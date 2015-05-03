@@ -18,12 +18,18 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 import com.google.api.client.xml.GenericXml;
+import com.google.api.client.xml.XmlNamespaceDictionary;
 
 public class Owner extends GenericXml {
-    @Key
-    private String ID;
-    @Key
-    private String DisplayName;
+    @Key private String ID;
+    @Key private String DisplayName;
+
+    public Owner() {
+        super();
+        this.name = "Owner";
+        this.namespaceDictionary = new XmlNamespaceDictionary();
+        this.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01");
+    }
 
     public String getID() {
         return ID;

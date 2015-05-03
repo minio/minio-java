@@ -52,7 +52,6 @@ public class HttpClient implements Client {
 
         url.setPathParts(pathParts);
 
-
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
         httpRequest = httpRequest.setRequestMethod("GET");

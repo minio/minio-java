@@ -27,7 +27,7 @@ import java.io.StringReader;
 
 import static org.junit.Assert.assertEquals;
 
-public class MessageTests {
+public class SerializationTests {
     @Test
     public void testSerializeMessage() throws XmlPullParserException, IOException {
         Owner owner = new Owner();
@@ -41,6 +41,8 @@ public class MessageTests {
         item.setStorageClass("storageClass");
         item.setETag("ETag");
         item.setOwner(owner);
+
+        System.out.println(item.toString());
 
         XmlPullParser parser = Xml.createParser();
         parser.setInput(new StringReader(item.toString()));
