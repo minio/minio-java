@@ -19,15 +19,15 @@ package io.minio.objectstorage.client;
 import java.util.Date;
 
 public class ObjectMetadata {
-    private String bucket;
-    private String key;
-    private Date createdTime;
-    private long length;
+    private final String bucket;
+    private final String key;
+    private final Date createdTime;
+    private final long length;
 
     public ObjectMetadata(String bucket, String name, Date createdTime, long length) {
         this.bucket = bucket;
         this.key = name;
-        this.createdTime = createdTime;
+        this.createdTime = (Date)createdTime.clone();
         this.length = length;
     }
 
@@ -36,7 +36,7 @@ public class ObjectMetadata {
     }
 
     public Date getCreatedTime() {
-        return createdTime;
+        return (Date) createdTime.clone();
     }
 
     public long getLength() {

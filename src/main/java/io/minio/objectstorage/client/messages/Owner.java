@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-apply plugin: 'java'
-apply plugin: 'findbugs'
+package io.minio.objectstorage.client.messages;
 
-ext.junitVersion = '4.12'
-ext.googleHttpClientVersion = '1.20.0'
+import com.google.api.client.util.Key;
+import com.google.api.client.xml.GenericXml;
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
-}
+public class Owner extends GenericXml {
+    @Key private String ID;
+    @Key private String DisplayName;
 
-dependencies {
-    compile group: 'com.google.http-client', name:'google-http-client', version: googleHttpClientVersion
-    compile group: 'com.google.http-client', name:'google-http-client-xml', version: googleHttpClientVersion
+    public String getID() {
+        return ID;
+    }
 
-    testCompile group: 'junit', name: 'junit', version: junitVersion
-}
+    public void setID(String ID) {
+        this.ID = ID;
+    }
 
-repositories {
-    mavenCentral()
+    public String getDisplayName() {
+        return DisplayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        DisplayName = displayName;
+    }
 }
