@@ -20,12 +20,18 @@ import com.google.api.client.util.Key;
 import com.google.api.client.xml.GenericXml;
 
 public class Item extends GenericXml {
-    @Key private String key;
-    @Key private String lastModified;
-    @Key("ETag") private String eTag;
-    @Key private long size;
-    @Key private String storageClass;
-    @Key private Owner owner;
+    @Key
+    private String key;
+    @Key
+    private String lastModified;
+    @Key("ETag")
+    private String eTag;
+    @Key
+    private long size;
+    @Key
+    private String storageClass;
+    @Key
+    private Owner owner;
 
     public String getKey() {
         return key;
