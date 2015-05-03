@@ -16,8 +16,15 @@
 
 package io.minio.objectstorage.client;
 
+import com.google.api.client.http.*;
+import com.google.api.client.json.Json;
+import com.google.api.client.testing.http.HttpTesting;
+import com.google.api.client.testing.http.MockHttpTransport;
+import com.google.api.client.testing.http.MockLowLevelHttpRequest;
+import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -61,5 +68,32 @@ public class ClientTest {
     @Test(expected = NullPointerException.class)
     public void NewClientWithNullURLStringFails() throws MalformedURLException {
         Clients.getClient((String) null);
+    }
+
+    @Test()
+    public void GetObjectMetadata() throws IOException {
+        // Set up mock
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("custom_header", "value");
+                        response.setStatusCode(200);
+                        response.setContentType(Json.MEDIA_TYPE);
+                        response.setContent("{\"error\":\"not found\"}");
+                        return response;
+                    }
+                };
+            }
+        };
+
+        HttpClient client = (HttpClient) Clients.getClient("http://example.com:9000");
+        client.setTransport(transport);
+        ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
+        assertEquals("bucket", objectMetadata.getBucket());
+        assertEquals("key", objectMetadata.getKey());
     }
 }

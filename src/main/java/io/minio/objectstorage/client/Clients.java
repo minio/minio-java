@@ -37,9 +37,18 @@ public class Clients {
         if (url == null) {
             throw new NullPointerException();
         }
+        // Set trailing / in path
+        if (url.getPath().length() == 0) {
+            String path = url.toString() + "/";
+            url = new URL(path);
+        }
+
+        // Only a trailing path should be present in the path
         if (url.getPath().length() > 0 && !url.getPath().equals("/")) {
             throw new java.net.MalformedURLException("Path should be empty: '" + url.getPath() + "'");
         }
+
+        // return a new http client
         return new HttpClient(url);
     }
 }

@@ -16,16 +16,58 @@
 
 package io.minio.objectstorage.client;
 
+import com.google.api.client.http.*;
+import com.google.api.client.http.javanet.NetHttpTransport;
+
+import java.io.IOException;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
 
 public class HttpClient implements Client {
     private final URL url;
+    private HttpTransport transport = new NetHttpTransport();
 
-    public HttpClient(URL url) {
+    HttpClient(URL url) {
         this.url = url;
     }
 
+    @Override
     public URL getUrl() {
         return url;
+    }
+
+    @Override
+    public ObjectMetadata getObjectMetadata(String bucket, String key) {
+        GenericUrl url = new GenericUrl(this.url);
+
+        List<String> pathParts = new LinkedList<String>();
+        pathParts.add("");
+        pathParts.add(bucket);
+        pathParts.add(key);
+
+        url.setPathParts(pathParts);
+
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = null;
+        try {
+            httpRequest = requestFactory.buildGetRequest(url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        httpRequest = httpRequest.setRequestMethod("GET");
+        try {
+            HttpResponse response = httpRequest.execute();
+            System.out.println(response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new ObjectMetadata("bucket", "key", Calendar.getInstance().getTime(), 0);
+    }
+
+    void setTransport(HttpTransport transport) {
+        this.transport = transport;
     }
 }

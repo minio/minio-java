@@ -17,12 +17,15 @@
 apply plugin: 'java'
 
 ext.junitVersion = '4.12'
+ext.googleHttpClientVersion = '1.20.0'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
 }
 
 dependencies {
+    compile group: 'com.google.http-client', name:'google-http-client', version: googleHttpClientVersion
+
     testCompile group: 'junit', name: 'junit', version: junitVersion
 }
 

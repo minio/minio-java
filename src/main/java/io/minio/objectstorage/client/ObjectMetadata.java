@@ -16,12 +16,34 @@
 
 package io.minio.objectstorage.client;
 
-import java.io.IOException;
-import java.net.URL;
+import java.util.Date;
 
-public interface Client {
-    URL getUrl();
+public class ObjectMetadata {
+    private String bucket;
+    private String key;
+    private Date createdTime;
+    private long length;
 
-    ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
+    public ObjectMetadata(String bucket, String name, Date createdTime, long length) {
+        this.bucket = bucket;
+        this.key = name;
+        this.createdTime = createdTime;
+        this.length = length;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public Date getCreatedTime() {
+        return createdTime;
+    }
+
+    public long getLength() {
+        return length;
+    }
+
+    public String getBucket() {
+        return bucket;
+    }
 }
-
