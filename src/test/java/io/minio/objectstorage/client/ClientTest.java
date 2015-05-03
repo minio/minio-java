@@ -11,7 +11,7 @@ public class ClientTest {
     @Test()
     public void InstantiateNewClient() throws MalformedURLException {
         String expectedHost = "example.com";
-        Client client = Client.newClient("http://" + expectedHost);
+        Client client = Clients.getClient("http://" + expectedHost);
 
         URL url = client.getUrl();
         // check schema
@@ -23,7 +23,7 @@ public class ClientTest {
     @Test()
     public void InstantiateNewClientWithTrailingSlash() throws MalformedURLException {
         String expectedHost = "example.com";
-        Client client = Client.newClient("http://" + expectedHost + "/");
+        Client client = Clients.getClient("http://" + expectedHost + "/");
 
         URL url = client.getUrl();
         // check schema
@@ -34,16 +34,16 @@ public class ClientTest {
 
     @Test(expected = MalformedURLException.class)
     public void NewClientWithPathFails() throws MalformedURLException {
-        Client.newClient("http://example.com/path");
+        Clients.getClient("http://example.com/path");
     }
 
     @Test(expected = NullPointerException.class)
     public void NewClientWithNullURLFails() throws MalformedURLException {
-        Client.newClient((URL) null);
+        Clients.getClient((URL) null);
     }
 
     @Test(expected = NullPointerException.class)
     public void NewClientWithNullURLStringFails() throws MalformedURLException {
-        Client.newClient((String) null);
+        Clients.getClient((String) null);
     }
 }
