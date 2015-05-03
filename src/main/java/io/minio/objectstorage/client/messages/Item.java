@@ -17,10 +17,8 @@
 package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
-import com.google.api.client.xml.GenericXml;
-import com.google.api.client.xml.XmlNamespaceDictionary;
 
-public class Item extends GenericXml {
+public class Item extends XmlEntity {
     @Key
     private String key;
     @Key
@@ -37,8 +35,6 @@ public class Item extends GenericXml {
     public Item() {
         super();
         this.name = "Item";
-        this.namespaceDictionary = new XmlNamespaceDictionary();
-        this.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01");
     }
 
     public String getKey() {

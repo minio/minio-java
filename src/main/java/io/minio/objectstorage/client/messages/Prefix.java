@@ -18,28 +18,15 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
-public class Owner extends XmlEntity {
-    @Key private String ID;
-    @Key private String DisplayName;
+public class Prefix extends XmlEntity {
+    @Key
+    private String prefix;
 
-    public Owner() {
-        super();
-        this.name = "Owner";
+    public String getPrefix() {
+        return prefix;
     }
 
-    public String getID() {
-        return ID;
-    }
-
-    public void setID(String ID) {
-        this.ID = ID;
-    }
-
-    public String getDisplayName() {
-        return DisplayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        DisplayName = displayName;
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 }
