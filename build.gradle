@@ -1,5 +1,15 @@
 apply plugin: 'java'
 
+ext.junitVersion = '4.12'
+
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: junitVersion
+}
+
+repositories {
+    mavenCentral()
 }
