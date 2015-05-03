@@ -39,10 +39,10 @@ public class HttpClient implements Client {
     }
 
     @Override
-    public ObjectMetadata getObjectMetadata(String bucket, String key) {
+    public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
         GenericUrl url = new GenericUrl(this.url);
 
-        List<String> pathParts = new LinkedList<String>();
+        List<String> pathParts = new LinkedList<>();
         pathParts.add("");
         pathParts.add(bucket);
         pathParts.add(key);
@@ -51,16 +51,10 @@ public class HttpClient implements Client {
 
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = null;
-        try {
-            httpRequest = requestFactory.buildGetRequest(url);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
         httpRequest = httpRequest.setRequestMethod("GET");
         try {
-            HttpResponse response = httpRequest.execute();
-            System.out.println(response);
+            httpRequest.execute();
         } catch (IOException e) {
             e.printStackTrace();
         }

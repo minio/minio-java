@@ -1,0 +1,78 @@
+/*
+ * Minimalist Object Storage Java Client, (C) 2015 Minio, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.minio.objectstorage.client.messages;
+
+import com.google.api.client.util.Key;
+import com.google.api.client.xml.GenericXml;
+
+public class Item extends GenericXml {
+    @Key private String key;
+    @Key private String lastModified;
+    @Key("ETag") private String eTag;
+    @Key private long size;
+    @Key private String storageClass;
+    @Key private Owner owner;
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(String lastModified) {
+        this.lastModified = lastModified;
+    }
+
+    public String getETag() {
+        return eTag;
+    }
+
+    public void setETag(String eTag) {
+        this.eTag = eTag;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public String getStorageClass() {
+        return storageClass;
+    }
+
+    public void setStorageClass(String storageClass) {
+        this.storageClass = storageClass;
+    }
+
+    public Owner getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+}
+
