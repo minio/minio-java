@@ -27,7 +27,7 @@ public class ObjectMetadata {
     public ObjectMetadata(String bucket, String name, Date createdTime, long length) {
         this.bucket = bucket;
         this.key = name;
-        this.createdTime = (Date) createdTime.clone();
+        this.createdTime = (Date)createdTime.clone();
         this.length = length;
     }
 
