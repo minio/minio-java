@@ -20,8 +20,10 @@ import com.google.api.client.util.Key;
 import com.google.api.client.xml.GenericXml;
 
 public class Owner extends GenericXml {
-    @Key private String ID;
-    @Key private String DisplayName;
+    @Key
+    private String ID;
+    @Key
+    private String DisplayName;
 
     public String getID() {
         return ID;
