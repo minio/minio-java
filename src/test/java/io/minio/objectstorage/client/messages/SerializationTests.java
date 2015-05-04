@@ -47,6 +47,7 @@ public class SerializationTests {
 
         List<Item> items = new LinkedList<>();
         items.add(item);
+        items.add(item);
 
         ListBucketResult result = new ListBucketResult();
         result.setName("name");
@@ -57,8 +58,14 @@ public class SerializationTests {
         result.setIsTruncated(true);
         result.setContents(items);
 
-
-        System.out.println(item.toString());
+        List<Prefix> prefixes = new LinkedList<>();
+        Prefix prefix = new Prefix();
+        prefix.setPrefix("prefix1");
+        prefixes.add(prefix);
+        prefix = new Prefix();
+        prefix.setPrefix("prefix2");
+        prefixes.add(prefix);
+        result.setCommonPrefixes(prefixes);
 
         XmlPullParser parser = Xml.createParser();
         parser.setInput(new StringReader(result.toString()));
