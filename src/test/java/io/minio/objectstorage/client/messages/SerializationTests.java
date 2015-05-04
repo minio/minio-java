@@ -67,12 +67,28 @@ public class SerializationTests {
         prefixes.add(prefix);
         result.setCommonPrefixes(prefixes);
 
+        List<Bucket> bucketList = new LinkedList<>();
+        Bucket bucket = new Bucket();
+        bucket.setName("bucketname");
+        bucket.setCreationDate("creation date");
+        bucketList.add(bucket);
+        bucketList.add(bucket);
+
+        Buckets buckets = new Buckets();
+        buckets.setBucket(bucketList);
+
+        ListAllMyBucketsResult allMyBucketsResult = new ListAllMyBucketsResult();
+        allMyBucketsResult.setOwner(owner);
+        allMyBucketsResult.setBuckets(buckets);
+
+        System.out.println(allMyBucketsResult.toString());
+
         XmlPullParser parser = Xml.createParser();
-        parser.setInput(new StringReader(result.toString()));
+        parser.setInput(new StringReader(allMyBucketsResult.toString()));
         XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
-        ListBucketResult parsedItem = new ListBucketResult();
+        ListAllMyBucketsResult parsedItem = new ListAllMyBucketsResult();
         Xml.parseElement(parser, parsedItem, dictionary, null);
-        assertEquals(result, parsedItem);
+        assertEquals(allMyBucketsResult, parsedItem);
     }
 
     @Test
