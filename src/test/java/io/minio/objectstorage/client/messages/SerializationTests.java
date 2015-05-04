@@ -24,12 +24,15 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
 public class SerializationTests {
     @Test
-    public void testSerializeMessage() throws XmlPullParserException, IOException {
+    public void testListObjectsResponse() throws XmlPullParserException, IOException {
+
         Owner owner = new Owner();
         owner.setID("id");
         owner.setDisplayName("displayName");
@@ -42,13 +45,45 @@ public class SerializationTests {
         item.setETag("ETag");
         item.setOwner(owner);
 
-        System.out.println(item.toString());
+        List<Item> items = new LinkedList<>();
+        items.add(item);
+        items.add(item);
+
+        ListBucketResult result = new ListBucketResult();
+        result.setName("name");
+        result.setPrefix("prefix");
+        result.setMarker("marker");
+        result.setMaxKeys(5);
+        result.setDelimiter("delimiter");
+        result.setIsTruncated(true);
+        result.setContents(items);
+
+        List<Prefix> prefixes = new LinkedList<>();
+        Prefix prefix = new Prefix();
+        prefix.setPrefix("prefix1");
+        prefixes.add(prefix);
+        prefix = new Prefix();
+        prefix.setPrefix("prefix2");
+        prefixes.add(prefix);
+        result.setCommonPrefixes(prefixes);
 
         XmlPullParser parser = Xml.createParser();
-        parser.setInput(new StringReader(item.toString()));
+        parser.setInput(new StringReader(result.toString()));
         XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
-        Item parsedItem = new Item();
+        ListBucketResult parsedItem = new ListBucketResult();
         Xml.parseElement(parser, parsedItem, dictionary, null);
-        assertEquals(item, parsedItem);
+        assertEquals(result, parsedItem);
+    }
+
+    @Test
+    public void testPrefix() throws XmlPullParserException, IOException {
+        Prefix prefix = new Prefix();
+        prefix.setPrefix("hello");
+        XmlPullParser parser = Xml.createParser();
+        parser.setInput(new StringReader(prefix.toString()));
+        XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
+        Prefix parsedPrefix = new Prefix();
+        Xml.parseElement(parser, parsedPrefix, dictionary, null);
+        assertEquals(prefix, parsedPrefix);
     }
 }
