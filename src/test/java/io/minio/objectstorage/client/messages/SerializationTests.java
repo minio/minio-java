@@ -67,6 +67,22 @@ public class SerializationTests {
         prefixes.add(prefix);
         result.setCommonPrefixes(prefixes);
 
+        System.out.println(result.toString());
+
+        XmlPullParser parser = Xml.createParser();
+        parser.setInput(new StringReader(result.toString()));
+        XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
+        ListBucketResult parsedItem = new ListBucketResult();
+        Xml.parseElement(parser, parsedItem, dictionary, null);
+        assertEquals(result, parsedItem);
+    }
+
+    @Test
+    public void testListAllBuckets() throws XmlPullParserException, IOException {
+        Owner owner = new Owner();
+        owner.setID("id");
+        owner.setDisplayName("displayName");
+
         List<Bucket> bucketList = new LinkedList<>();
         Bucket bucket = new Bucket();
         bucket.setName("bucketname");

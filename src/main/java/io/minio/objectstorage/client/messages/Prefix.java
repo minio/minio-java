@@ -19,7 +19,7 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.util.Key;
 
 public class Prefix extends XmlEntity {
-    @Key
+    @Key("Prefix")
     private String prefix;
 
     public String getPrefix() {
