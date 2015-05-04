@@ -19,7 +19,6 @@ package io.minio.objectstorage.client;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
-import com.google.api.client.json.Json;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
@@ -28,6 +27,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 
@@ -71,8 +72,8 @@ public class ClientTest {
         Clients.getClient((String) null);
     }
 
-    @Test()
-    public void GetObjectMetadata() throws IOException {
+    @Test(expected = IOException.class)
+    public void getMissingObjectHeaders() throws IOException {
         // Set up mock
         HttpTransport transport = new MockHttpTransport() {
             @Override
@@ -81,10 +82,10 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("custom_header", "value");
-                        response.setStatusCode(200);
-                        response.setContentType(Json.MEDIA_TYPE);
-                        response.setContent("{\"error\":\"not found\"}");
+//                        response.addHeader("custom_header", "value");
+                        response.setStatusCode(404);
+//                        response.setContentType(Xml.MEDIA_TYPE);
+                        //response.setContent("{\"error\":\"not found\"}");
                         return response;
                     }
                 };
@@ -96,5 +97,40 @@ public class ClientTest {
         ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
         assertEquals("bucket", objectMetadata.getBucket());
         assertEquals("key", objectMetadata.getKey());
+    }
+
+    @Test
+    public void testGetObjectHeaders() throws IOException {
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "5080");
+                        response.addHeader("Content-Type", "application/octet-stream");
+                        response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        // build expected request
+        Calendar expectedDate = Calendar.getInstance();
+        expectedDate.clear();
+        expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+        expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
+        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+
+        // get request
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
+
+        assertEquals(expectedMetadata, objectMetadata);
     }
 }

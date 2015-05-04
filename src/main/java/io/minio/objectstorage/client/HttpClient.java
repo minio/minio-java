@@ -16,15 +16,14 @@
 
 package io.minio.objectstorage.client;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpTransport;
+import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Calendar;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -54,13 +53,19 @@ public class HttpClient implements Client {
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("GET");
+        httpRequest = httpRequest.setRequestMethod("HEAD");
+        HttpResponse response = httpRequest.execute();
         try {
-            httpRequest.execute();
-        } catch (IOException e) {
+            HttpHeaders headers = response.getHeaders();
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+            Date lastModified = formatter.parse(headers.getLastModified());
+            return new ObjectMetadata(bucket, key, lastModified, headers.getContentLength(), headers.getETag());
+        } catch (ParseException e) {
             e.printStackTrace();
+        } finally {
+            response.disconnect();
         }
-        return new ObjectMetadata("bucket", "key", Calendar.getInstance().getTime(), 0);
+        throw new IOException();
     }
 
     void setTransport(HttpTransport transport) {

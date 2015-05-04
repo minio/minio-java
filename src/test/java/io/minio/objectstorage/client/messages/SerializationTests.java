@@ -85,7 +85,7 @@ public class SerializationTests {
 
         List<Bucket> bucketList = new LinkedList<>();
         Bucket bucket = new Bucket();
-        bucket.setName("bucketname");
+        bucket.setName("bucketName");
         bucket.setCreationDate("creation date");
         bucketList.add(bucket);
         bucketList.add(bucket);
