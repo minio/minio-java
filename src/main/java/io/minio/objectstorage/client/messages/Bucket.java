@@ -19,9 +19,9 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.util.Key;
 
 public class Bucket extends XmlEntity {
-    @Key
+    @Key("Name")
     private String name;
-    @Key
+    @Key("CreationDate")
     private String creationDate;
 
     public Bucket() {

@@ -21,7 +21,7 @@ import com.google.api.client.util.Key;
 import java.util.List;
 
 public class Buckets extends XmlEntity{
-    @Key
+    @Key("Bucket")
     private List<Bucket> bucket;
 
     public Buckets() {

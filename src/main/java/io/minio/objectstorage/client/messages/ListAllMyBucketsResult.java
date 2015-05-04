@@ -19,9 +19,9 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.util.Key;
 
 public class ListAllMyBucketsResult extends XmlEntity {
-    @Key
+    @Key("Owner")
     private Owner owner;
-    @Key
+    @Key("Buckets")
     private Buckets buckets;
 
     public ListAllMyBucketsResult() {

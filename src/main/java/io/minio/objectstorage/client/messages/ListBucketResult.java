@@ -21,21 +21,21 @@ import com.google.api.client.util.Key;
 import java.util.List;
 
 public class ListBucketResult extends XmlEntity {
-    @Key
+    @Key("Name")
     private String Name;
-    @Key
+    @Key("Prefix")
     private String Prefix;
-    @Key
+    @Key("Marker")
     private String Marker;
-    @Key
+    @Key("MaxKeys")
     private int MaxKeys;
-    @Key
+    @Key("Delimiter")
     private String Delimiter;
-    @Key
+    @Key("IsTruncated")
     private boolean IsTruncated;
-    @Key
+    @Key("Contents")
     private List<Item> Contents;
-    @Key
+    @Key("CommonPrefixes")
     private List<Prefix> CommonPrefixes;
 
     public ListBucketResult() {

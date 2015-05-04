@@ -19,17 +19,17 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.util.Key;
 
 public class Item extends XmlEntity {
-    @Key
+    @Key("Key")
     private String key;
-    @Key
+    @Key("LastModified")
     private String lastModified;
     @Key("ETag")
     private String eTag;
-    @Key
+    @Key("Size")
     private long size;
-    @Key
+    @Key("StorageClass")
     private String storageClass;
-    @Key
+    @Key("Owner")
     private Owner owner;
 
     public Item() {
