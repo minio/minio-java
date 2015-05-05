@@ -16,6 +16,9 @@
 
 package io.minio.objectstorage.client;
 
+import io.minio.objectstorage.client.messages.ListBucketResult;
+import org.xmlpull.v1.XmlPullParserException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -25,5 +28,7 @@ public interface Client {
 
     ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
     InputStream getObject(String bucket, String key) throws IOException;
+
+    ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException;
 }
 

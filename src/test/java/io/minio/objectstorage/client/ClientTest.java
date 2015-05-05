@@ -22,13 +22,17 @@ import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import io.minio.objectstorage.client.messages.Item;
+import io.minio.objectstorage.client.messages.ListBucketResult;
+import io.minio.objectstorage.client.messages.Owner;
 import org.junit.Test;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -168,5 +172,54 @@ public class ClientTest {
         int read = object.read(result);
         result = Arrays.copyOf(result, read);
         assertEquals(expectedObject, new String(result, "UTF-8"));
+    }
+
+    public void testListObjects() throws IOException, XmlPullParserException, ParseException {
+        final String body = "<ListBucketResult><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "414");
+                        response.addHeader("Content-Type", "application/xml");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.setContent(body.getBytes("UTF-8"));
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        ListBucketResult bucket = client.listObjectsInBucket("bucket");
+
+        assertEquals("bucket", bucket.getName());
+        assertEquals("", bucket.getPrefix());
+        assertEquals("", bucket.getMarker());
+        assertEquals(1000, bucket.getMaxKeys());
+        assertEquals("", bucket.getDelimiter());
+        assertEquals(false, bucket.isTruncated());
+        assertEquals(1, bucket.getContents().size());
+
+        Item item = bucket.getContents().get(0);
+        assertEquals("key", item.getKey());
+        assertEquals("Mon, 04 May 2015 07:58:51 UTC", item.getLastModified());
+        assertEquals(11, item.getSize());
+        assertEquals("STANDARD", item.getStorageClass());
+
+        Calendar expectedDate = Calendar.getInstance();
+        expectedDate.clear();
+        expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+        expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
+        assertEquals(expectedDate.getTime(), item.getLastModifiedDate());
+
+        Owner owner = item.getOwner();
+        assertEquals("minio", owner.getID());
+        assertEquals("minio", owner.getDisplayName());
     }
 }
