@@ -18,6 +18,8 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.util.List;
+
 public class ListAllMyBucketsResult extends XmlEntity {
     @Key("Owner")
     private Owner owner;
@@ -37,8 +39,11 @@ public class ListAllMyBucketsResult extends XmlEntity {
         this.owner = owner;
     }
 
-    public Buckets getBuckets() {
-        return buckets;
+    public List<Bucket> getBuckets() {
+        if(buckets == null) {
+            return null;
+        }
+        return buckets.getBucket();
     }
 
     public void setBuckets(Buckets buckets) {

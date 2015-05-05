@@ -16,6 +16,7 @@
 
 package io.minio.objectstorage.client;
 
+import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import io.minio.objectstorage.client.messages.ListBucketResult;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -30,5 +31,6 @@ public interface Client {
     InputStream getObject(String bucket, String key) throws IOException;
 
     ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException;
+    ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException;
 }
 

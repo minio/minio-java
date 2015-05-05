@@ -20,6 +20,7 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
+import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import io.minio.objectstorage.client.messages.ListBucketResult;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -98,7 +99,7 @@ public class HttpClient implements Client {
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("HEAD");
+        httpRequest = httpRequest.setRequestMethod("GET");
         HttpResponse response = httpRequest.execute();
 
         return response.getContent();
@@ -110,11 +111,8 @@ public class HttpClient implements Client {
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("HEAD");
+        httpRequest = httpRequest.setRequestMethod("GET");
         HttpResponse response = httpRequest.execute();
-
-
-
 
         XmlPullParser parser = Xml.createParser();
         InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
@@ -129,5 +127,25 @@ public class HttpClient implements Client {
 
     void setTransport(HttpTransport transport) {
         this.transport = transport;
+    }
+
+    @Override
+    public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException {
+        GenericUrl url = new GenericUrl(this.url);
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
+        httpRequest = httpRequest.setRequestMethod("GET");
+        HttpResponse response = httpRequest.execute();
+
+        XmlPullParser parser = Xml.createParser();
+        InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+        parser.setInput(reader);
+
+        ListAllMyBucketsResult result = new ListAllMyBucketsResult();
+
+        Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+
+        return result;
     }
 }

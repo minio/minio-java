@@ -54,7 +54,7 @@ public class Item extends XmlEntity {
         return lastModified;
     }
 
-    public Date getLastModifiedDate() throws ParseException {
+    public Date getParsedLastModified() throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         return formatter.parse(this.getLastModified());
