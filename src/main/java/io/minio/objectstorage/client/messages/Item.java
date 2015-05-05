@@ -54,14 +54,14 @@ public class Item extends XmlEntity {
         return lastModified;
     }
 
+    public void setLastModified(String lastModified) {
+        this.lastModified = lastModified;
+    }
+
     public Date getParsedLastModified() throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         return formatter.parse(this.getLastModified());
-    }
-
-    public void setLastModified(String lastModified) {
-        this.lastModified = lastModified;
     }
 
     public String getETag() {

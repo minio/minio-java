@@ -26,8 +26,8 @@ task wrapper(type: Wrapper) {
 }
 
 dependencies {
-    compile group: 'com.google.http-client', name:'google-http-client', version: googleHttpClientVersion
-    compile group: 'com.google.http-client', name:'google-http-client-xml', version: googleHttpClientVersion
+    compile group: 'com.google.http-client', name: 'google-http-client', version: googleHttpClientVersion
+    compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
 
     testCompile group: 'junit', name: 'junit', version: junitVersion
 }
