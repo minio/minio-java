@@ -29,6 +29,7 @@ public interface Client {
 
     ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
     InputStream getObject(String bucket, String key) throws IOException;
+    InputStream getObject(String bucket, String key, long offset, long length) throws IOException;
 
     ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException;
     ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException;
