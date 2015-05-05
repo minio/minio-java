@@ -20,6 +20,7 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -42,14 +43,7 @@ public class HttpClient implements Client {
 
     @Override
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
-        GenericUrl url = new GenericUrl(this.url);
-
-        List<String> pathParts = new LinkedList<>();
-        pathParts.add("");
-        pathParts.add(bucket);
-        pathParts.add(key);
-
-        url.setPathParts(pathParts);
+        GenericUrl url = getGenericUrl(bucket, key);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
@@ -66,6 +60,30 @@ public class HttpClient implements Client {
             response.disconnect();
         }
         throw new IOException();
+    }
+
+    private GenericUrl getGenericUrl(String bucket, String key) {
+        GenericUrl url = new GenericUrl(this.url);
+
+        List<String> pathParts = new LinkedList<>();
+        pathParts.add("");
+        pathParts.add(bucket);
+        pathParts.add(key);
+
+        url.setPathParts(pathParts);
+        return url;
+    }
+
+    @Override
+    public InputStream getObject(String bucket, String key) throws IOException {
+        GenericUrl url = getGenericUrl(bucket, key);
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
+        httpRequest = httpRequest.setRequestMethod("HEAD");
+        HttpResponse response = httpRequest.execute();
+
+        return response.getContent();
     }
 
     void setTransport(HttpTransport transport) {

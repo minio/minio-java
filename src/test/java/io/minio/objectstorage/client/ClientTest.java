@@ -25,8 +25,11 @@ import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.TimeZone;
 
@@ -132,5 +135,38 @@ public class ClientTest {
         ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
 
         assertEquals(expectedMetadata, objectMetadata);
+    }
+
+    @Test
+    public void testGetObject() throws IOException {
+        final String expectedObject = "hello world";
+
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "5080");
+                        response.addHeader("Content-Type", "application/octet-stream");
+                        response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.setStatusCode(200);
+                        response.setContent(expectedObject.getBytes("UTF-8"));
+                        return response;
+                    }
+                };
+            }
+        };
+
+        // get request
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        InputStream object = client.getObject("bucket", "key");
+        byte[] result = new byte[20];
+        int read = object.read(result);
+        result = Arrays.copyOf(result, read);
+        assertEquals(expectedObject, new String(result, "UTF-8"));
     }
 }

@@ -17,11 +17,13 @@
 package io.minio.objectstorage.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 
 public interface Client {
     URL getUrl();
 
     ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
+    InputStream getObject(String bucket, String key) throws IOException;
 }
 
