@@ -174,8 +174,9 @@ public class ClientTest {
         assertEquals(expectedObject, new String(result, "UTF-8"));
     }
 
+    @Test
     public void testListObjects() throws IOException, XmlPullParserException, ParseException {
-        final String body = "<ListBucketResult><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
+        final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
         HttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -199,23 +200,24 @@ public class ClientTest {
         ListBucketResult bucket = client.listObjectsInBucket("bucket");
 
         assertEquals("bucket", bucket.getName());
-        assertEquals("", bucket.getPrefix());
-        assertEquals("", bucket.getMarker());
+        assertEquals(null, bucket.getPrefix());
+        assertEquals(null, bucket.getMarker());
         assertEquals(1000, bucket.getMaxKeys());
-        assertEquals("", bucket.getDelimiter());
+        assertEquals(null, bucket.getDelimiter());
         assertEquals(false, bucket.isTruncated());
         assertEquals(1, bucket.getContents().size());
 
         Item item = bucket.getContents().get(0);
         assertEquals("key", item.getKey());
-        assertEquals("Mon, 04 May 2015 07:58:51 UTC", item.getLastModified());
+        assertEquals("2015-05-05T02:21:15.716Z", item.getLastModified());
         assertEquals(11, item.getSize());
         assertEquals("STANDARD", item.getStorageClass());
 
         Calendar expectedDate = Calendar.getInstance();
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
-        expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
+        expectedDate.set(2015, Calendar.MAY, 5, 2, 21, 15);
+        expectedDate.set(Calendar.MILLISECOND, 716);
         assertEquals(expectedDate.getTime(), item.getLastModifiedDate());
 
         Owner owner = item.getOwner();
