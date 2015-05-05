@@ -28,7 +28,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -100,6 +99,19 @@ public class HttpClient implements Client {
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
         httpRequest = httpRequest.setRequestMethod("GET");
+        HttpResponse response = httpRequest.execute();
+
+        return response.getContent();
+    }
+
+    @Override
+    public InputStream getObject(String bucket, String key, long offset, long length) throws IOException {
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("GET");
+        HttpHeaders headers = httpRequest.getHeaders().setRange(offset + "-" + offset+length);
+        httpRequest.setHeaders(headers);
         HttpResponse response = httpRequest.execute();
 
         return response.getContent();
