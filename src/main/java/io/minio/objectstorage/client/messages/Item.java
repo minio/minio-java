@@ -20,8 +20,8 @@ import com.google.api.client.util.Key;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 public class Item extends XmlEntity {
     @Key("Key")
@@ -55,7 +55,8 @@ public class Item extends XmlEntity {
     }
 
     public Date getLastModifiedDate() throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         return formatter.parse(this.getLastModified());
     }
 
