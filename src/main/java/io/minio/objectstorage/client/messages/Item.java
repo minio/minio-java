@@ -18,6 +18,11 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 public class Item extends XmlEntity {
     @Key("Key")
     private String key;
@@ -47,6 +52,11 @@ public class Item extends XmlEntity {
 
     public String getLastModified() {
         return lastModified;
+    }
+
+    public Date getLastModifiedDate() throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+        return formatter.parse(this.getLastModified());
     }
 
     public void setLastModified(String lastModified) {

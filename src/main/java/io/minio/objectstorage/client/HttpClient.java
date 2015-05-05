@@ -18,9 +18,16 @@ package io.minio.objectstorage.client;
 
 import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.xml.Xml;
+import com.google.api.client.xml.XmlNamespaceDictionary;
+import io.minio.objectstorage.client.messages.ListBucketResult;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -43,7 +50,7 @@ public class HttpClient implements Client {
 
     @Override
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
-        GenericUrl url = getGenericUrl(bucket, key);
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
@@ -62,7 +69,7 @@ public class HttpClient implements Client {
         throw new IOException();
     }
 
-    private GenericUrl getGenericUrl(String bucket, String key) {
+    private GenericUrl getGenericUrlOfKey(String bucket, String key) {
         GenericUrl url = new GenericUrl(this.url);
 
         List<String> pathParts = new LinkedList<>();
@@ -74,9 +81,20 @@ public class HttpClient implements Client {
         return url;
     }
 
+    private GenericUrl getGenericUrlOfBucket(String bucket) {
+        GenericUrl url = new GenericUrl(this.url);
+
+        List<String> pathParts = new LinkedList<>();
+        pathParts.add("");
+        pathParts.add(bucket);
+
+        url.setPathParts(pathParts);
+        return url;
+    }
+
     @Override
     public InputStream getObject(String bucket, String key) throws IOException {
-        GenericUrl url = getGenericUrl(bucket, key);
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
@@ -84,6 +102,29 @@ public class HttpClient implements Client {
         HttpResponse response = httpRequest.execute();
 
         return response.getContent();
+    }
+
+    @Override
+    public ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException {
+        GenericUrl url = getGenericUrlOfBucket(bucket);
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
+        httpRequest = httpRequest.setRequestMethod("HEAD");
+        HttpResponse response = httpRequest.execute();
+
+
+
+
+        XmlPullParser parser = Xml.createParser();
+        InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+        parser.setInput(reader);
+
+        ListBucketResult result = new ListBucketResult();
+
+        Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+
+        return result;
     }
 
     void setTransport(HttpTransport transport) {
