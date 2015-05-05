@@ -18,6 +18,11 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 public class Bucket extends XmlEntity {
     @Key("Name")
     private String name;
@@ -43,5 +48,11 @@ public class Bucket extends XmlEntity {
 
     public void setCreationDate(String creationDate) {
         this.creationDate = creationDate;
+    }
+
+    public Date getParsedCreationDate() throws ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return formatter.parse(this.getCreationDate());
     }
 }

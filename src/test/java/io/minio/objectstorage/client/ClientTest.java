@@ -22,9 +22,7 @@ import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
-import io.minio.objectstorage.client.messages.Item;
-import io.minio.objectstorage.client.messages.ListBucketResult;
-import io.minio.objectstorage.client.messages.Owner;
+import io.minio.objectstorage.client.messages.*;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -176,7 +174,7 @@ public class ClientTest {
 
     @Test
     public void testListObjects() throws IOException, XmlPullParserException, ParseException {
-        final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
+        final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>2a60eaffa7a82804bdc682ce1df6c2d4</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
         HttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -205,7 +203,7 @@ public class ClientTest {
         assertEquals(1000, bucket.getMaxKeys());
         assertEquals(null, bucket.getDelimiter());
         assertEquals(false, bucket.isTruncated());
-        assertEquals(1, bucket.getContents().size());
+        assertEquals(2, bucket.getContents().size());
 
         Item item = bucket.getContents().get(0);
         assertEquals("key", item.getKey());
@@ -218,10 +216,52 @@ public class ClientTest {
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
         expectedDate.set(2015, Calendar.MAY, 5, 2, 21, 15);
         expectedDate.set(Calendar.MILLISECOND, 716);
-        assertEquals(expectedDate.getTime(), item.getLastModifiedDate());
+        assertEquals(expectedDate.getTime(), item.getParsedLastModified());
 
         Owner owner = item.getOwner();
         assertEquals("minio", owner.getID());
         assertEquals("minio", owner.getDisplayName());
+    }
+
+    @Test
+    public void testListBuckets() throws IOException, XmlPullParserException, ParseException {
+        final String body = "<ListAllMyBucketsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner><Buckets><Bucket><Name>bucket</Name><CreationDate>2015-05-05T20:35:51.410Z</CreationDate></Bucket><Bucket><Name>foo</Name><CreationDate>2015-05-05T20:35:47.170Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>";
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "351");
+                        response.addHeader("Content-Type", "application/xml");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.setContent(body.getBytes("UTF-8"));
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        ListAllMyBucketsResult buckets = client.listBuckets();
+
+        assertEquals(2, buckets.getBuckets().size());
+        Bucket bucket = buckets.getBuckets().get(0);
+        assertEquals("bucket", bucket.getName());
+        assertEquals("2015-05-05T20:35:51.410Z", bucket.getCreationDate());
+
+        Calendar expectedDate = Calendar.getInstance();
+        expectedDate.clear();
+        expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+        expectedDate.set(2015, Calendar.MAY, 5, 20, 35, 51);
+        expectedDate.set(Calendar.MILLISECOND, 410);
+        assertEquals(expectedDate.getTime(), bucket.getParsedCreationDate());
+
+        Owner owner = buckets.getOwner();
+        assertEquals("minio", owner.getDisplayName());
+        assertEquals("minio", owner.getID());
     }
 }
