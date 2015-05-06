@@ -26,10 +26,13 @@ import io.minio.objectstorage.client.messages.*;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -369,8 +372,64 @@ public class ClientTest {
 
         HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.createBucket("bucket");
+        boolean result = client.createBucket("bucket", Client.ACL_PUBLIC_READ);
 
         assertEquals(true, result);
+    }
+
+    @Test
+    public void testCreateBucketFails() throws IOException, XmlPullParserException {
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Host", "localhost");
+                        response.setStatusCode(403);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        boolean result = client.createBucket("bucket", Client.ACL_PUBLIC_READ);
+
+        assertEquals(false, result);
+    }
+
+    @Test
+    public void testCreateObject() throws IOException, NoSuchAlgorithmException {
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Host", "localhost");
+                        response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+
+        String inputString = "hello world";
+        ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
+
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        byte[] md5 = md.digest(inputString.getBytes("UTF-8"));
+
+        client.createObject("bucket", "key", "application/octet-stream", md5, 11, data);
     }
 }
