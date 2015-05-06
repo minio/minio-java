@@ -33,10 +33,12 @@ public interface Client {
 
     ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
 
-    ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException;
-
     ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException;
 
+    ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException;
+
     boolean testBucketAccess(String bucket) throws IOException;
+
+    boolean createBucket(String bucket) throws IOException;
 }
 
