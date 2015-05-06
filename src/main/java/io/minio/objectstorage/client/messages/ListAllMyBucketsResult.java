@@ -40,7 +40,7 @@ public class ListAllMyBucketsResult extends XmlEntity {
     }
 
     public List<Bucket> getBuckets() {
-        if(buckets == null) {
+        if (buckets == null) {
             return null;
         }
         return buckets.getBucket();

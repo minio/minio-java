@@ -20,7 +20,7 @@ import com.google.api.client.util.Key;
 
 import java.util.List;
 
-public class Buckets extends XmlEntity{
+public class Buckets extends XmlEntity {
     @Key("Bucket")
     private List<Bucket> bucket;
 

@@ -19,8 +19,10 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.util.Key;
 
 public class Owner extends XmlEntity {
-    @Key private String ID;
-    @Key private String DisplayName;
+    @Key
+    private String ID;
+    @Key
+    private String DisplayName;
 
     public Owner() {
         super();

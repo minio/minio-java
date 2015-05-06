@@ -27,11 +27,16 @@ import java.net.URL;
 public interface Client {
     URL getUrl();
 
-    ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
     InputStream getObject(String bucket, String key) throws IOException;
+
     InputStream getObject(String bucket, String key, long offset, long length) throws IOException;
 
+    ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
+
     ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException;
+
     ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException;
+
+    boolean testBucketAccess(String bucket) throws IOException;
 }
 

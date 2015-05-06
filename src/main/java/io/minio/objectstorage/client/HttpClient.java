@@ -110,7 +110,7 @@ public class HttpClient implements Client {
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("GET");
-        HttpHeaders headers = httpRequest.getHeaders().setRange(offset + "-" + offset+length);
+        HttpHeaders headers = httpRequest.getHeaders().setRange(offset + "-" + offset + length);
         httpRequest.setHeaders(headers);
         HttpResponse response = httpRequest.execute();
 
@@ -159,5 +159,26 @@ public class HttpClient implements Client {
         Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
 
         return result;
+    }
+
+    @Override
+    public boolean testBucketAccess(String bucket) throws IOException {
+        GenericUrl url = getGenericUrlOfBucket(bucket);
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest;
+        httpRequest = requestFactory.buildGetRequest(url);
+        httpRequest = httpRequest.setRequestMethod("HEAD");
+        HttpResponse response = null;
+        try {
+            response = httpRequest.execute();
+        } catch (HttpResponseException e) {
+            return false;
+        }
+        if (response == null) {
+            return false;
+        }
+        response.disconnect();
+        return true;
     }
 }
