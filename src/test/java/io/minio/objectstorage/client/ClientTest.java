@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
 
 public class ClientTest {
     @Test()
-    public void InstantiateNewClient() throws MalformedURLException {
+    public void instantiateNewClient() throws MalformedURLException {
         String expectedHost = "example.com";
         Client client = Clients.getClient("http://" + expectedHost);
 
@@ -51,7 +51,7 @@ public class ClientTest {
     }
 
     @Test()
-    public void InstantiateNewClientWithTrailingSlash() throws MalformedURLException {
+    public void instantiateNewClientWithTrailingSlash() throws MalformedURLException {
         String expectedHost = "example.com";
         Client client = Clients.getClient("http://" + expectedHost + "/");
 
@@ -63,17 +63,17 @@ public class ClientTest {
     }
 
     @Test(expected = MalformedURLException.class)
-    public void NewClientWithPathFails() throws MalformedURLException {
+    public void newClientWithPathFails() throws MalformedURLException {
         Clients.getClient("http://example.com/path");
     }
 
     @Test(expected = NullPointerException.class)
-    public void NewClientWithNullURLFails() throws MalformedURLException {
+    public void newClientWithNullURLFails() throws MalformedURLException {
         Clients.getClient((URL) null);
     }
 
     @Test(expected = NullPointerException.class)
-    public void NewClientWithNullURLStringFails() throws MalformedURLException {
+    public void newClientWithNullURLStringFails() throws MalformedURLException {
         Clients.getClient((String) null);
     }
 
@@ -347,5 +347,30 @@ public class ClientTest {
         boolean result = client.testBucketAccess("bucket");
 
         assertEquals(false, result);
+    }
+
+    @Test
+    public void testCreateBucket() throws IOException, XmlPullParserException {
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Host", "localhost");
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        boolean result = client.createBucket("bucket");
+
+        assertEquals(true, result);
     }
 }

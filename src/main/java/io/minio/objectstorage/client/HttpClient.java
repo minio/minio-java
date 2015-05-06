@@ -169,16 +169,41 @@ public class HttpClient implements Client {
         HttpRequest httpRequest;
         httpRequest = requestFactory.buildGetRequest(url);
         httpRequest = httpRequest.setRequestMethod("HEAD");
-        HttpResponse response = null;
         try {
-            response = httpRequest.execute();
+            HttpResponse response = httpRequest.execute();
+            try {
+                if (response.getStatusCode() == 200) {
+                    return true;
+                }
+                return false;
+            } finally {
+                response.disconnect();
+            }
         } catch (HttpResponseException e) {
             return false;
         }
-        if (response == null) {
+    }
+
+    @Override
+    public boolean createBucket(String bucket) throws IOException {
+        GenericUrl url = getGenericUrlOfBucket(bucket);
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest;
+        httpRequest = requestFactory.buildGetRequest(url);
+        httpRequest = httpRequest.setRequestMethod("PUT");
+        try {
+            HttpResponse execute = httpRequest.execute();
+            try {
+                if (execute.getStatusCode() == 200) {
+                    return true;
+                }
+                return false;
+            } finally {
+                execute.disconnect();
+            }
+        } catch (HttpResponseException e) {
             return false;
         }
-        response.disconnect();
-        return true;
     }
 }
