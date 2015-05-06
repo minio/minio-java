@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -205,5 +206,24 @@ public class HttpClient implements Client {
         } catch (HttpResponseException e) {
             return false;
         }
+    }
+
+    @Override
+    public void createObject(String bucket, String key, String contentType, byte[] md5sum, long size, InputStream data) throws IOException {
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("PUT");
+
+        String base64md5sum = Base64.getEncoder().encodeToString(md5sum);
+        HttpHeaders headers = httpRequest.getHeaders();
+        headers.setContentMD5(base64md5sum);
+
+        InputStreamContent content = new InputStreamContent(contentType, data);
+        content.setLength(size);
+        httpRequest.setContent(content);
+
+        httpRequest.execute();
     }
 }

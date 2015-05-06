@@ -47,5 +47,7 @@ public interface Client {
     boolean testBucketAccess(String bucket) throws IOException;
 
     boolean createBucket(String bucket, String acl) throws IOException;
+
+    void createObject(String bucket, String object, String contentType, byte[] md5sum, long size, InputStream data) throws IOException;
 }
 
