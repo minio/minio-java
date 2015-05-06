@@ -25,6 +25,13 @@ import java.io.InputStream;
 import java.net.URL;
 
 public interface Client {
+    public static String ACL_PRIVATE = "private";
+    public static String ACL_PUBLIC_READ = "public-read";
+    public static String ACL_PUBLIC_READ_WRITE = "public-read-write";
+    public static String ACL_AUTHENTICATED_READ = "authenticated-read";
+    public static String ACL_BUCKET_OWNER_READ = "bucket-owner-read";
+    public static String ACL_BUCKET_OWNER_FULL_CONTROL = "bucket-owner-full-control";
+
     URL getUrl();
 
     InputStream getObject(String bucket, String key) throws IOException;
@@ -39,6 +46,6 @@ public interface Client {
 
     boolean testBucketAccess(String bucket) throws IOException;
 
-    boolean createBucket(String bucket) throws IOException;
+    boolean createBucket(String bucket, String acl) throws IOException;
 }
 

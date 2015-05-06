@@ -185,13 +185,13 @@ public class HttpClient implements Client {
     }
 
     @Override
-    public boolean createBucket(String bucket) throws IOException {
+    public boolean createBucket(String bucket, String acl) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest;
-        httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("PUT");
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("PUT");
+        HttpHeaders headers = httpRequest.getHeaders();
+        headers.set("x-amz-acl", acl);
         try {
             HttpResponse execute = httpRequest.execute();
             try {

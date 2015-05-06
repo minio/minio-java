@@ -369,7 +369,32 @@ public class ClientTest {
 
         HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.createBucket("bucket");
+        boolean result = client.createBucket("bucket", Client.ACL_PUBLIC_READ);
+
+        assertEquals(true, result);
+    }
+
+    @Test
+    public void testCreateBucketFails() throws IOException, XmlPullParserException {
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Host", "localhost");
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        boolean result = client.createBucket("bucket", Client.ACL_PUBLIC_READ);
 
         assertEquals(true, result);
     }
