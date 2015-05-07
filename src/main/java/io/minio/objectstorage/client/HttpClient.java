@@ -20,8 +20,7 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
-import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
-import io.minio.objectstorage.client.messages.ListBucketResult;
+import io.minio.objectstorage.client.messages.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -29,12 +28,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class HttpClient implements Client {
     private final URL url;
@@ -127,15 +125,18 @@ public class HttpClient implements Client {
         httpRequest = httpRequest.setRequestMethod("GET");
         HttpResponse response = httpRequest.execute();
 
-        XmlPullParser parser = Xml.createParser();
-        InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-        parser.setInput(reader);
+        try {
+            XmlPullParser parser = Xml.createParser();
+            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+            parser.setInput(reader);
 
-        ListBucketResult result = new ListBucketResult();
+            ListBucketResult result = new ListBucketResult();
 
-        Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
-
-        return result;
+            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+            return result;
+        } finally {
+            response.disconnect();
+        }
     }
 
     void setTransport(HttpTransport transport) {
@@ -209,21 +210,141 @@ public class HttpClient implements Client {
     }
 
     @Override
-    public void createObject(String bucket, String key, String contentType, byte[] md5sum, long size, InputStream data) throws IOException {
+    public void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException {
+        boolean isMultipart = false;
+        int partSize = 0;
+        String uploadID = null;
+
+        if (size > 100 * 1024 * 1024) {
+            isMultipart = true;
+            partSize = computePartSize(size);
+            uploadID = newMultipartUpload(bucket, key);
+        }
+
+        if (!isMultipart) {
+            byte[] dataArray = readData((int) size, data);
+            putObject(bucket, key, contentType, dataArray);
+        } else {
+            List<String> parts = new LinkedList<>();
+            for (int part = 1; ; part++) {
+                byte[] dataArray = readData(partSize, data);
+                if (dataArray.length == 0) {
+                    break;
+                }
+                parts.add(putObject(bucket, key, contentType, dataArray, uploadID, part));
+            }
+            completeMultipart(bucket, key, uploadID, parts);
+        }
+    }
+
+
+    private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        url.appendRawPath("?uploads");
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
+        HttpResponse response = httpRequest.execute();
+        try {
+            XmlPullParser parser = Xml.createParser();
+            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+            parser.setInput(reader);
+
+            InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
+
+            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+            return result.getUploadId();
+        } finally {
+            response.disconnect();
+        }
+
+    }
+
+    private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException {
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        url.appendRawPath("?uploadId" + uploadID);
+
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
+
+        List<Part> parts = new LinkedList<>();
+        for (int i = 1; i <= parts.size(); i++) {
+            Part part = new Part();
+            part.setPartNumber(i);
+            part.seteTag(etags.get(i));
+            parts.add(part);
+        }
+
+        CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
+        completeManifest.setParts(parts);
+
+        byte[] data = completeManifest.toString().getBytes("UTF-8");
+
+        httpRequest.setContent(new ByteArrayContent("application/xml", data));
+
+        HttpResponse response = httpRequest.execute();
+        response.disconnect();
+    }
+
+    private int computePartSize(long size) {
+        int minimumPartSize = 5 * 1024 * 1024; // 5MB
+        int partSize = (int) (size / 9999);
+        return Math.max(minimumPartSize, partSize);
+    }
+
+    private void putObject(String bucket, String key, String contentType, byte[] data) throws IOException {
+        putObject(bucket, key, contentType, data, "", 0);
+    }
+
+    private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
+        if (partID > 0) {
+            url.appendRawPath("?" + uploadId);
+        }
+
+        byte[] md5sum = null;
+        try {
+            MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+            md5sum = md5Digest.digest(data);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("PUT");
 
-        String base64md5sum = Base64.getEncoder().encodeToString(md5sum);
-        HttpHeaders headers = httpRequest.getHeaders();
-        headers.setContentMD5(base64md5sum);
+        if (md5sum != null) {
+            String base64md5sum = Base64.getEncoder().encodeToString(md5sum);
+            HttpHeaders headers = httpRequest.getHeaders();
+            headers.setContentMD5(base64md5sum);
+        }
 
-        InputStreamContent content = new InputStreamContent(contentType, data);
-        content.setLength(size);
+        ByteArrayContent content = new ByteArrayContent(contentType, data);
         httpRequest.setContent(content);
+        HttpResponse response = httpRequest.execute();
+        response.disconnect();
+        if (response.getStatusCode() != 200) {
+            throw new IOException("Unexpected result, try resending this part again");
+        }
+        return response.getHeaders().getETag();
+    }
 
-        httpRequest.execute();
+    private byte[] readData(int size, InputStream data) throws IOException {
+        int amountRead = 0;
+        byte[] fullData = new byte[size];
+        while (amountRead != size) {
+            byte[] buf = new byte[size - amountRead];
+            int curRead = data.read(buf);
+            if (curRead == -1) {
+                break;
+            }
+            buf = Arrays.copyOf(buf, curRead);
+            System.arraycopy(buf, 0, fullData, amountRead, curRead);
+            amountRead += curRead;
+        }
+
+        fullData = Arrays.copyOfRange(fullData, 0, amountRead);
+
+        return fullData;
     }
 }
