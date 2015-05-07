@@ -48,6 +48,6 @@ public interface Client {
 
     boolean createBucket(String bucket, String acl) throws IOException;
 
-    void createObject(String bucket, String object, String contentType, byte[] md5sum, long size, InputStream data) throws IOException;
+    void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException;
 }
 

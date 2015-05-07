@@ -403,7 +403,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testCreateObject() throws IOException, NoSuchAlgorithmException {
+    public void testCreateObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException {
         HttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -427,9 +427,6 @@ public class ClientTest {
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
 
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        byte[] md5 = md.digest(inputString.getBytes("UTF-8"));
-
-        client.createObject("bucket", "key", "application/octet-stream", md5, 11, data);
+        client.createObject("bucket", "key", "application/octet-stream", 11, data);
     }
 }
