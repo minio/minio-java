@@ -132,4 +132,28 @@ public class SerializationTests {
         Xml.parseElement(parser, parsedInitiateUpload, dictionary, null);
         assertEquals(initiateUpload, parsedInitiateUpload);
     }
+
+    @Test
+    public void testMultipartUploadComplete() throws XmlPullParserException, IOException {
+        Part part1 = new Part();
+        part1.seteTag("etag1");
+        part1.setPartNumber(1);
+
+        Part part2 = new Part();
+        part2.seteTag("etag2");
+        part2.setPartNumber(2);
+
+        CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
+        List<Part> parts = new LinkedList<>();
+        parts.add(part1);
+        parts.add(part2);
+        completeManifest.setParts(parts);
+
+        XmlPullParser parser = Xml.createParser();
+        parser.setInput(new StringReader(completeManifest.toString()));
+        XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
+        CompleteMultipartUpload parsedInitiateUpload = new CompleteMultipartUpload();
+        Xml.parseElement(parser, parsedInitiateUpload, dictionary, null);
+        assertEquals(completeManifest, parsedInitiateUpload);
+    }
 }
