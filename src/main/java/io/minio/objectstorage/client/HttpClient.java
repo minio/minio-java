@@ -35,6 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class HttpClient implements Client {
+    private static final int PART_SIZE = 5 * 1024 * 1024;
     private final URL url;
     private HttpTransport transport = new NetHttpTransport();
 
@@ -215,7 +216,7 @@ public class HttpClient implements Client {
         int partSize = 0;
         String uploadID = null;
 
-        if (size > 100 * 1024 * 1024) {
+        if (size > this.PART_SIZE) {
             isMultipart = true;
             partSize = computePartSize(size);
             uploadID = newMultipartUpload(bucket, key);
@@ -256,20 +257,19 @@ public class HttpClient implements Client {
         } finally {
             response.disconnect();
         }
-
     }
 
     private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.appendRawPath("?uploadId" + uploadID);
+        url.set("uploadId" , uploadID);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
 
         List<Part> parts = new LinkedList<>();
-        for (int i = 1; i <= parts.size(); i++) {
+        for (int i = 0; i < etags.size(); i++) {
             Part part = new Part();
-            part.setPartNumber(i);
+            part.setPartNumber(i+1);
             part.seteTag(etags.get(i));
             parts.add(part);
         }
@@ -286,7 +286,7 @@ public class HttpClient implements Client {
     }
 
     private int computePartSize(long size) {
-        int minimumPartSize = 5 * 1024 * 1024; // 5MB
+        int minimumPartSize = this.PART_SIZE; // 5MB
         int partSize = (int) (size / 9999);
         return Math.max(minimumPartSize, partSize);
     }
@@ -299,7 +299,8 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         if (partID > 0) {
-            url.appendRawPath("?" + uploadId);
+            url.set("partNumber" ,partID);
+            url.set("uploadId" , uploadId);
         }
 
         byte[] md5sum = null;
