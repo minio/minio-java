@@ -241,7 +241,8 @@ public class HttpClient implements Client {
 
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.appendRawPath("?uploads");
+        url.set("uploads", "");
+//        url.appendRawPath("?uploads");
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
         HttpResponse response = httpRequest.execute();
