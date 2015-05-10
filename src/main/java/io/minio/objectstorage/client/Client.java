@@ -22,9 +22,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.text.ParseException;
 
 public interface Client {
     public static String ACL_PRIVATE = "private";
@@ -36,20 +34,20 @@ public interface Client {
 
     URL getUrl();
 
-    InputStream getObject(String bucket, String key) throws IOException, ParseException, URISyntaxException;
+    InputStream getObject(String bucket, String key) throws IOException;
 
-    InputStream getObject(String bucket, String key, long offset, long length) throws IOException, URISyntaxException;
+    InputStream getObject(String bucket, String key, long offset, long length) throws IOException;
 
-    ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException, ParseException, URISyntaxException;
+    ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
 
-    ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException, URISyntaxException;
+    ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException;
 
-    ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException, URISyntaxException;
+    ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException;
 
-    boolean testBucketAccess(String bucket) throws IOException, URISyntaxException;
+    boolean testBucketAccess(String bucket) throws IOException;
 
-    boolean createBucket(String bucket, String acl) throws IOException, URISyntaxException;
+    boolean createBucket(String bucket, String acl) throws IOException;
 
-    void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException, URISyntaxException;
+    void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException;
 }
 
