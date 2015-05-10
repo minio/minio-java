@@ -16,6 +16,7 @@
 
 package io.minio.objectstorage.client;
 
+import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -27,9 +28,20 @@ import java.io.InputStream;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-@Ignore
 public class IntegrationTest {
+
     @Test
+    @Ignore
+    public void testSigning() throws IOException, XmlPullParserException {
+        HttpClient client = (HttpClient) Clients.getClient("https://s3-us-west-2.amazonaws.com/");
+        client.setKeys("REDACTED", "REDACTED");
+//        client.enableLogging();
+        ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
+        System.out.println(allMyBucketsResult);
+    }
+
+    @Test
+    @Ignore
     public void testClient() throws IOException, XmlPullParserException {
         Client client = Clients.getClient("http://localhost:9000");
         client.createBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
@@ -46,8 +58,8 @@ public class IntegrationTest {
         String resultString = new String(result, "UTF-8");
         assertEquals(inputString, resultString);
 
-        byte[] largeObject = new byte[10*1024*1024];
-        for(int i=0; i < 10 * 1024 * 1024; i++) {
+        byte[] largeObject = new byte[10 * 1024 * 1024];
+        for (int i = 0; i < 10 * 1024 * 1024; i++) {
             largeObject[i] = 'a';
         }
 
@@ -55,10 +67,10 @@ public class IntegrationTest {
         client.createObject("foo", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
 
         InputStream object1 = client.getObject("foo", "bar2");
-        byte[] largeResult = new byte[10*1024*1024];
+        byte[] largeResult = new byte[10 * 1024 * 1024];
         int amountRead = 0;
-        while(amountRead != largeResult.length) {
-             amountRead += object1.read(largeResult, amountRead, largeResult.length - amountRead);
+        while (amountRead != largeResult.length) {
+            amountRead += object1.read(largeResult, amountRead, largeResult.length - amountRead);
         }
         assertEquals(amountRead, largeResult.length);
 

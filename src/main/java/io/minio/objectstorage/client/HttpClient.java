@@ -28,16 +28,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 public class HttpClient implements Client {
     private static final int PART_SIZE = 5 * 1024 * 1024;
     private final URL url;
     private HttpTransport transport = new NetHttpTransport();
+    private String accessKey;
+    private String secretKey;
+    private Logger logger;
 
     HttpClient(URL url) {
         this.url = url;
@@ -52,9 +60,17 @@ public class HttpClient implements Client {
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory(new HttpRequestInitializer() {
+            @Override
+            public void initialize(HttpRequest request) throws IOException {
+                RequestSigner signer = new RequestSigner();
+                signer.setAccessKeys(accessKey, secretKey);
+                request.setInterceptor(signer);
+            }
+        });
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
         httpRequest = httpRequest.setRequestMethod("HEAD");
+        httpRequest.getHeaders().setUserAgent("Minio");
         HttpResponse response = httpRequest.execute();
         try {
             HttpHeaders headers = response.getHeaders();
@@ -148,21 +164,33 @@ public class HttpClient implements Client {
     public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException {
         GenericUrl url = new GenericUrl(this.url);
 
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory(new HttpRequestInitializer() {
+            @Override
+            public void initialize(HttpRequest request) throws IOException {
+                RequestSigner signer = new RequestSigner();
+                signer.setAccessKeys(accessKey, secretKey);
+                request.setInterceptor(signer);
+            }
+        });
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
         httpRequest = httpRequest.setRequestMethod("GET");
+        httpRequest.getHeaders().setAccept("application/xml");
+        httpRequest.setFollowRedirects(false);
         HttpResponse response = httpRequest.execute();
+        try {
+            XmlPullParser parser = Xml.createParser();
+            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+            parser.setInput(reader);
 
-        XmlPullParser parser = Xml.createParser();
-        InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-        parser.setInput(reader);
+            ListAllMyBucketsResult result = new ListAllMyBucketsResult();
 
-        ListAllMyBucketsResult result = new ListAllMyBucketsResult();
-
-        Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
-
-        return result;
+            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+            return result;
+        } finally {
+            response.disconnect();
+        }
     }
+
 
     @Override
     public boolean testBucketAccess(String bucket) throws IOException {
@@ -175,10 +203,7 @@ public class HttpClient implements Client {
         try {
             HttpResponse response = httpRequest.execute();
             try {
-                if (response.getStatusCode() == 200) {
-                    return true;
-                }
-                return false;
+                return response.getStatusCode() == 200;
             } finally {
                 response.disconnect();
             }
@@ -198,10 +223,7 @@ public class HttpClient implements Client {
         try {
             HttpResponse execute = httpRequest.execute();
             try {
-                if (execute.getStatusCode() == 200) {
-                    return true;
-                }
-                return false;
+                return execute.getStatusCode() == 200;
             } finally {
                 execute.disconnect();
             }
@@ -216,7 +238,7 @@ public class HttpClient implements Client {
         int partSize = 0;
         String uploadID = null;
 
-        if (size > this.PART_SIZE) {
+        if (size > PART_SIZE) {
             isMultipart = true;
             partSize = computePartSize(size);
             uploadID = newMultipartUpload(bucket, key);
@@ -236,6 +258,12 @@ public class HttpClient implements Client {
             }
             completeMultipart(bucket, key, uploadID, parts);
         }
+    }
+
+    @Override
+    public void setKeys(String accessKey, String secretKey) {
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
     }
 
 
@@ -262,7 +290,7 @@ public class HttpClient implements Client {
 
     private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.set("uploadId" , uploadID);
+        url.set("uploadId", uploadID);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
@@ -270,7 +298,7 @@ public class HttpClient implements Client {
         List<Part> parts = new LinkedList<>();
         for (int i = 0; i < etags.size(); i++) {
             Part part = new Part();
-            part.setPartNumber(i+1);
+            part.setPartNumber(i + 1);
             part.seteTag(etags.get(i));
             parts.add(part);
         }
@@ -287,7 +315,7 @@ public class HttpClient implements Client {
     }
 
     private int computePartSize(long size) {
-        int minimumPartSize = this.PART_SIZE; // 5MB
+        int minimumPartSize = PART_SIZE; // 5MB
         int partSize = (int) (size / 9999);
         return Math.max(minimumPartSize, partSize);
     }
@@ -300,8 +328,8 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         if (partID > 0) {
-            url.set("partNumber" ,partID);
-            url.set("uploadId" , uploadId);
+            url.set("partNumber", partID);
+            url.set("uploadId", uploadId);
         }
 
         byte[] md5sum = null;
@@ -348,5 +376,30 @@ public class HttpClient implements Client {
         fullData = Arrays.copyOfRange(fullData, 0, amountRead);
 
         return fullData;
+    }
+
+    public void enableLogging() {
+        if (logger == null) {
+            logger = Logger.getLogger(HttpTransport.class.getName());
+            logger.setLevel(Level.CONFIG);
+            logger.addHandler(new Handler() {
+
+                @Override
+                public void close() throws SecurityException {
+                }
+
+                @Override
+                public void flush() {
+                }
+
+                @Override
+                public void publish(LogRecord record) {
+                    // default ConsoleHandler will print >= INFO to System.err
+                    if (record.getLevel().intValue() < Level.INFO.intValue()) {
+                        System.out.println(record.getMessage());
+                    }
+                }
+            });
+        }
     }
 }

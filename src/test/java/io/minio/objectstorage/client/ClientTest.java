@@ -26,16 +26,20 @@ import io.minio.objectstorage.client.messages.*;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -80,7 +84,7 @@ public class ClientTest {
     }
 
     @Test(expected = IOException.class)
-    public void getMissingObjectHeaders() throws IOException {
+    public void getMissingObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
         // Set up mock
         HttpTransport transport = new MockHttpTransport() {
             @Override
@@ -107,7 +111,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testGetObjectHeaders() throws IOException {
+    public void testGetObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
         HttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -427,5 +431,45 @@ public class ClientTest {
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
 
         client.createObject("bucket", "key", "application/octet-stream", 11, data);
+    }
+
+    @Test
+    public void testSigningKey() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+        HttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        Map<String, List<String>> headers = this.getHeaders();
+                        for(String s : headers.keySet()) {
+                            System.out.println("-" + s);
+                        }
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "5080");
+                        response.addHeader("Content-Type", "application/octet-stream");
+                        response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        // build expected request
+        Calendar expectedDate = Calendar.getInstance();
+        expectedDate.clear();
+        expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+        expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
+        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+
+        // get request
+        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        client.setKeys("foo", "bar");
+        ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
+
+        assertEquals(expectedMetadata, objectMetadata);
     }
 }

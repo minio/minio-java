@@ -19,8 +19,10 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.util.Key;
 
 public class Part extends XmlEntity {
-    @Key("PartNumber") private int partNumber;
-    @Key("ETag") private String eTag;
+    @Key("PartNumber")
+    private int partNumber;
+    @Key("ETag")
+    private String eTag;
 
     public Part() {
         super();

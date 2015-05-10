@@ -19,8 +19,8 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.xml.GenericXml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
 
-public abstract class XmlEntity extends GenericXml {
-    public XmlEntity() {
+abstract class XmlEntity extends GenericXml {
+    XmlEntity() {
         super.namespaceDictionary = new XmlNamespaceDictionary();
         super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01");
     }

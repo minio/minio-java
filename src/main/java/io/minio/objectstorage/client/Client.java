@@ -23,14 +23,16 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 public interface Client {
-    public static String ACL_PRIVATE = "private";
-    public static String ACL_PUBLIC_READ = "public-read";
-    public static String ACL_PUBLIC_READ_WRITE = "public-read-write";
-    public static String ACL_AUTHENTICATED_READ = "authenticated-read";
-    public static String ACL_BUCKET_OWNER_READ = "bucket-owner-read";
-    public static String ACL_BUCKET_OWNER_FULL_CONTROL = "bucket-owner-full-control";
+    String ACL_PRIVATE = "private";
+    String ACL_PUBLIC_READ = "public-read";
+    String ACL_PUBLIC_READ_WRITE = "public-read-write";
+    String ACL_AUTHENTICATED_READ = "authenticated-read";
+    String ACL_BUCKET_OWNER_READ = "bucket-owner-read";
+    String ACL_BUCKET_OWNER_FULL_CONTROL = "bucket-owner-full-control";
 
     URL getUrl();
 
@@ -49,5 +51,7 @@ public interface Client {
     boolean createBucket(String bucket, String acl) throws IOException;
 
     void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException;
+
+    void setKeys(String foo, String bar);
 }
 
