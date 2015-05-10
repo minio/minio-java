@@ -20,6 +20,7 @@ apply plugin: 'pmd'
 
 ext.junitVersion = '4.12'
 ext.googleHttpClientVersion = '1.20.0'
+ext.apacheHttpClientVersion = '4.4.1'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
@@ -28,6 +29,7 @@ task wrapper(type: Wrapper) {
 dependencies {
     compile group: 'com.google.http-client', name: 'google-http-client', version: googleHttpClientVersion
     compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: apacheHttpClientVersion
 
     testCompile group: 'junit', name: 'junit', version: junitVersion
 }

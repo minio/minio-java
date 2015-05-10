@@ -23,6 +23,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 @Ignore
 public class IntegrationTest {
     @Test
-    public void testClient() throws IOException, XmlPullParserException {
+    public void testClient() throws IOException, XmlPullParserException, ParseException, URISyntaxException {
         Client client = Clients.getClient("http://localhost:9000");
         client.createBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
 
