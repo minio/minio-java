@@ -102,7 +102,7 @@ class RequestSigner implements HttpExecuteInterceptor {
         String authorization = getAuthorizationHeader(signedHeaders, signature, signingDate, region);
 
         // set authorization header
-        List<String> authorizationList = new LinkedList<>();
+        List<String> authorizationList = new LinkedList<String>();
         authorizationList.add(authorization);
         request.getHeaders().setAuthorization(authorizationList);
 
@@ -205,7 +205,7 @@ class RequestSigner implements HttpExecuteInterceptor {
         canonicalPrinter.print(bodySha256Hash);
 
         canonicalPrinter.flush();
-        return new Tuple2<>(canonicalWriter.toString(), signedHeaders);
+        return new Tuple2<String, String>(canonicalWriter.toString(), signedHeaders);
     }
 
     private String generateSignedHeaders(String[] headers) {
@@ -223,7 +223,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private String[] generateCanonicalHeaders(PrintWriter writer, HttpRequest request) {
-        Map<String, String> map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, String> map = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
 
         HttpContent content = request.getContent();
 
@@ -293,7 +293,9 @@ class RequestSigner implements HttpExecuteInterceptor {
     public void intercept(HttpRequest request) throws IOException {
         try {
             this.signV4(request, data);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
     }

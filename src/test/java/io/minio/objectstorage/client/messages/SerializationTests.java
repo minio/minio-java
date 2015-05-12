@@ -45,7 +45,7 @@ public class SerializationTests {
         item.setETag("ETag");
         item.setOwner(owner);
 
-        List<Item> items = new LinkedList<>();
+        List<Item> items = new LinkedList<Item>();
         items.add(item);
         items.add(item);
 
@@ -58,7 +58,7 @@ public class SerializationTests {
         result.setIsTruncated(true);
         result.setContents(items);
 
-        List<Prefix> prefixes = new LinkedList<>();
+        List<Prefix> prefixes = new LinkedList<Prefix>();
         Prefix prefix = new Prefix();
         prefix.setPrefix("prefix1");
         prefixes.add(prefix);
@@ -83,7 +83,7 @@ public class SerializationTests {
         owner.setID("id");
         owner.setDisplayName("displayName");
 
-        List<Bucket> bucketList = new LinkedList<>();
+        List<Bucket> bucketList = new LinkedList<Bucket>();
         Bucket bucket = new Bucket();
         bucket.setName("bucketName");
         bucket.setCreationDate("creation date");
@@ -144,7 +144,7 @@ public class SerializationTests {
         part2.setPartNumber(2);
 
         CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
-        List<Part> parts = new LinkedList<>();
+        List<Part> parts = new LinkedList<Part>();
         parts.add(part1);
         parts.add(part2);
         completeManifest.setParts(parts);
