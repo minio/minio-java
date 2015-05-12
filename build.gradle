@@ -15,20 +15,14 @@
  */
 
 apply plugin: 'java'
-apply plugin: 'findbugs'
 apply plugin: 'pmd'
 
 ext.junitVersion = '4.12'
 ext.googleHttpClientVersion = '1.20.0'
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
 version = '1.0'
-jar {
-    manifest {
-        attributes 'Implementation-Title': 'Minimal Object Storage Library',
-                   'Implementation-Version': version
-    }
-}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
@@ -45,17 +39,13 @@ repositories {
     mavenCentral()
 }
 
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled = false
-        html.enabled = true
+if(!org.gradle.internal.jvm.Jvm.current().toString().startsWith("1.6.0_")){
+    apply plugin: 'findbugs'
+    tasks.withType(FindBugs) {
+        reports {
+            xml.enabled = false
+            html.enabled = true
+        }
     }
 }
 
-uploadArchives {
-    repositories {
-       flatDir {
-           dirs 'dist'
-       }
-    }
-}

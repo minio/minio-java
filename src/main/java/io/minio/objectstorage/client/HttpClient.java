@@ -24,6 +24,7 @@ import io.minio.objectstorage.client.messages.*;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -99,7 +100,7 @@ public class HttpClient implements Client {
     private GenericUrl getGenericUrlOfKey(String bucket, String key) {
         GenericUrl url = new GenericUrl(this.url);
 
-        List<String> pathParts = new LinkedList<>();
+        List<String> pathParts = new LinkedList<String>();
         pathParts.add("");
         pathParts.add(bucket);
         pathParts.add(key);
@@ -111,7 +112,7 @@ public class HttpClient implements Client {
     private GenericUrl getGenericUrlOfBucket(String bucket) {
         GenericUrl url = new GenericUrl(this.url);
 
-        List<String> pathParts = new LinkedList<>();
+        List<String> pathParts = new LinkedList<String>();
         pathParts.add("");
         pathParts.add(bucket);
 
@@ -249,7 +250,7 @@ public class HttpClient implements Client {
             byte[] dataArray = readData((int) size, data);
             putObject(bucket, key, contentType, dataArray);
         } else {
-            List<String> parts = new LinkedList<>();
+            List<String> parts = new LinkedList<String>();
             for (int part = 1; ; part++) {
                 byte[] dataArray = readData(partSize, data);
                 if (dataArray.length == 0) {
@@ -302,7 +303,7 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
-        List<Part> parts = new LinkedList<>();
+        List<Part> parts = new LinkedList<Part>();
         for (int i = 0; i < etags.size(); i++) {
             Part part = new Part();
             part.setPartNumber(i + 1);
@@ -352,7 +353,7 @@ public class HttpClient implements Client {
         HttpHeaders headers = request.getHeaders();
 
         if (md5sum != null) {
-            String base64md5sum = Base64.getEncoder().encodeToString(md5sum);
+            String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
             headers.setContentMD5(base64md5sum);
         }
 
