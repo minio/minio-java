@@ -44,9 +44,9 @@ public class HttpClient implements Client {
     private HttpTransport transport = new NetHttpTransport();
     private String accessKey;
     private String secretKey;
-    private String userAgent;
     private String contentType;
     private Logger logger;
+    private String userAgent;
 
     HttpClient(URL url) {
         this.url = url;
@@ -60,10 +60,7 @@ public class HttpClient implements Client {
     @Override
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
-
         HttpRequest request = getHttpRequest("HEAD", url);
-	HttpHeaders headers = request.getHeaders();
-	headers.setUserAgent(this.userAgent);
 
         HttpResponse response = request.execute();
         try {
@@ -92,7 +89,11 @@ public class HttpClient implements Client {
                 request.setInterceptor(signer);
             }
         });
-        return requestFactory.buildRequest(method, url, null);
+        HttpRequest request = requestFactory.buildRequest(method, url, null);
+        if(userAgent != null) {
+            request.getHeaders().setUserAgent(userAgent);
+        }
+        return request;
     }
 
     private GenericUrl getGenericUrlOfKey(String bucket, String key) {
@@ -122,11 +123,8 @@ public class HttpClient implements Client {
     public InputStream getObject(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
-	HttpRequest request = getHttpRequest("GET", url);
+        HttpRequest request = getHttpRequest("GET", url);
         request = request.setRequestMethod("GET");
-	HttpHeaders httpHeaders = request.getHeaders();
-	httpHeaders.setUserAgent(this.userAgent);
-	request.setHeaders(httpHeaders);
 
         HttpResponse response = request.execute();
         return response.getContent();
@@ -137,10 +135,8 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-	HttpHeaders headers = request.getHeaders();
-	headers.setUserAgent(this.userAgent);
-	headers.setRange(offset + "-" + offset + length);
-	request.setHeaders(headers);
+        HttpHeaders headers = request.getHeaders();
+        headers.setRange(offset + "-" + offset + length);
 
         HttpResponse response = request.execute();
         return response.getContent();
@@ -150,11 +146,9 @@ public class HttpClient implements Client {
     public ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
-	HttpRequest request = getHttpRequest("GET", url);
-	HttpHeaders headers = request.getHeaders();
-	headers.setAccept(this.contentType);
-	headers.setUserAgent(this.userAgent);
-	request.setHeaders(headers);
+        HttpRequest request = getHttpRequest("GET", url);
+        HttpHeaders headers = request.getHeaders();
+        headers.setAccept(this.contentType);
 
         HttpResponse response = request.execute();
 
@@ -181,10 +175,8 @@ public class HttpClient implements Client {
         GenericUrl url = new GenericUrl(this.url);
 
         HttpRequest request = getHttpRequest("GET", url);
-	HttpHeaders headers = request.getHeaders();
-	headers.setAccept(this.contentType);
-	headers.setUserAgent(this.userAgent);
-	request.setHeaders(headers);
+        HttpHeaders headers = request.getHeaders();
+        headers.setAccept(this.contentType);
         request.setFollowRedirects(false);
 
         HttpResponse response = request.execute();
@@ -207,10 +199,7 @@ public class HttpClient implements Client {
     public boolean testBucketAccess(String bucket) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
-	HttpRequest request = getHttpRequest("HEAD", url);
-	HttpHeaders headers = request.getHeaders();
-	headers.setUserAgent(this.userAgent);
-	request.setHeaders(headers);
+        HttpRequest request = getHttpRequest("HEAD", url);
 
         try {
             HttpResponse response = request.execute();
@@ -229,10 +218,8 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
-	HttpHeaders headers = request.getHeaders();
-	headers.setUserAgent(this.userAgent);
-	headers.set("x-amz-acl", acl);
-	request.setHeaders(headers);
+        HttpHeaders headers = request.getHeaders();
+        headers.set("x-amz-acl", acl);
 
         try {
             HttpResponse execute = request.execute();
@@ -282,22 +269,19 @@ public class HttpClient implements Client {
 
     @Override
     public void setUserAgent(String userAgent) {
-	this.userAgent = userAgent;
+        this.userAgent = userAgent;
     }
 
     @Override
     public void setContentType(String contentType) {
-	this.contentType = contentType;
+        this.contentType = contentType;
     }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
 
-	HttpRequest request = getHttpRequest("POST", url);
-	HttpHeaders headers = request.getHeaders();
-	headers.setUserAgent(this.userAgent);
-	request.setHeaders(headers);
+        HttpRequest request = getHttpRequest("POST", url);
 
         HttpResponse response = request.execute();
         try {
@@ -332,9 +316,6 @@ public class HttpClient implements Client {
         byte[] data = completeManifest.toString().getBytes("UTF-8");
 
         HttpRequest request = getHttpRequest("POST", url, data);
-	HttpHeaders headers = request.getHeaders();
-	headers.setUserAgent(this.userAgent);
-	request.setHeaders(headers);
         request.setContent(new ByteArrayContent("application/xml", data));
 
         HttpResponse response = request.execute();
@@ -367,15 +348,13 @@ public class HttpClient implements Client {
             e.printStackTrace();
         }
 
-	HttpRequest request = getHttpRequest("PUT", url, data);
-	HttpHeaders headers = request.getHeaders();
-	headers.setUserAgent(this.userAgent);
+        HttpRequest request = getHttpRequest("PUT", url, data);
+        HttpHeaders headers = request.getHeaders();
 
         if (md5sum != null) {
             String base64md5sum = Base64.getEncoder().encodeToString(md5sum);
             headers.setContentMD5(base64md5sum);
         }
-	request.setHeaders(headers);
 
         ByteArrayContent content = new ByteArrayContent(contentType, data);
         request.setContent(content);
