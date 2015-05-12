@@ -53,5 +53,8 @@ public interface Client {
     void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException;
 
     void setKeys(String foo, String bar);
-}
 
+    void setUserAgent(String foo);
+
+    void setContentType(String foo);
+}
