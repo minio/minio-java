@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package io.minio.objectstorage.client.messages;
+package io.minio.objectstorage.client;
 
-import com.google.api.client.util.Key;
+class Tuple2<T1, T2> {
+    private final T1 t1;
+    private final T2 t2;
 
-import java.util.List;
-
-public class CompleteMultipartUpload extends XmlEntity {
-    @Key("Part")
-    private List<Part> parts;
-
-    public CompleteMultipartUpload() {
-        super();
-        super.name = "CompleteMultipartUpload";
+    public Tuple2(T1 t1, T2 t2) {
+        this.t1 = t1;
+        this.t2 = t2;
     }
 
-    public List<Part> getParts() {
-        return parts;
+    public T1 getFirst() {
+        return t1;
     }
 
-    public void setParts(List<Part> parts) {
-        this.parts = parts;
+    public T2 getSecond() {
+        return t2;
     }
 }

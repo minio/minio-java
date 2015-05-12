@@ -19,9 +19,12 @@ package io.minio.objectstorage.client.messages;
 import com.google.api.client.util.Key;
 
 public class InitiateMultipartUploadResult extends XmlEntity {
-    @Key("Bucket") private String bucket;
-    @Key("Key") private String key;
-    @Key("UploadId") private String UploadId;
+    @Key("Bucket")
+    private String bucket;
+    @Key("Key")
+    private String key;
+    @Key("UploadId")
+    private String UploadId;
 
     public InitiateMultipartUploadResult() {
         super();
