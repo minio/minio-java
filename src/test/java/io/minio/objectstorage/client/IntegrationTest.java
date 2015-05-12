@@ -33,7 +33,7 @@ public class IntegrationTest {
     @Test
     @Ignore
     public void testSigning() throws IOException, XmlPullParserException {
-        HttpClient client = (HttpClient) Clients.getClient("https://s3-us-west-2.amazonaws.com/");
+        HttpClient client = (HttpClient) Clients.getClient("https://s3-us-west-2.amazonaws.com");
         client.setKeys("REDACTED", "REDACTED");
 //        client.enableLogging();
         ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
@@ -43,8 +43,10 @@ public class IntegrationTest {
     @Test
     @Ignore
     public void testClient() throws IOException, XmlPullParserException {
-        Client client = Clients.getClient("http://localhost:9000");
-        client.createBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
+        HttpClient client = (HttpClient)Clients.getClient("https://s3-us-west-2.amazonaws.com");
+        client.setKeys("REDACTED", "REDACTED");
+        client.enableLogging();
+//        client.createBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
 
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));

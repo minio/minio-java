@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -60,18 +59,10 @@ public class HttpClient implements Client {
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory(new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
-                RequestSigner signer = new RequestSigner();
-                signer.setAccessKeys(accessKey, secretKey);
-                request.setInterceptor(signer);
-            }
-        });
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("HEAD");
-        httpRequest.getHeaders().setUserAgent("Minio");
-        HttpResponse response = httpRequest.execute();
+        HttpRequest request = getHttpRequest(url);
+        request = request.setRequestMethod("HEAD");
+        request.getHeaders().setUserAgent("Minio");
+        HttpResponse response = request.execute();
         try {
             HttpHeaders headers = response.getHeaders();
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
@@ -83,6 +74,22 @@ public class HttpClient implements Client {
             response.disconnect();
         }
         throw new IOException();
+    }
+
+    private HttpRequest getHttpRequest(GenericUrl url) throws IOException {
+        return getHttpRequest(url, null);
+    }
+
+    private HttpRequest getHttpRequest(GenericUrl url, final byte[] data) throws IOException {
+        HttpRequestFactory requestFactory = this.transport.createRequestFactory(new HttpRequestInitializer() {
+            @Override
+            public void initialize(HttpRequest request) throws IOException {
+                RequestSigner signer = new RequestSigner(data);
+                signer.setAccessKeys(accessKey, secretKey);
+                request.setInterceptor(signer);
+            }
+        });
+        return requestFactory.buildGetRequest(url);
     }
 
     private GenericUrl getGenericUrlOfKey(String bucket, String key) {
@@ -111,24 +118,21 @@ public class HttpClient implements Client {
     @Override
     public InputStream getObject(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
-
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("GET");
-        HttpResponse response = httpRequest.execute();
-
+        HttpRequest request = getHttpRequest(url);
+        request = request.setRequestMethod("GET");
+        HttpResponse response = request.execute();
         return response.getContent();
     }
 
     @Override
     public InputStream getObject(String bucket, String key, long offset, long length) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
+        HttpRequest request = getHttpRequest(url);
+        request.setRequestMethod("GET");
 
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("GET");
-        HttpHeaders headers = httpRequest.getHeaders().setRange(offset + "-" + offset + length);
-        httpRequest.setHeaders(headers);
-        HttpResponse response = httpRequest.execute();
+        HttpHeaders headers = request.getHeaders().setRange(offset + "-" + offset + length);
+        request.setHeaders(headers);
+        HttpResponse response = request.execute();
 
         return response.getContent();
     }
@@ -136,11 +140,9 @@ public class HttpClient implements Client {
     @Override
     public ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
-
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("GET");
-        HttpResponse response = httpRequest.execute();
+        HttpRequest request = getHttpRequest(url);
+        request = request.setRequestMethod("GET");
+        HttpResponse response = request.execute();
 
         try {
             XmlPullParser parser = Xml.createParser();
@@ -164,19 +166,11 @@ public class HttpClient implements Client {
     public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException {
         GenericUrl url = new GenericUrl(this.url);
 
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory(new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
-                RequestSigner signer = new RequestSigner();
-                signer.setAccessKeys(accessKey, secretKey);
-                request.setInterceptor(signer);
-            }
-        });
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("GET");
-        httpRequest.getHeaders().setAccept("application/xml");
-        httpRequest.setFollowRedirects(false);
-        HttpResponse response = httpRequest.execute();
+        HttpRequest request = getHttpRequest(url);
+        request = request.setRequestMethod("GET");
+        request.getHeaders().setAccept("application/xml");
+        request.setFollowRedirects(false);
+        HttpResponse response = request.execute();
         try {
             XmlPullParser parser = Xml.createParser();
             InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
@@ -195,13 +189,10 @@ public class HttpClient implements Client {
     @Override
     public boolean testBucketAccess(String bucket) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
-
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest;
-        httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("HEAD");
+        HttpRequest request = getHttpRequest(url);
+        request = request.setRequestMethod("HEAD");
         try {
-            HttpResponse response = httpRequest.execute();
+            HttpResponse response = request.execute();
             try {
                 return response.getStatusCode() == 200;
             } finally {
@@ -215,13 +206,12 @@ public class HttpClient implements Client {
     @Override
     public boolean createBucket(String bucket, String acl) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
-
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("PUT");
-        HttpHeaders headers = httpRequest.getHeaders();
+        HttpRequest request = getHttpRequest(url);
+        request.setRequestMethod("PUT");
+        HttpHeaders headers = request.getHeaders();
         headers.set("x-amz-acl", acl);
         try {
-            HttpResponse execute = httpRequest.execute();
+            HttpResponse execute = request.execute();
             try {
                 return execute.getStatusCode() == 200;
             } finally {
@@ -270,10 +260,9 @@ public class HttpClient implements Client {
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
-//        url.appendRawPath("?uploads");
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
-        HttpResponse response = httpRequest.execute();
+        HttpRequest request = getHttpRequest(url);
+        request.setRequestMethod("POST");
+        HttpResponse response = request.execute();
         try {
             XmlPullParser parser = Xml.createParser();
             InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
@@ -292,8 +281,6 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
 
         List<Part> parts = new LinkedList<>();
         for (int i = 0; i < etags.size(); i++) {
@@ -308,9 +295,11 @@ public class HttpClient implements Client {
 
         byte[] data = completeManifest.toString().getBytes("UTF-8");
 
-        httpRequest.setContent(new ByteArrayContent("application/xml", data));
+        HttpRequest request = getHttpRequest(url, data);
+        request.setRequestMethod("POST");
+        request.setContent(new ByteArrayContent("application/xml", data));
 
-        HttpResponse response = httpRequest.execute();
+        HttpResponse response = request.execute();
         response.disconnect();
     }
 
@@ -340,18 +329,18 @@ public class HttpClient implements Client {
             e.printStackTrace();
         }
 
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("PUT");
+        HttpRequest request = getHttpRequest(url, data);
+        request.setRequestMethod("PUT");
 
         if (md5sum != null) {
             String base64md5sum = Base64.getEncoder().encodeToString(md5sum);
-            HttpHeaders headers = httpRequest.getHeaders();
+            HttpHeaders headers = request.getHeaders();
             headers.setContentMD5(base64md5sum);
         }
 
         ByteArrayContent content = new ByteArrayContent(contentType, data);
-        httpRequest.setContent(content);
-        HttpResponse response = httpRequest.execute();
+        request.setContent(content);
+        HttpResponse response = request.execute();
         response.disconnect();
         if (response.getStatusCode() != 200) {
             throw new IOException("Unexpected result, try resending this part again");
