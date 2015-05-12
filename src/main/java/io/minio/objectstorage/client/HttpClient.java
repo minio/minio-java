@@ -45,6 +45,8 @@ public class HttpClient implements Client {
     private HttpTransport transport = new NetHttpTransport();
     private String accessKey;
     private String secretKey;
+    private String userAgent;
+    private String contentType;
     private Logger logger;
 
     HttpClient(URL url) {
@@ -70,7 +72,6 @@ public class HttpClient implements Client {
         });
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
         httpRequest = httpRequest.setRequestMethod("HEAD");
-        httpRequest.getHeaders().setUserAgent("Minio");
         HttpResponse response = httpRequest.execute();
         try {
             HttpHeaders headers = response.getHeaders();
@@ -114,9 +115,11 @@ public class HttpClient implements Client {
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("GET");
-        HttpResponse response = httpRequest.execute();
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setUserAgent(this.userAgent);
+	httpRequest.setHeaders(httpHeaders);
 
+        HttpResponse response = httpRequest.execute();
         return response.getContent();
     }
 
@@ -125,11 +128,13 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("GET");
-        HttpHeaders headers = httpRequest.getHeaders().setRange(offset + "-" + offset + length);
-        httpRequest.setHeaders(headers);
-        HttpResponse response = httpRequest.execute();
+        HttpRequest httpRequest = requestFactory.buildGetRequest(url);
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setUserAgent(this.userAgent);
+	httpHeaders.setRange(offset + "-" + offset + length);
+	httpRequest.setHeaders(httpHeaders);
 
+	HttpResponse response = httpRequest.execute();
         return response.getContent();
     }
 
@@ -139,7 +144,10 @@ public class HttpClient implements Client {
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("GET");
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setAccept(this.contentType);
+	httpHeaders.setUserAgent(this.userAgent);
+	httpRequest.setHeaders(httpHeaders);
         HttpResponse response = httpRequest.execute();
 
         try {
@@ -173,8 +181,10 @@ public class HttpClient implements Client {
             }
         });
         HttpRequest httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("GET");
-        httpRequest.getHeaders().setAccept("application/xml");
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setAccept(this.contentType);
+	httpHeaders.setUserAgent(this.userAgent);
+	httpRequest.setHeaders(httpHeaders);
         httpRequest.setFollowRedirects(false);
         HttpResponse response = httpRequest.execute();
         try {
@@ -197,9 +207,11 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest;
-        httpRequest = requestFactory.buildGetRequest(url);
-        httpRequest = httpRequest.setRequestMethod("HEAD");
+        HttpRequest httpRequest = requestFactory.buildHeadRequest(url);
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setUserAgent(this.userAgent);
+	httpRequest.setHeaders(httpHeaders);
+
         try {
             HttpResponse response = httpRequest.execute();
             try {
@@ -217,9 +229,12 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("PUT");
-        HttpHeaders headers = httpRequest.getHeaders();
-        headers.set("x-amz-acl", acl);
+        HttpRequest httpRequest = requestFactory.buildPutRequest(url, null);
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setUserAgent(this.userAgent);
+	httpHeaders.set("x-amz-acl", acl);
+	httpRequest.setHeaders(httpHeaders);
+
         try {
             HttpResponse execute = httpRequest.execute();
             try {
@@ -266,13 +281,26 @@ public class HttpClient implements Client {
         this.secretKey = secretKey;
     }
 
+    @Override
+    public void setUserAgent(String userAgent) {
+	this.userAgent = userAgent;
+    }
+
+    @Override
+    public void setContentType(String contentType) {
+	this.contentType = contentType;
+    }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
-//        url.appendRawPath("?uploads");
+
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
+        HttpRequest httpRequest = requestFactory.buildPostRequest(url, null);
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setUserAgent(this.userAgent);
+	httpRequest.setHeaders(httpHeaders);
+
         HttpResponse response = httpRequest.execute();
         try {
             XmlPullParser parser = Xml.createParser();
@@ -293,7 +321,10 @@ public class HttpClient implements Client {
         url.set("uploadId", uploadID);
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("POST");
+        HttpRequest httpRequest = requestFactory.buildPostRequest(url, null);
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setUserAgent(this.userAgent);
+	httpRequest.setHeaders(httpHeaders);
 
         List<Part> parts = new LinkedList<>();
         for (int i = 0; i < etags.size(); i++) {
@@ -341,13 +372,15 @@ public class HttpClient implements Client {
         }
 
         HttpRequestFactory requestFactory = this.transport.createRequestFactory();
-        HttpRequest httpRequest = requestFactory.buildGetRequest(url).setRequestMethod("PUT");
+        HttpRequest httpRequest = requestFactory.buildPutRequest(url, null);
+	HttpHeaders httpHeaders = httpRequest.getHeaders();
+	httpHeaders.setUserAgent(this.userAgent);
 
         if (md5sum != null) {
             String base64md5sum = Base64.getEncoder().encodeToString(md5sum);
-            HttpHeaders headers = httpRequest.getHeaders();
-            headers.setContentMD5(base64md5sum);
+            httpHeaders.setContentMD5(base64md5sum);
         }
+	httpRequest.setHeaders(httpHeaders);
 
         ByteArrayContent content = new ByteArrayContent(contentType, data);
         httpRequest.setContent(content);

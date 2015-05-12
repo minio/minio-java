@@ -18,3 +18,5 @@ hs_err_pid*
 
 # IDEA build scripts
 /.idea/
+
+dist/
