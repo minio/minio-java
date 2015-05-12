@@ -1,5 +1,5 @@
 ### Setup your objectstorage-java Github Repository
-Fork [objectstorage-java upstream](https://github.com/minio-io/objectstorage-java/fork) source repository to your own personal repository.
+Fork [objectstorage-java upstream](https://github.com/minio/objectstorage-java/fork) source repository to your own personal repository.
 ```sh
 $ git clone https://github.com/$USER_ID/objectstorage-java
 $ cd objectstorage-java
