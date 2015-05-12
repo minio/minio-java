@@ -9,7 +9,7 @@ Objectstorage Java library uses gradle for its dependency management https://gra
 
 ### Gradle start up script for UN*X
 ```sh
-$ ./gradlew
+$ ./gradlew check
 Downloading https://services.gradle.org/distributions/gradle-2.3-bin.zip
 ...
 ...
@@ -36,7 +36,7 @@ BUILD SUCCESSFUL
 On windows command prompt
 
 ```bat
-C:\objectstorage-java\>gradleview.bat
+C:\objectstorage-java\>gradlew.bat check
 ```
 
 ###  Developer Guidelines
