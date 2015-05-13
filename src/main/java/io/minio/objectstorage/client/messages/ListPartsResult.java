@@ -71,6 +71,14 @@ public class ListPartsResult extends XmlEntity {
 	this.storageClass = storageClass;
     }
 
+    public Initiator getInitiator() {
+	return initiator;
+    }
+
+    public void setInitiator(Initiator initiator) {
+	this.initiator = initiator;
+    }
+
     public Owner getOwner() {
 	return owner;
     }
