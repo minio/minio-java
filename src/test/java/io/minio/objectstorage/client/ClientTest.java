@@ -42,7 +42,7 @@ public class ClientTest {
     @Test()
     public void instantiateNewClient() throws MalformedURLException {
         String expectedHost = "example.com";
-        Client client = Clients.getClient("http://" + expectedHost);
+        Client client = Client.getClient("http://" + expectedHost);
 
         URL url = client.getUrl();
         // check schema
@@ -54,7 +54,7 @@ public class ClientTest {
     @Test()
     public void instantiateNewClientWithTrailingSlash() throws MalformedURLException {
         String expectedHost = "example.com";
-        Client client = Clients.getClient("http://" + expectedHost + "/");
+        Client client = Client.getClient("http://" + expectedHost + "/");
 
         URL url = client.getUrl();
         // check schema
@@ -65,17 +65,17 @@ public class ClientTest {
 
     @Test(expected = MalformedURLException.class)
     public void newClientWithPathFails() throws MalformedURLException {
-        Clients.getClient("http://example.com/path");
+        Client.getClient("http://example.com/path");
     }
 
     @Test(expected = NullPointerException.class)
     public void newClientWithNullURLFails() throws MalformedURLException {
-        Clients.getClient((URL) null);
+        Client.getClient((URL) null);
     }
 
     @Test(expected = NullPointerException.class)
     public void newClientWithNullURLStringFails() throws MalformedURLException {
-        Clients.getClient((String) null);
+        Client.getClient((String) null);
     }
 
     @Test(expected = IOException.class)
@@ -98,7 +98,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://example.com:9000");
+        Client client = Client.getClient("http://example.com:9000");
         client.setTransport(transport);
         ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
         assertEquals("bucket", objectMetadata.getBucket());
@@ -133,7 +133,7 @@ public class ClientTest {
         ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
 
         // get request
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
 
@@ -164,7 +164,7 @@ public class ClientTest {
         };
 
         // get request
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         InputStream object = client.getObject("bucket", "key");
         byte[] result = new byte[20];
@@ -198,7 +198,7 @@ public class ClientTest {
         };
 
         // get request
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         InputStream object = client.getObject("bucket", "key", 0, 5);
         byte[] result = new byte[20];
@@ -228,7 +228,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         ListBucketResult bucket = client.listObjectsInBucket("bucket");
 
@@ -279,7 +279,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         ListAllMyBucketsResult buckets = client.listBuckets();
 
@@ -318,7 +318,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         boolean result = client.testBucketAccess("bucket");
 
@@ -343,7 +343,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         boolean result = client.testBucketAccess("bucket");
 
@@ -368,7 +368,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         boolean result = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
 
@@ -393,7 +393,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         boolean result = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
 
@@ -419,7 +419,7 @@ public class ClientTest {
             }
         };
 
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
 
         String inputString = "hello world";
@@ -460,7 +460,7 @@ public class ClientTest {
         ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
 
         // get request
-        HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
+        Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         client.setKeys("foo", "bar");
         ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
