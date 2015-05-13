@@ -55,6 +55,4 @@ public interface Client {
     void setKeys(String foo, String bar);
 
     void setUserAgent(String foo);
-
-    void setContentType(String foo);
 }

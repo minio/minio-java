@@ -33,7 +33,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -45,7 +48,6 @@ public class HttpClient implements Client {
     private HttpTransport transport = new NetHttpTransport();
     private String accessKey;
     private String secretKey;
-    private String contentType;
     private Logger logger;
     private String userAgent;
 
@@ -91,7 +93,7 @@ public class HttpClient implements Client {
             }
         });
         HttpRequest request = requestFactory.buildRequest(method, url, null);
-        if(userAgent != null) {
+        if (userAgent != null) {
             request.getHeaders().setUserAgent(userAgent);
         }
         return request;
@@ -136,8 +138,7 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-        HttpHeaders headers = request.getHeaders();
-        headers.setRange(offset + "-" + offset + length);
+        request.getHeaders().setRange(offset + "-" + offset + length);
 
         HttpResponse response = request.execute();
         return response.getContent();
@@ -148,8 +149,6 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("GET", url);
-        HttpHeaders headers = request.getHeaders();
-        headers.setAccept(this.contentType);
 
         HttpResponse response = request.execute();
 
@@ -176,8 +175,6 @@ public class HttpClient implements Client {
         GenericUrl url = new GenericUrl(this.url);
 
         HttpRequest request = getHttpRequest("GET", url);
-        HttpHeaders headers = request.getHeaders();
-        headers.setAccept(this.contentType);
         request.setFollowRedirects(false);
 
         HttpResponse response = request.execute();
@@ -219,8 +216,7 @@ public class HttpClient implements Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
-        HttpHeaders headers = request.getHeaders();
-        headers.set("x-amz-acl", acl);
+        request.getHeaders().set("x-amz-acl", acl);
 
         try {
             HttpResponse execute = request.execute();
@@ -273,11 +269,6 @@ public class HttpClient implements Client {
         this.userAgent = userAgent;
     }
 
-    @Override
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
@@ -328,11 +319,8 @@ public class HttpClient implements Client {
         url.set("uploadId", uploadID);
 
         HttpRequest request = getHttpRequest("GET", url);
-        HttpHeaders headers = request.getHeaders();
-        headers.setAccept(this.contentType);
 
         HttpResponse response = request.execute();
-
         try {
             XmlPullParser parser = Xml.createParser();
             InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
@@ -391,11 +379,10 @@ public class HttpClient implements Client {
         }
 
         HttpRequest request = getHttpRequest("PUT", url, data);
-        HttpHeaders headers = request.getHeaders();
 
         if (md5sum != null) {
             String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
-            headers.setContentMD5(base64md5sum);
+            request.getHeaders().setContentMD5(base64md5sum);
         }
 
         ByteArrayContent content = new ByteArrayContent(contentType, data);

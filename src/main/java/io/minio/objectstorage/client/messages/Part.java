@@ -31,7 +31,7 @@ public class Part extends XmlEntity {
     @Key("LastModified")
     private String lastModified;
     @Key("Size")
-    private long size;
+    private Long size;
 
     public Part() {
         super();
@@ -54,26 +54,26 @@ public class Part extends XmlEntity {
         this.eTag = eTag;
     }
 
-        public String getLastModified() {
-	return lastModified;
+    public String getLastModified() {
+        return lastModified;
     }
 
     public void setLastModified(String lastModified) {
-	this.lastModified = lastModified;
+        this.lastModified = lastModified;
     }
 
     public Date getParsedLastModified() throws ParseException {
-	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-	formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-	return formatter.parse(this.getLastModified());
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return formatter.parse(this.getLastModified());
     }
 
-    public long getSize() {
-	return size;
+    public Long getSize() {
+        return size;
     }
 
-    public void setSize(long size) {
-	this.size = size;
+    public void setSize(Long size) {
+        this.size = size;
     }
 
 }
