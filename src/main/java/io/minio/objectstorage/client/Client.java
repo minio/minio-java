@@ -48,9 +48,9 @@ public interface Client {
 
     boolean testBucketAccess(String bucket) throws IOException;
 
-    boolean createBucket(String bucket, String acl) throws IOException;
+    boolean makeBucket(String bucket, String acl) throws IOException;
 
-    void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException;
+    void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException;
 
     void setKeys(String foo, String bar);
 
