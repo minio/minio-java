@@ -283,11 +283,29 @@ public class Client {
         }
     }
 
-    public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) {
-        return new ListMultipartUploadsResult();
+    public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException {
+        GenericUrl url = getGenericUrlOfBucket(bucket);
+        url.set("uploads", "");
+
+        HttpRequest request = getHttpRequest("GET", url);
+        request.setFollowRedirects(false);
+
+        HttpResponse response = request.execute();
+        try {
+            XmlPullParser parser = Xml.createParser();
+            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+            parser.setInput(reader);
+
+            ListMultipartUploadsResult result = new ListMultipartUploadsResult();
+
+            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+            return result;
+        } finally {
+            response.disconnect();
+        }
     }
 
-    public void abortAllMultipartUploads(String bucket) throws IOException {
+    public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException {
         ListMultipartUploadsResult uploads = listActiveMultipartUploads(bucket);
         for(Upload upload : uploads.getUploads()) {
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
