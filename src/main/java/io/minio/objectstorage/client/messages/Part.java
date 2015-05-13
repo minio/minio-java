@@ -68,11 +68,11 @@ public class Part extends XmlEntity {
         return formatter.parse(this.getLastModified());
     }
 
-    public Long getSize() {
+    public long getSize() {
         return size;
     }
 
-    public void setSize(Long size) {
+    public void setSize(long size) {
         this.size = size;
     }
 
