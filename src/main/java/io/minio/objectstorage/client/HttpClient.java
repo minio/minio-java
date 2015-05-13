@@ -215,7 +215,7 @@ public class HttpClient implements Client {
     }
 
     @Override
-    public boolean createBucket(String bucket, String acl) throws IOException {
+    public boolean makeBucket(String bucket, String acl) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
@@ -235,7 +235,7 @@ public class HttpClient implements Client {
     }
 
     @Override
-    public void createObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException {
+    public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException {
         boolean isMultipart = false;
         int partSize = 0;
         String uploadID = null;

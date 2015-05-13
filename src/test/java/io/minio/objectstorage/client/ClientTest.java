@@ -26,17 +26,12 @@ import io.minio.objectstorage.client.messages.*;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.*;
@@ -375,7 +370,7 @@ public class ClientTest {
 
         HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.createBucket("bucket", Client.ACL_PUBLIC_READ);
+        boolean result = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
 
         assertEquals(true, result);
     }
@@ -400,7 +395,7 @@ public class ClientTest {
 
         HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.createBucket("bucket", Client.ACL_PUBLIC_READ);
+        boolean result = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
 
         assertEquals(false, result);
     }
@@ -430,7 +425,7 @@ public class ClientTest {
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
 
-        client.createObject("bucket", "key", "application/octet-stream", 11, data);
+        client.putObject("bucket", "key", "application/octet-stream", 11, data);
     }
 
     @Test

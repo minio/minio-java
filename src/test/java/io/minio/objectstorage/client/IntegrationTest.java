@@ -47,11 +47,11 @@ public class IntegrationTest {
         HttpClient client = (HttpClient)Clients.getClient("http://localhost:9000");
 //        client.setKeys("REDACTED", "REDACTED");
         client.enableLogging();
-        client.createBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
+        client.makeBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
 
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
-        client.createObject("foo", "bar", "application/octet-stream", 11, data);
+        client.putObject("foo", "bar", "application/octet-stream", 11, data);
 
         InputStream object = client.getObject("foo", "bar");
         byte[] result = new byte[11];
@@ -67,7 +67,7 @@ public class IntegrationTest {
         }
 
         InputStream largeObjectStream = new ByteArrayInputStream(largeObject);
-        client.createObject("foo", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
+        client.putObject("foo", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
 
         InputStream object1 = client.getObject("foo", "bar2");
         byte[] largeResult = new byte[10 * 1024 * 1024];
