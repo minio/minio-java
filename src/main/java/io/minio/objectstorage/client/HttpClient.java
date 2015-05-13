@@ -43,7 +43,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 public class HttpClient implements Client {
-    private static final int PART_SIZE = 5 * 1024 * 1024;
+    private static final Long PART_SIZE = Long.valueOf(5 * 1024 * 1024);
     private final URL url;
     private HttpTransport transport = new NetHttpTransport();
     private String accessKey;
@@ -134,7 +134,7 @@ public class HttpClient implements Client {
     }
 
     @Override
-    public InputStream getObject(String bucket, String key, long offset, long length) throws IOException {
+    public InputStream getObject(String bucket, String key, Long offset, Long length) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
@@ -231,9 +231,9 @@ public class HttpClient implements Client {
     }
 
     @Override
-    public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException {
+    public void putObject(String bucket, String key, String contentType, Long size, InputStream data) throws IOException, XmlPullParserException {
         boolean isMultipart = false;
-        int partSize = 0;
+        Long partSize = Long.valueOf(0);
         String uploadID = null;
 
         if (size > PART_SIZE) {
@@ -243,7 +243,7 @@ public class HttpClient implements Client {
         }
 
         if (!isMultipart) {
-            byte[] dataArray = readData((int) size, data);
+            byte[] dataArray = readData(size, data);
             putObject(bucket, key, contentType, dataArray);
         } else {
             List<String> parts = new LinkedList<String>();
@@ -352,10 +352,10 @@ public class HttpClient implements Client {
         }
     }
 
-    private int computePartSize(long size) {
-        int minimumPartSize = PART_SIZE; // 5MB
-        int partSize = (int) (size / 9999);
-        return Math.max(minimumPartSize, partSize);
+    private Long computePartSize(Long size) {
+        Long minimumPartSize = PART_SIZE; // 5MB
+        Long partSize = size / 9999;
+        return Math.max(minimumPartSize.longValue(), partSize.longValue());
     }
 
     private void putObject(String bucket, String key, String contentType, byte[] data) throws IOException {
@@ -395,21 +395,21 @@ public class HttpClient implements Client {
         return response.getHeaders().getETag();
     }
 
-    private byte[] readData(int size, InputStream data) throws IOException {
-        int amountRead = 0;
-        byte[] fullData = new byte[size];
-        while (amountRead != size) {
-            byte[] buf = new byte[size - amountRead];
+    private byte[] readData(Long size, InputStream data) throws IOException {
+        Long amountRead = Long.valueOf(0);
+        byte[] fullData = new byte[size.intValue()];
+        while (!amountRead.equals(size)) {
+            byte[] buf = new byte[size.intValue() - amountRead.intValue()];
             int curRead = data.read(buf);
             if (curRead == -1) {
                 break;
             }
             buf = Arrays.copyOf(buf, curRead);
-            System.arraycopy(buf, 0, fullData, amountRead, curRead);
+            System.arraycopy(buf, 0, fullData, amountRead.intValue(), curRead);
             amountRead += curRead;
         }
 
-        fullData = Arrays.copyOfRange(fullData, 0, amountRead);
+        fullData = Arrays.copyOfRange(fullData, 0, amountRead.intValue());
 
         return fullData;
     }

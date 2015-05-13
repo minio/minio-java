@@ -28,7 +28,7 @@ public class ListBucketResult extends XmlEntity {
     @Key("Marker")
     private String Marker;
     @Key("MaxKeys")
-    private int MaxKeys;
+    private Integer MaxKeys;
     @Key("Delimiter")
     private String Delimiter;
     @Key("IsTruncated")
@@ -66,11 +66,11 @@ public class ListBucketResult extends XmlEntity {
         Marker = marker;
     }
 
-    public int getMaxKeys() {
+    public Integer getMaxKeys() {
         return MaxKeys;
     }
 
-    public void setMaxKeys(int maxKeys) {
+    public void setMaxKeys(Integer maxKeys) {
         MaxKeys = maxKeys;
     }
 

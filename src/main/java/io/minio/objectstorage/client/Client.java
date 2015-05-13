@@ -38,7 +38,7 @@ public interface Client {
 
     InputStream getObject(String bucket, String key) throws IOException;
 
-    InputStream getObject(String bucket, String key, long offset, long length) throws IOException;
+    InputStream getObject(String bucket, String key, Long offset, Long length) throws IOException;
 
     ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException;
 
@@ -50,7 +50,7 @@ public interface Client {
 
     boolean makeBucket(String bucket, String acl) throws IOException;
 
-    void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException;
+    void putObject(String bucket, String key, String contentType, Long size, InputStream data) throws IOException, XmlPullParserException;
 
     void setKeys(String foo, String bar);
 

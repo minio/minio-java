@@ -32,11 +32,11 @@ public class ListPartsResult extends XmlEntity {
     @Key("StorageClass")
     private String storageClass;
     @Key("PartNumberMarker")
-    private int PartNumberMarker;
+    private Integer PartNumberMarker;
     @Key("NextPartNumberMarker")
-    private int NextPartNumberMarker;
+    private Integer NextPartNumberMarker;
     @Key("MaxParts")
-    private int MaxParts;
+    private Integer MaxParts;
     @Key("IsTruncated")
     private boolean IsTruncated;
     @Key("Part")
@@ -87,11 +87,11 @@ public class ListPartsResult extends XmlEntity {
 	this.owner = owner;
     }
 
-    public int getMaxParts() {
+    public Integer getMaxParts() {
         return MaxParts;
     }
 
-    public void setMaxParts(int maxParts) {
+    public void setMaxParts(Integer maxParts) {
         MaxParts = maxParts;
     }
 
@@ -103,19 +103,19 @@ public class ListPartsResult extends XmlEntity {
         IsTruncated = isTruncated;
     }
 
-    public int getPartNumberMarker() {
+    public Integer getPartNumberMarker() {
 	return PartNumberMarker;
     }
 
-    public void setPartNumberMarker(int partNumberMarker) {
+    public void setPartNumberMarker(Integer partNumberMarker) {
 	PartNumberMarker = partNumberMarker;
     }
 
-    public int getNextPartNumberMarker() {
+    public Integer getNextPartNumberMarker() {
 	return NextPartNumberMarker;
     }
 
-    public void setNextPartNumberMarker(int nextPartNumberMarker) {
+    public void setNextPartNumberMarker(Integer nextPartNumberMarker) {
 	NextPartNumberMarker = nextPartNumberMarker;
     }
 

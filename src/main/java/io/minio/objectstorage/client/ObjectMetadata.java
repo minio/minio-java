@@ -22,10 +22,10 @@ public class ObjectMetadata {
     private final String bucket;
     private final String key;
     private final Date createdTime;
-    private final long length;
+    private final Long length;
     private final String md5sum;
 
-    public ObjectMetadata(String bucket, String name, Date createdTime, long length, String md5sum) {
+    public ObjectMetadata(String bucket, String name, Date createdTime, Long length, String md5sum) {
         this.bucket = bucket;
         this.key = name;
         this.createdTime = (Date) createdTime.clone();
@@ -41,7 +41,7 @@ public class ObjectMetadata {
         return (Date) createdTime.clone();
     }
 
-    public long getLength() {
+    public Long getLength() {
         return length;
     }
 
@@ -72,7 +72,7 @@ public class ObjectMetadata {
 
         ObjectMetadata that = (ObjectMetadata) o;
 
-        if (length != that.length) return false;
+        if (!length.equals(that.length)) return false;
         if (!bucket.equals(that.bucket)) return false;
         if (!key.equals(that.key)) return false;
         if (!createdTime.equals(that.createdTime)) return false;
@@ -83,11 +83,11 @@ public class ObjectMetadata {
 
     @Override
     public int hashCode() {
-        int result = bucket.hashCode();
-        result = 31 * result + key.hashCode();
-        result = 31 * result + createdTime.hashCode();
-        result = 31 * result + (int) (length ^ (length >>> 32));
-        result = 31 * result + md5sum.hashCode();
-        return result;
+	int result = bucket.hashCode();
+	result = 31 * result + key.hashCode();
+	result = 31 * result + createdTime.hashCode();
+	result = 31 * result + (int) (length ^ (length >>> 32));
+	result = 31 * result + md5sum.hashCode();
+	return result;
     }
 }

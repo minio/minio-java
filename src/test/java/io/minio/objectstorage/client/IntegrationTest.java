@@ -51,7 +51,7 @@ public class IntegrationTest {
 
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
-        client.putObject("foo", "bar", "application/octet-stream", 11, data);
+        client.putObject("foo", "bar", "application/octet-stream", Long.valueOf(11), data);
 
         InputStream object = client.getObject("foo", "bar");
         byte[] result = new byte[11];
@@ -67,7 +67,7 @@ public class IntegrationTest {
         }
 
         InputStream largeObjectStream = new ByteArrayInputStream(largeObject);
-        client.putObject("foo", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
+        client.putObject("foo", "bar2", "application/octet-stream", Long.valueOf(largeObject.length), largeObjectStream);
 
         InputStream object1 = client.getObject("foo", "bar2");
         byte[] largeResult = new byte[10 * 1024 * 1024];
