@@ -387,22 +387,14 @@ public class Client {
         }
     }
 
-    public boolean abortMultipartUpload(String bucket, String key, String uploadID) throws IOException {
+    public void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
         HttpRequest request = getHttpRequest("DELETE", url);
-        try {
-            HttpResponse response = request.execute();
-            try {
-                return response.getStatusCode() == 200;
-            } finally {
-                response.disconnect();
-            }
-        } catch (HttpResponseException e) {
-            return false;
-        }
-    }
+        HttpResponse response = request.execute();
+        response.disconnect();
+}
 
     private int computePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB
