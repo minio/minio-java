@@ -25,7 +25,7 @@ import java.util.TimeZone;
 
 public class Part extends XmlEntity {
     @Key("PartNumber")
-    private int partNumber;
+    private Integer partNumber;
     @Key("ETag")
     private String eTag;
     @Key("LastModified")
@@ -38,11 +38,11 @@ public class Part extends XmlEntity {
         super.name = "Part";
     }
 
-    public int getPartNumber() {
+    public Integer getPartNumber() {
         return partNumber;
     }
 
-    public void setPartNumber(int partNumber) {
+    public void setPartNumber(Integer partNumber) {
         this.partNumber = partNumber;
     }
 

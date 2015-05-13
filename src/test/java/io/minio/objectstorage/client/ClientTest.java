@@ -130,7 +130,8 @@ public class ClientTest {
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
         expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(),
+							     Long.valueOf(5080), "a670520d9d36833b3e28d1e4b73cbe22");
 
         // get request
         HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
@@ -168,7 +169,7 @@ public class ClientTest {
         client.setTransport(transport);
         InputStream object = client.getObject("bucket", "key");
         byte[] result = new byte[20];
-        int read = object.read(result);
+        Integer read = object.read(result);
         result = Arrays.copyOf(result, read);
         assertEquals(expectedObject, new String(result, "UTF-8"));
     }
@@ -200,9 +201,9 @@ public class ClientTest {
         // get request
         HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
         client.setTransport(transport);
-        InputStream object = client.getObject("bucket", "key", 0, 5);
+        InputStream object = client.getObject("bucket", "key", Long.valueOf(0), Long.valueOf(5));
         byte[] result = new byte[20];
-        int read = object.read(result);
+        Integer read = object.read(result);
         result = Arrays.copyOf(result, read);
         assertEquals(expectedObject, new String(result, "UTF-8"));
     }
@@ -235,7 +236,7 @@ public class ClientTest {
         assertEquals("bucket", bucket.getName());
         assertEquals(null, bucket.getPrefix());
         assertEquals(null, bucket.getMarker());
-        assertEquals(1000, bucket.getMaxKeys());
+        assertEquals(Integer.valueOf(1000).equals(bucket.getMaxKeys()), true);
         assertEquals(null, bucket.getDelimiter());
         assertEquals(false, bucket.isTruncated());
         assertEquals(2, bucket.getContents().size());
@@ -425,7 +426,7 @@ public class ClientTest {
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
 
-        client.putObject("bucket", "key", "application/octet-stream", 11, data);
+        client.putObject("bucket", "key", "application/octet-stream", Long.valueOf(11), data);
     }
 
     @Test
@@ -457,7 +458,7 @@ public class ClientTest {
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
         expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), Long.valueOf(5080), "a670520d9d36833b3e28d1e4b73cbe22");
 
         // get request
         HttpClient client = (HttpClient) Clients.getClient("http://localhost:9000");
