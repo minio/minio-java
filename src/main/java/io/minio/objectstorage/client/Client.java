@@ -283,6 +283,17 @@ public class Client {
         }
     }
 
+    public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) {
+        return new ListMultipartUploadsResult();
+    }
+
+    public void abortAllMultipartUploads(String bucket) throws IOException {
+        ListMultipartUploadsResult uploads = listActiveMultipartUploads(bucket);
+        for(Upload upload : uploads.getUploads()) {
+            abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
+        }
+    }
+
     public void setKeys(String accessKey, String secretKey) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
@@ -337,7 +348,7 @@ public class Client {
         response.disconnect();
     }
 
-    private ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException {
+    public ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
@@ -358,7 +369,7 @@ public class Client {
         }
     }
 
-    private boolean abortMultipart(String bucket, String key, String uploadID) throws IOException {
+    public boolean abortMultipartUpload(String bucket, String key, String uploadID) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
