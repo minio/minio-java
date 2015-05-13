@@ -1,5 +1,7 @@
 # Minimal object storage library in Java
 
+[![Build Status](https://travis-ci.org/minio/objectstorage-java.svg)](https://travis-ci.org/minio/objectstorage-java)
+
 ## Install
 
 ```sh

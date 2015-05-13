@@ -18,11 +18,20 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 public class Part extends XmlEntity {
     @Key("PartNumber")
     private int partNumber;
     @Key("ETag")
     private String eTag;
+    @Key("LastModified")
+    private String lastModified;
+    @Key("Size")
+    private long size;
 
     public Part() {
         super();
@@ -44,4 +53,27 @@ public class Part extends XmlEntity {
     public void seteTag(String eTag) {
         this.eTag = eTag;
     }
+
+        public String getLastModified() {
+	return lastModified;
+    }
+
+    public void setLastModified(String lastModified) {
+	this.lastModified = lastModified;
+    }
+
+    public Date getParsedLastModified() throws ParseException {
+	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+	formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+	return formatter.parse(this.getLastModified());
+    }
+
+    public long getSize() {
+	return size;
+    }
+
+    public void setSize(long size) {
+	this.size = size;
+    }
+
 }

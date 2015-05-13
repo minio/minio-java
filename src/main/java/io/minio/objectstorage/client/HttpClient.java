@@ -323,6 +323,47 @@ public class HttpClient implements Client {
         response.disconnect();
     }
 
+    private ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException {
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        url.set("uploadId", uploadID);
+
+        HttpRequest request = getHttpRequest("GET", url);
+        HttpHeaders headers = request.getHeaders();
+        headers.setAccept(this.contentType);
+
+        HttpResponse response = request.execute();
+
+        try {
+            XmlPullParser parser = Xml.createParser();
+            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+            parser.setInput(reader);
+
+            ListPartsResult result = new ListPartsResult();
+
+            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+            return result;
+        } finally {
+            response.disconnect();
+        }
+    }
+
+    private boolean abortMultipart(String bucket, String key, String uploadID) throws IOException {
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        url.set("uploadId", uploadID);
+
+        HttpRequest request = getHttpRequest("DELETE", url);
+        try {
+            HttpResponse response = request.execute();
+            try {
+                return response.getStatusCode() == 200;
+            } finally {
+                response.disconnect();
+            }
+        } catch (HttpResponseException e) {
+            return false;
+        }
+    }
+
     private int computePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB
         int partSize = (int) (size / 9999);
