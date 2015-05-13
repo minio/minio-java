@@ -59,7 +59,7 @@ public class Client {
     private Logger logger;
     private String userAgent;
 
-    Client(URL url) {
+    private Client(URL url) {
         this.url = url;
     }
 
