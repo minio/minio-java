@@ -307,7 +307,7 @@ public class Client {
 
     public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException {
         ListMultipartUploadsResult uploads = listActiveMultipartUploads(bucket);
-        for(Upload upload : uploads.getUploads()) {
+        for (Upload upload : uploads.getUploads()) {
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
         }
     }
