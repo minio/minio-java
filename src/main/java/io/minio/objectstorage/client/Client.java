@@ -34,10 +34,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -261,10 +258,21 @@ public class Client {
         int partSize = 0;
         String uploadID = null;
 
+
         if (size > PART_SIZE) {
+            // check if multipart exists
+            ListMultipartUploadsResult multipartUploads = listActiveMultipartUploads(bucket, key);
+            for(Upload upload : multipartUploads.getUploads()) {
+                if(upload.getKey().equals(key)) {
+                    uploadID = upload.getUploadID();
+                }
+            }
+
             isMultipart = true;
             partSize = computePartSize(size);
-            uploadID = newMultipartUpload(bucket, key);
+            if(uploadID == null) {
+                uploadID = newMultipartUpload(bucket, key);
+            }
         }
 
         if (!isMultipart) {
@@ -272,20 +280,44 @@ public class Client {
             putObject(bucket, key, contentType, dataArray);
         } else {
             List<String> parts = new LinkedList<String>();
-            for (int part = 1; ; part++) {
+            int part = 1;
+            ListPartsResult objectParts = listObjectParts(bucket, key, uploadID);
+            if(!objectParts.getParts().isEmpty()) {
+                Iterator<Part> iterator = objectParts.getParts().iterator();
+                while(iterator.hasNext()) {
+                    Part curPart = iterator.next();
+                    long curSize = curPart.getSize();
+                    String curEtag = curPart.geteTag();
+                    byte[] curData = readData((int) curSize, data);
+                    String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData));
+                    if(!curEtag.equals(generatedEtag)) {
+                        throw new IOException("Partial upload does not match");
+                    }
+                }
+            }
+            while (true) {
                 byte[] dataArray = readData(partSize, data);
                 if (dataArray.length == 0) {
                     break;
                 }
                 parts.add(putObject(bucket, key, contentType, dataArray, uploadID, part));
+                part++;
             }
             completeMultipart(bucket, key, uploadID, parts);
         }
     }
 
     public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException {
+        return listActiveMultipartUploads(bucket, null);
+    }
+
+    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String prefix) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
+
+        if (prefix != null) {
+            url.set("prefix", prefix);
+        }
 
         HttpRequest request = getHttpRequest("GET", url);
         request.setFollowRedirects(false);
@@ -414,13 +446,7 @@ public class Client {
             url.set("uploadId", uploadId);
         }
 
-        byte[] md5sum = null;
-        try {
-            MessageDigest md5Digest = MessageDigest.getInstance("MD5");
-            md5sum = md5Digest.digest(data);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
+        byte[] md5sum = calculateMd5sum(data);
 
         HttpRequest request = getHttpRequest("PUT", url, data);
 
@@ -437,6 +463,17 @@ public class Client {
             throw new IOException("Unexpected result, try resending this part again");
         }
         return response.getHeaders().getETag();
+    }
+
+    private byte[] calculateMd5sum(byte[] data) {
+        byte[] md5sum = null;
+        try {
+            MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+            md5sum = md5Digest.digest(data);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return md5sum;
     }
 
     private byte[] readData(int size, InputStream data) throws IOException {
