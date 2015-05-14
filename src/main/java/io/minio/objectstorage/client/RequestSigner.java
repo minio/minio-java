@@ -170,7 +170,7 @@ class RequestSigner implements HttpExecuteInterceptor {
                 canonicalHash;
     }
 
-    private Tuple2<String, String> getCanonicalRequest(HttpRequest request, String bodySha256Hash) {
+    private Tuple2<String, String> getCanonicalRequest(HttpRequest request, String bodySha256Hash) throws UnsupportedEncodingException {
         StringWriter canonicalWriter = new StringWriter();
         PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
 
@@ -180,20 +180,7 @@ class RequestSigner implements HttpExecuteInterceptor {
         if (rawQuery == null || rawQuery.isEmpty()) {
             rawQuery = "";
         }
-        StringBuilder queryBuilder = new StringBuilder();
-        if (!rawQuery.equals("")) {
-            String[] querySplit = rawQuery.split("&");
-            for (String s : querySplit) {
-                if (queryBuilder.length() != 0) {
-                    queryBuilder.append('&');
-                }
-                queryBuilder.append(s);
-                if (!s.contains("=")) {
-                    queryBuilder.append('=');
-                }
-            }
-        }
-        String query = queryBuilder.toString();
+        String query = getCanonicalQuery(rawQuery);
 
         canonicalPrinter.print(method + "\n");
         canonicalPrinter.print(path + "\n");
@@ -206,6 +193,27 @@ class RequestSigner implements HttpExecuteInterceptor {
 
         canonicalPrinter.flush();
         return new Tuple2<String, String>(canonicalWriter.toString(), signedHeaders);
+    }
+
+    private String getCanonicalQuery(String rawQuery) {
+        StringBuilder queryBuilder = new StringBuilder();
+        if (!rawQuery.equals("")) {
+            String[] querySplit = rawQuery.split("&");
+            for(int i = 0; i<querySplit.length; i++) {
+                querySplit[i] = querySplit[i].trim();
+            }
+            Arrays.sort(querySplit);
+            for (String s : querySplit) {
+                if (queryBuilder.length() != 0) {
+                    queryBuilder.append("&");
+                }
+                queryBuilder.append(s);
+                if (!s.contains("=")) {
+                    queryBuilder.append('=');
+                }
+            }
+        }
+        return queryBuilder.toString();
     }
 
     private String generateSignedHeaders(String[] headers) {
