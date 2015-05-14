@@ -17,6 +17,7 @@
 package io.minio.objectstorage.client;
 
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
+import io.minio.objectstorage.client.messages.ListMultipartUploadsResult;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -24,6 +25,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -78,5 +80,29 @@ public class IntegrationTest {
         assertEquals(amountRead, largeResult.length);
 
         assertArrayEquals(largeObject, largeResult);
+    }
+
+    @Test
+    @Ignore
+    public void testMultipart() throws IOException, XmlPullParserException {
+        byte[] largeObject = new byte[5 * 1024 * 1024];
+        for (int i = 0; i < 5 * 1024 * 1024; i++) {
+            largeObject[i] = 'a';
+        }
+        InputStream largeObjectStream = new ByteArrayInputStream(largeObject);
+        Client client = Client.getClient("http://localhost:9000");
+        client.putObject("foo", "bar2", "application/octet-stream", largeObject.length * 2, largeObjectStream);
+        largeObject = new byte[10 * 1024 * 1024];
+        for (int i = 0; i < 10 * 1024 * 1024; i++) {
+            largeObject[i] = 'a';
+        }
+        client.enableLogging();
+        ListMultipartUploadsResult foo = client.listActiveMultipartUploads("foo");
+        System.out.println("Foo:");
+        System.out.println(foo);
+        System.out.println(":Bar");
+        client.putObject("foo", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
+        foo = client.listActiveMultipartUploads("foo");
+        System.out.println(foo);
     }
 }

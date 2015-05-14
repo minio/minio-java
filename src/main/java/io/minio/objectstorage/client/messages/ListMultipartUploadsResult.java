@@ -18,6 +18,7 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListMultipartUploadsResult extends XmlEntity {
@@ -90,6 +91,9 @@ public class ListMultipartUploadsResult extends XmlEntity {
     }
 
     public List<Upload> getUploads() {
+        if(uploads == null) {
+            return new ArrayList<Upload>();
+        }
         return uploads;
     }
 

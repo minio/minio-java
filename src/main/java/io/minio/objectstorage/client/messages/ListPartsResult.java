@@ -18,6 +18,7 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class ListPartsResult extends XmlEntity {
@@ -40,7 +41,7 @@ public class ListPartsResult extends XmlEntity {
     @Key("IsTruncated")
     private boolean IsTruncated;
     @Key("Part")
-    private List<Part> Part;
+    private List<Part> parts;
 
     public ListPartsResult() {
         super();
@@ -120,11 +121,14 @@ public class ListPartsResult extends XmlEntity {
     }
 
     public List<Part> getParts() {
-        return Part;
+        if(parts == null) {
+            return new LinkedList<Part>();
+        }
+        return parts;
     }
 
     public void setParts(List<Part> parts) {
-        Part = parts;
+        this.parts = parts;
     }
 
 }
