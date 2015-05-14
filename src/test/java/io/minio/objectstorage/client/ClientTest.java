@@ -370,9 +370,14 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
+        boolean result1 = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
+        assertEquals(true, result1);
 
-        assertEquals(true, result);
+	boolean result2 = client.setBucketACL("bucket", Client.ACL_PRIVATE);
+	assertEquals(true, result2);
+
+	boolean result3 = client.setBucketACL("bucket", null);
+	assertEquals(false, result3);
     }
 
     @Test
@@ -395,9 +400,11 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
+        boolean result1 = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
+        assertEquals(false, result1);
 
-        assertEquals(false, result);
+	boolean result2 = client.setBucketACL("bucket", Client.ACL_PRIVATE);
+	assertEquals(false, result2);
     }
 
     @Test

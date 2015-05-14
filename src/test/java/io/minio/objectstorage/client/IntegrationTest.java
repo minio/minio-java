@@ -51,6 +51,8 @@ public class IntegrationTest {
         client.enableLogging();
         client.makeBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
 
+	client.setBucketACL("foo", Client.ACL_PRIVATE);
+
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
         client.putObject("foo", "bar", "application/octet-stream", 11, data);
