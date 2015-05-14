@@ -177,18 +177,18 @@ class RequestSigner implements HttpExecuteInterceptor {
         String method = request.getRequestMethod();
         String path = request.getUrl().getRawPath();
         String rawQuery = request.getUrl().toURI().getQuery();
-        if(rawQuery == null || rawQuery.isEmpty()) {
+        if (rawQuery == null || rawQuery.isEmpty()) {
             rawQuery = "";
         }
         StringBuilder queryBuilder = new StringBuilder();
-        if(!rawQuery.equals("")) {
+        if (!rawQuery.equals("")) {
             String[] querySplit = rawQuery.split("&");
-            for(String s : querySplit) {
-                if(queryBuilder.length() != 0) {
+            for (String s : querySplit) {
+                if (queryBuilder.length() != 0) {
                     queryBuilder.append('&');
                 }
                 queryBuilder.append(s);
-                if(!s.contains("=")) {
+                if (!s.contains("=")) {
                     queryBuilder.append('=');
                 }
             }
@@ -223,7 +223,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private String[] generateCanonicalHeaders(PrintWriter writer, HttpRequest request) {
-        Map<String, String> map = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 
         HttpContent content = request.getContent();
 
@@ -270,7 +270,7 @@ class RequestSigner implements HttpExecuteInterceptor {
         }
 
         String contentMD5 = request.getHeaders().getContentMD5();
-        if(contentMD5 != null) {
+        if (contentMD5 != null) {
             map.put("content-md5", contentMD5);
         }
 

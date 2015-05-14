@@ -21,6 +21,8 @@ import com.google.api.client.util.Key;
 import java.util.List;
 
 public class ListMultipartUploadsResult extends XmlEntity {
+    @Key("Upload")
+    List<Upload> uploads;
     @Key("Bucket")
     private String bucket;
     @Key("KeyMarker")
@@ -33,8 +35,6 @@ public class ListMultipartUploadsResult extends XmlEntity {
     private String nextUploadIDMarker;
     @Key("MaxUploads")
     private int maxUploads;
-    @Key("Upload")
-    List<Upload> uploads;
 
     public ListMultipartUploadsResult() {
         super();

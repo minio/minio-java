@@ -54,7 +54,7 @@ public class ObjectStorageExample {
 
         // get object
         InputStream object = client.getObject("mybucket", "myobject");
-        try  {
+        try {
             System.out.println("Printing object: ");
             IOUtils.copy(object, System.out);
         } finally {

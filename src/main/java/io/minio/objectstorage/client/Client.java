@@ -394,7 +394,7 @@ public class Client {
         HttpRequest request = getHttpRequest("DELETE", url);
         HttpResponse response = request.execute();
         response.disconnect();
-}
+    }
 
     private int computePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB

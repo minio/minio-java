@@ -43,48 +43,48 @@ public class ListPartsResult extends XmlEntity {
     private List<Part> Part;
 
     public ListPartsResult() {
-	super();
-	this.name = "ListPartsResult";
+        super();
+        this.name = "ListPartsResult";
     }
 
     public String getBucket() {
-	return Bucket;
+        return Bucket;
     }
 
     public void setBucket(String bucket) {
-	Bucket = bucket;
+        Bucket = bucket;
     }
 
     public String getKey() {
-	return Key;
+        return Key;
     }
 
     public void setKey(String key) {
-	Key = key;
+        Key = key;
     }
 
     public String getStorageClass() {
-	return storageClass;
+        return storageClass;
     }
 
     public void setStorageClass(String storageClass) {
-	this.storageClass = storageClass;
+        this.storageClass = storageClass;
     }
 
     public Initiator getInitiator() {
-	return initiator;
+        return initiator;
     }
 
     public void setInitiator(Initiator initiator) {
-	this.initiator = initiator;
+        this.initiator = initiator;
     }
 
     public Owner getOwner() {
-	return owner;
+        return owner;
     }
 
     public void setOwner(Owner owner) {
-	this.owner = owner;
+        this.owner = owner;
     }
 
     public int getMaxParts() {
@@ -104,19 +104,19 @@ public class ListPartsResult extends XmlEntity {
     }
 
     public int getPartNumberMarker() {
-	return PartNumberMarker;
+        return PartNumberMarker;
     }
 
     public void setPartNumberMarker(int partNumberMarker) {
-	PartNumberMarker = partNumberMarker;
+        PartNumberMarker = partNumberMarker;
     }
 
     public int getNextPartNumberMarker() {
-	return NextPartNumberMarker;
+        return NextPartNumberMarker;
     }
 
     public void setNextPartNumberMarker(int nextPartNumberMarker) {
-	NextPartNumberMarker = nextPartNumberMarker;
+        NextPartNumberMarker = nextPartNumberMarker;
     }
 
     public List<Part> getParts() {
