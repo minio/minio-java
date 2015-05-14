@@ -242,7 +242,11 @@ public class Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
-        request.getHeaders().set("x-amz-acl", acl);
+	if (acl != null) {
+	    request.getHeaders().set("x-amz-acl", acl);
+	} else {
+	    request.getHeaders().set("x-amz-acl", ACL_PRIVATE);
+	}
 
         try {
             HttpResponse execute = request.execute();
@@ -254,6 +258,29 @@ public class Client {
         } catch (HttpResponseException e) {
             return false;
         }
+    }
+
+    public boolean setBucketACL(String bucket, String acl) throws IOException {
+	GenericUrl url = getGenericUrlOfBucket(bucket);
+	url.set("acl", "");
+
+	HttpRequest request = getHttpRequest("PUT", url);
+	if (acl == null) {
+	    return false;
+	}
+	request.getHeaders().set("x-amz-acl", acl);
+
+	try {
+            HttpResponse execute = request.execute();
+            try {
+                return execute.getStatusCode() == 200;
+            } finally {
+                execute.disconnect();
+            }
+        } catch (HttpResponseException e) {
+            return false;
+        }
+
     }
 
     public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException {
