@@ -437,7 +437,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         Map<String, List<String>> headers = this.getHeaders();
-                        for(String s : headers.keySet()) {
+                        for (String s : headers.keySet()) {
                             System.out.println("-" + s);
                         }
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();

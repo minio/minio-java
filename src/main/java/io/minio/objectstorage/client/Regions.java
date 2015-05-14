@@ -21,7 +21,7 @@ import java.util.Map;
 
 public enum Regions {
     INSTANCE;
-    private final Map<String, String> regions = new HashMap<String,String>();
+    private final Map<String, String> regions = new HashMap<String, String>();
 
     Regions() {
         // ap-northeast-1
@@ -47,7 +47,7 @@ public enum Regions {
 
     public String getRegion(String host) {
         String s = Regions.INSTANCE.regions.get(host);
-        if(s == null) {
+        if (s == null) {
             s = "milkyway";
         }
         return s;
