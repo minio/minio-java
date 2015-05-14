@@ -33,6 +33,7 @@ public class ObjectStorageExample {
 
         // create client
         Client client = Client.getClient("http://localhost:9000");
+//        client.setKeys("accessKey", "secretKey");
 
         // create bucket
         client.makeBucket("mybucket", Client.ACL_PUBLIC_READ_WRITE);
