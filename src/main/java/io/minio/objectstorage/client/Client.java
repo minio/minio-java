@@ -43,12 +43,77 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+/**
+ * This class implements a simple object storage client. This client consists
+ * of a useful subset of S3 compatible functionality.
+ * These include:
+ *
+ *   Service:
+ *   * Creating a bucket
+ *   * Listing buckets
+ *
+ *   Bucket:
+ *   * Creating an object, including automatic upload resuming for large objects.
+ *   * Listing objects in a bucket
+ *   * Listing active multipart uploads
+ *   * Dropping all active multipart uploads
+ *   * Setting canned ACLs on buckets
+ *
+ *   Object:
+ *   * Dropping an active multipart upload for a specific object and uploadId
+ *   * Read object metadata
+ *   * Reading an object
+ *   * Reading a range of bytes of an object
+ *   * Deleting an object
+ *
+ *   Optionally, users can also provide access/secret keys or a precomputed
+ *   signing key to the client. If keys are provided, all requests by the
+ *   client will be signed using AWS Signature Version 4. @see #setKeys(String, String)
+ *
+ *   For an example of using this library, please see {TODO URL}
+ */
 public class Client {
+    /**
+     * Canned acl: public-read-write
+     *
+     * Read: public
+     * Write: public
+     */
     public static final String ACL_PUBLIC_READ_WRITE = "public-read-write";
+    /**
+     * Canned acl: private
+     *
+     * Read: authorized users only
+     * Write: authorized users only
+     */
     public static final String ACL_PRIVATE = "private";
+    /**
+     * Canned acl: public-read
+     *
+     * Read: public
+     * Write: authorized users only
+     */
     public static final String ACL_PUBLIC_READ = "public-read";
+    /**
+     * Canned acl: authenticated-read
+     *
+     * Read: Only users with a valid account, all valid users authorized
+     * Write: acl authorized users only
+     */
     public static final String ACL_AUTHENTICATED_READ = "authenticated-read";
+    /**
+     * Canned acl: bucket-owner-read
+     *
+     * Read: Object owner and bucket owner
+     * Write: Object owner only
+     */
     public static final String ACL_BUCKET_OWNER_READ = "bucket-owner-read";
+    /**
+     * Canned acl: bucket-owner-read
+     *
+     * Read: Object owner and bucket owner
+     * Write: Object owner and bucket owner
+     */
     public static final String ACL_BUCKET_OWNER_FULL_CONTROL = "bucket-owner-full-control";
 
     private static final int PART_SIZE = 5 * 1024 * 1024;
@@ -63,13 +128,20 @@ public class Client {
         this.url = url;
     }
 
-    public static Client getClient(String url) throws MalformedURLException {
-        if (url == null) {
-            throw new NullPointerException();
-        }
-        return getClient(new URL(url));
-    }
 
+    /**
+     * Create a new client given a url
+     * @param url must be the full url to the object storage server, exluding both bucket or object paths.
+     *            For example: http://play.minio.io
+     *            Valid:
+     *              * https://s3-us-west-2.amazonaws.com
+     *              * http://play.minio.io
+     *            Invalid:
+     *              * https://s3-us-west-2.amazonaws.com/example/
+     *              * https://s3-us-west-2.amazonaws.com/example/object
+     * @return an object storage client backed by an S3 compatible server.
+     * @throws MalformedURLException
+     */
     public static Client getClient(URL url) throws MalformedURLException {
         if (url == null) {
             throw new NullPointerException();
@@ -89,6 +161,22 @@ public class Client {
         return new Client(url);
     }
 
+    /**
+     * @see #getClient(URL url)
+     * @return an object storage client backed by an S3 compatible server.
+     * @throws MalformedURLException
+     */
+    public static Client getClient(String url) throws MalformedURLException {
+        if (url == null) {
+            throw new NullPointerException();
+        }
+        return getClient(new URL(url));
+    }
+
+    /**
+     * Returns the URL this client uses
+     * @return the URL backed by this.
+     */
     public URL getUrl() {
         return url;
     }
