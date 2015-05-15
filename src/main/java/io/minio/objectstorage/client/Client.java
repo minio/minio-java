@@ -131,6 +131,7 @@ public class Client {
 
     /**
      * Create a new client given a url
+     *
      * @param url must be the full url to the object storage server, exluding both bucket or object paths.
      *            For example: http://play.minio.io
      *            Valid:
@@ -175,12 +176,22 @@ public class Client {
 
     /**
      * Returns the URL this client uses
+     *
      * @return the URL backed by this.
      */
     public URL getUrl() {
         return url;
     }
 
+    /**
+     * Returns metadata about the object
+     *
+     * @param bucket
+     * @param key
+     * @return Populated object metadata
+     * @throws IOException
+     * @see ObjectMetadata
+     */
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("HEAD", url);
@@ -242,6 +253,15 @@ public class Client {
         return url;
     }
 
+    /**
+     * Returns an InputStream containing the object. The InputStream must be closed when
+     * complete or the connection will remain open.
+     *
+     * @param bucket
+     * @param key
+     * @return an InputStream containing the object. Close the InputStream when done.
+     * @throws IOException
+     */
     public InputStream getObject(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
@@ -252,6 +272,17 @@ public class Client {
         return response.getContent();
     }
 
+    /**
+     * Returns an InputStream containing a subset of the object. The InputStream must be
+     * closed or the connection will remain open.
+     *
+     * @param bucket
+     * @param key
+     * @param offset Offset from the start of the object.
+     * @param length Length of bytes to retrieve.
+     * @return an InputStream containing the object. Close the InputStream when done.
+     * @throws IOException
+     */
     public InputStream getObject(String bucket, String key, long offset, long length) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
@@ -262,6 +293,19 @@ public class Client {
         return response.getContent();
     }
 
+    /**
+     * List objects in a given bucket
+     *
+     * TODO: explain paramters and give examples
+     * @param bucket
+     * @param marker
+     * @param prefix
+     * @param delimiter
+     * @param maxkeys
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxkeys) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         if (maxkeys != null) {
@@ -299,6 +343,13 @@ public class Client {
         this.transport = transport;
     }
 
+    /**
+     * List buckets owned by the current user
+     *
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException {
         GenericUrl url = new GenericUrl(this.url);
 
@@ -321,6 +372,13 @@ public class Client {
     }
 
 
+    /**
+     * Test whether a bucket exists and the user has at least read access
+     *
+     * @param bucket
+     * @return true if the bucket exists and the user has at least read access
+     * @throws IOException
+     */
     public boolean testBucketAccess(String bucket) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
@@ -338,6 +396,14 @@ public class Client {
         }
     }
 
+    /**
+     * Create a bucket with a given name and ACL
+     *
+     * @param bucket
+     * @param acl
+     * @return
+     * @throws IOException
+     */
     public boolean makeBucket(String bucket, String acl) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
@@ -360,6 +426,14 @@ public class Client {
         }
     }
 
+    /**
+     * Set the bucket's ACL.
+     *
+     * @param bucket
+     * @param acl
+     * @return
+     * @throws IOException
+     */
     public boolean setBucketACL(String bucket, String acl) throws IOException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("acl", "");
@@ -383,6 +457,28 @@ public class Client {
 
     }
 
+    /**
+     * Create an object.
+     *
+     * If the object is larger than 5MB, the client will automatically use a multipart session.
+     *
+     * If the session fails, the user may attempt to reupload the object by attempting to create
+     * the exact same object again. The client will examine all parts of any current upload session
+     * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+     * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+     *
+     * If the multipart session fails, the user is responsible for resuming or dropping the session.
+     *
+     * @param bucket Bucket to use
+     * @param key Key of object
+     * @param contentType Content type to set this object to
+     * @param size Size of all the data that will be uploaded.
+     * @param data Data to upload
+     * @throws IOException
+     * @throws XmlPullParserException
+     * @see #listActiveMultipartUploads(String)
+     * @see #abortMultipartUpload(String, String, String)
+     */
     public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException {
         boolean isMultipart = false;
         int partSize = 0;
@@ -450,10 +546,27 @@ public class Client {
         }
     }
 
+    /**
+     * Lists all active multipart uploads in a bucket
+     *
+     * @param bucket
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException {
         return listActiveMultipartUploads(bucket, null);
     }
 
+    /**
+     * Lists all active multipart uploads in a bucket with a given key prefix
+     *
+     * @param bucket
+     * @param prefix
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String prefix) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
@@ -480,6 +593,13 @@ public class Client {
         }
     }
 
+    /**
+     * Abort all active multipart uploads in a given bucket.
+     *
+     * @param bucket
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException {
         ListMultipartUploadsResult uploads = listActiveMultipartUploads(bucket);
         for (Upload upload : uploads.getUploads()) {
@@ -487,11 +607,22 @@ public class Client {
         }
     }
 
+    /**
+     * Set access keys for authenticated access
+     *
+     * @param accessKey
+     * @param secretKey
+     */
     public void setKeys(String accessKey, String secretKey) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
     }
 
+    /**
+     * Set user agent of the client
+     *
+     * @param userAgent
+     */
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
     }
@@ -543,6 +674,16 @@ public class Client {
         response.disconnect();
     }
 
+    /**
+     * List all parts in an active multipart upload.
+     *
+     * @param bucket
+     * @param key
+     * @param uploadID
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     */
     public ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
@@ -564,6 +705,14 @@ public class Client {
         }
     }
 
+    /**
+     * Abort an active multipart upload
+     *
+     * @param bucket
+     * @param key
+     * @param uploadID
+     * @throws IOException
+     */
     public void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
@@ -640,6 +789,9 @@ public class Client {
         return fullData;
     }
 
+    /**
+     * Enable logging to a java logger for debug purposes.
+     */
     public void enableLogging() {
         if (logger == null) {
             logger = Logger.getLogger(HttpTransport.class.getName());
