@@ -273,10 +273,23 @@ public class Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-        request = request.setRequestMethod("GET");
 
         HttpResponse response = request.execute();
         return response.getContent();
+    }
+
+    /**
+     * Delete an object.
+     *
+     * @param bucket
+     * @param key
+     * @throws IOException
+     */
+    public void deleteObject(String bucket, String key) throws IOException {
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        HttpRequest request = getHttpRequest("DELETE", url);
+        HttpResponse response = request.execute();
+        response.disconnect();
     }
 
     /**
