@@ -25,7 +25,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -36,7 +35,6 @@ public class IntegrationTest {
     @Ignore
     public void testSigning() throws IOException, XmlPullParserException {
         Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
-        client.setKeys("REDACTED", "REDACTED");
 //        client.enableLogging();
         ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
         System.out.println(allMyBucketsResult);
@@ -45,19 +43,18 @@ public class IntegrationTest {
     @Test
     @Ignore
     public void testClient() throws IOException, XmlPullParserException {
-//        HttpClient client = (HttpClient)Clients.getClient("https://s3-us-west-2.amazonaws.com");
-        Client client = Client.getClient("http://localhost:9000");
-//        client.setKeys("REDACTED", "REDACTED");
+        Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
+//        Client client = Client.getClient("http://localhost:9000");
         client.enableLogging();
-        client.makeBucket("foo", Client.ACL_PUBLIC_READ_WRITE);
+        client.makeBucket("examplebucket", Client.ACL_PUBLIC_READ_WRITE);
 
 	client.setBucketACL("foo", Client.ACL_PRIVATE);
 
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
-        client.putObject("foo", "bar", "application/octet-stream", 11, data);
+        client.putObject("examplebucket", "bar", "application/octet-stream", 11, data);
 
-        InputStream object = client.getObject("foo", "bar");
+        InputStream object = client.getObject("examplebucket", "bar");
         byte[] result = new byte[11];
         int read = object.read(result);
         assertEquals(read, 11);
@@ -71,9 +68,9 @@ public class IntegrationTest {
         }
 
         InputStream largeObjectStream = new ByteArrayInputStream(largeObject);
-        client.putObject("foo", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
+        client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
 
-        InputStream object1 = client.getObject("foo", "bar2");
+        InputStream object1 = client.getObject("examplebucket", "bar2");
         byte[] largeResult = new byte[10 * 1024 * 1024];
         int amountRead = 0;
         while (amountRead != largeResult.length) {
@@ -87,24 +84,29 @@ public class IntegrationTest {
     @Test
     @Ignore
     public void testMultipart() throws IOException, XmlPullParserException {
-        byte[] largeObject = new byte[5 * 1024 * 1024];
-        for (int i = 0; i < 5 * 1024 * 1024; i++) {
-            largeObject[i] = 'a';
-        }
-        InputStream largeObjectStream = new ByteArrayInputStream(largeObject);
-        Client client = Client.getClient("http://localhost:9000");
-        client.putObject("foo", "bar2", "application/octet-stream", largeObject.length * 2, largeObjectStream);
-        largeObject = new byte[10 * 1024 * 1024];
+        byte[] largeObject = new byte[10 * 1024 * 1024];
         for (int i = 0; i < 10 * 1024 * 1024; i++) {
             largeObject[i] = 'a';
         }
+//        Client client = Client.getClient("http://localhost:9000");
+        Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
         client.enableLogging();
-        ListMultipartUploadsResult foo = client.listActiveMultipartUploads("foo");
+        try {
+            client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length * 2, new ByteArrayInputStream(largeObject));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        largeObject = new byte[20 * 1024 * 1024];
+        for (int i = 0; i < 20 * 1024 * 1024; i++) {
+            largeObject[i] = 'a';
+        }
+        client.enableLogging();
+        ListMultipartUploadsResult examplebucket = client.listActiveMultipartUploads("examplebucket");
         System.out.println("Foo:");
-        System.out.println(foo);
+        System.out.println(examplebucket);
         System.out.println(":Bar");
-        client.putObject("foo", "bar2", "application/octet-stream", largeObject.length, largeObjectStream);
-        foo = client.listActiveMultipartUploads("foo");
-        System.out.println(foo);
+        client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length, new ByteArrayInputStream(largeObject));
+        examplebucket = client.listActiveMultipartUploads("examplebucket");
+        System.out.println(examplebucket);
     }
 }

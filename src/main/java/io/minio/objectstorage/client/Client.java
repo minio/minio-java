@@ -314,10 +314,12 @@ public class Client {
             }
         }
 
+
         if (!isMultipart) {
             byte[] dataArray = readData((int) size, data);
             putObject(bucket, key, contentType, dataArray);
         } else {
+            long objectLength = 0;
             List<String> parts = new LinkedList<String>();
             int part = 1;
             ListPartsResult objectParts = listObjectParts(bucket, key, uploadID);
@@ -327,11 +329,20 @@ public class Client {
                     Part curPart = iterator.next();
                     long curSize = curPart.getSize();
                     String curEtag = curPart.geteTag();
+                    String curNormalizedEtag = curEtag.replaceAll("\"","").toLowerCase().trim();
                     byte[] curData = readData((int) curSize, data);
-                    String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData));
-                    if(!curEtag.equals(generatedEtag)) {
+                    String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData)).toLowerCase().trim();
+
+                    System.out.println("Part # " + curPart.getPartNumber());
+                    System.out.println("From upstream: " + curNormalizedEtag + " " + curSize);
+                    System.out.println("From generated: " + generatedEtag + " " + curData.length);
+                    if(!curNormalizedEtag.equals(generatedEtag) || curPart.getPartNumber() != part) {
                         throw new IOException("Partial upload does not match");
                     }
+                    System.out.println("Adding: " + curEtag);
+                    parts.add(curEtag);
+                    objectLength += curSize;
+                    part++;
                 }
             }
             while (true) {
@@ -341,6 +352,10 @@ public class Client {
                 }
                 parts.add(putObject(bucket, key, contentType, dataArray, uploadID, part));
                 part++;
+                objectLength += dataArray.length;
+            }
+            if(objectLength != size) {
+                throw new IOException("Data size mismatched");
             }
             completeMultipart(bucket, key, uploadID, parts);
         }
@@ -429,6 +444,8 @@ public class Client {
         completeManifest.setParts(parts);
 
         byte[] data = completeManifest.toString().getBytes("UTF-8");
+
+        System.out.println(completeManifest.toString());
 
         HttpRequest request = getHttpRequest("POST", url, data);
         request.setContent(new ByteArrayContent("application/xml", data));
