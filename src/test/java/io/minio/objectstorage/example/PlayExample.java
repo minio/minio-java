@@ -35,14 +35,14 @@ public class PlayExample {
         Client client = Client.getClient("http://play.minio.io:9000");
 //        client.setKeys("accessKey", "secretKey");
 
-	// Set a user agent for your app
-	client.setUserAgent("Example app/ (0.1)");
+        // Set a user agent for your app
+        client.setUserAgent("Example app/ (0.1)");
 
         // create bucket
         client.makeBucket("mybucket", Client.ACL_PUBLIC_READ);
 
-	// set Bucket ACL
-	client.setBucketACL("mybucket", Client.ACL_PUBLIC_READ_WRITE);
+        // set Bucket ACL
+        client.setBucketACL("mybucket", Client.ACL_PUBLIC_READ_WRITE);
 
         // list buckets
         ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
