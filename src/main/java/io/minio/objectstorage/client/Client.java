@@ -44,27 +44,34 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
+ * <p>
  * This class implements a simple object storage client. This client consists
  * of a useful subset of S3 compatible functionality.
- * These include:
+ * </p>
  *
- *   Service:
- *   * Creating a bucket
- *   * Listing buckets
+ *   <h2>Service</h2>
+ *   <ul>
+ *      <li>Creating a bucket</li>
+ *      <li>Listing buckets</li>
+ *   </ul>
  *
- *   Bucket:
- *   * Creating an object, including automatic upload resuming for large objects.
- *   * Listing objects in a bucket
- *   * Listing active multipart uploads
- *   * Dropping all active multipart uploads
- *   * Setting canned ACLs on buckets
+ *   <h2>Bucket</h2>
+ *   <ul>
+ *      <li> Creating an object, including automatic upload resuming for large objects.</li>
+ *      <li> Listing objects in a bucket</li>
+ *      <li> Listing active multipart uploads</li>
+ *      <li> Dropping all active multipart uploads</li>
+ *      <li> Setting canned ACLs on buckets</li>
+ *   </ul>
  *
- *   Object:
- *   * Dropping an active multipart upload for a specific object and uploadId
- *   * Read object metadata
- *   * Reading an object
- *   * Reading a range of bytes of an object
- *   * Deleting an object
+ *   <h2>Object</h2>Object
+ *   <ul>
+ *      <li>Dropping an active multipart upload for a specific object and uploadId</li>
+ *      <li>Read object metadata</li>
+ *      <li>Reading an object</li>
+ *      <li>Reading a range of bytes of an object</li>
+ *      <li>Deleting an object</li>
+ *   </ul>
  *
  *   Optionally, users can also provide access/secret keys or a precomputed
  *   signing key to the client. If keys are provided, all requests by the
