@@ -52,7 +52,7 @@ public class S3Example {
         client.putObject("mybucket", "myobject", "application/octet-stream", 11, new ByteArrayInputStream("hello world".getBytes("UTF-8")));
 
         // list objects
-        ListBucketResult myObjects = client.listObjectsInBucket("mybucket");
+        ListBucketResult myObjects = client.listObjectsInBucket("mybucket", null, null, null, 1000);
         System.out.println(myObjects);
 
         // get object metadata

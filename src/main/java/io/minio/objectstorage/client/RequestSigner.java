@@ -72,10 +72,8 @@ class RequestSigner implements HttpExecuteInterceptor {
         Date signingDate = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime();
         addDate(request, signingDate);
 
-//        System.out.println("--- Data Hash ---");
         byte[] dataHashBytes = computeSha256(data);
         String dataHash = DatatypeConverter.printHexBinary(dataHashBytes).toLowerCase();
-//        System.out.println(dataHash);
 
         request.getHeaders().set("x-amz-content-sha256", dataHash);
         request.getHeaders().setDate(dateFormat.format(signingDate));
@@ -138,8 +136,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private String getAuthorizationHeader(String signedHeaders, String signature, Date date, String region) {
-        String formattedDate = dateFormatyyyyMMdd.format(date);
-        return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + formattedDate + "/" + region + "/s3/aws4_request,SignedHeaders=" + signedHeaders + ",Signature=" + signature;
+        return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region, date) + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
     }
 
     private byte[] getSignature(byte[] signingKey, String stringtoSign) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
@@ -163,11 +160,15 @@ class RequestSigner implements HttpExecuteInterceptor {
         return hmacSha256.doFinal();
     }
 
+    private String getScope(String region, Date date) {
+	String formattedDate = dateFormatyyyyMMdd.format(date);
+	return formattedDate + "/" + region + "/" + "s3" + "/" + "aws4_request";
+    }
+
     private String getStringToSign(String region, String canonicalHash, Date date) {
         return "AWS4-HMAC-SHA256" + "\n" +
                 dateFormatyyyyMMddThhmmssZ.format(date) + "\n" +
-                dateFormatyyyyMMdd.format(date) + "/" + region + "/" + "s3" + "/" + "aws4_request" + "\n" +
-                canonicalHash;
+	        getScope(region, date) + "\n" + canonicalHash;
     }
 
     private Tuple2<String, String> getCanonicalRequest(HttpRequest request, String bodySha256Hash) {

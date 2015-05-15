@@ -171,8 +171,20 @@ public class Client {
         return response.getContent();
     }
 
-    public ListBucketResult listObjectsInBucket(String bucket) throws IOException, XmlPullParserException {
+    public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxkeys) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
+	if (maxkeys != null) {
+	    url.set("max-keys", maxkeys);
+	}
+	if (marker != null) {
+	    url.set("marker", marker);
+	}
+	if (prefix != null) {
+	    url.set("prefix", prefix);
+	}
+	if (delimiter != null) {
+	    url.set("delimiter", delimiter);
+	}
 
         HttpRequest request = getHttpRequest("GET", url);
 

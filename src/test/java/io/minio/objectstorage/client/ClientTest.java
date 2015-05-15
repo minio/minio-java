@@ -230,7 +230,7 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        ListBucketResult bucket = client.listObjectsInBucket("bucket");
+        ListBucketResult bucket = client.listObjectsInBucket("bucket", null, null, null, 1000);
 
         assertEquals("bucket", bucket.getName());
         assertEquals(null, bucket.getPrefix());
