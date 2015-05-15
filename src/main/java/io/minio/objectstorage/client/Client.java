@@ -77,7 +77,7 @@ import java.util.logging.Logger;
  *   signing key to the client. If keys are provided, all requests by the
  *   client will be signed using AWS Signature Version 4. @see #setKeys(String, String)
  *
- *   For an example of using this library, please see {TODO URL}
+ *   For an example of using this library, please see <a href="https://github.com/minio/objectstorage-java/blob/master/src/test/java/io/minio/objectstorage/example/S3Example.java">this example</a>.
  */
 public class Client {
     /**
