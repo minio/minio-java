@@ -35,14 +35,14 @@ public class S3Example {
         Client client = Client.getClient("https://s3.amazonaws.com");
 //        client.setKeys("accessKey", "secretKey");
 
-	// Set a user agent for your app
-	client.setUserAgent("Example app/ (0.1)");
+        // Set a user agent for your app
+        client.setUserAgent("Example app/ (0.1)");
 
         // create bucket
         client.makeBucket("mybucket", Client.ACL_PUBLIC_READ_WRITE);
 
-	// set bucket ACL
-	client.setBucketACL("mybucket", Client.ACL_PRIVATE);
+        // set bucket ACL
+        client.setBucketACL("mybucket", Client.ACL_PRIVATE);
 
         // list buckets
         ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();

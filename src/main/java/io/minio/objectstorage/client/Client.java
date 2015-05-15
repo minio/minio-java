@@ -324,19 +324,17 @@ public class Client {
             int part = 1;
             ListPartsResult objectParts = listObjectParts(bucket, key, uploadID);
             if(!objectParts.getParts().isEmpty()) {
-                Iterator<Part> iterator = objectParts.getParts().iterator();
-                while(iterator.hasNext()) {
-                    Part curPart = iterator.next();
+                for (Part curPart : objectParts.getParts()) {
                     long curSize = curPart.getSize();
                     String curEtag = curPart.geteTag();
-                    String curNormalizedEtag = curEtag.replaceAll("\"","").toLowerCase().trim();
+                    String curNormalizedEtag = curEtag.replaceAll("\"", "").toLowerCase().trim();
                     byte[] curData = readData((int) curSize, data);
                     String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData)).toLowerCase().trim();
 
                     System.out.println("Part # " + curPart.getPartNumber());
                     System.out.println("From upstream: " + curNormalizedEtag + " " + curSize);
                     System.out.println("From generated: " + generatedEtag + " " + curData.length);
-                    if(!curNormalizedEtag.equals(generatedEtag) || curPart.getPartNumber() != part) {
+                    if (!curNormalizedEtag.equals(generatedEtag) || curPart.getPartNumber() != part) {
                         throw new IOException("Partial upload does not match");
                     }
                     System.out.println("Adding: " + curEtag);
