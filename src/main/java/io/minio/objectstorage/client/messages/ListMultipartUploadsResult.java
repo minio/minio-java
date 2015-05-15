@@ -91,7 +91,7 @@ public class ListMultipartUploadsResult extends XmlEntity {
     }
 
     public List<Upload> getUploads() {
-        if(uploads == null) {
+        if (uploads == null) {
             return new ArrayList<Upload>();
         }
         return uploads;

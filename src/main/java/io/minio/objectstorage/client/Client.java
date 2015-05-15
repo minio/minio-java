@@ -34,7 +34,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -173,18 +176,18 @@ public class Client {
 
     public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxkeys) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
-	if (maxkeys != null) {
-	    url.set("max-keys", maxkeys);
-	}
-	if (marker != null) {
-	    url.set("marker", marker);
-	}
-	if (prefix != null) {
-	    url.set("prefix", prefix);
-	}
-	if (delimiter != null) {
-	    url.set("delimiter", delimiter);
-	}
+        if (maxkeys != null) {
+            url.set("max-keys", maxkeys);
+        }
+        if (marker != null) {
+            url.set("marker", marker);
+        }
+        if (prefix != null) {
+            url.set("prefix", prefix);
+        }
+        if (delimiter != null) {
+            url.set("delimiter", delimiter);
+        }
 
         HttpRequest request = getHttpRequest("GET", url);
 
@@ -251,11 +254,11 @@ public class Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
-	if (acl != null) {
-	    request.getHeaders().set("x-amz-acl", acl);
-	} else {
-	    request.getHeaders().set("x-amz-acl", ACL_PRIVATE);
-	}
+        if (acl != null) {
+            request.getHeaders().set("x-amz-acl", acl);
+        } else {
+            request.getHeaders().set("x-amz-acl", ACL_PRIVATE);
+        }
 
         try {
             HttpResponse execute = request.execute();
@@ -270,16 +273,16 @@ public class Client {
     }
 
     public boolean setBucketACL(String bucket, String acl) throws IOException {
-	GenericUrl url = getGenericUrlOfBucket(bucket);
-	url.set("acl", "");
+        GenericUrl url = getGenericUrlOfBucket(bucket);
+        url.set("acl", "");
 
-	HttpRequest request = getHttpRequest("PUT", url);
-	if (acl == null) {
-	    return false;
-	}
-	request.getHeaders().set("x-amz-acl", acl);
+        HttpRequest request = getHttpRequest("PUT", url);
+        if (acl == null) {
+            return false;
+        }
+        request.getHeaders().set("x-amz-acl", acl);
 
-	try {
+        try {
             HttpResponse execute = request.execute();
             try {
                 return execute.getStatusCode() == 200;
@@ -301,15 +304,15 @@ public class Client {
         if (size > PART_SIZE) {
             // check if multipart exists
             ListMultipartUploadsResult multipartUploads = listActiveMultipartUploads(bucket, key);
-            for(Upload upload : multipartUploads.getUploads()) {
-                if(upload.getKey().equals(key)) {
+            for (Upload upload : multipartUploads.getUploads()) {
+                if (upload.getKey().equals(key)) {
                     uploadID = upload.getUploadID();
                 }
             }
 
             isMultipart = true;
             partSize = computePartSize(size);
-            if(uploadID == null) {
+            if (uploadID == null) {
                 uploadID = newMultipartUpload(bucket, key);
             }
         }
@@ -323,7 +326,7 @@ public class Client {
             List<String> parts = new LinkedList<String>();
             int part = 1;
             ListPartsResult objectParts = listObjectParts(bucket, key, uploadID);
-            if(!objectParts.getParts().isEmpty()) {
+            if (!objectParts.getParts().isEmpty()) {
                 for (Part curPart : objectParts.getParts()) {
                     long curSize = curPart.getSize();
                     String curEtag = curPart.geteTag();
@@ -352,7 +355,7 @@ public class Client {
                 part++;
                 objectLength += dataArray.length;
             }
-            if(objectLength != size) {
+            if (objectLength != size) {
                 throw new IOException("Data size mismatched");
             }
             completeMultipart(bucket, key, uploadID, parts);

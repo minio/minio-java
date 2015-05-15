@@ -161,14 +161,14 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private String getScope(String region, Date date) {
-	String formattedDate = dateFormatyyyyMMdd.format(date);
-	return formattedDate + "/" + region + "/" + "s3" + "/" + "aws4_request";
+        String formattedDate = dateFormatyyyyMMdd.format(date);
+        return formattedDate + "/" + region + "/" + "s3" + "/" + "aws4_request";
     }
 
     private String getStringToSign(String region, String canonicalHash, Date date) {
         return "AWS4-HMAC-SHA256" + "\n" +
                 dateFormatyyyyMMddThhmmssZ.format(date) + "\n" +
-	        getScope(region, date) + "\n" + canonicalHash;
+                getScope(region, date) + "\n" + canonicalHash;
     }
 
     private Tuple2<String, String> getCanonicalRequest(HttpRequest request, String bodySha256Hash) throws UnsupportedEncodingException {
@@ -200,7 +200,7 @@ class RequestSigner implements HttpExecuteInterceptor {
         StringBuilder queryBuilder = new StringBuilder();
         if (!rawQuery.equals("")) {
             String[] querySplit = rawQuery.split("&");
-            for(int i = 0; i<querySplit.length; i++) {
+            for (int i = 0; i < querySplit.length; i++) {
                 querySplit[i] = querySplit[i].trim();
             }
             Arrays.sort(querySplit);
