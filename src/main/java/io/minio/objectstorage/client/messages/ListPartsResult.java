@@ -121,7 +121,7 @@ public class ListPartsResult extends XmlEntity {
     }
 
     public List<Part> getParts() {
-        if(parts == null) {
+        if (parts == null) {
             return new LinkedList<Part>();
         }
         return parts;
