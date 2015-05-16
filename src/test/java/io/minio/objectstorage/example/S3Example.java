@@ -70,5 +70,7 @@ public class S3Example {
         } finally {
             object.close();
         }
+
+        client.deleteObject("mybucket", "myobject");
     }
 }
