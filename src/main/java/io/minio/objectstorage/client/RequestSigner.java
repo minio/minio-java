@@ -36,7 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-class RequestSigner implements HttpExecuteInterceptor {
+public class RequestSigner implements HttpExecuteInterceptor {
     private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ= DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
     private static final DateTimeFormatter dateFormatyyyyMMdd = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC();
     private static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withZoneUTC();
@@ -46,7 +46,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     private String secretKey = null;
     private byte[] userProvidedSigningKey;
 
-    public RequestSigner(byte[] data) {
+    RequestSigner(byte[] data) {
         if (data == null) {
             data = new byte[0];
         }
@@ -313,12 +313,12 @@ class RequestSigner implements HttpExecuteInterceptor {
         }
     }
 
-    public void setAccessKeys(String accessKey, String secretKey) {
+    void setAccessKeys(String accessKey, String secretKey) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
     }
 
-    public void setSigningKey(byte[] signingKey) {
+    void setSigningKey(byte[] signingKey) {
         this.userProvidedSigningKey = signingKey;
     }
 }
