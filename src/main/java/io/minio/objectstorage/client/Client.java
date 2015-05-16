@@ -22,7 +22,6 @@ import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
 import io.minio.objectstorage.client.errors.*;
 import io.minio.objectstorage.client.messages.*;
-import io.minio.objectstorage.client.messages.XmlError;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -50,76 +49,76 @@ import java.util.logging.Logger;
  * This class implements a simple object storage client. This client consists
  * of a useful subset of S3 compatible functionality.
  * </p>
- *
- *   <h2>Service</h2>
- *   <ul>
- *      <li>Creating a bucket</li>
- *      <li>Listing buckets</li>
- *   </ul>
- *
- *   <h2>Bucket</h2>
- *   <ul>
- *      <li> Creating an object, including automatic upload resuming for large objects.</li>
- *      <li> Listing objects in a bucket</li>
- *      <li> Listing active multipart uploads</li>
- *      <li> Dropping all active multipart uploads</li>
- *      <li> Setting canned ACLs on buckets</li>
- *   </ul>
- *
- *   <h2>Object</h2>Object
- *   <ul>
- *      <li>Dropping an active multipart upload for a specific object and uploadId</li>
- *      <li>Read object metadata</li>
- *      <li>Reading an object</li>
- *      <li>Reading a range of bytes of an object</li>
- *      <li>Deleting an object</li>
- *   </ul>
- *
- *   Optionally, users can also provide access/secret keys or a precomputed
- *   signing key to the client. If keys are provided, all requests by the
- *   client will be signed using AWS Signature Version 4. @see #setKeys(String, String)
- *
- *   For an example of using this library, please see <a href="https://github.com/minio/objectstorage-java/blob/master/src/test/java/io/minio/objectstorage/example/S3Example.java">this example</a>.
+ * <p/>
+ * <h2>Service</h2>
+ * <ul>
+ * <li>Creating a bucket</li>
+ * <li>Listing buckets</li>
+ * </ul>
+ * <p/>
+ * <h2>Bucket</h2>
+ * <ul>
+ * <li> Creating an object, including automatic upload resuming for large objects.</li>
+ * <li> Listing objects in a bucket</li>
+ * <li> Listing active multipart uploads</li>
+ * <li> Dropping all active multipart uploads</li>
+ * <li> Setting canned ACLs on buckets</li>
+ * </ul>
+ * <p/>
+ * <h2>Object</h2>Object
+ * <ul>
+ * <li>Dropping an active multipart upload for a specific object and uploadId</li>
+ * <li>Read object metadata</li>
+ * <li>Reading an object</li>
+ * <li>Reading a range of bytes of an object</li>
+ * <li>Deleting an object</li>
+ * </ul>
+ * <p/>
+ * Optionally, users can also provide access/secret keys or a precomputed
+ * signing key to the client. If keys are provided, all requests by the
+ * client will be signed using AWS Signature Version 4. @see #setKeys(String, String)
+ * <p/>
+ * For an example of using this library, please see <a href="https://github.com/minio/objectstorage-java/blob/master/src/test/java/io/minio/objectstorage/example/S3Example.java">this example</a>.
  */
 public class Client {
     /**
      * Canned acl: public-read-write
-     *
+     * <p/>
      * Read: public
      * Write: public
      */
     public static final String ACL_PUBLIC_READ_WRITE = "public-read-write";
     /**
      * Canned acl: private
-     *
+     * <p/>
      * Read: authorized users only
      * Write: authorized users only
      */
     public static final String ACL_PRIVATE = "private";
     /**
      * Canned acl: public-read
-     *
+     * <p/>
      * Read: public
      * Write: authorized users only
      */
     public static final String ACL_PUBLIC_READ = "public-read";
     /**
      * Canned acl: authenticated-read
-     *
+     * <p/>
      * Read: Only users with a valid account, all valid users authorized
      * Write: acl authorized users only
      */
     public static final String ACL_AUTHENTICATED_READ = "authenticated-read";
     /**
      * Canned acl: bucket-owner-read
-     *
+     * <p/>
      * Read: Object owner and bucket owner
      * Write: Object owner only
      */
     public static final String ACL_BUCKET_OWNER_READ = "bucket-owner-read";
     /**
      * Canned acl: bucket-owner-read
-     *
+     * <p/>
      * Read: Object owner and bucket owner
      * Write: Object owner and bucket owner
      */
@@ -144,11 +143,11 @@ public class Client {
      * @param url must be the full url to the object storage server, exluding both bucket or object paths.
      *            For example: http://play.minio.io
      *            Valid:
-     *              * https://s3-us-west-2.amazonaws.com
-     *              * http://play.minio.io
+     *            * https://s3-us-west-2.amazonaws.com
+     *            * http://play.minio.io
      *            Invalid:
-     *              * https://s3-us-west-2.amazonaws.com/example/
-     *              * https://s3-us-west-2.amazonaws.com/example/object
+     *            * https://s3-us-west-2.amazonaws.com/example/
+     *            * https://s3-us-west-2.amazonaws.com/example/object
      * @return an object storage client backed by an S3 compatible server.
      * @throws MalformedURLException
      */
@@ -172,9 +171,9 @@ public class Client {
     }
 
     /**
-     * @see #getClient(URL url)
      * @return an object storage client backed by an S3 compatible server.
      * @throws MalformedURLException
+     * @see #getClient(URL url)
      */
     public static Client getClient(String url) throws MalformedURLException {
         if (url == null) {
@@ -206,9 +205,9 @@ public class Client {
         HttpRequest request = getHttpRequest("HEAD", url);
         request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
-                if(response.isSuccessStatusCode()) {
+                if (response.isSuccessStatusCode()) {
                     HttpHeaders responseHeaders = response.getHeaders();
                     SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
                     Date lastModified = formatter.parse(responseHeaders.getLastModified());
@@ -217,10 +216,10 @@ public class Client {
                     try {
                         parseError(response);
                     } catch (ObjectStorageException e) {
-                        if( e instanceof BucketNotFoundException) {
-                            throw (BucketNotFoundException)e;
-                        } else if(e instanceof ObjectNotFoundException) {
-                            throw (ObjectNotFoundException)e;
+                        if (e instanceof BucketNotFoundException) {
+                            throw (BucketNotFoundException) e;
+                        } else if (e instanceof ObjectNotFoundException) {
+                            throw (ObjectNotFoundException) e;
                         } else {
                             e.printStackTrace();
                         }
@@ -238,7 +237,7 @@ public class Client {
     }
 
     private void parseError(HttpResponse response) throws ObjectStorageException, IOException, XmlPullParserException {
-        if(response.getContent() == null) {
+        if (response.getContent() == null) {
             throw new IOException("Cannot connect");
         }
         XmlPullParser parser = Xml.createParser();
@@ -249,16 +248,16 @@ public class Client {
         String code = xmlError.getCode();
 
         ObjectStorageException e = null;
-        if(code.equals("NoSuchBucket")) e =  new BucketNotFoundException();
-        else if(code.equals("NoSuchKey"))  e =  new ObjectNotFoundException();
-        else if(code.equals("InvalidBucketName"))  e =  new InvalidObjectNameException();
-        else if(code.equals("InvalidObjectName"))  e =  new InvalidObjectNameException();
-        else if(code.equals("AccessDenied"))  e =  new AccessDeniedException();
-        else if(code.equals("BucketAlreadyExists")) e =  new BucketExistsException();
-        else if(code.equals("ObjectAlreadyExists")) e =  new ObjectExistsException();
-        else if(code.equals("InternalError")) e =  new InternalServerException();
-        else if(code.equals("KeyTooLong")) e =  new InvalidObjectNameException();
-        else if(code.equals("TooManyBuckets")) e =  new MaxBucketsReachedException();
+        if (code.equals("NoSuchBucket")) e = new BucketNotFoundException();
+        else if (code.equals("NoSuchKey")) e = new ObjectNotFoundException();
+        else if (code.equals("InvalidBucketName")) e = new InvalidObjectNameException();
+        else if (code.equals("InvalidObjectName")) e = new InvalidObjectNameException();
+        else if (code.equals("AccessDenied")) e = new AccessDeniedException();
+        else if (code.equals("BucketAlreadyExists")) e = new BucketExistsException();
+        else if (code.equals("ObjectAlreadyExists")) e = new ObjectExistsException();
+        else if (code.equals("InternalError")) e = new InternalServerException();
+        else if (code.equals("KeyTooLong")) e = new InvalidObjectNameException();
+        else if (code.equals("TooManyBuckets")) e = new MaxBucketsReachedException();
         else e = new InvalidStateException();
         e.setXmlError(xmlError);
         throw e;
@@ -362,8 +361,9 @@ public class Client {
 
     /**
      * List objects in a given bucket
-     *
+     * <p/>
      * TODO: explain paramters and give examples
+     *
      * @param bucket
      * @param marker
      * @param prefix
@@ -526,21 +526,21 @@ public class Client {
 
     /**
      * Create an object.
-     *
+     * <p/>
      * If the object is larger than 5MB, the client will automatically use a multipart session.
-     *
+     * <p/>
      * If the session fails, the user may attempt to reupload the object by attempting to create
      * the exact same object again. The client will examine all parts of any current upload session
      * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
      * before uploading any more data. Otherwise, it will resume uploading where the session left off.
-     *
+     * <p/>
      * If the multipart session fails, the user is responsible for resuming or dropping the session.
      *
-     * @param bucket Bucket to use
-     * @param key Key of object
+     * @param bucket      Bucket to use
+     * @param key         Key of object
      * @param contentType Content type to set this object to
-     * @param size Size of all the data that will be uploaded.
-     * @param data Data to upload
+     * @param size        Size of all the data that will be uploaded.
+     * @param data        Data to upload
      * @throws IOException
      * @throws XmlPullParserException
      * @see #listActiveMultipartUploads(String)

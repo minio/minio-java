@@ -16,8 +16,6 @@
 
 package io.minio.objectstorage.client.errors;
 
-import io.minio.objectstorage.client.messages.XmlError;
-
 public class InvalidStateException extends ObjectStorageException {
 
 }
