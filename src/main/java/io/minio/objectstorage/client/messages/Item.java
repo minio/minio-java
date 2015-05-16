@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class Item extends XmlEntity {
     @Key("Key")
     private String key;

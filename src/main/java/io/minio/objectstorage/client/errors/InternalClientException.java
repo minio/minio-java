@@ -16,5 +16,6 @@
 
 package io.minio.objectstorage.client.errors;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class InternalClientException extends ObjectStorageException {
 }

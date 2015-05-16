@@ -20,6 +20,7 @@ import com.google.api.client.util.Key;
 
 import java.util.List;
 
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class ListBucketResult extends XmlEntity {
     @Key("Name")
     private String Name;

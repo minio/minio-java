@@ -18,6 +18,7 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+@SuppressWarnings("unused")
 public class Upload extends XmlEntity {
     @Key("Key")
     private String key;
