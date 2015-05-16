@@ -138,6 +138,7 @@ public class Client {
     private String secretKey;
     private Logger logger;
     private String userAgent;
+    private byte[] signingKey;
 
     private Client(URL url) {
         this.url = url;
@@ -276,6 +277,7 @@ public class Client {
             public void initialize(HttpRequest request) throws IOException {
                 RequestSigner signer = new RequestSigner(data);
                 signer.setAccessKeys(accessKey, secretKey);
+                signer.setSigningKey(signingKey);
                 request.setInterceptor(signer);
             }
         });
@@ -884,6 +886,12 @@ public class Client {
                     }
                 }
             });
+        }
+    }
+
+    public void setSigningKey(byte[] signingKey) {
+        if(signingKey != null) {
+            this.signingKey = signingKey.clone();
         }
     }
 }
