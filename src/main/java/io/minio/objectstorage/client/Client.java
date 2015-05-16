@@ -20,7 +20,9 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
+import io.minio.objectstorage.client.errors.*;
 import io.minio.objectstorage.client.messages.*;
+import io.minio.objectstorage.client.messages.XmlError;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -199,22 +201,67 @@ public class Client {
      * @throws IOException
      * @see ObjectMetadata
      */
-    public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException {
+    public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException, BucketNotFoundException, ObjectNotFoundException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("HEAD", url);
-
+        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
-        try {
-            HttpHeaders responseHeaders = response.getHeaders();
-            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-            Date lastModified = formatter.parse(responseHeaders.getLastModified());
-            return new ObjectMetadata(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag());
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } finally {
-            response.disconnect();
+        if(response != null) {
+            try {
+                if(response.isSuccessStatusCode()) {
+                    HttpHeaders responseHeaders = response.getHeaders();
+                    SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+                    Date lastModified = formatter.parse(responseHeaders.getLastModified());
+                    return new ObjectMetadata(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag());
+                } else {
+                    try {
+                        parseError(response);
+                    } catch (ObjectStorageException e) {
+                        if( e instanceof BucketNotFoundException) {
+                            throw (BucketNotFoundException)e;
+                        } else if(e instanceof ObjectNotFoundException) {
+                            throw (ObjectNotFoundException)e;
+                        } else {
+                            e.printStackTrace();
+                        }
+                    } catch (XmlPullParserException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            } finally {
+                response.disconnect();
+            }
         }
         throw new IOException();
+    }
+
+    private void parseError(HttpResponse response) throws ObjectStorageException, IOException, XmlPullParserException {
+        if(response.getContent() == null) {
+            throw new IOException("Cannot connect");
+        }
+        XmlPullParser parser = Xml.createParser();
+        InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+        parser.setInput(reader);
+        XmlError xmlError = new XmlError();
+        Xml.parseElement(parser, xmlError, new XmlNamespaceDictionary(), null);
+        String code = xmlError.getCode();
+
+        ObjectStorageException e = null;
+        if(code.equals("NoSuchBucket")) e =  new BucketNotFoundException();
+        else if(code.equals("NoSuchKey"))  e =  new ObjectNotFoundException();
+        else if(code.equals("InvalidBucketName"))  e =  new InvalidObjectNameException();
+        else if(code.equals("InvalidObjectName"))  e =  new InvalidObjectNameException();
+        else if(code.equals("AccessDenied"))  e =  new AccessDeniedException();
+        else if(code.equals("BucketAlreadyExists")) e =  new BucketExistsException();
+        else if(code.equals("ObjectAlreadyExists")) e =  new ObjectExistsException();
+        else if(code.equals("InternalError")) e =  new InternalServerException();
+        else if(code.equals("KeyTooLong")) e =  new InvalidObjectNameException();
+        else if(code.equals("TooManyBuckets")) e =  new MaxBucketsReachedException();
+        else e = new InvalidStateException();
+        e.setXmlError(xmlError);
+        throw e;
     }
 
     private HttpRequest getHttpRequest(String method, GenericUrl url) throws IOException {
