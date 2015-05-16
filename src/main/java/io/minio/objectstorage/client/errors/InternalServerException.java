@@ -16,5 +16,5 @@
 
 package io.minio.objectstorage.client.errors;
 
-public class InternalServerException extends ObjectStorageException{
+public class InternalServerException extends ObjectStorageException {
 }
