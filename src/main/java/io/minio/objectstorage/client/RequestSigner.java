@@ -61,8 +61,8 @@ class RequestSigner implements HttpExecuteInterceptor {
 
         String region = getRegion(request);
 
-        Date signingDate = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTime();
-        addDate(request, signingDate);
+        DateTime signingDate = new DateTime();
+        addDateToHeaders(request, signingDate);
 
         byte[] dataHashBytes = computeSha256(data);
         String dataHash = DatatypeConverter.printHexBinary(dataHashBytes).toLowerCase();
@@ -123,12 +123,12 @@ class RequestSigner implements HttpExecuteInterceptor {
         return digest.digest(data);
     }
 
-    private void addDate(HttpRequest request, Date date) {
-        String dateString = new DateTime(date).toString(dateFormatyyyyMMddThhmmssZ);
+    private void addDateToHeaders(HttpRequest request, DateTime date) {
+        String dateString = date.toString(dateFormatyyyyMMddThhmmssZ);
         request.getHeaders().set("x-amz-date", dateString);
     }
 
-    private String getAuthorizationHeader(String signedHeaders, String signature, Date date, String region) {
+    private String getAuthorizationHeader(String signedHeaders, String signature, DateTime date, String region) {
         return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region, date) + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
     }
 
@@ -136,15 +136,19 @@ class RequestSigner implements HttpExecuteInterceptor {
         return signHmac(signingKey, stringToSign.getBytes("UTF-8"));
     }
 
-    private byte[] getSigningKey(Date date, String region) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+    private byte[] getSigningKey(DateTime date, String region) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         if(this.accessKey != null && this.secretKey != null) {
             return generateSigningKey(date, region, this.secretKey);
         }
         return this.userProvidedSigningKey;
     }
 
-    private static byte[] generateSigningKey(Date date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        String formattedDate = new DateTime(date).toString(dateFormatyyyyMMdd);
+    public static byte[] generateSigningKey(Date date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        return generateSigningKey(new DateTime(date), region, secretKey);
+    }
+
+    public static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        String formattedDate = date.toString(dateFormatyyyyMMdd);
         String dateKeyLine = "AWS4" + secretKey;
         byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
         byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
@@ -160,14 +164,14 @@ class RequestSigner implements HttpExecuteInterceptor {
         return hmacSha256.doFinal();
     }
 
-    private String getScope(String region, Date date) {
-        String formattedDate = new DateTime(date).toString(dateFormatyyyyMMdd);
+    private String getScope(String region, DateTime date) {
+        String formattedDate = date.toString(dateFormatyyyyMMdd);
         return formattedDate + "/" + region + "/" + "s3" + "/" + "aws4_request";
     }
 
-    private String getStringToSign(String region, String canonicalHash, Date date) {
+    private String getStringToSign(String region, String canonicalHash, DateTime date) {
         return "AWS4-HMAC-SHA256" + "\n" +
-                new DateTime(date).toString(dateFormatyyyyMMddThhmmssZ) + "\n" +
+                date.toString(dateFormatyyyyMMddThhmmssZ) + "\n" +
                 getScope(region, date) + "\n" + canonicalHash;
     }
 
