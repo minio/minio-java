@@ -335,7 +335,7 @@ public class Client {
      *
      * @param bucket object's bucket
      * @param key object's key
-     * @throws IOException
+     * @throws IOException if the connection fails
      */
     public void deleteObject(String bucket, String key) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -353,7 +353,7 @@ public class Client {
      * @param offset Offset from the start of the object.
      * @param length Length of bytes to retrieve.
      * @return an InputStream containing the object. Close the InputStream when done.
-     * @throws IOException
+     * @throws IOException if the connection does not succeed
      */
     public InputStream getObject(String bucket, String key, long offset, long length) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -367,15 +367,14 @@ public class Client {
 
     /**
      * List objects in a given bucket
-     * <p/>
      * TODO: explain parameters and give examples
      *
      * @param bucket target bucket to list objects in
-     * @param marker
-     * @param prefix
-     * @param delimiter
-     * @param maxKeys
-     * @return
+     * @param marker marker to start listing requests
+     * @param prefix list objects starting with give nprefix
+     * @param delimiter list objects up to a given delimiter, typically '/'
+     * @param maxKeys list of keys, up to 1000
+     * @return a list of objects
      * @throws IOException
      * @throws XmlPullParserException
      */
@@ -417,10 +416,10 @@ public class Client {
     }
 
     /**
-     * List buckets owned by the current user
+     * List buckets owned by the current user.
      *
-     * @return
-     * @throws IOException
+     * @return a list of buckets owned by the current user
+     * @throws IOException if the connection fails
      * @throws XmlPullParserException
      */
     public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException {
@@ -448,7 +447,7 @@ public class Client {
     /**
      * Test whether a bucket exists and the user has at least read access
      *
-     * @param bucket
+     * @param bucket bucket to test
      * @return true if the bucket exists and the user has at least read access
      * @throws IOException
      */
@@ -472,9 +471,9 @@ public class Client {
     /**
      * Create a bucket with a given name and ACL
      *
-     * @param bucket
-     * @param acl
-     * @return
+     * @param bucket bucket to create
+     * @param acl canned acl
+     * @return true if succeeds // TODO return void, throw exception on failure
      * @throws IOException
      */
     public boolean makeBucket(String bucket, String acl) throws IOException {
@@ -502,9 +501,9 @@ public class Client {
     /**
      * Set the bucket's ACL.
      *
-     * @param bucket
-     * @param acl
-     * @return
+     * @param bucket bucket to set ACL on
+     * @param acl canned acl
+     * @return // TODO throw exception on failure
      * @throws IOException
      */
     public boolean setBucketACL(String bucket, String acl) throws IOException {
@@ -547,8 +546,8 @@ public class Client {
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
      * @param data        Data to upload
-     * @throws IOException
-     * @throws XmlPullParserException
+     * @throws IOException on failure
+     * @throws XmlPullParserException on unexpected xml // TODO don't fail like this, wrap as our own error
      * @see #listActiveMultipartUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      */
@@ -622,8 +621,8 @@ public class Client {
     /**
      * Lists all active multipart uploads in a bucket
      *
-     * @param bucket
-     * @return
+     * @param bucket bucket to list active multipart uploads
+     * @return list of active multipart uploads
      * @throws IOException
      * @throws XmlPullParserException
      */
@@ -634,11 +633,11 @@ public class Client {
     /**
      * Lists all active multipart uploads in a bucket with a given key prefix
      *
-     * @param bucket
-     * @param prefix
-     * @return
-     * @throws IOException
-     * @throws XmlPullParserException
+     * @param bucket bucket to list active multipart uploads
+     * @param prefix prefix to filter, all multipart objects returned will begin with prefix.
+     * @return a list of multipart objects with a given prefix
+     * @throws IOException on connection failure
+     * @throws XmlPullParserException // TODO return better error
      */
     private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String prefix) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -669,9 +668,9 @@ public class Client {
     /**
      * Abort all active multipart uploads in a given bucket.
      *
-     * @param bucket
-     * @throws IOException
-     * @throws XmlPullParserException
+     * @param bucket to dorp all active multipart uploads in
+     * @throws IOException on connection failure
+     * @throws XmlPullParserException // TODO return better error
      */
     public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException {
         ListMultipartUploadsResult uploads = listActiveMultipartUploads(bucket);
@@ -683,8 +682,8 @@ public class Client {
     /**
      * Set access keys for authenticated access
      *
-     * @param accessKey
-     * @param secretKey
+     * @param accessKey access key to sign requests
+     * @param secretKey secret key to sign requests
      */
     public void setKeys(String accessKey, String secretKey) {
         this.accessKey = accessKey;
@@ -694,7 +693,7 @@ public class Client {
     /**
      * Set user agent of the client
      *
-     * @param userAgent
+     * @param userAgent Sets the user agent of the request.
      */
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
@@ -750,12 +749,12 @@ public class Client {
     /**
      * List all parts in an active multipart upload.
      *
-     * @param bucket
-     * @param key
-     * @param uploadID
-     * @return
-     * @throws IOException
-     * @throws XmlPullParserException
+     * @param bucket of object
+     * @param key of object
+     * @param uploadID of object
+     * @return a list of parts in a given multipart upload
+     * @throws IOException on connection failure
+     * @throws XmlPullParserException // TODO better error
      */
     public ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -781,10 +780,11 @@ public class Client {
     /**
      * Abort an active multipart upload
      *
-     * @param bucket
-     * @param key
-     * @param uploadID
-     * @throws IOException
+     * @param bucket of multipart upload to abort
+     * @param key of multipart upload to abort
+     * @param uploadID of multipart upload to abort
+     * @throws IOException on connection failure
+     * // TODO handle failure, given bucket/object/uploadid might not exist
      */
     public void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -797,7 +797,7 @@ public class Client {
 
     private int computePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB
-        int partSize = (int) (size / 9999);
+        int partSize = (int) (size / 9999); // using 10000 may cause part size to become too small, and not fit the entire object in
         return Math.max(minimumPartSize, partSize);
     }
 
@@ -890,6 +890,11 @@ public class Client {
         }
     }
 
+    /**
+     * Set signing key to sign requests with
+     *
+     * @param signingKey to use in this connection
+     */
     public void setSigningKey(byte[] signingKey) {
         if(signingKey != null) {
             this.signingKey = signingKey.clone();
