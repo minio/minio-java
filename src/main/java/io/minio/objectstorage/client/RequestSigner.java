@@ -41,6 +41,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     private byte[] data = new byte[0];
     private String accessKey = null;
     private String secretKey = null;
+    private byte[] userProvidedSigningKey;
 
     public RequestSigner(byte[] data) {
         if (data == null) {
@@ -59,7 +60,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private void signV4(HttpRequest request, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
-        if (this.accessKey == null || this.secretKey == null) {
+        if ((this.accessKey == null || this.secretKey == null) && this.userProvidedSigningKey == null) {
             return;
         }
 
@@ -140,12 +141,15 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private byte[] getSigningKey(Date date, String region) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        String formattedDate = dateFormatyyyyMMdd.format(date);
-        String dateKeyLine = "AWS4" + this.secretKey;
-        byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
-        byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
-        byte[] dateRegionServiceKey = signHmac(dateRegionKey, "s3".getBytes("UTF-8"));
-        return signHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
+        if(this.accessKey != null && this.secretKey != null) {
+            String formattedDate = dateFormatyyyyMMdd.format(date);
+            String dateKeyLine = "AWS4" + this.secretKey;
+            byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
+            byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
+            byte[] dateRegionServiceKey = signHmac(dateRegionKey, "s3".getBytes("UTF-8"));
+            return signHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
+        }
+        return this.userProvidedSigningKey;
     }
 
     private byte[] signHmac(byte[] curKey, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
@@ -310,4 +314,7 @@ class RequestSigner implements HttpExecuteInterceptor {
         this.secretKey = secretKey;
     }
 
+    public void setSigningKey(byte[] signingKey) {
+        this.userProvidedSigningKey = signingKey;
+    }
 }
