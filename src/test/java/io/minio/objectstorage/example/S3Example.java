@@ -21,6 +21,7 @@ import io.minio.objectstorage.client.Client;
 import io.minio.objectstorage.client.ObjectMetadata;
 import io.minio.objectstorage.client.errors.BucketNotFoundException;
 import io.minio.objectstorage.client.errors.ObjectNotFoundException;
+import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import io.minio.objectstorage.client.messages.ListBucketResult;
 import org.xmlpull.v1.XmlPullParserException;
@@ -30,7 +31,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class S3Example {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ObjectNotFoundException, BucketNotFoundException {
+    public static void main(String[] args) throws IOException, XmlPullParserException, ObjectStorageException {
         System.out.println("Example app");
 
         // create client
