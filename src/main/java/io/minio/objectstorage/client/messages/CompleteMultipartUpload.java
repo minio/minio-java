@@ -20,6 +20,7 @@ import com.google.api.client.util.Key;
 
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class CompleteMultipartUpload extends XmlEntity {
     @Key("Part")
     private List<Part> parts;

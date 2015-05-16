@@ -21,6 +21,7 @@ import com.google.api.client.util.Key;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class ListMultipartUploadsResult extends XmlEntity {
     @Key("Upload")
     List<Upload> uploads;

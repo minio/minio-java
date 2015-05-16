@@ -20,6 +20,7 @@ import com.google.api.client.util.Key;
 
 import java.util.List;
 
+@SuppressWarnings("WeakerAccess")
 public class Buckets extends XmlEntity {
     @Key("Bucket")
     private List<Bucket> bucket;

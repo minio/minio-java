@@ -42,10 +42,6 @@ class RequestSigner implements HttpExecuteInterceptor {
     private String accessKey = null;
     private String secretKey = null;
 
-    public RequestSigner() {
-        this(null);
-    }
-
     public RequestSigner(byte[] data) {
         if (data == null) {
             data = new byte[0];
@@ -139,8 +135,8 @@ class RequestSigner implements HttpExecuteInterceptor {
         return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region, date) + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
     }
 
-    private byte[] getSignature(byte[] signingKey, String stringtoSign) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
-        return signHmac(signingKey, stringtoSign.getBytes("UTF-8"));
+    private byte[] getSignature(byte[] signingKey, String stringToSign) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+        return signHmac(signingKey, stringToSign.getBytes("UTF-8"));
     }
 
     private byte[] getSigningKey(Date date, String region) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {

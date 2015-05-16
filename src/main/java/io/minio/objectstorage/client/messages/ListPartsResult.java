@@ -21,6 +21,7 @@ import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class ListPartsResult extends XmlEntity {
     @Key("Bucket")
     private String Bucket;

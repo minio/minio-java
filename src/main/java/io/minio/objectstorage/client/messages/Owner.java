@@ -18,6 +18,7 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+@SuppressWarnings("SameParameterValue")
 public class Owner extends XmlEntity {
     @Key
     private String ID;

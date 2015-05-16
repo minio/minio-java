@@ -18,6 +18,7 @@ package io.minio.objectstorage.client.errors;
 
 import io.minio.objectstorage.client.messages.XmlError;
 
+@SuppressWarnings("unused")
 public class ObjectStorageException extends Exception {
     private XmlError xmlError;
 

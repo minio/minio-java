@@ -18,6 +18,7 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class InitiateMultipartUploadResult extends XmlEntity {
     @Key("Bucket")
     private String bucket;

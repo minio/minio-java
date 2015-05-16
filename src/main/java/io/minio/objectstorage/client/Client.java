@@ -80,6 +80,7 @@ import java.util.logging.Logger;
  * <p/>
  * For an example of using this library, please see <a href="https://github.com/minio/objectstorage-java/blob/master/src/test/java/io/minio/objectstorage/example/S3Example.java">this example</a>.
  */
+@SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class Client {
     /**
      * Canned acl: public-read-write
@@ -87,6 +88,7 @@ public class Client {
      * Read: public
      * Write: public
      */
+    @SuppressWarnings("unused")
     public static final String ACL_PUBLIC_READ_WRITE = "public-read-write";
     /**
      * Canned acl: private
@@ -94,6 +96,7 @@ public class Client {
      * Read: authorized users only
      * Write: authorized users only
      */
+    @SuppressWarnings("unused")
     public static final String ACL_PRIVATE = "private";
     /**
      * Canned acl: public-read
@@ -101,6 +104,7 @@ public class Client {
      * Read: public
      * Write: authorized users only
      */
+    @SuppressWarnings("unused")
     public static final String ACL_PUBLIC_READ = "public-read";
     /**
      * Canned acl: authenticated-read
@@ -108,6 +112,7 @@ public class Client {
      * Read: Only users with a valid account, all valid users authorized
      * Write: acl authorized users only
      */
+    @SuppressWarnings("unused")
     public static final String ACL_AUTHENTICATED_READ = "authenticated-read";
     /**
      * Canned acl: bucket-owner-read
@@ -115,6 +120,7 @@ public class Client {
      * Read: Object owner and bucket owner
      * Write: Object owner only
      */
+    @SuppressWarnings("unused")
     public static final String ACL_BUCKET_OWNER_READ = "bucket-owner-read";
     /**
      * Canned acl: bucket-owner-read
@@ -122,6 +128,7 @@ public class Client {
      * Read: Object owner and bucket owner
      * Write: Object owner and bucket owner
      */
+    @SuppressWarnings("unused")
     public static final String ACL_BUCKET_OWNER_FULL_CONTROL = "bucket-owner-full-control";
 
     private static final int PART_SIZE = 5 * 1024 * 1024;
@@ -140,7 +147,7 @@ public class Client {
     /**
      * Create a new client given a url
      *
-     * @param url must be the full url to the object storage server, exluding both bucket or object paths.
+     * @param url must be the full url to the object storage server, excluding both bucket or object paths.
      *            For example: http://play.minio.io
      *            Valid:
      *            * https://s3-us-west-2.amazonaws.com
@@ -228,7 +235,7 @@ public class Client {
         if (response.getContent() == null) {
             throw new IOException("Cannot connect");
         }
-        XmlPullParser parser = null;
+        XmlPullParser parser;
         XmlError xmlError = new XmlError();
         try {
             parser = Xml.createParser();
@@ -358,21 +365,21 @@ public class Client {
     /**
      * List objects in a given bucket
      * <p/>
-     * TODO: explain paramters and give examples
+     * TODO: explain parameters and give examples
      *
      * @param bucket target bucket to list objects in
      * @param marker
      * @param prefix
      * @param delimiter
-     * @param maxkeys
+     * @param maxKeys
      * @return
      * @throws IOException
      * @throws XmlPullParserException
      */
-    public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxkeys) throws IOException, XmlPullParserException {
+    public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxKeys) throws IOException, XmlPullParserException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
-        if (maxkeys != null) {
-            url.set("max-keys", maxkeys);
+        if (maxKeys != null) {
+            url.set("max-keys", maxKeys);
         }
         if (marker != null) {
             url.set("marker", marker);
@@ -525,7 +532,7 @@ public class Client {
      * <p/>
      * If the object is larger than 5MB, the client will automatically use a multipart session.
      * <p/>
-     * If the session fails, the user may attempt to reupload the object by attempting to create
+     * If the session fails, the user may attempt to re-upload the object by attempting to create
      * the exact same object again. The client will examine all parts of any current upload session
      * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
      * before uploading any more data. Otherwise, it will resume uploading where the session left off.
@@ -576,19 +583,19 @@ public class Client {
             if (!objectParts.getParts().isEmpty()) {
                 for (Part curPart : objectParts.getParts()) {
                     long curSize = curPart.getSize();
-                    String curEtag = curPart.geteTag();
-                    String curNormalizedEtag = curEtag.replaceAll("\"", "").toLowerCase().trim();
+                    String curETag = curPart.geteTag();
+                    String curNormalizedETag = curETag.replaceAll("\"", "").toLowerCase().trim();
                     byte[] curData = readData((int) curSize, data);
                     String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData)).toLowerCase().trim();
 
                     System.out.println("Part # " + curPart.getPartNumber());
-                    System.out.println("From upstream: " + curNormalizedEtag + " " + curSize);
+                    System.out.println("From upstream: " + curNormalizedETag + " " + curSize);
                     System.out.println("From generated: " + generatedEtag + " " + curData.length);
-                    if (!curNormalizedEtag.equals(generatedEtag) || curPart.getPartNumber() != part) {
+                    if (!curNormalizedETag.equals(generatedEtag) || curPart.getPartNumber() != part) {
                         throw new IOException("Partial upload does not match");
                     }
-                    System.out.println("Adding: " + curEtag);
-                    parts.add(curEtag);
+                    System.out.println("Adding: " + curETag);
+                    parts.add(curETag);
                     objectLength += curSize;
                     part++;
                 }

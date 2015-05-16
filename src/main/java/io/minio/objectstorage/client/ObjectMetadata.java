@@ -18,6 +18,7 @@ package io.minio.objectstorage.client;
 
 import java.util.Date;
 
+@SuppressWarnings("unused")
 public class ObjectMetadata {
     private final String bucket;
     private final String key;

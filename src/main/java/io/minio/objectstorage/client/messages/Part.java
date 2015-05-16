@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class Part extends XmlEntity {
     @Key("PartNumber")
     private int partNumber;

@@ -18,6 +18,7 @@ package io.minio.objectstorage.client.messages;
 
 import com.google.api.client.util.Key;
 
+@SuppressWarnings("unused")
 public class Initiator extends XmlEntity {
     @Key
     private String ID;
