@@ -23,6 +23,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import io.minio.objectstorage.client.errors.BucketNotFoundException;
 import io.minio.objectstorage.client.errors.ObjectNotFoundException;
+import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.*;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -80,7 +81,7 @@ public class ClientTest {
     }
 
     @Test(expected = IOException.class)
-    public void getMissingObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectNotFoundException, BucketNotFoundException {
+    public void getMissingObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectStorageException {
         // Set up mock
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
@@ -107,7 +108,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testGetObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectNotFoundException, BucketNotFoundException {
+    public void testGetObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectStorageException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -437,7 +438,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testSigningKey() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectNotFoundException, BucketNotFoundException {
+    public void testSigningKey() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectStorageException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {

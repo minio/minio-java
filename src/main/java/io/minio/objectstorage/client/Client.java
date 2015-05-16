@@ -200,7 +200,7 @@ public class Client {
      * @throws IOException
      * @see ObjectMetadata
      */
-    public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException, BucketNotFoundException, ObjectNotFoundException {
+    public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("HEAD", url);
         request.setThrowExceptionOnExecuteError(false);
@@ -213,19 +213,7 @@ public class Client {
                     Date lastModified = formatter.parse(responseHeaders.getLastModified());
                     return new ObjectMetadata(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag());
                 } else {
-                    try {
-                        parseError(response);
-                    } catch (ObjectStorageException e) {
-                        if (e instanceof BucketNotFoundException) {
-                            throw (BucketNotFoundException) e;
-                        } else if (e instanceof ObjectNotFoundException) {
-                            throw (ObjectNotFoundException) e;
-                        } else {
-                            e.printStackTrace();
-                        }
-                    } catch (XmlPullParserException e) {
-                        e.printStackTrace();
-                    }
+                    parseError(response);
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
@@ -236,17 +224,25 @@ public class Client {
         throw new IOException();
     }
 
-    private void parseError(HttpResponse response) throws ObjectStorageException, IOException, XmlPullParserException {
+    private void parseError(HttpResponse response) throws ObjectStorageException, IOException {
         if (response.getContent() == null) {
             throw new IOException("Cannot connect");
         }
-        XmlPullParser parser = Xml.createParser();
-        InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-        parser.setInput(reader);
+        XmlPullParser parser = null;
         XmlError xmlError = new XmlError();
-        Xml.parseElement(parser, xmlError, new XmlNamespaceDictionary(), null);
-        String code = xmlError.getCode();
+        try {
+            parser = Xml.createParser();
+            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+            parser.setInput(reader);
+            Xml.parseElement(parser, xmlError, new XmlNamespaceDictionary(), null);
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+            InvalidStateException invalidStateException = new InvalidStateException();
+            invalidStateException.initCause(e);
+            throw invalidStateException;
+        }
 
+        String code = xmlError.getCode();
         ObjectStorageException e;
         if (code.equals("NoSuchBucket")) e = new BucketNotFoundException();
         else if (code.equals("NoSuchKey")) e = new ObjectNotFoundException();
