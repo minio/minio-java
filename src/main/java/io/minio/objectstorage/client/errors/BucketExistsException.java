@@ -16,8 +16,5 @@
 
 package io.minio.objectstorage.client.errors;
 
-/**
- * Created by fkautz on 5/15/15.
- */
 public class BucketExistsException extends ObjectStorageException {
 }

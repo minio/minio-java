@@ -194,8 +194,8 @@ public class Client {
     /**
      * Returns metadata about the object
      *
-     * @param bucket
-     * @param key
+     * @param bucket object's bucket
+     * @param key object's key
      * @return Populated object metadata
      * @throws IOException
      * @see ObjectMetadata
@@ -247,7 +247,7 @@ public class Client {
         Xml.parseElement(parser, xmlError, new XmlNamespaceDictionary(), null);
         String code = xmlError.getCode();
 
-        ObjectStorageException e = null;
+        ObjectStorageException e;
         if (code.equals("NoSuchBucket")) e = new BucketNotFoundException();
         else if (code.equals("NoSuchKey")) e = new ObjectNotFoundException();
         else if (code.equals("InvalidBucketName")) e = new InvalidObjectNameException();
@@ -310,8 +310,8 @@ public class Client {
      * Returns an InputStream containing the object. The InputStream must be closed when
      * complete or the connection will remain open.
      *
-     * @param bucket
-     * @param key
+     * @param bucket object's bucket
+     * @param key object's key
      * @return an InputStream containing the object. Close the InputStream when done.
      * @throws IOException
      */
@@ -327,8 +327,8 @@ public class Client {
     /**
      * Delete an object.
      *
-     * @param bucket
-     * @param key
+     * @param bucket object's bucket
+     * @param key object's key
      * @throws IOException
      */
     public void deleteObject(String bucket, String key) throws IOException {
@@ -342,8 +342,8 @@ public class Client {
      * Returns an InputStream containing a subset of the object. The InputStream must be
      * closed or the connection will remain open.
      *
-     * @param bucket
-     * @param key
+     * @param bucket object's bucket
+     * @param key object's key
      * @param offset Offset from the start of the object.
      * @param length Length of bytes to retrieve.
      * @return an InputStream containing the object. Close the InputStream when done.
@@ -364,7 +364,7 @@ public class Client {
      * <p/>
      * TODO: explain paramters and give examples
      *
-     * @param bucket
+     * @param bucket target bucket to list objects in
      * @param marker
      * @param prefix
      * @param delimiter

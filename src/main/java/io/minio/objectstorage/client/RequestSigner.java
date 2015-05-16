@@ -171,7 +171,7 @@ class RequestSigner implements HttpExecuteInterceptor {
                 getScope(region, date) + "\n" + canonicalHash;
     }
 
-    private Tuple2<String, String> getCanonicalRequest(HttpRequest request, String bodySha256Hash) throws UnsupportedEncodingException {
+    private Tuple2<String, String> getCanonicalRequest(HttpRequest request, String bodySha256Hash) {
         StringWriter canonicalWriter = new StringWriter();
         PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
 

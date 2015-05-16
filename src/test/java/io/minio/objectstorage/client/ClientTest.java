@@ -16,7 +16,6 @@
 
 package io.minio.objectstorage.client;
 
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.LowLevelHttpRequest;
 import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.testing.http.MockHttpTransport;
@@ -83,7 +82,7 @@ public class ClientTest {
     @Test(expected = IOException.class)
     public void getMissingObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectNotFoundException, BucketNotFoundException {
         // Set up mock
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -109,7 +108,7 @@ public class ClientTest {
 
     @Test
     public void testGetObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectNotFoundException, BucketNotFoundException {
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -146,7 +145,7 @@ public class ClientTest {
     public void testGetObject() throws IOException {
         final String expectedObject = "hello world";
 
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -179,7 +178,7 @@ public class ClientTest {
     public void testPartialObject() throws IOException {
         final String expectedObject = "hello";
 
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -212,7 +211,7 @@ public class ClientTest {
     @Test
     public void testListObjects() throws IOException, XmlPullParserException, ParseException {
         final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>2a60eaffa7a82804bdc682ce1df6c2d4</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -263,7 +262,7 @@ public class ClientTest {
     @Test
     public void testListBuckets() throws IOException, XmlPullParserException, ParseException {
         final String body = "<ListAllMyBucketsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner><Buckets><Bucket><Name>bucket</Name><CreationDate>2015-05-05T20:35:51.410Z</CreationDate></Bucket><Bucket><Name>foo</Name><CreationDate>2015-05-05T20:35:47.170Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>";
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -304,7 +303,7 @@ public class ClientTest {
 
     @Test
     public void testBucketAccess() throws IOException, XmlPullParserException {
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -329,7 +328,7 @@ public class ClientTest {
 
     @Test
     public void testBucketAccessFails() throws IOException, XmlPullParserException {
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -354,7 +353,7 @@ public class ClientTest {
 
     @Test
     public void testCreateBucket() throws IOException, XmlPullParserException {
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -384,7 +383,7 @@ public class ClientTest {
 
     @Test
     public void testCreateBucketFails() throws IOException, XmlPullParserException {
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -411,7 +410,7 @@ public class ClientTest {
 
     @Test
     public void testCreateObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException {
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
@@ -439,7 +438,7 @@ public class ClientTest {
 
     @Test
     public void testSigningKey() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ObjectNotFoundException, BucketNotFoundException {
-        HttpTransport transport = new MockHttpTransport() {
+        MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
                 return new MockLowLevelHttpRequest() {
