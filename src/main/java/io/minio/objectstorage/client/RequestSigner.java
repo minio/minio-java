@@ -20,6 +20,9 @@ import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpEncoding;
 import com.google.api.client.http.HttpExecuteInterceptor;
 import com.google.api.client.http.HttpRequest;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -31,19 +34,12 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 class RequestSigner implements HttpExecuteInterceptor {
-    private static final SimpleDateFormat dateFormatyyyyMMddThhmmssZ=new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-    private static final SimpleDateFormat dateFormatyyyyMMdd = new SimpleDateFormat("yyyyMMdd");
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-
-    static {
-        dateFormatyyyyMMddThhmmssZ.setTimeZone(TimeZone.getTimeZone("GMT"));
-        dateFormatyyyyMMdd.setTimeZone(TimeZone.getTimeZone("GMT"));
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
+    private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ= DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
+    private static final DateTimeFormatter dateFormatyyyyMMdd = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC();
+    private static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withZoneUTC();
 
     private byte[] data = new byte[0];
     private String accessKey = null;
@@ -72,7 +68,8 @@ class RequestSigner implements HttpExecuteInterceptor {
         String dataHash = DatatypeConverter.printHexBinary(dataHashBytes).toLowerCase();
 
         request.getHeaders().set("x-amz-content-sha256", dataHash);
-        request.getHeaders().setDate(dateFormat.format(signingDate));
+//        request.getHeaders().setDate(dateFormat.format(signingDate));
+        request.getHeaders().setDate(new DateTime(signingDate).toString(dateFormat));
 
         request.getHeaders().set("Host", request.getUrl().getHost());
 
@@ -127,7 +124,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private void addDate(HttpRequest request, Date date) {
-        String dateString = dateFormatyyyyMMddThhmmssZ.format(date);
+        String dateString = new DateTime(date).toString(dateFormatyyyyMMddThhmmssZ);
         request.getHeaders().set("x-amz-date", dateString);
     }
 
@@ -147,7 +144,7 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private static byte[] generateSigningKey(Date date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        String formattedDate = dateFormatyyyyMMdd.format(date);
+        String formattedDate = new DateTime(date).toString(dateFormatyyyyMMdd);
         String dateKeyLine = "AWS4" + secretKey;
         byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
         byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
@@ -164,13 +161,13 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private String getScope(String region, Date date) {
-        String formattedDate = dateFormatyyyyMMdd.format(date);
+        String formattedDate = new DateTime(date).toString(dateFormatyyyyMMdd);
         return formattedDate + "/" + region + "/" + "s3" + "/" + "aws4_request";
     }
 
     private String getStringToSign(String region, String canonicalHash, Date date) {
         return "AWS4-HMAC-SHA256" + "\n" +
-                dateFormatyyyyMMddThhmmssZ.format(date) + "\n" +
+                new DateTime(date).toString(dateFormatyyyyMMddThhmmssZ) + "\n" +
                 getScope(region, date) + "\n" + canonicalHash;
     }
 

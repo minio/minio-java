@@ -19,6 +19,7 @@ apply plugin: 'pmd'
 
 ext.junitVersion = '4.12'
 ext.googleHttpClientVersion = '1.20.0'
+ext.jodaTimeVersion = '2.7'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -31,6 +32,7 @@ task wrapper(type: Wrapper) {
 dependencies {
     compile group: 'com.google.http-client', name: 'google-http-client', version: googleHttpClientVersion
     compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
+    compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
 
     testCompile group: 'junit', name: 'junit', version: junitVersion
 }
