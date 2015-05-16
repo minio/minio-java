@@ -35,9 +35,16 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 class RequestSigner implements HttpExecuteInterceptor {
-    private final SimpleDateFormat dateFormatyyyyMMddThhmmssZ;
-    private final SimpleDateFormat dateFormatyyyyMMdd;
-    private final SimpleDateFormat dateFormat;
+    private static final SimpleDateFormat dateFormatyyyyMMddThhmmssZ=new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+    private static final SimpleDateFormat dateFormatyyyyMMdd = new SimpleDateFormat("yyyyMMdd");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+
+    static {
+        dateFormatyyyyMMddThhmmssZ.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateFormatyyyyMMdd.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
+
     private byte[] data = new byte[0];
     private String accessKey = null;
     private String secretKey = null;
@@ -49,14 +56,6 @@ class RequestSigner implements HttpExecuteInterceptor {
         }
         this.data = data;
 
-        dateFormatyyyyMMddThhmmssZ = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-        dateFormatyyyyMMddThhmmssZ.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-        dateFormatyyyyMMdd = new SimpleDateFormat("yyyyMMdd");
-        dateFormatyyyyMMdd.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-        dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
     private void signV4(HttpRequest request, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
@@ -142,17 +141,21 @@ class RequestSigner implements HttpExecuteInterceptor {
 
     private byte[] getSigningKey(Date date, String region) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         if(this.accessKey != null && this.secretKey != null) {
-            String formattedDate = dateFormatyyyyMMdd.format(date);
-            String dateKeyLine = "AWS4" + this.secretKey;
-            byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
-            byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
-            byte[] dateRegionServiceKey = signHmac(dateRegionKey, "s3".getBytes("UTF-8"));
-            return signHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
+            return generateSigningKey(date, region, this.secretKey);
         }
         return this.userProvidedSigningKey;
     }
 
-    private byte[] signHmac(byte[] curKey, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
+    private static byte[] generateSigningKey(Date date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        String formattedDate = dateFormatyyyyMMdd.format(date);
+        String dateKeyLine = "AWS4" + secretKey;
+        byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
+        byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
+        byte[] dateRegionServiceKey = signHmac(dateRegionKey, "s3".getBytes("UTF-8"));
+        return signHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
+    }
+
+    private static byte[] signHmac(byte[] curKey, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
         SecretKeySpec key = new SecretKeySpec(curKey, "HmacSHA256");
         Mac hmacSha256 = Mac.getInstance("HmacSHA256");
         hmacSha256.init(key);
