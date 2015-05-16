@@ -282,6 +282,7 @@ public class Client {
             }
         });
         HttpRequest request = requestFactory.buildRequest(method, url, null);
+        request.setSuppressUserAgentSuffix(true);
         if (userAgent != null) {
             request.getHeaders().setUserAgent(userAgent);
         }
