@@ -956,6 +956,7 @@ public class Client {
     /**
      * Enable logging to a java logger for debug purposes.
      */
+    @SuppressWarnings("unused")
     public void enableLogging() {
         if (this.logger.get() == null) {
             this.logger.set(Logger.getLogger(HttpTransport.class.getName()));
@@ -986,6 +987,7 @@ public class Client {
     /**
      * Disable logging http requests
      */
+    @SuppressWarnings("unused")
     public void disableLogging() {
         if(this.logger.get() != null) {
             this.logger.get().setLevel(Level.OFF);
