@@ -16,6 +16,7 @@
 
 package io.minio.objectstorage.client;
 
+import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import io.minio.objectstorage.client.messages.ListMultipartUploadsResult;
 import org.junit.Ignore;
@@ -33,7 +34,7 @@ public class IntegrationTest {
 
     @Test
     @Ignore
-    public void testSigning() throws IOException, XmlPullParserException {
+    public void testSigning() throws IOException, XmlPullParserException, ObjectStorageException {
         Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
 //        client.enableLogging();
         ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
@@ -42,7 +43,7 @@ public class IntegrationTest {
 
     @Test
     @Ignore
-    public void testClient() throws IOException, XmlPullParserException {
+    public void testClient() throws IOException, XmlPullParserException, ObjectStorageException {
         Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
 //        Client client = Client.getClient("http://localhost:9000");
         client.enableLogging();
@@ -83,7 +84,7 @@ public class IntegrationTest {
 
     @Test
     @Ignore
-    public void testMultipart() throws IOException, XmlPullParserException {
+    public void testMultipart() throws IOException, XmlPullParserException, ObjectStorageException {
         byte[] largeObject = new byte[10 * 1024 * 1024];
         for (int i = 0; i < 10 * 1024 * 1024; i++) {
             largeObject[i] = 'a';

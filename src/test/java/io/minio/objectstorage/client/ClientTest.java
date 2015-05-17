@@ -21,6 +21,7 @@ import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import io.minio.objectstorage.client.errors.BucketExistsException;
 import io.minio.objectstorage.client.errors.BucketNotFoundException;
 import io.minio.objectstorage.client.errors.ObjectNotFoundException;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
@@ -39,6 +40,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class ClientTest {
     @Test()
@@ -143,7 +145,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testGetObject() throws IOException {
+    public void testGetObject() throws IOException, ObjectStorageException {
         final String expectedObject = "hello world";
 
         MockHttpTransport transport = new MockHttpTransport() {
@@ -176,7 +178,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testPartialObject() throws IOException {
+    public void testPartialObject() throws IOException, ObjectStorageException {
         final String expectedObject = "hello";
 
         MockHttpTransport transport = new MockHttpTransport() {
@@ -210,7 +212,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testListObjects() throws IOException, XmlPullParserException, ParseException {
+    public void testListObjects() throws IOException, XmlPullParserException, ParseException, ObjectStorageException {
         final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>2a60eaffa7a82804bdc682ce1df6c2d4</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
@@ -261,7 +263,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testListBuckets() throws IOException, XmlPullParserException, ParseException {
+    public void testListBuckets() throws IOException, XmlPullParserException, ParseException, ObjectStorageException {
         final String body = "<ListAllMyBucketsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner><Buckets><Bucket><Name>bucket</Name><CreationDate>2015-05-05T20:35:51.410Z</CreationDate></Bucket><Bucket><Name>foo</Name><CreationDate>2015-05-05T20:35:47.170Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>";
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
@@ -353,7 +355,8 @@ public class ClientTest {
     }
 
     @Test
-    public void testCreateBucket() throws IOException, XmlPullParserException {
+    @SuppressWarnings("PMD.EmptyCatchBlock")
+    public void testCreateBucket() throws IOException, XmlPullParserException, ObjectStorageException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -372,18 +375,22 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result1 = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
-        assertEquals(true, result1);
-
-        boolean result2 = client.setBucketACL("bucket", Client.ACL_PRIVATE);
-        assertEquals(true, result2);
-
-        boolean result3 = client.setBucketACL("bucket", null);
-        assertEquals(false, result3);
+        client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
+        client.setBucketACL("bucket", Client.ACL_PRIVATE);
+        try {
+            client.setBucketACL("bucket", null);
+            fail();
+        } catch(NullPointerException ex) {
+        }
     }
 
-    @Test
-    public void testCreateBucketFails() throws IOException, XmlPullParserException {
+    @Test(expected = BucketExistsException.class)
+    public void testCreateBucketFails() throws IOException, XmlPullParserException, ObjectStorageException {
+        final XmlError err = new XmlError();
+        err.setCode("BucketAlreadyExists");
+        err.setMessage("Bucket Already Exists");
+        err.setRequestID("1");
+        err.setResource("/bucket");
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -394,6 +401,7 @@ public class ClientTest {
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("Host", "localhost");
                         response.setStatusCode(403);
+                        response.setContent(err.toString());
                         return response;
                     }
                 };
@@ -402,15 +410,11 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result1 = client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
-        assertEquals(false, result1);
-
-        boolean result2 = client.setBucketACL("bucket", Client.ACL_PRIVATE);
-        assertEquals(false, result2);
+        client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
     }
 
     @Test
-    public void testCreateObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException {
+    public void testCreateObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ObjectStorageException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
