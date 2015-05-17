@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -136,7 +137,7 @@ public class Client {
     private HttpTransport transport = new NetHttpTransport();
     private String accessKey;
     private String secretKey;
-    private Logger logger;
+    private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
     private String userAgent;
     private byte[] signingKey;
 
@@ -956,10 +957,10 @@ public class Client {
      * Enable logging to a java logger for debug purposes.
      */
     public void enableLogging() {
-        if (logger == null) {
-            logger = Logger.getLogger(HttpTransport.class.getName());
-            logger.setLevel(Level.CONFIG);
-            logger.addHandler(new Handler() {
+        if (this.logger.get() == null) {
+            this.logger.set(Logger.getLogger(HttpTransport.class.getName()));
+            this.logger.get().setLevel(Level.CONFIG);
+            this.logger.get().addHandler(new Handler() {
 
                 @Override
                 public void close() throws SecurityException {
@@ -977,6 +978,14 @@ public class Client {
                     }
                 }
             });
+        } else {
+            this.logger.get().setLevel(Level.CONFIG);
+        }
+    }
+
+    public void disableLogging() {
+        if(this.logger.get() != null) {
+            this.logger.get().setLevel(Level.OFF);
         }
     }
 
