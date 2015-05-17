@@ -203,7 +203,7 @@ public class Client {
      * Returns metadata about the object
      *
      * @param bucket object's bucket
-     * @param key object's key
+     * @param key    object's key
      * @return Populated object metadata
      * @throws IOException
      * @see ObjectMetadata
@@ -232,9 +232,9 @@ public class Client {
         throw new IOException();
     }
 
-    private void parseError(HttpResponse response) throws ObjectStorageException, IOException {
+    private void parseError(HttpResponse response) throws IOException, ObjectStorageException {
         if (response.getContent() == null) {
-            throw new IOException("Cannot connect");
+            throw new IOException("Unsuccessful response from server without error: " + response.getStatusCode());
         }
         XmlPullParser parser;
         XmlError xmlError = new XmlError();
@@ -317,31 +317,53 @@ public class Client {
      * complete or the connection will remain open.
      *
      * @param bucket object's bucket
-     * @param key object's key
+     * @param key    object's key
      * @return an InputStream containing the object. Close the InputStream when done.
      * @throws IOException
      */
-    public InputStream getObject(String bucket, String key) throws IOException {
+    public InputStream getObject(String bucket, String key) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-
+        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
-        return response.getContent();
+        if (response != null) {
+            if (!response.isSuccessStatusCode()) {
+                try {
+                    parseError(response);
+                } finally {
+                    response.disconnect();
+                }
+            }
+            return response.getContent();
+        }
+        // TODO create a better exception
+        throw new IOException();
     }
 
     /**
      * Delete an object.
      *
      * @param bucket object's bucket
-     * @param key object's key
+     * @param key    object's key
      * @throws IOException if the connection fails
      */
-    public void deleteObject(String bucket, String key) throws IOException {
+    public void deleteObject(String bucket, String key) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("DELETE", url);
+        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
-        response.disconnect();
+        if (response != null) {
+            try {
+                if (response.isSuccessStatusCode()) {
+                    return;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
+        }
+        throw new IOException();
     }
 
     /**
@@ -349,36 +371,47 @@ public class Client {
      * closed or the connection will remain open.
      *
      * @param bucket object's bucket
-     * @param key object's key
+     * @param key    object's key
      * @param offset Offset from the start of the object.
      * @param length Length of bytes to retrieve.
      * @return an InputStream containing the object. Close the InputStream when done.
      * @throws IOException if the connection does not succeed
      */
-    public InputStream getObject(String bucket, String key, long offset, long length) throws IOException {
+    public InputStream getObject(String bucket, String key, long offset, long length) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
+        request.setThrowExceptionOnExecuteError(false);
         request.getHeaders().setRange(offset + "-" + offset + length);
 
         HttpResponse response = request.execute();
-        return response.getContent();
+        if (response != null) {
+            if (response.isSuccessStatusCode()) {
+                return response.getContent();
+            }
+            try {
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
+        }
+        throw new IOException();
     }
 
     /**
      * List objects in a given bucket
      * TODO: explain parameters and give examples
      *
-     * @param bucket target bucket to list objects in
-     * @param marker marker to start listing requests
-     * @param prefix list objects starting with give nprefix
+     * @param bucket    target bucket to list objects in
+     * @param marker    marker to start listing requests
+     * @param prefix    list objects starting with give nprefix
      * @param delimiter list objects up to a given delimiter, typically '/'
-     * @param maxKeys list of keys, up to 1000
+     * @param maxKeys   list of keys, up to 1000
      * @return a list of objects
      * @throws IOException
      * @throws XmlPullParserException
      */
-    public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxKeys) throws IOException, XmlPullParserException {
+    public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         if (maxKeys != null) {
             url.set("max-keys", maxKeys);
@@ -394,21 +427,28 @@ public class Client {
         }
 
         HttpRequest request = getHttpRequest("GET", url);
+        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
 
-        try {
-            XmlPullParser parser = Xml.createParser();
-            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-            parser.setInput(reader);
+        if (response != null) {
+            try {
+                if (response.isSuccessStatusCode()) {
+                    XmlPullParser parser = Xml.createParser();
+                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+                    parser.setInput(reader);
 
-            ListBucketResult result = new ListBucketResult();
+                    ListBucketResult result = new ListBucketResult();
 
-            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
-            return result;
-        } finally {
-            response.disconnect();
+                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    return result;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
         }
+        throw new IOException();
     }
 
     void setTransport(HttpTransport transport) {
@@ -419,28 +459,34 @@ public class Client {
      * List buckets owned by the current user.
      *
      * @return a list of buckets owned by the current user
-     * @throws IOException if the connection fails
+     * @throws IOException            if the connection fails
      * @throws XmlPullParserException
      */
-    public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException {
+    public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = new GenericUrl(this.url);
 
         HttpRequest request = getHttpRequest("GET", url);
         request.setFollowRedirects(false);
 
         HttpResponse response = request.execute();
-        try {
-            XmlPullParser parser = Xml.createParser();
-            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-            parser.setInput(reader);
+        if (response != null) {
+            try {
+                if (response.isSuccessStatusCode()) {
+                    XmlPullParser parser = Xml.createParser();
+                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+                    parser.setInput(reader);
 
-            ListAllMyBucketsResult result = new ListAllMyBucketsResult();
+                    ListAllMyBucketsResult result = new ListAllMyBucketsResult();
 
-            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
-            return result;
-        } finally {
-            response.disconnect();
+                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    return result;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
         }
+        throw new IOException();
     }
 
 
@@ -472,29 +518,31 @@ public class Client {
      * Create a bucket with a given name and ACL
      *
      * @param bucket bucket to create
-     * @param acl canned acl
+     * @param acl    canned acl
      * @return true if succeeds // TODO return void, throw exception on failure
      * @throws IOException
      */
-    public boolean makeBucket(String bucket, String acl) throws IOException {
+    public void makeBucket(String bucket, String acl) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
+        request.setThrowExceptionOnExecuteError(false);
         if (acl != null) {
             request.getHeaders().set("x-amz-acl", acl);
         } else {
             request.getHeaders().set("x-amz-acl", ACL_PRIVATE);
         }
 
-        try {
-            HttpResponse execute = request.execute();
+        HttpResponse response = request.execute();
+        if(response != null) {
             try {
-                return execute.getStatusCode() == 200;
+                if (response.isSuccessStatusCode()) {
+                    return;
+                }
+                parseError(response);
             } finally {
-                execute.disconnect();
+                response.disconnect();
             }
-        } catch (HttpResponseException e) {
-            return false;
         }
     }
 
@@ -502,31 +550,34 @@ public class Client {
      * Set the bucket's ACL.
      *
      * @param bucket bucket to set ACL on
-     * @param acl canned acl
+     * @param acl    canned acl
      * @return // TODO throw exception on failure
      * @throws IOException
      */
-    public boolean setBucketACL(String bucket, String acl) throws IOException {
+    public void setBucketACL(String bucket, String acl) throws IOException, ObjectStorageException {
+        if (acl == null) {
+            throw new NullPointerException();
+        }
+
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("acl", "");
 
         HttpRequest request = getHttpRequest("PUT", url);
-        if (acl == null) {
-            return false;
-        }
+        request.setThrowExceptionOnExecuteError(false);
         request.getHeaders().set("x-amz-acl", acl);
 
-        try {
-            HttpResponse execute = request.execute();
+        HttpResponse response = request.execute();
+        if(response != null) {
             try {
-                return execute.getStatusCode() == 200;
+                if (response.isSuccessStatusCode()) {
+                    return;
+                }
+                parseError(response);
             } finally {
-                execute.disconnect();
+                response.disconnect();
             }
-        } catch (HttpResponseException e) {
-            return false;
         }
-
+        throw new IOException();
     }
 
     /**
@@ -546,12 +597,12 @@ public class Client {
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
      * @param data        Data to upload
-     * @throws IOException on failure
+     * @throws IOException            on failure
      * @throws XmlPullParserException on unexpected xml // TODO don't fail like this, wrap as our own error
      * @see #listActiveMultipartUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      */
-    public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException {
+    public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException, ObjectStorageException {
         boolean isMultipart = false;
         int partSize = 0;
         String uploadID = null;
@@ -589,14 +640,9 @@ public class Client {
                     String curNormalizedETag = curETag.replaceAll("\"", "").toLowerCase().trim();
                     byte[] curData = readData((int) curSize, data);
                     String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData)).toLowerCase().trim();
-
-                    System.out.println("Part # " + curPart.getPartNumber());
-                    System.out.println("From upstream: " + curNormalizedETag + " " + curSize);
-                    System.out.println("From generated: " + generatedEtag + " " + curData.length);
                     if (!curNormalizedETag.equals(generatedEtag) || curPart.getPartNumber() != part) {
                         throw new IOException("Partial upload does not match");
                     }
-                    System.out.println("Adding: " + curETag);
                     parts.add(curETag);
                     objectLength += curSize;
                     part++;
@@ -626,7 +672,7 @@ public class Client {
      * @throws IOException
      * @throws XmlPullParserException
      */
-    public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException {
+    public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
         return listActiveMultipartUploads(bucket, null);
     }
 
@@ -636,10 +682,10 @@ public class Client {
      * @param bucket bucket to list active multipart uploads
      * @param prefix prefix to filter, all multipart objects returned will begin with prefix.
      * @return a list of multipart objects with a given prefix
-     * @throws IOException on connection failure
+     * @throws IOException            on connection failure
      * @throws XmlPullParserException // TODO return better error
      */
-    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String prefix) throws IOException, XmlPullParserException {
+    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String prefix) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
 
@@ -649,30 +695,37 @@ public class Client {
 
         HttpRequest request = getHttpRequest("GET", url);
         request.setFollowRedirects(false);
+        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
-        try {
-            XmlPullParser parser = Xml.createParser();
-            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-            parser.setInput(reader);
+        if(response != null) {
+            try {
+                if(response.isSuccessStatusCode()) {
+                    XmlPullParser parser = Xml.createParser();
+                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+                    parser.setInput(reader);
 
-            ListMultipartUploadsResult result = new ListMultipartUploadsResult();
+                    ListMultipartUploadsResult result = new ListMultipartUploadsResult();
 
-            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
-            return result;
-        } finally {
-            response.disconnect();
+                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    return result;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
         }
+        throw new IOException();
     }
 
     /**
      * Abort all active multipart uploads in a given bucket.
      *
      * @param bucket to dorp all active multipart uploads in
-     * @throws IOException on connection failure
+     * @throws IOException            on connection failure
      * @throws XmlPullParserException // TODO return better error
      */
-    public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException {
+    public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
         ListMultipartUploadsResult uploads = listActiveMultipartUploads(bucket);
         for (Upload upload : uploads.getUploads()) {
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
@@ -704,23 +757,27 @@ public class Client {
         url.set("uploads", "");
 
         HttpRequest request = getHttpRequest("POST", url);
+        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
-        try {
-            XmlPullParser parser = Xml.createParser();
-            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-            parser.setInput(reader);
+        if(response != null) {
+            try {
+                XmlPullParser parser = Xml.createParser();
+                InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+                parser.setInput(reader);
 
-            InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
+                InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
 
-            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
-            return result.getUploadId();
-        } finally {
-            response.disconnect();
+                Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                return result.getUploadId();
+            } finally {
+                response.disconnect();
+            }
         }
+        throw new IOException();
     }
 
-    private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException {
+    private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
@@ -737,62 +794,88 @@ public class Client {
 
         byte[] data = completeManifest.toString().getBytes("UTF-8");
 
-        System.out.println(completeManifest.toString());
-
         HttpRequest request = getHttpRequest("POST", url, data);
+        request.setThrowExceptionOnExecuteError(false);
         request.setContent(new ByteArrayContent("application/xml", data));
 
         HttpResponse response = request.execute();
-        response.disconnect();
+        if(response != null) {
+            try {
+                if(response.isSuccessStatusCode()) {
+                    return;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
+        }
     }
 
     /**
      * List all parts in an active multipart upload.
      *
-     * @param bucket of object
-     * @param key of object
+     * @param bucket   of object
+     * @param key      of object
      * @param uploadID of object
      * @return a list of parts in a given multipart upload
-     * @throws IOException on connection failure
+     * @throws IOException            on connection failure
      * @throws XmlPullParserException // TODO better error
      */
-    public ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException {
+    public ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
         HttpRequest request = getHttpRequest("GET", url);
+        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
-        try {
-            XmlPullParser parser = Xml.createParser();
-            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-            parser.setInput(reader);
+        if(response != null) {
+            try {
+                if(response.isSuccessStatusCode()) {
+                    XmlPullParser parser = Xml.createParser();
+                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+                    parser.setInput(reader);
 
-            ListPartsResult result = new ListPartsResult();
+                    ListPartsResult result = new ListPartsResult();
 
-            Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
-            return result;
-        } finally {
-            response.disconnect();
+                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    return result;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
         }
+        throw new IOException();
     }
 
     /**
      * Abort an active multipart upload
      *
-     * @param bucket of multipart upload to abort
-     * @param key of multipart upload to abort
+     * @param bucket   of multipart upload to abort
+     * @param key      of multipart upload to abort
      * @param uploadID of multipart upload to abort
      * @throws IOException on connection failure
-     * // TODO handle failure, given bucket/object/uploadid might not exist
+     *                     // TODO handle failure, given bucket/object/uploadid might not exist
      */
-    public void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException {
+    public void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
         HttpRequest request = getHttpRequest("DELETE", url);
+        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
-        response.disconnect();
+        if(response != null) {
+            try {
+                if(response.isSuccessStatusCode()) {
+                    return;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
+        }
+        throw new IOException();
     }
 
     private int computePartSize(long size) {
@@ -801,11 +884,11 @@ public class Client {
         return Math.max(minimumPartSize, partSize);
     }
 
-    private void putObject(String bucket, String key, String contentType, byte[] data) throws IOException {
+    private void putObject(String bucket, String key, String contentType, byte[] data) throws IOException, ObjectStorageException {
         putObject(bucket, key, contentType, data, "", 0);
     }
 
-    private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException {
+    private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         if (partID > 0) {
@@ -816,6 +899,7 @@ public class Client {
         byte[] md5sum = calculateMd5sum(data);
 
         HttpRequest request = getHttpRequest("PUT", url, data);
+        request.setThrowExceptionOnExecuteError(false);
 
         if (md5sum != null) {
             String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
@@ -825,11 +909,17 @@ public class Client {
         ByteArrayContent content = new ByteArrayContent(contentType, data);
         request.setContent(content);
         HttpResponse response = request.execute();
-        response.disconnect();
-        if (response.getStatusCode() != 200) {
-            throw new IOException("Unexpected result, try resending this part again");
+        if(response != null) {
+            try {
+                if(response.isSuccessStatusCode()) {
+                    return response.getHeaders().getETag();
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
         }
-        return response.getHeaders().getETag();
+        throw new IOException();
     }
 
     private byte[] calculateMd5sum(byte[] data) {
@@ -896,7 +986,7 @@ public class Client {
      * @param signingKey to use in this connection
      */
     public void setSigningKey(byte[] signingKey) {
-        if(signingKey != null) {
+        if (signingKey != null) {
             this.signingKey = signingKey.clone();
         }
     }
