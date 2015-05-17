@@ -22,6 +22,7 @@ import io.minio.objectstorage.client.ObjectMetadata;
 import io.minio.objectstorage.client.errors.BucketNotFoundException;
 import io.minio.objectstorage.client.errors.ObjectNotFoundException;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
+import io.minio.objectstorage.client.messages.Item;
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import io.minio.objectstorage.client.messages.ListBucketResult;
 import org.xmlpull.v1.XmlPullParserException;
@@ -29,6 +30,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 public class PlayExample {
     public static void main(String[] args) throws IOException, XmlPullParserException, ObjectStorageException {
@@ -55,8 +57,10 @@ public class PlayExample {
         client.putObject("mybucket", "myobject", "application/octet-stream", 11, new ByteArrayInputStream("hello world".getBytes("UTF-8")));
 
         // list objects
-        ListBucketResult myObjects = client.listObjectsInBucket("mybucket", null, null, null, 1000);
-        System.out.println(myObjects);
+        Iterator<Item> myObjects = client.listObjectsInBucket("mybucket");
+        while(myObjects.hasNext()) {
+            System.out.println(myObjects.next());
+        }
 
         // get object metadata
         ObjectMetadata objectMetadata = client.getObjectMetadata("mybucket", "myobject");

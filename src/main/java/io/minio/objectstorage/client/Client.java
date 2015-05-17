@@ -35,10 +35,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -399,20 +396,39 @@ public class Client {
         throw new IOException();
     }
 
-    /**
-     * List objects in a given bucket
-     * TODO: explain parameters and give examples
-     *
-     * @param bucket    target bucket to list objects in
-     * @param marker    marker to start listing requests
-     * @param prefix    list objects starting with give nprefix
-     * @param delimiter list objects up to a given delimiter, typically '/'
-     * @param maxKeys   list of keys, up to 1000
-     * @return a list of objects
-     * @throws IOException
-     * @throws XmlPullParserException
-     */
-    public ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
+    public Iterator<Item> listObjectsInBucket(final String bucket, final String prefix) {
+        return new ListObjectsIterator<Item>() {
+            private String marker = null;
+            private boolean isComplete = false;
+            @Override
+            protected List<Item> populate() {
+                if(!isComplete) {
+                    try {
+                        ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, null, 1000);
+                        if (listBucketResult.isTruncated()) {
+                            marker = listBucketResult.getMarker();
+                        } else {
+                            isComplete = true;
+                        }
+                        return listBucketResult.getContents();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (XmlPullParserException e) {
+                        e.printStackTrace();
+                    } catch (ObjectStorageException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return new LinkedList<Item>();
+            }
+        };
+    }
+
+    public Iterator<Item> listObjectsInBucket(final String bucket) {
+        return listObjectsInBucket(bucket, null);
+    }
+
+    private ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         if (maxKeys != null) {
             url.set("max-keys", maxKeys);

@@ -39,7 +39,12 @@ abstract class ListObjectsIterator<T> implements Iterator<T> {
         return items.remove(0);
     }
 
-    private void populateIfEmpty() {
+    @Override
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+
+    private synchronized void populateIfEmpty() {
         if (items.isEmpty()) {
             List<T> list = populate();
             this.items.addAll(list);

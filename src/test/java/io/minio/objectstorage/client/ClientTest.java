@@ -234,17 +234,9 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        ListBucketResult bucket = client.listObjectsInBucket("bucket", null, null, null, 1000);
+        Iterator<Item> bucket = client.listObjectsInBucket("bucket");
 
-        assertEquals("bucket", bucket.getName());
-        assertEquals(null, bucket.getPrefix());
-        assertEquals(null, bucket.getMarker());
-        assertEquals(1000, bucket.getMaxKeys());
-        assertEquals(null, bucket.getDelimiter());
-        assertEquals(false, bucket.isTruncated());
-        assertEquals(2, bucket.getContents().size());
-
-        Item item = bucket.getContents().get(0);
+        Item item = bucket.next();
         assertEquals("key", item.getKey());
         assertEquals("2015-05-05T02:21:15.716Z", item.getLastModified());
         assertEquals(11, item.getSize());
