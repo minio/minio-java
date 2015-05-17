@@ -983,6 +983,9 @@ public class Client {
         }
     }
 
+    /**
+     * Disable logging http requests
+     */
     public void disableLogging() {
         if(this.logger.get() != null) {
             this.logger.get().setLevel(Level.OFF);
