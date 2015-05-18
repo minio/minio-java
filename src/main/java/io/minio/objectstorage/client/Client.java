@@ -406,7 +406,7 @@ public class Client {
                     try {
                         ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, null, 1000);
                         if (listBucketResult.isTruncated()) {
-                            marker = listBucketResult.getMarker();
+                            marker = listBucketResult.getNextMarker();
                         } else {
                             isComplete = true;
                         }
@@ -650,21 +650,20 @@ public class Client {
             long objectLength = 0;
             List<String> parts = new LinkedList<String>();
             int part = 1;
-            ListPartsResult objectParts = listObjectParts(bucket, key, uploadID);
-            if (!objectParts.getParts().isEmpty()) {
-                for (Part curPart : objectParts.getParts()) {
-                    long curSize = curPart.getSize();
-                    String curETag = curPart.geteTag();
-                    String curNormalizedETag = curETag.replaceAll("\"", "").toLowerCase().trim();
-                    byte[] curData = readData((int) curSize, data);
-                    String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData)).toLowerCase().trim();
-                    if (!curNormalizedETag.equals(generatedEtag) || curPart.getPartNumber() != part) {
-                        throw new IOException("Partial upload does not match");
-                    }
-                    parts.add(curETag);
-                    objectLength += curSize;
-                    part++;
+            Iterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
+            while (objectParts.hasNext()) {
+                Part curPart = objectParts.next();
+                long curSize = curPart.getSize();
+                String curETag = curPart.geteTag();
+                String curNormalizedETag = curETag.replaceAll("\"", "").toLowerCase().trim();
+                byte[] curData = readData((int) curSize, data);
+                String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData)).toLowerCase().trim();
+                if (!curNormalizedETag.equals(generatedEtag) || curPart.getPartNumber() != part) {
+                    throw new IOException("Partial upload does not match");
                 }
+                parts.add(curETag);
+                objectLength += curSize;
+                part++;
             }
             while (true) {
                 byte[] dataArray = readData(partSize, data);
@@ -706,7 +705,7 @@ public class Client {
                         result = listActiveMultipartUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
                         if(result.isTruncated()) {
                             keyMarker = result.getNextKeyMarker();
-                            uploadIdMarker = result.getUploadIDMarker();
+                            uploadIdMarker = result.getNextUploadIDMarker();
                         } else {
                             isComplete = true;
                         }
@@ -863,17 +862,47 @@ public class Client {
         }
     }
 
+    public Iterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
+        return new ListObjectsIterator<Part>() {
+            public int marker;
+            private boolean isComplete = false;
+            @Override
+            protected List<Part> populate() {
+                while(!isComplete) {
+                    ListPartsResult result = null;
+                    try {
+                        result = listObjectParts(bucket, key, uploadID, marker);
+                        if(result.isTruncated()) {
+                            marker = result.getNextPartNumberMarker();
+                        } else {
+                            isComplete = true;
+                        }
+                        return result.getParts();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (XmlPullParserException e) {
+                        e.printStackTrace();
+                    } catch (ObjectStorageException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return new LinkedList<Part>();
+            }
+        };
+    }
+
     /**
      * List all parts in an active multipart upload.
      *
      * @param bucket   of object
      * @param key      of object
      * @param uploadID of object
+     * @param partMarker
      * @return a list of parts in a given multipart upload
      * @throws IOException            on connection failure
      * @throws XmlPullParserException // TODO better error
      */
-    public ListPartsResult listObjectParts(String bucket, String key, String uploadID) throws IOException, XmlPullParserException, ObjectStorageException {
+    private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partMarker) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
