@@ -627,8 +627,9 @@ public class Client {
 
         if (size > PART_SIZE) {
             // check if multipart exists
-            ListMultipartUploadsResult multipartUploads = listActiveMultipartUploads(bucket, key);
-            for (Upload upload : multipartUploads.getUploads()) {
+            Iterator<Upload> multipartUploads = listActiveMultipartUploads(bucket, key);
+            while (multipartUploads.hasNext()) {
+                Upload upload = multipartUploads.next();
                 if (upload.getKey().equals(key)) {
                     uploadID = upload.getUploadID();
                 }
@@ -689,25 +690,58 @@ public class Client {
      * @throws IOException
      * @throws XmlPullParserException
      */
-    public ListMultipartUploadsResult listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
+    public Iterator<Upload> listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
         return listActiveMultipartUploads(bucket, null);
     }
+    public Iterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) throws IOException, XmlPullParserException, ObjectStorageException {
+        return new ListObjectsIterator<Upload>() {
+            private boolean isComplete = false;
+            private String keyMarker = null;
+            private String uploadIdMarker;
+            @Override
+            protected List<Upload> populate() {
+                if(!isComplete) {
+                    ListMultipartUploadsResult result = null;
+                    try {
+                        result = listActiveMultipartUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
+                        if(result.isTruncated()) {
+                            keyMarker = result.getNextKeyMarker();
+                            uploadIdMarker = result.getUploadIDMarker();
+                        } else {
+                            isComplete = true;
+                        }
+                        return result.getUploads();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (XmlPullParserException e) {
+                        e.printStackTrace();
+                    } catch (ObjectStorageException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return new LinkedList<Upload>();
+            }
+        };
+    }
 
-    /**
-     * Lists all active multipart uploads in a bucket with a given key prefix
-     *
-     * @param bucket bucket to list active multipart uploads
-     * @param prefix prefix to filter, all multipart objects returned will begin with prefix.
-     * @return a list of multipart objects with a given prefix
-     * @throws IOException            on connection failure
-     * @throws XmlPullParserException // TODO return better error
-     */
-    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String prefix) throws IOException, XmlPullParserException, ObjectStorageException {
+    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIdMarker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
 
         if (prefix != null) {
             url.set("prefix", prefix);
+        }
+        if (prefix != null) {
+            url.set("marker", prefix);
+        }
+        if (prefix != null) {
+            url.set("uploadIdMarker", prefix);
+        }
+        if (prefix != null) {
+            url.set("delimiter", prefix);
+        }
+        if(maxKeys > 0 && maxKeys < 1000) {
+            url.set("max-keys", maxKeys);
         }
 
         HttpRequest request = getHttpRequest("GET", url);
@@ -743,8 +777,9 @@ public class Client {
      * @throws XmlPullParserException // TODO return better error
      */
     public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
-        ListMultipartUploadsResult uploads = listActiveMultipartUploads(bucket);
-        for (Upload upload : uploads.getUploads()) {
+        Iterator<Upload> uploads = listActiveMultipartUploads(bucket);
+        while (uploads.hasNext()){
+            Upload upload = uploads.next();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
         }
     }

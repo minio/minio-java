@@ -38,6 +38,17 @@ public class ListMultipartUploadsResult extends XmlEntity {
     @Key("MaxUploads")
     private int maxUploads;
 
+    public boolean isTruncated() {
+        return isTruncated;
+    }
+
+    public void setIsTruncated(boolean isTruncated) {
+        this.isTruncated = isTruncated;
+    }
+
+    @Key("IsTruncated")
+    private boolean isTruncated;
+
     public ListMultipartUploadsResult() {
         super();
         super.name = "ListMultipartUploadsResult";
