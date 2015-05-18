@@ -135,7 +135,7 @@ public class Client {
     private String accessKey;
     private String secretKey;
     private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
-    private String userAgent = "Minio (0.1)";
+    private String userAgent = "objectstorage-java/0.0.1";
     private byte[] signingKey;
 
     private Client(URL url) {
@@ -800,7 +800,7 @@ public class Client {
      * @param userAgent Sets the user agent of the request.
      */
     public void setUserAgent(String userAgent) {
-        this.userAgent = "Minio/0.1 (" + userAgent + ")";
+        this.userAgent = "objectstorage-java/0.0.1 (" + userAgent + ")";
     }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
