@@ -28,6 +28,17 @@ public class ListBucketResult extends XmlEntity {
     private String Prefix;
     @Key("Marker")
     private String Marker;
+
+    public String getNextMarker() {
+        return nextMarker;
+    }
+
+    public void setNextMarker(String nextMarker) {
+        this.nextMarker = nextMarker;
+    }
+
+    @Key("NextMarker")
+    private String nextMarker;
     @Key("MaxKeys")
     private int MaxKeys;
     @Key("Delimiter")
