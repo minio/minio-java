@@ -723,21 +723,21 @@ public class Client {
         };
     }
 
-    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIdMarker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
+    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
 
         if (prefix != null) {
             url.set("prefix", prefix);
         }
-        if (prefix != null) {
-            url.set("marker", prefix);
+        if (keyMarker != null) {
+            url.set("key-marker", keyMarker);
         }
-        if (prefix != null) {
-            url.set("uploadIdMarker", prefix);
+        if (uploadIDMarker != null) {
+            url.set("upload-id-marker", uploadIDMarker);
         }
-        if (prefix != null) {
-            url.set("delimiter", prefix);
+        if (delimiter != null) {
+            url.set("delimiter", delimiter);
         }
         if(maxKeys > 0 && maxKeys < 1000) {
             url.set("max-keys", maxKeys);
@@ -897,14 +897,18 @@ public class Client {
      * @param bucket   of object
      * @param key      of object
      * @param uploadID of object
-     * @param partMarker
+     * @param partNumberMarker
      * @return a list of parts in a given multipart upload
      * @throws IOException            on connection failure
      * @throws XmlPullParserException // TODO better error
      */
-    private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partMarker) throws IOException, XmlPullParserException, ObjectStorageException {
+    private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
+
+        if(partNumberMarker > 0) {
+            url.set("part-number-marker", partNumberMarker);
+        }
 
         HttpRequest request = getHttpRequest("GET", url);
         request.setThrowExceptionOnExecuteError(false);
