@@ -19,6 +19,7 @@ package io.minio.objectstorage.client;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import io.minio.objectstorage.client.messages.ListMultipartUploadsResult;
+import io.minio.objectstorage.client.messages.Upload;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -26,6 +27,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -102,12 +104,12 @@ public class IntegrationTest {
             largeObject[i] = 'a';
         }
         client.enableLogging();
-        ListMultipartUploadsResult examplebucket = client.listActiveMultipartUploads("examplebucket");
+        Iterator<Upload> examplebucket = client.listActiveMultipartUploads("examplebucket");
         System.out.println("Foo:");
-        System.out.println(examplebucket);
+        System.out.println(examplebucket.next());
         System.out.println(":Bar");
         client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length, new ByteArrayInputStream(largeObject));
         examplebucket = client.listActiveMultipartUploads("examplebucket");
-        System.out.println(examplebucket);
+        System.out.println(examplebucket.hasNext());
     }
 }
