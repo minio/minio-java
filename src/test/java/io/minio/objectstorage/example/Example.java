@@ -47,7 +47,7 @@ public class Example {
 //        client.setKeys("accessKey", "secretKey");
 
         // Set a user agent for your app
-        client.setUserAgent("Example app/ (0.1)");
+        client.addUserAgent("Example app", "(0.1)", "amd64");
 
         // create bucket
         client.makeBucket("mybucket", Client.ACL_PUBLIC_READ_WRITE);
