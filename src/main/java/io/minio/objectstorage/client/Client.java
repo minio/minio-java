@@ -135,7 +135,7 @@ public class Client {
     private String accessKey;
     private String secretKey;
     private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
-    private String userAgent = "objectstorage-java/0.0.1";
+    private String userAgent = "objectstorage-java/0.0.1" + " (" + System.getProperty("os.arch") + System.getProperty("os.name") + ") ";
     private byte[] signingKey;
 
     private Client(URL url) {
@@ -281,9 +281,6 @@ public class Client {
         });
         HttpRequest request = requestFactory.buildRequest(method, url, null);
         request.setSuppressUserAgentSuffix(true);
-        if (userAgent != null) {
-            request.getHeaders().setUserAgent(userAgent);
-        }
         return request;
     }
 
@@ -792,12 +789,21 @@ public class Client {
     }
 
     /**
-     * Set user agent of the client
+     * Add additional user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
      *
-     * @param userAgent Sets the user agent of the request.
+     * @param name name of your application
+     * @param version version of your application
+     * @param comments optional list of comments
      */
-    public void setUserAgent(String userAgent) {
-        this.userAgent = "objectstorage-java/0.0.1 (" + userAgent + ")";
+    public void addUserAgent(String name, String version, String... comments) {
+	if (name != null && version != null) {
+	    String newUserAgent = name + "/" + version + " (";
+	    StringBuilder sb = new StringBuilder();
+	    for (int i = 0; i < comments.length; i++) {
+		sb.append(comments[i]).append(", ");
+	    }
+	    this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
+	}
     }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
