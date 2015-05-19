@@ -802,10 +802,12 @@ public class Client {
      */
     public void addUserAgent(String name, String version, String... comments) {
         if (name != null && version != null) {
-            String newUserAgent = name + "/" + version + " (";
+            String newUserAgent = name.trim() + "/" + version.trim() + " (";
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < comments.length; i++) {
-                sb.append(comments[i]).append(", ");
+                if(comments[i] != null) {
+                    sb.append(comments[i].trim()).append(", ");
+                }
             }
             this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
         }
