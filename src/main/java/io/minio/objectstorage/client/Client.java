@@ -135,7 +135,8 @@ public class Client {
     private static final int PART_SIZE = 5 * 1024 * 1024;
     private final URL url;
     private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
-    private HttpTransport transport = new NetHttpTransport();
+    private static final HttpTransport defaultTransport = new NetHttpTransport();
+    private HttpTransport transport = defaultTransport;
     private String accessKey;
     private String secretKey;
     private String userAgent = "objectstorage-java/0.0.1" + " (" + System.getProperty("os.name") + ", " + System.getProperty("os.arch") + ") ";
@@ -477,6 +478,10 @@ public class Client {
 
     void setTransport(HttpTransport transport) {
         this.transport = transport;
+    }
+
+    void resetTransport() {
+        this.transport = defaultTransport;
     }
 
     /**
