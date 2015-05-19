@@ -37,7 +37,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class RequestSigner implements HttpExecuteInterceptor {
-    private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ= DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
+    private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
     private static final DateTimeFormatter dateFormatyyyyMMdd = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC();
     private static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withZoneUTC();
 
@@ -52,6 +52,27 @@ public class RequestSigner implements HttpExecuteInterceptor {
         }
         this.data = data;
 
+    }
+
+    public static byte[] generateSigningKey(Date date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        return generateSigningKey(new DateTime(date), region, secretKey);
+    }
+
+    public static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        String formattedDate = date.toString(dateFormatyyyyMMdd);
+        String dateKeyLine = "AWS4" + secretKey;
+        byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
+        byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
+        byte[] dateRegionServiceKey = signHmac(dateRegionKey, "s3".getBytes("UTF-8"));
+        return signHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
+    }
+
+    private static byte[] signHmac(byte[] curKey, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
+        SecretKeySpec key = new SecretKeySpec(curKey, "HmacSHA256");
+        Mac hmacSha256 = Mac.getInstance("HmacSHA256");
+        hmacSha256.init(key);
+        hmacSha256.update(data);
+        return hmacSha256.doFinal();
     }
 
     private void signV4(HttpRequest request, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
@@ -137,31 +158,10 @@ public class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private byte[] getSigningKey(DateTime date, String region) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        if(this.accessKey != null && this.secretKey != null) {
+        if (this.accessKey != null && this.secretKey != null) {
             return generateSigningKey(date, region, this.secretKey);
         }
         return this.userProvidedSigningKey;
-    }
-
-    public static byte[] generateSigningKey(Date date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        return generateSigningKey(new DateTime(date), region, secretKey);
-    }
-
-    public static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        String formattedDate = date.toString(dateFormatyyyyMMdd);
-        String dateKeyLine = "AWS4" + secretKey;
-        byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
-        byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
-        byte[] dateRegionServiceKey = signHmac(dateRegionKey, "s3".getBytes("UTF-8"));
-        return signHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
-    }
-
-    private static byte[] signHmac(byte[] curKey, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
-        SecretKeySpec key = new SecretKeySpec(curKey, "HmacSHA256");
-        Mac hmacSha256 = Mac.getInstance("HmacSHA256");
-        hmacSha256.init(key);
-        hmacSha256.update(data);
-        return hmacSha256.doFinal();
     }
 
     private String getScope(String region, DateTime date) {

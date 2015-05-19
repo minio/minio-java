@@ -28,15 +28,6 @@ public class ListBucketResult extends XmlEntity {
     private String Prefix;
     @Key("Marker")
     private String Marker;
-
-    public String getNextMarker() {
-        return nextMarker;
-    }
-
-    public void setNextMarker(String nextMarker) {
-        this.nextMarker = nextMarker;
-    }
-
     @Key("NextMarker")
     private String nextMarker;
     @Key("MaxKeys")
@@ -52,6 +43,14 @@ public class ListBucketResult extends XmlEntity {
 
     public ListBucketResult() {
         super.name = "ListBucketResult";
+    }
+
+    public String getNextMarker() {
+        return nextMarker;
+    }
+
+    public void setNextMarker(String nextMarker) {
+        this.nextMarker = nextMarker;
     }
 
     public String getName() {

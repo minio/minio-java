@@ -18,7 +18,6 @@ package io.minio.objectstorage.client;
 
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
-import io.minio.objectstorage.client.messages.ListMultipartUploadsResult;
 import io.minio.objectstorage.client.messages.Upload;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -27,7 +26,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
