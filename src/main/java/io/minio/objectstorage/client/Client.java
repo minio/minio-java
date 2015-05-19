@@ -35,7 +35,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -131,10 +134,10 @@ public class Client {
 
     private static final int PART_SIZE = 5 * 1024 * 1024;
     private final URL url;
+    private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
     private HttpTransport transport = new NetHttpTransport();
     private String accessKey;
     private String secretKey;
-    private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
     private String userAgent = "objectstorage-java/0.0.1" + " (" + System.getProperty("os.arch") + System.getProperty("os.name") + ") ";
     private byte[] signingKey;
 
@@ -400,7 +403,7 @@ public class Client {
 
             @Override
             protected List<Item> populate() throws ObjectStorageException, IOException {
-                if(!isComplete) {
+                if (!isComplete) {
                     try {
                         ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, null, 1000);
                         if (listBucketResult.isTruncated()) {
@@ -547,7 +550,7 @@ public class Client {
         }
 
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
                     return;
@@ -580,7 +583,7 @@ public class Client {
         request.getHeaders().set("x-amz-acl", acl);
 
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
                     return;
@@ -688,18 +691,20 @@ public class Client {
     public ExceptionIterator<Upload> listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
         return listActiveMultipartUploads(bucket, null);
     }
+
     public ExceptionIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) throws IOException, XmlPullParserException, ObjectStorageException {
         return new ExceptionIterator<Upload>() {
             private boolean isComplete = false;
             private String keyMarker = null;
             private String uploadIdMarker;
+
             @Override
             protected List<Upload> populate() throws ObjectStorageException, IOException {
-                if(!isComplete) {
+                if (!isComplete) {
                     ListMultipartUploadsResult result = null;
                     try {
                         result = listActiveMultipartUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
-                        if(result.isTruncated()) {
+                        if (result.isTruncated()) {
                             keyMarker = result.getNextKeyMarker();
                             uploadIdMarker = result.getNextUploadIDMarker();
                         } else {
@@ -733,7 +738,7 @@ public class Client {
         if (delimiter != null) {
             url.set("delimiter", delimiter);
         }
-        if(maxKeys > 0 && maxKeys < 1000) {
+        if (maxKeys > 0 && maxKeys < 1000) {
             url.set("max-keys", maxKeys);
         }
 
@@ -742,9 +747,9 @@ public class Client {
         request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
-                if(response.isSuccessStatusCode()) {
+                if (response.isSuccessStatusCode()) {
                     XmlPullParser parser = Xml.createParser();
                     InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
                     parser.setInput(reader);
@@ -771,7 +776,7 @@ public class Client {
      */
     public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
         ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket);
-        while (uploads.hasNext()){
+        while (uploads.hasNext()) {
             Upload upload = uploads.next();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
         }
@@ -791,19 +796,19 @@ public class Client {
     /**
      * Add additional user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
      *
-     * @param name name of your application
-     * @param version version of your application
+     * @param name     name of your application
+     * @param version  version of your application
      * @param comments optional list of comments
      */
     public void addUserAgent(String name, String version, String... comments) {
-	if (name != null && version != null) {
-	    String newUserAgent = name + "/" + version + " (";
-	    StringBuilder sb = new StringBuilder();
-	    for (int i = 0; i < comments.length; i++) {
-		sb.append(comments[i]).append(", ");
-	    }
-	    this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
-	}
+        if (name != null && version != null) {
+            String newUserAgent = name + "/" + version + " (";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < comments.length; i++) {
+                sb.append(comments[i]).append(", ");
+            }
+            this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
+        }
     }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
@@ -814,7 +819,7 @@ public class Client {
         request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
                 XmlPullParser parser = Xml.createParser();
                 InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
@@ -853,9 +858,9 @@ public class Client {
         request.setContent(new ByteArrayContent("application/xml", data));
 
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
-                if(response.isSuccessStatusCode()) {
+                if (response.isSuccessStatusCode()) {
                     return;
                 }
                 parseError(response);
@@ -869,13 +874,14 @@ public class Client {
         return new ExceptionIterator<Part>() {
             public int marker;
             private boolean isComplete = false;
+
             @Override
             protected List<Part> populate() throws IOException, ObjectStorageException {
-                while(!isComplete) {
+                while (!isComplete) {
                     ListPartsResult result = null;
                     try {
                         result = listObjectParts(bucket, key, uploadID, marker);
-                        if(result.isTruncated()) {
+                        if (result.isTruncated()) {
                             marker = result.getNextPartNumberMarker();
                         } else {
                             isComplete = true;
@@ -895,9 +901,9 @@ public class Client {
     /**
      * List all parts in an active multipart upload.
      *
-     * @param bucket   of object
-     * @param key      of object
-     * @param uploadID of object
+     * @param bucket           of object
+     * @param key              of object
+     * @param uploadID         of object
      * @param partNumberMarker
      * @return a list of parts in a given multipart upload
      * @throws IOException            on connection failure
@@ -907,7 +913,7 @@ public class Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
-        if(partNumberMarker > 0) {
+        if (partNumberMarker > 0) {
             url.set("part-number-marker", partNumberMarker);
         }
 
@@ -915,9 +921,9 @@ public class Client {
         request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
-                if(response.isSuccessStatusCode()) {
+                if (response.isSuccessStatusCode()) {
                     XmlPullParser parser = Xml.createParser();
                     InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
                     parser.setInput(reader);
@@ -951,9 +957,9 @@ public class Client {
         HttpRequest request = getHttpRequest("DELETE", url);
         request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
-                if(response.isSuccessStatusCode()) {
+                if (response.isSuccessStatusCode()) {
                     return;
                 }
                 parseError(response);
@@ -995,9 +1001,9 @@ public class Client {
         ByteArrayContent content = new ByteArrayContent(contentType, data);
         request.setContent(content);
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             try {
-                if(response.isSuccessStatusCode()) {
+                if (response.isSuccessStatusCode()) {
                     return response.getHeaders().getETag();
                 }
                 parseError(response);
@@ -1074,7 +1080,7 @@ public class Client {
      */
     @SuppressWarnings("unused")
     public void disableLogging() {
-        if(this.logger.get() != null) {
+        if (this.logger.get() != null) {
             this.logger.get().setLevel(Level.OFF);
         }
     }
