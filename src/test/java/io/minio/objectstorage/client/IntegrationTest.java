@@ -104,7 +104,7 @@ public class IntegrationTest {
             largeObject[i] = 'a';
         }
         client.enableLogging();
-        Iterator<Upload> examplebucket = client.listActiveMultipartUploads("examplebucket");
+        ExceptionIterator<Upload> examplebucket = client.listActiveMultipartUploads("examplebucket");
         System.out.println("Foo:");
         System.out.println(examplebucket.next());
         System.out.println(":Bar");

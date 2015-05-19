@@ -18,6 +18,7 @@ package io.minio.objectstorage.example;
 
 import com.google.api.client.util.IOUtils;
 import io.minio.objectstorage.client.Client;
+import io.minio.objectstorage.client.ExceptionIterator;
 import io.minio.objectstorage.client.ObjectMetadata;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.Item;
@@ -62,7 +63,7 @@ public class Example {
         client.putObject("mybucket", "myobject", "application/octet-stream", 11, new ByteArrayInputStream("hello world".getBytes("UTF-8")));
 
         // list objects
-        Iterator<Item> myObjects = client.listObjectsInBucket("mybucket");
+        ExceptionIterator<Item> myObjects = client.listObjectsInBucket("mybucket");
         System.out.println(myObjects);
 
         // get object metadata
