@@ -79,7 +79,7 @@ import java.util.logging.Logger;
  * signing key to the client. If keys are provided, all requests by the
  * client will be signed using AWS Signature Version 4. @see #setKeys(String, String)
  * <p/>
- * For an example of using this library, please see <a href="https://github.com/minio/objectstorage-java/blob/master/src/test/java/io/minio/objectstorage/example/S3Example.java">this example</a>.
+ * For an example of using this library, please see <a href="https://github.com/minio/objectstorage-java/blob/master/src/test/java/io/minio/objectstorage/example/Example.java">this example</a>.
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class Client {
@@ -138,7 +138,7 @@ public class Client {
     private HttpTransport transport = new NetHttpTransport();
     private String accessKey;
     private String secretKey;
-    private String userAgent = "objectstorage-java/0.0.1" + " (" + System.getProperty("os.arch") + System.getProperty("os.name") + ") ";
+    private String userAgent = "objectstorage-java/0.0.1" + " (" + System.getProperty("os.name") + ", " + System.getProperty("os.arch") + ") ";
     private byte[] signingKey;
 
     private Client(URL url) {
