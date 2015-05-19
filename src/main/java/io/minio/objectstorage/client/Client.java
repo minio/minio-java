@@ -237,19 +237,8 @@ public class Client {
         if (response.getContent() == null) {
             throw new IOException("Unsuccessful response from server without error: " + response.getStatusCode());
         }
-        XmlPullParser parser;
         XmlError xmlError = new XmlError();
-        try {
-            parser = Xml.createParser();
-            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-            parser.setInput(reader);
-            Xml.parseElement(parser, xmlError, new XmlNamespaceDictionary(), null);
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-            InvalidStateException invalidStateException = new InvalidStateException();
-            invalidStateException.initCause(e);
-            throw invalidStateException;
-        }
+        parseXml(response, xmlError);
 
         String code = xmlError.getCode();
         ObjectStorageException e;
@@ -263,9 +252,28 @@ public class Client {
         else if (code.equals("InternalError")) e = new InternalServerException();
         else if (code.equals("KeyTooLong")) e = new InvalidObjectNameException();
         else if (code.equals("TooManyBuckets")) e = new MaxBucketsReachedException();
+        else if (code.equals("PermanentRedirect")) e = new RedirectionException();
         else e = new InvalidStateException();
         e.setXmlError(xmlError);
         throw e;
+    }
+
+    private void parseXml(HttpResponse response, XmlError objectToPopulate) throws IOException, InvalidStateException {
+        XmlPullParser parser;
+        try {
+            parser = Xml.createParser();
+            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
+            parser.setInput(reader);
+            XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
+            dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
+            dictionary.set("", "");
+            Xml.parseElement(parser, objectToPopulate, dictionary, null);
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+            InvalidStateException invalidStateException = new InvalidStateException();
+            invalidStateException.initCause(e);
+            throw invalidStateException;
+        }
     }
 
     private HttpRequest getHttpRequest(String method, GenericUrl url) throws IOException {
@@ -535,7 +543,6 @@ public class Client {
      *
      * @param bucket bucket to create
      * @param acl    canned acl
-     * @return true if succeeds // TODO return void, throw exception on failure
      * @throws IOException
      */
     public void makeBucket(String bucket, String acl) throws IOException, ObjectStorageException {
@@ -567,7 +574,6 @@ public class Client {
      *
      * @param bucket bucket to set ACL on
      * @param acl    canned acl
-     * @return // TODO throw exception on failure
      * @throws IOException
      */
     public void setBucketACL(String bucket, String acl) throws IOException, ObjectStorageException {
@@ -685,14 +691,12 @@ public class Client {
      *
      * @param bucket bucket to list active multipart uploads
      * @return list of active multipart uploads
-     * @throws IOException
-     * @throws XmlPullParserException
      */
-    public ExceptionIterator<Upload> listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
+    public ExceptionIterator<Upload> listActiveMultipartUploads(String bucket) {
         return listActiveMultipartUploads(bucket, null);
     }
 
-    public ExceptionIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) throws IOException, XmlPullParserException, ObjectStorageException {
+    public ExceptionIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) {
         return new ExceptionIterator<Upload>() {
             private boolean isComplete = false;
             private String keyMarker = null;
@@ -701,7 +705,7 @@ public class Client {
             @Override
             protected List<Upload> populate() throws ObjectStorageException, IOException {
                 if (!isComplete) {
-                    ListMultipartUploadsResult result = null;
+                    ListMultipartUploadsResult result;
                     try {
                         result = listActiveMultipartUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
                         if (result.isTruncated()) {
@@ -771,10 +775,9 @@ public class Client {
      * Abort all active multipart uploads in a given bucket.
      *
      * @param bucket to dorp all active multipart uploads in
-     * @throws IOException            on connection failure
-     * @throws XmlPullParserException // TODO return better error
+     * @throws IOException on connection failure
      */
-    public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
+    public void abortAllMultipartUploads(String bucket) throws IOException, ObjectStorageException {
         ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket);
         while (uploads.hasNext()) {
             Upload upload = uploads.next();
@@ -804,9 +807,9 @@ public class Client {
         if (name != null && version != null) {
             String newUserAgent = name.trim() + "/" + version.trim() + " (";
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < comments.length; i++) {
-                if (comments[i] != null) {
-                    sb.append(comments[i].trim()).append(", ");
+            for (String comment : comments) {
+                if (comment != null) {
+                    sb.append(comment.trim()).append(", ");
                 }
             }
             this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
@@ -879,8 +882,8 @@ public class Client {
 
             @Override
             protected List<Part> populate() throws IOException, ObjectStorageException {
-                while (!isComplete) {
-                    ListPartsResult result = null;
+                if (!isComplete) {
+                    ListPartsResult result;
                     try {
                         result = listObjectParts(bucket, key, uploadID, marker);
                         if (result.isTruncated()) {
@@ -900,17 +903,6 @@ public class Client {
         };
     }
 
-    /**
-     * List all parts in an active multipart upload.
-     *
-     * @param bucket           of object
-     * @param key              of object
-     * @param uploadID         of object
-     * @param partNumberMarker
-     * @return a list of parts in a given multipart upload
-     * @throws IOException            on connection failure
-     * @throws XmlPullParserException // TODO better error
-     */
     private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
