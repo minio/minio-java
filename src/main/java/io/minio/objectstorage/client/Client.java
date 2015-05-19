@@ -805,7 +805,7 @@ public class Client {
             String newUserAgent = name.trim() + "/" + version.trim() + " (";
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < comments.length; i++) {
-                if(comments[i] != null) {
+                if (comments[i] != null) {
                     sb.append(comments[i].trim()).append(", ");
                 }
             }

@@ -22,8 +22,6 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import io.minio.objectstorage.client.errors.BucketExistsException;
-import io.minio.objectstorage.client.errors.BucketNotFoundException;
-import io.minio.objectstorage.client.errors.ObjectNotFoundException;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.*;
 import org.junit.Test;
@@ -372,7 +370,7 @@ public class ClientTest {
         try {
             client.setBucketACL("bucket", null);
             fail();
-        } catch(NullPointerException ex) {
+        } catch (NullPointerException ex) {
         }
     }
 

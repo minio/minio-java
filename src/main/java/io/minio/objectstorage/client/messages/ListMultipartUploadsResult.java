@@ -37,6 +37,13 @@ public class ListMultipartUploadsResult extends XmlEntity {
     private String nextUploadIDMarker;
     @Key("MaxUploads")
     private int maxUploads;
+    @Key("IsTruncated")
+    private boolean isTruncated;
+
+    public ListMultipartUploadsResult() {
+        super();
+        super.name = "ListMultipartUploadsResult";
+    }
 
     public boolean isTruncated() {
         return isTruncated;
@@ -44,14 +51,6 @@ public class ListMultipartUploadsResult extends XmlEntity {
 
     public void setIsTruncated(boolean isTruncated) {
         this.isTruncated = isTruncated;
-    }
-
-    @Key("IsTruncated")
-    private boolean isTruncated;
-
-    public ListMultipartUploadsResult() {
-        super();
-        super.name = "ListMultipartUploadsResult";
     }
 
     public String getBucket() {

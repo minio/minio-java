@@ -20,7 +20,6 @@ import io.minio.objectstorage.client.errors.ObjectStorageException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;

@@ -28,7 +28,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 
 public class Example {
     public static void main(String[] args) throws IOException, XmlPullParserException, ObjectStorageException {
