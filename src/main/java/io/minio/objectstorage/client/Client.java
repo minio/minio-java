@@ -396,12 +396,13 @@ public class Client {
         throw new IOException();
     }
 
-    public Iterator<Item> listObjectsInBucket(final String bucket, final String prefix) {
-        return new ListObjectsIterator<Item>() {
+    public ExceptionIterator<Item> listObjectsInBucket(final String bucket, final String prefix) {
+        return new ExceptionIterator<Item>() {
             private String marker = null;
             private boolean isComplete = false;
+
             @Override
-            protected List<Item> populate() {
+            protected List<Item> populate() throws ObjectStorageException, IOException {
                 if(!isComplete) {
                     try {
                         ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, null, 1000);
@@ -411,12 +412,10 @@ public class Client {
                             isComplete = true;
                         }
                         return listBucketResult.getContents();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     } catch (XmlPullParserException e) {
-                        e.printStackTrace();
-                    } catch (ObjectStorageException e) {
-                        e.printStackTrace();
+                        InternalClientException xmlParsingError = new InternalClientException();
+                        xmlParsingError.initCause(e);
+                        throw xmlParsingError;
                     }
                 }
                 return new LinkedList<Item>();
@@ -424,7 +423,7 @@ public class Client {
         };
     }
 
-    public Iterator<Item> listObjectsInBucket(final String bucket) {
+    public ExceptionIterator<Item> listObjectsInBucket(final String bucket) {
         return listObjectsInBucket(bucket, null);
     }
 
@@ -627,7 +626,7 @@ public class Client {
 
         if (size > PART_SIZE) {
             // check if multipart exists
-            Iterator<Upload> multipartUploads = listActiveMultipartUploads(bucket, key);
+            ExceptionIterator<Upload> multipartUploads = listActiveMultipartUploads(bucket, key);
             while (multipartUploads.hasNext()) {
                 Upload upload = multipartUploads.next();
                 if (upload.getKey().equals(key)) {
@@ -650,7 +649,7 @@ public class Client {
             long objectLength = 0;
             List<String> parts = new LinkedList<String>();
             int part = 1;
-            Iterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
+            ExceptionIterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
             while (objectParts.hasNext()) {
                 Part curPart = objectParts.next();
                 long curSize = curPart.getSize();
@@ -689,16 +688,16 @@ public class Client {
      * @throws IOException
      * @throws XmlPullParserException
      */
-    public Iterator<Upload> listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
+    public ExceptionIterator<Upload> listActiveMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
         return listActiveMultipartUploads(bucket, null);
     }
-    public Iterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) throws IOException, XmlPullParserException, ObjectStorageException {
-        return new ListObjectsIterator<Upload>() {
+    public ExceptionIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) throws IOException, XmlPullParserException, ObjectStorageException {
+        return new ExceptionIterator<Upload>() {
             private boolean isComplete = false;
             private String keyMarker = null;
             private String uploadIdMarker;
             @Override
-            protected List<Upload> populate() {
+            protected List<Upload> populate() throws ObjectStorageException, IOException {
                 if(!isComplete) {
                     ListMultipartUploadsResult result = null;
                     try {
@@ -710,12 +709,10 @@ public class Client {
                             isComplete = true;
                         }
                         return result.getUploads();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     } catch (XmlPullParserException e) {
-                        e.printStackTrace();
-                    } catch (ObjectStorageException e) {
-                        e.printStackTrace();
+                        InternalClientException xmlError = new InternalClientException();
+                        xmlError.initCause(e);
+                        throw xmlError;
                     }
                 }
                 return new LinkedList<Upload>();
@@ -776,7 +773,7 @@ public class Client {
      * @throws XmlPullParserException // TODO return better error
      */
     public void abortAllMultipartUploads(String bucket) throws IOException, XmlPullParserException, ObjectStorageException {
-        Iterator<Upload> uploads = listActiveMultipartUploads(bucket);
+        ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket);
         while (uploads.hasNext()){
             Upload upload = uploads.next();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
@@ -862,12 +859,12 @@ public class Client {
         }
     }
 
-    public Iterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
-        return new ListObjectsIterator<Part>() {
+    public ExceptionIterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
+        return new ExceptionIterator<Part>() {
             public int marker;
             private boolean isComplete = false;
             @Override
-            protected List<Part> populate() {
+            protected List<Part> populate() throws IOException, ObjectStorageException {
                 while(!isComplete) {
                     ListPartsResult result = null;
                     try {
@@ -878,12 +875,10 @@ public class Client {
                             isComplete = true;
                         }
                         return result.getParts();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     } catch (XmlPullParserException e) {
-                        e.printStackTrace();
-                    } catch (ObjectStorageException e) {
-                        e.printStackTrace();
+                        InternalClientException internalClientException = new InternalClientException();
+                        internalClientException.initCause(e);
+                        throw internalClientException;
                     }
                 }
                 return new LinkedList<Part>();

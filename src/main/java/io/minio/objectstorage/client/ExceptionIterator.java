@@ -16,22 +16,24 @@
 
 package io.minio.objectstorage.client;
 
+import io.minio.objectstorage.client.errors.ObjectStorageException;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-abstract class ListObjectsIterator<T> implements Iterator<T> {
-    private List<T> items = new LinkedList<T>();
+public abstract class ExceptionIterator<T1> {
+    private List<T1> items = new LinkedList<T1>();
 
-    @Override
-    public boolean hasNext() {
+    public boolean hasNext() throws IOException, XmlPullParserException, ObjectStorageException {
         populateIfEmpty();
         return !items.isEmpty();
     }
 
-    @Override
-    public T next() {
+    public T1 next() throws IOException, XmlPullParserException, ObjectStorageException {
         populateIfEmpty();
         if (items.isEmpty()) {
             throw new NoSuchElementException();
@@ -39,17 +41,16 @@ abstract class ListObjectsIterator<T> implements Iterator<T> {
         return items.remove(0);
     }
 
-    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }
 
-    private synchronized void populateIfEmpty() {
+    private synchronized void populateIfEmpty() throws ObjectStorageException, IOException, XmlPullParserException {
         if (items.isEmpty()) {
-            List<T> list = populate();
+            List<T1> list = populate();
             this.items.addAll(list);
         }
     }
 
-    protected abstract List<T> populate();
+    protected abstract List<T1> populate() throws ObjectStorageException, IOException, XmlPullParserException;
 }
