@@ -555,11 +555,10 @@ public class Client {
 
         HttpRequest request = getHttpRequest("PUT", url);
         request.setThrowExceptionOnExecuteError(false);
-        if (acl != null) {
-            request.getHeaders().set("x-amz-acl", acl);
-        } else {
-            request.getHeaders().set("x-amz-acl", ACL_PRIVATE);
+        if (acl == null) {
+            acl = ACL_PRIVATE;
         }
+        request.getHeaders().set("x-amz-acl", acl);
 
         HttpResponse response = request.execute();
         if (response != null) {
