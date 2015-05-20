@@ -16,6 +16,7 @@
 
 package io.minio.objectstorage.client;
 
+import io.minio.objectstorage.client.acl.Acl;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
 import io.minio.objectstorage.client.messages.Upload;
@@ -47,9 +48,9 @@ public class IntegrationTest {
         Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
 //        Client client = Client.getClient("http://localhost:9000");
         client.enableLogging();
-        client.makeBucket("examplebucket", Client.ACL_PUBLIC_READ_WRITE);
+        client.makeBucket("examplebucket", Acl.PUBLIC_READ_WRITE);
 
-        client.setBucketACL("foo", Client.ACL_PRIVATE);
+        client.setBucketACL("foo", Acl.PRIVATE);
 
         String inputString = "hello world";
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
