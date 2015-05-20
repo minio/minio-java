@@ -110,4 +110,21 @@ public class IntegrationTest {
         examplebucket = client.listActiveMultipartUploads("examplebucket");
         System.out.println(examplebucket.hasNext());
     }
+
+    @Test
+    @Ignore
+    public void testInternationalCharacters() throws XmlPullParserException, IOException, ObjectStorageException {
+        String input = "hello 世界";
+        byte[] inputBytes = input.getBytes("UTF-8");
+        Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
+        client.enableLogging();
+        client.putObject("examplebucket", "世界", "application/octet-stream", inputBytes.length, new ByteArrayInputStream(inputBytes));
+        InputStream object = client.getObject("examplebucket", "世界");
+        byte[] result = new byte[inputBytes.length];
+        int read = object.read(result);
+        assertEquals(read, inputBytes.length);
+        object.close();
+        String resultString = new String(result, "UTF-8");
+        assertEquals(input, resultString);
+    }
 }
