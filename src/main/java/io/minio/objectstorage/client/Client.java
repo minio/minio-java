@@ -67,7 +67,7 @@ import java.util.logging.Logger;
  * <li> Setting canned ACLs on buckets</li>
  * </ul>
  * <p/>
- * <h2>Object</h2>Object
+ * <h2>Object</h2>
  * <ul>
  * <li>Dropping an active multipart upload for a specific object and uploadId</li>
  * <li>Read object metadata</li>
@@ -78,7 +78,7 @@ import java.util.logging.Logger;
  * <p/>
  * Optionally, users can also provide access/secret keys or a precomputed
  * signing key to the client. If keys are provided, all requests by the
- * client will be signed using AWS Signature Version 4. @see #setKeys(String, String)
+ * client will be signed using AWS Signature Version 4. See {@link #setKeys(String, String)} and {@link #setSigningKey(byte[])}
  * <p/>
  * For an example of using this library, please see <a href="https://github.com/minio/objectstorage-java/blob/master/src/test/java/io/minio/objectstorage/example/Example.java">this example</a>.
  */
@@ -112,6 +112,7 @@ public class Client {
      *            * https://s3-us-west-2.amazonaws.com/example/object
      * @return an object storage client backed by an S3 compatible server.
      * @throws MalformedURLException
+     * @see #getClient(String)
      */
     public static Client getClient(URL url) throws MalformedURLException {
         // URL should not be null
