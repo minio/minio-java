@@ -84,16 +84,27 @@ import java.util.logging.Logger;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class Client {
+    // default multipart upload size is 5MB
     private static final int PART_SIZE = 5 * 1024 * 1024;
+    // default transport is an HTTP client.
     private static final HttpTransport defaultTransport = new NetHttpTransport();
+    // the current client instance's base URL.
     private final URL url;
+    // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers from being instantiated
     private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
+    // current transporter which can be used to mock
     private HttpTransport transport = defaultTransport;
+    // access key to sign all requests with
     private String accessKey;
+    // Secret key to sign all requests with
     private String secretKey;
+    // user agent to tag all requests with
     private String userAgent = "objectstorage-java/0.0.1" + " (" + System.getProperty("os.name") + ", " + System.getProperty("os.arch") + ") ";
+    // signing key to sign all requests with. Is not used if access and secret key are set
     private byte[] signingKey;
 
+    // Don't allow users to instantiate clients themselves, since it is bad form to throw exceptions in constructors.
+    // Use Client.getClient instead
     private Client(URL url) {
         this.url = url;
     }
@@ -259,6 +270,7 @@ public class Client {
         });
         HttpRequest request = requestFactory.buildRequest(method, url, null);
         request.setSuppressUserAgentSuffix(true);
+        request.setThrowExceptionOnExecuteError(false);
         return request;
     }
 
@@ -486,17 +498,11 @@ public class Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("HEAD", url);
-
-        try {
-            HttpResponse response = request.execute();
-            try {
-                return response.getStatusCode() == 200;
-            } finally {
-                response.disconnect();
-            }
-        } catch (HttpResponseException e) {
-            return false;
+        HttpResponse response = request.execute();
+        if(response != null) {
+            return response.getStatusCode() == 200;
         }
+        return false;
     }
 
     /**
@@ -510,7 +516,6 @@ public class Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
-        request.setThrowExceptionOnExecuteError(false);
         if (acl == null) {
             acl = Acl.PRIVATE;
         }
@@ -543,7 +548,6 @@ public class Client {
 
         GenericUrl url = getGenericUrlOfBucket(bucket);
         HttpRequest request = getHttpRequest("PUT", url);
-        request.setThrowExceptionOnExecuteError(false);
         request.getHeaders().set("x-amz-acl", acl.toString());
 
         HttpResponse response = request.execute();
@@ -706,7 +710,6 @@ public class Client {
 
         HttpRequest request = getHttpRequest("GET", url);
         request.setFollowRedirects(false);
-        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
         if (response != null) {
@@ -774,7 +777,6 @@ public class Client {
         url.set("uploads", "");
 
         HttpRequest request = getHttpRequest("POST", url);
-        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
         if (response != null) {
@@ -807,7 +809,6 @@ public class Client {
         byte[] data = completeManifest.toString().getBytes("UTF-8");
 
         HttpRequest request = getHttpRequest("POST", url, data);
-        request.setThrowExceptionOnExecuteError(false);
         request.setContent(new ByteArrayContent("application/xml", data));
 
         HttpResponse response = request.execute();
@@ -860,7 +861,6 @@ public class Client {
         }
 
         HttpRequest request = getHttpRequest("GET", url);
-        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
         if (response != null) {
@@ -892,7 +892,6 @@ public class Client {
         url.set("uploadId", uploadID);
 
         HttpRequest request = getHttpRequest("DELETE", url);
-        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
         if (response != null) {
             try {
@@ -928,7 +927,6 @@ public class Client {
         byte[] md5sum = calculateMd5sum(data);
 
         HttpRequest request = getHttpRequest("PUT", url, data);
-        request.setThrowExceptionOnExecuteError(false);
 
         if (md5sum != null) {
             String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
