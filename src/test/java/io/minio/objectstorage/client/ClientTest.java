@@ -21,6 +21,7 @@ import com.google.api.client.http.LowLevelHttpResponse;
 import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
+import io.minio.objectstorage.client.acl.Acl;
 import io.minio.objectstorage.client.errors.BucketExistsException;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.*;
@@ -365,8 +366,8 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
-        client.setBucketACL("bucket", Client.ACL_PRIVATE);
+        client.makeBucket("bucket", Acl.PUBLIC_READ);
+        client.setBucketACL("bucket", Acl.PRIVATE);
         try {
             client.setBucketACL("bucket", null);
             fail();
@@ -400,7 +401,7 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        client.makeBucket("bucket", Client.ACL_PUBLIC_READ);
+        client.makeBucket("bucket", Acl.PUBLIC_READ);
     }
 
     @Test

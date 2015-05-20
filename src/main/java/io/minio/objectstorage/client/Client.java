@@ -20,6 +20,7 @@ import com.google.api.client.http.*;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
+import io.minio.objectstorage.client.acl.Acl;
 import io.minio.objectstorage.client.errors.*;
 import io.minio.objectstorage.client.messages.*;
 import org.xmlpull.v1.XmlPullParser;
@@ -83,55 +84,6 @@ import java.util.logging.Logger;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class Client {
-    /**
-     * Canned acl: public-read-write
-     * <p/>
-     * Read: public
-     * Write: public
-     */
-    @SuppressWarnings("unused")
-    public static final String ACL_PUBLIC_READ_WRITE = "public-read-write";
-    /**
-     * Canned acl: private
-     * <p/>
-     * Read: authorized users only
-     * Write: authorized users only
-     */
-    @SuppressWarnings("unused")
-    public static final String ACL_PRIVATE = "private";
-    /**
-     * Canned acl: public-read
-     * <p/>
-     * Read: public
-     * Write: authorized users only
-     */
-    @SuppressWarnings("unused")
-    public static final String ACL_PUBLIC_READ = "public-read";
-    /**
-     * Canned acl: authenticated-read
-     * <p/>
-     * Read: Only users with a valid account, all valid users authorized
-     * Write: acl authorized users only
-     */
-    @SuppressWarnings("unused")
-    public static final String ACL_AUTHENTICATED_READ = "authenticated-read";
-    /**
-     * Canned acl: bucket-owner-read
-     * <p/>
-     * Read: Object owner and bucket owner
-     * Write: Object owner only
-     */
-    @SuppressWarnings("unused")
-    public static final String ACL_BUCKET_OWNER_READ = "bucket-owner-read";
-    /**
-     * Canned acl: bucket-owner-read
-     * <p/>
-     * Read: Object owner and bucket owner
-     * Write: Object owner and bucket owner
-     */
-    @SuppressWarnings("unused")
-    public static final String ACL_BUCKET_OWNER_FULL_CONTROL = "bucket-owner-full-control";
-
     private static final int PART_SIZE = 5 * 1024 * 1024;
     private static final HttpTransport defaultTransport = new NetHttpTransport();
     private final URL url;
@@ -553,15 +505,15 @@ public class Client {
      * @param acl    canned acl
      * @throws IOException
      */
-    public void makeBucket(String bucket, String acl) throws IOException, ObjectStorageException {
+    public void makeBucket(String bucket, Acl acl) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("PUT", url);
         request.setThrowExceptionOnExecuteError(false);
         if (acl == null) {
-            acl = ACL_PRIVATE;
+            acl = Acl.PRIVATE;
         }
-        request.getHeaders().set("x-amz-acl", acl);
+        request.getHeaders().set("x-amz-acl", acl.toString());
 
         HttpResponse response = request.execute();
         if (response != null) {
@@ -583,17 +535,15 @@ public class Client {
      * @param acl    canned acl
      * @throws IOException
      */
-    public void setBucketACL(String bucket, String acl) throws IOException, ObjectStorageException {
+    public void setBucketACL(String bucket, Acl acl) throws IOException, ObjectStorageException {
         if (acl == null) {
             throw new NullPointerException();
         }
 
         GenericUrl url = getGenericUrlOfBucket(bucket);
-        url.set("acl", "");
-
         HttpRequest request = getHttpRequest("PUT", url);
         request.setThrowExceptionOnExecuteError(false);
-        request.getHeaders().set("x-amz-acl", acl);
+        request.getHeaders().set("x-amz-acl", acl.toString());
 
         HttpResponse response = request.execute();
         if (response != null) {

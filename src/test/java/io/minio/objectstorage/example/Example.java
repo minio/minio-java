@@ -20,6 +20,7 @@ import com.google.api.client.util.IOUtils;
 import io.minio.objectstorage.client.Client;
 import io.minio.objectstorage.client.ExceptionIterator;
 import io.minio.objectstorage.client.ObjectMetadata;
+import io.minio.objectstorage.client.acl.Acl;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.Item;
 import io.minio.objectstorage.client.messages.ListAllMyBucketsResult;
@@ -49,10 +50,10 @@ public class Example {
         client.addUserAgent("Example app", "0.1", "amd64");
 
         // create bucket
-        client.makeBucket("mybucket", Client.ACL_PUBLIC_READ_WRITE);
+        client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
 
         // set bucket ACL
-        client.setBucketACL("mybucket", Client.ACL_PRIVATE);
+        client.setBucketACL("mybucket", Acl.PRIVATE);
 
         // list buckets
         ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
