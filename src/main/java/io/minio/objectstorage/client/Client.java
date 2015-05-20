@@ -197,7 +197,9 @@ public class Client {
                     parseError(response);
                 }
             } catch (ParseException e) {
-                e.printStackTrace();
+                InternalClientException internalClientException = new InternalClientException();
+                internalClientException.initCause(e);
+                throw internalClientException;
             } finally {
                 response.disconnect();
             }
@@ -211,7 +213,6 @@ public class Client {
         }
         XmlError xmlError = new XmlError();
         parseXml(response, xmlError);
-        System.out.println(xmlError);
         String code = xmlError.getCode();
         ObjectStorageException e;
         if (code.equals("NoSuchBucket")) e = new BucketNotFoundException();
@@ -225,12 +226,12 @@ public class Client {
         else if (code.equals("KeyTooLong")) e = new InvalidObjectNameException();
         else if (code.equals("TooManyBuckets")) e = new MaxBucketsReachedException();
         else if (code.equals("PermanentRedirect")) e = new RedirectionException();
-        else e = new InvalidStateException();
+        else e = new InternalClientException();
         e.setXmlError(xmlError);
         throw e;
     }
 
-    private void parseXml(HttpResponse response, Object objectToPopulate) throws IOException, InvalidStateException {
+    private void parseXml(HttpResponse response, Object objectToPopulate) throws IOException, InternalClientException {
         XmlPullParser parser;
         try {
             parser = Xml.createParser();
@@ -247,10 +248,9 @@ public class Client {
             }
             Xml.parseElement(parser, objectToPopulate, dictionary, null);
         } catch (XmlPullParserException e) {
-            e.printStackTrace();
-            InvalidStateException invalidStateException = new InvalidStateException();
-            invalidStateException.initCause(e);
-            throw invalidStateException;
+            InternalClientException internalClientException = new InternalClientException();
+            internalClientException.initCause(e);
+            throw internalClientException;
         }
     }
 
@@ -772,7 +772,7 @@ public class Client {
         }
     }
 
-    private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException, InvalidStateException {
+    private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException, InternalClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
 
@@ -955,7 +955,11 @@ public class Client {
             MessageDigest md5Digest = MessageDigest.getInstance("MD5");
             md5sum = md5Digest.digest(data);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            // we should never see this, unless the underlying JVM is broken.
+            // Throw a runtime exception if we run into this, the environment
+            // is not sane
+            System.err.println("MD5 message digest is not found, the current JVM is likely broken.");
+            throw new RuntimeException(e);
         }
         return md5sum;
     }
