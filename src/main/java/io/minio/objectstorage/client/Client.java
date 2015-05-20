@@ -133,9 +133,9 @@ public class Client {
     public static final String ACL_BUCKET_OWNER_FULL_CONTROL = "bucket-owner-full-control";
 
     private static final int PART_SIZE = 5 * 1024 * 1024;
+    private static final HttpTransport defaultTransport = new NetHttpTransport();
     private final URL url;
     private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
-    private static final HttpTransport defaultTransport = new NetHttpTransport();
     private HttpTransport transport = defaultTransport;
     private String accessKey;
     private String secretKey;
@@ -162,9 +162,16 @@ public class Client {
      * @throws MalformedURLException
      */
     public static Client getClient(URL url) throws MalformedURLException {
+        // URL should not be null
         if (url == null) {
             throw new NullPointerException();
         }
+
+        // check if url is http or https
+        if (!(url.getProtocol().equals("http") || url.getProtocol().equals("https"))) {
+            throw new MalformedURLException("Scheme should be http or https");
+        }
+
         // Set trailing / in path
         if (url.getPath().length() == 0) {
             String path = url.toString() + "/";
