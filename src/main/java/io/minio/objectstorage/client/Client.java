@@ -247,7 +247,7 @@ public class Client {
         }
         XmlError xmlError = new XmlError();
         parseXml(response, xmlError);
-
+        System.out.println(xmlError);
         String code = xmlError.getCode();
         ObjectStorageException e;
         if (code.equals("NoSuchBucket")) e = new BucketNotFoundException();
@@ -266,15 +266,21 @@ public class Client {
         throw e;
     }
 
-    private void parseXml(HttpResponse response, XmlError objectToPopulate) throws IOException, InvalidStateException {
+    private void parseXml(HttpResponse response, Object objectToPopulate) throws IOException, InvalidStateException {
         XmlPullParser parser;
         try {
             parser = Xml.createParser();
             InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
             parser.setInput(reader);
             XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
-            dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
-            dictionary.set("", "");
+            if(objectToPopulate instanceof XmlError) {
+                // Errors have no namespace, so we set a default empty alias and namespace
+                dictionary.set("", "");
+            } else {
+                // Setting an empty alias causes a failure when the namespace exists, so we don't set it when
+                // we are not using XmlError. Set the real namespace instead
+                dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
+            }
             Xml.parseElement(parser, objectToPopulate, dictionary, null);
         } catch (XmlPullParserException e) {
             e.printStackTrace();
@@ -466,13 +472,8 @@ public class Client {
         if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
-                    XmlPullParser parser = Xml.createParser();
-                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-                    parser.setInput(reader);
-
                     ListBucketResult result = new ListBucketResult();
-
-                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    parseXml(response, result);
                     return result;
                 }
                 parseError(response);
@@ -508,13 +509,8 @@ public class Client {
         if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
-                    XmlPullParser parser = Xml.createParser();
-                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-                    parser.setInput(reader);
-
                     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
-
-                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    parseXml(response, result);
                     return result;
                 }
                 parseError(response);
@@ -765,13 +761,8 @@ public class Client {
         if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
-                    XmlPullParser parser = Xml.createParser();
-                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-                    parser.setInput(reader);
-
                     ListMultipartUploadsResult result = new ListMultipartUploadsResult();
-
-                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    parseXml(response, result);
                     return result;
                 }
                 parseError(response);
@@ -827,7 +818,7 @@ public class Client {
         }
     }
 
-    private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException {
+    private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException, InvalidStateException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
 
@@ -837,13 +828,8 @@ public class Client {
         HttpResponse response = request.execute();
         if (response != null) {
             try {
-                XmlPullParser parser = Xml.createParser();
-                InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-                parser.setInput(reader);
-
                 InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
-
-                Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                parseXml(response, result);
                 return result.getUploadId();
             } finally {
                 response.disconnect();
@@ -929,13 +915,8 @@ public class Client {
         if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
-                    XmlPullParser parser = Xml.createParser();
-                    InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-                    parser.setInput(reader);
-
                     ListPartsResult result = new ListPartsResult();
-
-                    Xml.parseElement(parser, result, new XmlNamespaceDictionary(), null);
+                    parseXml(response, result);
                     return result;
                 }
                 parseError(response);
