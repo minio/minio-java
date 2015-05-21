@@ -325,10 +325,15 @@ public class Client {
         GenericUrl url = new GenericUrl(this.url);
 
         List<String> pathParts = new LinkedList<String>();
+        // pathparts adds slashes between each part
+        // e.g. foo, bar => foo/bar
+        // we add a "" in the beginning to force it to add a / at the beginning or the url will not be differentiated from the port
+        // e.g. "", bucket, key => /bucket/key
         pathParts.add("");
         pathParts.add(bucket);
         pathParts.add(key);
 
+        // add the path to the url and return
         url.setPathParts(pathParts);
         return url;
     }
@@ -339,6 +344,10 @@ public class Client {
         }
         GenericUrl url = new GenericUrl(this.url);
 
+        // pathparts adds slashes between each part
+        // e.g. foo, bar => foo/bar
+        // we add a "" in the beginning to force it to add a / at the beginning or the url will not be differentiated from the port
+        // e.g. "", bucket => /bucket
         List<String> pathParts = new LinkedList<String>();
         pathParts.add("");
         pathParts.add(bucket);
@@ -361,6 +370,8 @@ public class Client {
 
         HttpRequest request = getHttpRequest("GET", url);
         HttpResponse response = request.execute();
+        // we close the response only on failure or the user will be unable to retrieve the object
+        // it is the user's responsibility to close the input stream
         if (response != null) {
             if (!response.isSuccessStatusCode()) {
                 try {
@@ -405,17 +416,20 @@ public class Client {
      *
      * @param bucket object's bucket
      * @param key    object's key
-     * @param offset Offset from the start of the object.
+     * @param offsetStart Offset from the start of the object.
      * @param length Length of bytes to retrieve.
      * @return an InputStream containing the object. Close the InputStream when done.
      * @throws IOException if the connection does not succeed
      */
-    public InputStream getObject(String bucket, String key, long offset, long length) throws IOException, ObjectStorageException {
+    public InputStream getObject(String bucket, String key, long offsetStart, long length) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-        request.getHeaders().setRange(offset + "-" + offset + length);
+        long offsetEnd = offsetStart+length;
+        request.getHeaders().setRange(offsetStart + "-" + offsetEnd);
 
+        // we close the response only on failure or the user will be unable to retrieve the object
+        // it is the user's responsibility to close the input stream
         HttpResponse response = request.execute();
         if (response != null) {
             if (response.isSuccessStatusCode()) {
@@ -431,15 +445,24 @@ public class Client {
     }
 
     public ExceptionIterator<Item> listObjectsInBucket(final String bucket, final String prefix) {
+        return listObjectsInBucket(bucket, prefix, true);
+    }
+
+    public ExceptionIterator<Item> listObjectsInBucket(final String bucket, final String prefix, final boolean recursive) {
         return new ExceptionIterator<Item>() {
             private String marker = null;
             private boolean isComplete = false;
+            private final static String delimiter = "/";
 
             @Override
             protected List<Item> populate() throws ObjectStorageException, IOException {
                 if (!isComplete) {
                     try {
-                        ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, null, 1000);
+                        String delimiter = null;
+                        if(recursive == true) {
+                            delimiter = "/";
+                        }
+                        ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, delimiter, 1000);
                         if (listBucketResult.isTruncated()) {
                             marker = listBucketResult.getNextMarker();
                         } else {
