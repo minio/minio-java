@@ -444,22 +444,36 @@ public class Client {
         throw new IOException();
     }
 
+    /**
+     *
+     * @param bucket
+     * @param prefix
+     * @return
+     */
     public ExceptionIterator<Item> listObjectsInBucket(final String bucket, final String prefix) {
+        // list all objects recursively
         return listObjectsInBucket(bucket, prefix, true);
     }
 
+    /**
+     *
+     * @param bucket
+     * @param prefix
+     * @param recursive
+     * @return
+     */
     public ExceptionIterator<Item> listObjectsInBucket(final String bucket, final String prefix, final boolean recursive) {
         return new ExceptionIterator<Item>() {
             private String marker = null;
             private boolean isComplete = false;
-            private final static String delimiter = "/";
 
             @Override
             protected List<Item> populate() throws ObjectStorageException, IOException {
                 if (!isComplete) {
                     try {
                         String delimiter = null;
-                        if(recursive == true) {
+                        // set delimiter  to '/' if not recursive to emulate directories
+                        if(!recursive) {
                             delimiter = "/";
                         }
                         ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, delimiter, 1000);
@@ -480,21 +494,49 @@ public class Client {
         };
     }
 
+    /**
+     *
+     * @param bucket
+     * @return
+     */
     public ExceptionIterator<Item> listObjectsInBucket(final String bucket) {
         return listObjectsInBucket(bucket, null);
     }
 
-    private ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, Integer maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
+    /**
+     *
+     * @param bucket
+     * @param marker
+     * @param prefix
+     * @param delimiter
+     * @param maxKeys
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     * @throws ObjectStorageException
+     */
+    private ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
-        if (maxKeys != null) {
+
+        // max keys limits the number of keys returned, max limit is 1000
+        if (maxKeys > 0 && maxKeys <= 1000) {
             url.set("max-keys", maxKeys);
+        } else {
+            url.set("max-keys", 1000);
         }
+
+        // marker is similar to a book mark, returns objects in alphabetical order starting from the marker
         if (marker != null) {
             url.set("marker", marker);
         }
+
+        // prefix filters results, result must contain the given prefix
         if (prefix != null) {
             url.set("prefix", prefix);
         }
+
+        // delimiter will limit results to unique entries with keys truncated at the first instance of the delimiter
+        // useful for emulating file system directories
         if (delimiter != null) {
             url.set("delimiter", delimiter);
         }
@@ -518,10 +560,17 @@ public class Client {
         throw new IOException();
     }
 
+    /**
+     * Set test transports for mocking the http request and response
+     * @param transport
+     */
     void setTransport(HttpTransport transport) {
         this.transport = transport;
     }
 
+    /**
+     * Sets the test transport back to the default http transport
+     */
     @SuppressWarnings("unused")
     void resetTransport() {
         this.transport = defaultTransport;
@@ -572,6 +621,12 @@ public class Client {
         return response != null && response.getStatusCode() == 200;
     }
 
+    /**
+     *
+     * @param bucket
+     * @throws IOException
+     * @throws ObjectStorageException
+     */
     public void makeBucket(String bucket) throws IOException, ObjectStorageException {
         this.makeBucket(bucket, Acl.PRIVATE);
     }
@@ -729,6 +784,12 @@ public class Client {
         return listActiveMultipartUploads(bucket, null);
     }
 
+    /**
+     *
+     * @param bucket
+     * @param prefix
+     * @return
+     */
     public ExceptionIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) {
         return new ExceptionIterator<Upload>() {
             private boolean isComplete = false;
@@ -759,6 +820,19 @@ public class Client {
         };
     }
 
+    /**
+     *
+     * @param bucket
+     * @param keyMarker
+     * @param uploadIDMarker
+     * @param prefix
+     * @param delimiter
+     * @param maxKeys
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     * @throws ObjectStorageException
+     */
     private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
@@ -843,6 +917,14 @@ public class Client {
         }
     }
 
+    /**
+     *
+     * @param bucket
+     * @param key
+     * @return
+     * @throws IOException
+     * @throws ObjectStorageException
+     */
     private String newMultipartUpload(String bucket, String key) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
@@ -862,6 +944,15 @@ public class Client {
         throw new IOException();
     }
 
+    /**
+     *
+     * @param bucket
+     * @param key
+     * @param uploadID
+     * @param etags
+     * @throws IOException
+     * @throws ObjectStorageException
+     */
     private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
@@ -895,6 +986,13 @@ public class Client {
         }
     }
 
+    /**
+     *
+     * @param bucket
+     * @param key
+     * @param uploadID
+     * @return
+     */
     public ExceptionIterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
         return new ExceptionIterator<Part>() {
             public int marker;
@@ -923,6 +1021,17 @@ public class Client {
         };
     }
 
+    /**
+     *
+     * @param bucket
+     * @param key
+     * @param uploadID
+     * @param partNumberMarker
+     * @return
+     * @throws IOException
+     * @throws XmlPullParserException
+     * @throws ObjectStorageException
+     */
     private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
@@ -977,16 +1086,42 @@ public class Client {
         throw new IOException();
     }
 
+    /**
+     *
+     * @param size
+     * @return
+     */
     private int computePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB
         int partSize = (int) (size / 9999); // using 10000 may cause part size to become too small, and not fit the entire object in
         return Math.max(minimumPartSize, partSize);
     }
 
+    /**
+     *
+     * @param bucket
+     * @param key
+     * @param contentType
+     * @param data
+     * @throws IOException
+     * @throws ObjectStorageException
+     */
     private void putObject(String bucket, String key, String contentType, byte[] data) throws IOException, ObjectStorageException {
         putObject(bucket, key, contentType, data, "", 0);
     }
 
+    /**
+     *
+     * @param bucket
+     * @param key
+     * @param contentType
+     * @param data
+     * @param uploadId
+     * @param partID
+     * @return
+     * @throws IOException
+     * @throws ObjectStorageException
+     */
     private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
@@ -1020,6 +1155,11 @@ public class Client {
         throw new IOException();
     }
 
+    /**
+     *
+     * @param data
+     * @return
+     */
     private byte[] calculateMd5sum(byte[] data) {
         byte[] md5sum;
         try {
@@ -1035,6 +1175,13 @@ public class Client {
         return md5sum;
     }
 
+    /**
+     *
+     * @param size
+     * @param data
+     * @return
+     * @throws IOException
+     */
     private byte[] readData(int size, InputStream data) throws IOException {
         int amountRead = 0;
         byte[] fullData = new byte[size];
