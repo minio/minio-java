@@ -23,6 +23,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import io.minio.objectstorage.client.acl.Acl;
 import io.minio.objectstorage.client.errors.BucketExistsException;
+import io.minio.objectstorage.client.errors.InvalidAclNameException;
 import io.minio.objectstorage.client.errors.ObjectStorageException;
 import io.minio.objectstorage.client.messages.*;
 import org.junit.Test;
@@ -39,7 +40,6 @@ import java.text.ParseException;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class ClientTest {
     @Test()
@@ -296,7 +296,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testBucketAccess() throws IOException, XmlPullParserException {
+    public void testBucketAccess() throws IOException, XmlPullParserException, ObjectStorageException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -321,7 +321,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testBucketAccessFails() throws IOException, XmlPullParserException {
+    public void testBucketAccessFails() throws IOException, XmlPullParserException, ObjectStorageException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -368,12 +368,33 @@ public class ClientTest {
         client.setTransport(transport);
         client.makeBucket("bucket", Acl.PUBLIC_READ);
         client.setBucketACL("bucket", Acl.PRIVATE);
-        try {
-            client.setBucketACL("bucket", null);
-            fail();
-        } catch (NullPointerException ex) {
-        }
     }
+
+    @Test(expected = InvalidAclNameException.class)
+    public void testCreateNullAclFails() throws IOException, ObjectStorageException {
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Host", "localhost");
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        client.makeBucket("bucket");
+        client.setBucketACL("bucket", null);
+
+    }
+
 
     @Test(expected = BucketExistsException.class)
     public void testCreateBucketFails() throws IOException, XmlPullParserException, ObjectStorageException {

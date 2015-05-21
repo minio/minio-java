@@ -16,5 +16,5 @@
 
 package io.minio.objectstorage.client.errors;
 
-public class InvalidObjectNameException extends ObjectStorageException {
+public class InvalidKeyNameException extends ObjectStorageException {
 }

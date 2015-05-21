@@ -182,6 +182,12 @@ public class Client {
      * @see ObjectMetadata
      */
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException, ObjectStorageException {
+        if (bucket == null) {
+            throw new InvalidBucketNameException();
+        }
+        if (key == null) {
+            throw new InvalidKeyNameException();
+        }
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("HEAD", url);
         HttpResponse response = request.execute();
@@ -210,7 +216,7 @@ public class Client {
 
     private void parseError(HttpResponse response) throws IOException, ObjectStorageException {
         // if response is null, throw an IOException and finish here
-        if(response == null) {
+        if (response == null) {
             throw new IOException("No response was returned");
         }
 
@@ -229,13 +235,13 @@ public class Client {
         ObjectStorageException e;
         if ("NoSuchBucket".equals(code)) e = new BucketNotFoundException();
         else if ("NoSuchKey".equals(code)) e = new ObjectNotFoundException();
-        else if ("InvalidBucketName".equals(code)) e = new InvalidObjectNameException();
-        else if ("InvalidObjectName".equals(code)) e = new InvalidObjectNameException();
+        else if ("InvalidBucketName".equals(code)) e = new InvalidKeyNameException();
+        else if ("InvalidObjectName".equals(code)) e = new InvalidKeyNameException();
         else if ("AccessDenied".equals(code)) e = new AccessDeniedException();
         else if ("BucketAlreadyExists".equals(code)) e = new BucketExistsException();
         else if ("ObjectAlreadyExists".equals(code)) e = new ObjectExistsException();
         else if ("InternalError".equals(code)) e = new InternalServerException();
-        else if ("KeyTooLong".equals(code)) e = new InvalidObjectNameException();
+        else if ("KeyTooLong".equals(code)) e = new InvalidKeyNameException();
         else if ("TooManyBuckets".equals(code)) e = new MaxBucketsReachedException();
         else if ("PermanentRedirect".equals(code)) e = new RedirectionException();
         else e = new InternalClientException();
@@ -244,11 +250,21 @@ public class Client {
     }
 
     private void parseXml(HttpResponse response, Object objectToPopulate) throws IOException, InternalClientException {
-        XmlPullParser parser;
+        // if response is null, throw an IOException
+        if (response == null) {
+            throw new IOException("No response was returned");
+        }
+        // if objectToPopulate is null, this indicates a flaw in the library. Throw a relevant exception.
+        if (objectToPopulate == null) {
+            throw new InternalClientException("Object to populate should not be null");
+        }
         try {
-            parser = Xml.createParser();
+            // set up a parser
+            XmlPullParser parser = Xml.createParser();
+            // write up the response body to the parser
             InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
             parser.setInput(reader);
+            // create a dictionary and populate based on object type
             XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
             if (objectToPopulate instanceof XmlError) {
                 // Errors have no namespace, so we set a default empty alias and namespace
@@ -258,6 +274,7 @@ public class Client {
                 // we are not using XmlError. Set the real namespace instead
                 dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
             }
+            // parse and return
             Xml.parseElement(parser, objectToPopulate, dictionary, null);
         } catch (XmlPullParserException e) {
             InternalClientException internalClientException = new InternalClientException();
@@ -266,14 +283,22 @@ public class Client {
         }
     }
 
-    private HttpRequest getHttpRequest(String method, GenericUrl url) throws IOException {
+    private HttpRequest getHttpRequest(String method, GenericUrl url) throws IOException, InternalClientException {
         return getHttpRequest(method, url, null);
     }
 
-    private HttpRequest getHttpRequest(String method, GenericUrl url, final byte[] data) throws IOException {
+    private HttpRequest getHttpRequest(String method, GenericUrl url, final byte[] data) throws IOException, InternalClientException {
+        if (method == null || method.trim().equals("")) {
+            throw new InternalClientException("Method should be populated");
+        }
+        if (url == null) {
+            throw new InternalClientException("URL should be populated");
+        }
+        // create a new request factory that will sign the code on execute()
         HttpRequestFactory requestFactory = this.transport.createRequestFactory(new HttpRequestInitializer() {
             @Override
             public void initialize(HttpRequest request) throws IOException {
+                // wire up secrets for code signing
                 RequestSigner signer = new RequestSigner(data);
                 signer.setAccessKeys(accessKey, secretKey);
                 signer.setSigningKey(signingKey);
@@ -281,12 +306,22 @@ public class Client {
             }
         });
         HttpRequest request = requestFactory.buildRequest(method, url, null);
+        // Workaround for where user agent for google is appended after signing interceptor is called.
         request.setSuppressUserAgentSuffix(true);
+        // Disable throwing exceptions on execute()
         request.setThrowExceptionOnExecuteError(false);
+        // set our own user agent
+        request.getHeaders().setUserAgent(this.userAgent);
         return request;
     }
 
-    private GenericUrl getGenericUrlOfKey(String bucket, String key) {
+    private GenericUrl getGenericUrlOfKey(String bucket, String key) throws InvalidBucketNameException, InvalidKeyNameException {
+        if (bucket == null) {
+            throw new InvalidBucketNameException();
+        }
+        if (key == null) {
+            throw new InvalidKeyNameException();
+        }
         GenericUrl url = new GenericUrl(this.url);
 
         List<String> pathParts = new LinkedList<String>();
@@ -298,7 +333,10 @@ public class Client {
         return url;
     }
 
-    private GenericUrl getGenericUrlOfBucket(String bucket) {
+    private GenericUrl getGenericUrlOfBucket(String bucket) throws InvalidBucketNameException {
+        if (bucket == null) {
+            throw new InvalidBucketNameException();
+        }
         GenericUrl url = new GenericUrl(this.url);
 
         List<String> pathParts = new LinkedList<String>();
@@ -461,6 +499,7 @@ public class Client {
         this.transport = transport;
     }
 
+    @SuppressWarnings("unused")
     void resetTransport() {
         this.transport = defaultTransport;
     }
@@ -502,15 +541,16 @@ public class Client {
      * @return true if the bucket exists and the user has at least read access
      * @throws IOException
      */
-    public boolean testBucketAccess(String bucket) throws IOException {
+    public boolean testBucketAccess(String bucket) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("HEAD", url);
         HttpResponse response = request.execute();
-        if (response != null) {
-            return response.getStatusCode() == 200;
-        }
-        return false;
+        return response != null && response.getStatusCode() == 200;
+    }
+
+    public void makeBucket(String bucket) throws IOException, ObjectStorageException {
+        this.makeBucket(bucket, Acl.PRIVATE);
     }
 
     /**
@@ -551,7 +591,7 @@ public class Client {
      */
     public void setBucketACL(String bucket, Acl acl) throws IOException, ObjectStorageException {
         if (acl == null) {
-            throw new NullPointerException();
+            throw new InvalidAclNameException();
         }
 
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -780,7 +820,7 @@ public class Client {
         }
     }
 
-    private String newMultipartUpload(String bucket, String key) throws IOException, XmlPullParserException, InternalClientException {
+    private String newMultipartUpload(String bucket, String key) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
 
@@ -958,7 +998,7 @@ public class Client {
     }
 
     private byte[] calculateMd5sum(byte[] data) {
-        byte[] md5sum = null;
+        byte[] md5sum;
         try {
             MessageDigest md5Digest = MessageDigest.getInstance("MD5");
             md5sum = md5Digest.digest(data);
