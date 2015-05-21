@@ -238,7 +238,7 @@ public class Client {
             InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
             parser.setInput(reader);
             XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
-            if(objectToPopulate instanceof XmlError) {
+            if (objectToPopulate instanceof XmlError) {
                 // Errors have no namespace, so we set a default empty alias and namespace
                 dictionary.set("", "");
             } else {
@@ -499,7 +499,7 @@ public class Client {
 
         HttpRequest request = getHttpRequest("HEAD", url);
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             return response.getStatusCode() == 200;
         }
         return false;
