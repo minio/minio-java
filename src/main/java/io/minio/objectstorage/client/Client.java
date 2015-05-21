@@ -132,7 +132,7 @@ public class Client {
         }
 
         // check if url is http or https
-        if (!(url.getProtocol().equals("http") || url.getProtocol().equals("https"))) {
+        if (!("http".equals(url.getProtocol()) || "https".equals(url.getProtocol()))) {
             throw new MalformedURLException("Scheme should be http or https");
         }
 
@@ -143,7 +143,7 @@ public class Client {
         }
 
         // Only a trailing path should be present in the path
-        if (url.getPath().length() > 0 && !url.getPath().equals("/")) {
+        if (url.getPath().length() > 0 && !"/".equals(url.getPath())) {
             throw new MalformedURLException("Path should be empty: '" + url.getPath() + "'");
         }
 
@@ -188,6 +188,7 @@ public class Client {
         if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
+                    // all info we need is in the headers
                     HttpHeaders responseHeaders = response.getHeaders();
                     SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
                     Date lastModified = formatter.parse(responseHeaders.getLastModified());
@@ -196,6 +197,7 @@ public class Client {
                     parseError(response);
                 }
             } catch (ParseException e) {
+                // if a parse exception occurred, this indicates an error in the client.
                 InternalClientException internalClientException = new InternalClientException();
                 internalClientException.initCause(e);
                 throw internalClientException;
@@ -207,24 +209,35 @@ public class Client {
     }
 
     private void parseError(HttpResponse response) throws IOException, ObjectStorageException {
+        // if response is null, throw an IOException and finish here
+        if(response == null) {
+            throw new IOException("No response was returned");
+        }
+
+        // if response.getContent is null, throw an IOException with status code in string
         if (response.getContent() == null) {
             throw new IOException("Unsuccessful response from server without error: " + response.getStatusCode());
         }
+
+        // Populate an XmlError, will throw an ObjectStorageException if unparseable. We should just pass it up.
         XmlError xmlError = new XmlError();
         parseXml(response, xmlError);
+
+        // Return the correct exception based upon the error code.
+        // Minor note, flipped .equals() protects against null pointer exceptions
         String code = xmlError.getCode();
         ObjectStorageException e;
-        if (code.equals("NoSuchBucket")) e = new BucketNotFoundException();
-        else if (code.equals("NoSuchKey")) e = new ObjectNotFoundException();
-        else if (code.equals("InvalidBucketName")) e = new InvalidObjectNameException();
-        else if (code.equals("InvalidObjectName")) e = new InvalidObjectNameException();
-        else if (code.equals("AccessDenied")) e = new AccessDeniedException();
-        else if (code.equals("BucketAlreadyExists")) e = new BucketExistsException();
-        else if (code.equals("ObjectAlreadyExists")) e = new ObjectExistsException();
-        else if (code.equals("InternalError")) e = new InternalServerException();
-        else if (code.equals("KeyTooLong")) e = new InvalidObjectNameException();
-        else if (code.equals("TooManyBuckets")) e = new MaxBucketsReachedException();
-        else if (code.equals("PermanentRedirect")) e = new RedirectionException();
+        if ("NoSuchBucket".equals(code)) e = new BucketNotFoundException();
+        else if ("NoSuchKey".equals(code)) e = new ObjectNotFoundException();
+        else if ("InvalidBucketName".equals(code)) e = new InvalidObjectNameException();
+        else if ("InvalidObjectName".equals(code)) e = new InvalidObjectNameException();
+        else if ("AccessDenied".equals(code)) e = new AccessDeniedException();
+        else if ("BucketAlreadyExists".equals(code)) e = new BucketExistsException();
+        else if ("ObjectAlreadyExists".equals(code)) e = new ObjectExistsException();
+        else if ("InternalError".equals(code)) e = new InternalServerException();
+        else if ("KeyTooLong".equals(code)) e = new InvalidObjectNameException();
+        else if ("TooManyBuckets".equals(code)) e = new MaxBucketsReachedException();
+        else if ("PermanentRedirect".equals(code)) e = new RedirectionException();
         else e = new InternalClientException();
         e.setXmlError(xmlError);
         throw e;
