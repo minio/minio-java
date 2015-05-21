@@ -184,7 +184,6 @@ public class Client {
     public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("HEAD", url);
-        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
         if (response != null) {
             try {
@@ -310,7 +309,6 @@ public class Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
         if (response != null) {
             if (!response.isSuccessStatusCode()) {
@@ -336,7 +334,6 @@ public class Client {
     public void deleteObject(String bucket, String key) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("DELETE", url);
-        request.setThrowExceptionOnExecuteError(false);
         HttpResponse response = request.execute();
         if (response != null) {
             try {
@@ -366,7 +363,6 @@ public class Client {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-        request.setThrowExceptionOnExecuteError(false);
         request.getHeaders().setRange(offset + "-" + offset + length);
 
         HttpResponse response = request.execute();
@@ -430,7 +426,6 @@ public class Client {
         }
 
         HttpRequest request = getHttpRequest("GET", url);
-        request.setThrowExceptionOnExecuteError(false);
 
         HttpResponse response = request.execute();
 
