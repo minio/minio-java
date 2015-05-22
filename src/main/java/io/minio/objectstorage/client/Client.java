@@ -827,16 +827,22 @@ public class Client {
      * @param uploadIDMarker
      * @param prefix
      * @param delimiter
-     * @param maxKeys
+     * @param maxUploads
      * @return
      * @throws IOException
      * @throws XmlPullParserException
      * @throws ObjectStorageException
      */
-    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ObjectStorageException {
+    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, XmlPullParserException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
 
+        // max uploads limits the number of uploads returned, max limit is 1000
+        if (maxUploads > 0 && maxUploads <= 1000) {
+            url.set("max-uploads", maxUploads);
+        } else {
+            url.set("max-uploads", 1000);
+        }
         if (prefix != null) {
             url.set("prefix", prefix);
         }
@@ -848,9 +854,6 @@ public class Client {
         }
         if (delimiter != null) {
             url.set("delimiter", delimiter);
-        }
-        if (maxKeys > 0 && maxKeys < 1000) {
-            url.set("max-keys", maxKeys);
         }
 
         HttpRequest request = getHttpRequest("GET", url);
