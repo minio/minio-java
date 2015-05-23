@@ -1091,8 +1091,8 @@ public class Client {
 
     /**
      *
-     * @param size
-     * @return
+     * @param size of total object
+     * @return multipart size
      */
     private int computePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB
@@ -1102,7 +1102,7 @@ public class Client {
 
     /**
      *
-     * @param bucket
+     * @param bucket to put object
      * @param key
      * @param contentType
      * @param data
@@ -1115,20 +1115,20 @@ public class Client {
 
     /**
      *
-     * @param bucket
-     * @param key
-     * @param contentType
-     * @param data
-     * @param uploadId
-     * @param partID
-     * @return
+     * @param bucket to put object to
+     * @param key to put object to
+     * @param contentType of data
+     * @param data to upload
+     * @param uploadId of multipart upload, set to null if not a multipart upload
+     * @param partID of multipart upload, set to 0 if not a multipart upload.
+     * @return string representing the returned etag
      * @throws IOException
      * @throws ObjectStorageException
      */
     private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException, ObjectStorageException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
-        if (partID > 0) {
+        if (partID > 0 && uploadId != null && "".equals(uploadId.trim())) {
             url.set("partNumber", partID);
             url.set("uploadId", uploadId);
         }
@@ -1160,8 +1160,8 @@ public class Client {
 
     /**
      *
-     * @param data
-     * @return
+     * @param data to calculate sum for
+     * @return md5sum
      */
     private byte[] calculateMd5sum(byte[] data) {
         byte[] md5sum;
@@ -1180,9 +1180,9 @@ public class Client {
 
     /**
      *
-     * @param size
-     * @param data
-     * @return
+     * @param size of data to read
+     * @param data to read from
+     * @return byte array of read data
      * @throws IOException
      */
     private byte[] readData(int size, InputStream data) throws IOException {
@@ -1205,7 +1205,7 @@ public class Client {
     }
 
     /**
-     * Enable logging to a java logger for debug purposes.
+     * Enable logging to a java logger for debug purposes. This will enable logging for all http requests.
      */
     @SuppressWarnings("unused")
     public void enableLogging() {
