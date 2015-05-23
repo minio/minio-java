@@ -4,6 +4,9 @@ jdk:
 - oraclejdk8
 - oraclejdk7
 - openjdk6
+script:
+- ./gradlew check
+- ./gradlew javadoc
 notifications:
   slack:
     secure: Eysqa04pxLVwOLAHTbzvgZWl5gQCTqffQv72C0qrL06sNYOGlKjg4mym46YPC2E6ePmTlq6lnM26GrPOtvNPP85WSxqe7XWOiGyXoPTOLgs2+9DurhuwAAflNlUWqIwys5uuR/QTuRUN2/e3XJEIL7nyeE6vgWBTEfyF1USEwhI=

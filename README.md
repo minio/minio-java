@@ -1,11 +1,11 @@
 # Minimal object storage library in Java
 
-[![Build Status](https://travis-ci.org/minio/objectstorage-java.svg)](https://travis-ci.org/minio/objectstorage-java)
+[![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
 
 ## Install
 
 ```sh
-$ git clone https://github.com/minio/objectstorage-java
+$ git clone https://github.com/minio/minio-java
 ```
 
 ## Join Community
