@@ -103,9 +103,9 @@ public class ClientTest {
 
         Client client = Client.getClient("http://example.com:9000");
         client.setTransport(transport);
-        ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
-        assertEquals("bucket", objectMetadata.getBucket());
-        assertEquals("key", objectMetadata.getKey());
+        ObjectStat objectStatInfo = client.statObject("bucket", "key");
+        assertEquals("bucket", objectStatInfo.getBucket());
+        assertEquals("key", objectStatInfo.getKey());
     }
 
     @Test
@@ -133,14 +133,14 @@ public class ClientTest {
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
         expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+        ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
 
         // get request
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
+        ObjectStat objectStatInfo = client.statObject("bucket", "key");
 
-        assertEquals(expectedMetadata, objectMetadata);
+        assertEquals(expectedStatInfo, objectStatInfo);
     }
 
     @Test
@@ -296,7 +296,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testBucketAccess() throws IOException, XmlPullParserException, ClientException {
+    public void testBucketExists() throws IOException, XmlPullParserException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -304,7 +304,6 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("Host", "localhost");
                         response.setStatusCode(200);
                         return response;
@@ -315,13 +314,13 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.testBucketAccess("bucket");
+        boolean result = client.bucketExists("bucket");
 
         assertEquals(true, result);
     }
 
     @Test
-    public void testBucketAccessFails() throws IOException, XmlPullParserException, ClientException {
+    public void testBucketExistsFails() throws IOException, XmlPullParserException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -329,7 +328,6 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("Host", "localhost");
                         response.setStatusCode(404);
                         return response;
@@ -340,7 +338,7 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        boolean result = client.testBucketAccess("bucket");
+        boolean result = client.bucketExists("bucket");
 
         assertEquals(false, result);
     }
@@ -355,7 +353,6 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("Host", "localhost");
                         response.setStatusCode(200);
                         return response;
@@ -379,7 +376,6 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("Host", "localhost");
                         response.setStatusCode(200);
                         return response;
@@ -410,7 +406,6 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("Host", "localhost");
                         response.setStatusCode(403);
                         response.setContent(err.toString());
@@ -482,14 +477,14 @@ public class ClientTest {
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
         expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-        ObjectMetadata expectedMetadata = new ObjectMetadata("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+        ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
 
         // get request
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         client.setKeys("foo", "bar");
-        ObjectMetadata objectMetadata = client.getObjectMetadata("bucket", "key");
+        ObjectStat objectStatInfo = client.statObject("bucket", "key");
 
-        assertEquals(expectedMetadata, objectMetadata);
+        assertEquals(expectedStatInfo, objectStatInfo);
     }
 }
