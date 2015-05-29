@@ -119,7 +119,7 @@ public class Client {
      *            * https://s3-us-west-2.amazonaws.com/example/
      *            * https://s3-us-west-2.amazonaws.com/example/object
      * @return an object storage client backed by an S3 compatible server.
-     * @throws MalformedURLException
+     * @throws MalformedURLException malformed url
      * @see #getClient(String)
      */
     public static Client getClient(URL url) throws MalformedURLException {
@@ -149,8 +149,9 @@ public class Client {
     }
 
     /**
+     * @param url must be the full url to the object storage server, excluding both bucket or object paths.
      * @return an object storage client backed by an S3 compatible server.
-     * @throws MalformedURLException
+     * @throws MalformedURLException malformed url
      * @see #getClient(URL url)
      */
     public static Client getClient(String url) throws MalformedURLException {
@@ -176,6 +177,7 @@ public class Client {
      * @param key    object's key
      * @return Populated object metadata
      * @throws IOException
+     * @throws ClientException
      * @see ObjectStat
      */
     public ObjectStat statObject(String bucket, String key) throws IOException, ClientException {
@@ -360,7 +362,8 @@ public class Client {
      * @param bucket object's bucket
      * @param key    object's key
      * @return an InputStream containing the object. Close the InputStream when done.
-     * @throws IOException
+     * @throws IOException if transport disconnects
+     * @throws ClientException
      */
     public InputStream getObject(String bucket, String key) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -389,6 +392,7 @@ public class Client {
      * @param bucket object's bucket
      * @param key    object's key
      * @throws IOException if the connection fails
+     * @throws ClientException
      */
     public void deleteObject(String bucket, String key) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -418,6 +422,7 @@ public class Client {
      * @param length Length of bytes to retrieve.
      * @return an InputStream containing the object. Close the InputStream when done.
      * @throws IOException if the connection does not succeed
+     * @throws ClientException
      */
     public InputStream getObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -504,10 +509,10 @@ public class Client {
     /**
      *
      * @param bucket
-     * @param marker
-     * @param prefix
-     * @param delimiter
-     * @param maxKeys
+     * @param marker is similar to a bookmark, returns objects in alphabetical order starting from the marker
+     * @param prefix filters results, result must contain the given prefix
+     * @param delimiter will limit results to unique entries with keys truncated at the first instance of the delimiter
+     * @param maxKeys limits the number of keys returned in response, max limit is 1000
      * @return
      * @throws IOException
      * @throws XmlPullParserException
@@ -580,6 +585,7 @@ public class Client {
      * @return a list of buckets owned by the current user
      * @throws IOException            if the connection fails
      * @throws XmlPullParserException
+     * @throws ClientException
      */
     public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException, ClientException {
         GenericUrl url = new GenericUrl(this.url);
@@ -610,6 +616,7 @@ public class Client {
      * @param bucket bucket to test
      * @return true if the bucket exists and the user has at least read access
      * @throws IOException
+     * @throws ClientException
      */
     public boolean bucketExists(String bucket) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -635,6 +642,7 @@ public class Client {
      * @param bucket bucket to create
      * @param acl    canned acl
      * @throws IOException
+     * @throws ClientException
      */
     public void makeBucket(String bucket, Acl acl) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -689,6 +697,7 @@ public class Client {
      * @param bucket bucket to set ACL on
      * @param acl    canned acl
      * @throws IOException
+     * @throws ClientException
      */
     public void setBucketACL(String bucket, Acl acl) throws IOException, ClientException {
         if (acl == null) {
@@ -732,6 +741,7 @@ public class Client {
      * @param data        Data to upload
      * @throws IOException            on failure
      * @throws XmlPullParserException on unexpected xml // TODO don't fail like this, wrap as our own error
+     * @throws ClientException
      * @see #listActiveMultipartUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      * </p>
@@ -1091,6 +1101,8 @@ public class Client {
      * @param bucket   of multipart upload to abort
      * @param key      of multipart upload to abort
      * @param uploadID of multipart upload to abort
+     * @throws IOException on connection failure
+     * @throws ClientException
      */
     private void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException, ClientException {
 	if (bucket == null) {
@@ -1252,7 +1264,7 @@ public class Client {
     }
 
     /**
-     * Enable logging to a java logger for debug purposes. This will enable logging for all http requests.
+     * Enable logging to a java logger for debugging purposes. This will enable logging for all http requests.
      */
     @SuppressWarnings("unused")
     public void enableLogging() {
