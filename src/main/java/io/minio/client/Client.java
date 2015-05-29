@@ -176,9 +176,9 @@ public class Client {
      * @param key    object's key
      * @return Populated object metadata
      * @throws IOException
-     * @see ObjectMetadata
+     * @see ObjectStat
      */
-    public ObjectMetadata getObjectMetadata(String bucket, String key) throws IOException, ClientException {
+    public ObjectStat statObject(String bucket, String key) throws IOException, ClientException {
         if (bucket == null) {
             throw new InvalidBucketNameException();
         }
@@ -195,7 +195,7 @@ public class Client {
                     HttpHeaders responseHeaders = response.getHeaders();
                     SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
                     Date lastModified = formatter.parse(responseHeaders.getLastModified());
-                    return new ObjectMetadata(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag());
+                    return new ObjectStat(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag());
                 } else {
                     parseError(response);
                 }
@@ -407,6 +407,7 @@ public class Client {
         throw new IOException();
     }
 
+
     /**
      * Returns an InputStream containing a subset of the object. The InputStream must be
      * closed or the connection will remain open.
@@ -610,7 +611,7 @@ public class Client {
      * @return true if the bucket exists and the user has at least read access
      * @throws IOException
      */
-    public boolean testBucketAccess(String bucket) throws IOException, ClientException {
+    public boolean bucketExists(String bucket) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("HEAD", url);
@@ -655,6 +656,31 @@ public class Client {
                 response.disconnect();
             }
         }
+    }
+
+    /**
+     * Delete a bucket with a given name
+     *
+     * @param bucket bucket to create
+     * @throws IOException
+     * @throws ClientException
+     */
+    public void deleteBucket(String bucket) throws IOException, ClientException {
+        GenericUrl url = getGenericUrlOfBucket(bucket);
+
+        HttpRequest request = getHttpRequest("DELETE", url);
+        HttpResponse response = request.execute();
+        if (response != null) {
+            try {
+                if (response.isSuccessStatusCode()) {
+                    return;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
+        }
+	throw new IOException();
     }
 
     /**
@@ -874,12 +900,13 @@ public class Client {
     }
 
     /**
-     * Abort all active multipart uploads in a given bucket.
+     * Drop all active multipart uploads in a given bucket.
      *
-     * @param bucket to dorp all active multipart uploads in
+     * @param bucket to drop all active multipart uploads in
      * @throws IOException on connection failure
+     * @throws ClientException
      */
-    public void abortAllMultipartUploads(String bucket) throws IOException, ClientException {
+    public void dropAllMultipartUploads(String bucket) throws IOException, ClientException {
         ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket);
         while (uploads.hasNext()) {
             Upload upload = uploads.next();
@@ -1059,32 +1086,54 @@ public class Client {
         throw new IOException();
     }
 
-    /**
-     * Abort an active multipart upload
+    /** Abort an active multipart upload
      *
      * @param bucket   of multipart upload to abort
      * @param key      of multipart upload to abort
      * @param uploadID of multipart upload to abort
-     * @throws IOException on connection failure
-     *                     // TODO handle failure, given bucket/object/uploadid might not exist
      */
-    public void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.set("uploadId", uploadID);
+    private void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException, ClientException {
+	if (bucket == null) {
+	    throw new InternalClientException("Bucket cannot be null");
+	}
+	if (key == null) {
+	    throw new InternalClientException("Key cannot be null");
+	}
+	if (uploadID == null) {
+	    throw new InternalClientException("UploadID cannot be null");
+	}
+	GenericUrl url = getGenericUrlOfKey(bucket, key);
+	url.set("uploadId", uploadID);
 
-        HttpRequest request = getHttpRequest("DELETE", url);
-        HttpResponse response = request.execute();
-        if (response != null) {
-            try {
-                if (response.isSuccessStatusCode()) {
-                    return;
-                }
-                parseError(response);
-            } finally {
-                response.disconnect();
-            }
+	HttpRequest request = getHttpRequest("DELETE", url);
+	HttpResponse response = request.execute();
+	if (response != null) {
+	    try {
+		if (response.isSuccessStatusCode()) {
+		    return;
+		}
+		parseError(response);
+	    } finally {
+		response.disconnect();
+	    }
+	}
+	throw new IOException();
+    }
+
+    /**
+     * Drop active multipart uploads, starting from key
+     *
+     * @param bucket   of multipart upload to drop
+     * @param key      of multipart upload to drop
+     * @throws IOException on connection failure
+     * @throws ClientException
+     */
+    public void dropMultipartUploads(String bucket, String key) throws IOException, ClientException {
+        ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket, key);
+        while (uploads.hasNext()) {
+            Upload upload = uploads.next();
+            abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
         }
-        throw new IOException();
     }
 
     /**

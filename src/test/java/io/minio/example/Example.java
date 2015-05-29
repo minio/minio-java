@@ -19,7 +19,7 @@ package io.minio.example;
 import com.google.api.client.util.IOUtils;
 import io.minio.client.Client;
 import io.minio.client.ExceptionIterator;
-import io.minio.client.ObjectMetadata;
+import io.minio.client.ObjectStat;
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
 import io.minio.client.messages.Item;
@@ -67,8 +67,8 @@ public class Example {
         System.out.println(myObjects);
 
         // get object metadata
-        ObjectMetadata objectMetadata = client.getObjectMetadata("mybucket", "myobject");
-        System.out.println(objectMetadata);
+        ObjectStat objectStat = client.statObject("mybucket", "myobject");
+        System.out.println(objectStat);
 
         // get object
         InputStream object = client.getObject("mybucket", "myobject");

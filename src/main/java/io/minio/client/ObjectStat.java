@@ -19,14 +19,14 @@ package io.minio.client;
 import java.util.Date;
 
 @SuppressWarnings("unused")
-public class ObjectMetadata {
+public class ObjectStat {
     private final String bucket;
     private final String key;
     private final Date createdTime;
     private final long length;
     private final String md5sum;
 
-    public ObjectMetadata(String bucket, String name, Date createdTime, long length, String md5sum) {
+    public ObjectStat(String bucket, String name, Date createdTime, long length, String md5sum) {
         this.bucket = bucket;
         this.key = name;
         this.createdTime = (Date) createdTime.clone();
@@ -56,7 +56,7 @@ public class ObjectMetadata {
 
     @Override
     public String toString() {
-        return "ObjectMetadata{" +
+        return "ObjectStat{" +
                 "bucket='" + bucket + '\'' +
                 ", key='" + key + '\'' +
                 ", createdTime=" + createdTime +
@@ -71,7 +71,7 @@ public class ObjectMetadata {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ObjectMetadata that = (ObjectMetadata) o;
+        ObjectStat that = (ObjectStat) o;
 
         if (length != that.length) return false;
         if (!bucket.equals(that.bucket)) return false;

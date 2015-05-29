@@ -68,30 +68,4 @@ public enum Acl {
             return "authenticated-read";
         }
     },
-    /**
-     * Canned acl: bucket-owner-read
-     * <p>
-     * Read: Object owner and bucket owner
-     * Write: Object owner only
-     * </p>
-     */
-    @SuppressWarnings("unused")
-    BUCKET_OWNER_READ {
-        public String toString() {
-            return "bucket-owner-read";
-        }
-    },
-    /**
-     * Canned acl: bucket-owner-full-control
-     * <p>
-     * Read: Object owner and bucket owner
-     * Write: Object owner and bucket owner
-     * </p>
-     */
-    @SuppressWarnings("unused")
-    BUCKET_OWNER_FULL_CONTROL {
-        public String toString() {
-            return "bucket-owner-full-control";
-        }
-    },
 }
