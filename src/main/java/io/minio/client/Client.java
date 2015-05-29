@@ -545,7 +545,6 @@ public class Client {
         }
 
         HttpRequest request = getHttpRequest("GET", url);
-
         HttpResponse response = request.execute();
 
         if (response != null) {
@@ -691,6 +690,48 @@ public class Client {
 	throw new IOException();
     }
 
+    private AccessControlPolicy getBucketACL(String bucket) throws IOException, ClientException {
+        GenericUrl url = new GenericUrl(this.url);
+	url.set("acl", "");
+
+        HttpRequest request = getHttpRequest("GET", url);
+        request.setFollowRedirects(false);
+
+        HttpResponse response = request.execute();
+        if (response != null) {
+            try {
+                if (response.isSuccessStatusCode()) {
+                    AccessControlPolicy policy = new AccessControlPolicy();
+                    parseXml(response, policy);
+                    return policy;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
+        }
+        throw new IOException();
+    }
+
+    /**
+     * Get the bucket's ACL.
+     *
+     * @param bucket bucket to get ACL on
+     * @throws IOException
+     * @throws ClientException
+     */
+    /*
+    public String getBucketACL(String bucket) throws IOException, ClientException {
+	AccessControlPolicy policy = this.getBucketACL(bucket);
+	if (policy == null) {
+		throw new NullPointerException();
+	}
+	// TODO
+	String acl = "private";
+	return acl;
+    }
+    */
+
     /**
      * Set the bucket's ACL.
      *
@@ -703,6 +744,12 @@ public class Client {
         if (acl == null) {
             throw new InvalidAclNameException();
         }
+
+	// This is incorrectly written, this would never succeed on amazon
+	// query "acl" should be part of  HTTP request
+	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTacl.html
+
+	// Requires url.Set("acl", "")
 
         GenericUrl url = getGenericUrlOfBucket(bucket);
         HttpRequest request = getHttpRequest("PUT", url);
