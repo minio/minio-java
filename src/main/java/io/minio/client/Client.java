@@ -745,13 +745,9 @@ public class Client {
             throw new InvalidAclNameException();
         }
 
-	// This is incorrectly written, this would never succeed on amazon
-	// query "acl" should be part of  HTTP request
-	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTacl.html
-
-	// Requires url.Set("acl", "")
-
         GenericUrl url = getGenericUrlOfBucket(bucket);
+	// make sure to set this, otherwise it would convert this call into a regular makeBucket operation
+	url.set("acl", "");
         HttpRequest request = getHttpRequest("PUT", url);
         request.getHeaders().set("x-amz-acl", acl.toString());
 
