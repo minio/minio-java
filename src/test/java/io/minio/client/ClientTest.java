@@ -233,7 +233,7 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        ExceptionIterator<Item> bucket = client.listObjectsInBucket("bucket");
+        ExceptionIterator<Item> bucket = client.listObjects("bucket");
 
         Item item = bucket.next();
         assertEquals("key", item.getKey());

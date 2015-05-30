@@ -453,9 +453,9 @@ public class Client {
      * @param prefix
      * @return
      */
-    public ExceptionIterator<Item> listObjectsInBucket(final String bucket, final String prefix) {
+    public ExceptionIterator<Item> listObjects(final String bucket, final String prefix) {
         // list all objects recursively
-        return listObjectsInBucket(bucket, prefix, true);
+        return listObjects(bucket, prefix, true);
     }
 
     /**
@@ -465,7 +465,7 @@ public class Client {
      * @param recursive
      * @return
      */
-    public ExceptionIterator<Item> listObjectsInBucket(final String bucket, final String prefix, final boolean recursive) {
+    public ExceptionIterator<Item> listObjects(final String bucket, final String prefix, final boolean recursive) {
         return new ExceptionIterator<Item>() {
             private String marker = null;
             private boolean isComplete = false;
@@ -479,7 +479,7 @@ public class Client {
                         if(!recursive) {
                             delimiter = "/";
                         }
-                        ListBucketResult listBucketResult = listObjectsInBucket(bucket, marker, prefix, delimiter, 1000);
+                        ListBucketResult listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
                         if (listBucketResult.isTruncated()) {
                             marker = listBucketResult.getNextMarker();
                         } else {
@@ -502,8 +502,8 @@ public class Client {
      * @param bucket
      * @return
      */
-    public ExceptionIterator<Item> listObjectsInBucket(final String bucket) {
-        return listObjectsInBucket(bucket, null);
+    public ExceptionIterator<Item> listObjects(final String bucket) {
+        return listObjects(bucket, null);
     }
 
     /**
@@ -518,7 +518,7 @@ public class Client {
      * @throws XmlPullParserException
      * @throws ClientException
      */
-    private ListBucketResult listObjectsInBucket(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ClientException {
+    private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         // max keys limits the number of keys returned, max limit is 1000
@@ -690,7 +690,24 @@ public class Client {
 	throw new IOException();
     }
 
-    private AccessControlPolicy getBucketACL(String bucket) throws IOException, ClientException {
+    /**
+     * Get the bucket's ACL.
+     *
+     * @param bucket bucket to get ACL on
+     * @throws IOException
+     * @throws ClientException
+     */
+    public String getBucketACL(String bucket) throws IOException, ClientException {
+	AccessControlPolicy policy = this.getAccessPolicy(bucket);
+	if (policy == null) {
+		throw new NullPointerException();
+	}
+	// TODO
+	String acl = "private";
+	return acl;
+    }
+
+    private AccessControlPolicy getAccessPolicy(String bucket) throws IOException, ClientException {
         GenericUrl url = new GenericUrl(this.url);
 	url.set("acl", "");
 
@@ -712,25 +729,6 @@ public class Client {
         }
         throw new IOException();
     }
-
-    /**
-     * Get the bucket's ACL.
-     *
-     * @param bucket bucket to get ACL on
-     * @throws IOException
-     * @throws ClientException
-     */
-    /*
-    public String getBucketACL(String bucket) throws IOException, ClientException {
-	AccessControlPolicy policy = this.getBucketACL(bucket);
-	if (policy == null) {
-		throw new NullPointerException();
-	}
-	// TODO
-	String acl = "private";
-	return acl;
-    }
-    */
 
     /**
      * Set the bucket's ACL.

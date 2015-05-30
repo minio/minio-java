@@ -63,7 +63,7 @@ public class Example {
         client.putObject("mybucket", "myobject", "application/octet-stream", 11, new ByteArrayInputStream("hello world".getBytes("UTF-8")));
 
         // list objects
-        ExceptionIterator<Item> myObjects = client.listObjectsInBucket("mybucket");
+        ExceptionIterator<Item> myObjects = client.listObjects("mybucket");
         System.out.println(myObjects);
 
         // get object metadata
