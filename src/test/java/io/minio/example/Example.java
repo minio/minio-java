@@ -79,6 +79,10 @@ public class Example {
             object.close();
         }
 
-        client.deleteObject("mybucket", "myobject");
+	// remove object
+        client.removeObject("mybucket", "myobject");
+
+	// remove bucket
+	client.removeBucket("mybucket");
     }
 }

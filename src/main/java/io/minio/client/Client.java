@@ -387,14 +387,14 @@ public class Client {
     }
 
     /**
-     * Delete an object.
+     * Remove an object from a bucket
      *
      * @param bucket object's bucket
      * @param key    object's key
      * @throws IOException if the connection fails
      * @throws ClientException
      */
-    public void deleteObject(String bucket, String key) throws IOException, ClientException {
+    public void removeObject(String bucket, String key) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("DELETE", url);
         HttpResponse response = request.execute();
@@ -666,13 +666,17 @@ public class Client {
     }
 
     /**
-     * Delete a bucket with a given name
+     * Remove a bucket with a given name
+     *
+     * NOTE: -
+     * All objects (including all object versions and delete markers) in the bucket
+     * must be deleted prior, this API will not recursively delete objects
      *
      * @param bucket bucket to create
      * @throws IOException
      * @throws ClientException
      */
-    public void deleteBucket(String bucket) throws IOException, ClientException {
+    public void removeBucket(String bucket) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         HttpRequest request = getHttpRequest("DELETE", url);
