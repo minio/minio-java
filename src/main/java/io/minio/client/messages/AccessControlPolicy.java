@@ -18,6 +18,7 @@ package io.minio.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
@@ -42,7 +43,7 @@ public class AccessControlPolicy extends XmlEntity {
 
     public List<Grant> getGrants () {
 	if (grants == null) {
-	    return null;
+	    return new LinkedList<Grant>();
 	}
 	return grants.getGrant();
     }
