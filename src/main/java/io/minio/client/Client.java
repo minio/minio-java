@@ -243,6 +243,7 @@ public class Client {
         else if ("KeyTooLong".equals(code)) e = new InvalidKeyNameException();
         else if ("TooManyBuckets".equals(code)) e = new MaxBucketsReachedException();
         else if ("PermanentRedirect".equals(code)) e = new RedirectionException();
+        else if ("MethodNotAllowed".equals(code)) e = new ObjectExistsException();
         else e = new InternalClientException();
         e.setXmlError(xmlError);
         throw e;

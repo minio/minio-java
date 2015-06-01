@@ -23,6 +23,7 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.BucketExistsException;
+import io.minio.client.errors.ObjectExistsException;
 import io.minio.client.errors.InvalidAclNameException;
 import io.minio.client.errors.ClientException;
 import io.minio.client.messages.*;
@@ -347,7 +348,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testCreateBucket() throws IOException, XmlPullParserException, ClientException {
+    public void testMakeBucket() throws IOException, XmlPullParserException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -368,6 +369,7 @@ public class ClientTest {
         client.makeBucket("bucket", Acl.PUBLIC_READ);
         client.setBucketACL("bucket", Acl.PRIVATE);
     }
+
 
     @Test
     public void testGetBucketACLPublicRW() throws IOException, XmlPullParserException, ClientException {
@@ -482,7 +484,7 @@ public class ClientTest {
     }
 
     @Test(expected = InvalidAclNameException.class)
-    public void testCreateNullAclFails() throws IOException, ClientException {
+    public void testSetNullAclFails() throws IOException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -506,7 +508,7 @@ public class ClientTest {
 
 
     @Test(expected = BucketExistsException.class)
-    public void testCreateBucketFails() throws IOException, XmlPullParserException, ClientException {
+    public void testMakeBucketFails() throws IOException, XmlPullParserException, ClientException {
         final XmlError err = new XmlError();
         err.setCode("BucketAlreadyExists");
         err.setMessage("Bucket Already Exists");
@@ -520,7 +522,7 @@ public class ClientTest {
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
 			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-                        response.setStatusCode(403);
+                        response.setStatusCode(409); // status conflict
                         response.setContent(err.toString());
                         return response;
                     }
@@ -534,7 +536,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testCreateObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
+    public void testPutObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -546,6 +548,39 @@ public class ClientTest {
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
                         response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+
+        String inputString = "hello world";
+        ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
+
+        client.putObject("bucket", "key", "application/octet-stream", 11, data);
+    }
+
+    // this case only occurs for minio object storage
+    @Test(expected = ObjectExistsException.class)
+    public void testPutObjectFails() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
+        final XmlError err = new XmlError();
+        err.setCode("MethodNotAllowed");
+        err.setMessage("The specified method is not allowed against this resource.");
+        err.setRequestID("1");
+        err.setResource("/bucket/key");
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.setStatusCode(405); // method not allowed set by minio object storage
+                        response.setContent(err.toString());
                         return response;
                     }
                 };
