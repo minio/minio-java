@@ -22,7 +22,7 @@ import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class AccessControlList extends XmlEntity {
-    @Key("AccessControlList")
+    @Key("Grant")
     private List<Grant> grant;
 
     public AccessControlList() {
@@ -34,7 +34,7 @@ public class AccessControlList extends XmlEntity {
         return grant;
     }
 
-    public void setGrants(List<Grant> grant) {
+    public void setGrant(List<Grant> grant) {
         this.grant = grant;
     }
 }

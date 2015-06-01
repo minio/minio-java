@@ -117,10 +117,11 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+			response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -131,7 +132,7 @@ public class ClientTest {
         // build expected request
         Calendar expectedDate = Calendar.getInstance();
         expectedDate.clear();
-        expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
+        expectedDate.setTimeZone(TimeZone.getTimeZone("GMT"));
         expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
         ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
 
@@ -154,10 +155,11 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+			response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
                         response.setStatusCode(200);
                         response.setContent(expectedObject.getBytes("UTF-8"));
                         return response;
@@ -190,7 +192,7 @@ public class ClientTest {
                         response.addHeader("Content-Length", "5");
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
                         response.addHeader("0-4/11", "Mon, 04 May 2015 07:58:51 UTC");
                         response.setStatusCode(206);
                         response.setContent(expectedObject.getBytes("UTF-8"));
@@ -220,9 +222,9 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "414");
                         response.addHeader("Content-Type", "application/xml");
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.setContent(body.getBytes("UTF-8"));
                         response.setStatusCode(200);
                         return response;
@@ -263,9 +265,9 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "351");
                         response.addHeader("Content-Type", "application/xml");
-                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.setContent(body.getBytes("UTF-8"));
                         response.setStatusCode(200);
                         return response;
@@ -304,7 +306,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Host", "localhost");
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -328,7 +330,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Host", "localhost");
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(404);
                         return response;
                     }
@@ -344,7 +346,6 @@ public class ClientTest {
     }
 
     @Test
-    @SuppressWarnings("PMD.EmptyCatchBlock")
     public void testCreateBucket() throws IOException, XmlPullParserException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
@@ -353,7 +354,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Host", "localhost");
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -367,6 +368,34 @@ public class ClientTest {
         client.setBucketACL("bucket", Acl.PRIVATE);
     }
 
+    @Test
+    public void testGetBucketACL() throws IOException, XmlPullParserException, ClientException {
+        final String body = "<AccessControlPolicy xmlns=\"http://s3.amazonaws.com/doc/2006-03-01\"><Owner><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Owner><AccessControlList><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName><URI>http://acs.amazonaws.com/groups/global/AllUsers</URI></Grantee><Permission>WRITE</Permission></Grant><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName><URI>http://acs.amazonaws.com/groups/global/AllUsers</URI></Grantee><Permission>READ</Permission></Grant><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName><URI>http://acs.amazonaws.com/groups/global/AllUsers</URI></Grantee><Permission>FULL_CONTROL</Permission></Grant></AccessControlList></AccessControlPolicy>";
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Content-Length", "124");
+                        response.addHeader("Content-Type", "application/xml");
+                        response.setContent(body.getBytes("UTF-8"));
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        Acl acl = client.getBucketACL("bucket");
+
+        assertEquals(acl, Acl.PUBLIC_READ_WRITE);
+    }
+
     @Test(expected = InvalidAclNameException.class)
     public void testCreateNullAclFails() throws IOException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
@@ -376,7 +405,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Host", "localhost");
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -388,7 +417,6 @@ public class ClientTest {
         client.setTransport(transport);
         client.makeBucket("bucket");
         client.setBucketACL("bucket", null);
-
     }
 
 
@@ -406,7 +434,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-                        response.addHeader("Host", "localhost");
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(403);
                         response.setContent(err.toString());
                         return response;
@@ -429,8 +457,8 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
-                        response.addHeader("Host", "localhost");
                         response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
                         response.setStatusCode(200);
                         return response;
@@ -461,6 +489,7 @@ public class ClientTest {
                             System.out.println("-" + s);
                         }
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");

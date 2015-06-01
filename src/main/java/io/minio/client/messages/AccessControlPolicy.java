@@ -41,14 +41,14 @@ public class AccessControlPolicy extends XmlEntity {
 	this.owner = owner;
     }
 
-    public List<Grant> getGrants () {
+    public List<Grant> getAccessControlList () {
 	if (grants == null) {
-	    return new LinkedList<Grant>();
+	    return null;
 	}
 	return grants.getGrant();
     }
 
-    public void setGrants(AccessControlList grants) {
+    public void setAccessControlList(AccessControlList grants) {
 	this.grants = grants;
     }
 
