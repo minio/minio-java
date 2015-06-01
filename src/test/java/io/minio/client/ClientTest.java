@@ -117,7 +117,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");
@@ -155,7 +155,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
@@ -193,7 +193,8 @@ public class ClientTest {
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
-                        response.addHeader("0-4/11", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("Accept-Ranges", "bytes");
+                        response.addHeader("Content-Range", "0-4/11");
                         response.setStatusCode(206);
                         response.setContent(expectedObject.getBytes("UTF-8"));
                         return response;
@@ -222,7 +223,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "414");
                         response.addHeader("Content-Type", "application/xml");
                         response.setContent(body.getBytes("UTF-8"));
@@ -265,7 +266,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "351");
                         response.addHeader("Content-Type", "application/xml");
                         response.setContent(body.getBytes("UTF-8"));
@@ -306,7 +307,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -330,7 +331,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(404);
                         return response;
                     }
@@ -354,7 +355,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -378,7 +379,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "124");
                         response.addHeader("Content-Type", "application/xml");
                         response.setContent(body.getBytes("UTF-8"));
