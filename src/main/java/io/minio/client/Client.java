@@ -663,6 +663,7 @@ public class Client {
                 response.disconnect();
             }
         }
+	throw new IOException();
     }
 
     /**
@@ -701,19 +702,52 @@ public class Client {
      * @throws IOException
      * @throws ClientException
      */
-    public String getBucketACL(String bucket) throws IOException, ClientException {
-	AccessControlPolicy policy = this.getAccessPolicy(bucket);
-	if (policy == null) {
-		throw new NullPointerException();
-	}
-	// TODO
-	String acl = "private";
-	return acl;
+    public Acl getBucketACL(String bucket) throws IOException, ClientException {
+        AccessControlPolicy policy = this.getAccessPolicy(bucket);
+        if (policy == null) {
+            throw new NullPointerException();
+        }
+        Acl acl = Acl.PRIVATE;
+        List<Grant> accessControlList = policy.getAccessControlList();
+	switch (accessControlList.size()) {
+        case 1:
+            for (Grant grant : accessControlList) {
+                if (grant.getGrantee().getURI().isEmpty() && grant.getPermission().equals("FULL_CONTROL")) {
+                    acl = Acl.PRIVATE;
+                    break;
+                }
+            }
+            break;
+        case 2:
+            for (Grant grant : accessControlList) {
+                if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AuthenticatedUsers") &&
+                    grant.getPermission().equals("READ")) {
+                    acl = Acl.AUTHENTICATED_READ;
+                    break;
+                }
+                if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
+                    grant.getPermission().equals("READ")) {
+                    acl = Acl.PUBLIC_READ;
+                    break;
+                }
+            }
+            break;
+        case 3:
+            for (Grant grant : accessControlList) {
+                if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
+                    grant.getPermission().equals("WRITE")) {
+                    acl = Acl.PUBLIC_READ_WRITE;
+                    break;
+                }
+            }
+            break;
+        }
+        return acl;
     }
 
     private AccessControlPolicy getAccessPolicy(String bucket) throws IOException, ClientException {
         GenericUrl url = new GenericUrl(this.url);
-	url.set("acl", "");
+        url.set("acl", "");
 
         HttpRequest request = getHttpRequest("GET", url);
         request.setFollowRedirects(false);
