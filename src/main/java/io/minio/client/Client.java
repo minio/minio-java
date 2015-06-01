@@ -712,7 +712,7 @@ public class Client {
 	switch (accessControlList.size()) {
         case 1:
             for (Grant grant : accessControlList) {
-                if (grant.getGrantee().getURI().isEmpty() && grant.getPermission().equals("FULL_CONTROL")) {
+                if (grant.getGrantee().getURI() == null && grant.getPermission().equals("FULL_CONTROL")) {
                     acl = Acl.PRIVATE;
                     break;
                 }
@@ -818,7 +818,7 @@ public class Client {
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
      * @param data        Data to upload
-     * @throws IOException            on failure
+     * @throws IOException            on network failure
      * @throws XmlPullParserException on unexpected xml // TODO don't fail like this, wrap as our own error
      * @throws ClientException
      * @see #listActiveMultipartUploads(String)

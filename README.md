@@ -26,6 +26,7 @@
  StatObject(bucket, key string) ObjectStat throws ClientException
  RemoveObject(bucket, key string) throws ClientException
  DropIncompleteUpload(bucket, key string) throws ClientException
+~~~
 
 ### Error
 
