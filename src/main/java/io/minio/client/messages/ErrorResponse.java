@@ -19,19 +19,21 @@ package io.minio.client.messages;
 import com.google.api.client.util.Key;
 
 @SuppressWarnings("unused")
-public class XmlError extends XmlEntity {
+public class ErrorResponse extends XmlEntity {
     @Key("Code")
     private String code;
     @Key("Message")
     private String message;
     @Key("RequestId")
     private String requestID;
+    @Key("HostId")
+    private String hostID;
     @Key("Resource")
     private String resource;
 
-    public XmlError() {
+    public ErrorResponse() {
         super();
-        super.name = "Error";
+        super.name = "ErrorResponse";
     }
 
     public String getCode() {
@@ -56,6 +58,14 @@ public class XmlError extends XmlEntity {
 
     public void setRequestID(String requestID) {
         this.requestID = requestID;
+    }
+
+    public String getHostID() {
+        return hostID;
+    }
+
+    public void setHostID(String hostID) {
+        this.hostID = hostID;
     }
 
     public String getResource() {

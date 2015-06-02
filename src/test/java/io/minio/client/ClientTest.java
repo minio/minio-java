@@ -509,11 +509,11 @@ public class ClientTest {
 
     @Test(expected = BucketExistsException.class)
     public void testMakeBucketFails() throws IOException, XmlPullParserException, ClientException {
-        final XmlError err = new XmlError();
-        err.setCode("BucketAlreadyExists");
-        err.setMessage("Bucket Already Exists");
-        err.setRequestID("1");
-        err.setResource("/bucket");
+        final ErrorResponse errResponse = new ErrorResponse();
+        errResponse.setCode("BucketAlreadyExists");
+        errResponse.setMessage("Bucket Already Exists");
+        errResponse.setRequestID("1");
+        errResponse.setResource("/bucket");
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -523,7 +523,7 @@ public class ClientTest {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
 			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(409); // status conflict
-                        response.setContent(err.toString());
+                        response.setContent(errResponse.toString());
                         return response;
                     }
                 };
@@ -566,11 +566,11 @@ public class ClientTest {
     // this case only occurs for minio object storage
     @Test(expected = ObjectExistsException.class)
     public void testPutObjectFails() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
-        final XmlError err = new XmlError();
-        err.setCode("MethodNotAllowed");
-        err.setMessage("The specified method is not allowed against this resource.");
-        err.setRequestID("1");
-        err.setResource("/bucket/key");
+        final ErrorResponse errResponse = new ErrorResponse();
+        errResponse.setCode("MethodNotAllowed");
+        errResponse.setMessage("The specified method is not allowed against this resource.");
+        errResponse.setRequestID("1");
+        errResponse.setResource("/bucket/key");
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -580,7 +580,7 @@ public class ClientTest {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
                         response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(405); // method not allowed set by minio object storage
-                        response.setContent(err.toString());
+                        response.setContent(errResponse.toString());
                         return response;
                     }
                 };

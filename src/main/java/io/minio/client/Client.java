@@ -224,13 +224,13 @@ public class Client {
             throw new IOException("Unsuccessful response from server without error: " + response.getStatusCode());
         }
 
-        // Populate an XmlError, will throw an ClientException if unparseable. We should just pass it up.
-        XmlError xmlError = new XmlError();
-        parseXml(response, xmlError);
+        // Populate an ErrorResponse, will throw an ClientException if unparseable. We should just pass it up.
+        ErrorResponse errorResponse = new ErrorResponse();
+        parseXml(response, errorResponse);
 
         // Return the correct exception based upon the error code.
         // Minor note, flipped .equals() protects against null pointer exceptions
-        String code = xmlError.getCode();
+        String code = errorResponse.getCode();
         ClientException e;
         if ("NoSuchBucket".equals(code)) e = new BucketNotFoundException();
         else if ("NoSuchKey".equals(code)) e = new ObjectNotFoundException();
@@ -245,7 +245,7 @@ public class Client {
         else if ("PermanentRedirect".equals(code)) e = new RedirectionException();
         else if ("MethodNotAllowed".equals(code)) e = new ObjectExistsException();
         else e = new InternalClientException();
-        e.setXmlError(xmlError);
+        e.setErrorResponse(errorResponse);
         throw e;
     }
 
@@ -266,12 +266,12 @@ public class Client {
             parser.setInput(reader);
             // create a dictionary and populate based on object type
             XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
-            if (objectToPopulate instanceof XmlError) {
+            if (objectToPopulate instanceof ErrorResponse) {
                 // Errors have no namespace, so we set a default empty alias and namespace
                 dictionary.set("", "");
             } else {
                 // Setting an empty alias causes a failure when the namespace exists, so we don't set it when
-                // we are not using XmlError. Set the real namespace instead
+                // we are not using Error. Set the real namespace instead
                 dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
             }
             // parse and return

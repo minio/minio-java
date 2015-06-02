@@ -16,17 +16,17 @@
 
 package io.minio.client.errors;
 
-import io.minio.client.messages.XmlError;
+import io.minio.client.messages.ErrorResponse;
 
 @SuppressWarnings("unused")
 public class ClientException extends Exception {
-    private XmlError xmlError;
+    private ErrorResponse errorResponse;
 
-    public XmlError getXmlError() {
-        return xmlError;
+    public ErrorResponse getErrorResponse() {
+        return errorResponse;
     }
 
-    public void setXmlError(XmlError xmlError) {
-        this.xmlError = xmlError;
+    public void setErrorResponse(ErrorResponse errorResponse) {
+        this.errorResponse = errorResponse;
     }
 }
