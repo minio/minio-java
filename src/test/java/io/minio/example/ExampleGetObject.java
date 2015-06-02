@@ -18,53 +18,23 @@ package io.minio.example;
 
 import com.google.api.client.util.IOUtils;
 import io.minio.client.Client;
-import io.minio.client.ExceptionIterator;
 import io.minio.client.ObjectStat;
-import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
-import io.minio.client.messages.Item;
-import io.minio.client.messages.ListAllMyBucketsResult;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class Example {
+public class ExampleGetObject {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
         System.out.println("Example app");
 
-        // play.minio.io - s3 compatible object storage
+        // play.minio.io requires no credentials
+        // play.minio.io is s3 compatible object storage
         Client client = Client.getClient("http://play.minio.io:9000");
-        // Requires no credentials for play.minio.io
-
-        // amazonaws.com - amazon s3 object storage
-//         Client client = Client.getClient("https://s3.amazonaws.com");
-//         client.setKeys("accessKey", "secretKey");
-
-        // s3-us-west-2 - amazon s3 object storage in oregon
-//        Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
-//        client.setKeys("accessKey", "secretKey");
 
         // Set a user agent for your app
         client.addUserAgent("Example app", "0.1", "amd64");
-
-        // create bucket
-        client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
-
-        // set bucket ACL
-        client.setBucketACL("mybucket", Acl.PRIVATE);
-
-        // list buckets
-        ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
-        System.out.println(allMyBucketsResult);
-
-        // create object
-        client.putObject("mybucket", "myobject", "application/octet-stream", 11, new ByteArrayInputStream("hello world".getBytes("UTF-8")));
-
-        // list objects
-        ExceptionIterator<Item> myObjects = client.listObjects("mybucket");
-        System.out.println(myObjects);
 
         // get object metadata
         ObjectStat objectStat = client.statObject("mybucket", "myobject");
@@ -78,11 +48,5 @@ public class Example {
         } finally {
             object.close();
         }
-
-	// remove object
-        client.removeObject("mybucket", "myobject");
-
-	// remove bucket
-	client.removeBucket("mybucket");
     }
 }
