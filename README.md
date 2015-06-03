@@ -1,47 +1,45 @@
 # Minimal object storage library in Java [![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
 
-## API
+## Example
+```java
+import io.minio.client.Client;
+import io.minio.client.errors.ClientException;
+import io.minio.client.messages.ListAllMyBucketsResult;
+import org.xmlpull.v1.XmlPullParserException;
 
-### Bucket
+import java.io.IOException;
 
-~~~
- MakeBucket(String bucket) throws ClientException
- ListBuckets(bucket string) Iterator<BucketStat>
- BucketExists(String bucket) boolean throw ClientException
- RemoveBucket(String bucket) throw ClientException
- GetBucketACL(String bucket) BucketACL throws ClientException
- SetBucketACL(String bucket, BucketACL acl) throws ClientException
- DropAllIncompleteUploads(String bucket) throws ClientException
-~~~
+public class HelloListBuckets {
+    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
+        System.out.println("Hello app");
 
-### Object
+        // Set s3 endpoint, region is calculated automatically
+        Client s3client = Client.getClient("https://s3.amazonaws.com");
+        
+        // Set access and secret keys
+        s3client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-~~~
- GetObject(String bucket, String key) java.io.Reader throws ClientException
- PutObject(bucket, key string) throws ClientException
- ListObjects(bucket) ExceptionIterator<ObjectStat>
- ListObjects(bucket, prefix) ExceptionIterator<ObjectStat>
- ListObjects(bucket, recursive) ExceptionIterator<ObjectStat>
- ListObjects(bucket, prefix string, recursive bool) ExceptionIterator<ObjectStat>
- StatObject(bucket, key string) ObjectStat throws ClientException
- RemoveObject(bucket, key string) throws ClientException
- DropIncompleteUpload(bucket, key string) throws ClientException
-~~~
+        // Set a user agent for your app
+        s3client.addUserAgent("Example app", "0.1", "amd64");
 
-### Error
+        // list buckets
+        ListAllMyBucketsResult allMyBucketsResult = s3client.listBuckets();
+        System.out.println(allMyBucketsResult);
+    }
+}
+```
 
-~~~
- ClientIOException extends IOException
- BucketNotExistException extends ClientException extends Exception
- ObjectNotExistException extends ClientException
- ...
-~~~
+## Install from maven
 
-## Install
+--- TODO --- 
+
+## Install from source
 
 ```sh
 $ git clone https://github.com/minio/minio-java
 $ ./gradlew jar
+$ ls build/libs/
+[2015-06-01 00:26:39 PDT] 1.6MiB minio-java-1.0.jar
 ```
 
 ## Join The Community
