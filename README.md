@@ -1,5 +1,18 @@
 # Minimal object storage library in Java [![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
 
+## Install from maven
+
+--- TODO --- 
+
+## Install from source
+
+```sh
+$ git clone https://github.com/minio/minio-java
+$ ./gradlew jar
+$ ls build/libs/
+[2015-06-01 00:26:39 PDT] 1.6MiB minio-java-1.0.jar
+```
+
 ## Example
 ```java
 import io.minio.client.Client;
@@ -27,19 +40,6 @@ public class HelloListBuckets {
         System.out.println(allMyBucketsResult);
     }
 }
-```
-
-## Install from maven
-
---- TODO --- 
-
-## Install from source
-
-```sh
-$ git clone https://github.com/minio/minio-java
-$ ./gradlew jar
-$ ls build/libs/
-[2015-06-01 00:26:39 PDT] 1.6MiB minio-java-1.0.jar
 ```
 
 ## Join The Community
