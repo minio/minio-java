@@ -1255,7 +1255,7 @@ public class Client {
     private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
-        if (partID > 0 && uploadId != null && "".equals(uploadId.trim())) {
+        if (partID > 0 && uploadId != null && !"".equals(uploadId.trim())) {
             url.set("partNumber", partID);
             url.set("uploadId", uploadId);
         }
