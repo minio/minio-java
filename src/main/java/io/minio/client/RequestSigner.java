@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -115,6 +116,7 @@ public class RequestSigner implements HttpExecuteInterceptor {
         // print debug info
 //        System.out.println("--- Canonical Request ---");
 //        System.out.println(canonicalRequest);
+//        System.out.println(DatatypeConverter.printHexBinary(canonicalRequest.getBytes("UTF-8")));
 //        System.out.println("--- Canonical Hash ---");
 //        System.out.println(canonicalHash);
 //        System.out.println("--- String to Sign ---");
@@ -192,6 +194,15 @@ public class RequestSigner implements HttpExecuteInterceptor {
         if (!rawQuery.equals("")) {
             String[] querySplit = rawQuery.split("&");
             for (int i = 0; i < querySplit.length; i++) {
+                if(querySplit[i].contains("=")) {
+                    String[] split = querySplit[i].split("=", 2);
+                    try {
+                        split[1] = URLEncoder.encode(split[1], "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
+                    querySplit[i] = split[0] + "=" + split[1];
+                }
                 querySplit[i] = querySplit[i].trim();
             }
             Arrays.sort(querySplit);

@@ -34,8 +34,12 @@ public class ExamplePutObject {
         // Set a user agent for your app
         client.addUserAgent("Example app", "0.1", "amd64");
 
-        // create object
-        client.putObject("mybucket", "myobject", "application/octet-stream", 11, new ByteArrayInputStream("hello world".getBytes("UTF-8")));
+        StringBuilder builder = new StringBuilder();
+        for(int i=0; i < 11*1024*1024; i++) {
+            builder.append('a');
+        }
 
+        // create object
+        client.putObject("mybucket", "my/object", "application/octet-stream", 11*1024*1024, new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
     }
 }
