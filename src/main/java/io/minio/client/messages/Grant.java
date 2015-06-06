@@ -26,23 +26,23 @@ public class Grant extends XmlEntity {
     private String permission;
 
     public Grant() {
-	super();
-	this.name = "Grant";
+        super();
+        this.name = "Grant";
     }
 
     public String getPermission() {
-	return permission;
+        return permission;
     }
 
     public void setPermission(String permission) {
-	this.permission = permission;
+        this.permission = permission;
     }
 
     public Grantee getGrantee() {
-	return grantee;
+        return grantee;
     }
 
     public void setGrantee(Grantee grantee) {
-	this.grantee = grantee;
+        this.grantee = grantee;
     }
 }
