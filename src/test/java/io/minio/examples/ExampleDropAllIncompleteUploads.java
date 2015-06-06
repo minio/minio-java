@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-package io.minio.example;
+package io.minio.examples;
 
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-public class ExampleBucketExists {
-    public static void main(String[] args) throws IOException, ClientException {
+public class ExampleDropAllIncompleteUploads {
+    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
         System.out.println("Example app");
 
-        // play.minio.io requires no credentials
-        // play.minio.io is s3 compatible object storage
-        Client client = Client.getClient("http://play.minio.io:9000");
+        // Set s3 endpoint, region is calculated automatically
+        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+
+        // Set access and secret keys
+        s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         // Set a user agent for your app
-        client.addUserAgent("Example app", "0.1", "amd64");
+        s3Client.addUserAgent("Example app", "0.1", "amd64");
 
         // recursively drop every in progress active multipart upload sessions for a given bucket
-        boolean bucketExists = client.bucketExists("mymultipartbucket");
-        System.out.println(bucketExists);
+        s3Client.dropAllIncompleteUploads("mybucket");
     }
 }

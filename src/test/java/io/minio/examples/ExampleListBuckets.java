@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,32 +14,33 @@
  * limitations under the License.
  */
 
-package io.minio.example;
+package io.minio.examples;
 
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
+import io.minio.client.messages.Bucket;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
-public class ExamplePutObject {
+public class ExampleListBuckets {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
         System.out.println("Example app");
 
         // play.minio.io requires no credentials
         // play.minio.io is s3 compatible object storage
-        Client client = Client.getClient("http://play.minio.io:9000");
+        Client s3Client = Client.getClient("https://s3.amazonaws.com");
 
         // Set a user agent for your app
-        client.addUserAgent("Example app", "0.1", "amd64");
+        s3Client.addUserAgent("Example app", "0.1", "amd64");
 
-        StringBuilder builder = new StringBuilder();
-        for(int i=0; i < 11*1024*1024; i++) {
-            builder.append('a');
+        // list buckets
+        Iterator<Bucket> bucketList = s3Client.listBuckets();
+        while (bucketList.hasNext()) {
+            Bucket bucket = bucketList.next();
+            System.out.println(bucket.getName());
         }
 
-        // create object
-        client.putObject("mybucket", "my/object", "application/octet-stream", 11*1024*1024, new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
     }
 }
