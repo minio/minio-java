@@ -34,6 +34,6 @@ public class ExampleDropAllUploads {
         client.addUserAgent("Example app", "0.1", "amd64");
 
         // recursively drop every in progress active multipart upload sessions for a given bucket
-        client.dropAllMultipartUploads("mymultipartbucket");
+        client.dropAllMultipartUploads("mybucket");
     }
 }
