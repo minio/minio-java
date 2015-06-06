@@ -36,10 +36,6 @@ public class ExampleGetObject {
         // Set a user agent for your app
         client.addUserAgent("Example app", "0.1", "amd64");
 
-        // get object metadata
-        ObjectStat objectStat = client.statObject("mybucket", "myobject");
-        System.out.println(objectStat);
-
         // get object
         InputStream object = client.getObject("mybucket", "myobject");
         try {
