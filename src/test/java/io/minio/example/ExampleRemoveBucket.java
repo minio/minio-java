@@ -34,7 +34,7 @@ public class ExampleRemoveBucket {
         // Set a user agent for your app
         client.addUserAgent("Example app", "0.1", "amd64");
 
-	// remove bucket
-	client.removeBucket("mybucket");
+        // remove bucket
+        client.removeBucket("mybucket");
     }
 }
