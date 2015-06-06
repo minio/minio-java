@@ -608,7 +608,11 @@ public class Client {
 
         HttpRequest request = getHttpRequest("HEAD", url);
         HttpResponse response = request.execute();
-        return response != null && response.getStatusCode() == 200;
+        if(response != null) {
+            response.disconnect();
+            return response.getStatusCode() == 200;
+        }
+        throw new IOException("No response from server");
     }
 
     /**
