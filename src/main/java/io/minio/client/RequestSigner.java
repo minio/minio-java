@@ -54,10 +54,6 @@ public class RequestSigner implements HttpExecuteInterceptor {
 
     }
 
-    public static byte[] generateSigningKey(Date date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        return generateSigningKey(new DateTime(date), region, secretKey);
-    }
-
     public static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         String formattedDate = date.toString(dateFormatyyyyMMdd);
         String dateKeyLine = "AWS4" + secretKey;
@@ -89,7 +85,6 @@ public class RequestSigner implements HttpExecuteInterceptor {
         String dataHash = DatatypeConverter.printHexBinary(dataHashBytes).toLowerCase();
 
         request.getHeaders().set("x-amz-content-sha256", dataHash);
-//        request.getHeaders().setDate(dateFormat.format(signingDate));
         request.getHeaders().setDate(new DateTime(signingDate).toString(dateFormat));
 
         request.getHeaders().set("Host", request.getUrl().getHost());
@@ -279,7 +274,7 @@ public class RequestSigner implements HttpExecuteInterceptor {
 
         String userAgent = request.getHeaders().getUserAgent();
         if (userAgent != null) {
-            map.put("user-agent", userAgent);
+            map.put("user-agent", userAgent.trim());
         }
 
         String contentMD5 = request.getHeaders().getContentMD5();
