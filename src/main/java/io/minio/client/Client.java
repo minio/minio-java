@@ -265,8 +265,8 @@ public class Client {
                 // Errors have no namespace, so we set a default empty alias and namespace
                 dictionary.set("", "");
             } //else {
-                // Setting an empty alias causes a failure when the namespace exists, so we don't set it when
-                // we are not using Error. Set the real namespace instead
+            // Setting an empty alias causes a failure when the namespace exists, so we don't set it when
+            // we are not using Error. Set the real namespace instead
 //                dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
 //            }
             // parse and return
@@ -326,7 +326,7 @@ public class Client {
         pathParts.add("");
         pathParts.add(bucket);
         String[] keySplit = key.split("/");
-        for(String s : keySplit) {
+        for (String s : keySplit) {
             pathParts.add(s);
         }
 
@@ -570,7 +570,7 @@ public class Client {
      * List buckets owned by the current user.
      *
      * @return a list of buckets owned by the current user
-     * @throws IOException            if the connection fails
+     * @throws IOException     if the connection fails
      * @throws ClientException
      */
     public Iterator<Bucket> listBuckets() throws IOException, ClientException {
@@ -611,7 +611,7 @@ public class Client {
 
         HttpRequest request = getHttpRequest("HEAD", url);
         HttpResponse response = request.execute();
-        if(response != null) {
+        if (response != null) {
             response.disconnect();
             return response.getStatusCode() == 200;
         }
@@ -831,7 +831,7 @@ public class Client {
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
      * @param data        Data to upload
-     * @throws IOException            on network failure
+     * @throws IOException     on network failure
      * @throws ClientException
      * @see #listActiveMultipartUploads(String)
      * @see #abortMultipartUpload(String, String, String)

@@ -18,7 +18,6 @@ package io.minio.example;
 
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
