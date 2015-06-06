@@ -585,8 +585,6 @@ public class Client {
                 if (response.isSuccessStatusCode()) {
                     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
                     parseXml(response, result);
-                    System.out.println(result);
-                    System.out.println(result.getBuckets());
                     return result.getBuckets().iterator();
                 }
                 parseError(response);
@@ -1298,7 +1296,7 @@ public class Client {
             // we should never see this, unless the underlying JVM is broken.
             // Throw a runtime exception if we run into this, the environment
             // is not sane
-            System.err.println("MD5 message digest is not found, the current JVM is likely broken.");
+            System.err.println("MD5 message digest type not found, the current JVM is likely broken.");
             throw new RuntimeException(e);
         }
         return md5sum;
