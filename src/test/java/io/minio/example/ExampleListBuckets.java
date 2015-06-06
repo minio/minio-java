@@ -18,10 +18,12 @@ package io.minio.example;
 
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
+import io.minio.client.messages.Bucket;
 import io.minio.client.messages.ListAllMyBucketsResult;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class ExampleListBuckets {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
@@ -35,8 +37,11 @@ public class ExampleListBuckets {
         client.addUserAgent("Example app", "0.1", "amd64");
 
         // list buckets
-        ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
-        System.out.println(allMyBucketsResult);
+        Iterator<Bucket> bucketList = client.listBuckets();
+        while(bucketList.hasNext()) {
+            Bucket bucket = bucketList.next();
+            System.out.println(bucket.getName());
+        }
 
     }
 }

@@ -36,10 +36,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -267,11 +264,11 @@ public class Client {
             if (objectToPopulate instanceof ErrorResponse) {
                 // Errors have no namespace, so we set a default empty alias and namespace
                 dictionary.set("", "");
-            } else {
+            } //else {
                 // Setting an empty alias causes a failure when the namespace exists, so we don't set it when
                 // we are not using Error. Set the real namespace instead
-                dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
-            }
+//                dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
+//            }
             // parse and return
             Xml.parseElement(parser, objectToPopulate, dictionary, null);
         } catch (XmlPullParserException e) {
@@ -573,7 +570,7 @@ public class Client {
      * @throws IOException            if the connection fails
      * @throws ClientException
      */
-    public ListAllMyBucketsResult listBuckets() throws IOException, ClientException {
+    public Iterator<Bucket> listBuckets() throws IOException, ClientException {
         GenericUrl url = new GenericUrl(this.url);
 
         HttpRequest request = getHttpRequest("GET", url);
@@ -585,7 +582,9 @@ public class Client {
                 if (response.isSuccessStatusCode()) {
                     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
                     parseXml(response, result);
-                    return result;
+                    System.out.println(result);
+                    System.out.println(result.getBuckets());
+                    return result.getBuckets().iterator();
                 }
                 parseError(response);
             } finally {

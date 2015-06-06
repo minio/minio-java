@@ -280,23 +280,22 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        ListAllMyBucketsResult buckets = client.listBuckets();
+        Iterator<Bucket> buckets = client.listBuckets();
 
-        assertEquals(2, buckets.getBuckets().size());
-        Bucket bucket = buckets.getBuckets().get(0);
+        Bucket bucket = buckets.next();
         assertEquals("bucket", bucket.getName());
         assertEquals("2015-05-05T20:35:51.410Z", bucket.getCreationDate());
+
+        bucket = buckets.next();
+        assertEquals("foo", bucket.getName());
+        assertEquals("2015-05-05T20:35:47.170Z", bucket.getCreationDate());
 
         Calendar expectedDate = Calendar.getInstance();
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
-        expectedDate.set(2015, Calendar.MAY, 5, 20, 35, 51);
-        expectedDate.set(Calendar.MILLISECOND, 410);
+        expectedDate.set(2015, Calendar.MAY, 5, 20, 35, 47);
+        expectedDate.set(Calendar.MILLISECOND, 170);
         assertEquals(expectedDate.getTime(), bucket.getParsedCreationDate());
-
-        Owner owner = buckets.getOwner();
-        assertEquals("minio", owner.getDisplayName());
-        assertEquals("minio", owner.getID());
     }
 
     @Test
