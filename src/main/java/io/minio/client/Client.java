@@ -325,7 +325,10 @@ public class Client {
         // e.g. "", bucket, key => /bucket/key
         pathParts.add("");
         pathParts.add(bucket);
-        pathParts.add(key);
+        String[] keySplit = key.split("/");
+        for(String s : keySplit) {
+            pathParts.add(s);
+        }
 
         // add the path to the url and return
         url.setPathParts(pathParts);
