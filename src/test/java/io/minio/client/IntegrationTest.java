@@ -18,6 +18,7 @@ package io.minio.client;
 
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
+import io.minio.client.messages.Bucket;
 import io.minio.client.messages.ListAllMyBucketsResult;
 import io.minio.client.messages.Upload;
 import org.junit.Ignore;
@@ -27,6 +28,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -38,8 +40,11 @@ public class IntegrationTest {
     public void testSigning() throws IOException, XmlPullParserException, ClientException {
         Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
 //        client.enableLogging();
-        ListAllMyBucketsResult allMyBucketsResult = client.listBuckets();
-        System.out.println(allMyBucketsResult);
+        Iterator<Bucket> bucketIterator = client.listBuckets();
+        while(bucketIterator.hasNext()) {
+            Bucket bucket = bucketIterator.next();
+            System.out.println(bucket.getName());
+        }
     }
 
     @Test
