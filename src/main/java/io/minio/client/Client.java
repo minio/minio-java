@@ -75,7 +75,7 @@ import java.util.logging.Logger;
  * <p>
  * Optionally, users can also provide access/secret keys or a precomputed
  * signing key to the client. If keys are provided, all requests by the
- * client will be signed using AWS Signature Version 4. See {@link #setKeys(String, String)} and {@link #setSigningKey(byte[])}
+ * client will be signed using AWS Signature Version 4. See {@link #setKeys(String, String)}
  * </p>
  * For an example of using this library, please see <a href="https://github.com/minio/minio-java/blob/master/src/test/java/io/minio/client/example/Example.java">this example</a>.
  */
@@ -96,9 +96,7 @@ public class Client {
     // Secret key to sign all requests with
     private String secretKey;
     // user agent to tag all requests with
-    private String userAgent = "minio-java/0.0.1" + " (" + System.getProperty("os.name") + ", " + System.getProperty("os.arch") + ") ";
-    // signing key to sign all requests with. Is not used if access and secret key are set
-    private byte[] signingKey;
+    private String userAgent = "minio-java/0.0.1" + " (" + System.getProperty("os.name") + ", " + System.getProperty("os.arch") + ")";
 
     // Don't allow users to instantiate clients themselves, since it is bad form to throw exceptions in constructors.
     // Use Client.getClient instead
@@ -244,7 +242,7 @@ public class Client {
         else if ("TooManyBuckets".equals(code)) e = new MaxBucketsReachedException();
         else if ("PermanentRedirect".equals(code)) e = new RedirectionException();
         else if ("MethodNotAllowed".equals(code)) e = new ObjectExistsException();
-        else e = new InternalClientException();
+        else e = new InternalClientException(errorResponse.toString());
         e.setErrorResponse(errorResponse);
         throw e;
     }
@@ -301,7 +299,6 @@ public class Client {
                 // wire up secrets for code signing
                 RequestSigner signer = new RequestSigner(data);
                 signer.setAccessKeys(accessKey, secretKey);
-                signer.setSigningKey(signingKey);
                 request.setInterceptor(signer);
             }
         });
@@ -647,11 +644,28 @@ public class Client {
     public void makeBucket(String bucket, Acl acl) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
-        HttpRequest request = getHttpRequest("PUT", url);
+        CreateBucketConfiguration config = new CreateBucketConfiguration();
+        config.setLocationConstraint(Regions.INSTANCE.getRegion(url.getHost()));
+
+        byte[] data = config.toString().getBytes("UTF-8");
+        byte[] md5sum = calculateMd5sum(data);
+
+
+        HttpRequest request = getHttpRequest("PUT", url, data);
+
         if (acl == null) {
             acl = Acl.PRIVATE;
         }
         request.getHeaders().set("x-amz-acl", acl.toString());
+
+
+        if (md5sum != null) {
+            String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
+            request.getHeaders().setContentMD5(base64md5sum);
+        }
+
+        ByteArrayContent content = new ByteArrayContent("application/xml", data);
+        request.setContent(content);
 
         HttpResponse response = request.execute();
         if (response != null) {
@@ -1381,17 +1395,6 @@ public class Client {
     public void disableLogging() {
         if (this.logger.get() != null) {
             this.logger.get().setLevel(Level.OFF);
-        }
-    }
-
-    /**
-     * Set signing key to sign requests with
-     *
-     * @param signingKey to use in this connection
-     */
-    public void setSigningKey(byte[] signingKey) {
-        if (signingKey != null) {
-            this.signingKey = signingKey.clone();
         }
     }
 }
