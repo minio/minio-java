@@ -44,7 +44,6 @@ public class RequestSigner implements HttpExecuteInterceptor {
     private byte[] data = new byte[0];
     private String accessKey = null;
     private String secretKey = null;
-    private byte[] userProvidedSigningKey;
 
     RequestSigner(byte[] data) {
         if (data == null) {
@@ -72,7 +71,7 @@ public class RequestSigner implements HttpExecuteInterceptor {
     }
 
     private void signV4(HttpRequest request, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
-        if ((this.accessKey == null || this.secretKey == null) && this.userProvidedSigningKey == null) {
+        if (this.accessKey == null || this.secretKey == null) {
             return;
         }
 
@@ -100,7 +99,7 @@ public class RequestSigner implements HttpExecuteInterceptor {
 
         // generate key to sign
         String stringToSign = getStringToSign(region, canonicalHash, signingDate);
-        byte[] signingKey = getSigningKey(signingDate, region);
+        byte[] signingKey = generateSigningKey(signingDate, region, this.secretKey);
 
         // generate signing key
         String signature = DatatypeConverter.printHexBinary(getSignature(signingKey, stringToSign)).toLowerCase();
@@ -150,13 +149,6 @@ public class RequestSigner implements HttpExecuteInterceptor {
 
     private byte[] getSignature(byte[] signingKey, String stringToSign) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
         return signHmac(signingKey, stringToSign.getBytes("UTF-8"));
-    }
-
-    private byte[] getSigningKey(DateTime date, String region) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
-        if (this.accessKey != null && this.secretKey != null) {
-            return generateSigningKey(date, region, this.secretKey);
-        }
-        return this.userProvidedSigningKey;
     }
 
     private String getScope(String region, DateTime date) {
@@ -311,9 +303,5 @@ public class RequestSigner implements HttpExecuteInterceptor {
     void setAccessKeys(String accessKey, String secretKey) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
-    }
-
-    void setSigningKey(byte[] signingKey) {
-        this.userProvidedSigningKey = signingKey;
     }
 }

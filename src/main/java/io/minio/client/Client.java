@@ -322,7 +322,7 @@ public class Client {
         GenericUrl url = new GenericUrl(this.url);
 
         List<String> pathParts = new LinkedList<String>();
-        // pathparts adds slashes between each part
+        // pathParts adds slashes between each part
         // e.g. foo, bar => foo/bar
         // we add a "" in the beginning to force it to add a / at the beginning or the url will not be differentiated from the port
         // e.g. "", bucket, key => /bucket/key
@@ -341,7 +341,7 @@ public class Client {
         }
         GenericUrl url = new GenericUrl(this.url);
 
-        // pathparts adds slashes between each part
+        // pathParts adds slashes between each part
         // e.g. foo, bar => foo/bar
         // we add a "" in the beginning to force it to add a / at the beginning or the url will not be differentiated from the port
         // e.g. "", bucket => /bucket
@@ -469,24 +469,18 @@ public class Client {
             @Override
             protected List<Item> populate() throws ClientException, IOException {
                 if (!isComplete) {
-                    try {
-                        String delimiter = null;
-                        // set delimiter  to '/' if not recursive to emulate directories
-                        if (!recursive) {
-                            delimiter = "/";
-                        }
-                        ListBucketResult listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
-                        if (listBucketResult.isTruncated()) {
-                            marker = listBucketResult.getNextMarker();
-                        } else {
-                            isComplete = true;
-                        }
-                        return listBucketResult.getContents();
-                    } catch (XmlPullParserException e) {
-                        InternalClientException xmlParsingError = new InternalClientException();
-                        xmlParsingError.initCause(e);
-                        throw xmlParsingError;
+                    String delimiter = null;
+                    // set delimiter  to '/' if not recursive to emulate directories
+                    if (!recursive) {
+                        delimiter = "/";
                     }
+                    ListBucketResult listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
+                    if (listBucketResult.isTruncated()) {
+                        marker = listBucketResult.getNextMarker();
+                    } else {
+                        isComplete = true;
+                    }
+                    return listBucketResult.getContents();
                 }
                 return new LinkedList<Item>();
             }
@@ -509,10 +503,9 @@ public class Client {
      * @param maxKeys   limits the number of keys returned in response, max limit is 1000
      * @return
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws ClientException
      */
-    private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, XmlPullParserException, ClientException {
+    private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         // max keys limits the number of keys returned, max limit is 1000
@@ -578,10 +571,9 @@ public class Client {
      *
      * @return a list of buckets owned by the current user
      * @throws IOException            if the connection fails
-     * @throws XmlPullParserException
      * @throws ClientException
      */
-    public ListAllMyBucketsResult listBuckets() throws IOException, XmlPullParserException, ClientException {
+    public ListAllMyBucketsResult listBuckets() throws IOException, ClientException {
         GenericUrl url = new GenericUrl(this.url);
 
         HttpRequest request = getHttpRequest("GET", url);
@@ -758,7 +750,7 @@ public class Client {
     }
 
     private AccessControlPolicy getAccessPolicy(String bucket) throws IOException, ClientException {
-        GenericUrl url = new GenericUrl(this.url);
+        GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("acl", "");
 
         HttpRequest request = getHttpRequest("GET", url);
@@ -834,12 +826,11 @@ public class Client {
      * @param size        Size of all the data that will be uploaded.
      * @param data        Data to upload
      * @throws IOException            on network failure
-     * @throws XmlPullParserException on unexpected xml // TODO don't fail like this, wrap as our own error
      * @throws ClientException
      * @see #listActiveMultipartUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      */
-    public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException, ClientException {
+    public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, ClientException {
         boolean isMultipart = false;
         int partSize = 0;
         String uploadID = null;
@@ -926,20 +917,14 @@ public class Client {
             protected List<Upload> populate() throws ClientException, IOException {
                 if (!isComplete) {
                     ListMultipartUploadsResult result;
-                    try {
-                        result = listActiveMultipartUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
-                        if (result.isTruncated()) {
-                            keyMarker = result.getNextKeyMarker();
-                            uploadIdMarker = result.getNextUploadIDMarker();
-                        } else {
-                            isComplete = true;
-                        }
-                        return result.getUploads();
-                    } catch (XmlPullParserException e) {
-                        InternalClientException xmlError = new InternalClientException();
-                        xmlError.initCause(e);
-                        throw xmlError;
+                    result = listActiveMultipartUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
+                    if (result.isTruncated()) {
+                        keyMarker = result.getNextKeyMarker();
+                        uploadIdMarker = result.getNextUploadIDMarker();
+                    } else {
+                        isComplete = true;
                     }
+                    return result.getUploads();
                 }
                 return new LinkedList<Upload>();
             }
@@ -955,10 +940,9 @@ public class Client {
      * @param maxUploads
      * @return
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws ClientException
      */
-    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, XmlPullParserException, ClientException {
+    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
 
@@ -1128,19 +1112,13 @@ public class Client {
             protected List<Part> populate() throws IOException, ClientException {
                 if (!isComplete) {
                     ListPartsResult result;
-                    try {
-                        result = listObjectParts(bucket, key, uploadID, marker);
-                        if (result.isTruncated()) {
-                            marker = result.getNextPartNumberMarker();
-                        } else {
-                            isComplete = true;
-                        }
-                        return result.getParts();
-                    } catch (XmlPullParserException e) {
-                        InternalClientException internalClientException = new InternalClientException();
-                        internalClientException.initCause(e);
-                        throw internalClientException;
+                    result = listObjectParts(bucket, key, uploadID, marker);
+                    if (result.isTruncated()) {
+                        marker = result.getNextPartNumberMarker();
+                    } else {
+                        isComplete = true;
                     }
+                    return result.getParts();
                 }
                 return new LinkedList<Part>();
             }
@@ -1154,10 +1132,9 @@ public class Client {
      * @param partNumberMarker
      * @return
      * @throws IOException
-     * @throws XmlPullParserException
      * @throws ClientException
      */
-    private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, XmlPullParserException, ClientException {
+    private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
 
