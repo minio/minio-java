@@ -18,7 +18,6 @@ package io.minio.client.messages;
 
 import com.google.api.client.util.Key;
 
-import java.util.LinkedList;
 import java.util.List;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
@@ -29,27 +28,27 @@ public class AccessControlPolicy extends XmlEntity {
     private AccessControlList grants;
 
     public AccessControlPolicy() {
-	super();
-	this.name = "AccessControlPolicy";
+        super();
+        this.name = "AccessControlPolicy";
     }
 
     public Owner getOwner() {
-	return owner;
+        return owner;
     }
 
     public void setOwner(Owner owner) {
-	this.owner = owner;
+        this.owner = owner;
     }
 
-    public List<Grant> getAccessControlList () {
-	if (grants == null) {
-	    return null;
-	}
-	return grants.getGrant();
+    public List<Grant> getAccessControlList() {
+        if (grants == null) {
+            return null;
+        }
+        return grants.getGrant();
     }
 
     public void setAccessControlList(AccessControlList grants) {
-	this.grants = grants;
+        this.grants = grants;
     }
 
 }

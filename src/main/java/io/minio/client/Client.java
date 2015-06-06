@@ -360,7 +360,7 @@ public class Client {
      * @param bucket object's bucket
      * @param key    object's key
      * @return an InputStream containing the object. Close the InputStream when done.
-     * @throws IOException if transport disconnects
+     * @throws IOException     if transport disconnects
      * @throws ClientException
      */
     public InputStream getObject(String bucket, String key) throws IOException, ClientException {
@@ -389,7 +389,7 @@ public class Client {
      *
      * @param bucket object's bucket
      * @param key    object's key
-     * @throws IOException if the connection fails
+     * @throws IOException     if the connection fails
      * @throws ClientException
      */
     public void removeObject(String bucket, String key) throws IOException, ClientException {
@@ -414,19 +414,19 @@ public class Client {
      * Returns an InputStream containing a subset of the object. The InputStream must be
      * closed or the connection will remain open.
      *
-     * @param bucket object's bucket
-     * @param key    object's key
+     * @param bucket      object's bucket
+     * @param key         object's key
      * @param offsetStart Offset from the start of the object.
-     * @param length Length of bytes to retrieve.
+     * @param length      Length of bytes to retrieve.
      * @return an InputStream containing the object. Close the InputStream when done.
-     * @throws IOException if the connection does not succeed
+     * @throws IOException     if the connection does not succeed
      * @throws ClientException
      */
     public InputStream getObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         HttpRequest request = getHttpRequest("GET", url);
-        long offsetEnd = offsetStart+length;
+        long offsetEnd = offsetStart + length;
         request.getHeaders().setRange(offsetStart + "-" + offsetEnd);
 
         // we close the response only on failure or the user will be unable to retrieve the object
@@ -446,7 +446,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param prefix
      * @return
@@ -457,7 +456,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param prefix
      * @param recursive
@@ -474,7 +472,7 @@ public class Client {
                     try {
                         String delimiter = null;
                         // set delimiter  to '/' if not recursive to emulate directories
-                        if(!recursive) {
+                        if (!recursive) {
                             delimiter = "/";
                         }
                         ListBucketResult listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
@@ -496,7 +494,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @return
      */
@@ -505,12 +502,11 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
-     * @param marker is similar to a bookmark, returns objects in alphabetical order starting from the marker
-     * @param prefix filters results, result must contain the given prefix
+     * @param marker    is similar to a bookmark, returns objects in alphabetical order starting from the marker
+     * @param prefix    filters results, result must contain the given prefix
      * @param delimiter will limit results to unique entries with keys truncated at the first instance of the delimiter
-     * @param maxKeys limits the number of keys returned in response, max limit is 1000
+     * @param maxKeys   limits the number of keys returned in response, max limit is 1000
      * @return
      * @throws IOException
      * @throws XmlPullParserException
@@ -562,6 +558,7 @@ public class Client {
 
     /**
      * Set test transports for mocking the http request and response
+     *
      * @param transport
      */
     void setTransport(HttpTransport transport) {
@@ -624,7 +621,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @throws IOException
      * @throws ClientException
@@ -678,15 +674,16 @@ public class Client {
                 response.disconnect();
             }
         }
-	throw new IOException();
+        throw new IOException();
     }
 
     /**
      * Remove a bucket with a given name
-     *
+     * <p>
      * NOTE: -
      * All objects (including all object versions and delete markers) in the bucket
      * must be deleted prior, this API will not recursively delete objects
+     * </p>
      *
      * @param bucket bucket to create
      * @throws IOException
@@ -707,7 +704,7 @@ public class Client {
                 response.disconnect();
             }
         }
-	throw new IOException();
+        throw new IOException();
     }
 
     /**
@@ -724,38 +721,38 @@ public class Client {
         }
         Acl acl = Acl.PRIVATE;
         List<Grant> accessControlList = policy.getAccessControlList();
-	switch (accessControlList.size()) {
-        case 1:
-            for (Grant grant : accessControlList) {
-                if (grant.getGrantee().getURI() == null && grant.getPermission().equals("FULL_CONTROL")) {
-                    acl = Acl.PRIVATE;
-                    break;
+        switch (accessControlList.size()) {
+            case 1:
+                for (Grant grant : accessControlList) {
+                    if (grant.getGrantee().getURI() == null && grant.getPermission().equals("FULL_CONTROL")) {
+                        acl = Acl.PRIVATE;
+                        break;
+                    }
                 }
-            }
-            break;
-        case 2:
-            for (Grant grant : accessControlList) {
-                if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AuthenticatedUsers") &&
-                    grant.getPermission().equals("READ")) {
-                    acl = Acl.AUTHENTICATED_READ;
-                    break;
+                break;
+            case 2:
+                for (Grant grant : accessControlList) {
+                    if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AuthenticatedUsers") &&
+                            grant.getPermission().equals("READ")) {
+                        acl = Acl.AUTHENTICATED_READ;
+                        break;
+                    }
+                    if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
+                            grant.getPermission().equals("READ")) {
+                        acl = Acl.PUBLIC_READ;
+                        break;
+                    }
                 }
-                if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
-                    grant.getPermission().equals("READ")) {
-                    acl = Acl.PUBLIC_READ;
-                    break;
+                break;
+            case 3:
+                for (Grant grant : accessControlList) {
+                    if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
+                            grant.getPermission().equals("WRITE")) {
+                        acl = Acl.PUBLIC_READ_WRITE;
+                        break;
+                    }
                 }
-            }
-            break;
-        case 3:
-            for (Grant grant : accessControlList) {
-                if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
-                    grant.getPermission().equals("WRITE")) {
-                    acl = Acl.PUBLIC_READ_WRITE;
-                    break;
-                }
-            }
-            break;
+                break;
         }
         return acl;
     }
@@ -797,8 +794,8 @@ public class Client {
         }
 
         GenericUrl url = getGenericUrlOfBucket(bucket);
-	// make sure to set this, otherwise it would convert this call into a regular makeBucket operation
-	url.set("acl", "");
+        // make sure to set this, otherwise it would convert this call into a regular makeBucket operation
+        url.set("acl", "");
         HttpRequest request = getHttpRequest("PUT", url);
         request.getHeaders().set("x-amz-acl", acl.toString());
 
@@ -821,12 +818,15 @@ public class Client {
      * <p>
      * If the object is larger than 5MB, the client will automatically use a multipart session.
      * </p>
+     * <p>
      * If the session fails, the user may attempt to re-upload the object by attempting to create
      * the exact same object again. The client will examine all parts of any current upload session
      * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
      * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+     * </p>
      * <p>
      * If the multipart session fails, the user is responsible for resuming or dropping the session.
+     * </p>
      *
      * @param bucket      Bucket to use
      * @param key         Key of object
@@ -838,7 +838,6 @@ public class Client {
      * @throws ClientException
      * @see #listActiveMultipartUploads(String)
      * @see #abortMultipartUpload(String, String, String)
-     * </p>
      */
     public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, XmlPullParserException, ClientException {
         boolean isMultipart = false;
@@ -913,7 +912,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param prefix
      * @return
@@ -949,7 +947,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param keyMarker
      * @param uploadIDMarker
@@ -1007,7 +1004,7 @@ public class Client {
      * Drop all active multipart uploads in a given bucket.
      *
      * @param bucket to drop all active multipart uploads in
-     * @throws IOException on connection failure
+     * @throws IOException     on connection failure
      * @throws ClientException
      */
     public void dropAllMultipartUploads(String bucket) throws IOException, ClientException {
@@ -1050,7 +1047,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param key
      * @return
@@ -1077,7 +1073,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param key
      * @param uploadID
@@ -1119,7 +1114,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param key
      * @param uploadID
@@ -1154,7 +1148,6 @@ public class Client {
     }
 
     /**
-     *
      * @param bucket
      * @param key
      * @param uploadID
@@ -1190,48 +1183,49 @@ public class Client {
         throw new IOException();
     }
 
-    /** Abort an active multipart upload
+    /**
+     * Abort an active multipart upload
      *
      * @param bucket   of multipart upload to abort
      * @param key      of multipart upload to abort
      * @param uploadID of multipart upload to abort
-     * @throws IOException on connection failure
+     * @throws IOException     on connection failure
      * @throws ClientException
      */
     private void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException, ClientException {
-	if (bucket == null) {
-	    throw new InternalClientException("Bucket cannot be null");
-	}
-	if (key == null) {
-	    throw new InternalClientException("Key cannot be null");
-	}
-	if (uploadID == null) {
-	    throw new InternalClientException("UploadID cannot be null");
-	}
-	GenericUrl url = getGenericUrlOfKey(bucket, key);
-	url.set("uploadId", uploadID);
+        if (bucket == null) {
+            throw new InternalClientException("Bucket cannot be null");
+        }
+        if (key == null) {
+            throw new InternalClientException("Key cannot be null");
+        }
+        if (uploadID == null) {
+            throw new InternalClientException("UploadID cannot be null");
+        }
+        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        url.set("uploadId", uploadID);
 
-	HttpRequest request = getHttpRequest("DELETE", url);
-	HttpResponse response = request.execute();
-	if (response != null) {
-	    try {
-		if (response.isSuccessStatusCode()) {
-		    return;
-		}
-		parseError(response);
-	    } finally {
-		response.disconnect();
-	    }
-	}
-	throw new IOException();
+        HttpRequest request = getHttpRequest("DELETE", url);
+        HttpResponse response = request.execute();
+        if (response != null) {
+            try {
+                if (response.isSuccessStatusCode()) {
+                    return;
+                }
+                parseError(response);
+            } finally {
+                response.disconnect();
+            }
+        }
+        throw new IOException();
     }
 
     /**
      * Drop active multipart uploads, starting from key
      *
-     * @param bucket   of multipart upload to drop
-     * @param key      of multipart upload to drop
-     * @throws IOException on connection failure
+     * @param bucket of multipart upload to drop
+     * @param key    of multipart upload to drop
+     * @throws IOException     on connection failure
      * @throws ClientException
      */
     public void dropMultipartUploads(String bucket, String key) throws IOException, ClientException {
@@ -1243,7 +1237,6 @@ public class Client {
     }
 
     /**
-     *
      * @param size of total object
      * @return multipart size
      */
@@ -1254,8 +1247,7 @@ public class Client {
     }
 
     /**
-     *
-     * @param bucket to put object
+     * @param bucket      to put object
      * @param key
      * @param contentType
      * @param data
@@ -1267,13 +1259,12 @@ public class Client {
     }
 
     /**
-     *
-     * @param bucket to put object to
-     * @param key to put object to
+     * @param bucket      to put object to
+     * @param key         to put object to
      * @param contentType of data
-     * @param data to upload
-     * @param uploadId of multipart upload, set to null if not a multipart upload
-     * @param partID of multipart upload, set to 0 if not a multipart upload.
+     * @param data        to upload
+     * @param uploadId    of multipart upload, set to null if not a multipart upload
+     * @param partID      of multipart upload, set to 0 if not a multipart upload.
      * @return string representing the returned etag
      * @throws IOException
      * @throws ClientException
@@ -1312,7 +1303,6 @@ public class Client {
     }
 
     /**
-     *
      * @param data to calculate sum for
      * @return md5sum
      */
@@ -1332,7 +1322,6 @@ public class Client {
     }
 
     /**
-     *
      * @param size of data to read
      * @param data to read from
      * @return byte array of read data
