@@ -18,7 +18,6 @@ package io.minio.example;
 
 import com.google.api.client.util.IOUtils;
 import io.minio.client.Client;
-import io.minio.client.ObjectStat;
 import io.minio.client.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 

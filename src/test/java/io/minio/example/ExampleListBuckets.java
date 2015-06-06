@@ -19,7 +19,6 @@ package io.minio.example;
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
 import io.minio.client.messages.Bucket;
-import io.minio.client.messages.ListAllMyBucketsResult;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -38,7 +37,7 @@ public class ExampleListBuckets {
 
         // list buckets
         Iterator<Bucket> bucketList = client.listBuckets();
-        while(bucketList.hasNext()) {
+        while (bucketList.hasNext()) {
             Bucket bucket = bucketList.next();
             System.out.println(bucket.getName());
         }

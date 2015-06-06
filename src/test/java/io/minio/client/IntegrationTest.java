@@ -19,7 +19,6 @@ package io.minio.client;
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
 import io.minio.client.messages.Bucket;
-import io.minio.client.messages.ListAllMyBucketsResult;
 import io.minio.client.messages.Upload;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -41,7 +40,7 @@ public class IntegrationTest {
         Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
 //        client.enableLogging();
         Iterator<Bucket> bucketIterator = client.listBuckets();
-        while(bucketIterator.hasNext()) {
+        while (bucketIterator.hasNext()) {
             Bucket bucket = bucketIterator.next();
             System.out.println(bucket.getName());
         }

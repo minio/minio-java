@@ -23,10 +23,13 @@ import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.BucketExistsException;
-import io.minio.client.errors.ObjectExistsException;
-import io.minio.client.errors.InvalidAclNameException;
 import io.minio.client.errors.ClientException;
-import io.minio.client.messages.*;
+import io.minio.client.errors.InvalidAclNameException;
+import io.minio.client.errors.ObjectExistsException;
+import io.minio.client.messages.Bucket;
+import io.minio.client.messages.ErrorResponse;
+import io.minio.client.messages.Item;
+import io.minio.client.messages.Owner;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -491,7 +494,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -520,7 +523,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.setStatusCode(409); // status conflict
                         response.setContent(errResponse.toString());
                         return response;
@@ -543,7 +546,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
                         response.setStatusCode(200);
@@ -608,7 +611,7 @@ public class ClientTest {
                             System.out.println("-" + s);
                         }
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-			response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
                         response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");
