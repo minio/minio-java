@@ -995,7 +995,7 @@ public class Client {
      * @throws IOException     on connection failure
      * @throws ClientException
      */
-    public void dropAllMultipartUploads(String bucket) throws IOException, ClientException {
+    public void dropAllIncompleteUploads(String bucket) throws IOException, ClientException {
         ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket);
         while (uploads.hasNext()) {
             Upload upload = uploads.next();
@@ -1209,7 +1209,7 @@ public class Client {
      * @throws IOException     on connection failure
      * @throws ClientException
      */
-    public void dropMultipartUploads(String bucket, String key) throws IOException, ClientException {
+    public void dropIncompleteUpload(String bucket, String key) throws IOException, ClientException {
         ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket, key);
         while (uploads.hasNext()) {
             Upload upload = uploads.next();
