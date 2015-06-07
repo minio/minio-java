@@ -176,12 +176,6 @@ public class Client {
      * @see ObjectStat
      */
     public ObjectStat statObject(String bucket, String key) throws IOException, ClientException {
-        if (bucket == null) {
-            throw new InvalidBucketNameException();
-        }
-        if (key == null) {
-            throw new InvalidKeyNameException();
-        }
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         HttpRequest request = getHttpRequest("HEAD", url);
         HttpResponse response = request.execute();
@@ -310,10 +304,10 @@ public class Client {
     }
 
     private GenericUrl getGenericUrlOfKey(String bucket, String key) throws InvalidBucketNameException, InvalidKeyNameException {
-        if (bucket == null) {
+        if (bucket == null || "".equals(bucket.trim())) {
             throw new InvalidBucketNameException();
         }
-        if (key == null) {
+        if (key == null || "".equals(bucket.trim())) {
             throw new InvalidKeyNameException();
         }
         GenericUrl url = new GenericUrl(this.url);
@@ -336,7 +330,7 @@ public class Client {
     }
 
     private GenericUrl getGenericUrlOfBucket(String bucket) throws InvalidBucketNameException {
-        if (bucket == null) {
+        if (bucket == null || "".equals(bucket.trim())) {
             throw new InvalidBucketNameException();
         }
         GenericUrl url = new GenericUrl(this.url);
