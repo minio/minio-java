@@ -492,16 +492,6 @@ public class Client {
         return listObjects(bucket, null);
     }
 
-    /**
-     * @param bucket    is the bucket to list objects from
-     * @param marker    is similar to a bookmark, returns objects in alphabetical order starting from the marker
-     * @param prefix    filters results, result must contain the given prefix
-     * @param delimiter will limit results to unique entries with keys truncated at the first instance of the delimiter
-     * @param maxKeys   limits the number of keys returned in response, max limit is 1000
-     * @return
-     * @throws IOException
-     * @throws ClientException
-     */
     private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
@@ -549,7 +539,6 @@ public class Client {
     /**
      * Set test transports for mocking the http request and response
      *
-     * @param transport
      */
     void setTransport(HttpTransport transport) {
         this.transport = transport;
@@ -596,7 +585,7 @@ public class Client {
     /**
      * Test whether a bucket exists and the user has at least read access
      *
-     * @param bucket bucket to test
+     * @param bucket bucket to test for existence and access
      * @return true if the bucket exists and the user has at least read access
      * @throws IOException
      * @throws ClientException
@@ -614,9 +603,9 @@ public class Client {
     }
 
     /**
-     * @param bucket
-     * @throws IOException
-     * @throws ClientException
+     * @param bucket bucket to create
+     * @throws IOException on connection error
+     * @throws ClientException on failure from server
      */
     public void makeBucket(String bucket) throws IOException, ClientException {
         this.makeBucket(bucket, Acl.PRIVATE);
@@ -627,8 +616,8 @@ public class Client {
      *
      * @param bucket bucket to create
      * @param acl    canned acl
-     * @throws IOException
-     * @throws ClientException
+     * @throws IOException on connection error
+     * @throws ClientException on failure from server
      */
     public void makeBucket(String bucket, Acl acl) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -899,16 +888,16 @@ public class Client {
      * @param bucket bucket to list active multipart uploads
      * @return list of active multipart uploads
      */
-    public MinioIterator<Upload> listActiveMultipartUploads(String bucket) {
+    public Iterator<Upload> listActiveMultipartUploads(String bucket) {
         return listActiveMultipartUploads(bucket, null);
     }
 
     /**
-     * @param bucket
-     * @param prefix
-     * @return
+     * @param bucket bucket to list active uploads of
+     * @param prefix filter multipart upload keys by the given prefix
+     * @return a list of active multipart uploads
      */
-    public MinioIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) {
+    public Iterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) {
         return new MinioIterator<Upload>() {
             private boolean isComplete = false;
             private String keyMarker = null;
