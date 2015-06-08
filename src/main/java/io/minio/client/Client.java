@@ -853,7 +853,7 @@ public class Client {
             }
 
             isMultipart = true;
-            partSize = computePartSize(size);
+            partSize = calculatePartSize(size);
             if (uploadID == null) {
                 uploadID = newMultipartUpload(bucket, key);
             }
@@ -1180,7 +1180,7 @@ public class Client {
         }
     }
 
-    private int computePartSize(long size) {
+    private int calculatePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB
         int partSize = (int) (size / 9999); // using 10000 may cause part size to become too small, and not fit the entire object in
         return Math.max(minimumPartSize, partSize);
