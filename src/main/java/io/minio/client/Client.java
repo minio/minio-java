@@ -439,12 +439,13 @@ public class Client {
 
     /**
      * listObjects is a wrapper around listObjects(bucket, prefix, true)
+     *
      * @param bucket to list objects of
      * @param prefix filters the list of objects to include only those that start with prefix
      * @return an iterator of Items.
      * @see #listObjects(String, String, boolean)
      */
-    public Iterator<Item> listObjects(final String bucket, final String prefix) {
+    public Iterator<Result<Item>> listObjects(final String bucket, final String prefix) {
         // list all objects recursively
         return listObjects(bucket, prefix, true);
     }
@@ -457,51 +458,57 @@ public class Client {
      *                  '/' will be merged into one entry.
      * @return an iterator of Items.
      */
-    public Iterator<Item> listObjects(final String bucket, final String prefix, final boolean recursive) {
-        return new MinioIterator<Item>() {
+    public Iterator<Result<Item>> listObjects(final String bucket, final String prefix, final boolean recursive) {
+        return new MinioIterator<Result<Item>>() {
             private String marker = null;
             private boolean isComplete = false;
 
             @Override
-            protected List<Item> populate() throws ClientException, IOException {
+            protected List<Result<Item>> populate() {
                 if (!isComplete) {
                     String delimiter = null;
                     // set delimiter  to '/' if not recursive to emulate directories
                     if (!recursive) {
                         delimiter = "/";
                     }
-                    ListBucketResult listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
-                    if (listBucketResult.isTruncated()) {
-                        marker = listBucketResult.getNextMarker();
-                    } else {
+                    ListBucketResult listBucketResult;
+                    List<Result<Item>> items = new LinkedList<Result<Item>>();
+                    try {
+                        listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
+                        for (Item item : listBucketResult.getContents()) {
+                            items.add(new Result<Item>(item, null));
+                        }
+                        if (listBucketResult.isTruncated()) {
+                            marker = listBucketResult.getNextMarker();
+                        } else {
+                            isComplete = true;
+                        }
+                    } catch (IOException e) {
+                        items.add(new Result<Item>(null, e));
                         isComplete = true;
+                        return items;
+                    } catch (ClientException e) {
+                        items.add(new Result<Item>(null, e));
+                        isComplete = true;
+                        return items;
                     }
-                    return listBucketResult.getContents();
+                    return items;
                 }
-                return new LinkedList<Item>();
+                return new LinkedList<Result<Item>>();
             }
         };
     }
 
     /**
      * listObjects is a wrapper around listObjects(bucket, null, true)
-     * @param bucket    is the bucket to list objects from
+     *
+     * @param bucket is the bucket to list objects from
      * @see #listObjects(String, String, boolean)
      */
-    public Iterator<Item> listObjects(final String bucket) {
+    public Iterator<Result<Item>> listObjects(final String bucket) {
         return listObjects(bucket, null);
     }
 
-    /**
-     * @param bucket    is the bucket to list objects from
-     * @param marker    is similar to a bookmark, returns objects in alphabetical order starting from the marker
-     * @param prefix    filters results, result must contain the given prefix
-     * @param delimiter will limit results to unique entries with keys truncated at the first instance of the delimiter
-     * @param maxKeys   limits the number of keys returned in response, max limit is 1000
-     * @return
-     * @throws IOException
-     * @throws ClientException
-     */
     private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
@@ -548,8 +555,6 @@ public class Client {
 
     /**
      * Set test transports for mocking the http request and response
-     *
-     * @param transport
      */
     void setTransport(HttpTransport transport) {
         this.transport = transport;
@@ -580,9 +585,9 @@ public class Client {
         if (response != null) {
             try {
                 if (response.isSuccessStatusCode()) {
-                    ListAllMyBucketsResult result = new ListAllMyBucketsResult();
-                    parseXml(response, result);
-                    return result.getBuckets().iterator();
+                    ListAllMyBucketsResult retrievedBuckets = new ListAllMyBucketsResult();
+                    parseXml(response, retrievedBuckets);
+                    return retrievedBuckets.getBuckets().iterator();
                 }
                 parseError(response);
             } finally {
@@ -596,7 +601,7 @@ public class Client {
     /**
      * Test whether a bucket exists and the user has at least read access
      *
-     * @param bucket bucket to test
+     * @param bucket bucket to test for existence and access
      * @return true if the bucket exists and the user has at least read access
      * @throws IOException
      * @throws ClientException
@@ -614,9 +619,9 @@ public class Client {
     }
 
     /**
-     * @param bucket
-     * @throws IOException
-     * @throws ClientException
+     * @param bucket bucket to create
+     * @throws IOException     on connection error
+     * @throws ClientException on failure from server
      */
     public void makeBucket(String bucket) throws IOException, ClientException {
         this.makeBucket(bucket, Acl.PRIVATE);
@@ -627,8 +632,8 @@ public class Client {
      *
      * @param bucket bucket to create
      * @param acl    canned acl
-     * @throws IOException
-     * @throws ClientException
+     * @throws IOException     on connection error
+     * @throws ClientException on failure from server
      */
     public void makeBucket(String bucket, Acl acl) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -828,7 +833,7 @@ public class Client {
      * @param data        Data to upload
      * @throws IOException     on network failure
      * @throws ClientException
-     * @see #listActiveMultipartUploads(String)
+     * @see #listAllUnfinishedUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      */
     public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, ClientException {
@@ -839,9 +844,9 @@ public class Client {
 
         if (size > PART_SIZE) {
             // check if multipart exists
-            MinioIterator<Upload> multipartUploads = listActiveMultipartUploads(bucket, key);
+            Iterator<Result<Upload>> multipartUploads = listAllUnfinishedUploads(bucket, key);
             while (multipartUploads.hasNext()) {
-                Upload upload = multipartUploads.next();
+                Upload upload = multipartUploads.next().getResult();
                 if (upload.getKey().equals(key)) {
                     uploadID = upload.getUploadID();
                 }
@@ -862,7 +867,7 @@ public class Client {
             long objectLength = 0;
             List<String> parts = new LinkedList<String>();
             int part = 1;
-            MinioIterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
+            Iterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
             while (objectParts.hasNext()) {
                 Part curPart = objectParts.next();
                 long curSize = curPart.getSize();
@@ -899,51 +904,52 @@ public class Client {
      * @param bucket bucket to list active multipart uploads
      * @return list of active multipart uploads
      */
-    public MinioIterator<Upload> listActiveMultipartUploads(String bucket) {
-        return listActiveMultipartUploads(bucket, null);
+    public Iterator<Result<Upload>> listAllUnfinishedUploads(String bucket) {
+        return listAllUnfinishedUploads(bucket, null);
     }
 
     /**
-     * @param bucket
-     * @param prefix
-     * @return
+     * @param bucket bucket to list active uploads of
+     * @param prefix filter multipart upload keys by the given prefix
+     * @return a list of active multipart uploads starting with a given prefix
      */
-    public MinioIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) {
-        return new MinioIterator<Upload>() {
+    public Iterator<Result<Upload>> listAllUnfinishedUploads(final String bucket, final String prefix) {
+        return new MinioIterator<Result<Upload>>() {
             private boolean isComplete = false;
             private String keyMarker = null;
             private String uploadIdMarker;
 
             @Override
-            protected List<Upload> populate() throws ClientException, IOException {
+            protected List<Result<Upload>> populate() {
+                List<Result<Upload>> ret = new LinkedList<Result<Upload>>();
                 if (!isComplete) {
-                    ListMultipartUploadsResult result;
-                    result = listActiveMultipartUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
-                    if (result.isTruncated()) {
-                        keyMarker = result.getNextKeyMarker();
-                        uploadIdMarker = result.getNextUploadIDMarker();
-                    } else {
+                    ListMultipartUploadsResult uploadResult = null;
+                    try {
+                        uploadResult = listAllUnfinishedUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
+                        if (uploadResult.isTruncated()) {
+                            keyMarker = uploadResult.getNextKeyMarker();
+                            uploadIdMarker = uploadResult.getNextUploadIDMarker();
+                        } else {
+                            isComplete = true;
+                        }
+                        List<Upload> uploads = uploadResult.getUploads();
+                        for(Upload upload : uploads) {
+                            ret.add(new Result<Upload>(upload, null));
+                        }
+                    } catch (IOException e) {
+                        ret.add(new Result<Upload>(null, e));
+                        isComplete = true;
+                    } catch (ClientException e) {
+                        ret.add(new Result<Upload>(null, e));
                         isComplete = true;
                     }
-                    return result.getUploads();
                 }
-                return new LinkedList<Upload>();
+                return ret;
             }
         };
     }
 
-    /**
-     * @param bucket
-     * @param keyMarker
-     * @param uploadIDMarker
-     * @param prefix
-     * @param delimiter
-     * @param maxUploads
-     * @return
-     * @throws IOException
-     * @throws ClientException
-     */
-    private ListMultipartUploadsResult listActiveMultipartUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, ClientException {
+    private ListMultipartUploadsResult listAllUnfinishedUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
 
@@ -993,9 +999,9 @@ public class Client {
      * @throws ClientException
      */
     public void dropAllIncompleteUploads(String bucket) throws IOException, ClientException {
-        MinioIterator<Upload> uploads = listActiveMultipartUploads(bucket);
+        Iterator<Result<Upload>> uploads = listAllUnfinishedUploads(bucket);
         while (uploads.hasNext()) {
-            Upload upload = uploads.next();
+            Upload upload = uploads.next().getResult();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
         }
     }
@@ -1031,13 +1037,6 @@ public class Client {
         }
     }
 
-    /**
-     * @param bucket
-     * @param key
-     * @return
-     * @throws IOException
-     * @throws ClientException
-     */
     private String newMultipartUpload(String bucket, String key) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploads", "");
@@ -1057,14 +1056,6 @@ public class Client {
         throw new IOException();
     }
 
-    /**
-     * @param bucket
-     * @param key
-     * @param uploadID
-     * @param etags
-     * @throws IOException
-     * @throws ClientException
-     */
     private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
@@ -1098,13 +1089,7 @@ public class Client {
         }
     }
 
-    /**
-     * @param bucket
-     * @param key
-     * @param uploadID
-     * @return
-     */
-    public MinioIterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
+    private Iterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
         return new MinioIterator<Part>() {
             public int marker;
             private boolean isComplete = false;
@@ -1126,15 +1111,6 @@ public class Client {
         };
     }
 
-    /**
-     * @param bucket
-     * @param key
-     * @param uploadID
-     * @param partNumberMarker
-     * @return
-     * @throws IOException
-     * @throws ClientException
-     */
     private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
@@ -1161,15 +1137,6 @@ public class Client {
         throw new IOException();
     }
 
-    /**
-     * Abort an active multipart upload
-     *
-     * @param bucket   of multipart upload to abort
-     * @param key      of multipart upload to abort
-     * @param uploadID of multipart upload to abort
-     * @throws IOException     on connection failure
-     * @throws ClientException
-     */
     private void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException, ClientException {
         if (bucket == null) {
             throw new InternalClientException("Bucket cannot be null");
@@ -1203,50 +1170,26 @@ public class Client {
      *
      * @param bucket of multipart upload to drop
      * @param key    of multipart upload to drop
-     * @throws IOException     on connection failure
-     * @throws ClientException
+     * @throws IOException on connection failure
      */
     public void dropIncompleteUpload(String bucket, String key) throws IOException, ClientException {
-        MinioIterator<Upload> uploads = listActiveMultipartUploads(bucket, key);
+        Iterator<Result<Upload>> uploads = listAllUnfinishedUploads(bucket, key);
         while (uploads.hasNext()) {
-            Upload upload = uploads.next();
+            Upload upload = uploads.next().getResult();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
         }
     }
 
-    /**
-     * @param size of total object
-     * @return multipart size
-     */
     private int computePartSize(long size) {
         int minimumPartSize = PART_SIZE; // 5MB
         int partSize = (int) (size / 9999); // using 10000 may cause part size to become too small, and not fit the entire object in
         return Math.max(minimumPartSize, partSize);
     }
 
-    /**
-     * @param bucket      to put object
-     * @param key
-     * @param contentType
-     * @param data
-     * @throws IOException
-     * @throws ClientException
-     */
     private void putObject(String bucket, String key, String contentType, byte[] data) throws IOException, ClientException {
         putObject(bucket, key, contentType, data, "", 0);
     }
 
-    /**
-     * @param bucket      to put object to
-     * @param key         to put object to
-     * @param contentType of data
-     * @param data        to upload
-     * @param uploadId    of multipart upload, set to null if not a multipart upload
-     * @param partID      of multipart upload, set to 0 if not a multipart upload.
-     * @return string representing the returned etag
-     * @throws IOException
-     * @throws ClientException
-     */
     private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
