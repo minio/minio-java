@@ -17,12 +17,13 @@
 package io.minio.examples;
 
 import io.minio.client.Client;
-import io.minio.client.ExceptionIterator;
+import io.minio.client.MinioIterator;
 import io.minio.client.errors.ClientException;
 import io.minio.client.messages.Item;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 public class ExampleListObjects {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
@@ -38,7 +39,7 @@ public class ExampleListObjects {
         s3Client.addUserAgent("Example app", "0.1", "amd64");
 
         // list objects
-        ExceptionIterator<Item> myObjects = s3Client.listObjects("mybucket");
+        Iterator<Item> myObjects = s3Client.listObjects("mybucket");
         while (myObjects.hasNext()) {
             Item object = myObjects.next();
             System.out.println(object.getKey());

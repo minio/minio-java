@@ -194,7 +194,7 @@ public class RequestSigner implements HttpExecuteInterceptor {
         if (!rawQuery.equals("")) {
             String[] querySplit = rawQuery.split("&");
             for (int i = 0; i < querySplit.length; i++) {
-                if(querySplit[i].contains("=")) {
+                if (querySplit[i].contains("=")) {
                     String[] split = querySplit[i].split("=", 2);
                     try {
                         split[1] = URLEncoder.encode(split[1], "UTF-8");
