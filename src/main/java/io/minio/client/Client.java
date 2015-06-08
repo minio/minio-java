@@ -320,9 +320,7 @@ public class Client {
         pathParts.add("");
         pathParts.add(bucket);
         String[] keySplit = key.split("/");
-        for (String s : keySplit) {
-            pathParts.add(s);
-        }
+        Collections.addAll(pathParts, keySplit);
 
         // add the path to the url and return
         url.setPathParts(pathParts);
@@ -440,23 +438,27 @@ public class Client {
     }
 
     /**
-     * @param bucket
-     * @param prefix
-     * @return
+     * listObjects is a wrapper around listObjects(bucket, prefix, true)
+     * @param bucket to list objects of
+     * @param prefix filters the list of objects to include only those that start with prefix
+     * @return an iterator of Items.
+     * @see #listObjects(String, String, boolean)
      */
-    public ExceptionIterator<Item> listObjects(final String bucket, final String prefix) {
+    public Iterator<Item> listObjects(final String bucket, final String prefix) {
         // list all objects recursively
         return listObjects(bucket, prefix, true);
     }
 
     /**
-     * @param bucket
-     * @param prefix
-     * @param recursive
-     * @return
+     * @param bucket    bucket to list objects from
+     * @param prefix    filters all objects returned where each object must begin with the given prefix
+     * @param recursive when false, emulates a directory structure where each listing returned is either a full object
+     *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
+     *                  '/' will be merged into one entry.
+     * @return an iterator of Items.
      */
-    public ExceptionIterator<Item> listObjects(final String bucket, final String prefix, final boolean recursive) {
-        return new ExceptionIterator<Item>() {
+    public Iterator<Item> listObjects(final String bucket, final String prefix, final boolean recursive) {
+        return new MinioIterator<Item>() {
             private String marker = null;
             private boolean isComplete = false;
 
@@ -482,15 +484,16 @@ public class Client {
     }
 
     /**
-     * @param bucket
-     * @return
+     * listObjects is a wrapper around listObjects(bucket, null, true)
+     * @param bucket    is the bucket to list objects from
+     * @see #listObjects(String, String, boolean)
      */
-    public ExceptionIterator<Item> listObjects(final String bucket) {
+    public Iterator<Item> listObjects(final String bucket) {
         return listObjects(bucket, null);
     }
 
     /**
-     * @param bucket
+     * @param bucket    is the bucket to list objects from
      * @param marker    is similar to a bookmark, returns objects in alphabetical order starting from the marker
      * @param prefix    filters results, result must contain the given prefix
      * @param delimiter will limit results to unique entries with keys truncated at the first instance of the delimiter
@@ -836,7 +839,7 @@ public class Client {
 
         if (size > PART_SIZE) {
             // check if multipart exists
-            ExceptionIterator<Upload> multipartUploads = listActiveMultipartUploads(bucket, key);
+            MinioIterator<Upload> multipartUploads = listActiveMultipartUploads(bucket, key);
             while (multipartUploads.hasNext()) {
                 Upload upload = multipartUploads.next();
                 if (upload.getKey().equals(key)) {
@@ -859,7 +862,7 @@ public class Client {
             long objectLength = 0;
             List<String> parts = new LinkedList<String>();
             int part = 1;
-            ExceptionIterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
+            MinioIterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
             while (objectParts.hasNext()) {
                 Part curPart = objectParts.next();
                 long curSize = curPart.getSize();
@@ -896,7 +899,7 @@ public class Client {
      * @param bucket bucket to list active multipart uploads
      * @return list of active multipart uploads
      */
-    public ExceptionIterator<Upload> listActiveMultipartUploads(String bucket) {
+    public MinioIterator<Upload> listActiveMultipartUploads(String bucket) {
         return listActiveMultipartUploads(bucket, null);
     }
 
@@ -905,8 +908,8 @@ public class Client {
      * @param prefix
      * @return
      */
-    public ExceptionIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) {
-        return new ExceptionIterator<Upload>() {
+    public MinioIterator<Upload> listActiveMultipartUploads(final String bucket, final String prefix) {
+        return new MinioIterator<Upload>() {
             private boolean isComplete = false;
             private String keyMarker = null;
             private String uploadIdMarker;
@@ -990,7 +993,7 @@ public class Client {
      * @throws ClientException
      */
     public void dropAllIncompleteUploads(String bucket) throws IOException, ClientException {
-        ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket);
+        MinioIterator<Upload> uploads = listActiveMultipartUploads(bucket);
         while (uploads.hasNext()) {
             Upload upload = uploads.next();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
@@ -1101,8 +1104,8 @@ public class Client {
      * @param uploadID
      * @return
      */
-    public ExceptionIterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
-        return new ExceptionIterator<Part>() {
+    public MinioIterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
+        return new MinioIterator<Part>() {
             public int marker;
             private boolean isComplete = false;
 
@@ -1204,7 +1207,7 @@ public class Client {
      * @throws ClientException
      */
     public void dropIncompleteUpload(String bucket, String key) throws IOException, ClientException {
-        ExceptionIterator<Upload> uploads = listActiveMultipartUploads(bucket, key);
+        MinioIterator<Upload> uploads = listActiveMultipartUploads(bucket, key);
         while (uploads.hasNext()) {
             Upload upload = uploads.next();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
