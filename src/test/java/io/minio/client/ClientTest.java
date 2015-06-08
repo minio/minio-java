@@ -240,9 +240,9 @@ public class ClientTest {
 
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        Iterator<Item> bucket = client.listObjects("bucket");
+        Iterator<Result<Item>> objectsInBucket = client.listObjects("bucket");
 
-        Item item = bucket.next();
+        Item item = objectsInBucket.next().getResult();
         assertEquals("key", item.getKey());
         assertEquals("2015-05-05T02:21:15.716Z", item.getLastModified());
         assertEquals(11, item.getSize());

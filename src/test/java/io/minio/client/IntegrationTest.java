@@ -107,12 +107,10 @@ public class IntegrationTest {
             largeObject[i] = 'a';
         }
         client.enableLogging();
-        Iterator<Upload> examplebucket = client.listActiveMultipartUploads("examplebucket");
-        System.out.println("Foo:");
-        System.out.println(examplebucket.next());
-        System.out.println(":Bar");
+        Iterator<Result<Upload>> examplebucket = client.listAllUnfinishedUploads("examplebucket");
+        System.out.println(examplebucket.next().getResult());
         client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length, new ByteArrayInputStream(largeObject));
-        examplebucket = client.listActiveMultipartUploads("examplebucket");
+        examplebucket = client.listAllUnfinishedUploads("examplebucket");
         System.out.println(examplebucket.hasNext());
     }
 

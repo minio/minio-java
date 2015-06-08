@@ -17,7 +17,7 @@
 package io.minio.examples;
 
 import io.minio.client.Client;
-import io.minio.client.MinioIterator;
+import io.minio.client.Result;
 import io.minio.client.errors.ClientException;
 import io.minio.client.messages.Item;
 import org.xmlpull.v1.XmlPullParserException;
@@ -39,10 +39,11 @@ public class ExampleListObjects {
         s3Client.addUserAgent("Example app", "0.1", "amd64");
 
         // list objects
-        Iterator<Item> myObjects = s3Client.listObjects("mybucket");
+        Iterator<Result<Item>> myObjects = s3Client.listObjects("mybucket");
         while (myObjects.hasNext()) {
-            Item object = myObjects.next();
-            System.out.println(object.getKey());
+            Result<Item> result = myObjects.next();
+            Item object = result.getResult();
+            System.out.println(object);
         }
     }
 }
