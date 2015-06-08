@@ -923,7 +923,7 @@ public class Client {
             protected List<Result<Upload>> populate() {
                 List<Result<Upload>> ret = new LinkedList<Result<Upload>>();
                 if (!isComplete) {
-                    ListMultipartUploadsResult uploadResult = null;
+                    ListMultipartUploadsResult uploadResult;
                     try {
                         uploadResult = listAllUnfinishedUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
                         if (uploadResult.isTruncated()) {
@@ -933,7 +933,7 @@ public class Client {
                             isComplete = true;
                         }
                         List<Upload> uploads = uploadResult.getUploads();
-                        for(Upload upload : uploads) {
+                        for (Upload upload : uploads) {
                             ret.add(new Result<Upload>(upload, null));
                         }
                     } catch (IOException e) {
@@ -1223,10 +1223,6 @@ public class Client {
         throw new IOException();
     }
 
-    /**
-     * @param data to calculate sum for
-     * @return md5sum
-     */
     private byte[] calculateMd5sum(byte[] data) {
         byte[] md5sum;
         try {
@@ -1242,12 +1238,6 @@ public class Client {
         return md5sum;
     }
 
-    /**
-     * @param size of data to read
-     * @param data to read from
-     * @return byte array of read data
-     * @throws IOException
-     */
     private byte[] readData(int size, InputStream data) throws IOException {
         int amountRead = 0;
         byte[] fullData = new byte[size];
