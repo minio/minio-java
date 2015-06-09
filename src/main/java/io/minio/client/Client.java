@@ -722,7 +722,7 @@ public class Client {
         switch (accessControlList.size()) {
             case 1:
                 for (Grant grant : accessControlList) {
-                    if (grant.getGrantee().getURI() == null && grant.getPermission().equals("FULL_CONTROL")) {
+                    if (grant.getGrantee().getURI() == null && "FULL_CONTROL".equals(grant.getPermission())) {
                         acl = Acl.PRIVATE;
                         break;
                     }
@@ -730,13 +730,13 @@ public class Client {
                 break;
             case 2:
                 for (Grant grant : accessControlList) {
-                    if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AuthenticatedUsers") &&
-                            grant.getPermission().equals("READ")) {
+                    if ("http://acs.amazonaws.com/groups/global/AuthenticatedUsers".equals(grant.getGrantee().getURI()) &&
+                            "READ".equals(grant.getPermission())) {
                         acl = Acl.AUTHENTICATED_READ;
                         break;
                     }
-                    if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
-                            grant.getPermission().equals("READ")) {
+                    if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.getGrantee().getURI()) &&
+                            "READ".equals(grant.getPermission())) {
                         acl = Acl.PUBLIC_READ;
                         break;
                     }
@@ -744,8 +744,8 @@ public class Client {
                 break;
             case 3:
                 for (Grant grant : accessControlList) {
-                    if (grant.getGrantee().getURI().equals("http://acs.amazonaws.com/groups/global/AllUsers") &&
-                            grant.getPermission().equals("WRITE")) {
+                    if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.getGrantee().getURI()) &&
+                            "WRITE".equals(grant.getPermission())) {
                         acl = Acl.PUBLIC_READ_WRITE;
                         break;
                     }

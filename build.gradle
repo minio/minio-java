@@ -55,6 +55,7 @@ dependencies {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 if(!org.gradle.internal.jvm.Jvm.current().toString().startsWith("1.6.0_")){
