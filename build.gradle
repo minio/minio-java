@@ -35,11 +35,10 @@ if(project.properties.containsKey('ossrhPassword')) {
 
 group = 'io.minio'
 archivesBaseName = 'minio'
-version = '0.0.2'
+version = '0.1.0'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
-
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
@@ -133,4 +132,3 @@ uploadArchives {
         }
     }
 }
-
