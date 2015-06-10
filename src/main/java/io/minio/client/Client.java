@@ -93,7 +93,7 @@ public class Client {
     // Secret key to sign all requests with
     private String secretKey;
     // user agent to tag all requests with
-    private String userAgent = "minio-java/0.0.1" + " (" + System.getProperty("os.name") + ", " + System.getProperty("os.arch") + ")";
+    private String userAgent = "minio-java/0.1.0" + " (" + System.getProperty("os.name") + "; " + System.getProperty("os.arch") + ")";
 
     // Don't allow users to instantiate clients themselves, since it is bad form to throw exceptions in constructors.
     // Use Client.getClient instead
