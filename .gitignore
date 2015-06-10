@@ -19,5 +19,6 @@ hs_err_pid*
 
 # IDEA build scripts
 /.idea/
+*.iml
 
 dist/
