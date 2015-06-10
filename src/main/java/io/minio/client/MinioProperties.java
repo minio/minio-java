@@ -22,9 +22,6 @@ import java.util.Enumeration;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-/**
- * Created by fkautz on 6/10/15.
- */
 enum MinioProperties {
     INSTANCE;
     private static String versionString = "Minio-Client-Java-Version";
