@@ -32,9 +32,6 @@ public class ExampleListBuckets {
         // play.minio.io is s3 compatible object storage
         Client s3Client = Client.getClient("https://s3.amazonaws.com");
 
-        // Set a user agent for your app
-        s3Client.addUserAgent("Example app", "0.1", "amd64");
-
         // list buckets
         Iterator<Bucket> bucketList = s3Client.listBuckets();
         while (bucketList.hasNext()) {

@@ -35,9 +35,6 @@ public class ExampleListObjects {
         // Set access and secret keys
         s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set a user agent for your app
-        s3Client.addUserAgent("Example app", "0.1", "amd64");
-
         // list objects
         Iterator<Result<Item>> myObjects = s3Client.listObjects("mybucket");
         while (myObjects.hasNext()) {

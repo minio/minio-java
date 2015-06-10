@@ -33,9 +33,6 @@ public class ExampleStatObject {
         // Set access and secret keys
         s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set a user agent for your app
-        s3Client.addUserAgent("Example app", "0.1", "amd64");
-
         // stat an object
         ObjectStat objectStat = s3Client.statObject("mybucket", "my/object");
         System.out.println(objectStat);
