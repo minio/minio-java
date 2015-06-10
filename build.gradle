@@ -134,3 +134,8 @@ uploadArchives {
     }
 }
 
+jar {
+    manifest {
+        attributes("Minio-Client-Java-Version": version)
+    }
+}
