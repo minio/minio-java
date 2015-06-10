@@ -21,8 +21,8 @@ import io.minio.client.errors.ClientException;
 import java.io.IOException;
 
 public class Result<T> {
-    private T t;
-    private Exception e;
+    private final T t;
+    private final Exception e;
 
     public Result(T t, Exception e) {
         this.t = t;
