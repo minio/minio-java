@@ -477,13 +477,13 @@ public class Client {
                         listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
                         for (Item item : listBucketResult.getContents()) {
                             items.add(new Result<Item>(item, null));
-                            if(listBucketResult.isTruncated()) {
+                            if (listBucketResult.isTruncated()) {
                                 marker = item.getKey();
                             }
                         }
                         if (listBucketResult.isTruncated() && delimiter != null) {
                             marker = listBucketResult.getNextMarker();
-                        } else if(!listBucketResult.isTruncated()){
+                        } else if (!listBucketResult.isTruncated()) {
                             isComplete = true;
                         }
                     } catch (IOException e) {

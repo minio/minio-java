@@ -23,18 +23,19 @@ import java.io.IOException;
 public class Result<T> {
     private T t;
     private Exception e;
+
     public Result(T t, Exception e) {
         this.t = t;
         this.e = e;
     }
 
     public T getResult() throws IOException, ClientException {
-        if(e != null) {
-            if(e instanceof IOException) {
-                throw (IOException)e;
+        if (e != null) {
+            if (e instanceof IOException) {
+                throw (IOException) e;
             }
-            if(e instanceof ClientException) {
-                throw (ClientException)e;
+            if (e instanceof ClientException) {
+                throw (ClientException) e;
             }
         }
         return t;
