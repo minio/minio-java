@@ -34,10 +34,10 @@ public class ExamplePutObject {
         s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         StringBuilder builder = new StringBuilder();
-        for (int i=0; i < 11*1024*1024; i++) {
+        for (int i = 0; i < 11 * 1024 * 1024; i++) {
             builder.append('a');
         }
         // create object
-        s3Client.putObject("mybucket", "my/object", "application/octet-stream", 11*1024*1024, new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
+        s3Client.putObject("mybucket", "my/object", "application/octet-stream", 11 * 1024 * 1024, new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
     }
 }

@@ -51,7 +51,7 @@ public class ObjectStat {
     }
 
     public String getMd5sum() {
-        if(md5sum != null) {
+        if (md5sum != null) {
             return md5sum.replaceAll("\"", "");
         }
         return null;
