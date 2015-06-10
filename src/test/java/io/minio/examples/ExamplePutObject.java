@@ -33,9 +33,6 @@ public class ExamplePutObject {
         // Set access and secret keys
         s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set a user agent for your app
-        s3Client.addUserAgent("Example app", "0.1", "amd64");
-
         StringBuilder builder = new StringBuilder();
         for (int i=0; i < 11*1024*1024; i++) {
             builder.append('a');

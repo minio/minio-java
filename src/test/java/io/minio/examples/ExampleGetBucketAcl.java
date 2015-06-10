@@ -33,9 +33,6 @@ public class ExampleGetBucketAcl {
         // Set access and secret keys
         s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set a user agent for your app
-        s3Client.addUserAgent("Example app", "0.1", "amd64");
-
         // get bucket canned acl
         Acl acl = s3Client.getBucketACL("mybucket");
         System.out.println(acl);

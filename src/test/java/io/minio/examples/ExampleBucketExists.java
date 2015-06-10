@@ -31,9 +31,6 @@ public class ExampleBucketExists {
         // Set access and secret keys
         s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set a user agent for your app
-        s3Client.addUserAgent("Example app", "0.1", "amd64");
-
         // recursively drop every in progress active multipart upload sessions for a given bucket
         boolean bucketExists = s3Client.bucketExists("mymultipartbucket");
         System.out.println(bucketExists);

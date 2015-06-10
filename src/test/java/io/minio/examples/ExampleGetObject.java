@@ -32,9 +32,6 @@ public class ExampleGetObject {
         // play.minio.io is s3 compatible object storage
         Client s3Client = Client.getClient("https://s3.amazonaws.com");
 
-        // Set a user agent for your app
-        s3Client.addUserAgent("Example app", "0.1", "amd64");
-
         // get object
         InputStream object = s3Client.getObject("mybucket", "myobject");
         try {
