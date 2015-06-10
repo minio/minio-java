@@ -2,16 +2,15 @@
 
 ## Install from maven
 
---- TODO ---
-
-## Install from source
-
-```sh
-$ git clone https://github.com/minio/minio-java
-$ ./gradlew jar
-$ ls build/libs/
-[2015-06-01 00:26:39 PDT] 1.6MiB minio-java-1.0.jar
+```xml
+<dependency>
+    <groupId>io.minio</groupId>
+    <artifactId>minio</artifactId>
+    <version>0.0.2</version>
+</dependency>
 ```
+
+* [Maven Central](https://search.maven.org/#search%7Cga%7C1%7Ca%3A%22minio%22)
 
 ## Example
 ```java
