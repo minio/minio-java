@@ -1027,6 +1027,7 @@ public class Client {
      * @param version  version of your application
      * @param comments optional list of comments
      */
+    @SuppressWarnings("unused")
     public void addUserAgent(String name, String version, String... comments) {
         if (name != null && version != null) {
             String newUserAgent = name.trim() + "/" + version.trim() + " (";

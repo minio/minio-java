@@ -31,6 +31,7 @@ public class ListAllMyBucketsResult extends XmlEntity {
         this.name = "ListAllMyBucketsResult";
     }
 
+    @SuppressWarnings("unused")
     public Owner getOwner() {
         return owner;
     }

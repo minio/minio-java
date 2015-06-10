@@ -45,6 +45,7 @@ import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("unused")
 public class ClientTest {
     @Test()
     public void instantiateNewClient() throws MalformedURLException {
@@ -86,7 +87,7 @@ public class ClientTest {
     }
 
     @Test(expected = IOException.class)
-    public void getMissingObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ClientException {
+    public void getMissingObjectHeaders() throws IOException, ClientException {
         // Set up mock
         MockHttpTransport transport = new MockHttpTransport() {
             @Override

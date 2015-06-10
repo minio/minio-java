@@ -25,6 +25,7 @@ public class AccessControlList extends XmlEntity {
     @Key("Grant")
     private List<Grant> grant;
 
+    @SuppressWarnings("unused")
     public AccessControlList() {
         super();
         super.name = "AccessControlList";

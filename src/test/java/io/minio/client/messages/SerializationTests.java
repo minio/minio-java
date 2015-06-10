@@ -29,6 +29,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("unused")
 public class SerializationTests {
     @Test
     public void testListObjectsResponse() throws XmlPullParserException, IOException {

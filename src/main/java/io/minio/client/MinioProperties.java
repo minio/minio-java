@@ -24,8 +24,7 @@ import java.util.jar.Manifest;
 
 enum MinioProperties {
     INSTANCE;
-    private static String versionString = "Minio-Client-Java-Version";
-    String version = null;
+    private String version = null;
 
     public String getVersion() {
         if (version == null) {
@@ -36,6 +35,7 @@ enum MinioProperties {
                         while (resources.hasMoreElements()) {
                             Manifest manifest = new Manifest(resources.nextElement().openStream());
                             for (Object k : manifest.getMainAttributes().keySet()) {
+                                String versionString = "Minio-Client-Java-Version";
                                 if (k.toString().equals(versionString)) {
                                     version = manifest.getMainAttributes().getValue((Attributes.Name) k);
                                 }
