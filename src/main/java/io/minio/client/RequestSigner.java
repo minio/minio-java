@@ -54,7 +54,7 @@ class RequestSigner implements HttpExecuteInterceptor {
 
     }
 
-    public static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+    private static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         String formattedDate = date.toString(dateFormatyyyyMMdd);
         String dateKeyLine = "AWS4" + secretKey;
         byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));

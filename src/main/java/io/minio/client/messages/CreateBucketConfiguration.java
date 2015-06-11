@@ -27,6 +27,7 @@ public class CreateBucketConfiguration extends XmlEntity {
         super.name = "CreateBucketConfiguration";
     }
 
+    @SuppressWarnings("unused")
     public String getLocationConstraint() {
         return locationConstraint;
     }

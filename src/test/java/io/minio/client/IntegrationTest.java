@@ -32,6 +32,7 @@ import java.util.Iterator;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+@SuppressWarnings("unused")
 public class IntegrationTest {
 
     @Test
