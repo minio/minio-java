@@ -19,17 +19,19 @@ package io.minio.client;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 enum MinioProperties {
     INSTANCE;
-    private String version = null;
+    private final AtomicReference<String> version = new AtomicReference<String>(null);
 
     public String getVersion() {
-        if (version == null) {
+        String result = version.get();
+        if (result == null) {
             synchronized (INSTANCE) {
-                if (version == null) {
+                if (version.get() == null) {
                     try {
                         Enumeration<URL> resources = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
                         while (resources.hasMoreElements()) {
@@ -37,19 +39,20 @@ enum MinioProperties {
                             for (Object k : manifest.getMainAttributes().keySet()) {
                                 String versionString = "Minio-Client-Java-Version";
                                 if (k.toString().equals(versionString)) {
-                                    version = manifest.getMainAttributes().getValue((Attributes.Name) k);
+                                    version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
                                 }
                             }
                         }
-                        if (version == null) {
-                            version = "dev";
+                        if (version.get() == null) {
+                            version.set("dev");
                         }
                     } catch (IOException e) {
-                        version = "unknown";
+                        version.set("unknown");
                     }
+                    result = version.get();
                 }
             }
         }
-        return version;
+        return result;
     }
 }
