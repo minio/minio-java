@@ -30,6 +30,7 @@ public class ErrorResponse extends XmlEntity {
     private String hostID;
     @Key("Resource")
     private String resource;
+    private String xAmzID2;
 
     public ErrorResponse() {
         super();
@@ -74,5 +75,13 @@ public class ErrorResponse extends XmlEntity {
 
     public void setResource(String resource) {
         this.resource = resource;
+    }
+
+    public String getxAmzID2() {
+        return xAmzID2;
+    }
+
+    public void setxAmzID2(String xAmzID2) {
+        this.xAmzID2 = xAmzID2;
     }
 }

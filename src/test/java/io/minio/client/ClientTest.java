@@ -22,10 +22,7 @@ import com.google.api.client.testing.http.MockHttpTransport;
 import com.google.api.client.testing.http.MockLowLevelHttpRequest;
 import com.google.api.client.testing.http.MockLowLevelHttpResponse;
 import io.minio.client.acl.Acl;
-import io.minio.client.errors.BucketExistsException;
-import io.minio.client.errors.ClientException;
-import io.minio.client.errors.InvalidAclNameException;
-import io.minio.client.errors.ObjectExistsException;
+import io.minio.client.errors.*;
 import io.minio.client.messages.Bucket;
 import io.minio.client.messages.ErrorResponse;
 import io.minio.client.messages.Item;
@@ -74,19 +71,22 @@ public class ClientTest {
     @Test(expected = MalformedURLException.class)
     public void newClientWithPathFails() throws MalformedURLException {
         Client.getClient("http://example.com/path");
+        throw new RuntimeException("Expected exception did not fire");
     }
 
     @Test(expected = NullPointerException.class)
     public void newClientWithNullURLFails() throws MalformedURLException {
         Client.getClient((URL) null);
+        throw new RuntimeException("Expected exception did not fire");
     }
 
     @Test(expected = NullPointerException.class)
     public void newClientWithNullURLStringFails() throws MalformedURLException {
         Client.getClient((String) null);
+        throw new RuntimeException("Expected exception did not fire");
     }
 
-    @Test(expected = IOException.class)
+    @Test(expected = ObjectNotFoundException.class)
     public void getMissingObjectHeaders() throws IOException, ClientException {
         // Set up mock
         MockHttpTransport transport = new MockHttpTransport() {
@@ -108,9 +108,8 @@ public class ClientTest {
 
         Client client = Client.getClient("http://example.com:9000");
         client.setTransport(transport);
-        ObjectStat objectStatInfo = client.statObject("bucket", "key");
-        assertEquals("bucket", objectStatInfo.getBucket());
-        assertEquals("key", objectStatInfo.getKey());
+        client.statObject("bucket", "key");
+        throw new RuntimeException("Expected exception did not fire");
     }
 
     @Test
@@ -507,6 +506,7 @@ public class ClientTest {
         client.setTransport(transport);
         client.makeBucket("bucket");
         client.setBucketACL("bucket", null);
+        throw new RuntimeException("Expected exception did not fire");
     }
 
 
@@ -536,6 +536,7 @@ public class ClientTest {
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
         client.makeBucket("bucket", Acl.PUBLIC_READ);
+        throw new RuntimeException("Expected exception did not fire");
     }
 
     @Test
@@ -597,6 +598,7 @@ public class ClientTest {
         ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
 
         client.putObject("bucket", "key", "application/octet-stream", 11, data);
+        throw new RuntimeException("Expected exception did not fire");
     }
 
     @Test

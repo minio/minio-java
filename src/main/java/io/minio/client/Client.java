@@ -210,6 +210,34 @@ public class Client {
 
         // if response.getContent is null, throw an IOException with status code in string
         if (response.getContent() == null) {
+            if(response.getStatusCode() == 404) {
+                ClientException e;
+                ErrorResponse errorResponse = new ErrorResponse();
+                String resource = response.getRequest().getUrl().getRawPath();
+                int pathLength = resource.split("/").length;
+                errorResponse.setResource(resource);
+                String amzId2 = String.valueOf(response.getHeaders().get("x-amz-id-2"));
+                if ("null".equals(amzId2)) {
+                    amzId2 = null;
+                }
+                String requestId = String.valueOf(response.getHeaders().get("x-amz-request-id"));
+                if ("null".equals(requestId)) {
+                    requestId = null;
+                }
+                errorResponse.setxAmzID2(amzId2);
+                errorResponse.setRequestID(requestId);
+                if(pathLength > 2) {
+                    errorResponse.setCode("NoSuchKey");
+                    e = new ObjectNotFoundException();
+                } else if(pathLength == 2) {
+                    errorResponse.setCode("NoSuchBucket");
+                    e = new BucketNotFoundException();
+                } else {
+                    e = new InternalClientException("404 without body resulted in path with less than two components");
+                }
+                e.setErrorResponse(errorResponse);
+                throw e;
+            }
             throw new IOException("Unsuccessful response from server without error: " + response.getStatusCode());
         }
 
