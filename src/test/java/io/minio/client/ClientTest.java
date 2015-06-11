@@ -86,6 +86,29 @@ public class ClientTest {
         throw new RuntimeException("Expected exception did not fire");
     }
 
+    @Test(expected = ForbiddenException.class)
+    public void testForbidden() throws IOException, ClientException {
+        // Set up mock
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.setStatusCode(403);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        Client client = Client.getClient("http://example.com:9000");
+        client.setTransport(transport);
+        client.statObject("bucket", "key");
+        throw new RuntimeException("Expected exception did not fire");
+    }
+
     @Test(expected = ObjectNotFoundException.class)
     public void getMissingObjectHeaders() throws IOException, ClientException {
         // Set up mock
@@ -96,10 +119,7 @@ public class ClientTest {
                     @Override
                     public LowLevelHttpResponse execute() throws IOException {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
-//                        response.addHeader("custom_header", "value");
                         response.setStatusCode(404);
-//                        response.setContentType(Xml.MEDIA_TYPE);
-                        //response.setContent("{\"error\":\"not found\"}");
                         return response;
                     }
                 };
