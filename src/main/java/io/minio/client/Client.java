@@ -642,7 +642,10 @@ public class Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         CreateBucketConfiguration config = new CreateBucketConfiguration();
-        config.setLocationConstraint(Regions.INSTANCE.getRegion(url.getHost()));
+        String region = Regions.INSTANCE.getRegion(url.getHost());
+        if(!"milkyway".equals(region)) {
+            config.setLocationConstraint(region);
+        }
 
         byte[] data = config.toString().getBytes("UTF-8");
         byte[] md5sum = calculateMd5sum(data);
