@@ -213,9 +213,6 @@ public class Client {
             if (response.getStatusCode() == 404 || response.getStatusCode() == 403) {
                 ClientException e;
                 ErrorResponse errorResponse = new ErrorResponse();
-                String resource = response.getRequest().getUrl().getRawPath();
-                int pathLength = resource.split("/").length;
-                errorResponse.setResource(resource);
                 String amzId2 = String.valueOf(response.getHeaders().get("x-amz-id-2"));
 
                 if ("null".equals(amzId2)) {
@@ -227,6 +224,15 @@ public class Client {
                 }
                 errorResponse.setxAmzID2(amzId2);
                 errorResponse.setRequestID(requestId);
+
+                String resource = response.getRequest().getUrl().getRawPath();
+                if (resource == null) {
+                    resource = "/";
+                }
+
+                int pathLength = resource.split("/").length;
+                errorResponse.setResource(resource);
+
                 if (response.getStatusCode() == 404) {
                     if (pathLength > 2) {
                         errorResponse.setCode("NoSuchKey");

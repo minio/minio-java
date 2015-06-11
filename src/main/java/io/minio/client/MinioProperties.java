@@ -33,13 +33,16 @@ enum MinioProperties {
             synchronized (INSTANCE) {
                 if (version.get() == null) {
                     try {
-                        Enumeration<URL> resources = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
-                        while (resources.hasMoreElements()) {
-                            Manifest manifest = new Manifest(resources.nextElement().openStream());
-                            for (Object k : manifest.getMainAttributes().keySet()) {
-                                String versionString = "Minio-Client-Java-Version";
-                                if (k.toString().equals(versionString)) {
-                                    version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
+                        ClassLoader classLoader = getClass().getClassLoader();
+                        if (classLoader != null) {
+                            Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
+                            while (resources.hasMoreElements()) {
+                                Manifest manifest = new Manifest(resources.nextElement().openStream());
+                                for (Object k : manifest.getMainAttributes().keySet()) {
+                                    String versionString = "Minio-Client-Java-Version";
+                                    if (k.toString().equals(versionString)) {
+                                        version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
+                                    }
                                 }
                             }
                         }

@@ -18,6 +18,7 @@ package io.minio.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class ListAllMyBucketsResult extends XmlEntity {
@@ -42,7 +43,7 @@ public class ListAllMyBucketsResult extends XmlEntity {
 
     public List<Bucket> getBuckets() {
         if (buckets == null) {
-            return null;
+            return new LinkedList<Bucket>();
         }
         return buckets.getBucket();
     }
