@@ -9,8 +9,7 @@
     <version>0.0.2</version>
 </dependency>
 ```
-
-* [Maven Central](https://search.maven.org/#search%7Cga%7C1%7Ca%3A%22minio%22)
+[![Maven](https://img.shields.io/maven-central/v/io.minio/minio.svg)](https://search.maven.org/#search%7Cga%7C1%7Ca%3A%22minio%22)
 
 ## Example
 ```java
@@ -23,16 +22,11 @@ import java.io.IOException;
 
 public class HelloListBuckets {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Hello app");
-
         // Set s3 endpoint, region is calculated automatically
         Client s3client = Client.getClient("https://s3.amazonaws.com");
 
         // Set access and secret keys
         s3client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-        // Set a user agent for your app
-        s3client.addUserAgent("Example app", "0.1", "amd64");
 
         // list buckets
         Iterator<Bucket> bucketList = s3Client.listBuckets();
