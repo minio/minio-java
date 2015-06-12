@@ -286,7 +286,10 @@ class RequestSigner implements HttpExecuteInterceptor {
         }
 
         for (String s : request.getHeaders().getUnknownKeys().keySet()) {
-            map.put(s.toLowerCase().trim(), request.getHeaders().getFirstHeaderStringValue(s).trim());
+            String val = request.getHeaders().getFirstHeaderStringValue(s);
+            if (val != null) {
+                map.put(s.toLowerCase().trim(), val.trim());
+            }
         }
 
         for (Map.Entry<String, String> e : map.entrySet()) {
