@@ -677,7 +677,7 @@ public class Client {
 
         CreateBucketConfiguration config = new CreateBucketConfiguration();
         String region = Regions.INSTANCE.getRegion(url.getHost());
-        if (!"milkyway".equals(region)) {
+        if (!"milkyway".equals(region) || !"us-east-1".equals(region)) {
             config.setLocationConstraint(region);
         }
 
