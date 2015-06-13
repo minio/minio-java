@@ -171,8 +171,8 @@ public class Client {
      * @param bucket object's bucket
      * @param key    object's key
      * @return Populated object metadata
-     * @throws IOException
-     * @throws ClientException
+     * @throws IOException     upon connection failure
+     * @throws ClientException upon failure from server
      * @see ObjectStat
      */
     public ObjectStat statObject(String bucket, String key) throws IOException, ClientException {
@@ -317,7 +317,7 @@ public class Client {
     }
 
     private HttpRequest getHttpRequest(String method, GenericUrl url, final byte[] data) throws IOException, InternalClientException {
-        if (method == null || method.trim().equals("")) {
+        if (method == null || "".equals(method.trim())) {
             throw new InternalClientException("Method should be populated");
         }
         if (url == null) {
@@ -392,8 +392,8 @@ public class Client {
      * @param bucket object's bucket
      * @param key    object's key
      * @return an InputStream containing the object. Close the InputStream when done.
-     * @throws IOException     if transport disconnects
-     * @throws ClientException
+     * @throws IOException     upon connection error
+     * @throws ClientException upon failure from server
      */
     public InputStream getObject(String bucket, String key) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -421,8 +421,8 @@ public class Client {
      *
      * @param bucket object's bucket
      * @param key    object's key
-     * @throws IOException     if the connection fails
-     * @throws ClientException
+     * @throws IOException     upon connection error
+     * @throws ClientException upon failure from server
      */
     public void removeObject(String bucket, String key) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -451,8 +451,8 @@ public class Client {
      * @param offsetStart Offset from the start of the object.
      * @param length      Length of bytes to retrieve.
      * @return an InputStream containing the object. Close the InputStream when done.
-     * @throws IOException     if the connection does not succeed
-     * @throws ClientException
+     * @throws IOException     upon connection failure
+     * @throws ClientException upon failure from server
      */
     public InputStream getObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
@@ -556,11 +556,10 @@ public class Client {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         // max keys limits the number of keys returned, max limit is 1000
-        if (maxKeys > 0 && maxKeys <= 1000) {
-            url.set("max-keys", maxKeys);
-        } else {
-            url.set("max-keys", 1000);
+        if (maxKeys >= 1000 || maxKeys < 0) {
+                maxKeys = 1000;
         }
+        url.set("max-keys", maxKeys);
 
         // marker is similar to a book mark, returns objects in alphabetical order starting from the marker
         if (marker != null) {
@@ -615,8 +614,8 @@ public class Client {
      * List buckets owned by the current user.
      *
      * @return a list of buckets owned by the current user
-     * @throws IOException     if the connection fails
-     * @throws ClientException
+     * @throws IOException      upon connection failure
+     * @throws ClientException  upon failure from server
      */
     public Iterator<Bucket> listBuckets() throws IOException, ClientException {
         GenericUrl url = new GenericUrl(this.url);
@@ -646,8 +645,8 @@ public class Client {
      *
      * @param bucket bucket to test for existence and access
      * @return true if the bucket exists and the user has at least read access
-     * @throws IOException
-     * @throws ClientException
+     * @throws IOException     upon connection error
+     * @throws ClientException upon failure from server
      */
     public boolean bucketExists(String bucket) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -663,8 +662,8 @@ public class Client {
 
     /**
      * @param bucket bucket to create
-     * @throws IOException     on connection error
-     * @throws ClientException on failure from server
+     * @throws IOException     upon connection error
+     * @throws ClientException upon failure from server
      */
     public void makeBucket(String bucket) throws IOException, ClientException {
         this.makeBucket(bucket, Acl.PRIVATE);
@@ -675,14 +674,17 @@ public class Client {
      *
      * @param bucket bucket to create
      * @param acl    canned acl
-     * @throws IOException     on connection error
-     * @throws ClientException on failure from server
+     * @throws IOException     upon connection error
+     * @throws ClientException upon failure from server
      */
     public void makeBucket(String bucket, Acl acl) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
 
         CreateBucketConfiguration config = new CreateBucketConfiguration();
         String region = Regions.INSTANCE.getRegion(url.getHost());
+        // ``us-east-1`` is not a valid location constraint according to amazon, so we skip it
+        // Valid constraints are
+        // [ us-west-1 | us-west-2 | EU or eu-west-1 | eu-central-1 | ap-southeast-1 | ap-northeast-1 | ap-southeast-2 | sa-east-1 ]
         if (!("milkyway".equals(region) || "us-east-1".equals(region))) {
             config.setLocationConstraint(region);
         }
@@ -690,14 +692,12 @@ public class Client {
         byte[] data = config.toString().getBytes("UTF-8");
         byte[] md5sum = calculateMd5sum(data);
 
-
         HttpRequest request = getHttpRequest("PUT", url, data);
 
         if (acl == null) {
             acl = Acl.PRIVATE;
         }
         request.getHeaders().set("x-amz-acl", acl.toString());
-
 
         if (md5sum != null) {
             String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
@@ -730,8 +730,8 @@ public class Client {
      * </p>
      *
      * @param bucket bucket to create
-     * @throws IOException
-     * @throws ClientException
+     * @throws IOException upon connection error
+     * @throws ClientException upon failure from server
      */
     public void removeBucket(String bucket) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
@@ -755,8 +755,8 @@ public class Client {
      * Get the bucket's ACL.
      *
      * @param bucket bucket to get ACL on
-     * @throws IOException
-     * @throws ClientException
+     * @throws IOException upon connection error
+     * @throws ClientException upon failure from server
      */
     public Acl getBucketACL(String bucket) throws IOException, ClientException {
         AccessControlPolicy policy = this.getAccessPolicy(bucket);
@@ -829,8 +829,8 @@ public class Client {
      *
      * @param bucket bucket to set ACL on
      * @param acl    canned acl
-     * @throws IOException
-     * @throws ClientException
+     * @throws IOException upon connection error
+     * @throws ClientException upon failure from server
      */
     public void setBucketACL(String bucket, Acl acl) throws IOException, ClientException {
         if (acl == null) {
@@ -877,8 +877,8 @@ public class Client {
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
      * @param data        Data to upload
-     * @throws IOException     on network failure
-     * @throws ClientException
+     * @throws IOException     upon connection error
+     * @throws ClientException upon failure from server
      * @see #listAllUnfinishedUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      */
@@ -886,7 +886,6 @@ public class Client {
         boolean isMultipart = false;
         int partSize = 0;
         String uploadID = null;
-
 
         if (size > PART_SIZE) {
             // check if multipart exists
@@ -904,7 +903,6 @@ public class Client {
                 uploadID = newMultipartUpload(bucket, key);
             }
         }
-
 
         if (!isMultipart) {
             byte[] dataArray = readData((int) size, data);
@@ -1000,11 +998,10 @@ public class Client {
         url.set("uploads", "");
 
         // max uploads limits the number of uploads returned, max limit is 1000
-        if (maxUploads > 0 && maxUploads <= 1000) {
-            url.set("max-uploads", maxUploads);
-        } else {
-            url.set("max-uploads", 1000);
+        if (maxUploads >= 1000 || maxUploads < 0) {
+            maxUploads = 1000;
         }
+        url.set("max-uploads", maxUploads);
         if (prefix != null) {
             url.set("prefix", prefix);
         }
@@ -1041,8 +1038,8 @@ public class Client {
      * Drop all active multipart uploads in a given bucket.
      *
      * @param bucket to drop all active multipart uploads in
-     * @throws IOException     on connection failure
-     * @throws ClientException
+     * @throws IOException     upon connection failure
+     * @throws ClientException upon failure from server
      */
     public void dropAllIncompleteUploads(String bucket) throws IOException, ClientException {
         Iterator<Result<Upload>> uploads = listAllUnfinishedUploads(bucket);
@@ -1217,7 +1214,8 @@ public class Client {
      *
      * @param bucket of multipart upload to drop
      * @param key    of multipart upload to drop
-     * @throws IOException on connection failure
+     * @throws IOException upon connection failure
+     * @throws ClientException upon failure from server
      */
     public void dropIncompleteUpload(String bucket, String key) throws IOException, ClientException {
         Iterator<Result<Upload>> uploads = listAllUnfinishedUploads(bucket, key);
