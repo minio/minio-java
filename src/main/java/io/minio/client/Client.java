@@ -113,7 +113,9 @@ public class Client {
      *            Invalid:
      *            * https://s3-us-west-2.amazonaws.com/example/
      *            * https://s3-us-west-2.amazonaws.com/example/object
+     *
      * @return an object storage client backed by an S3 compatible server.
+     *
      * @throws MalformedURLException malformed url
      * @see #getClient(String)
      */
@@ -145,7 +147,9 @@ public class Client {
 
     /**
      * @param url must be the full url to the object storage server, excluding both bucket or object paths.
+     *
      * @return an object storage client backed by an S3 compatible server.
+     *
      * @throws MalformedURLException malformed url
      * @see #getClient(URL url)
      */
@@ -170,7 +174,9 @@ public class Client {
      *
      * @param bucket object's bucket
      * @param key    object's key
+     *
      * @return Populated object metadata
+     *
      * @throws IOException     upon connection failure
      * @throws ClientException upon failure from server
      * @see ObjectStat
@@ -391,7 +397,9 @@ public class Client {
      *
      * @param bucket object's bucket
      * @param key    object's key
+     *
      * @return an InputStream containing the object. Close the InputStream when done.
+     *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      */
@@ -421,6 +429,7 @@ public class Client {
      *
      * @param bucket object's bucket
      * @param key    object's key
+     *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      */
@@ -450,7 +459,9 @@ public class Client {
      * @param key         object's key
      * @param offsetStart Offset from the start of the object.
      * @param length      Length of bytes to retrieve.
+     *
      * @return an InputStream containing the object. Close the InputStream when done.
+     *
      * @throws IOException     upon connection failure
      * @throws ClientException upon failure from server
      */
@@ -482,7 +493,9 @@ public class Client {
      *
      * @param bucket to list objects of
      * @param prefix filters the list of objects to include only those that start with prefix
+     *
      * @return an iterator of Items.
+     *
      * @see #listObjects(String, String, boolean)
      */
     public Iterator<Result<Item>> listObjects(final String bucket, final String prefix) {
@@ -496,6 +509,7 @@ public class Client {
      * @param recursive when false, emulates a directory structure where each listing returned is either a full object
      *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
      *                  '/' will be merged into one entry.
+     *
      * @return an iterator of Items.
      */
     public Iterator<Result<Item>> listObjects(final String bucket, final String prefix, final boolean recursive) {
@@ -546,7 +560,9 @@ public class Client {
      * listObjects is a wrapper around listObjects(bucket, null, true)
      *
      * @param bucket is the bucket to list objects from
+     *
      * @return an iterator of Items.
+     *
      * @see #listObjects(String, String, boolean)
      */
     public Iterator<Result<Item>> listObjects(final String bucket) {
@@ -558,7 +574,7 @@ public class Client {
 
         // max keys limits the number of keys returned, max limit is 1000
         if (maxKeys >= 1000 || maxKeys < 0) {
-                maxKeys = 1000;
+            maxKeys = 1000;
         }
         url.set("max-keys", maxKeys);
 
@@ -615,8 +631,9 @@ public class Client {
      * List buckets owned by the current user.
      *
      * @return a list of buckets owned by the current user
-     * @throws IOException      upon connection failure
-     * @throws ClientException  upon failure from server
+     *
+     * @throws IOException     upon connection failure
+     * @throws ClientException upon failure from server
      */
     public Iterator<Bucket> listBuckets() throws IOException, ClientException {
         GenericUrl url = new GenericUrl(this.url);
@@ -645,7 +662,9 @@ public class Client {
      * Test whether a bucket exists and the user has at least read access
      *
      * @param bucket bucket to test for existence and access
+     *
      * @return true if the bucket exists and the user has at least read access
+     *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      */
@@ -663,6 +682,7 @@ public class Client {
 
     /**
      * @param bucket bucket to create
+     *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      */
@@ -675,6 +695,7 @@ public class Client {
      *
      * @param bucket bucket to create
      * @param acl    canned acl
+     *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      */
@@ -731,7 +752,8 @@ public class Client {
      * </p>
      *
      * @param bucket bucket to create
-     * @throws IOException upon connection error
+     *
+     * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      */
     public void removeBucket(String bucket) throws IOException, ClientException {
@@ -756,9 +778,11 @@ public class Client {
      * Get the bucket's ACL.
      *
      * @param bucket bucket to get ACL on
-     * @throws IOException upon connection error
-     * @throws ClientException upon failure from server
+     *
      * @return Acl type
+     *
+     * @throws IOException     upon connection error
+     * @throws ClientException upon failure from server
      */
     public Acl getBucketACL(String bucket) throws IOException, ClientException {
         AccessControlPolicy policy = this.getAccessPolicy(bucket);
@@ -831,7 +855,8 @@ public class Client {
      *
      * @param bucket bucket to set ACL on
      * @param acl    canned acl
-     * @throws IOException upon connection error
+     *
+     * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      */
     public void setBucketACL(String bucket, Acl acl) throws IOException, ClientException {
@@ -879,6 +904,7 @@ public class Client {
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
      * @param data        Data to upload
+     *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      * @see #listAllUnfinishedUploads(String)
@@ -948,6 +974,7 @@ public class Client {
      * Lists all active multipart uploads in a bucket
      *
      * @param bucket bucket to list active multipart uploads
+     *
      * @return list of active multipart uploads
      */
     public Iterator<Result<Upload>> listAllUnfinishedUploads(String bucket) {
@@ -957,6 +984,7 @@ public class Client {
     /**
      * @param bucket bucket to list active uploads of
      * @param prefix filter multipart upload keys by the given prefix
+     *
      * @return a list of active multipart uploads starting with a given prefix
      */
     public Iterator<Result<Upload>> listAllUnfinishedUploads(final String bucket, final String prefix) {
@@ -1040,6 +1068,7 @@ public class Client {
      * Drop all active multipart uploads in a given bucket.
      *
      * @param bucket to drop all active multipart uploads in
+     *
      * @throws IOException     upon connection failure
      * @throws ClientException upon failure from server
      */
@@ -1216,7 +1245,8 @@ public class Client {
      *
      * @param bucket of multipart upload to drop
      * @param key    of multipart upload to drop
-     * @throws IOException upon connection failure
+     *
+     * @throws IOException     upon connection failure
      * @throws ClientException upon failure from server
      */
     public void dropIncompleteUpload(String bucket, String key) throws IOException, ClientException {
