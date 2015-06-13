@@ -903,14 +903,13 @@ public class Client {
      * @param key         Key of object
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
-     * @param data        Data to upload
-     *
+     * @param body        Data to upload
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      * @see #listAllUnfinishedUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      */
-    public void putObject(String bucket, String key, String contentType, long size, InputStream data) throws IOException, ClientException {
+    public void putObject(String bucket, String key, String contentType, long size, InputStream body) throws IOException, ClientException {
         boolean isMultipart = false;
         int partSize = 0;
         String uploadID = null;
@@ -933,35 +932,34 @@ public class Client {
         }
 
         if (!isMultipart) {
-            byte[] dataArray = readData((int) size, data);
-            putObject(bucket, key, contentType, dataArray);
+            Data data = readData((int) size, body);
+            putObject(bucket, key, contentType, data.getData(), data.getMD5());
         } else {
             long objectLength = 0;
-            List<String> parts = new LinkedList<String>();
-            int part = 1;
-            Iterator<Part> objectParts = listObjectParts(bucket, key, uploadID);
-            while (objectParts.hasNext()) {
-                Part curPart = objectParts.next();
-                long curSize = curPart.getSize();
-                String curETag = curPart.geteTag();
-                String curNormalizedETag = curETag.replaceAll("\"", "").toLowerCase().trim();
-                byte[] curData = readData((int) curSize, data);
-                String generatedEtag = DatatypeConverter.printHexBinary(calculateMd5sum(curData)).toLowerCase().trim();
-                if (!curNormalizedETag.equals(generatedEtag) || curPart.getPartNumber() != part) {
-                    throw new IOException("Partial upload does not match");
-                }
-                parts.add(curETag);
-                objectLength += curSize;
-                part++;
-            }
+            List<Part> parts = new LinkedList<Part>();
+            int partNumber = 1;
+            Iterator<Part> skipParts = listObjectParts(bucket, key, uploadID);
             while (true) {
-                byte[] dataArray = readData(partSize, data);
-                if (dataArray.length == 0) {
+                Data data = readData(partSize, body);
+                if (iteratorSize(skipParts) > 0) {
+                    Part part = new Part();
+                    part.setPartNumber(partNumber);
+                    part.seteTag(DatatypeConverter.printHexBinary(data.getMD5()));
+                    if (isPartUploaded(part, skipParts)) {
+                        partNumber++;
+                        continue;
+                    }
+                }
+                if (data.getData().length == 0) {
                     break;
                 }
-                parts.add(putObject(bucket, key, contentType, dataArray, uploadID, part));
-                part++;
-                objectLength += dataArray.length;
+                String etag = putObject(bucket, key, contentType, data.getData(), data.getMD5(), uploadID, partNumber);
+                Part part = new Part();
+                part.setPartNumber(partNumber);
+                part.seteTag(etag);
+                parts.add(part);
+                objectLength += data.getData().length;
+                partNumber++;
             }
             if (objectLength != size) {
                 throw new IOException("Data size mismatched");
@@ -970,6 +968,23 @@ public class Client {
         }
     }
 
+    private int iteratorSize(Iterator<?> it) {
+        if (it instanceof Collection) {
+            return ((Collection<?>)it).size();
+        }
+        return 0;
+    }
+
+    private Boolean isPartUploaded(Part part, Iterator<Part> skipParts) {
+        while (skipParts.hasNext()) {
+            Part p = skipParts.next();
+            String etag = p.geteTag().replaceAll("\"", "").toLowerCase().trim();
+            if (etag.equals(part.geteTag()) && p.getPartNumber() == part.getPartNumber()) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * Lists all active multipart uploads in a bucket
      *
@@ -1131,17 +1146,9 @@ public class Client {
         throw new IOException();
     }
 
-    private void completeMultipart(String bucket, String key, String uploadID, List<String> etags) throws IOException, ClientException {
+    private void completeMultipart(String bucket, String key, String uploadID, List<Part> parts) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
         url.set("uploadId", uploadID);
-
-        List<Part> parts = new LinkedList<Part>();
-        for (int i = 0; i < etags.size(); i++) {
-            Part part = new Part();
-            part.setPartNumber(i + 1);
-            part.seteTag(etags.get(i));
-            parts.add(part);
-        }
 
         CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
         completeManifest.setParts(parts);
@@ -1263,19 +1270,17 @@ public class Client {
         return Math.max(minimumPartSize, partSize);
     }
 
-    private void putObject(String bucket, String key, String contentType, byte[] data) throws IOException, ClientException {
-        putObject(bucket, key, contentType, data, "", 0);
+    private void putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum) throws IOException, ClientException {
+        putObject(bucket, key, contentType, data, md5sum, "", 0);
     }
 
-    private String putObject(String bucket, String key, String contentType, byte[] data, String uploadId, int partID) throws IOException, ClientException {
+    private String putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum, String uploadId, int partID) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         if (partID > 0 && uploadId != null && !"".equals(uploadId.trim())) {
             url.set("partNumber", partID);
             url.set("uploadId", uploadId);
         }
-
-        byte[] md5sum = calculateMd5sum(data);
 
         HttpRequest request = getHttpRequest("PUT", url, data);
 
@@ -1284,8 +1289,10 @@ public class Client {
             request.getHeaders().setContentMD5(base64md5sum);
         }
 
-        ByteArrayContent content = new ByteArrayContent(contentType, data);
-        request.setContent(content);
+        if (!"".equals(contentType.trim())) {
+            ByteArrayContent content = new ByteArrayContent(contentType, data);
+            request.setContent(content);
+        }
         HttpResponse response = request.execute();
         if (response != null) {
             try {
@@ -1315,7 +1322,7 @@ public class Client {
         return md5sum;
     }
 
-    private byte[] readData(int size, InputStream data) throws IOException {
+    private Data readData(int size, InputStream data) throws IOException {
         int amountRead = 0;
         byte[] fullData = new byte[size];
         while (amountRead != size) {
@@ -1328,10 +1335,11 @@ public class Client {
             System.arraycopy(buf, 0, fullData, amountRead, curRead);
             amountRead += curRead;
         }
-
         fullData = Arrays.copyOfRange(fullData, 0, amountRead);
-
-        return fullData;
+        Data d = new Data();
+        d.setData(fullData);
+        d.setMD5(calculateMd5sum(fullData));
+        return d;
     }
 
     /**
