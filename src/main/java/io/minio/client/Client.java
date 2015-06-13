@@ -546,6 +546,7 @@ public class Client {
      * listObjects is a wrapper around listObjects(bucket, null, true)
      *
      * @param bucket is the bucket to list objects from
+     * @return an iterator of Items.
      * @see #listObjects(String, String, boolean)
      */
     public Iterator<Result<Item>> listObjects(final String bucket) {
@@ -757,6 +758,7 @@ public class Client {
      * @param bucket bucket to get ACL on
      * @throws IOException upon connection error
      * @throws ClientException upon failure from server
+     * @return Acl type
      */
     public Acl getBucketACL(String bucket) throws IOException, ClientException {
         AccessControlPolicy policy = this.getAccessPolicy(bucket);

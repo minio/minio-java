@@ -99,7 +99,7 @@ public class IntegrationTest {
         Client client = Client.getClient("https://s3-us-west-2.amazonaws.com");
         client.enableLogging();
         try {
-            client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length * 2, new ByteArrayInputStream(largeObject));
+            client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length * 2L, new ByteArrayInputStream(largeObject));
         } catch (IOException ex) {
             ex.printStackTrace();
         }
