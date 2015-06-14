@@ -560,7 +560,7 @@ public class ClientTest {
     }
 
     @Test
-    public void testPutObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
+    public void testPutSmallObject() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -589,7 +589,7 @@ public class ClientTest {
 
     // this case only occurs for minio object storage
     @Test(expected = ObjectExistsException.class)
-    public void testPutObjectFails() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
+    public void testPutSmallObjectFails() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
         final ErrorResponse errResponse = new ErrorResponse();
         errResponse.setCode("MethodNotAllowed");
         errResponse.setMessage("The specified method is not allowed against this resource.");

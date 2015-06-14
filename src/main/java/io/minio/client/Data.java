@@ -27,28 +27,28 @@ public class Data {
         super();
     }
 
-    public void setData(byte[] data) {
-        this.data = data.clone();
-    }
-
-    public void setMD5(byte[] md5) {
-        this.md5 = md5.clone();
-    }
-
     public byte[] getData() {
         return data.clone();
+    }
+
+    public void setData(byte[] data) {
+        this.data = data.clone();
     }
 
     public byte[] getMD5() {
         return md5.clone();
     }
 
+    public void setMD5(byte[] md5) {
+        this.md5 = md5.clone();
+    }
+
     @Override
     public String toString() {
         return "Data{" +
-            "data='" + "**bytes**" + '\'' +
-            ", md5='" + "**bytes**" +
-            '}';
+                "data='" + "**bytes**" + '\'' +
+                ", md5='" + "**bytes**" +
+                '}';
     }
 
     @SuppressWarnings("RedundantIfStatement")
