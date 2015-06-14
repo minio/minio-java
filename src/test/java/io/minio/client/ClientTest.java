@@ -621,6 +621,74 @@ public class ClientTest {
         throw new RuntimeException("Expected exception did not fire");
     }
 
+    // this case only occurs for minio object storage
+//    @Test(expected = ObjectExistsException.class)
+    @Test(expected = DataSizeMismatchException.class)
+    public void testPutIncompleteSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
+        final ErrorResponse errResponse = new ErrorResponse();
+        errResponse.setCode("MethodNotAllowed");
+        errResponse.setMessage("The specified method is not allowed against this resource.");
+        errResponse.setRequestID("1");
+        errResponse.setResource("/bucket/key");
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.setStatusCode(405); // method not allowed set by minio object storage
+                        response.setContent(errResponse.toString());
+                        return response;
+                    }
+                };
+            }
+        };
+
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+
+        String inputString = "hello worl";
+        ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
+
+        client.putObject("bucket", "key", "application/octet-stream", 11, data);
+        throw new RuntimeException("Expected exception did not fire");
+    }
+
+    @Test(expected = DataSizeMismatchException.class)
+    public void testPutOversizedSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
+        final ErrorResponse errResponse = new ErrorResponse();
+        errResponse.setCode("MethodNotAllowed");
+        errResponse.setMessage("The specified method is not allowed against this resource.");
+        errResponse.setRequestID("1");
+        errResponse.setResource("/bucket/key");
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.setStatusCode(405); // method not allowed set by minio object storage
+                        response.setContent(errResponse.toString());
+                        return response;
+                    }
+                };
+            }
+        };
+
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+
+        String inputString = "how long is a piece of string? too long!";
+        ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
+
+        client.putObject("bucket", "key", "application/octet-stream", 11, data);
+        throw new RuntimeException("Expected exception did not fire");
+    }
+
     @Test
     public void testSigningKey() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {

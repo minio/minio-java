@@ -934,14 +934,22 @@ public class Client {
 
         if (!isMultipart) {
             Data data = readData((int) size, body);
+            if (data.getData().length != size || destructiveHasMore(body)) {
+                throw new DataSizeMismatchException();
+            }
             putObject(bucket, key, contentType, data.getData(), data.getMD5());
         } else {
             long objectLength = 0;
+            long totalSeen = 0;
             List<Part> parts = new LinkedList<Part>();
             int partNumber = 1;
             Iterator<Part> existingParts = listObjectParts(bucket, key, uploadID);
             while (true) {
                 Data data = readData(partSize, body);
+                totalSeen += data.getData().length;
+                if (totalSeen > size) {
+                    throw new DataSizeMismatchException();
+                }
                 if (existingParts.hasNext()) {
                     Part existingPart = existingParts.next();
                     if (existingPart.getPartNumber() == partNumber && existingPart.geteTag().toLowerCase().equals(Arrays.toString(data.getMD5()).toLowerCase())) {
@@ -962,6 +970,9 @@ public class Client {
             }
             if (objectLength != size) {
                 throw new IOException("Data size mismatched");
+            }
+            if (totalSeen != size) {
+                throw new DataSizeMismatchException();
             }
             completeMultipart(bucket, key, uploadID, parts);
         }
@@ -1322,6 +1333,14 @@ public class Client {
         d.setData(fullData);
         d.setMD5(calculateMd5sum(fullData));
         return d;
+    }
+
+    private boolean destructiveHasMore(InputStream data) {
+        try {
+            return data.read() > -1;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     /**
