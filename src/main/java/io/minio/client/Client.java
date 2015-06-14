@@ -904,6 +904,7 @@ public class Client {
      * @param contentType Content type to set this object to
      * @param size        Size of all the data that will be uploaded.
      * @param body        Data to upload
+     *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
      * @see #listAllUnfinishedUploads(String)
@@ -938,14 +939,12 @@ public class Client {
             long objectLength = 0;
             List<Part> parts = new LinkedList<Part>();
             int partNumber = 1;
-            Iterator<Part> skipParts = listObjectParts(bucket, key, uploadID);
+            Iterator<Part> existingParts = listObjectParts(bucket, key, uploadID);
             while (true) {
                 Data data = readData(partSize, body);
-                if (iteratorSize(skipParts) > 0) {
-                    Part part = new Part();
-                    part.setPartNumber(partNumber);
-                    part.seteTag(DatatypeConverter.printHexBinary(data.getMD5()));
-                    if (isPartUploaded(part, skipParts)) {
+                if (existingParts.hasNext()) {
+                    Part existingPart = existingParts.next();
+                    if (existingPart.getPartNumber() == partNumber && existingPart.geteTag().toLowerCase().equals(Arrays.toString(data.getMD5()).toLowerCase())) {
                         partNumber++;
                         continue;
                     }
@@ -968,23 +967,6 @@ public class Client {
         }
     }
 
-    private int iteratorSize(Iterator<?> it) {
-        if (it instanceof Collection) {
-            return ((Collection<?>)it).size();
-        }
-        return 0;
-    }
-
-    private Boolean isPartUploaded(Part part, Iterator<Part> skipParts) {
-        while (skipParts.hasNext()) {
-            Part p = skipParts.next();
-            String etag = p.geteTag().replaceAll("\"", "").toLowerCase().trim();
-            if (etag.equals(part.geteTag()) && p.getPartNumber() == part.getPartNumber()) {
-                return true;
-            }
-        }
-        return false;
-    }
     /**
      * Lists all active multipart uploads in a bucket
      *
