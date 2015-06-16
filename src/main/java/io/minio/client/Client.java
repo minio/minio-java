@@ -259,7 +259,7 @@ public class Client {
             throw new IOException("Unsuccessful response from server without error: " + response.getStatusCode());
         }
 
-        // Populate an ErrorResponse, will throw an ClientException if unparseable. We should just pass it up.
+        // Populate an ErrorResponse, will throw an ClientException if not parsable. We should just pass it up.
         ErrorResponse errorResponse = new ErrorResponse();
         parseXml(response, errorResponse);
 
