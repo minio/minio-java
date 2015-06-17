@@ -35,7 +35,7 @@ if(project.properties.containsKey('ossrhPassword')) {
 
 group = 'io.minio'
 archivesBaseName = 'minio'
-version = '0.0.3'
+version = '0.1.0'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
