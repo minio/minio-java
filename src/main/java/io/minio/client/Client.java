@@ -93,7 +93,7 @@ public class Client {
     // Secret key to sign all requests with
     private String secretKey;
     // user agent to tag all requests with
-    private String userAgent = "minio-java/" + MinioProperties.INSTANCE.getVersion() + " (" + System.getProperty("os.name") + ", " + System.getProperty("os.arch") + ")";
+    private String userAgent = "minio-java/" + MinioProperties.INSTANCE.getVersion() + " (" + System.getProperty("os.name") + "; " + System.getProperty("os.arch") + ")";
 
     // Don't allow users to instantiate clients themselves, since it is bad form to throw exceptions in constructors.
     // Use Client.getClient instead
@@ -305,10 +305,6 @@ public class Client {
                 // Errors have no namespace, so we set a default empty alias and namespace
                 dictionary.set("", "");
             } //else {
-            // Setting an empty alias causes a failure when the namespace exists, so we don't set it when
-            // we are not using Error. Set the real namespace instead
-//                dictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
-//            }
             // parse and return
             Xml.parseElement(parser, objectToPopulate, dictionary, null);
         } catch (XmlPullParserException e) {
@@ -1113,7 +1109,7 @@ public class Client {
             StringBuilder sb = new StringBuilder();
             for (String comment : comments) {
                 if (comment != null) {
-                    sb.append(comment.trim()).append(", ");
+                    sb.append(comment.trim()).append("; ");
                 }
             }
             this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
