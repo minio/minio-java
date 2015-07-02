@@ -40,8 +40,9 @@ public class HelloListBuckets {
 
 ### Additional Examples
 
-* [ExampleGetObject.Java](./src/test/java/io/minio/examples/ExampleGetObject.java)
 * [ExamplePutObject.java](./src/test/java/io/minio/examples/ExamplePutObject.java)
+* [ExampleGetObject.Java](./src/test/java/io/minio/examples/ExampleGetObject.java)
+* [ExampleGetPartialObject.java](./src/test/java/io/minio/examples/ExampleGetPartialObject.java)
 * [ExampleListBuckets.java](./src/test/java/io/minio/examples/ExampleListBuckets.java)
 * [ExampleListObjects.java](./src/test/java/io/minio/examples/ExampleListObjects.java)
 * [ExampleMakeBucket.java](./src/test/java/io/minio/examples/ExampleMakeBucket.java)
