@@ -31,7 +31,7 @@ public class ObjectStat {
         this.key = name;
         this.createdTime = (Date) createdTime.clone();
         this.length = length;
-        this.md5sum = md5sum;
+        this.md5sum = md5sum.replaceAll("\"", "");
     }
 
     public String getKey() {
@@ -51,10 +51,7 @@ public class ObjectStat {
     }
 
     public String getMd5sum() {
-        if (md5sum != null) {
-            return md5sum.replaceAll("\"", "");
-        }
-        return null;
+        return md5sum;
     }
 
     @Override
