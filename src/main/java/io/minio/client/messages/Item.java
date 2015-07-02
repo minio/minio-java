@@ -70,7 +70,7 @@ public class Item extends XmlEntity {
     }
 
     public void setETag(String eTag) {
-        this.eTag = eTag;
+        this.eTag = eTag.replaceAll("\"", "");
     }
 
     public long getSize() {
@@ -97,4 +97,3 @@ public class Item extends XmlEntity {
         this.owner = owner;
     }
 }
-

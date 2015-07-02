@@ -52,7 +52,7 @@ public class Part extends XmlEntity {
     }
 
     public void seteTag(String eTag) {
-        this.eTag = eTag;
+        this.eTag = eTag.replaceAll("\"", "");
     }
 
     public String getLastModified() {

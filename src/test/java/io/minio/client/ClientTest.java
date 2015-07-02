@@ -144,7 +144,7 @@ public class ClientTest {
                         response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
-                        response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");
+                        response.addHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
                         response.setStatusCode(200);
                         return response;
@@ -182,7 +182,7 @@ public class ClientTest {
                         response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
-                        response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
+                        response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
                         response.setStatusCode(200);
                         response.setContent(expectedObject.getBytes("UTF-8"));
@@ -215,7 +215,7 @@ public class ClientTest {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
                         response.addHeader("Content-Length", "5");
                         response.addHeader("Content-Type", "application/octet-stream");
-                        response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
+                        response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
                         response.addHeader("Accept-Ranges", "bytes");
                         response.addHeader("Content-Range", "0-4/11");
@@ -239,7 +239,7 @@ public class ClientTest {
 
     @Test
     public void testListObjects() throws IOException, XmlPullParserException, ParseException, ClientException {
-        final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>5eb63bbbe01eeed093cb22bb8f5acdc3</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>2a60eaffa7a82804bdc682ce1df6c2d4</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
+        final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>\"2a60eaffa7a82804bdc682ce1df6c2d4\"</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
             public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
@@ -570,7 +570,7 @@ public class ClientTest {
                         MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
                         response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
-                        response.addHeader("ETag", "5eb63bbbe01eeed093cb22bb8f5acdc3");
+                        response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
                         response.setStatusCode(200);
                         return response;
                     }
@@ -705,7 +705,7 @@ public class ClientTest {
                         response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
                         response.addHeader("Content-Length", "5080");
                         response.addHeader("Content-Type", "application/octet-stream");
-                        response.addHeader("ETag", "a670520d9d36833b3e28d1e4b73cbe22");
+                        response.addHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
                         response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
                         response.setStatusCode(200);
                         return response;
