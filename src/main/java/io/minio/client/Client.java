@@ -903,7 +903,7 @@ public class Client {
      *
      * @throws IOException     upon connection error
      * @throws ClientException upon failure from server
-     * @see #listAllUnfinishedUploads(String)
+     * @see #listAllIncompleteUploads(String)
      * @see #abortMultipartUpload(String, String, String)
      */
     public void putObject(String bucket, String key, String contentType, long size, InputStream body) throws IOException, ClientException {
@@ -913,7 +913,7 @@ public class Client {
 
         if (size > PART_SIZE) {
             // check if multipart exists
-            Iterator<Result<Upload>> multipartUploads = listAllUnfinishedUploads(bucket, key);
+            Iterator<Result<Upload>> multipartUploads = listAllIncompleteUploads(bucket, key);
             while (multipartUploads.hasNext()) {
                 Upload upload = multipartUploads.next().getResult();
                 if (upload.getKey().equals(key)) {
@@ -981,8 +981,8 @@ public class Client {
      *
      * @return list of active multipart uploads
      */
-    public Iterator<Result<Upload>> listAllUnfinishedUploads(String bucket) {
-        return listAllUnfinishedUploads(bucket, null);
+    public Iterator<Result<Upload>> listAllIncompleteUploads(String bucket) {
+        return listAllIncompleteUploads(bucket, null);
     }
 
     /**
@@ -991,7 +991,7 @@ public class Client {
      *
      * @return a list of active multipart uploads starting with a given prefix
      */
-    public Iterator<Result<Upload>> listAllUnfinishedUploads(final String bucket, final String prefix) {
+    public Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket, final String prefix) {
         return new MinioIterator<Result<Upload>>() {
             private boolean isComplete = false;
             private String keyMarker = null;
@@ -1003,7 +1003,7 @@ public class Client {
                 if (!isComplete) {
                     ListMultipartUploadsResult uploadResult;
                     try {
-                        uploadResult = listAllUnfinishedUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
+                        uploadResult = listAllIncompleteUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
                         if (uploadResult.isTruncated()) {
                             keyMarker = uploadResult.getNextKeyMarker();
                             uploadIdMarker = uploadResult.getNextUploadIDMarker();
@@ -1027,7 +1027,7 @@ public class Client {
         };
     }
 
-    private ListMultipartUploadsResult listAllUnfinishedUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, ClientException {
+    private ListMultipartUploadsResult listAllIncompleteUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfBucket(bucket);
         url.set("uploads", "");
 
@@ -1077,7 +1077,7 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public void dropAllIncompleteUploads(String bucket) throws IOException, ClientException {
-        Iterator<Result<Upload>> uploads = listAllUnfinishedUploads(bucket);
+        Iterator<Result<Upload>> uploads = listAllIncompleteUploads(bucket);
         while (uploads.hasNext()) {
             Upload upload = uploads.next().getResult();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
@@ -1246,7 +1246,7 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public void dropIncompleteUpload(String bucket, String key) throws IOException, ClientException {
-        Iterator<Result<Upload>> uploads = listAllUnfinishedUploads(bucket, key);
+        Iterator<Result<Upload>> uploads = listAllIncompleteUploads(bucket, key);
         while (uploads.hasNext()) {
             Upload upload = uploads.next().getResult();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
