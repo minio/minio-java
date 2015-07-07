@@ -108,10 +108,10 @@ public class IntegrationTest {
             largeObject[i] = 'a';
         }
         client.enableLogging();
-        Iterator<Result<Upload>> examplebucket = client.listAllUnfinishedUploads("examplebucket");
+        Iterator<Result<Upload>> examplebucket = client.listAllIncompleteUploads("examplebucket");
         System.out.println(examplebucket.next().getResult());
         client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length, new ByteArrayInputStream(largeObject));
-        examplebucket = client.listAllUnfinishedUploads("examplebucket");
+        examplebucket = client.listAllIncompleteUploads("examplebucket");
         System.out.println(examplebucket.hasNext());
     }
 
