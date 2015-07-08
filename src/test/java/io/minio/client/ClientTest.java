@@ -68,6 +68,21 @@ public class ClientTest {
         assertEquals(expectedHost, url.getHost());
     }
 
+    @Test()
+    public void setUserAgentOnceSet() throws IOException {
+        String expectedHost = "example.com";
+        Client client = Client.getClient("http://" + expectedHost + "/");
+        client.setUserAgent("testApp", "1.0.0", "");
+    }
+
+    @Test(expected = IOException.class)
+    public void setUserAgentTwiceSet() throws IOException {
+        String expectedHost = "example.com";
+        Client client = Client.getClient("http://" + expectedHost + "/");
+        client.setUserAgent("testApp", "1.0.0", "");
+        client.setUserAgent("testApp", "1.0.0", "");
+    }
+
     @Test(expected = MalformedURLException.class)
     public void newClientWithPathFails() throws MalformedURLException {
         Client.getClient("http://example.com/path");

@@ -94,6 +94,8 @@ public class Client {
     private String secretKey;
     // user agent to tag all requests with
     private String userAgent = "minio-java/" + MinioProperties.INSTANCE.getVersion() + " (" + System.getProperty("os.name") + "; " + System.getProperty("os.arch") + ")";
+    // user agent can be set only once with in a class
+    private boolean userAgentSet = false;
 
     // Don't allow users to instantiate clients themselves, since it is bad form to throw exceptions in constructors.
     // Use Client.getClient instead
@@ -1096,15 +1098,17 @@ public class Client {
     }
 
     /**
-     * Add additional user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+     * Set user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
      *
      * @param name     name of your application
      * @param version  version of your application
      * @param comments optional list of comments
+     *
+     * @throws IOException   attempt to overwrite an already set useragent
      */
     @SuppressWarnings("unused")
-    public void addUserAgent(String name, String version, String... comments) {
-        if (name != null && version != null) {
+    public void setUserAgent(String name, String version, String... comments) throws IOException {
+        if (!this.userAgentSet && name != null && version != null) {
             String newUserAgent = name.trim() + "/" + version.trim() + " (";
             StringBuilder sb = new StringBuilder();
             for (String comment : comments) {
@@ -1113,7 +1117,10 @@ public class Client {
                 }
             }
             this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
+            this.userAgentSet = true;
+            return;
         }
+        throw new IOException("User agent already set");
     }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, ClientException {
