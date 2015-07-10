@@ -46,13 +46,48 @@ class RequestSigner implements HttpExecuteInterceptor {
     private String accessKey = null;
     private String secretKey = null;
 
+    //
+    // Excerpts from @lsegal - https://github.com/aws/aws-sdk-js/issues/659#issuecomment-120477258
+    //
+    //  User-Agent:
+    //
+    //      This is ignored from signing because signing this causes problems with generating pre-signed URLs
+    //      (that are executed by other agents) or when customers pass requests through proxies, which may
+    //      modify the user-agent.
+    //
+    //  Content-Length:
+    //
+    //      This is ignored from signing because generating a pre-signed URL should not provide a content-length
+    //      constraint, specifically when vending a S3 pre-signed PUT URL. The corollary to this is that when
+    //      sending regular requests (non-pre-signed), the signature contains a checksum of the body, which
+    //      implicitly validates the payload length (since changing the number of bytes would change the checksum)
+    //      and therefore this header is not valuable in the signature.
+    //
+    //  Content-Type:
+    //
+    //      Signing this header causes quite a number of problems in browser environments, where browsers
+    //      like to modify and normalize the content-type header in different ways. There is more information
+    //      on this in https://github.com/aws/aws-sdk-js/issues/244. Avoiding this field simplifies logic
+    //      and reduces the possibility of future bugs
+    //
+    //  Authorization:
+    //
+    //      Is skipped for obvious reasons
+    //
+    private Set<String> ignoredHeaders = new HashSet<String>();
+
     RequestSigner(byte[] data) {
         if (data == null) {
             data = new byte[0];
         }
         this.data = data;
 
+        ignoredHeaders.add("authorization");
+        ignoredHeaders.add("content-type");
+        ignoredHeaders.add("content-length");
+        ignoredHeaders.add("user-agent");
     }
+
 
     private static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
         String formattedDate = date.toString(dateFormatyyyyMMdd);
@@ -239,21 +274,6 @@ class RequestSigner implements HttpExecuteInterceptor {
         HttpContent content = request.getContent();
 
         if (content != null) {
-            Long contentLength = null;
-            try {
-                contentLength = content.getLength();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (contentLength != null) {
-                map.put("content-length", contentLength.toString());
-            }
-
-            String contentType = content.getType();
-            if (contentType != null) {
-                map.put("content-type", contentType);
-            }
-
             HttpEncoding encoding = request.getEncoding();
             String contentEncoding = null;
             if (encoding != null) {
@@ -262,7 +282,6 @@ class RequestSigner implements HttpExecuteInterceptor {
             if (contentEncoding != null) {
                 map.put("content-encoding", contentEncoding);
             }
-
         }
 
         String acceptEncoding = request.getHeaders().getAcceptEncoding();
@@ -275,20 +294,20 @@ class RequestSigner implements HttpExecuteInterceptor {
             map.put("date", dateHeader);
         }
 
-        String userAgent = request.getHeaders().getUserAgent();
-        if (userAgent != null) {
-            map.put("user-agent", userAgent.trim());
-        }
-
         String contentMD5 = request.getHeaders().getContentMD5();
         if (contentMD5 != null) {
             map.put("content-md5", contentMD5);
         }
 
+
         for (String s : request.getHeaders().getUnknownKeys().keySet()) {
             String val = request.getHeaders().getFirstHeaderStringValue(s);
             if (val != null) {
-                map.put(s.toLowerCase().trim(), val.trim());
+                String headerKey = s.toLowerCase().trim();
+                String headerValue = val.trim();
+                if (!ignoredHeaders.contains(headerKey)) {
+                    map.put(headerKey, headerValue);
+                }
             }
         }
 
