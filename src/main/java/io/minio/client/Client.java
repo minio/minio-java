@@ -913,6 +913,10 @@ public class Client {
         int partSize = 0;
         String uploadID = null;
 
+        if(contentType == null || "".equals(contentType.trim())) {
+            contentType = "application/octet-stream";
+        }
+
         if (size > PART_SIZE) {
             // check if multipart exists
             Iterator<Result<Upload>> multipartUploads = listAllIncompleteUploads(bucket, key);
