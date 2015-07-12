@@ -194,7 +194,8 @@ public class Client {
                     HttpHeaders responseHeaders = response.getHeaders();
                     SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
                     Date lastModified = formatter.parse(responseHeaders.getLastModified());
-                    return new ObjectStat(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag());
+                    String contentType = responseHeaders.getContentType();
+                    return new ObjectStat(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag(), contentType);
                 } else {
                     parseError(response);
                 }

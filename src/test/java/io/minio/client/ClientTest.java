@@ -173,7 +173,7 @@ public class ClientTest {
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("GMT"));
         expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-        ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+        ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22", "application/octet-stream");
 
         // get request
         Client client = Client.getClient("http://localhost:9000");
@@ -734,7 +734,8 @@ public class ClientTest {
         expectedDate.clear();
         expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
         expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-        ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22");
+        String contentType = "application/octet-stream";
+        ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22", contentType);
 
         // get request
         Client client = Client.getClient("http://localhost:9000");
