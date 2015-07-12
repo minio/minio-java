@@ -25,13 +25,42 @@ public class ObjectStat {
     private final Date createdTime;
     private final long length;
     private final String md5sum;
+    private final String contentType;
 
-    public ObjectStat(String bucket, String name, Date createdTime, long length, String md5sum) {
+    public ObjectStat(String bucket, String name, Date createdTime, long length, String md5sum, String contentType) {
         this.bucket = bucket;
         this.key = name;
+        this.contentType = contentType;
         this.createdTime = (Date) createdTime.clone();
         this.length = length;
         this.md5sum = md5sum.replaceAll("\"", "");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ObjectStat that = (ObjectStat) o;
+
+        if (length != that.length) return false;
+        if (!bucket.equals(that.bucket)) return false;
+        if (!key.equals(that.key)) return false;
+        if (!createdTime.equals(that.createdTime)) return false;
+        if (!md5sum.equals(that.md5sum)) return false;
+        return contentType.equals(that.contentType);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = bucket.hashCode();
+        result = 31 * result + key.hashCode();
+        result = 31 * result + createdTime.hashCode();
+        result = 31 * result + (int) (length ^ (length >>> 32));
+        result = 31 * result + md5sum.hashCode();
+        result = 31 * result + contentType.hashCode();
+        return result;
     }
 
     public String getKey() {
@@ -59,36 +88,10 @@ public class ObjectStat {
         return "ObjectStat{" +
                 "bucket='" + bucket + '\'' +
                 ", key='" + key + '\'' +
+                ", contentType='" + contentType + '\'' +
                 ", createdTime=" + createdTime +
                 ", length=" + length +
                 ", md5sum='" + md5sum + '\'' +
                 '}';
-    }
-
-    @SuppressWarnings("RedundantIfStatement")
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ObjectStat that = (ObjectStat) o;
-
-        if (length != that.length) return false;
-        if (!bucket.equals(that.bucket)) return false;
-        if (!key.equals(that.key)) return false;
-        if (!createdTime.equals(that.createdTime)) return false;
-        if (!md5sum.equals(that.md5sum)) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = bucket.hashCode();
-        result = 31 * result + key.hashCode();
-        result = 31 * result + createdTime.hashCode();
-        result = 31 * result + (int) (length ^ (length >>> 32));
-        result = 31 * result + md5sum.hashCode();
-        return result;
     }
 }
