@@ -705,6 +705,34 @@ public class ClientTest {
     }
 
     @Test
+    public void testNullContentTypeWorks() throws IOException, ClientException {
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+                        response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+                        response.setStatusCode(200);
+                        return response;
+                    }
+                };
+            }
+        };
+
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+
+        String inputString = "hello world";
+        ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
+
+        client.putObject("bucket", "key", null, 11, data);
+    }
+
+    @Test
     public void testSigningKey() throws IOException, NoSuchAlgorithmException, InvalidKeyException, ClientException {
         MockHttpTransport transport = new MockHttpTransport() {
             @Override
