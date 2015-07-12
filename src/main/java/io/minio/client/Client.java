@@ -467,6 +467,10 @@ public class Client {
     public InputStream getObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
+        if(offsetStart < 0 || length <= 0) {
+            throw new InvalidRangeException();
+        }
+
         HttpRequest request = getHttpRequest("GET", url);
         long offsetEnd = offsetStart + length;
         request.getHeaders().setRange(offsetStart + "-" + offsetEnd);
