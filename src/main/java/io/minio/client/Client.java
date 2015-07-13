@@ -287,6 +287,7 @@ public class Client {
         else if ("TooManyBuckets".equals(code)) e = new MaxBucketsReachedException();
         else if ("PermanentRedirect".equals(code)) e = new RedirectionException();
         else if ("MethodNotAllowed".equals(code)) e = new ObjectExistsException();
+        else if ("BucketAlreadyOwnedByYou".equals(code)) e = new BucketExistsException();
         else e = new InternalClientException(errorResponse.toString());
         e.setErrorResponse(errorResponse);
         throw e;
