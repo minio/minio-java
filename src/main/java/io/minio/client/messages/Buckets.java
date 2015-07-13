@@ -18,6 +18,7 @@ package io.minio.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
@@ -31,6 +32,9 @@ public class Buckets extends XmlEntity {
     }
 
     public List<Bucket> getBucket() {
+        if(bucket == null) {
+            return new LinkedList<Bucket>();
+        }
         return bucket;
     }
 
