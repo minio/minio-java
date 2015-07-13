@@ -133,7 +133,6 @@ class RequestSigner implements HttpExecuteInterceptor {
             }
         }
         request.getHeaders().set("Host", host);
-        System.out.println(host);
 
         // get canonical request and headers to sign
         Tuple2<String, String> canonicalRequestAndHeaders = getCanonicalRequest(request, dataHash);
