@@ -485,7 +485,7 @@ public class Client {
     public InputStream getObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
-        if(offsetStart < 0 || length <= 0) {
+        if (offsetStart < 0 || length <= 0) {
             throw new InvalidRangeException();
         }
 
@@ -555,6 +555,12 @@ public class Client {
                             if (listBucketResult.isTruncated()) {
                                 marker = item.getKey();
                             }
+                        }
+                        for (Prefix prefix : listBucketResult.getCommonPrefixes()) {
+                            Item item = new Item();
+                            item.setKey(prefix.getPrefix());
+                            item.setIsDir(true);
+                            items.add(new Result<Item>(item, null));
                         }
                         if (listBucketResult.isTruncated() && delimiter != null) {
                             marker = listBucketResult.getNextMarker();
@@ -936,7 +942,7 @@ public class Client {
         int partSize = 0;
         String uploadID = null;
 
-        if(contentType == null || "".equals(contentType.trim())) {
+        if (contentType == null || "".equals(contentType.trim())) {
             contentType = "application/octet-stream";
         }
 
@@ -1131,7 +1137,7 @@ public class Client {
      * @param version  version of your application
      * @param comments optional list of comments
      *
-     * @throws IOException   attempt to overwrite an already set useragent
+     * @throws IOException attempt to overwrite an already set useragent
      */
     @SuppressWarnings("unused")
     public void setUserAgent(String name, String version, String... comments) throws IOException {

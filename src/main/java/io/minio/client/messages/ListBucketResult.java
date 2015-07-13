@@ -18,6 +18,7 @@ package io.minio.client.messages;
 
 import com.google.api.client.util.Key;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
@@ -110,6 +111,9 @@ public class ListBucketResult extends XmlEntity {
     }
 
     public List<Prefix> getCommonPrefixes() {
+        if(CommonPrefixes == null) {
+            return new LinkedList<Prefix>();
+        }
         return CommonPrefixes;
     }
 

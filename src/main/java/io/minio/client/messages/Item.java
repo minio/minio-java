@@ -37,6 +37,7 @@ public class Item extends XmlEntity {
     private String storageClass;
     @Key("Owner")
     private Owner owner;
+    private boolean isDir = false;
 
     public Item() {
         super();
@@ -95,5 +96,13 @@ public class Item extends XmlEntity {
 
     public void setOwner(Owner owner) {
         this.owner = owner;
+    }
+
+    public boolean isDir() {
+        return isDir;
+    }
+
+    public void setIsDir(boolean isDir) {
+        this.isDir = isDir;
     }
 }
