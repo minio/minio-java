@@ -449,6 +449,24 @@ public class Client {
         throw new IOException();
     }
 
+    /**
+     * Returns an InputStream containing a subset of the object. The InputStream must be
+     * closed or the connection will remain open.
+     *
+     * @param bucket      object's bucket
+     * @param key         object's key
+     * @param offsetStart Offset from the start of the object.
+     *
+     * @return an InputStream containing the object. Close the InputStream when done.
+     *
+     * @throws IOException     upon connection failure
+     * @throws ClientException upon failure from server
+     */
+    public InputStream getObject(String bucket, String key, long offsetStart) throws IOException, ClientException {
+        ObjectStat stat = statObject(bucket, key);
+        long length = stat.getLength() - offsetStart;
+        return getObject(bucket, key, offsetStart, length);
+    }
 
     /**
      * Returns an InputStream containing a subset of the object. The InputStream must be
