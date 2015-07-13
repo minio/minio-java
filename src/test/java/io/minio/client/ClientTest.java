@@ -27,6 +27,7 @@ import io.minio.client.messages.Bucket;
 import io.minio.client.messages.ErrorResponse;
 import io.minio.client.messages.Item;
 import io.minio.client.messages.Owner;
+import org.junit.Assert;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -250,6 +251,70 @@ public class ClientTest {
         int read = object.read(result);
         result = Arrays.copyOf(result, read);
         assertEquals(expectedObject, new String(result, "UTF-8"));
+    }
+
+    @Test(expected = InvalidRangeException.class)
+    public void testGetObjectOffsetIsNegativeReturnsError() throws IOException, ClientException {
+        final String expectedObject = "hello";
+
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "5");
+                        response.addHeader("Content-Type", "application/octet-stream");
+                        response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
+                        response.addHeader("Accept-Ranges", "bytes");
+                        response.addHeader("Content-Range", "0-4/11");
+                        response.setStatusCode(206);
+                        response.setContent(expectedObject.getBytes("UTF-8"));
+                        return response;
+                    }
+                };
+            }
+        };
+
+        // get request
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        client.getObject("bucket", "key", -1, 5);
+        Assert.fail("Should of thrown an exception");
+    }
+
+    @Test(expected = InvalidRangeException.class)
+    public void testGetObjectLengthIsZeroReturnsError() throws IOException, ClientException {
+        final String expectedObject = "hello";
+
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "5");
+                        response.addHeader("Content-Type", "application/octet-stream");
+                        response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
+                        response.addHeader("Accept-Ranges", "bytes");
+                        response.addHeader("Content-Range", "0-4/11");
+                        response.setStatusCode(206);
+                        response.setContent(expectedObject.getBytes("UTF-8"));
+                        return response;
+                    }
+                };
+            }
+        };
+
+        // get request
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        client.getObject("bucket", "key", 0, 0);
+        Assert.fail("Should of thrown an exception");
     }
 
     @Test
