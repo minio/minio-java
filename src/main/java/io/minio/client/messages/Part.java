@@ -48,7 +48,7 @@ public class Part extends XmlEntity {
     }
 
     public String geteTag() {
-        return eTag;
+        return eTag.replaceAll("\"", "");
     }
 
     public void seteTag(String eTag) {

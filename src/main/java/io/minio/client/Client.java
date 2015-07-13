@@ -995,7 +995,7 @@ public class Client {
                 }
                 if (existingParts.hasNext()) {
                     Part existingPart = existingParts.next();
-                    if (existingPart.getPartNumber() == partNumber && existingPart.geteTag().toLowerCase().equals(Arrays.toString(data.getMD5()).toLowerCase())) {
+                    if (existingPart.getPartNumber() == partNumber && existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
                         partNumber++;
                         continue;
                     }
