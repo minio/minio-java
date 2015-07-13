@@ -122,7 +122,18 @@ class RequestSigner implements HttpExecuteInterceptor {
         request.getHeaders().set("x-amz-content-sha256", dataHash);
         request.getHeaders().setDate(new DateTime(signingDate).toString(dateFormat));
 
-        request.getHeaders().set("Host", request.getUrl().getHost());
+        String host = request.getUrl().getHost();
+        int port = request.getUrl().getPort();
+        if(port != -1) {
+            String scheme = request.getUrl().getScheme();
+            if ("http".equals(scheme) && port != 80) {
+                host += ":" + request.getUrl().getPort();
+            } else if ("https".equals(scheme) && port != 443) {
+                host += ":" + request.getUrl().getPort();
+            }
+        }
+        request.getHeaders().set("Host", host);
+        System.out.println(host);
 
         // get canonical request and headers to sign
         Tuple2<String, String> canonicalRequestAndHeaders = getCanonicalRequest(request, dataHash);
