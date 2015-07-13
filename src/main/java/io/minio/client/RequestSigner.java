@@ -83,6 +83,7 @@ class RequestSigner implements HttpExecuteInterceptor {
         this.data = data;
 
         ignoredHeaders.add("authorization");
+        ignoredHeaders.add("date"); // we always set x-amz-date
         ignoredHeaders.add("content-type");
         ignoredHeaders.add("content-length");
         ignoredHeaders.add("user-agent");
@@ -267,13 +268,15 @@ class RequestSigner implements HttpExecuteInterceptor {
     private String generateSignedHeaders(String[] headers) {
         StringBuilder builder = new StringBuilder();
         boolean printSeparator = false;
-        for (String s : headers) {
-            if (printSeparator) {
-                builder.append(';');
-            } else {
-                printSeparator = true;
+        for (String header : headers) {
+            if(!ignoredHeaders.contains(header)) {
+                if (printSeparator) {
+                    builder.append(';');
+                } else {
+                    printSeparator = true;
+                }
+                builder.append(header);
             }
-            builder.append(s);
         }
         return builder.toString();
     }
@@ -299,16 +302,10 @@ class RequestSigner implements HttpExecuteInterceptor {
             map.put("accept-encoding", acceptEncoding);
         }
 
-        String dateHeader = request.getHeaders().getDate();
-        if (dateHeader != null) {
-            map.put("date", dateHeader);
-        }
-
         String contentMD5 = request.getHeaders().getContentMD5();
         if (contentMD5 != null) {
             map.put("content-md5", contentMD5);
         }
-
 
         for (String s : request.getHeaders().getUnknownKeys().keySet()) {
             String val = request.getHeaders().getFirstHeaderStringValue(s);
@@ -322,7 +319,6 @@ class RequestSigner implements HttpExecuteInterceptor {
         }
 
         for (Map.Entry<String, String> e : map.entrySet()) {
-//            System.out.println(e.getKey() + ":" + e.getValue());
             writer.write(e.getKey() + ":" + e.getValue() + '\n');
         }
 
