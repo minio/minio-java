@@ -472,8 +472,8 @@ public class Client {
         }
 
         HttpRequest request = getHttpRequest("GET", url);
-        long offsetEnd = offsetStart + length;
-        request.getHeaders().setRange(offsetStart + "-" + offsetEnd);
+        long offsetEnd = offsetStart + length - 1;
+        request.getHeaders().setRange("bytes=" + offsetStart + "-" + offsetEnd);
 
         // we close the response only on failure or the user will be unable to retrieve the object
         // it is the user's responsibility to close the input stream
