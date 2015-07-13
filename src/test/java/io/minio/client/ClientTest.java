@@ -317,6 +317,40 @@ public class ClientTest {
         Assert.fail("Should of thrown an exception");
     }
 
+    public void testGetObjectWithOffset() throws IOException, ClientException {
+        final String expectedObject = "world";
+
+        MockHttpTransport transport = new MockHttpTransport() {
+            @Override
+            public LowLevelHttpRequest buildRequest(String method, String url) throws IOException {
+                return new MockLowLevelHttpRequest() {
+                    @Override
+                    public LowLevelHttpResponse execute() throws IOException {
+                        MockLowLevelHttpResponse response = new MockLowLevelHttpResponse();
+                        response.addHeader("Content-Length", "6");
+                        response.addHeader("Content-Type", "application/octet-stream");
+                        response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+                        response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
+                        response.addHeader("Accept-Ranges", "bytes");
+                        response.addHeader("Content-Range", "5-10/11");
+                        response.setStatusCode(206);
+                        response.setContent(expectedObject.getBytes("UTF-8"));
+                        return response;
+                    }
+                };
+            }
+        };
+
+        // get request
+        Client client = Client.getClient("http://localhost:9000");
+        client.setTransport(transport);
+        InputStream object = client.getObject("bucket", "key", 6);
+        byte[] result = new byte[5];
+        int read = object.read(result);
+        result = Arrays.copyOf(result, read);
+        assertEquals(expectedObject, new String(result, "UTF-8"));
+    }
+
     @Test
     public void testListObjects() throws IOException, XmlPullParserException, ParseException, ClientException {
         final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>\"2a60eaffa7a82804bdc682ce1df6c2d4\"</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
