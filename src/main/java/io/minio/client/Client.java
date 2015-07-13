@@ -217,6 +217,10 @@ public class Client {
             throw new IOException("No response was returned");
         }
 
+        if(response.getStatusCode() == 307) {
+            throw new RedirectionException();
+        }
+
         if (response.getStatusCode() == 404 || response.getStatusCode() == 403) {
             ClientException e;
             ErrorResponse errorResponse = new ErrorResponse();
