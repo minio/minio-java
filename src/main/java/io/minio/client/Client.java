@@ -681,7 +681,13 @@ public class Client {
                     parseXml(response, retrievedBuckets);
                     return retrievedBuckets.getBuckets().iterator();
                 }
-                parseError(response);
+                try {
+                    parseError(response);
+                } catch(RedirectionException ex) {
+                    ForbiddenException fe = new ForbiddenException();
+                    fe.initCause(ex);
+                    throw fe;
+                }
             } finally {
                 response.disconnect();
             }
