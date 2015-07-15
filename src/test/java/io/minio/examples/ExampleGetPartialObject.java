@@ -33,7 +33,7 @@ public class ExampleGetPartialObject {
         Client s3Client = Client.getClient("https://s3.amazonaws.com");
 
         // get object from offset, of specific length
-        InputStream object = s3Client.getObject("mybucket", "myobject", 1024, 4096);
+        InputStream object = s3Client.getPartialObject("mybucket", "myobject", 1024, 4096);
         try {
             System.out.println("Printing object: ");
             IOUtils.copy(object, System.out);

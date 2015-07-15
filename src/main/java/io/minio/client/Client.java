@@ -469,10 +469,10 @@ public class Client {
      * @throws IOException     upon connection failure
      * @throws ClientException upon failure from server
      */
-    public InputStream getObject(String bucket, String key, long offsetStart) throws IOException, ClientException {
+    public InputStream getPartialObject(String bucket, String key, long offsetStart) throws IOException, ClientException {
         ObjectStat stat = statObject(bucket, key);
         long length = stat.getLength() - offsetStart;
-        return getObject(bucket, key, offsetStart, length);
+        return getPartialObject(bucket, key, offsetStart, length);
     }
 
     /**
@@ -489,7 +489,7 @@ public class Client {
      * @throws IOException     upon connection failure
      * @throws ClientException upon failure from server
      */
-    public InputStream getObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
+    public InputStream getPartialObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
         GenericUrl url = getGenericUrlOfKey(bucket, key);
 
         if (offsetStart < 0 || length <= 0) {
