@@ -246,7 +246,7 @@ public class ClientTest {
         // get request
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        InputStream object = client.getObject("bucket", "key", 0, 5);
+        InputStream object = client.getPartialObject("bucket", "key", 0, 5);
         byte[] result = new byte[20];
         int read = object.read(result);
         result = Arrays.copyOf(result, read);
@@ -281,7 +281,7 @@ public class ClientTest {
         // get request
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        client.getObject("bucket", "key", -1, 5);
+        client.getPartialObject("bucket", "key", -1, 5);
         Assert.fail("Should of thrown an exception");
     }
 
@@ -313,7 +313,7 @@ public class ClientTest {
         // get request
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        client.getObject("bucket", "key", 0, 0);
+        client.getPartialObject("bucket", "key", 0, 0);
         Assert.fail("Should of thrown an exception");
     }
 
@@ -344,7 +344,7 @@ public class ClientTest {
         // get request
         Client client = Client.getClient("http://localhost:9000");
         client.setTransport(transport);
-        InputStream object = client.getObject("bucket", "key", 6);
+        InputStream object = client.getPartialObject("bucket", "key", 6);
         byte[] result = new byte[5];
         int read = object.read(result);
         result = Arrays.copyOf(result, read);

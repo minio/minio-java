@@ -19,7 +19,6 @@ package io.minio.client;
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
 import io.minio.client.messages.Bucket;
-import io.minio.client.messages.Upload;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
