@@ -342,6 +342,7 @@ public class Client {
                 RequestSigner signer = new RequestSigner(data);
                 signer.setAccessKeys(accessKey, secretKey);
                 request.setInterceptor(signer);
+                request.setFollowRedirects(false);
             }
         });
         HttpRequest request = requestFactory.buildRequest(method, url, null);
