@@ -107,12 +107,12 @@ public class IntegrationTest {
         for (int i = 0; i < 20 * 1024 * 1024; i++) {
             largeObject[i] = 'a';
         }
-        client.enableLogging();
-        Iterator<Result<Upload>> examplebucket = client.listAllIncompleteUploads("examplebucket");
-        System.out.println(examplebucket.next().getResult());
-        client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length, new ByteArrayInputStream(largeObject));
-        examplebucket = client.listAllIncompleteUploads("examplebucket");
-        System.out.println(examplebucket.hasNext());
+//        client.enableLogging();
+//        Iterator<Result<Upload>> examplebucket = client.listAllIncompleteUploads("examplebucket");
+//        System.out.println(examplebucket.next().getResult());
+//        client.putObject("examplebucket", "bar2", "application/octet-stream", largeObject.length, new ByteArrayInputStream(largeObject));
+//        examplebucket = client.listAllIncompleteUploads("examplebucket");
+//        System.out.println(examplebucket.hasNext());
     }
 
     @Test

@@ -1028,24 +1028,11 @@ public class Client {
         }
     }
 
-    /**
-     * Lists all active multipart uploads in a bucket
-     *
-     * @param bucket bucket to list active multipart uploads
-     *
-     * @return list of active multipart uploads
-     */
-    public Iterator<Result<Upload>> listAllIncompleteUploads(String bucket) {
+    private Iterator<Result<Upload>> listAllIncompleteUploads(String bucket) {
         return listAllIncompleteUploads(bucket, null);
     }
 
-    /**
-     * @param bucket bucket to list active uploads of
-     * @param prefix filter multipart upload keys by the given prefix
-     *
-     * @return a list of active multipart uploads starting with a given prefix
-     */
-    public Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket, final String prefix) {
+    private Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket, final String prefix) {
         return new MinioIterator<Result<Upload>>() {
             private boolean isComplete = false;
             private String keyMarker = null;
