@@ -102,7 +102,7 @@ public class ClientTest {
         throw new RuntimeException("Expected exception did not fire");
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test(expected = AccessDeniedException.class)
     public void testForbidden() throws IOException, ClientException {
         // Set up mock
         MockHttpTransport transport = new MockHttpTransport() {
