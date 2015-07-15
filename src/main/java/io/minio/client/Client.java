@@ -217,7 +217,7 @@ public class Client {
             throw new IOException("No response was returned");
         }
 
-        if(response.getStatusCode() == 307) {
+        if(response.getStatusCode() == 307 || response.getStatusCode() == 301) {
             throw new RedirectionException();
         }
 
@@ -255,8 +255,8 @@ public class Client {
                     e = new InternalClientException("404 without body resulted in path with less than two components");
                 }
             } else {
-                errorResponse.setCode("Forbidden");
-                e = new ForbiddenException();
+                errorResponse.setCode("AccessDenied");
+                e = new AccessDeniedException();
             }
             e.setErrorResponse(errorResponse);
             throw e;
@@ -685,7 +685,7 @@ public class Client {
                 try {
                     parseError(response);
                 } catch(RedirectionException ex) {
-                    ForbiddenException fe = new ForbiddenException();
+                    AccessDeniedException fe = new AccessDeniedException();
                     fe.initCause(ex);
                     throw fe;
                 }
@@ -714,7 +714,14 @@ public class Client {
         HttpResponse response = request.execute();
         if (response != null) {
             response.disconnect();
-            return response.getStatusCode() == 200;
+            if(response.getStatusCode() == 200) {
+                return true;
+            }
+            try{
+                parseError(response);
+            } catch (BucketNotFoundException ex) {
+                return false;
+            }
         }
         throw new IOException("No response from server");
     }
