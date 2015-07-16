@@ -139,30 +139,3 @@ jar {
         attributes("Minio-Client-Java-Version": version)
     }
 }
-
-/*
- * Courtesy https://discuss.gradle.org/t/running-groovy-shell-from-gradle-task/6075/3
- */
-configurations {
-    console
-}
-dependencies {
-    console 'commons-cli:commons-cli:1.2'
-    console('jline:jline:2.12.1')
-    console 'org.codehaus.groovy:groovy-groovysh:2.4.+'
-}
-task(console, dependsOn: 'classes') << {
-    def classpath = sourceSets.main.runtimeClasspath + configurations.console
-    def command = [
-            'java',
-            '-cp', classpath.collect().join(':'),
-            'org.codehaus.groovy.tools.shell.Main',
-            '--color',
-            '--terminal', 'unix']
-    def proc = new ProcessBuilder(command)
-            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-            .redirectInput(ProcessBuilder.Redirect.INHERIT)
-            .redirectError(ProcessBuilder.Redirect.INHERIT)
-            .start()
-    proc.waitFor()
-}
