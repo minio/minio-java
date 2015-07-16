@@ -217,11 +217,13 @@ public class Client {
             throw new IOException("No response was returned");
         }
 
-        if(response.getStatusCode() == 307 || response.getStatusCode() == 301) {
+        int statusCode = response.getStatusCode();
+
+        if (statusCode == 307 || statusCode == 301) {
             throw new RedirectionException();
         }
 
-        if (response.getStatusCode() == 404 || response.getStatusCode() == 403) {
+        if (statusCode == 404 || statusCode == 403 || statusCode == 501 || statusCode == 405) {
             ClientException e;
             ErrorResponse errorResponse = new ErrorResponse();
             String amzId2 = String.valueOf(response.getHeaders().get("x-amz-id-2"));
@@ -244,7 +246,7 @@ public class Client {
             int pathLength = resource.split("/").length;
             errorResponse.setResource(resource);
 
-            if (response.getStatusCode() == 404) {
+            if (statusCode == 404) {
                 if (pathLength > 2) {
                     errorResponse.setCode("NoSuchKey");
                     e = new ObjectNotFoundException();
@@ -254,6 +256,9 @@ public class Client {
                 } else {
                     e = new InternalClientException("404 without body resulted in path with less than two components");
                 }
+            } else if (statusCode == 501 || statusCode == 405) {
+                errorResponse.setCode("MethodNotAllowed");
+                e = new MethodNotAllowedException();
             } else {
                 errorResponse.setCode("AccessDenied");
                 e = new AccessDeniedException();
@@ -264,7 +269,7 @@ public class Client {
 
         // if response.getContent is null, throw an IOException with status code in string
         if (response.getContent() == null) {
-            throw new InternalClientException("Unsuccessful response from server without XML error: " + response.getStatusCode());
+            throw new InternalClientException("Unsuccessful response from server without XML error: " + statusCode);
         }
 
         // Populate an ErrorResponse, will throw an ClientException if not parsable. We should just pass it up.
@@ -685,7 +690,7 @@ public class Client {
                 }
                 try {
                     parseError(response);
-                } catch(RedirectionException ex) {
+                } catch (RedirectionException ex) {
                     AccessDeniedException fe = new AccessDeniedException();
                     fe.initCause(ex);
                     throw fe;
@@ -715,10 +720,10 @@ public class Client {
         HttpResponse response = request.execute();
         if (response != null) {
             response.disconnect();
-            if(response.getStatusCode() == 200) {
+            if (response.getStatusCode() == 200) {
                 return true;
             }
-            try{
+            try {
                 parseError(response);
             } catch (BucketNotFoundException ex) {
                 return false;
@@ -988,7 +993,14 @@ public class Client {
             if (data.getData().length != size || destructiveHasMore(body)) {
                 throw new DataSizeMismatchException();
             }
-            putObject(bucket, key, contentType, data.getData(), data.getMD5());
+            try {
+                putObject(bucket, key, contentType, data.getData(), data.getMD5());
+            } catch (MethodNotAllowedException ex) {
+                ObjectExistsException objectExistsException = new ObjectExistsException();
+                objectExistsException.setErrorResponse(ex.getErrorResponse());
+                objectExistsException.initCause(ex);
+                throw objectExistsException;
+            }
         } else {
             long objectLength = 0;
             long totalSeen = 0;
@@ -1025,7 +1037,14 @@ public class Client {
             if (totalSeen != size) {
                 throw new DataSizeMismatchException();
             }
-            completeMultipart(bucket, key, uploadID, parts);
+            try {
+                completeMultipart(bucket, key, uploadID, parts);
+            } catch (MethodNotAllowedException ex) {
+                ObjectExistsException objectExistsException = new ObjectExistsException();
+                objectExistsException.setErrorResponse(ex.getErrorResponse());
+                objectExistsException.initCause(ex);
+                throw objectExistsException;
+            }
         }
     }
 
