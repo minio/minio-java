@@ -7,7 +7,7 @@
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 </dependency>
 ```
 [![Maven](https://img.shields.io/maven-central/v/io.minio/minio.svg)](https://search.maven.org/#search%7Cga%7C1%7Ca%3A%22minio%22)
