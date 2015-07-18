@@ -14,11 +14,9 @@ hs_err_pid*
 
 # gradle working files
 .gradle/
+build/
 
-/build/
-
-# IDEA build scripts
-/.idea/
-*.iml
-
-dist/
+# sbt files
+lib/
+project/
+target/
