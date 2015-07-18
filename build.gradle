@@ -140,7 +140,23 @@ jar {
     }
 }
 
-task copyLibraries(type:Copy) {
-    into "lib"
-    from configurations.runtime
+
+apply plugin: 'groovy'
+ext.libdir = 'lib'
+task copyArtifactJars(type: Copy) {
+  from(getRuntimeArtifacts())
+  into libdir
+}
+
+def getRuntimeArtifacts() {
+  configurations.runtime.artifacts.files
+}
+
+task copyDependentLibraries(type: Copy) {
+  from(getRuntimeLibraries())
+  into libdir
+}
+
+def getRuntimeLibraries() {
+  configurations.runtime
 }

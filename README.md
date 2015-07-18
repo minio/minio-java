@@ -2,7 +2,6 @@
 
 ## Install from maven [![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
 
-
 ```xml
 <dependency>
     <groupId>io.minio</groupId>
