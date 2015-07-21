@@ -46,7 +46,7 @@ import static org.junit.Assert.assertEquals;
 @SuppressWarnings("unused")
 public class ClientTest {
     @Test()
-    public void instantiateNewClient() throws MalformedURLException {
+    public void instantiateNewClient() throws MalformedURLException, ClientException {
         String expectedHost = "example.com";
         Client client = Client.getClient("http://" + expectedHost);
 
@@ -58,7 +58,7 @@ public class ClientTest {
     }
 
     @Test()
-    public void instantiateNewClientWithTrailingSlash() throws MalformedURLException {
+    public void instantiateNewClientWithTrailingSlash() throws MalformedURLException, ClientException {
         String expectedHost = "example.com";
         Client client = Client.getClient("http://" + expectedHost + "/");
 
@@ -70,14 +70,14 @@ public class ClientTest {
     }
 
     @Test()
-    public void setUserAgentOnceSet() throws IOException {
+    public void setUserAgentOnceSet() throws IOException, ClientException {
         String expectedHost = "example.com";
         Client client = Client.getClient("http://" + expectedHost + "/");
         client.setUserAgent("testApp", "1.0.0", "");
     }
 
     @Test(expected = IOException.class)
-    public void setUserAgentTwiceSet() throws IOException {
+    public void setUserAgentTwiceSet() throws IOException, ClientException {
         String expectedHost = "example.com";
         Client client = Client.getClient("http://" + expectedHost + "/");
         client.setUserAgent("testApp", "1.0.0", "");
@@ -85,19 +85,19 @@ public class ClientTest {
     }
 
     @Test(expected = MalformedURLException.class)
-    public void newClientWithPathFails() throws MalformedURLException {
+    public void newClientWithPathFails() throws MalformedURLException, ClientException {
         Client.getClient("http://example.com/path");
         throw new RuntimeException("Expected exception did not fire");
     }
 
-    @Test(expected = NullPointerException.class)
-    public void newClientWithNullURLFails() throws MalformedURLException {
+    @Test(expected = InvalidArgumentException.class)
+    public void newClientWithNullURLFails() throws MalformedURLException, ClientException {
         Client.getClient((URL) null);
         throw new RuntimeException("Expected exception did not fire");
     }
 
-    @Test(expected = NullPointerException.class)
-    public void newClientWithNullURLStringFails() throws MalformedURLException {
+    @Test(expected = InvalidArgumentException.class)
+    public void newClientWithNullURLStringFails() throws MalformedURLException, ClientException {
         Client.getClient((String) null);
         throw new RuntimeException("Expected exception did not fire");
     }
@@ -737,7 +737,7 @@ public class ClientTest {
 
     // this case only occurs for minio object storage
 //    @Test(expected = ObjectExistsException.class)
-    @Test(expected = DataSizeMismatchException.class)
+    @Test(expected = InputSizeMismatchException.class)
     public void testPutIncompleteSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
         final ErrorResponse errResponse = new ErrorResponse();
         errResponse.setCode("MethodNotAllowed");
@@ -770,7 +770,7 @@ public class ClientTest {
         throw new RuntimeException("Expected exception did not fire");
     }
 
-    @Test(expected = DataSizeMismatchException.class)
+    @Test(expected = InputSizeMismatchException.class)
     public void testPutOversizedSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
         final ErrorResponse errResponse = new ErrorResponse();
         errResponse.setCode("MethodNotAllowed");

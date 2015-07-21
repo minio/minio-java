@@ -16,5 +16,5 @@
 
 package io.minio.client.errors;
 
-public class DataSizeMismatchException extends ClientException {
+public class InputSizeMismatchException extends ClientException {
 }

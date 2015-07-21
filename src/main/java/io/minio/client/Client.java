@@ -121,10 +121,10 @@ public class Client {
      * @throws MalformedURLException malformed url
      * @see #getClient(String)
      */
-    public static Client getClient(URL url) throws MalformedURLException {
+    public static Client getClient(URL url) throws MalformedURLException, ClientException {
         // URL should not be null
         if (url == null) {
-            throw new NullPointerException();
+            throw new InvalidArgumentException();
         }
 
         // check if url is http or https
@@ -155,9 +155,9 @@ public class Client {
      * @throws MalformedURLException malformed url
      * @see #getClient(URL url)
      */
-    public static Client getClient(String url) throws MalformedURLException {
+    public static Client getClient(String url) throws MalformedURLException, ClientException {
         if (url == null) {
-            throw new NullPointerException();
+            throw new InvalidArgumentException();
         }
         return getClient(new URL(url));
     }
@@ -220,7 +220,7 @@ public class Client {
         int statusCode = response.getStatusCode();
 
         if (statusCode == 307 || statusCode == 301) {
-            throw new RedirectionException();
+            throw new HTTPRedirectException();
         }
 
         if (statusCode == 404 || statusCode == 403 || statusCode == 501 || statusCode == 405) {
@@ -286,11 +286,11 @@ public class Client {
         else if ("InvalidObjectName".equals(code)) e = new InvalidKeyNameException();
         else if ("AccessDenied".equals(code)) e = new AccessDeniedException();
         else if ("BucketAlreadyExists".equals(code)) e = new BucketExistsException();
-        else if ("ObjectAlreadyExists".equals(code)) e = new ObjectExistsException();
         else if ("InternalError".equals(code)) e = new InternalServerException();
         else if ("KeyTooLong".equals(code)) e = new InvalidKeyNameException();
         else if ("TooManyBuckets".equals(code)) e = new MaxBucketsReachedException();
-        else if ("PermanentRedirect".equals(code)) e = new RedirectionException();
+        else if ("PermanentRedirect".equals(code)) e = new HTTPRedirectException();
+        else if ("TemporaryRedirect".equals(code)) e = new HTTPRedirectException();
         else if ("MethodNotAllowed".equals(code)) e = new ObjectExistsException();
         else if ("BucketAlreadyOwnedByYou".equals(code)) e = new BucketExistsException();
         else e = new InternalClientException(errorResponse.toString());
@@ -690,7 +690,7 @@ public class Client {
                 }
                 try {
                     parseError(response);
-                } catch (RedirectionException ex) {
+                } catch (HTTPRedirectException ex) {
                     AccessDeniedException fe = new AccessDeniedException();
                     fe.initCause(ex);
                     throw fe;
@@ -839,7 +839,7 @@ public class Client {
     public Acl getBucketACL(String bucket) throws IOException, ClientException {
         AccessControlPolicy policy = this.getAccessPolicy(bucket);
         if (policy == null) {
-            throw new NullPointerException();
+            throw new InvalidArgumentException();
         }
         Acl acl = Acl.PRIVATE;
         List<Grant> accessControlList = policy.getAccessControlList();
@@ -991,7 +991,7 @@ public class Client {
         if (!isMultipart) {
             Data data = readData((int) size, body);
             if (data.getData().length != size || destructiveHasMore(body)) {
-                throw new DataSizeMismatchException();
+                throw new InputSizeMismatchException();
             }
             try {
                 putObject(bucket, key, contentType, data.getData(), data.getMD5());
@@ -1011,7 +1011,7 @@ public class Client {
                 Data data = readData(partSize, body);
                 totalSeen += data.getData().length;
                 if (totalSeen > size) {
-                    throw new DataSizeMismatchException();
+                    throw new InputSizeMismatchException();
                 }
                 if (existingParts.hasNext()) {
                     Part existingPart = existingParts.next();
@@ -1035,7 +1035,7 @@ public class Client {
                 throw new IOException("Data size mismatched");
             }
             if (totalSeen != size) {
-                throw new DataSizeMismatchException();
+                throw new InputSizeMismatchException();
             }
             try {
                 completeMultipart(bucket, key, uploadID, parts);
