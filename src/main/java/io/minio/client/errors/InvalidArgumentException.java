@@ -16,5 +16,5 @@
 
 package io.minio.client.errors;
 
-public class RedirectionException extends ClientException {
+public class InvalidArgumentException extends ClientException {
 }
