@@ -16,10 +16,14 @@
 
 package io.minio.client;
 
-import com.google.api.client.http.HttpContent;
-import com.google.api.client.http.HttpEncoding;
-import com.google.api.client.http.HttpExecuteInterceptor;
-import com.google.api.client.http.HttpRequest;
+
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Interceptor;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.RequestBody;
+
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -32,17 +36,19 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-class RequestSigner implements HttpExecuteInterceptor {
+class RequestSigner implements Interceptor {
     private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
     private static final DateTimeFormatter dateFormatyyyyMMdd = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC();
     private static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withZoneUTC();
 
     private byte[] data = new byte[0];
+    private DateTime date = null;
     private String accessKey = null;
     private String secretKey = null;
 
@@ -76,30 +82,33 @@ class RequestSigner implements HttpExecuteInterceptor {
     //
     private Set<String> ignoredHeaders = new HashSet<String>();
 
-    RequestSigner(byte[] data) {
+    RequestSigner(byte[] data, String accessKey, String secretKey, DateTime date) {
         if (data == null) {
             data = new byte[0];
         }
         this.data = data;
+        this.date = date;
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
 
         ignoredHeaders.add("authorization");
-        ignoredHeaders.add("date"); // we always set x-amz-date
         ignoredHeaders.add("content-type");
         ignoredHeaders.add("content-length");
         ignoredHeaders.add("user-agent");
     }
 
 
-    private static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+    private static byte[] generateSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException,
+                                                                                                    InvalidKeyException, UnsupportedEncodingException {
         String formattedDate = date.toString(dateFormatyyyyMMdd);
         String dateKeyLine = "AWS4" + secretKey;
-        byte[] dateKey = signHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
-        byte[] dateRegionKey = signHmac(dateKey, region.getBytes("UTF-8"));
-        byte[] dateRegionServiceKey = signHmac(dateRegionKey, "s3".getBytes("UTF-8"));
-        return signHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
+        byte[] dateKey = sumHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
+        byte[] dateRegionKey = sumHmac(dateKey, region.getBytes("UTF-8"));
+        byte[] dateRegionServiceKey = sumHmac(dateRegionKey, "s3".getBytes("UTF-8"));
+        return sumHmac(dateRegionServiceKey, "aws4_request".getBytes("UTF-8"));
     }
 
-    private static byte[] signHmac(byte[] curKey, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
+    private static byte[] sumHmac(byte[] curKey, byte[] data) throws NoSuchAlgorithmException, InvalidKeyException {
         SecretKeySpec key = new SecretKeySpec(curKey, "HmacSHA256");
         Mac hmacSha256 = Mac.getInstance("HmacSHA256");
         hmacSha256.init(key);
@@ -107,36 +116,33 @@ class RequestSigner implements HttpExecuteInterceptor {
         return hmacSha256.doFinal();
     }
 
-    private void signV4(HttpRequest request, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+    private Request signV4(Request originalRequest, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException, IOException {
         if (this.accessKey == null || this.secretKey == null) {
-            return;
+            return originalRequest;
         }
 
-        String region = getRegion(request);
-
-        DateTime signingDate = new DateTime();
-        addDateToHeaders(request, signingDate);
-
+        String region = getRegion(originalRequest);
         byte[] dataHashBytes = computeSha256(data);
         String dataHash = DatatypeConverter.printHexBinary(dataHashBytes).toLowerCase();
 
-        request.getHeaders().set("x-amz-content-sha256", dataHash);
-        request.getHeaders().setDate(new DateTime(signingDate).toString(dateFormat));
-
-        String host = request.getUrl().getHost();
-        int port = request.getUrl().getPort();
+        String host = originalRequest.uri().getHost();
+        int port = originalRequest.uri().getPort();
         if(port != -1) {
-            String scheme = request.getUrl().getScheme();
+            String scheme = originalRequest.uri().getScheme();
             if ("http".equals(scheme) && port != 80) {
-                host += ":" + request.getUrl().getPort();
+                host += ":" + originalRequest.uri().getPort();
             } else if ("https".equals(scheme) && port != 443) {
-                host += ":" + request.getUrl().getPort();
+                host += ":" + originalRequest.uri().getPort();
             }
         }
-        request.getHeaders().set("Host", host);
+
+        Request signedRequest = originalRequest.newBuilder()
+            .header("x-amz-content-sha256", dataHash)
+            .header("Host", host)
+            .build();
 
         // get canonical request and headers to sign
-        Tuple2<String, String> canonicalRequestAndHeaders = getCanonicalRequest(request, dataHash);
+        Tuple2<String, String> canonicalRequestAndHeaders = getCanonicalRequest(signedRequest, dataHash);
         String canonicalRequest = canonicalRequestAndHeaders.getFirst();
         String signedHeaders = canonicalRequestAndHeaders.getSecond();
 
@@ -145,39 +151,40 @@ class RequestSigner implements HttpExecuteInterceptor {
         String canonicalHash = DatatypeConverter.printHexBinary(canonicalHashBytes).toLowerCase();
 
         // generate key to sign
-        String stringToSign = getStringToSign(region, canonicalHash, signingDate);
-        byte[] signingKey = generateSigningKey(signingDate, region, this.secretKey);
+        String stringToSign = getStringToSign(region, canonicalHash, this.date);
+        byte[] signingKey = generateSigningKey(this.date, region, this.secretKey);
 
         // generate signing key
         String signature = DatatypeConverter.printHexBinary(getSignature(signingKey, stringToSign)).toLowerCase();
 
         // generate authorization header
-        String authorization = getAuthorizationHeader(signedHeaders, signature, signingDate, region);
+        String authorization = getAuthorizationHeader(signedHeaders, signature, this.date, region);
 
-        // set authorization header
-        List<String> authorizationList = new LinkedList<String>();
-        authorizationList.add(authorization);
-        request.getHeaders().setAuthorization(authorizationList);
+        signedRequest = signedRequest.newBuilder()
+            .header("Authorization", authorization)
+            .build();
 
         // print debug info
-//        System.out.println("--- Canonical Request ---");
-//        System.out.println(canonicalRequest);
-//        System.out.println(DatatypeConverter.printHexBinary(canonicalRequest.getBytes("UTF-8")));
-//        System.out.println("--- Canonical Hash ---");
-//        System.out.println(canonicalHash);
-//        System.out.println("--- String to Sign ---");
-//        System.out.println(stringToSign);
-//        System.out.println("--- Signing Key ---");
-//        System.out.println(DatatypeConverter.printHexBinary(signingKey));
-//        System.out.println("--- Signature ---");
-//        System.out.println(signature);
-//        System.out.println("--- Authorization ---");
-//        System.out.println(authorization);
-//        System.out.println("--- End ---");
+        // System.out.println("--- Canonical Request ---");
+        // System.out.println(canonicalRequest);
+        // System.out.println(DatatypeConverter.printHexBinary(canonicalRequest.getBytes("UTF-8")));
+        // System.out.println("--- Canonical Hash ---");
+        // System.out.println(canonicalHash);
+        // System.out.println("--- String to Sign ---");
+        // System.out.println(stringToSign);
+        // System.out.println("--- Signing Key ---");
+        // System.out.println(DatatypeConverter.printHexBinary(signingKey));
+        // System.out.println("--- Signature ---");
+        // System.out.println(signature);
+
+        // System.out.println("--- Authorization ---");
+        // System.out.println(authorization);
+        // System.out.println("--- End ---");
+        return signedRequest;
     }
 
-    private String getRegion(HttpRequest request) {
-        String host = request.getUrl().getHost();
+    private String getRegion(Request request) {
+        String host = request.url().getHost();
         return Regions.INSTANCE.getRegion(host);
     }
 
@@ -186,17 +193,12 @@ class RequestSigner implements HttpExecuteInterceptor {
         return digest.digest(data);
     }
 
-    private void addDateToHeaders(HttpRequest request, DateTime date) {
-        String dateString = date.toString(dateFormatyyyyMMddThhmmssZ);
-        request.getHeaders().set("x-amz-date", dateString);
-    }
-
     private String getAuthorizationHeader(String signedHeaders, String signature, DateTime date, String region) {
         return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region, date) + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
     }
 
     private byte[] getSignature(byte[] signingKey, String stringToSign) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
-        return signHmac(signingKey, stringToSign.getBytes("UTF-8"));
+        return sumHmac(signingKey, stringToSign.getBytes("UTF-8"));
     }
 
     private String getScope(String region, DateTime date) {
@@ -210,13 +212,13 @@ class RequestSigner implements HttpExecuteInterceptor {
                 getScope(region, date) + "\n" + canonicalHash;
     }
 
-    private Tuple2<String, String> getCanonicalRequest(HttpRequest request, String bodySha256Hash) {
+    private Tuple2<String, String> getCanonicalRequest(Request request, String bodySha256Hash) throws IOException {
         StringWriter canonicalWriter = new StringWriter();
         PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
 
-        String method = request.getRequestMethod();
-        String path = request.getUrl().getRawPath();
-        String rawQuery = request.getUrl().toURI().getQuery();
+        String method = request.method();
+        String path = request.uri().getPath();
+        String rawQuery = request.uri().getQuery();
         if (rawQuery == null || rawQuery.isEmpty()) {
             rawQuery = "";
         }
@@ -281,34 +283,16 @@ class RequestSigner implements HttpExecuteInterceptor {
         return builder.toString();
     }
 
-    private String[] generateCanonicalHeaders(PrintWriter writer, HttpRequest request) {
+    private String[] generateCanonicalHeaders(PrintWriter writer, Request request) throws IOException {
         Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 
-        HttpContent content = request.getContent();
-
-        if (content != null) {
-            HttpEncoding encoding = request.getEncoding();
-            String contentEncoding = null;
-            if (encoding != null) {
-                contentEncoding = encoding.getName();
-            }
-            if (contentEncoding != null) {
-                map.put("content-encoding", contentEncoding);
-            }
-        }
-
-        String acceptEncoding = request.getHeaders().getAcceptEncoding();
-        if (acceptEncoding != null) {
-            map.put("accept-encoding", acceptEncoding);
-        }
-
-        String contentMD5 = request.getHeaders().getContentMD5();
+        String contentMD5 = request.headers().get("Content-MD5");
         if (contentMD5 != null) {
             map.put("content-md5", contentMD5);
         }
 
-        for (String s : request.getHeaders().getUnknownKeys().keySet()) {
-            String val = request.getHeaders().getFirstHeaderStringValue(s);
+        for (String s : request.headers().names()) {
+            String val = request.headers().get(s);
             if (val != null) {
                 String headerKey = s.toLowerCase().trim();
                 String headerValue = val.trim();
@@ -329,18 +313,17 @@ class RequestSigner implements HttpExecuteInterceptor {
     }
 
     @Override
-    public void intercept(HttpRequest request) throws IOException {
+    public Response intercept(Chain chain) throws IOException {
         try {
-            this.signV4(request, data);
+            Request signedRequest = this.signV4(chain.request(), data);
+            Response response = chain.proceed(signedRequest);
+            return response;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+            return new Response.Builder().build();
         } catch (InvalidKeyException e) {
             e.printStackTrace();
+            return new Response.Builder().build();
         }
-    }
-
-    void setAccessKeys(String accessKey, String secretKey) {
-        this.accessKey = accessKey;
-        this.secretKey = secretKey;
     }
 }

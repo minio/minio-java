@@ -16,20 +16,30 @@
 
 package io.minio.client;
 
-import com.google.api.client.http.*;
-import com.google.api.client.http.javanet.NetHttpTransport;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.Headers;
+
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
+
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.*;
 import io.minio.client.messages.*;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.MessageDigest;
@@ -70,24 +80,25 @@ import java.util.logging.Logger;
  * <li>Deleting an object</li>
  * </ul>
  * <p>
- * Optionally, users can also provide access/secret keys or a precomputed
- * signing key to the client. If keys are provided, all requests by the
+ * Optionally, users can also provide access/secret keys. If keys are provided, all requests by the
  * client will be signed using AWS Signature Version 4. See {@link #setKeys(String, String)}
  * </p>
- * For an example of using this library, please see <a href="https://github.com/minio/minio-java/blob/master/src/test/java/io/minio/client/example/Example.java">this example</a>.
+ * For examples on using this library, please see <a href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples"></a>.
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class Client {
     // default multipart upload size is 5MB
     private static final int PART_SIZE = 5 * 1024 * 1024;
     // default transport is an HTTP client.
-    private static final HttpTransport defaultTransport = new NetHttpTransport();
+    private static final OkHttpClient defaultTransport = new OkHttpClient();
     // the current client instance's base URL.
-    private final URL url;
+    private final HttpUrl url;
+
     // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers from being instantiated
     private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
+
     // current transporter which can be used to mock
-    private HttpTransport transport = defaultTransport;
+    private OkHttpClient transport = defaultTransport;
     // access key to sign all requests with
     private String accessKey;
     // Secret key to sign all requests with
@@ -100,9 +111,8 @@ public class Client {
     // Don't allow users to instantiate clients themselves, since it is bad form to throw exceptions in constructors.
     // Use Client.getClient instead
     private Client(URL url) {
-        this.url = url;
+        this.url = HttpUrl.get(url);
     }
-
 
     /**
      * Create a new client given a url
@@ -119,6 +129,7 @@ public class Client {
      * @return an object storage client backed by an S3 compatible server.
      *
      * @throws MalformedURLException malformed url
+     * @throws ClientException invalid argument
      * @see #getClient(String)
      */
     public static Client getClient(URL url) throws MalformedURLException, ClientException {
@@ -153,6 +164,7 @@ public class Client {
      * @return an object storage client backed by an S3 compatible server.
      *
      * @throws MalformedURLException malformed url
+     * @throws ClientException invalid argument
      * @see #getClient(URL url)
      */
     public static Client getClient(String url) throws MalformedURLException, ClientException {
@@ -168,7 +180,7 @@ public class Client {
      * @return the URL backed by this.
      */
     public URL getUrl() {
-        return url;
+        return url.url();
     }
 
     /**
@@ -184,18 +196,20 @@ public class Client {
      * @see ObjectStat
      */
     public ObjectStat statObject(String bucket, String key) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
-        HttpRequest request = getHttpRequest("HEAD", url);
-        HttpResponse response = request.execute();
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
+        Request request = getRequest("HEAD", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     // all info we need is in the headers
-                    HttpHeaders responseHeaders = response.getHeaders();
+                    Headers responseHeaders = response.headers();
                     SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-                    Date lastModified = formatter.parse(responseHeaders.getLastModified());
-                    String contentType = responseHeaders.getContentType();
-                    return new ObjectStat(bucket, key, lastModified, responseHeaders.getContentLength(), responseHeaders.getETag(), contentType);
+                    Date lastModified = formatter.parse(responseHeaders.get("Last-Modified"));
+                    String contentType = responseHeaders.get("Content-Type");
+                    String etag = responseHeaders.get("ETag");
+                    Long contentLength = Long.valueOf(responseHeaders.get("Content-Length"));
+                    return new ObjectStat(bucket, key, lastModified, contentLength, etag, contentType);
                 } else {
                     parseError(response);
                 }
@@ -205,40 +219,39 @@ public class Client {
                 internalClientException.initCause(e);
                 throw internalClientException;
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
     }
 
-    private void parseError(HttpResponse response) throws IOException, ClientException {
+    private void parseError(Response response) throws IOException, ClientException {
         // if response is null, throw an IOException and finish here
         if (response == null) {
             throw new IOException("No response was returned");
         }
 
-        int statusCode = response.getStatusCode();
-
-        if (statusCode == 307 || statusCode == 301) {
+        int statusCode = response.code();
+        if (response.isRedirect()) {
             throw new HTTPRedirectException();
         }
 
         if (statusCode == 404 || statusCode == 403 || statusCode == 501 || statusCode == 405) {
             ClientException e;
             ErrorResponse errorResponse = new ErrorResponse();
-            String amzId2 = String.valueOf(response.getHeaders().get("x-amz-id-2"));
+            String hostId = String.valueOf(response.headers().get("x-amz-id-2"));
 
-            if ("null".equals(amzId2)) {
-                amzId2 = null;
+            if ("null".equals(hostId)) {
+                hostId = null;
             }
-            String requestId = String.valueOf(response.getHeaders().get("x-amz-request-id"));
+            String requestId = String.valueOf(response.headers().get("x-amz-request-id"));
             if ("null".equals(requestId)) {
                 requestId = null;
             }
-            errorResponse.setxAmzID2(amzId2);
+            errorResponse.setxAmzID2(hostId);
             errorResponse.setRequestID(requestId);
 
-            String resource = response.getRequest().getUrl().getRawPath();
+            String resource = response.request().url().getPath();
             if (resource == null) {
                 resource = "/";
             }
@@ -268,7 +281,7 @@ public class Client {
         }
 
         // if response.getContent is null, throw an IOException with status code in string
-        if (response.getContent() == null) {
+        if (response.body().bytes() == null) {
             throw new InternalClientException("Unsuccessful response from server without XML error: " + statusCode);
         }
 
@@ -298,7 +311,7 @@ public class Client {
         throw e;
     }
 
-    private void parseXml(HttpResponse response, Object objectToPopulate) throws IOException, InternalClientException {
+    private void parseXml(Response response, Object objectToPopulate) throws IOException, InternalClientException {
         // if response is null, throw an IOException
         if (response == null) {
             throw new IOException("No response was returned");
@@ -311,8 +324,7 @@ public class Client {
             // set up a parser
             XmlPullParser parser = Xml.createParser();
             // write up the response body to the parser
-            InputStreamReader reader = new InputStreamReader(response.getContent(), "UTF-8");
-            parser.setInput(reader);
+            parser.setInput(response.body().charStream());
             // create a dictionary and populate based on object type
             XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
             if (objectToPopulate instanceof ErrorResponse) {
@@ -328,77 +340,64 @@ public class Client {
         }
     }
 
-    private HttpRequest getHttpRequest(String method, GenericUrl url) throws IOException, InternalClientException {
-        return getHttpRequest(method, url, null);
+    private Request getRequest(String method, HttpUrl url) throws IOException, InternalClientException {
+        return getRequest(method, url, null);
     }
 
-    private HttpRequest getHttpRequest(String method, GenericUrl url, final byte[] data) throws IOException, InternalClientException {
+    private Request getRequest(String method, HttpUrl url, final byte[] data) throws IOException, InternalClientException {
+        DateTimeFormatter dateFormatyyyyMMddThhmmssZ = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
         if (method == null || "".equals(method.trim())) {
             throw new InternalClientException("Method should be populated");
         }
         if (url == null) {
             throw new InternalClientException("URL should be populated");
         }
-        // create a new request factory that will sign the code on execute()
-        HttpRequestFactory requestFactory = this.transport.createRequestFactory(new HttpRequestInitializer() {
-            @Override
-            public void initialize(HttpRequest request) throws IOException {
-                // wire up secrets for code signing
-                RequestSigner signer = new RequestSigner(data);
-                signer.setAccessKeys(accessKey, secretKey);
-                request.setInterceptor(signer);
-                request.setFollowRedirects(false);
-            }
-        });
-        HttpRequest request = requestFactory.buildRequest(method, url, null);
-        // Workaround for where user agent for google is appended after signing interceptor is called.
-        request.setSuppressUserAgentSuffix(true);
-        // Disable throwing exceptions on execute()
-        request.setThrowExceptionOnExecuteError(false);
-        // set our own user agent
-        request.getHeaders().setUserAgent(this.userAgent);
+
+        DateTime date = new DateTime();
+        String dateString = date.toString(dateFormatyyyyMMddThhmmssZ);
+
+        this.transport.setFollowRedirects(false);
+        this.transport.interceptors().add(new RequestSigner(data, accessKey, secretKey, date));
+
+        RequestBody requestBody = null;
+        if (data != null) {
+            requestBody = RequestBody.create(null, data);
+        }
+        Request request = new Request.Builder()
+            .url(url)
+            .method(method, requestBody)
+            .header("User-Agent", this.userAgent)
+            .header("x-amz-date", dateString)
+            .build();
+
         return request;
     }
 
-    private GenericUrl getGenericUrlOfKey(String bucket, String key) throws InvalidBucketNameException, InvalidKeyNameException {
+    private HttpUrl getHttpUrlOfKey(String bucket, String key) throws InvalidBucketNameException, InvalidKeyNameException {
         if (bucket == null || "".equals(bucket.trim())) {
             throw new InvalidBucketNameException();
         }
         if (key == null || "".equals(bucket.trim())) {
             throw new InvalidKeyNameException();
         }
-        GenericUrl url = new GenericUrl(this.url);
 
-        List<String> pathParts = new LinkedList<String>();
-        // pathParts adds slashes between each part
-        // e.g. foo, bar => foo/bar
-        // we add a "" in the beginning to force it to add a / at the beginning or the url will not be differentiated from the port
-        // e.g. "", bucket, key => /bucket/key
-        pathParts.add("");
-        pathParts.add(bucket);
-        String[] keySplit = key.split("/");
-        Collections.addAll(pathParts, keySplit);
+        HttpUrl url = this.url.newBuilder()
+            .addPathSegment(bucket)
+            .addPathSegment(key)
+            .build();
 
-        // add the path to the url and return
-        url.setPathParts(pathParts);
         return url;
     }
 
-    private GenericUrl getGenericUrlOfBucket(String bucket) throws InvalidBucketNameException {
+    private HttpUrl getHttpUrlOfBucket(String bucket) throws InvalidBucketNameException {
         if (bucket == null || "".equals(bucket.trim())) {
             throw new InvalidBucketNameException();
         }
-        GenericUrl url = new GenericUrl(this.url);
 
-        // pathParts adds slashes between each part
-        // e.g. foo, bar => foo/bar
-        // we add a "" in the beginning to force it to add a / at the beginning or the url will not be differentiated from the port
-        // e.g. "", bucket => /bucket
-        List<String> pathParts = new LinkedList<String>();
-        pathParts.add("");
-        pathParts.add(bucket);
+        HttpUrl url = this.url.newBuilder()
+            .addPathSegment(bucket)
+            .build();
 
-        url.setPathParts(pathParts);
         return url;
     }
 
@@ -415,21 +414,21 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public InputStream getObject(String bucket, String key) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
 
-        HttpRequest request = getHttpRequest("GET", url);
-        HttpResponse response = request.execute();
+        Request request = getRequest("GET", url);
+        Response response = this.transport.newCall(request).execute();
         // we close the response only on failure or the user will be unable to retrieve the object
         // it is the user's responsibility to close the input stream
         if (response != null) {
-            if (!response.isSuccessStatusCode()) {
+            if (!(response.isSuccessful())) {
                 try {
                     parseError(response);
                 } finally {
-                    response.disconnect();
+                    response.body().close();
                 }
             }
-            return response.getContent();
+            return response.body().byteStream();
         }
         // TODO create a better exception
         throw new IOException();
@@ -445,17 +444,18 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public void removeObject(String bucket, String key) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
-        HttpRequest request = getHttpRequest("DELETE", url);
-        HttpResponse response = request.execute();
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
+
+        Request request = getRequest("DELETE", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     return;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -495,27 +495,30 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public InputStream getPartialObject(String bucket, String key, long offsetStart, long length) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
 
         if (offsetStart < 0 || length <= 0) {
             throw new InvalidRangeException();
         }
 
-        HttpRequest request = getHttpRequest("GET", url);
+        Request request = getRequest("GET", url);
         long offsetEnd = offsetStart + length - 1;
-        request.getHeaders().setRange("bytes=" + offsetStart + "-" + offsetEnd);
+
+        Request rangeRequest = request.newBuilder()
+            .header("Range", "bytes=" + offsetStart + "-" + offsetEnd)
+            .build();
 
         // we close the response only on failure or the user will be unable to retrieve the object
         // it is the user's responsibility to close the input stream
-        HttpResponse response = request.execute();
+        Response response = this.transport.newCall(rangeRequest).execute();
         if (response != null) {
-            if (response.isSuccessStatusCode()) {
-                return response.getContent();
+            if (response.isSuccessful()) {
+                return response.body().byteStream();
             }
             try {
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -609,43 +612,32 @@ public class Client {
     }
 
     private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfBucket(bucket);
+        HttpUrl url = getHttpUrlOfBucket(bucket);
 
         // max keys limits the number of keys returned, max limit is 1000
         if (maxKeys >= 1000 || maxKeys < 0) {
             maxKeys = 1000;
         }
-        url.set("max-keys", maxKeys);
+        url = url.newBuilder()
+            .addQueryParameter("max-keys", Integer.toString(maxKeys))
+            .addQueryParameter("marker", marker)
+            .addQueryParameter("prefix", prefix)
+            .addQueryParameter("delimiter", delimiter)
+            .build();
 
-        // marker is similar to a book mark, returns objects in alphabetical order starting from the marker
-        if (marker != null) {
-            url.set("marker", marker);
-        }
-
-        // prefix filters results, result must contain the given prefix
-        if (prefix != null) {
-            url.set("prefix", prefix);
-        }
-
-        // delimiter will limit results to unique entries with keys truncated at the first instance of the delimiter
-        // useful for emulating file system directories
-        if (delimiter != null) {
-            url.set("delimiter", delimiter);
-        }
-
-        HttpRequest request = getHttpRequest("GET", url);
-        HttpResponse response = request.execute();
+        Request request = getRequest("GET", url);
+        Response response = this.transport.newCall(request).execute();
 
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     ListBucketResult result = new ListBucketResult();
                     parseXml(response, result);
                     return result;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -654,7 +646,7 @@ public class Client {
     /**
      * Set test transports for mocking the http request and response
      */
-    void setTransport(HttpTransport transport) {
+    void setTransport(OkHttpClient transport) {
         this.transport = transport;
     }
 
@@ -675,15 +667,12 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public Iterator<Bucket> listBuckets() throws IOException, ClientException {
-        GenericUrl url = new GenericUrl(this.url);
+        Request request = getRequest("GET", this.url);
 
-        HttpRequest request = getHttpRequest("GET", url);
-        request.setFollowRedirects(false);
-
-        HttpResponse response = request.execute();
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     ListAllMyBucketsResult retrievedBuckets = new ListAllMyBucketsResult();
                     parseXml(response, retrievedBuckets);
                     return retrievedBuckets.getBuckets().iterator();
@@ -696,7 +685,7 @@ public class Client {
                     throw fe;
                 }
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -714,19 +703,20 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public boolean bucketExists(String bucket) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfBucket(bucket);
+        HttpUrl url = getHttpUrlOfBucket(bucket);
 
-        HttpRequest request = getHttpRequest("HEAD", url);
-        HttpResponse response = request.execute();
+        Request request = getRequest("HEAD", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
-            response.disconnect();
-            if (response.getStatusCode() == 200) {
+            if (response.isSuccessful()) {
                 return true;
             }
             try {
                 parseError(response);
             } catch (BucketNotFoundException ex) {
                 return false;
+            } finally {
+                response.body().close();
             }
         }
         throw new IOException("No response from server");
@@ -752,10 +742,10 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public void makeBucket(String bucket, Acl acl) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfBucket(bucket);
+        HttpUrl url = getHttpUrlOfBucket(bucket);
 
         CreateBucketConfiguration config = new CreateBucketConfiguration();
-        String region = Regions.INSTANCE.getRegion(url.getHost());
+        String region = Regions.INSTANCE.getRegion(url.uri().getHost());
         // ``us-east-1`` is not a valid location constraint according to amazon, so we skip it
         // Valid constraints are
         // [ us-west-1 | us-west-2 | EU or eu-west-1 | eu-central-1 | ap-southeast-1 | ap-northeast-1 | ap-southeast-2 | sa-east-1 ]
@@ -765,31 +755,30 @@ public class Client {
 
         byte[] data = config.toString().getBytes("UTF-8");
         byte[] md5sum = calculateMd5sum(data);
+        String base64md5sum = "";
+        if (md5sum != null) {
+            base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
+        }
 
-        HttpRequest request = getHttpRequest("PUT", url, data);
-
+        Request request = getRequest("PUT", url, data);
         if (acl == null) {
             acl = Acl.PRIVATE;
         }
-        request.getHeaders().set("x-amz-acl", acl.toString());
 
-        if (md5sum != null) {
-            String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
-            request.getHeaders().setContentMD5(base64md5sum);
-        }
+        request = request.newBuilder()
+            .header("x-amz-acl", acl.toString())
+            .header("Content-MD5", base64md5sum)
+            .build();
 
-        ByteArrayContent content = new ByteArrayContent("application/xml", data);
-        request.setContent(content);
-
-        HttpResponse response = request.execute();
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     return;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -809,18 +798,18 @@ public class Client {
      * @throws ClientException upon failure from server
      */
     public void removeBucket(String bucket) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfBucket(bucket);
+        HttpUrl url = getHttpUrlOfBucket(bucket);
 
-        HttpRequest request = getHttpRequest("DELETE", url);
-        HttpResponse response = request.execute();
+        Request request = getRequest("DELETE", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     return;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -880,23 +869,23 @@ public class Client {
     }
 
     private AccessControlPolicy getAccessPolicy(String bucket) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfBucket(bucket);
-        url.set("acl", "");
+        HttpUrl url = getHttpUrlOfBucket(bucket);
+        url = url.newBuilder()
+            .addQueryParameter("acl", "")
+            .build();
 
-        HttpRequest request = getHttpRequest("GET", url);
-        request.setFollowRedirects(false);
-
-        HttpResponse response = request.execute();
+        Request request = getRequest("GET", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     AccessControlPolicy policy = new AccessControlPolicy();
                     parseXml(response, policy);
                     return policy;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -916,21 +905,26 @@ public class Client {
             throw new InvalidAclNameException();
         }
 
-        GenericUrl url = getGenericUrlOfBucket(bucket);
+        HttpUrl url = getHttpUrlOfBucket(bucket);
         // make sure to set this, otherwise it would convert this call into a regular makeBucket operation
-        url.set("acl", "");
-        HttpRequest request = getHttpRequest("PUT", url);
-        request.getHeaders().set("x-amz-acl", acl.toString());
+        url = url.newBuilder()
+            .addQueryParameter("acl", "")
+            .build();
 
-        HttpResponse response = request.execute();
+        Request request = getRequest("PUT", url);
+        request = request.newBuilder()
+            .header("x-amz-acl", acl.toString())
+            .build();
+
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     return;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -1089,41 +1083,33 @@ public class Client {
     }
 
     private ListMultipartUploadsResult listAllIncompleteUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfBucket(bucket);
-        url.set("uploads", "");
-
+        HttpUrl url = getHttpUrlOfBucket(bucket);
         // max uploads limits the number of uploads returned, max limit is 1000
         if (maxUploads >= 1000 || maxUploads < 0) {
             maxUploads = 1000;
         }
-        url.set("max-uploads", maxUploads);
-        if (prefix != null) {
-            url.set("prefix", prefix);
-        }
-        if (keyMarker != null) {
-            url.set("key-marker", keyMarker);
-        }
-        if (uploadIDMarker != null) {
-            url.set("upload-id-marker", uploadIDMarker);
-        }
-        if (delimiter != null) {
-            url.set("delimiter", delimiter);
-        }
 
-        HttpRequest request = getHttpRequest("GET", url);
-        request.setFollowRedirects(false);
+        url = url.newBuilder()
+            .addQueryParameter("uploads", "")
+            .addQueryParameter("max-uploads", Integer.toString(maxUploads))
+            .addQueryParameter("prefix", prefix)
+            .addQueryParameter("key-marker", keyMarker)
+            .addQueryParameter("upload-id-marker", uploadIDMarker)
+            .addQueryParameter("delimiter", delimiter)
+            .build();
 
-        HttpResponse response = request.execute();
+        Request request = getRequest("GET", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     ListMultipartUploadsResult result = new ListMultipartUploadsResult();
                     parseXml(response, result);
                     return result;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -1183,45 +1169,46 @@ public class Client {
     }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.set("uploads", "");
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
+        url = url.newBuilder()
+            .addQueryParameter("uploads", "")
+            .build();
 
-        HttpRequest request = getHttpRequest("POST", url);
-
-        HttpResponse response = request.execute();
+        Request request = getRequest("POST", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
                 InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
                 parseXml(response, result);
                 return result.getUploadId();
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
     }
 
     private void completeMultipart(String bucket, String key, String uploadID, List<Part> parts) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.set("uploadId", uploadID);
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
+        url = url.newBuilder()
+            .addQueryParameter("uploadId", uploadID)
+            .build();
 
         CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
         completeManifest.setParts(parts);
 
         byte[] data = completeManifest.toString().getBytes("UTF-8");
+        Request request = getRequest("POST", url, data);
 
-        HttpRequest request = getHttpRequest("POST", url, data);
-        request.setContent(new ByteArrayContent("application/xml", data));
-
-        HttpResponse response = request.execute();
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     return;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
     }
@@ -1249,26 +1236,28 @@ public class Client {
     }
 
     private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.set("uploadId", uploadID);
-
-        if (partNumberMarker > 0) {
-            url.set("part-number-marker", partNumberMarker);
+        if (partNumberMarker <= 0) {
+            throw new InvalidArgumentException();
         }
 
-        HttpRequest request = getHttpRequest("GET", url);
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
+        url = url.newBuilder()
+            .addQueryParameter("uploadId", uploadID)
+            .addQueryParameter("part-number-marker", Integer.toString(partNumberMarker))
+            .build();
 
-        HttpResponse response = request.execute();
+        Request request = getRequest("GET", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     ListPartsResult result = new ListPartsResult();
                     parseXml(response, result);
                     return result;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -1276,27 +1265,29 @@ public class Client {
 
     private void abortMultipartUpload(String bucket, String key, String uploadID) throws IOException, ClientException {
         if (bucket == null) {
-            throw new InternalClientException("Bucket cannot be null");
+            throw new InvalidBucketNameException();
         }
         if (key == null) {
-            throw new InternalClientException("Key cannot be null");
+            throw new InvalidKeyNameException();
         }
         if (uploadID == null) {
             throw new InternalClientException("UploadID cannot be null");
         }
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
-        url.set("uploadId", uploadID);
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
+        url = url.newBuilder()
+            .addQueryParameter("uploadId", uploadID)
+            .build();
 
-        HttpRequest request = getHttpRequest("DELETE", url);
-        HttpResponse response = request.execute();
+        Request request = getRequest("DELETE", url);
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
+                if (response.isSuccessful()) {
                     return;
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -1329,34 +1320,37 @@ public class Client {
         putObject(bucket, key, contentType, data, md5sum, "", 0);
     }
 
-    private String putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum, String uploadId, int partID) throws IOException, ClientException {
-        GenericUrl url = getGenericUrlOfKey(bucket, key);
+    private String putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum, String uploadID, int partID) throws IOException, ClientException {
+        HttpUrl url = getHttpUrlOfKey(bucket, key);
 
-        if (partID > 0 && uploadId != null && !"".equals(uploadId.trim())) {
-            url.set("partNumber", partID);
-            url.set("uploadId", uploadId);
+        if (partID > 0 && uploadID != null && !"".equals(uploadID.trim())) {
+            url = url.newBuilder()
+                .addQueryParameter("partNumber", Integer.toString(partID))
+                .addQueryParameter("uploadId", uploadID)
+                .build();
         }
 
-        HttpRequest request = getHttpRequest("PUT", url, data);
-
+        String base64md5sum = "";
         if (md5sum != null) {
-            String base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
-            request.getHeaders().setContentMD5(base64md5sum);
+            base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
         }
 
-        if (!"".equals(contentType.trim())) {
-            ByteArrayContent content = new ByteArrayContent(contentType, data);
-            request.setContent(content);
+        Request request = getRequest("PUT", url, data);
+        if (md5sum != null) {
+            request = request.newBuilder()
+                .header("Content-MD5", base64md5sum)
+                .build();
         }
-        HttpResponse response = request.execute();
+
+        Response response = this.transport.newCall(request).execute();
         if (response != null) {
             try {
-                if (response.isSuccessStatusCode()) {
-                    return response.getHeaders().getETag();
+                if (response.isSuccessful()) {
+                    return response.headers().get("ETag").replaceAll("\"", "");
                 }
                 parseError(response);
             } finally {
-                response.disconnect();
+                response.body().close();
             }
         }
         throw new IOException();
@@ -1411,7 +1405,7 @@ public class Client {
     @SuppressWarnings("unused")
     public void enableLogging() {
         if (this.logger.get() == null) {
-            this.logger.set(Logger.getLogger(HttpTransport.class.getName()));
+            this.logger.set(Logger.getLogger(OkHttpClient.class.getName()));
             this.logger.get().setLevel(Level.CONFIG);
             this.logger.get().addHandler(new Handler() {
 
