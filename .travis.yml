@@ -6,4 +6,4 @@ jdk:
 - openjdk7
 notifications:
   slack:
-    secure: Eysqa04pxLVwOLAHTbzvgZWl5gQCTqffQv72C0qrL06sNYOGlKjg4mym46YPC2E6ePmTlq6lnM26GrPOtvNPP85WSxqe7XWOiGyXoPTOLgs2+9DurhuwAAflNlUWqIwys5uuR/QTuRUN2/e3XJEIL7nyeE6vgWBTEfyF1USEwhI=
+    secure: SXnv/KuRr7tH1pq8CGhtgZt6RtlffSJR6uld3G36zpd2ozHEM1cjMQiY0sogPT5Xj0SSZ3apcs1G9DDb13UBz3goYYrd5rj4KIX++3PXgX9o+sP6g20Mo5lI4slFeKIfG/pERp9VZrk3epfzGXRBN+5H/l3nXEleznWPCbu8rTc=
