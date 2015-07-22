@@ -21,6 +21,7 @@ apply plugin: 'signing'
 
 ext.junitVersion = '4.12'
 ext.googleHttpClientVersion = '1.20.0'
+ext.okHttpClientVersion = '2.4.0'
 ext.jodaTimeVersion = '2.7'
 
 ext.deployUsername = ''
@@ -46,8 +47,8 @@ task wrapper(type: Wrapper) {
 }
 
 dependencies {
-    compile group: 'com.google.http-client', name: 'google-http-client', version: googleHttpClientVersion
     compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
+    compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpClientVersion
     compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
 
     testCompile group: 'junit', name: 'junit', version: junitVersion
