@@ -49,6 +49,7 @@ task wrapper(type: Wrapper) {
 dependencies {
     compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
     compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpClientVersion
+    compile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpClientVersion
     compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
 
     testCompile group: 'junit', name: 'junit', version: junitVersion

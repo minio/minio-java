@@ -231,11 +231,11 @@ public class Client {
             throw new IOException("No response was returned");
         }
 
-        int statusCode = response.code();
         if (response.isRedirect()) {
             throw new HTTPRedirectException();
         }
 
+        int statusCode = response.code();
         if (statusCode == 404 || statusCode == 403 || statusCode == 501 || statusCode == 405) {
             ClientException e;
             ErrorResponse errorResponse = new ErrorResponse();
@@ -278,11 +278,6 @@ public class Client {
             }
             e.setErrorResponse(errorResponse);
             throw e;
-        }
-
-        // if response.getContent is null, throw an IOException with status code in string
-        if (response.body().bytes() == null) {
-            throw new InternalClientException("Unsuccessful response from server without XML error: " + statusCode);
         }
 
         // Populate an ErrorResponse, will throw an ClientException if not parsable. We should just pass it up.
@@ -772,14 +767,10 @@ public class Client {
 
         Response response = this.transport.newCall(request).execute();
         if (response != null) {
-            try {
-                if (response.isSuccessful()) {
-                    return;
-                }
-                parseError(response);
-            } finally {
-                response.body().close();
+            if (response.isSuccessful()) {
+                return;
             }
+            parseError(response);
         }
         throw new IOException();
     }
@@ -911,9 +902,20 @@ public class Client {
             .addQueryParameter("acl", "")
             .build();
 
-        Request request = getRequest("PUT", url);
+        // FUTURE: dummy access control policy for now
+        AccessControlPolicy accessControlPolicy = new AccessControlPolicy();
+
+        byte[] data = accessControlPolicy.toString().getBytes("UTF-8");
+        byte[] md5sum = calculateMd5sum(data);
+        String base64md5sum = "";
+        if (md5sum != null) {
+            base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
+        }
+
+        Request request = getRequest("PUT", url, data);
         request = request.newBuilder()
             .header("x-amz-acl", acl.toString())
+            .header("Content-MD5", base64md5sum)
             .build();
 
         Response response = this.transport.newCall(request).execute();
