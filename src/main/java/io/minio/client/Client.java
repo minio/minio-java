@@ -1,5 +1,5 @@
 /*
- * Minimal Object Storage Library, (C) 2015 Minio, Inc.
+ * Minio Java Library for Amazon S3 compatible cloud storage, (C) 2015 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ import java.util.logging.Logger;
 
 /**
  * <p>
- * This class implements a simple object storage client. This client consists
+ * This class implements a simple cloud storage client. This client consists
  * of a useful subset of S3 compatible functionality.
  * </p>
  * <h2>Service</h2>
@@ -117,7 +117,7 @@ public class Client {
     /**
      * Create a new client given a url
      *
-     * @param url must be the full url to the object storage server, excluding both bucket or object paths.
+     * @param url must be the full url to the cloud storage server, excluding both bucket or object paths.
      *            For example: http://play.minio.io
      *            Valid:
      *            * https://s3-us-west-2.amazonaws.com
@@ -126,7 +126,7 @@ public class Client {
      *            * https://s3-us-west-2.amazonaws.com/example/
      *            * https://s3-us-west-2.amazonaws.com/example/object
      *
-     * @return an object storage client backed by an S3 compatible server.
+     * @return an cloud storage client backed by an S3 compatible server.
      *
      * @throws MalformedURLException malformed url
      * @throws ClientException invalid argument
@@ -159,9 +159,9 @@ public class Client {
     }
 
     /**
-     * @param url must be the full url to the object storage server, excluding both bucket or object paths.
+     * @param url must be the full url to the cloud storage server, excluding both bucket or object paths.
      *
-     * @return an object storage client backed by an S3 compatible server.
+     * @return an cloud storage client backed by an S3 compatible server.
      *
      * @throws MalformedURLException malformed url
      * @throws ClientException invalid argument
