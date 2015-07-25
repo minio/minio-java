@@ -1,5 +1,5 @@
 /*
- * Minimal Object Storage Library, (C) 2015 Minio, Inc.
+ * Minio Java Library for Amazon S3 compatible cloud storage, (C) 2015 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -558,7 +558,7 @@ public class ClientTest {
         client.putObject("bucket", "key", "application/octet-stream", 11, data);
     }
 
-    // this case only occurs for minio object storage
+    // this case only occurs for minio cloud storage
     @Test(expected = ObjectExistsException.class)
     public void testPutSmallObjectFails() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
         MockWebServer server = new MockWebServer();
@@ -571,7 +571,7 @@ public class ClientTest {
         errResponse.setResource("/bucket/key");
 
         response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-        response.setResponseCode(405); // method not allowed set by minio object storage
+        response.setResponseCode(405); // method not allowed set by minio cloud storage
         response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
         server.enqueue(response);
@@ -586,7 +586,7 @@ public class ClientTest {
         throw new RuntimeException("Expected exception did not fire");
     }
 
-    // this case only occurs for minio object storage
+    // this case only occurs for minio cloud storage
 //    @Test(expected = ObjectExistsException.class)
     @Test(expected = InputSizeMismatchException.class)
     public void testPutIncompleteSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
@@ -600,7 +600,7 @@ public class ClientTest {
         errResponse.setResource("/bucket/key");
 
         response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-        response.setResponseCode(405); // method not allowed set by minio object storage
+        response.setResponseCode(405); // method not allowed set by minio cloud storage
         response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
         server.enqueue(response);
@@ -627,7 +627,7 @@ public class ClientTest {
         errResponse.setResource("/bucket/key");
 
         response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-        response.setResponseCode(405); // method not allowed set by minio object storage
+        response.setResponseCode(405); // method not allowed set by minio cloud storage
         response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
         server.enqueue(response);

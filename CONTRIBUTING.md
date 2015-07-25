@@ -5,7 +5,7 @@ $ git clone https://github.com/$USER_ID/minio-java
 $ cd minio-java
 ```
 
-Minio Java library uses gradle for its dependency management https://gradle.org/
+Minio Java Library uses gradle for its dependency management https://gradle.org/
 
 ### Gradle start up script for UN*X
 ```sh
