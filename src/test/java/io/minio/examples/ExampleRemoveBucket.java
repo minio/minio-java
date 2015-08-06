@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-package io.minio.examples;
-
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
