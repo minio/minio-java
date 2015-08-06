@@ -738,31 +738,38 @@ public class Client {
      */
     public void makeBucket(String bucket, Acl acl) throws IOException, ClientException {
         HttpUrl url = getHttpUrlOfBucket(bucket);
+        Request request = null;
 
         CreateBucketConfiguration config = new CreateBucketConfiguration();
         String region = Regions.INSTANCE.getRegion(url.uri().getHost());
+
         // ``us-east-1`` is not a valid location constraint according to amazon, so we skip it
         // Valid constraints are
         // [ us-west-1 | us-west-2 | EU or eu-west-1 | eu-central-1 | ap-southeast-1 | ap-northeast-1 | ap-southeast-2 | sa-east-1 ]
         if (!("milkyway".equals(region) || "us-east-1".equals(region))) {
             config.setLocationConstraint(region);
+            byte[] data = config.toString().getBytes("UTF-8");
+            byte[] md5sum = calculateMd5sum(data);
+            String base64md5sum = "";
+            if (md5sum != null) {
+                base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
+            }
+            request = getRequest("PUT", url, data);
+            request = request.newBuilder()
+                .header("Content-MD5", base64md5sum)
+                .build();
+        } else {
+            // okhttp requires PUT objects to have non-nil body, so we send a dummy not "null"
+            byte[] dummy = "".getBytes("UTF-8");
+            request = getRequest("PUT", url, dummy) ;
         }
 
-        byte[] data = config.toString().getBytes("UTF-8");
-        byte[] md5sum = calculateMd5sum(data);
-        String base64md5sum = "";
-        if (md5sum != null) {
-            base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
-        }
-
-        Request request = getRequest("PUT", url, data);
         if (acl == null) {
             acl = Acl.PRIVATE;
         }
 
         request = request.newBuilder()
             .header("x-amz-acl", acl.toString())
-            .header("Content-MD5", base64md5sum)
             .build();
 
         Response response = this.transport.newCall(request).execute();
