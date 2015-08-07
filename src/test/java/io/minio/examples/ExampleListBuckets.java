@@ -1,5 +1,5 @@
 /*
- * Minio Java Library for Amazon S3 compatible cloud storage, (C) 2015 Minio, Inc.
+ * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2015 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ public class ExampleListBuckets {
         System.out.println("Example app");
 
         // play.minio.io requires no credentials
-        // play.minio.io is s3 compatible cloud storage
+        // play.minio.io is s3 Compatible Cloud Storage
         Client s3Client = Client.getClient("https://s3.amazonaws.com");
 
         // list buckets

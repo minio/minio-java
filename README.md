@@ -18,9 +18,9 @@ compileDependencies {
 }
 ```
 
-## Install jar
+## Install from jars
 
-You can download the latest jars directly from maven [![Maven](https://img.shields.io/maven-central/v/io.minio/minio.svg)](http://repo1.maven.org/maven2/io/minio/minio/0.2.2/)
+You can download the latest jars directly from maven - [![Maven](https://img.shields.io/maven-central/v/io.minio/minio.svg)](http://repo1.maven.org/maven2/io/minio/minio/0.2.2/)
 
 ## Example
 ```java
