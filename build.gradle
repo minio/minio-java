@@ -173,18 +173,15 @@ jar {
 
 
 ext.libdir = 'lib'
-task copyArtifactJars(type: Copy) {
+task copyLibraries(type: Copy) {
   from(getRuntimeArtifacts())
+  into libdir
+  from(getRuntimeLibraries())
   into libdir
 }
 
 def getRuntimeArtifacts() {
   configurations.runtime.artifacts.files
-}
-
-task copyDependentLibraries(type: Copy) {
-  from(getRuntimeLibraries())
-  into libdir
 }
 
 def getRuntimeLibraries() {
