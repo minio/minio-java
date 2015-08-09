@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
 import io.minio.client.Client;
+import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-public class ExamplePutObject {
+public class SetBucketAcl {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("SetBucketAcl app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set access and secret keys
-        s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < 11 * 1024 * 1024; i++) {
-            builder.append('a');
-        }
-        // create object
-        s3Client.putObject("mybucket", "my/object", "application/octet-stream", 11 * 1024 * 1024, new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
+        // set bucket canned acl
+        s3Client.setBucketACL("mybucket", Acl.PRIVATE);
     }
 }

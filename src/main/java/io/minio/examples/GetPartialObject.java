@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
+import com.google.api.client.util.IOUtils;
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
-import io.minio.client.messages.Bucket;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.io.InputStream;
 
-public class ExampleListBuckets {
+public class GetPartialObject {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("GetPartialObject app");
 
-        // play.minio.io requires no credentials
-        // play.minio.io is s3 Compatible Cloud Storage
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        // Set s3 endpoint, region is calculated automatically
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // list buckets
-        Iterator<Bucket> bucketList = s3Client.listBuckets();
-        while (bucketList.hasNext()) {
-            Bucket bucket = bucketList.next();
-            System.out.println(bucket.getName());
+        // get object from offset, of specific length
+        InputStream object = s3Client.getPartialObject("mybucket", "myobject", 1024, 4096);
+        try {
+            System.out.println("Printing object: ");
+            IOUtils.copy(object, System.out);
+        } finally {
+            object.close();
         }
-
     }
 }

@@ -687,8 +687,7 @@ public class ClientTest {
         ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22", contentType);
 
         // get request
-        Client client = Client.getClient(server.getUrl(""));
-        client.setKeys("foo", "bar");
+        Client client = Client.getClient(server.getUrl(""), "foo", "bar");
 
         ObjectStat objectStatInfo = client.statObject("bucket", "key");
         assertEquals(expectedStatInfo, objectStatInfo);

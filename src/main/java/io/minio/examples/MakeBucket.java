@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
 import io.minio.client.Client;
 import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
@@ -21,17 +23,14 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-public class ExampleSetBucketAcl {
+public class MakeBucket {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("MakeBucket app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set access and secret keys
-        s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-        // set bucket canned acl
-        s3Client.setBucketACL("mybucket", Acl.PRIVATE);
+        // create bucket
+        s3Client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
     }
 }
