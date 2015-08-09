@@ -18,6 +18,12 @@ apply plugin: 'java'
 apply plugin: 'pmd'
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply plugin: 'findbugs'
+apply plugin: 'groovy'
+
+compileJava {
+  options.fork = true
+}
 
 ext.junitVersion = '4.12'
 ext.googleHttpClientVersion = '1.20.0'
@@ -25,125 +31,147 @@ ext.okHttpClientVersion = '2.4.0'
 ext.jodaTimeVersion = '2.7'
 
 ext.deployUsername = ''
-if(project.properties.containsKey('ossrhUsername')) {
-    ext.deployUsername = ossrhUsername
+if (project.properties.containsKey('ossrhUsername')) {
+  ext.deployUsername = ossrhUsername
 }
 
 ext.deployPassword = ''
-if(project.properties.containsKey('ossrhPassword')) {
-    ext.deployPassword = ext.ossrhPassword
+if (project.properties.containsKey('ossrhPassword')) {
+  ext.deployPassword = ext.ossrhPassword
 }
 
 group = 'io.minio'
 archivesBaseName = 'minio'
 version = '0.2.2'
 
-sourceCompatibility = 1.6
-targetCompatibility = 1.6
-
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
+  gradleVersion = '2.3'
+}
+
+[compileJava, compileTestJava].each() {
+  it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options"]
+  it.options.encoding = "UTF-8"
 }
 
 dependencies {
-    compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
-    compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpClientVersion
-    compile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpClientVersion
-    compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
+  compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
+  compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpClientVersion
+  compile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpClientVersion
+  compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
 
-    testCompile group: 'junit', name: 'junit', version: junitVersion
+  testCompile group: 'junit', name: 'junit', version: junitVersion
 }
 
 repositories {
-    mavenCentral()
-    mavenLocal()
+  mavenCentral()
+  mavenLocal()
 }
 
-if(!org.gradle.internal.jvm.Jvm.current().toString().startsWith("1.6.0_")){
-    apply plugin: 'findbugs'
-    tasks.withType(FindBugs) {
-        reports {
-            xml.enabled = false
-            html.enabled = true
-        }
-    }
+tasks.withType(FindBugs) {
+  reports {
+    xml.enabled = false
+    html.enabled = true
+  }
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
+  classifier = 'sources'
+  from sourceSets.main.allJava
 }
 
 task javadocJar (type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+javadoc.options {
+  encoding = 'UTF-8'
+  links 'https://docs.oracle.com/javase/8/docs/api/'
+}
+
+// Disable JavaDoc doclint on Java 8. It's annoying.
+if (JavaVersion.current().isJava8Compatible()) {
+  allprojects {
+    tasks.withType(Javadoc) {
+      options.addStringOption('Xdoclint:none', '-quiet')
+    }
+  }
 }
 
 artifacts {
-    archives javadocJar, sourcesJar
+  archives javadocJar, sourcesJar
 }
 
 signing {
-    if(project.properties.containsKey('signing.keyId')) {
-        sign configurations.archives
-    }
+  if (project.properties.containsKey('signing.keyId')) {
+    sign configurations.archives
+  }
+}
+
+// At a test failure, log the stack trace to the console so that we don't
+// have to open the HTML in a browser.
+test {
+  testLogging {
+    exceptionFormat = 'full'
+    showExceptions true
+    showCauses true
+    showStackTraces true
+  }
 }
 
 uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: deployUsername, password: deployPassword)
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: deployUsername, password: deployPassword)
-            }
-
-            pom.project {
-                name 'minio'
-                packaging 'jar'
-
-                description 'Minio Java Library for Amazon S3 Compatible Cloud Storage'
-                url 'https://github.com/minio/minio-java'
-
-                scm {
-                    connection 'scm:git:git@github.com:minio/minio-java.git'
-                    developerConnection 'scm:git:git@github.com:minio/minio-java.git'
-                    url 'http://github.com/minio/minio-java'
-                }
-
-                licenses {
-                    license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id 'minio'
-                        name 'Minio Inc.'
-                        email 'dev@minio.io'
-                    }
-                }
-            }
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: deployUsername, password: deployPassword)
+      }
+      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+        authentication(userName: deployUsername, password: deployPassword)
+      }
+      pom.project {
+        name 'minio'
+        packaging 'jar'
+        description 'Minio Java Library for Amazon S3 Compatible Cloud Storage'
+        url 'https://github.com/minio/minio-java'
+        scm {
+          connection 'scm:git:git@github.com:minio/minio-java.git'
+          developerConnection 'scm:git:git@github.com:minio/minio-java.git'
+          url 'http://github.com/minio/minio-java'
         }
+        licenses {
+          license {
+            name 'The Apache License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        developers {
+          developer {
+            id 'minio'
+            name 'Minio Inc.'
+            email 'dev@minio.io'
+          }
+        }
+      }
     }
+  }
 }
 
 jar {
-    manifest {
-        attributes("Minio-Client-Java-Version": version)
-    }
+  manifest {
+    attributes('Implementation-Title': archivesBaseName,
+    'Implementation-Version': version,
+    'Built-By': System.getProperty('user.name'),
+    'Built-JDK': System.getProperty('java.version'),
+    'Source-Compatibility': sourceCompatibility,
+    'Target-Compatibility': targetCompatibility)
+  }
 }
 
 
-apply plugin: 'groovy'
 ext.libdir = 'lib'
 task copyArtifactJars(type: Copy) {
   from(getRuntimeArtifacts())
