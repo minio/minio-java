@@ -14,29 +14,22 @@
  * limitations under the License.
  */
 
-import com.google.api.client.util.IOUtils;
+package io.minio.examples;
+
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.io.InputStream;
 
-public class ExampleGetObject {
+public class DropIncompleteUpload {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("DropIncompleteUpload app");
 
-        // play.minio.io requires no credentials
-        // play.minio.io is s3 Compatible Cloud Storage
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        // Set s3 endpoint, region is calculated automatically
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // get object
-        InputStream object = s3Client.getObject("mybucket", "myobject");
-        try {
-            System.out.println("Printing object: ");
-            IOUtils.copy(object, System.out);
-        } finally {
-            object.close();
-        }
+        // recursively drop every in progress active multipart upload sessions for a given bucket and key
+        s3Client.dropIncompleteUpload("mybucket", "myobject");
     }
 }

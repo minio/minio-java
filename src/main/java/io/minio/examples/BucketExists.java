@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
 import io.minio.client.Client;
-import io.minio.client.ObjectStat;
 import io.minio.client.errors.ClientException;
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-public class ExampleStatObject {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+public class BucketExists {
+    public static void main(String[] args) throws IOException, ClientException {
+        System.out.println(" app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set access and secret keys
-        s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-        // stat an object
-        ObjectStat objectStat = s3Client.statObject("mybucket", "my/object");
-        System.out.println(objectStat);
+        // recursively drop every in progress active multipart upload sessions for a given bucket
+        boolean bucketExists = s3Client.bucketExists("mymultipartbucket");
+        System.out.println(bucketExists);
     }
 }

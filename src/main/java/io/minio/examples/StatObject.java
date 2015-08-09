@@ -14,31 +14,24 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
 import io.minio.client.Client;
-import io.minio.client.Result;
+import io.minio.client.ObjectStat;
 import io.minio.client.errors.ClientException;
-import io.minio.client.messages.Item;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.util.Iterator;
 
-public class ExampleListObjects {
+public class StatObject {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("StatObject app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set access and secret keys
-        s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-        // list objects
-        Iterator<Result<Item>> myObjects = s3Client.listObjects("mybucket");
-        while (myObjects.hasNext()) {
-            Result<Item> result = myObjects.next();
-            Item object = result.getResult();
-            System.out.println(object);
-        }
+        // stat an object
+        ObjectStat objectStat = s3Client.statObject("mybucket", "my/object");
+        System.out.println(objectStat);
     }
 }

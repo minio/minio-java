@@ -81,7 +81,7 @@ import java.util.logging.Logger;
  * </ul>
  * <p>
  * Optionally, users can also provide access/secret keys. If keys are provided, all requests by the
- * client will be signed using AWS Signature Version 4. See {@link #setKeys(String, String)}
+ * client will be signed using AWS Signature Version 4. See {@link #getClient(URL, String, String)}
  * </p>
  * For examples on using this library, please see <a href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples"></a>.
  */
@@ -110,8 +110,10 @@ public class Client {
 
     // Don't allow users to instantiate clients themselves, since it is bad form to throw exceptions in constructors.
     // Use Client.getClient instead
-    private Client(URL url) {
+    private Client(URL url, String accessKey, String secretKey) {
         this.url = HttpUrl.get(url);
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
     }
 
     /**
@@ -125,14 +127,16 @@ public class Client {
      *            Invalid:
      *            * https://s3-us-west-2.amazonaws.com/example/
      *            * https://s3-us-west-2.amazonaws.com/example/object
+     * @param accessKey access key id for authenticating API requests
+     * @param secretKey secret key id for authenticating API requests
      *
      * @return an cloud storage client backed by an S3 compatible server.
      *
      * @throws MalformedURLException malformed url
      * @throws ClientException invalid argument
-     * @see #getClient(String)
+     * @see #getClient(URL url, String accessKey, String secretKey)
      */
-    public static Client getClient(URL url) throws MalformedURLException, ClientException {
+    public static Client getClient(URL url, String accessKey, String secretKey) throws MalformedURLException, ClientException {
         // URL should not be null
         if (url == null) {
             throw new InvalidArgumentException();
@@ -155,7 +159,47 @@ public class Client {
         }
 
         // return a new http client
-        return new Client(url);
+        return new Client(url, accessKey, secretKey);
+    }
+
+    /**
+     * Create a new client given a url
+     *
+     * @param url must be the full url to the cloud storage server, excluding both bucket or object paths.
+     *            For example: http://play.minio.io
+     *            Valid:
+     *            * https://s3-us-west-2.amazonaws.com
+     *            * http://play.minio.io
+     *            Invalid:
+     *            * https://s3-us-west-2.amazonaws.com/example/
+     *            * https://s3-us-west-2.amazonaws.com/example/object
+     *
+     * @return an cloud storage client backed by an S3 compatible server.
+     *
+     * @throws MalformedURLException malformed url
+     * @throws ClientException invalid argument
+     * @see #getClient(URL url)
+     */
+    public static Client getClient(URL url) throws MalformedURLException, ClientException {
+        return getClient(url, null, null);
+    }
+
+    /**
+     * @param url must be the full url to the cloud storage server, excluding both bucket or object paths.
+     * @param accessKey access key id for authenticating API requests
+     * @param secretKey secret key id for authenticating API requests
+     *
+     * @return an cloud storage client backed by an S3 compatible server.
+     *
+     * @throws MalformedURLException malformed url
+     * @throws ClientException invalid argument
+     * @see #getClient(String url, String accesskey, String secretKey)
+     */
+    public static Client getClient(String url, String accessKey, String secretKey) throws MalformedURLException, ClientException {
+        if (url == null) {
+            throw new InvalidArgumentException();
+        }
+        return getClient(new URL(url), accessKey, secretKey);
     }
 
     /**
@@ -165,13 +209,39 @@ public class Client {
      *
      * @throws MalformedURLException malformed url
      * @throws ClientException invalid argument
-     * @see #getClient(URL url)
+     * @see #getClient(String url)
      */
     public static Client getClient(String url) throws MalformedURLException, ClientException {
         if (url == null) {
             throw new InvalidArgumentException();
         }
-        return getClient(new URL(url));
+        return getClient(new URL(url), null, null);
+    }
+
+    /**
+     * Set user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+     *
+     * @param name     name of your application
+     * @param version  version of your application
+     * @param comments optional list of comments
+     *
+     * @throws IOException attempt to overwrite an already set useragent
+     */
+    @SuppressWarnings("unused")
+    public void setUserAgent(String name, String version, String... comments) throws IOException {
+        if (!this.userAgentSet && name != null && version != null) {
+            String newUserAgent = name.trim() + "/" + version.trim() + " (";
+            StringBuilder sb = new StringBuilder();
+            for (String comment : comments) {
+                if (comment != null) {
+                    sb.append(comment.trim()).append("; ");
+                }
+            }
+            this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
+            this.userAgentSet = true;
+            return;
+        }
+        throw new IOException("User agent already set");
     }
 
     /**
@@ -1138,43 +1208,6 @@ public class Client {
             Upload upload = uploads.next().getResult();
             abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
         }
-    }
-
-    /**
-     * Set access keys for authenticated access
-     *
-     * @param accessKey access key to sign requests
-     * @param secretKey secret key to sign requests
-     */
-    public void setKeys(String accessKey, String secretKey) {
-        this.accessKey = accessKey;
-        this.secretKey = secretKey;
-    }
-
-    /**
-     * Set user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
-     *
-     * @param name     name of your application
-     * @param version  version of your application
-     * @param comments optional list of comments
-     *
-     * @throws IOException attempt to overwrite an already set useragent
-     */
-    @SuppressWarnings("unused")
-    public void setUserAgent(String name, String version, String... comments) throws IOException {
-        if (!this.userAgentSet && name != null && version != null) {
-            String newUserAgent = name.trim() + "/" + version.trim() + " (";
-            StringBuilder sb = new StringBuilder();
-            for (String comment : comments) {
-                if (comment != null) {
-                    sb.append(comment.trim()).append("; ");
-                }
-            }
-            this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
-            this.userAgentSet = true;
-            return;
-        }
-        throw new IOException("User agent already set");
     }
 
     private String newMultipartUpload(String bucket, String key) throws IOException, ClientException {

@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
 import io.minio.client.Client;
-import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-public class ExampleMakeBucket {
+public class PutObject {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("PutObject app");
 
-        // play.minio.io requires no credentials
-        // play.minio.io is s3 Compatible Cloud Storage
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        // Set s3 endpoint, region is calculated automatically
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // create bucket
-        s3Client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 11 * 1024 * 1024; i++) {
+            builder.append('a');
+        }
+        // create object
+        s3Client.putObject("mybucket", "my/object", "application/octet-stream", 11 * 1024 * 1024, new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
     }
 }

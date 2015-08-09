@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
 import io.minio.client.Client;
-import io.minio.client.acl.Acl;
 import io.minio.client.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-public class ExampleGetBucketAcl {
+public class DropAllIncompleteUploads {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("DropAllIncompleteUploads app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set access and secret keys
-        s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-        // get bucket canned acl
-        Acl acl = s3Client.getBucketACL("mybucket");
-        System.out.println(acl);
+        // recursively drop every in progress active multipart upload sessions for a given bucket
+        s3Client.dropAllIncompleteUploads("mybucket");
     }
 }

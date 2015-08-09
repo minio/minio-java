@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
+package io.minio.examples;
+
 import io.minio.client.Client;
 import io.minio.client.errors.ClientException;
+import io.minio.client.messages.Bucket;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-public class ExampleRemoveObject {
+public class ListBuckets {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("Example app");
+        System.out.println("ListBuckets app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com");
+        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // Set access and secret keys
-        s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+        // list buckets
+        Iterator<Bucket> bucketList = s3Client.listBuckets();
+        while (bucketList.hasNext()) {
+            Bucket bucket = bucketList.next();
+            System.out.println(bucket.getName());
+        }
 
-        // remove object
-        s3Client.removeObject("mybucket", "my/object");
     }
 }
