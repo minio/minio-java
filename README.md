@@ -65,7 +65,7 @@ public class HelloListBuckets {
 #### Object Operations
 
 * [PutObject.java](./src/main/java/io/minio/examples/PutObject.java)
-* [GetObject.Java](./src/main/java/io/minio/examples/GetObject.java
+* [GetObject.Java](./src/main/java/io/minio/examples/GetObject.java)
 * [GetPartialObject.java](./src/main/java/io/minio/examples/GetPartialObject.java)
 * [RemoveObject.java](./src/main/java/io/minio/examples/RemoveObject.java)
 * [StatObject.java](./src/main/java/io/minio/examples/StatObject.java)
