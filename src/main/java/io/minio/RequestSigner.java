@@ -271,7 +271,7 @@ class RequestSigner implements Interceptor {
         } else {
           printSeparator = true;
         }
-        builder.append(header);
+        builder.append(header.toLowerCase().trim());
       }
     }
     return builder.toString();
