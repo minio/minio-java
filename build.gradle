@@ -15,6 +15,7 @@
  */
 
 apply plugin: 'checkstyle'
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java'
 apply plugin: 'pmd'
 apply plugin: 'maven'
@@ -38,6 +39,15 @@ if (project.properties.containsKey('ossrhUsername')) {
 ext.deployPassword = ''
 if (project.properties.containsKey('ossrhPassword')) {
   ext.deployPassword = ext.ossrhPassword
+}
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+  }
 }
 
 group = 'io.minio'

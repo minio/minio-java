@@ -1,6 +1,6 @@
 # Minio Java Library for Amazon S3 Compatible Cloud Storage [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Minio/minio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## Install from maven [![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
+## Download from maven
 
 ```xml
 <dependency>
@@ -10,7 +10,7 @@
 </dependency>
 ```
 
-## Install from gradle
+## Download from gradle
 
 ```gradle
 dependencies {
@@ -18,9 +18,9 @@ dependencies {
 }
 ```
 
-## Install from jars
+## Download from JAR
 
-You can download the latest jars directly from maven - [![Maven](https://img.shields.io/maven-central/v/io.minio/minio.svg)](http://repo1.maven.org/maven2/io/minio/minio/0.2.3/)
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/0.2.3/) directly from maven.
 
 ## Example
 ```java
@@ -73,3 +73,5 @@ public class HelloListBuckets {
 ## Contribute
 
 [Contributors Guide](./CONTRIBUTING.md)
+
+[![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
