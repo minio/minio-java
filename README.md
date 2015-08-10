@@ -54,50 +54,21 @@ public class HelloListBuckets {
 
 #### Bucket Operations
 
-* [ListBuckets.java](./src/main/java/io/minio/examples/ListBuckets.java)
-* [ListObjects.java](./src/main/java/io/minio/examples/ListObjects.java)
-* [BucketExists.java](./src/main/java/io/minio/examples/BucketExists.java)
-* [MakeBucket.java](./src/main/java/io/minio/examples/MakeBucket.java)
-* [SetBucketAcl.java](./src/main/java/io/minio/examples/SetBucketAcl.java)
-* [GetBucketAcl.java](./src/main/java/io/minio/examples/GetBucketAcl.java)
-* [RemoveBucket.java](./src/main/java/io/minio/examples/RemoveBucket.java)
+* [ListBuckets.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/ListBuckets.java)
+* [ListObjects.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/ListObjects.java)
+* [BucketExists.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/BucketExists.java)
+* [MakeBucket.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/MakeBucket.java)
+* [SetBucketAcl.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/SetBucketAcl.java)
+* [GetBucketAcl.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetBucketAcl.java)
+* [RemoveBucket.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/RemoveBucket.java)
 
 #### Object Operations
 
-* [PutObject.java](./src/main/java/io/minio/examples/PutObject.java)
-* [GetObject.Java](./src/main/java/io/minio/examples/GetObject.java)
-* [GetPartialObject.java](./src/main/java/io/minio/examples/GetPartialObject.java)
-* [RemoveObject.java](./src/main/java/io/minio/examples/RemoveObject.java)
-* [StatObject.java](./src/main/java/io/minio/examples/StatObject.java)
-
-### How to run these examples?
-
-#### Step 1: clone the project
-
-```bash
-$ git clone https://github.com/minio/minio-java
-```
-
-#### Edit examples with your favorite editor
-
-Edit any examples you want to test and fill in access key placeholders
-
-```bash
-$ editor src/main/io/minio/examples/ListBuckets.java
-```
-
-#### Run the example
-
-```bash
-$ ./gradlew copyLibraries
-$ java -cp 'lib/*' io.minio.examples.ListBuckets
-bucket1
-bucket2
-....
-...
-bucketN
-
-```
+* [PutObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/PutObject.java)
+* [GetObject.Java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetObject.java)
+* [GetPartialObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetPartialObject.java)
+* [RemoveObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/RemoveObject.java)
+* [StatObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/StatObject.java)
 
 ## Contribute
 
