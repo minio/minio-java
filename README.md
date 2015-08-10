@@ -25,8 +25,6 @@ You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/0
 ## Example
 ```java
 
-package hello.listbuckets;
-
 import io.minio.MinioClient;
 import io.minio.errors.ClientException;
 import io.minio.messages.ListAllMyBucketsResult;
@@ -54,21 +52,21 @@ public class HelloListBuckets {
 
 #### Bucket Operations
 
-* [ListBuckets.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/ListBuckets.java)
-* [ListObjects.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/ListObjects.java)
-* [BucketExists.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/BucketExists.java)
-* [MakeBucket.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/MakeBucket.java)
-* [SetBucketAcl.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/SetBucketAcl.java)
-* [GetBucketAcl.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetBucketAcl.java)
-* [RemoveBucket.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/RemoveBucket.java)
+* [ListBuckets.java](./examples/ListBuckets.java)
+* [ListObjects.java](./examples/ListObjects.java)
+* [BucketExists.java](./examples/BucketExists.java)
+* [MakeBucket.java](./examples/MakeBucket.java)
+* [SetBucketAcl.java](./examples/SetBucketAcl.java)
+* [GetBucketAcl.java](./examples/GetBucketAcl.java)
+* [RemoveBucket.java](./examples/RemoveBucket.java)
 
 #### Object Operations
 
-* [PutObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/PutObject.java)
-* [GetObject.Java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetObject.java)
-* [GetPartialObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetPartialObject.java)
-* [RemoveObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/RemoveObject.java)
-* [StatObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/StatObject.java)
+* [PutObject.java](./examples/PutObject.java)
+* [GetObject.Java](./examples/GetObject.java)
+* [GetPartialObject.java](./examples/GetPartialObject.java)
+* [RemoveObject.java](./examples/RemoveObject.java)
+* [StatObject.java](./examples/StatObject.java)
 
 ## Contribute
 
