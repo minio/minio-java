@@ -16,9 +16,9 @@
 
 package io.minio.examples;
 
-import io.minio.client.Client;
-import io.minio.client.errors.ClientException;
-import io.minio.client.messages.Bucket;
+import io.minio.MinioClient;
+import io.minio.errors.ClientException;
+import io.minio.messages.Bucket;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class ListBuckets {
         System.out.println("ListBuckets app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         // list buckets
         Iterator<Bucket> bucketList = s3Client.listBuckets();

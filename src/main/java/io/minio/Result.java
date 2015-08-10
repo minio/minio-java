@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     https://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
-package io.minio.examples;
+package io.minio;
 
-import io.minio.MinioClient;
 import io.minio.errors.ClientException;
 
 import java.io.IOException;
 
-public class BucketExists {
-    public static void main(String[] args) throws IOException, ClientException {
-        System.out.println(" app");
+public class Result<T> {
+    private final T t;
+    private final Exception e;
 
-        // Set s3 endpoint, region is calculated automatically
-        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    public Result(T t, Exception e) {
+        this.t = t;
+        this.e = e;
+    }
 
-        // recursively drop every in progress active multipart upload sessions for a given bucket
-        boolean bucketExists = s3Client.bucketExists("mymultipartbucket");
-        System.out.println(bucketExists);
+    public T getResult() throws IOException, ClientException {
+        if (e != null) {
+            if (e instanceof IOException) {
+                throw (IOException) e;
+            }
+            if (e instanceof ClientException) {
+                throw (ClientException) e;
+            }
+        }
+        return t;
     }
 }

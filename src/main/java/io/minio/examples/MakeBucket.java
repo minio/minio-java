@@ -16,9 +16,9 @@
 
 package io.minio.examples;
 
-import io.minio.client.Client;
-import io.minio.client.acl.Acl;
-import io.minio.client.errors.ClientException;
+import io.minio.MinioClient;
+import io.minio.acl.Acl;
+import io.minio.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class MakeBucket {
         System.out.println("MakeBucket app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         // create bucket
         s3Client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
