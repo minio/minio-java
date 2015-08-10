@@ -17,55 +17,51 @@
 package io.minio.acl;
 
 public enum Acl {
-    /**
-     * Canned acl: public-read-write
-     * <p>
-     * Read: public
-     * Write: public
-     * </p>
-     */
-    PUBLIC_READ_WRITE {
-        public String toString() {
-            return "public-read-write";
-        }
-    },
-    /**
-     * Canned acl: private
-     * <p>
-     * Read: authorized users only
-     * Write: authorized users only
-     * </p>
-     */
-    @SuppressWarnings("unused")
-    PRIVATE {
-        public String toString() {
-            return "private";
-        }
-    },
-    /**
-     * Canned acl: public-read
-     * <p>
-     * Read: public
-     * Write: authorized users only
-     * </p>
-     */
-    @SuppressWarnings("unused")
-    PUBLIC_READ {
-        public String toString() {
-            return "public-read";
-        }
-    },
-    /**
-     * Canned acl: authenticated-read
-     * <p>
-     * Read: Only users with a valid account, all valid users authorized
-     * Write: acl authorized users only
-     * </p>
-     */
-    @SuppressWarnings("unused")
-    AUTHENTICATED_READ {
-        public String toString() {
-            return "authenticated-read";
-        }
-    },
+  /** Canned acl: public-read-write
+   * <p>
+   * Read: public
+   * Write: public
+   * </p>
+   */
+  PUBLIC_READ_WRITE {
+    public String toString() {
+      return "public-read-write";
+    }
+  },
+  /** Canned acl: private
+   * <p>
+   * Read: authorized users only
+   * Write: authorized users only
+   * </p>
+   */
+  @SuppressWarnings("unused")
+  PRIVATE {
+    public String toString() {
+      return "private";
+    }
+  },
+  /** Canned acl: public-read
+   * <p>
+   * Read: public
+   * Write: authorized users only
+   * </p>
+   */
+  @SuppressWarnings("unused")
+  PUBLIC_READ {
+    public String toString() {
+      return "public-read";
+    }
+  },
+  /** Canned acl: authenticated-read
+   * <p>
+   * Read: Only users with a valid account, all valid users authorized
+   * Write: acl authorized users only
+   * </p>
+   */
+  @SuppressWarnings("unused")
+  AUTHENTICATED_READ {
+    public String toString() {
+      return "authenticated-read";
+    }
+  },
 }

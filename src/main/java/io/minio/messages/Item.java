@@ -25,84 +25,84 @@ import java.util.TimeZone;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Item extends XmlEntity {
-    @Key("Key")
-    private String key;
-    @Key("LastModified")
-    private String lastModified;
-    @Key("ETag")
-    private String eTag;
-    @Key("Size")
-    private long size;
-    @Key("StorageClass")
-    private String storageClass;
-    @Key("Owner")
-    private Owner owner;
-    private boolean isDir = false;
+  @Key("Key")
+  private String key;
+  @Key("LastModified")
+  private String lastModified;
+  @Key("ETag")
+  private String eTag;
+  @Key("Size")
+  private long size;
+  @Key("StorageClass")
+  private String storageClass;
+  @Key("Owner")
+  private Owner owner;
+  private boolean isDir = false;
 
-    public Item() {
-        super();
-        this.name = "Item";
-    }
+  public Item() {
+    super();
+    this.name = "Item";
+  }
 
-    public String getKey() {
-        return key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public String getLastModified() {
-        return lastModified;
-    }
+  public String getLastModified() {
+    return lastModified;
+  }
 
-    public void setLastModified(String lastModified) {
-        this.lastModified = lastModified;
-    }
+  public void setLastModified(String lastModified) {
+    this.lastModified = lastModified;
+  }
 
-    public Date getParsedLastModified() throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return formatter.parse(this.getLastModified());
-    }
+  public Date getParsedLastModified() throws ParseException {
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return formatter.parse(this.getLastModified());
+  }
 
-    public String getETag() {
-        return eTag;
-    }
+  public String getETag() {
+    return eTag;
+  }
 
-    public void setETag(String eTag) {
-        this.eTag = eTag.replaceAll("\"", "");
-    }
+  public void setETag(String eTag) {
+    this.eTag = eTag.replaceAll("\"", "");
+  }
 
-    public long getSize() {
-        return size;
-    }
+  public long getSize() {
+    return size;
+  }
 
-    public void setSize(long size) {
-        this.size = size;
-    }
+  public void setSize(long size) {
+    this.size = size;
+  }
 
-    public String getStorageClass() {
-        return storageClass;
-    }
+  public String getStorageClass() {
+    return storageClass;
+  }
 
-    public void setStorageClass(String storageClass) {
-        this.storageClass = storageClass;
-    }
+  public void setStorageClass(String storageClass) {
+    this.storageClass = storageClass;
+  }
 
-    public Owner getOwner() {
-        return owner;
-    }
+  public Owner getOwner() {
+    return owner;
+  }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
+  public void setOwner(Owner owner) {
+    this.owner = owner;
+  }
 
-    public boolean isDir() {
-        return isDir;
-    }
+  public boolean isDir() {
+    return isDir;
+  }
 
-    public void setIsDir(boolean isDir) {
-        this.isDir = isDir;
-    }
+  public void setIsDir(boolean isDir) {
+    this.isDir = isDir;
+  }
 }

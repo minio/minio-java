@@ -23,113 +23,113 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 public class ListPartsResult extends XmlEntity {
-    @Key("Bucket")
-    private String Bucket;
-    @Key("Key")
-    private String Key;
-    @Key("Initiator")
-    private Initiator initiator;
-    @Key("Owner")
-    private Owner owner;
-    @Key("StorageClass")
-    private String storageClass;
-    @Key("PartNumberMarker")
-    private int PartNumberMarker;
-    @Key("NextPartNumberMarker")
-    private int NextPartNumberMarker;
-    @Key("MaxParts")
-    private int MaxParts;
-    @Key("IsTruncated")
-    private boolean IsTruncated;
-    @Key("Part")
-    private List<Part> parts;
+  @Key("Bucket")
+  private String bucket;
+  @Key("Key")
+  private String key;
+  @Key("Initiator")
+  private Initiator initiator;
+  @Key("Owner")
+  private Owner owner;
+  @Key("StorageClass")
+  private String storageClass;
+  @Key("PartNumberMarker")
+  private int partNumberMarker;
+  @Key("NextPartNumberMarker")
+  private int nextPartNumberMarker;
+  @Key("MaxParts")
+  private int maxParts;
+  @Key("IsTruncated")
+  private boolean isTruncated;
+  @Key("Part")
+  private List<Part> parts;
 
-    public ListPartsResult() {
-        super();
-        this.name = "ListPartsResult";
-    }
+  public ListPartsResult() {
+    super();
+    this.name = "ListPartsResult";
+  }
 
-    public String getBucket() {
-        return Bucket;
-    }
+  public String getBucket() {
+    return bucket;
+  }
 
-    public void setBucket(String bucket) {
-        Bucket = bucket;
-    }
+  public void setBucket(String bucket) {
+    this.bucket = bucket;
+  }
 
-    public String getKey() {
-        return Key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public void setKey(String key) {
-        Key = key;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public String getStorageClass() {
-        return storageClass;
-    }
+  public String getStorageClass() {
+    return storageClass;
+  }
 
-    public void setStorageClass(String storageClass) {
-        this.storageClass = storageClass;
-    }
+  public void setStorageClass(String storageClass) {
+    this.storageClass = storageClass;
+  }
 
-    public Initiator getInitiator() {
-        return initiator;
-    }
+  public Initiator getInitiator() {
+    return initiator;
+  }
 
-    public void setInitiator(Initiator initiator) {
-        this.initiator = initiator;
-    }
+  public void setInitiator(Initiator initiator) {
+    this.initiator = initiator;
+  }
 
-    public Owner getOwner() {
-        return owner;
-    }
+  public Owner getOwner() {
+    return owner;
+  }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
+  public void setOwner(Owner owner) {
+    this.owner = owner;
+  }
 
-    public int getMaxParts() {
-        return MaxParts;
-    }
+  public int getMaxParts() {
+    return maxParts;
+  }
 
-    public void setMaxParts(int maxParts) {
-        MaxParts = maxParts;
-    }
+  public void setMaxParts(int maxParts) {
+    this.maxParts = maxParts;
+  }
 
-    public boolean isTruncated() {
-        return IsTruncated;
-    }
+  public boolean isTruncated() {
+    return isTruncated;
+  }
 
-    public void setIsTruncated(boolean isTruncated) {
-        IsTruncated = isTruncated;
-    }
+  public void setIsTruncated(boolean isTruncated) {
+    this.isTruncated = isTruncated;
+  }
 
-    public int getPartNumberMarker() {
-        return PartNumberMarker;
-    }
+  public int getPartNumberMarker() {
+    return partNumberMarker;
+  }
 
-    public void setPartNumberMarker(int partNumberMarker) {
-        PartNumberMarker = partNumberMarker;
-    }
+  public void setPartNumberMarker(int partNumberMarker) {
+    this.partNumberMarker = partNumberMarker;
+  }
 
-    public int getNextPartNumberMarker() {
-        return NextPartNumberMarker;
-    }
+  public int getNextPartNumberMarker() {
+    return nextPartNumberMarker;
+  }
 
-    public void setNextPartNumberMarker(int nextPartNumberMarker) {
-        NextPartNumberMarker = nextPartNumberMarker;
-    }
+  public void setNextPartNumberMarker(int nextPartNumberMarker) {
+    this.nextPartNumberMarker = nextPartNumberMarker;
+  }
 
-    public List<Part> getParts() {
-        if (parts == null) {
-            return new LinkedList<Part>();
-        }
-        return parts;
+  public List<Part> getParts() {
+    if (parts == null) {
+      return new LinkedList<Part>();
     }
+    return parts;
+  }
 
-    public void setParts(List<Part> parts) {
-        this.parts = parts;
-    }
+  public void setParts(List<Part> parts) {
+    this.parts = parts;
+  }
 
 }

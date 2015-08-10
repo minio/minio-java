@@ -22,33 +22,33 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ListAllMyBucketsResult extends XmlEntity {
-    @Key("Owner")
-    private Owner owner;
-    @Key("Buckets")
-    private Buckets buckets;
+  @Key("Owner")
+  private Owner owner;
+  @Key("Buckets")
+  private Buckets buckets;
 
-    public ListAllMyBucketsResult() {
-        super();
-        this.name = "ListAllMyBucketsResult";
-    }
+  public ListAllMyBucketsResult() {
+    super();
+    this.name = "ListAllMyBucketsResult";
+  }
 
-    @SuppressWarnings("unused")
-    public Owner getOwner() {
-        return owner;
-    }
+  @SuppressWarnings("unused")
+  public Owner getOwner() {
+    return owner;
+  }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
+  public void setOwner(Owner owner) {
+    this.owner = owner;
+  }
 
-    public List<Bucket> getBuckets() {
-        if (buckets == null) {
-            return new LinkedList<Bucket>();
-        }
-        return buckets.getBucket();
+  public List<Bucket> getBuckets() {
+    if (buckets == null) {
+      return new LinkedList<Bucket>();
     }
+    return buckets.getBucket();
+  }
 
-    public void setBuckets(Buckets buckets) {
-        this.buckets = buckets;
-    }
+  public void setBuckets(Buckets buckets) {
+    this.buckets = buckets;
+  }
 }

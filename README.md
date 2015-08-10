@@ -70,6 +70,35 @@ public class HelloListBuckets {
 * [RemoveObject.java](./src/main/java/io/minio/examples/RemoveObject.java)
 * [StatObject.java](./src/main/java/io/minio/examples/StatObject.java)
 
+### How to run these examples?
+
+#### Step 1: clone the project
+
+```bash
+$ git clone https://github.com/minio/minio-java
+```
+
+#### Edit examples with your favorite editor
+
+Edit any examples you want to test and fill in access key placeholders
+
+```bash
+$ editor src/main/io/minio/examples/ListBuckets.java
+```
+
+#### Run the example
+
+```bash
+$ ./gradlew copyLibraries
+$ java -cp 'lib/*' io.minio.examples.ListBuckets
+bucket1
+bucket2
+....
+...
+bucketN
+
+```
+
 ## Contribute
 
 [Contributors Guide](./CONTRIBUTING.md)

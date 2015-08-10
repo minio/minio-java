@@ -23,101 +23,101 @@ import java.util.List;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class ListBucketResult extends XmlEntity {
-    @Key("Name")
-    private String Name;
-    @Key("Prefix")
-    private String Prefix;
-    @Key("Marker")
-    private String Marker;
-    @Key("NextMarker")
-    private String nextMarker;
-    @Key("MaxKeys")
-    private int MaxKeys;
-    @Key("Delimiter")
-    private String Delimiter;
-    @Key("IsTruncated")
-    private boolean IsTruncated;
-    @Key("Contents")
-    private List<Item> Contents;
-    @Key("CommonPrefixes")
-    private List<Prefix> CommonPrefixes;
+  @Key("Name")
+  private String name;
+  @Key("Prefix")
+  private String prefix;
+  @Key("Marker")
+  private String marker;
+  @Key("NextMarker")
+  private String nextMarker;
+  @Key("MaxKeys")
+  private int maxKeys;
+  @Key("Delimiter")
+  private String delimiter;
+  @Key("IsTruncated")
+  private boolean isTruncated;
+  @Key("Contents")
+  private List<Item> contents;
+  @Key("CommonPrefixes")
+  private List<Prefix> commonPrefixes;
 
-    public ListBucketResult() {
-        super.name = "ListBucketResult";
-    }
+  public ListBucketResult() {
+    super.name = "ListBucketResult";
+  }
 
-    public String getNextMarker() {
-        return nextMarker;
-    }
+  public String getNextMarker() {
+    return nextMarker;
+  }
 
-    public void setNextMarker(String nextMarker) {
-        this.nextMarker = nextMarker;
-    }
+  public void setNextMarker(String nextMarker) {
+    this.nextMarker = nextMarker;
+  }
 
-    public String getName() {
-        return Name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        Name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public String getPrefix() {
-        return Prefix;
-    }
+  public String getPrefix() {
+    return prefix;
+  }
 
-    public void setPrefix(String prefix) {
-        Prefix = prefix;
-    }
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
+  }
 
-    public String getMarker() {
-        return Marker;
-    }
+  public String getMarker() {
+    return marker;
+  }
 
-    public void setMarker(String marker) {
-        Marker = marker;
-    }
+  public void setMarker(String marker) {
+    this.marker = marker;
+  }
 
-    public int getMaxKeys() {
-        return MaxKeys;
-    }
+  public int getMaxKeys() {
+    return maxKeys;
+  }
 
-    public void setMaxKeys(int maxKeys) {
-        MaxKeys = maxKeys;
-    }
+  public void setMaxKeys(int maxKeys) {
+    this.maxKeys = maxKeys;
+  }
 
-    public String getDelimiter() {
-        return Delimiter;
-    }
+  public String getDelimiter() {
+    return delimiter;
+  }
 
-    public void setDelimiter(String delimiter) {
-        Delimiter = delimiter;
-    }
+  public void setDelimiter(String delimiter) {
+    this.delimiter = delimiter;
+  }
 
-    public boolean isTruncated() {
-        return IsTruncated;
-    }
+  public boolean isTruncated() {
+    return isTruncated;
+  }
 
-    public void setIsTruncated(boolean isTruncated) {
-        IsTruncated = isTruncated;
-    }
+  public void setIsTruncated(boolean isTruncated) {
+    this.isTruncated = isTruncated;
+  }
 
-    public List<Item> getContents() {
-        return Contents;
-    }
+  public List<Item> getContents() {
+    return contents;
+  }
 
-    public void setContents(List<Item> contents) {
-        Contents = contents;
-    }
+  public void setContents(List<Item> contents) {
+    this.contents = contents;
+  }
 
-    public List<Prefix> getCommonPrefixes() {
-        if(CommonPrefixes == null) {
-            return new LinkedList<Prefix>();
-        }
-        return CommonPrefixes;
+  public List<Prefix> getCommonPrefixes() {
+    if (commonPrefixes == null) {
+      return new LinkedList<Prefix>();
     }
+    return commonPrefixes;
+  }
 
-    public void setCommonPrefixes(List<Prefix> commonPrefixes) {
-        CommonPrefixes = commonPrefixes;
-    }
+  public void setCommonPrefixes(List<Prefix> commonPrefixes) {
+    this.commonPrefixes = commonPrefixes;
+  }
 }

@@ -23,33 +23,33 @@ import java.util.List;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class AccessControlPolicy extends XmlEntity {
-    @Key("Owner")
-    private Owner owner;
-    @Key("AccessControlList")
-    private AccessControlList grants;
+  @Key("Owner")
+  private Owner owner;
+  @Key("AccessControlList")
+  private AccessControlList grants;
 
-    public AccessControlPolicy() {
-        super();
-        this.name = "AccessControlPolicy";
-    }
+  public AccessControlPolicy() {
+    super();
+    this.name = "AccessControlPolicy";
+  }
 
-    public Owner getOwner() {
-        return owner;
-    }
+  public Owner getOwner() {
+    return owner;
+  }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
+  public void setOwner(Owner owner) {
+    this.owner = owner;
+  }
 
-    public List<Grant> getAccessControlList() {
-        if (grants == null) {
-            return new LinkedList<Grant>();
-        }
-        return grants.getGrant();
+  public List<Grant> getAccessControlList() {
+    if (grants == null) {
+      return new LinkedList<Grant>();
     }
+    return grants.getGrant();
+  }
 
-    public void setAccessControlList(AccessControlList grants) {
-        this.grants = grants;
-    }
+  public void setAccessControlList(AccessControlList grants) {
+    this.grants = grants;
+  }
 
 }

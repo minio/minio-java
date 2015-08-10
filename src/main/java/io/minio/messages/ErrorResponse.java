@@ -20,68 +20,60 @@ import com.google.api.client.util.Key;
 
 @SuppressWarnings("unused")
 public class ErrorResponse extends XmlEntity {
-    @Key("Code")
-    private String code;
-    @Key("Message")
-    private String message;
-    @Key("RequestId")
-    private String requestID;
-    @Key("HostId")
-    private String hostID;
-    @Key("Resource")
-    private String resource;
-    private String xAmzID2;
+  @Key("Code")
+  private String code;
+  @Key("Message")
+  private String message;
+  @Key("RequestId")
+  private String requestID;
+  @Key("HostId")
+  private String hostID;
+  @Key("Resource")
+  private String resource;
 
-    public ErrorResponse() {
-        super();
-        super.name = "ErrorResponse";
-    }
+  public ErrorResponse() {
+    super();
+    super.name = "ErrorResponse";
+  }
 
-    public String getCode() {
-        return code;
-    }
+  public String getCode() {
+    return code;
+  }
 
-    public void setCode(String code) {
-        this.code = code;
-    }
+  public void setCode(String code) {
+    this.code = code;
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public String getMessage() {
+    return message;
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    public String getRequestID() {
-        return requestID;
-    }
+  public String getRequestID() {
+    return requestID;
+  }
 
-    public void setRequestID(String requestID) {
-        this.requestID = requestID;
-    }
+  public void setRequestID(String requestID) {
+    this.requestID = requestID;
+  }
 
-    public String getHostID() {
-        return hostID;
-    }
+  public String getHostID() {
+    return hostID;
+  }
 
-    public void setHostID(String hostID) {
-        this.hostID = hostID;
-    }
+  public void setHostID(String hostID) {
+    this.hostID = hostID;
+  }
 
-    public String getResource() {
-        return resource;
-    }
+  public String getResource() {
+    return resource;
+  }
 
-    public void setResource(String resource) {
-        this.resource = resource;
-    }
+  public void setResource(String resource) {
+    this.resource = resource;
+  }
 
-    public String getxAmzID2() {
-        return xAmzID2;
-    }
-
-    public void setxAmzID2(String xAmzID2) {
-        this.xAmzID2 = xAmzID2;
-    }
 }

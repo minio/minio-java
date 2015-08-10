@@ -20,59 +20,59 @@ import com.google.api.client.util.Key;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Grantee extends XmlEntity {
-    @Key("ID")
-    private String id;
-    @Key("DisplayName")
-    private String displayName;
-    @Key("EmailAddress")
-    private String emailAddress;
-    @Key("Type")
-    private String type;
-    @Key("URI")
-    private String uri;
+  @Key("ID")
+  private String id;
+  @Key("DisplayName")
+  private String displayName;
+  @Key("EmailAddress")
+  private String emailAddress;
+  @Key("Type")
+  private String type;
+  @Key("URI")
+  private String uri;
 
-    public Grantee() {
-        super();
-        this.name = "Grantee";
-    }
+  public Grantee() {
+    super();
+    this.name = "Grantee";
+  }
 
-    public String getID() {
-        return id;
-    }
+  public String getID() {
+    return id;
+  }
 
-    public void setID(String id) {
-        this.id = id;
-    }
+  public void setID(String id) {
+    this.id = id;
+  }
 
-    public String getDisplayName() {
-        return displayName;
-    }
+  public String getDisplayName() {
+    return displayName;
+  }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
 
-    public String getEmailAddress() {
-        return emailAddress;
-    }
+  public String getEmailAddress() {
+    return emailAddress;
+  }
 
-    public void setEmailAddress(String emailAddress) {
-        this.emailAddress = emailAddress;
-    }
+  public void setEmailAddress(String emailAddress) {
+    this.emailAddress = emailAddress;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public String getType() {
+    return type;
+  }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    public String getURI() {
-        return uri;
-    }
+  public String getURI() {
+    return uri;
+  }
 
-    public void setURI(String uri) {
-        this.uri = uri;
-    }
+  public void setURI(String uri) {
+    this.uri = uri;
+  }
 }

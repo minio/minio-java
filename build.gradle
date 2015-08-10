@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+apply plugin: 'checkstyle'
 apply plugin: 'java'
 apply plugin: 'pmd'
 apply plugin: 'maven'
 apply plugin: 'signing'
 apply plugin: 'findbugs'
-apply plugin: 'groovy'
 
 compileJava {
   options.fork = true
@@ -48,7 +48,7 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '2.3'
+  gradleVersion = '2.5'
 }
 
 [compileJava, compileTestJava].each() {
@@ -68,6 +68,23 @@ dependencies {
 repositories {
   mavenCentral()
   mavenLocal()
+}
+
+checkstyle {
+  configFile = file("$rootDir/checkstyle.xml")
+  toolVersion = "6.5"
+  ignoreFailures = true
+  if (rootProject.hasProperty("checkstyle.ignoreFailures")) {
+    ignoreFailures = rootProject.properties["checkstyle.ignoreFailures"].toBoolean()
+  }
+}
+
+checkstyleMain {
+  source = fileTree(dir: "src/main", include: "**/*.java")
+}
+
+checkstyleTest {
+  source = fileTree(dir: "src/test", include: "**/*.java")
 }
 
 tasks.withType(FindBugs) {

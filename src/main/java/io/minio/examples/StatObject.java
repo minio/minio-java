@@ -24,14 +24,14 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 
 public class StatObject {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("StatObject app");
+  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
+    System.out.println("StatObject app");
 
-        // Set s3 endpoint, region is calculated automatically
-        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // Set s3 endpoint, region is calculated automatically
+    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // stat an object
-        ObjectStat objectStat = s3Client.statObject("mybucket", "my/object");
-        System.out.println(objectStat);
-    }
+    // stat an object
+    ObjectStat objectStat = s3Client.statObject("mybucket", "my/object");
+    System.out.println(objectStat);
+  }
 }

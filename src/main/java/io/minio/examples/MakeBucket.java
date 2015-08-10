@@ -24,13 +24,13 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 
 public class MakeBucket {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("MakeBucket app");
+  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
+    System.out.println("MakeBucket app");
 
-        // Set s3 endpoint, region is calculated automatically
-        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // Set s3 endpoint, region is calculated automatically
+    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // create bucket
-        s3Client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
-    }
+    // create bucket
+    s3Client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
+  }
 }

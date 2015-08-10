@@ -19,20 +19,20 @@ package io.minio.messages;
 import com.google.api.client.util.Key;
 
 public class CreateBucketConfiguration extends XmlEntity {
-    @Key("LocationConstraint")
-    private String locationConstraint;
+  @Key("LocationConstraint")
+  private String locationConstraint;
 
-    public CreateBucketConfiguration() {
-        super();
-        super.name = "CreateBucketConfiguration";
-    }
+  public CreateBucketConfiguration() {
+    super();
+    super.name = "CreateBucketConfiguration";
+  }
 
-    @SuppressWarnings("unused")
-    public String getLocationConstraint() {
-        return locationConstraint;
-    }
+  @SuppressWarnings("unused")
+  public String getLocationConstraint() {
+    return locationConstraint;
+  }
 
-    public void setLocationConstraint(String locationConstraint) {
-        this.locationConstraint = locationConstraint;
-    }
+  public void setLocationConstraint(String locationConstraint) {
+    this.locationConstraint = locationConstraint;
+  }
 }

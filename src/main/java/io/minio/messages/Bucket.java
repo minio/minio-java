@@ -25,35 +25,35 @@ import java.util.TimeZone;
 
 @SuppressWarnings("SameParameterValue")
 public class Bucket extends XmlEntity {
-    @Key("Name")
-    private String name;
-    @Key("CreationDate")
-    private String creationDate;
+  @Key("Name")
+  private String name;
+  @Key("CreationDate")
+  private String creationDate;
 
-    public Bucket() {
-        super();
-        super.name = "Bucket";
-    }
+  public Bucket() {
+    super();
+    super.name = "Bucket";
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public String getCreationDate() {
-        return creationDate;
-    }
+  public String getCreationDate() {
+    return creationDate;
+  }
 
-    public void setCreationDate(String creationDate) {
-        this.creationDate = creationDate;
-    }
+  public void setCreationDate(String creationDate) {
+    this.creationDate = creationDate;
+  }
 
-    public Date getParsedCreationDate() throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return formatter.parse(this.getCreationDate());
-    }
+  public Date getParsedCreationDate() throws ParseException {
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return formatter.parse(this.getCreationDate());
+  }
 }

@@ -23,22 +23,22 @@ import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class Buckets extends XmlEntity {
-    @Key("Bucket")
-    private List<Bucket> bucket;
+  @Key("Bucket")
+  private List<Bucket> bucket;
 
-    public Buckets() {
-        super();
-        super.name = "Buckets";
-    }
+  public Buckets() {
+    super();
+    super.name = "Buckets";
+  }
 
-    public List<Bucket> getBucket() {
-        if(bucket == null) {
-            return new LinkedList<Bucket>();
-        }
-        return bucket;
+  public List<Bucket> getBucket() {
+    if (bucket == null) {
+      return new LinkedList<Bucket>();
     }
+    return bucket;
+  }
 
-    public void setBucket(List<Bucket> bucket) {
-        this.bucket = bucket;
-    }
+  public void setBucket(List<Bucket> bucket) {
+    this.bucket = bucket;
+  }
 }
