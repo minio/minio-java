@@ -292,6 +292,57 @@ class RequestSigner implements Interceptor {
     return map;
   }
 
+  private String getPresignCanonicalRequest(Request request, String requestQuery, String expires, DateTime date) throws IOException {
+    StringWriter canonicalWriter = new StringWriter();
+    PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
+
+    String method = request.method();
+    String path = request.uri().getPath();
+
+    canonicalPrinter.print(method + "\n");
+    canonicalPrinter.print(path + "\n");
+    canonicalPrinter.print(requestQuery + "\n");
+    Map<String, String> headers = getCanonicalHeaders(request);
+    for (Map.Entry<String, String> e : headers.entrySet()) {
+      canonicalPrinter.write(e.getKey() + ":" + e.getValue() + '\n');
+    }
+    canonicalPrinter.print("\n");
+    canonicalPrinter.print(getSignedHeaders(request) + "\n");
+    canonicalPrinter.print("UNSIGNED-PAYLOAD");
+    canonicalPrinter.flush();
+    return canonicalWriter.toString();
+  }
+
+  public String presignURL(Request originalRequest, Integer expiresInt) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    String host = originalRequest.uri().getHost();
+    String path = originalRequest.uri().getPath();
+    String region = getRegion(originalRequest);
+    String expires = Integer.toString(expiresInt);
+    String requestQuery = "";
+
+    Request signedRequest = originalRequest.newBuilder()
+        .header("Host", host)
+        .build();
+
+    ignoredHeaders.add("x-amz-date");
+
+    requestQuery = "X-Amz-Algorithm=AWS4-HMAC-SHA256&";
+    requestQuery += "X-Amz-Credential=" + this.accessKey + URLEncoder.encode("/" + getScope(region, date), "UTF-8") + "&";
+    requestQuery += "X-Amz-Date=" + date.toString(dateFormatyyyyMMddThhmmssZ) + "&";
+    requestQuery += "X-Amz-Expires=" + expires + "&";
+    requestQuery += "X-Amz-SignedHeaders=" + getSignedHeaders(signedRequest);
+
+    String canonicalRequest = getPresignCanonicalRequest(signedRequest, requestQuery, expires, date);
+    byte[] canonicalRequestHashBytes = computeSha256(canonicalRequest.getBytes("UTF-8"));
+    String canonicalRequestHash = DatatypeConverter.printHexBinary(canonicalRequestHashBytes).toLowerCase();
+    String stringToSign = getStringToSign(region, canonicalRequestHash, date);
+    byte[] signingKey = getSigningKey(date, region, this.secretKey);
+    String signature = DatatypeConverter.printHexBinary(getSignature(signingKey, stringToSign)).toLowerCase();
+    String scheme = signedRequest.uri().getScheme();
+
+    return scheme + "://" + host + path + "?" + requestQuery + "&X-Amz-Signature=" + signature;
+  }
+
   @Override
   public Response intercept(Chain chain) throws IOException {
     try {
