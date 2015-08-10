@@ -16,8 +16,8 @@
 
 package io.minio.examples;
 
-import io.minio.client.Client;
-import io.minio.client.errors.ClientException;
+import io.minio.MinioClient;
+import io.minio.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class DropAllIncompleteUploads {
         System.out.println("DropAllIncompleteUploads app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         // recursively drop every in progress active multipart upload sessions for a given bucket
         s3Client.dropAllIncompleteUploads("mybucket");

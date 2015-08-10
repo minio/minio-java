@@ -17,8 +17,8 @@
 package io.minio.examples;
 
 import com.google.api.client.util.IOUtils;
-import io.minio.client.Client;
-import io.minio.client.errors.ClientException;
+import io.minio.MinioClient;
+import io.minio.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class GetPartialObject {
         System.out.println("GetPartialObject app");
 
         // Set s3 endpoint, region is calculated automatically
-        Client s3Client = Client.getClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         // get object from offset, of specific length
         InputStream object = s3Client.getPartialObject("mybucket", "myobject", 1024, 4096);
