@@ -945,20 +945,11 @@ public final class MinioClient {
         .addQueryParameter("acl", "")
         .build();
 
-    // FUTURE: dummy access control policy for now
-    AccessControlPolicy accessControlPolicy = new AccessControlPolicy();
-
-    byte[] data = accessControlPolicy.toString().getBytes("UTF-8");
-    byte[] md5sum = calculateMd5sum(data);
-    String base64md5sum = "";
-    if (md5sum != null) {
-      base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
-    }
-
+    // okhttp requires PUT objects to have non-nil body, so we send a dummy not "null"
+    byte[] data = "".getBytes("UTF-8");
     Request request = getRequest("PUT", url, data);
     request = request.newBuilder()
         .header("x-amz-acl", acl.toString())
-        .header("Content-MD5", base64md5sum)
         .build();
 
     Response response = this.transport.newCall(request).execute();
