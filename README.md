@@ -13,7 +13,7 @@
 ## Install from gradle
 
 ```gradle
-compileDependencies {
+dependencies {
     compile 'io.minio:minio:0.2.2'
 }
 ```
