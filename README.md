@@ -6,7 +6,7 @@
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>0.2.3</version>
+    <version>0.2.4</version>
 </dependency>
 ```
 
@@ -14,13 +14,13 @@
 
 ```gradle
 dependencies {
-    compile 'io.minio:minio:0.2.3'
+    compile 'io.minio:minio:0.2.4'
 }
 ```
 
 ## Download from JAR
 
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/0.2.3/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/0.2.4/) directly from maven.
 
 ## Example
 ```java
