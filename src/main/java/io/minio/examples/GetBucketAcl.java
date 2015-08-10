@@ -24,14 +24,14 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 
 public class GetBucketAcl {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("GetBucketAcl app");
+  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
+    System.out.println("GetBucketAcl app");
 
-        // Set s3 endpoint, region is calculated automatically
-        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // Set s3 endpoint, region is calculated automatically
+    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // get bucket canned acl
-        Acl acl = s3Client.getBucketACL("mybucket");
-        System.out.println(acl);
-    }
+    // get bucket canned acl
+    Acl acl = s3Client.getBucketACL("mybucket");
+    System.out.println(acl);
+  }
 }

@@ -1,5 +1,11 @@
 language: java
 sudo: false
+
+scripts:
+  - gradle assemble
+  - gradle build
+  - gradle check
+
 jdk:
 - oraclejdk8
 - oraclejdk7

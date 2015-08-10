@@ -20,69 +20,69 @@ import com.google.api.client.util.Key;
 
 @SuppressWarnings("unused")
 public class Upload extends XmlEntity {
-    @Key("Key")
-    private String key;
-    @Key("UploadId")
-    private String uploadID;
-    @Key("Initiator")
-    private Initiator initiator;
-    @Key("Owner")
-    private Owner owner;
-    @Key("StorageClass")
-    private String storageClass;
-    @Key("Initiated")
-    private String initiated;
+  @Key("Key")
+  private String key;
+  @Key("UploadId")
+  private String uploadID;
+  @Key("Initiator")
+  private Initiator initiator;
+  @Key("Owner")
+  private Owner owner;
+  @Key("StorageClass")
+  private String storageClass;
+  @Key("Initiated")
+  private String initiated;
 
-    public Upload() {
-        super();
-        super.name = "Upload";
-    }
+  public Upload() {
+    super();
+    super.name = "Upload";
+  }
 
-    public String getKey() {
-        return key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public String getUploadID() {
-        return uploadID;
-    }
+  public String getUploadID() {
+    return uploadID;
+  }
 
-    public void setUploadID(String uploadID) {
-        this.uploadID = uploadID;
-    }
+  public void setUploadID(String uploadID) {
+    this.uploadID = uploadID;
+  }
 
-    public Initiator getInitiator() {
-        return initiator;
-    }
+  public Initiator getInitiator() {
+    return initiator;
+  }
 
-    public void setInitiator(Initiator initiator) {
-        this.initiator = initiator;
-    }
+  public void setInitiator(Initiator initiator) {
+    this.initiator = initiator;
+  }
 
-    public Owner getOwner() {
-        return owner;
-    }
+  public Owner getOwner() {
+    return owner;
+  }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
+  public void setOwner(Owner owner) {
+    this.owner = owner;
+  }
 
-    public String getStorageClass() {
-        return storageClass;
-    }
+  public String getStorageClass() {
+    return storageClass;
+  }
 
-    public void setStorageClass(String storageClass) {
-        this.storageClass = storageClass;
-    }
+  public void setStorageClass(String storageClass) {
+    this.storageClass = storageClass;
+  }
 
-    public String getInitiated() {
-        return initiated;
-    }
+  public String getInitiated() {
+    return initiated;
+  }
 
-    public void setInitiated(String initiated) {
-        this.initiated = initiated;
-    }
+  public void setInitiated(String initiated) {
+    this.initiated = initiated;
+  }
 }

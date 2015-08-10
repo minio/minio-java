@@ -20,39 +20,39 @@ import com.google.api.client.util.Key;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class InitiateMultipartUploadResult extends XmlEntity {
-    @Key("Bucket")
-    private String bucket;
-    @Key("Key")
-    private String key;
-    @Key("UploadId")
-    private String UploadId;
+  @Key("Bucket")
+  private String bucket;
+  @Key("Key")
+  private String key;
+  @Key("UploadId")
+  private String uploadId;
 
-    public InitiateMultipartUploadResult() {
-        super();
-        this.name = "InitiateMultipartUploadResult";
-    }
+  public InitiateMultipartUploadResult() {
+    super();
+    this.name = "InitiateMultipartUploadResult";
+  }
 
-    public String getBucket() {
-        return bucket;
-    }
+  public String getBucket() {
+    return bucket;
+  }
 
-    public void setBucket(String bucket) {
-        this.bucket = bucket;
-    }
+  public void setBucket(String bucket) {
+    this.bucket = bucket;
+  }
 
-    public String getKey() {
-        return key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public String getUploadId() {
-        return UploadId;
-    }
+  public String getUploadId() {
+    return uploadId;
+  }
 
-    public void setUploadId(String uploadId) {
-        UploadId = uploadId;
-    }
+  public void setUploadId(String uploadId) {
+    this.uploadId = uploadId;
+  }
 }

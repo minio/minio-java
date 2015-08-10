@@ -25,56 +25,56 @@ import java.util.TimeZone;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Part extends XmlEntity {
-    @Key("PartNumber")
-    private int partNumber;
-    @Key("ETag")
-    private String eTag;
-    @Key("LastModified")
-    private String lastModified;
-    @Key("Size")
-    private Long size;
+  @Key("PartNumber")
+  private int partNumber;
+  @Key("ETag")
+  private String eTag;
+  @Key("LastModified")
+  private String lastModified;
+  @Key("Size")
+  private Long size;
 
-    public Part() {
-        super();
-        super.name = "Part";
-    }
+  public Part() {
+    super();
+    super.name = "Part";
+  }
 
-    public int getPartNumber() {
-        return partNumber;
-    }
+  public int getPartNumber() {
+    return partNumber;
+  }
 
-    public void setPartNumber(int partNumber) {
-        this.partNumber = partNumber;
-    }
+  public void setPartNumber(int partNumber) {
+    this.partNumber = partNumber;
+  }
 
-    public String geteTag() {
-        return eTag.replaceAll("\"", "");
-    }
+  public String geteTag() {
+    return eTag.replaceAll("\"", "");
+  }
 
-    public void seteTag(String eTag) {
-        this.eTag = eTag.replaceAll("\"", "");
-    }
+  public void seteTag(String eTag) {
+    this.eTag = eTag.replaceAll("\"", "");
+  }
 
-    public String getLastModified() {
-        return lastModified;
-    }
+  public String getLastModified() {
+    return lastModified;
+  }
 
-    public void setLastModified(String lastModified) {
-        this.lastModified = lastModified;
-    }
+  public void setLastModified(String lastModified) {
+    this.lastModified = lastModified;
+  }
 
-    public Date getParsedLastModified() throws ParseException {
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return formatter.parse(this.getLastModified());
-    }
+  public Date getParsedLastModified() throws ParseException {
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
+    return formatter.parse(this.getLastModified());
+  }
 
-    public long getSize() {
-        return size;
-    }
+  public long getSize() {
+    return size;
+  }
 
-    public void setSize(long size) {
-        this.size = size;
-    }
+  public void setSize(long size) {
+    this.size = size;
+  }
 
 }

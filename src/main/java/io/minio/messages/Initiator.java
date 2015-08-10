@@ -20,29 +20,29 @@ import com.google.api.client.util.Key;
 
 @SuppressWarnings("unused")
 public class Initiator extends XmlEntity {
-    @Key
-    private String ID;
-    @Key
-    private String DisplayName;
+  @Key("ID")
+  private String id;
+  @Key("DisplayName")
+  private String displayName;
 
-    public Initiator() {
-        super();
-        this.name = "Initiator";
-    }
+  public Initiator() {
+    super();
+    this.name = "Initiator";
+  }
 
-    public String getID() {
-        return ID;
-    }
+  public String getID() {
+    return id;
+  }
 
-    public void setID(String ID) {
-        this.ID = ID;
-    }
+  public void setID(String id) {
+    this.id = id;
+  }
 
-    public String getDisplayName() {
-        return DisplayName;
-    }
+  public String getDisplayName() {
+    return displayName;
+  }
 
-    public void setDisplayName(String displayName) {
-        DisplayName = displayName;
-    }
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
 }

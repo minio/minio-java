@@ -23,92 +23,92 @@ import java.util.List;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ListMultipartUploadsResult extends XmlEntity {
-    @Key("Upload")
-    List<Upload> uploads;
-    @Key("Bucket")
-    private String bucket;
-    @Key("KeyMarker")
-    private String keyMarker;
-    @Key("UploadIdMarker")
-    private String uploadIDMarker;
-    @Key("NextKeyMarker")
-    private String nextKeyMarker;
-    @Key("NextUploadIdMarker")
-    private String nextUploadIDMarker;
-    @Key("MaxUploads")
-    private int maxUploads;
-    @Key("IsTruncated")
-    private boolean isTruncated;
+  @Key("Upload")
+  List<Upload> uploads;
+  @Key("Bucket")
+  private String bucket;
+  @Key("KeyMarker")
+  private String keyMarker;
+  @Key("UploadIdMarker")
+  private String uploadIDMarker;
+  @Key("NextKeyMarker")
+  private String nextKeyMarker;
+  @Key("NextUploadIdMarker")
+  private String nextUploadIDMarker;
+  @Key("MaxUploads")
+  private int maxUploads;
+  @Key("IsTruncated")
+  private boolean isTruncated;
 
-    public ListMultipartUploadsResult() {
-        super();
-        super.name = "ListMultipartUploadsResult";
-    }
+  public ListMultipartUploadsResult() {
+    super();
+    super.name = "ListMultipartUploadsResult";
+  }
 
-    public boolean isTruncated() {
-        return isTruncated;
-    }
+  public boolean isTruncated() {
+    return isTruncated;
+  }
 
-    public void setIsTruncated(boolean isTruncated) {
-        this.isTruncated = isTruncated;
-    }
+  public void setIsTruncated(boolean isTruncated) {
+    this.isTruncated = isTruncated;
+  }
 
-    public String getBucket() {
-        return bucket;
-    }
+  public String getBucket() {
+    return bucket;
+  }
 
-    public void setBucket(String bucket) {
-        this.bucket = bucket;
-    }
+  public void setBucket(String bucket) {
+    this.bucket = bucket;
+  }
 
-    public String getKeyMarker() {
-        return keyMarker;
-    }
+  public String getKeyMarker() {
+    return keyMarker;
+  }
 
-    public void setKeyMarker(String keyMarker) {
-        this.keyMarker = keyMarker;
-    }
+  public void setKeyMarker(String keyMarker) {
+    this.keyMarker = keyMarker;
+  }
 
-    public String getUploadIDMarker() {
-        return uploadIDMarker;
-    }
+  public String getUploadIDMarker() {
+    return uploadIDMarker;
+  }
 
-    public void setUploadIDMarker(String uploadIDMarker) {
-        this.uploadIDMarker = uploadIDMarker;
-    }
+  public void setUploadIDMarker(String uploadIDMarker) {
+    this.uploadIDMarker = uploadIDMarker;
+  }
 
-    public String getNextKeyMarker() {
-        return nextKeyMarker;
-    }
+  public String getNextKeyMarker() {
+    return nextKeyMarker;
+  }
 
-    public void setNextKeyMarker(String nextKeyMarker) {
-        this.nextKeyMarker = nextKeyMarker;
-    }
+  public void setNextKeyMarker(String nextKeyMarker) {
+    this.nextKeyMarker = nextKeyMarker;
+  }
 
-    public String getNextUploadIDMarker() {
-        return nextUploadIDMarker;
-    }
+  public String getNextUploadIDMarker() {
+    return nextUploadIDMarker;
+  }
 
-    public void setNextUploadIDMarker(String nextUploadIDMarker) {
-        this.nextUploadIDMarker = nextUploadIDMarker;
-    }
+  public void setNextUploadIDMarker(String nextUploadIDMarker) {
+    this.nextUploadIDMarker = nextUploadIDMarker;
+  }
 
-    public int getMaxUploads() {
-        return maxUploads;
-    }
+  public int getMaxUploads() {
+    return maxUploads;
+  }
 
-    public void setMaxUploads(int maxUploads) {
-        this.maxUploads = maxUploads;
-    }
+  public void setMaxUploads(int maxUploads) {
+    this.maxUploads = maxUploads;
+  }
 
-    public List<Upload> getUploads() {
-        if (uploads == null) {
-            return new ArrayList<Upload>();
-        }
-        return uploads;
+  public List<Upload> getUploads() {
+    if (uploads == null) {
+      return new ArrayList<Upload>();
     }
+    return uploads;
+  }
 
-    public void setUploads(List<Upload> uploads) {
-        this.uploads = uploads;
-    }
+  public void setUploads(List<Upload> uploads) {
+    this.uploads = uploads;
+  }
 }

@@ -20,14 +20,14 @@ import com.google.api.client.util.Key;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Prefix extends XmlEntity {
-    @Key("Prefix")
-    private String prefix;
+  @Key("Prefix")
+  private String prefix;
 
-    public String getPrefix() {
-        return prefix;
-    }
+  public String getPrefix() {
+    return prefix;
+  }
 
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
+  public void setPrefix(String prefix) {
+    this.prefix = prefix;
+  }
 }

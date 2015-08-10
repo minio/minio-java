@@ -23,13 +23,13 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 
 public class RemoveBucket {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("RemoveBucket app");
+  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
+    System.out.println("RemoveBucket app");
 
-        // Set s3 endpoint, region is calculated automatically
-        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // Set s3 endpoint, region is calculated automatically
+    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // remove bucket
-        s3Client.removeBucket("mybucket");
-    }
+    // remove bucket
+    s3Client.removeBucket("mybucket");
+  }
 }

@@ -24,38 +24,38 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 enum MinioProperties {
-    INSTANCE;
-    private final AtomicReference<String> version = new AtomicReference<String>(null);
+  INSTANCE;
+  private final AtomicReference<String> version = new AtomicReference<String>(null);
 
-    public String getVersion() {
-        String result = version.get();
-        if (result == null) {
-            synchronized (INSTANCE) {
-                if (version.get() == null) {
-                    try {
-                        ClassLoader classLoader = getClass().getClassLoader();
-                        if (classLoader != null) {
-                            Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
-                            while (resources.hasMoreElements()) {
-                                Manifest manifest = new Manifest(resources.nextElement().openStream());
-                                for (Object k : manifest.getMainAttributes().keySet()) {
-                                    String versionString = "Minio-Client-Java-Version";
-                                    if (k.toString().equals(versionString)) {
-                                        version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
-                                    }
-                                }
-                            }
-                        }
-                        if (version.get() == null) {
-                            version.set("dev");
-                        }
-                    } catch (IOException e) {
-                        version.set("unknown");
-                    }
-                    result = version.get();
+  public String getVersion() {
+    String result = version.get();
+    if (result == null) {
+      synchronized (INSTANCE) {
+        if (version.get() == null) {
+          try {
+            ClassLoader classLoader = getClass().getClassLoader();
+            if (classLoader != null) {
+              Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
+              while (resources.hasMoreElements()) {
+                Manifest manifest = new Manifest(resources.nextElement().openStream());
+                for (Object k : manifest.getMainAttributes().keySet()) {
+                  String versionString = "Minio-Client-Java-Version";
+                  if (k.toString().equals(versionString)) {
+                    version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
+                  }
                 }
+              }
             }
+            if (version.get() == null) {
+              version.set("dev");
+            }
+          } catch (IOException e) {
+            version.set("unknown");
+          }
+          result = version.get();
         }
-        return result;
+      }
     }
+    return result;
+  }
 }

@@ -20,55 +20,72 @@ import java.util.Arrays;
 
 @SuppressWarnings("unused")
 public class Data {
-    private byte[] data;
-    private byte[] md5;
+  private byte[] data;
+  private byte[] md5;
 
-    public Data() {
-        super();
+  public Data() {
+    super();
+  }
+
+  public byte[] getData() {
+    return data.clone();
+  }
+
+  public void setData(byte[] data) {
+    this.data = data.clone();
+  }
+
+  public byte[] getMD5() {
+    return md5.clone();
+  }
+
+  public void setMD5(byte[] md5) {
+    this.md5 = md5.clone();
+  }
+
+  @Override
+  public String toString() {
+    return "Data{" 
+      +
+      "data='" 
+      + 
+      "**bytes**"
+      +
+      '\''
+      +
+      ", md5='"
+      + 
+      "**bytes**"
+      +
+      '}';
+  }
+
+  @SuppressWarnings("RedundantIfStatement")
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
 
-    public byte[] getData() {
-        return data.clone();
+    Data that = (Data) o;
+
+    if (!Arrays.equals(data, that.data)) {
+      return false;
+    }
+    if (!Arrays.equals(md5, that.md5)) {
+      return false;
     }
 
-    public void setData(byte[] data) {
-        this.data = data.clone();
-    }
+    return true;
+  }
 
-    public byte[] getMD5() {
-        return md5.clone();
-    }
-
-    public void setMD5(byte[] md5) {
-        this.md5 = md5.clone();
-    }
-
-    @Override
-    public String toString() {
-        return "Data{" +
-                "data='" + "**bytes**" + '\'' +
-                ", md5='" + "**bytes**" +
-                '}';
-    }
-
-    @SuppressWarnings("RedundantIfStatement")
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Data that = (Data) o;
-
-        if (!Arrays.equals(data, that.data)) return false;
-        if (!Arrays.equals(md5, that.md5)) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Arrays.hashCode(data);
-        result = 31 * result + Arrays.hashCode(md5);
-        return result;
-    }
+  @Override
+  public int hashCode() {
+    int result = Arrays.hashCode(data);
+    result = 31 * result + Arrays.hashCode(md5);
+    return result;
+  }
 }

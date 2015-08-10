@@ -26,18 +26,18 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public class ListObjects {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("ListObjects app");
+  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
+    System.out.println("ListObjects app");
 
-        // Set s3 endpoint, region is calculated automatically
-        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // Set s3 endpoint, region is calculated automatically
+    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // list objects
-        Iterator<Result<Item>> myObjects = s3Client.listObjects("mybucket");
-        while (myObjects.hasNext()) {
-            Result<Item> result = myObjects.next();
-            Item object = result.getResult();
-            System.out.println(object);
-        }
+    // list objects
+    Iterator<Result<Item>> myObjects = s3Client.listObjects("mybucket");
+    while (myObjects.hasNext()) {
+      Result<Item> result = myObjects.next();
+      Item object = result.getResult();
+      System.out.println(object);
     }
+  }
 }

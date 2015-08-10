@@ -22,20 +22,20 @@ import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class AccessControlList extends XmlEntity {
-    @Key("Grant")
-    private List<Grant> grant;
+  @Key("Grant")
+  private List<Grant> grant;
 
-    @SuppressWarnings("unused")
-    public AccessControlList() {
-        super();
-        super.name = "AccessControlList";
-    }
+  @SuppressWarnings("unused")
+  public AccessControlList() {
+    super();
+    super.name = "AccessControlList";
+  }
 
-    public List<Grant> getGrant() {
-        return grant;
-    }
+  public List<Grant> getGrant() {
+    return grant;
+  }
 
-    public void setGrant(List<Grant> grant) {
-        this.grant = grant;
-    }
+  public void setGrant(List<Grant> grant) {
+    this.grant = grant;
+  }
 }

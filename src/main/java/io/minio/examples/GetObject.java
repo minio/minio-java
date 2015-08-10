@@ -25,19 +25,19 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class GetObject {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        System.out.println("GetObject app");
+  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
+    System.out.println("GetObject app");
 
-        // Set s3 endpoint, region is calculated automatically
-        MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // Set s3 endpoint, region is calculated automatically
+    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // get object
-        InputStream object = s3Client.getObject("mybucket", "myobject");
-        try {
-            System.out.println("Printing object: ");
-            IOUtils.copy(object, System.out);
-        } finally {
-            object.close();
-        }
+    // get object
+    InputStream object = s3Client.getObject("mybucket", "myobject");
+    try {
+      System.out.println("Printing object: ");
+      IOUtils.copy(object, System.out);
+    } finally {
+      object.close();
     }
+  }
 }

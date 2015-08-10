@@ -20,29 +20,29 @@ import com.google.api.client.util.Key;
 
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Grant extends XmlEntity {
-    @Key("Grantee")
-    private Grantee grantee;
-    @Key("Permission")
-    private String permission;
+  @Key("Grantee")
+  private Grantee grantee;
+  @Key("Permission")
+  private String permission;
 
-    public Grant() {
-        super();
-        this.name = "Grant";
-    }
+  public Grant() {
+    super();
+    this.name = "Grant";
+  }
 
-    public String getPermission() {
-        return permission;
-    }
+  public String getPermission() {
+    return permission;
+  }
 
-    public void setPermission(String permission) {
-        this.permission = permission;
-    }
+  public void setPermission(String permission) {
+    this.permission = permission;
+  }
 
-    public Grantee getGrantee() {
-        return grantee;
-    }
+  public Grantee getGrantee() {
+    return grantee;
+  }
 
-    public void setGrantee(Grantee grantee) {
-        this.grantee = grantee;
-    }
+  public void setGrantee(Grantee grantee) {
+    this.grantee = grantee;
+  }
 }

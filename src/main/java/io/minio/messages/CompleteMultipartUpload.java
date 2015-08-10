@@ -22,19 +22,19 @@ import java.util.List;
 
 @SuppressWarnings("unused")
 public class CompleteMultipartUpload extends XmlEntity {
-    @Key("Part")
-    private List<Part> parts;
+  @Key("Part")
+  private List<Part> parts;
 
-    public CompleteMultipartUpload() {
-        super();
-        super.name = "CompleteMultipartUpload";
-    }
+  public CompleteMultipartUpload() {
+    super();
+    super.name = "CompleteMultipartUpload";
+  }
 
-    public List<Part> getParts() {
-        return parts;
-    }
+  public List<Part> getParts() {
+    return parts;
+  }
 
-    public void setParts(List<Part> parts) {
-        this.parts = parts;
-    }
+  public void setParts(List<Part> parts) {
+    this.parts = parts;
+  }
 }

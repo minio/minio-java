@@ -20,13 +20,13 @@ import io.minio.messages.ErrorResponse;
 
 @SuppressWarnings("unused")
 public class ClientException extends Exception {
-    private ErrorResponse errorResponse;
+  private ErrorResponse errorResponse;
 
-    public ErrorResponse getErrorResponse() {
-        return errorResponse;
-    }
+  public ErrorResponse getErrorResponse() {
+    return errorResponse;
+  }
 
-    public void setErrorResponse(ErrorResponse errorResponse) {
-        this.errorResponse = errorResponse;
-    }
+  public void setErrorResponse(ErrorResponse errorResponse) {
+    this.errorResponse = errorResponse;
+  }
 }
