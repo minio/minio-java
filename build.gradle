@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-apply plugin: 'checkstyle'
-apply plugin: 'java'
-apply plugin: 'pmd'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'findbugs'
+plugins {
+  id 'java'
+  id 'com.github.johnrengelman.shadow' version '1.2.2'
+  id 'checkstyle'
+  id 'pmd'
+  id 'maven'
+  id 'signing'
+  id 'findbugs'
+}
 
 compileJava {
   options.fork = true
@@ -186,21 +189,4 @@ jar {
     'Source-Compatibility': sourceCompatibility,
     'Target-Compatibility': targetCompatibility)
   }
-}
-
-
-ext.libdir = 'lib'
-task copyLibraries(type: Copy) {
-  from(getRuntimeArtifacts())
-  into libdir
-  from(getRuntimeLibraries())
-  into libdir
-}
-
-def getRuntimeArtifacts() {
-  configurations.runtime.artifacts.files
-}
-
-def getRuntimeLibraries() {
-  configurations.runtime
 }

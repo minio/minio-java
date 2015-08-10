@@ -1,6 +1,6 @@
 # Minio Java Library for Amazon S3 Compatible Cloud Storage [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Minio/minio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## Install from maven [![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
+## Download from maven
 
 ```xml
 <dependency>
@@ -10,7 +10,7 @@
 </dependency>
 ```
 
-## Install from gradle
+## Download from gradle
 
 ```gradle
 dependencies {
@@ -18,14 +18,12 @@ dependencies {
 }
 ```
 
-## Install from jars
+## Download from JAR
 
-You can download the latest jars directly from maven - [![Maven](https://img.shields.io/maven-central/v/io.minio/minio.svg)](http://repo1.maven.org/maven2/io/minio/minio/0.2.3/)
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/0.2.3/) directly from maven.
 
 ## Example
 ```java
-
-package hello.listbuckets;
 
 import io.minio.MinioClient;
 import io.minio.errors.ClientException;
@@ -54,22 +52,24 @@ public class HelloListBuckets {
 
 #### Bucket Operations
 
-* [ListBuckets.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/ListBuckets.java)
-* [ListObjects.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/ListObjects.java)
-* [BucketExists.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/BucketExists.java)
-* [MakeBucket.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/MakeBucket.java)
-* [SetBucketAcl.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/SetBucketAcl.java)
-* [GetBucketAcl.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetBucketAcl.java)
-* [RemoveBucket.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/RemoveBucket.java)
+* [ListBuckets.java](./examples/ListBuckets.java)
+* [ListObjects.java](./examples/ListObjects.java)
+* [BucketExists.java](./examples/BucketExists.java)
+* [MakeBucket.java](./examples/MakeBucket.java)
+* [SetBucketAcl.java](./examples/SetBucketAcl.java)
+* [GetBucketAcl.java](./examples/GetBucketAcl.java)
+* [RemoveBucket.java](./examples/RemoveBucket.java)
 
 #### Object Operations
 
-* [PutObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/PutObject.java)
-* [GetObject.Java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetObject.java)
-* [GetPartialObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/GetPartialObject.java)
-* [RemoveObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/RemoveObject.java)
-* [StatObject.java](https://github.com/minio/minio-java-examples/blob/master/src/main/java/io/minio/examples/StatObject.java)
+* [PutObject.java](./examples/PutObject.java)
+* [GetObject.Java](./examples/GetObject.java)
+* [GetPartialObject.java](./examples/GetPartialObject.java)
+* [RemoveObject.java](./examples/RemoveObject.java)
+* [StatObject.java](./examples/StatObject.java)
 
 ## Contribute
 
 [Contributors Guide](./CONTRIBUTING.md)
+
+[![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
