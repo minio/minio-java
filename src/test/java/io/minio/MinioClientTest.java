@@ -151,13 +151,38 @@ public class MinioClientTest {
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("GMT"));
     expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-    ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080, "a670520d9d36833b3e28d1e4b73cbe22", "application/octet-stream");
+    ObjectStat expectedStatInfo = new ObjectStat("bucket", "key",
+                                                 expectedDate.getTime(),
+                                                 5080,
+                                                 "a670520d9d36833b3e28d1e4b73cbe22",
+                                                 "application/octet-stream");
 
     // get request
     MinioClient client = new MinioClient(server.getUrl(""));
     ObjectStat objectStatInfo = client.statObject("bucket", "key");
 
     assertEquals(expectedStatInfo, objectStatInfo);
+  }
+
+  @Test(expected = InvalidExpiresRangeException.class)
+  public void testPresignGetObjectFail() throws IOException, InvalidKeyException, ClientException, NoSuchAlgorithmException, InvalidExpiresRangeException {
+    MockWebServer server = new MockWebServer();
+    server.start();
+
+    // get request
+    MinioClient client = new MinioClient(server.getUrl(""));
+    client.presignGetObject("bucket", "key", 604801);
+  }
+
+  @Test
+  public void testPresignGetObject() throws IOException, InvalidKeyException, ClientException, NoSuchAlgorithmException, InvalidExpiresRangeException {
+    MockWebServer server = new MockWebServer();
+    server.start();
+
+    // get request
+    MinioClient client = new MinioClient(server.getUrl(""));
+    String presignedObjectUrl = client.presignGetObject("bucket", "key");
+    assertEquals(presignedObjectUrl.isEmpty(), false);
   }
 
   @Test

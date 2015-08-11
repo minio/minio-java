@@ -99,7 +99,7 @@ public final class MinioClient {
   // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers from being instantiated
   private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
 
-  private static final int expires_default = 7*24*3600;
+  private static final int expiresDefault = 7*24*3600;
   // user agent to tag all requests with
   private String userAgent = "minio-java/"
       + MinioProperties.INSTANCE.getVersion()
@@ -477,26 +477,43 @@ public final class MinioClient {
     throw new IOException();
   }
 
-  public String presignGetObject(String bucket, String key) throws IOException, ClientException,
-                                NoSuchAlgorithmException, InvalidKeyException {
-    return presignGetObject(bucket, key, expires_default);
-  }
-
-  public String presignGetObject(String bucket, String key, Integer expires) throws IOException,
-                                ClientException, NoSuchAlgorithmException, InvalidKeyException {
-    if (expires < 1 || expires > expires_default) {
+  /** Returns an presigned URL containing the object.
+   *
+   * @param bucket  object's bucket
+   * @param key     object's key
+   * @param expires object expiration
+   *
+   * @throws IOException     upon signature calculation failure
+   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException upon input expires is out of range
+   */
+  public String presignGetObject(String bucket, String key, Integer expires) throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException, InvalidKeyNameException, InternalClientException, InvalidBucketNameException {
+    if (expires < 1 || expires > expiresDefault) {
       throw new InvalidExpiresRangeException();
     }
     HttpUrl url = getRequestUrl(bucket, key);
     Request request = getRequest("GET", url);
     DateTime date = new DateTime();
 
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, date);
+    RequestSigner signer = new RequestSigner(null, this.accessKey,
+                                             this.secretKey, date);
     return signer.presignURL(request, expires);
   }
 
-  /**
-   * Remove an object from a bucket
+  /** Returns an presigned URL containing the object.
+   *
+   * @param bucket  object's bucket
+   * @param key     object's key
+   *
+   * @throws IOException     upon connection error
+   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException upon input expires is out of range
+   */
+  public String presignGetObject(String bucket, String key) throws IOException, NoSuchAlgorithmException, InvalidKeyNameException, InvalidExpiresRangeException, InvalidKeyException, InternalClientException, InvalidBucketNameException {
+    return presignGetObject(bucket, key, expiresDefault);
+  }
+
+  /** Remove an object from a bucket
    *
    * @param bucket object's bucket
    * @param key    object's key
@@ -522,9 +539,8 @@ public final class MinioClient {
     throw new IOException();
   }
 
-  /**
-   * Returns an InputStream containing a subset of the object. The InputStream must be
-   * closed or the connection will remain open.
+  /** Returns an InputStream containing a subset of the object. The InputStream must be
+   *  closed or the connection will remain open.
    *
    * @param bucket      object's bucket
    * @param key         object's key
