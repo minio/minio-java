@@ -68,6 +68,26 @@ public class HelloListBuckets {
 * [RemoveObject.java](./examples/RemoveObject.java)
 * [StatObject.java](./examples/StatObject.java)
 
+### How to run these examples?
+
+Simply edit the example java program to include your access credentials and follow the steps below. 
+
+NOTE: `minio-0.2.4-all.jar` includes all the necessary dependencies to run these examples. 
+
+```bash
+$ git clone https://github.com/minio/minio-java
+[edit examples/ListBuckets.java]
+$ cd minio-java/examples; wget http://repo1.maven.org/maven2/io/minio/minio/0.2.4/minio-0.2.4-all.jar;
+$ javac -cp 'minio-0.2.4-all.jar' ListBuckets.java
+$ java -cp '.:minio-0.2.4-all.jar' ListBuckets
+bucket1
+bucket2
+....
+...
+bucketN
+
+```
+
 ## Contribute
 
 [Contributors Guide](./CONTRIBUTING.md)
