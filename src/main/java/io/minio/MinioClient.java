@@ -42,6 +42,7 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
+import java.security.InvalidKeyException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -98,6 +99,7 @@ public final class MinioClient {
   // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers from being instantiated
   private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
 
+  private static final int expires_default = 7*24*3600;
   // user agent to tag all requests with
   private String userAgent = "minio-java/"
       + MinioProperties.INSTANCE.getVersion()
@@ -473,6 +475,24 @@ public final class MinioClient {
     }
     // TODO create a better exception
     throw new IOException();
+  }
+
+  public String presignGetObject(String bucket, String key) throws IOException, ClientException,
+                                NoSuchAlgorithmException, InvalidKeyException {
+    return presignGetObject(bucket, key, expires_default);
+  }
+
+  public String presignGetObject(String bucket, String key, Integer expires) throws IOException,
+                                ClientException, NoSuchAlgorithmException, InvalidKeyException {
+    if (expires < 1 || expires > expires_default) {
+      throw new InvalidExpiresRangeException();
+    }
+    HttpUrl url = getRequestUrl(bucket, key);
+    Request request = getRequest("GET", url);
+    DateTime date = new DateTime();
+
+    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, date);
+    return signer.presignURL(request, expires);
   }
 
   /**
