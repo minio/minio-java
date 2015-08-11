@@ -1381,7 +1381,10 @@ public final class MinioClient {
     Iterator<Result<Upload>> uploads = listAllIncompleteUploads(bucket, key);
     while (uploads.hasNext()) {
       Upload upload = uploads.next().getResult();
-      abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
+      if (key.equals(upload.getKey())) {
+        abortMultipartUpload(bucket, key, upload.getUploadID());
+        return;
+      }
     }
   }
 
