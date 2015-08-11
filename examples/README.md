@@ -13,20 +13,20 @@ $ git clone https://github.com/minio/minio-java
 ### Download minio full JAR
 
 ```bash
-$ cd minio-java; wget http://repo1.maven.org/maven2/io/minio/minio/0.2.3/minio-0.2.3-all.jar;
+$ cd minio-java; wget http://repo1.maven.org/maven2/io/minio/minio/0.2.4/minio-0.2.4-all.jar;
 ```
 ### Edit examples
 
 Edit any examples and fill in access key parameters.
 
 ```bash
-$ javac -cp 'minio-0.2.3-all.jar' ListBuckets.java
+$ javac -cp 'minio-0.2.4-all.jar' ListBuckets.java
 ```
 
 ### Run the compiled example
 
 ```bash
-$ java -cp '.:minio-0.2.3-all.jar' ListBuckets
+$ java -cp '.:minio-0.2.4-all.jar' ListBuckets
 bucket1
 bucket2
 ....
