@@ -94,8 +94,7 @@ class RequestSigner implements Interceptor {
   }
 
 
-  private static byte[] getSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException,
-      InvalidKeyException, UnsupportedEncodingException {
+  private static byte[] getSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
     String formattedDate = date.toString(dateFormatyyyyMMdd);
     String dateKeyLine = "AWS4" + secretKey;
     byte[] dateKey = sumHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
@@ -112,7 +111,7 @@ class RequestSigner implements Interceptor {
     return hmacSha256.doFinal();
   }
 
-  private Request signV4(Request originalRequest, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException, IOException {
+  private Request signV4(Request originalRequest, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException, InvalidKeyException {
     if (this.accessKey == null || this.secretKey == null) {
       return originalRequest;
     }
@@ -179,7 +178,7 @@ class RequestSigner implements Interceptor {
     return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region, date) + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
   }
 
-  private byte[] getSignature(byte[] signingKey, String stringToSign) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+  private byte[] getSignature(byte[] signingKey, String stringToSign) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
     return sumHmac(signingKey, stringToSign.getBytes("UTF-8"));
   }
 
@@ -204,7 +203,7 @@ class RequestSigner implements Interceptor {
         + canonicalHash;
   }
 
-  private String getCanonicalRequest(Request request, String bodySha256Hash, String signedHeaders) throws IOException {
+  private String getCanonicalRequest(Request request, String bodySha256Hash, String signedHeaders) throws IOException, InvalidKeyException {
     StringWriter canonicalWriter = new StringWriter();
     PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
 
@@ -221,7 +220,10 @@ class RequestSigner implements Interceptor {
     canonicalPrinter.print(query + "\n");
     Map<String, String> headers = getCanonicalHeaders(request); // new line already added
     for (Map.Entry<String, String> e : headers.entrySet()) {
-      canonicalPrinter.write(e.getKey() + ":" + e.getValue() + '\n');
+      canonicalPrinter.write(e.getKey()
+                             + ":"
+                             + e.getValue()
+                             + '\n');
     }
     canonicalPrinter.print("\n");
     canonicalPrinter.print(signedHeaders + "\n");
@@ -243,7 +245,9 @@ class RequestSigner implements Interceptor {
           } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
           }
-          querySplit[i] = split[0] + "=" + split[1];
+          querySplit[i] = split[0]
+              + "="
+              + split[1];
         }
         querySplit[i] = querySplit[i].trim();
       }
@@ -292,7 +296,7 @@ class RequestSigner implements Interceptor {
     return map;
   }
 
-  private String getPresignCanonicalRequest(Request request, String requestQuery, String expires, DateTime date) throws IOException {
+  private String getPresignCanonicalRequest(Request request, String requestQuery, String expires, DateTime date) throws IOException, InvalidKeyException {
     StringWriter canonicalWriter = new StringWriter();
     PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
 
@@ -304,7 +308,10 @@ class RequestSigner implements Interceptor {
     canonicalPrinter.print(requestQuery + "\n");
     Map<String, String> headers = getCanonicalHeaders(request);
     for (Map.Entry<String, String> e : headers.entrySet()) {
-      canonicalPrinter.write(e.getKey() + ":" + e.getValue() + '\n');
+      canonicalPrinter.write(e.getKey()
+                             + ":"
+                             + e.getValue()
+                             + '\n');
     }
     canonicalPrinter.print("\n");
     canonicalPrinter.print(getSignedHeaders(request) + "\n");
@@ -324,23 +331,44 @@ class RequestSigner implements Interceptor {
         .header("Host", host)
         .build();
 
+    // remove x-amz-date proactively
     ignoredHeaders.add("x-amz-date");
 
     requestQuery = "X-Amz-Algorithm=AWS4-HMAC-SHA256&";
-    requestQuery += "X-Amz-Credential=" + this.accessKey + URLEncoder.encode("/" + getScope(region, date), "UTF-8") + "&";
-    requestQuery += "X-Amz-Date=" + date.toString(dateFormatyyyyMMddThhmmssZ) + "&";
-    requestQuery += "X-Amz-Expires=" + expires + "&";
-    requestQuery += "X-Amz-SignedHeaders=" + getSignedHeaders(signedRequest);
+    requestQuery += "X-Amz-Credential="
+        + this.accessKey
+        + URLEncoder.encode("/"
+                            + getScope(region, date),
+                            "UTF-8")
+        + "&";
+    requestQuery += "X-Amz-Date="
+        + date.toString(dateFormatyyyyMMddThhmmssZ)
+        + "&";
+    requestQuery += "X-Amz-Expires="
+        + expires
+        + "&";
+    requestQuery += "X-Amz-SignedHeaders="
+        + getSignedHeaders(signedRequest);
 
-    String canonicalRequest = getPresignCanonicalRequest(signedRequest, requestQuery, expires, date);
+    String canonicalRequest = getPresignCanonicalRequest(signedRequest,
+                                                         requestQuery,
+                                                         expires, date);
     byte[] canonicalRequestHashBytes = computeSha256(canonicalRequest.getBytes("UTF-8"));
     String canonicalRequestHash = DatatypeConverter.printHexBinary(canonicalRequestHashBytes).toLowerCase();
     String stringToSign = getStringToSign(region, canonicalRequestHash, date);
     byte[] signingKey = getSigningKey(date, region, this.secretKey);
-    String signature = DatatypeConverter.printHexBinary(getSignature(signingKey, stringToSign)).toLowerCase();
+    String signature = DatatypeConverter.printHexBinary(getSignature(signingKey,
+                                                                     stringToSign)).toLowerCase();
     String scheme = signedRequest.uri().getScheme();
 
-    return scheme + "://" + host + path + "?" + requestQuery + "&X-Amz-Signature=" + signature;
+    return scheme
+        + "://"
+        + host
+        + path
+        + "?"
+        + requestQuery
+        + "&X-Amz-Signature="
+        + signature;
   }
 
   @Override
@@ -353,6 +381,9 @@ class RequestSigner implements Interceptor {
       e.printStackTrace();
       return new Response.Builder().build();
     } catch (InvalidKeyException e) {
+      e.printStackTrace();
+      return new Response.Builder().build();
+    } catch (IOException e) {
       e.printStackTrace();
       return new Response.Builder().build();
     }
