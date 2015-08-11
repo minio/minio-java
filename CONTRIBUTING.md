@@ -10,22 +10,9 @@ Minio Java Library uses gradle for its dependency management https://gradle.org/
 ### Gradle start up script for UN*X
 ```sh
 $ ./gradlew check
-Downloading https://services.gradle.org/distributions/gradle-2.3-bin.zip
+Downloading https://services.gradle.org/distributions/gradle-2.5-bin.zip
 ...
 ...
-Unzipping /home/user/.gradle/wrapper/dists/gradle-2.3-bin/a48v6zq5mdp1uyn9rwlj56945/gradle-2.3-bin.zip to /home/user/.gradle/wrapper/dists/gradle-2.3-bin/a48v6zq5mdp1uyn9rwlj56945
-Set executable permissions for: /home/user/.gradle/wrapper/dists/gradle-2.3-bin/a48v6zq5mdp1uyn9rwlj56945/gradle-2.3/bin/gradle
-:help
-
-Welcome to Gradle 2.3.
-
-To run a build, run gradlew <task> ...
-
-To see a list of available tasks, run gradlew tasks
-
-To see a list of command-line options, run gradlew --help
-
-To see more detail about a task, run gradlew help --task <task>
 
 BUILD SUCCESSFUL
 
