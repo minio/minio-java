@@ -164,8 +164,8 @@ class RequestSigner implements Interceptor {
     return signedRequest;
   }
 
-  private String getRegion(Request request) {
-    String host = request.url().getHost();
+  private String getRegion(Request request) throws IOException {
+    String host = request.uri().getHost();
     return Regions.INSTANCE.getRegion(host);
   }
 
@@ -229,7 +229,6 @@ class RequestSigner implements Interceptor {
     canonicalPrinter.print(signedHeaders + "\n");
     canonicalPrinter.print(bodySha256Hash);
     canonicalPrinter.flush();
-
     return canonicalWriter.toString();
   }
 
@@ -360,7 +359,6 @@ class RequestSigner implements Interceptor {
     String signature = DatatypeConverter.printHexBinary(getSignature(signingKey,
                                                                      stringToSign)).toLowerCase();
     String scheme = signedRequest.uri().getScheme();
-
     return scheme
         + "://"
         + host
