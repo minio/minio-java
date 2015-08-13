@@ -253,8 +253,8 @@ public final class MinioClient {
       throw new HTTPRedirectException();
     }
 
-    int statusCode = response.code();
-    if (statusCode == 404 || statusCode == 403 || statusCode == 501 || statusCode == 405) {
+    if (response.body().contentLength() == -1 || response.body().contentLength() == 0) {
+      int statusCode = response.code();
       ClientException e;
       ErrorResponse errorResponse = new ErrorResponse();
       String hostId = String.valueOf(response.headers().get("x-amz-id-2"));
@@ -373,7 +373,7 @@ public final class MinioClient {
       if (objectToPopulate instanceof ErrorResponse) {
         // Errors have no namespace, so we set a default empty alias and namespace
         dictionary.set("", "");
-      } //else {
+      }
       // parse and return
       Xml.parseElement(parser, objectToPopulate, dictionary, null);
     } catch (XmlPullParserException e) {
@@ -1249,13 +1249,18 @@ public final class MinioClient {
         .addQueryParameter("uploads", "")
         .build();
 
-    Request request = getRequest("POST", url);
+    // okhttp requires POST to have non-nil body, so we send a dummy not "null"
+    byte[] dummy = "".getBytes("UTF-8");
+    Request request = getRequest("POST", url, dummy);
     Response response = this.transport.newCall(request).execute();
     if (response != null) {
       try {
-        InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
-        parseXml(response, result);
-        return result.getUploadId();
+        if (response.isSuccessful()) {
+          InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
+          parseXml(response, result);
+          return result.getUploadId();
+        }
+        parseError(response);
       } finally {
         response.body().close();
       }
