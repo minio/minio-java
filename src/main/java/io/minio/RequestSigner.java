@@ -206,9 +206,8 @@ class RequestSigner implements Interceptor {
   private String getCanonicalRequest(Request request, String bodySha256Hash, String signedHeaders) throws IOException, InvalidKeyException {
     StringWriter canonicalWriter = new StringWriter();
     PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
-
     String method = request.method();
-    String path = request.uri().getPath();
+    String path = request.uri().getRawPath();
     String rawQuery = request.uri().getQuery();
     if (rawQuery == null || rawQuery.isEmpty()) {
       rawQuery = "";
@@ -300,7 +299,7 @@ class RequestSigner implements Interceptor {
     PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
 
     String method = request.method();
-    String path = request.uri().getPath();
+    String path = request.uri().getRawPath();
 
     canonicalPrinter.print(method + "\n");
     canonicalPrinter.print(path + "\n");
@@ -321,7 +320,7 @@ class RequestSigner implements Interceptor {
 
   public String presignURL(Request originalRequest, Integer expiresInt) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     String host = originalRequest.uri().getHost();
-    String path = originalRequest.uri().getPath();
+    String path = originalRequest.uri().getRawPath();
     String region = getRegion(originalRequest);
     String expires = Integer.toString(expiresInt);
     String requestQuery = "";

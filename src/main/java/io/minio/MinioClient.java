@@ -37,8 +37,10 @@ import com.google.api.client.xml.XmlNamespaceDictionary;
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -416,19 +418,20 @@ public final class MinioClient {
     return request;
   }
 
-  private HttpUrl getRequestUrl(String bucket, String key) throws InvalidBucketNameException, InvalidKeyNameException {
+  private HttpUrl getRequestUrl(String bucket, String key) throws InvalidBucketNameException, InvalidKeyNameException, UnsupportedEncodingException {
     if (bucket == null || "".equals(bucket.trim())) {
       throw new InvalidBucketNameException();
     }
     if (key == null || "".equals(bucket.trim())) {
       throw new InvalidKeyNameException();
     }
-
-    HttpUrl url = this.url.newBuilder()
-        .addPathSegment(bucket)
-        .addPathSegment(key)
-        .build();
-
+    HttpUrl.Builder urlBuilder = this.url.newBuilder();
+    urlBuilder.addPathSegment(bucket);
+    // URLEncoder.encode replaces space with + and / with %2F
+    for (String tok: URLEncoder.encode(key, "UTF-8").replace("+", "%20").replace("%2F", "/").split("/")) {
+      urlBuilder.addEncodedPathSegment(tok);
+    }
+    HttpUrl url = urlBuilder.build();
     return url;
   }
 
@@ -438,8 +441,8 @@ public final class MinioClient {
     }
 
     HttpUrl url = this.url.newBuilder()
-        .addPathSegment(bucket)
-        .build();
+                  .addPathSegment(bucket)
+                  .build();
 
     return url;
   }
