@@ -1030,6 +1030,7 @@ public final class MinioClient {
    */
   public void putObject(String bucket, String key, String contentType, long size, InputStream body) throws IOException, ClientException {
     boolean isMultipart = false;
+    boolean newUpload = true;
     int partSize = 0;
     String uploadID = null;
 
@@ -1044,14 +1045,12 @@ public final class MinioClient {
         Upload upload = multipartUploads.next().getResult();
         if (upload.getKey().equals(key)) {
           uploadID = upload.getUploadID();
+          newUpload = false;
         }
       }
 
       isMultipart = true;
       partSize = calculatePartSize(size);
-      if (uploadID == null) {
-        uploadID = newMultipartUpload(bucket, key);
-      }
     }
 
     if (!isMultipart) {
@@ -1067,50 +1066,55 @@ public final class MinioClient {
         objectExistsException.initCause(ex);
         throw objectExistsException;
       }
+      return;
+    }
+    long objectLength = 0;
+    long totalSeen = 0;
+    List<Part> parts = new LinkedList<Part>();
+    int partNumber = 1;
+    Iterator<Part> existingParts = new LinkedList<Part>().iterator();
+    if (newUpload) {
+      uploadID = newMultipartUpload(bucket, key);
     } else {
-      long objectLength = 0;
-      long totalSeen = 0;
-      List<Part> parts = new LinkedList<Part>();
-      int partNumber = 1;
-      Iterator<Part> existingParts = listObjectParts(bucket, key, uploadID);
-      while (true) {
-        Data data = readData(partSize, body);
-        totalSeen += data.getData().length;
-        if (totalSeen > size) {
-          throw new InputSizeMismatchException();
-        }
-        if (existingParts.hasNext()) {
-          Part existingPart = existingParts.next();
-          if (existingPart.getPartNumber() == partNumber && existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
-            partNumber++;
-            continue;
-          }
-        }
-        if (data.getData().length == 0) {
-          break;
-        }
-        String etag = putObject(bucket, key, contentType, data.getData(), data.getMD5(), uploadID, partNumber);
-        Part part = new Part();
-        part.setPartNumber(partNumber);
-        part.seteTag(etag);
-        parts.add(part);
-        objectLength += data.getData().length;
-        partNumber++;
-      }
-      if (objectLength != size) {
-        throw new IOException("Data size mismatched");
-      }
-      if (totalSeen != size) {
+      existingParts = listObjectParts(bucket, key, uploadID);
+    }
+    while (true) {
+      Data data = readData(partSize, body);
+      totalSeen += data.getData().length;
+      if (totalSeen > size) {
         throw new InputSizeMismatchException();
       }
-      try {
-        completeMultipart(bucket, key, uploadID, parts);
-      } catch (MethodNotAllowedException ex) {
-        ObjectExistsException objectExistsException = new ObjectExistsException();
-        objectExistsException.setErrorResponse(ex.getErrorResponse());
-        objectExistsException.initCause(ex);
-        throw objectExistsException;
+      if (!newUpload && existingParts.hasNext()) {
+        Part existingPart = existingParts.next();
+        if (existingPart.getPartNumber() == partNumber && existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
+          partNumber++;
+          continue;
+        }
       }
+      if (data.getData().length == 0) {
+        break;
+      }
+      String etag = putObject(bucket, key, contentType, data.getData(), data.getMD5(), uploadID, partNumber);
+      Part part = new Part();
+      part.setPartNumber(partNumber);
+      part.seteTag(etag);
+      parts.add(part);
+      objectLength += data.getData().length;
+      partNumber++;
+    }
+    if (objectLength != size) {
+      throw new IOException("Data size mismatched");
+    }
+    if (totalSeen != size) {
+      throw new InputSizeMismatchException();
+    }
+    try {
+      completeMultipart(bucket, key, uploadID, parts);
+    } catch (MethodNotAllowedException ex) {
+      ObjectExistsException objectExistsException = new ObjectExistsException();
+      objectExistsException.setErrorResponse(ex.getErrorResponse());
+      objectExistsException.initCause(ex);
+      throw objectExistsException;
     }
   }
 
