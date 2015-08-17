@@ -613,9 +613,7 @@ public class MinioClientTest {
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  // this case only occurs for minio cloud storage
-  //    @Test(expected = ObjectExistsException.class)
-  @Test(expected = InputSizeMismatchException.class)
+  @Test(expected = UnexpectedShortReadException.class)
   public void testPutIncompleteSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -642,7 +640,7 @@ public class MinioClientTest {
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  @Test(expected = InputSizeMismatchException.class)
+  @Test(expected = UnexpectedShortReadException.class)
   public void testPutOversizedSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException, ClientException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();

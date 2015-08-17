@@ -96,8 +96,11 @@ public final class MinioClient {
 
   // default Transport
   private final OkHttpClient transport = new OkHttpClient();
-  // default multipart upload size is 5MB
-  private static final int PART_SIZE = 5 * 1024 * 1024;
+
+  // default multipart upload size is 5MB, maximum is 5GB
+  private static final int minimumPartSize = 5 * 1024 * 1024;
+  private static final int maximumPartSize = 5 * 1024 * 1024 * 1024;
+
   // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers from being instantiated
   private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
 
@@ -1041,7 +1044,7 @@ public final class MinioClient {
       contentType = "application/octet-stream";
     }
 
-    if (size > PART_SIZE) {
+    if (size > minimumPartSize) {
       // check if multipart exists
       Iterator<Result<Upload>> multipartUploads = listAllIncompleteUploads(bucket, key);
       while (multipartUploads.hasNext()) {
@@ -1059,7 +1062,7 @@ public final class MinioClient {
     if (!isMultipart) {
       Data data = readData((int) size, body);
       if (data.getData().length != size || destructiveHasMore(body)) {
-        throw new InputSizeMismatchException();
+        throw new UnexpectedShortReadException();
       }
       try {
         putObject(bucket, key, contentType, data.getData(), data.getMD5());
@@ -1071,7 +1074,6 @@ public final class MinioClient {
       }
       return;
     }
-    long objectLength = 0;
     long totalSeen = 0;
     List<Part> parts = new LinkedList<Part>();
     int partNumber = 1;
@@ -1083,30 +1085,32 @@ public final class MinioClient {
     }
     while (true) {
       Data data = readData(partSize, body);
-      totalSeen += data.getData().length;
-      if (totalSeen > size) {
-        throw new InputSizeMismatchException();
+      if (data.getData().length == 0) {
+        break;
+      }
+      if (data.getData().length < partSize) {
+        long expectedSize = size - totalSeen;
+        if (expectedSize != data.getData().length) {
+          throw new UnexpectedShortReadException();
+        }
       }
       if (!newUpload && existingParts.hasNext()) {
         Part existingPart = existingParts.next();
-        if (existingPart.getPartNumber() == partNumber && existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
+        if (existingPart.getPartNumber() == partNumber &&
+            existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
           partNumber++;
           continue;
         }
       }
-      if (data.getData().length == 0) {
-        break;
-      }
-      String etag = putObject(bucket, key, contentType, data.getData(), data.getMD5(), uploadID, partNumber);
+      String etag = putObject(bucket, key, contentType, data.getData(),
+                              data.getMD5(), uploadID, partNumber);
+      totalSeen += data.getData().length;
+
       Part part = new Part();
       part.setPartNumber(partNumber);
       part.seteTag(etag);
       parts.add(part);
-      objectLength += data.getData().length;
       partNumber++;
-    }
-    if (objectLength != size) {
-      throw new IOException("Data size mismatched");
     }
     if (totalSeen != size) {
       throw new InputSizeMismatchException();
@@ -1121,11 +1125,14 @@ public final class MinioClient {
     }
   }
 
-  private void putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum) throws IOException, ClientException {
+  private void putObject(String bucket, String key, String contentType,
+                         byte[] data, byte[] md5sum) throws IOException, ClientException {
     putObject(bucket, key, contentType, data, md5sum, "", 0);
   }
 
-  private String putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum, String uploadID, int partID) throws IOException, ClientException {
+  private String putObject(String bucket, String key, String contentType,
+                           byte[] data, byte[] md5sum, String uploadID,
+                           int partID) throws IOException, ClientException {
     HttpUrl url = getRequestUrl(bucket, key);
 
     if (partID > 0 && uploadID != null && !"".equals(uploadID.trim())) {
@@ -1165,7 +1172,8 @@ public final class MinioClient {
     return listAllIncompleteUploads(bucket, null);
   }
 
-  private Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket, final String prefix) {
+  private Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket,
+                                                            final String prefix) {
     return new MinioIterator<Result<Upload>>() {
       private boolean isComplete = false;
       private String keyMarker = null;
@@ -1177,7 +1185,9 @@ public final class MinioClient {
         if (!isComplete) {
           ListMultipartUploadsResult uploadResult;
           try {
-            uploadResult = listAllIncompleteUploads(bucket, keyMarker, uploadIdMarker, prefix, null, 1000);
+            uploadResult = listAllIncompleteUploads(bucket, keyMarker,
+                                                    uploadIdMarker, prefix,
+                                                    null, 1000);
             if (uploadResult.isTruncated()) {
               keyMarker = uploadResult.getNextKeyMarker();
               uploadIdMarker = uploadResult.getNextUploadIDMarker();
@@ -1201,7 +1211,12 @@ public final class MinioClient {
     };
   }
 
-  private ListMultipartUploadsResult listAllIncompleteUploads(String bucket, String keyMarker, String uploadIDMarker, String prefix, String delimiter, int maxUploads) throws IOException, ClientException {
+  private ListMultipartUploadsResult listAllIncompleteUploads(String bucket,
+                                                              String keyMarker,
+                                                              String uploadIDMarker,
+                                                              String prefix,
+                                                              String delimiter,
+                                                              int maxUploads) throws IOException, ClientException {
     HttpUrl url = getRequestUrl(bucket);
     // max uploads limits the number of uploads returned, max limit is 1000
     if (maxUploads >= 1000 || maxUploads < 0) {
@@ -1275,7 +1290,8 @@ public final class MinioClient {
     throw new IOException();
   }
 
-  private void completeMultipart(String bucket, String key, String uploadID, List<Part> parts) throws IOException, ClientException {
+  private void completeMultipart(String bucket, String key, String uploadID,
+                                 List<Part> parts) throws IOException, ClientException {
     HttpUrl url = getRequestUrl(bucket, key);
     url = url.newBuilder()
         .addQueryParameter("uploadId", uploadID)
@@ -1300,7 +1316,8 @@ public final class MinioClient {
     }
   }
 
-  private Iterator<Part> listObjectParts(final String bucket, final String key, final String uploadID) {
+  private Iterator<Part> listObjectParts(final String bucket, final String key,
+                                         final String uploadID) {
     return new MinioIterator<Part>() {
       public int marker;
       private boolean isComplete = false;
@@ -1322,7 +1339,8 @@ public final class MinioClient {
     };
   }
 
-  private ListPartsResult listObjectParts(String bucket, String key, String uploadID, int partNumberMarker) throws IOException, ClientException {
+  private ListPartsResult listObjectParts(String bucket, String key,
+                                          String uploadID, int partNumberMarker) throws IOException, ClientException {
     if (partNumberMarker <= 0) {
       throw new InvalidArgumentException();
     }
@@ -1330,7 +1348,8 @@ public final class MinioClient {
     HttpUrl url = getRequestUrl(bucket, key);
     url = url.newBuilder()
         .addQueryParameter("uploadId", uploadID)
-        .addQueryParameter("part-number-marker", Integer.toString(partNumberMarker))
+        .addQueryParameter("part-number-marker",
+                           Integer.toString(partNumberMarker))
         .build();
 
     Request request = getRequest("GET", url);
@@ -1401,9 +1420,15 @@ public final class MinioClient {
   }
 
   private int calculatePartSize(long size) {
-    int minimumPartSize = PART_SIZE; // 5MB
-    int partSize = (int) (size / 9999); // using 10000 may cause part size to become too small, and not fit the entire object in
-    return Math.max(minimumPartSize, partSize);
+    // 9999 is used instead of 10000 to cater for the last part being too small
+    int partSize = (int) (size / 9999);
+    if (partSize > minimumPartSize) {
+      if (partSize > maximumPartSize) {
+        return maximumPartSize;
+      }
+      return partSize;
+    }
+    return minimumPartSize;
   }
 
   private byte[] calculateMd5sum(byte[] data) {
