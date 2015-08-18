@@ -6,7 +6,7 @@
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>0.2.4</version>
+    <version>0.2.5</version>
 </dependency>
 ```
 
@@ -14,13 +14,13 @@
 
 ```gradle
 dependencies {
-    compile 'io.minio:minio:0.2.4'
+    compile 'io.minio:minio:0.2.5'
 }
 ```
 
 ## Download from JAR
 
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/0.2.4/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/0.2.5/) directly from maven.
 
 ## Example
 ```java
@@ -72,14 +72,14 @@ public class HelloListBuckets {
 
 Simply edit the example java program to include your access credentials and follow the steps below. 
 
-NOTE: `minio-0.2.4-all.jar` includes all the necessary dependencies to run these examples. 
+NOTE: `minio-0.2.5-all.jar` includes all the necessary dependencies to run these examples.
 
 ```bash
 $ git clone https://github.com/minio/minio-java
 [edit examples/ListBuckets.java]
-$ cd minio-java/examples; wget http://repo1.maven.org/maven2/io/minio/minio/0.2.4/minio-0.2.4-all.jar;
-$ javac -cp 'minio-0.2.4-all.jar' ListBuckets.java
-$ java -cp '.:minio-0.2.4-all.jar' ListBuckets
+$ cd minio-java/examples; wget http://repo1.maven.org/maven2/io/minio/minio/0.2.5/minio-0.2.5-all.jar;
+$ javac -cp 'minio-0.2.5-all.jar' ListBuckets.java
+$ java -cp '.:minio-0.2.5-all.jar' ListBuckets
 bucket1
 bucket2
 ....
