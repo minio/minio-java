@@ -519,32 +519,6 @@ public final class MinioClient {
     return presignGetObject(bucket, key, expiresDefault);
   }
 
-  /** Remove an object from a bucket
-   *
-   * @param bucket object's bucket
-   * @param key    object's key
-   *
-   * @throws IOException     upon connection error
-   * @throws ClientException upon failure from server
-   */
-  public void removeObject(String bucket, String key) throws IOException, ClientException {
-    HttpUrl url = getRequestUrl(bucket, key);
-
-    Request request = getRequest("DELETE", url);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          return;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
-  }
-
   /** Returns an InputStream containing a subset of the object. The InputStream must be
    *  closed or the connection will remain open.
    *
@@ -599,6 +573,32 @@ public final class MinioClient {
         return response.body().byteStream();
       }
       try {
+        parseError(response);
+      } finally {
+        response.body().close();
+      }
+    }
+    throw new IOException();
+  }
+
+  /** Remove an object from a bucket
+   *
+   * @param bucket object's bucket
+   * @param key    object's key
+   *
+   * @throws IOException     upon connection error
+   * @throws ClientException upon failure from server
+   */
+  public void removeObject(String bucket, String key) throws IOException, ClientException {
+    HttpUrl url = getRequestUrl(bucket, key);
+
+    Request request = getRequest("DELETE", url);
+    Response response = this.transport.newCall(request).execute();
+    if (response != null) {
+      try {
+        if (response.isSuccessful()) {
+          return;
+        }
         parseError(response);
       } finally {
         response.body().close();
