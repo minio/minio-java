@@ -267,7 +267,7 @@ class RequestSigner implements Interceptor {
     StringBuilder builder = new StringBuilder();
     boolean printSeparator = false;
     for (String header : request.headers().names()) {
-      if(!ignoredHeaders.contains(header.toLowerCase().trim())) {
+      if (!ignoredHeaders.contains(header.toLowerCase().trim())) {
         if (printSeparator) {
           builder.append(';');
         } else {

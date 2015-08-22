@@ -104,7 +104,9 @@ public final class MinioClient {
   // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers from being instantiated
   private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
 
-  private static final int expiresDefault = 7*24*3600;
+  // default expiration for a presigned URL is 7 days in seconds
+  private static final int expiresDefault = 7 * 24 * 3600;
+
   // user agent to tag all requests with
   private String userAgent = "minio-java/"
       + MinioProperties.INSTANCE.getVersion()
@@ -1096,8 +1098,8 @@ public final class MinioClient {
       }
       if (!newUpload && existingParts.hasNext()) {
         Part existingPart = existingParts.next();
-        if (existingPart.getPartNumber() == partNumber &&
-            existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
+        if (existingPart.getPartNumber() == partNumber
+            && existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
           partNumber++;
           continue;
         }
