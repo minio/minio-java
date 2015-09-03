@@ -17,6 +17,7 @@
 package io.minio;
 
 
+import com.google.common.io.BaseEncoding;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -27,7 +28,6 @@ import org.joda.time.format.DateTimeFormatter;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -118,7 +118,7 @@ class RequestSigner implements Interceptor {
 
     String region = getRegion(originalRequest);
     byte[] dataHashBytes = computeSha256(data);
-    String dataHash = DatatypeConverter.printHexBinary(dataHashBytes).toLowerCase();
+    String dataHash = BaseEncoding.base16().encode(dataHashBytes).toLowerCase();
 
     String host = originalRequest.uri().getHost();
     int port = originalRequest.uri().getPort();
@@ -145,14 +145,14 @@ class RequestSigner implements Interceptor {
 
     // get sha256 of canonical request
     byte[] canonicalHashBytes = computeSha256(canonicalRequest.getBytes("UTF-8"));
-    String canonicalHash = DatatypeConverter.printHexBinary(canonicalHashBytes).toLowerCase();
+    String canonicalHash = BaseEncoding.base16().encode(canonicalHashBytes).toLowerCase();
 
     // get key to sign
     String stringToSign = getStringToSign(region, canonicalHash, this.date);
     byte[] signingKey = getSigningKey(this.date, region, this.secretKey);
 
     // get signing key
-    String signature = DatatypeConverter.printHexBinary(getSignature(signingKey, stringToSign)).toLowerCase();
+    String signature = BaseEncoding.base16().encode(getSignature(signingKey, stringToSign)).toLowerCase();
 
     // get authorization header
     String authorization = getAuthorizationHeader(signedHeaders, signature, this.date, region);
@@ -352,10 +352,10 @@ class RequestSigner implements Interceptor {
                                                          requestQuery,
                                                          expires, date);
     byte[] canonicalRequestHashBytes = computeSha256(canonicalRequest.getBytes("UTF-8"));
-    String canonicalRequestHash = DatatypeConverter.printHexBinary(canonicalRequestHashBytes).toLowerCase();
+    String canonicalRequestHash = BaseEncoding.base16().encode(canonicalRequestHashBytes).toLowerCase();
     String stringToSign = getStringToSign(region, canonicalRequestHash, date);
     byte[] signingKey = getSigningKey(date, region, this.secretKey);
-    String signature = DatatypeConverter.printHexBinary(getSignature(signingKey,
+    String signature = BaseEncoding.base16().encode(getSignature(signingKey,
                                                                      stringToSign)).toLowerCase();
     String scheme = signedRequest.uri().getScheme();
     return scheme
