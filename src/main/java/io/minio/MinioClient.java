@@ -33,8 +33,8 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
+import com.google.common.io.BaseEncoding;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -827,7 +827,7 @@ public final class MinioClient {
       byte[] md5sum = calculateMd5sum(data);
       String base64md5sum = "";
       if (md5sum != null) {
-        base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
+        base64md5sum = BaseEncoding.base64().encode(md5sum);
       }
       request = getRequest("PUT", url, data);
       request = request.newBuilder()
@@ -1099,7 +1099,7 @@ public final class MinioClient {
       if (!newUpload && existingParts.hasNext()) {
         Part existingPart = existingParts.next();
         if (existingPart.getPartNumber() == partNumber
-            && existingPart.geteTag().toLowerCase().equals(DatatypeConverter.printHexBinary(data.getMD5()).toLowerCase())) {
+            && existingPart.geteTag().toLowerCase().equals(BaseEncoding.base16().encode(data.getMD5()).toLowerCase())) {
           partNumber++;
           continue;
         }
@@ -1146,7 +1146,7 @@ public final class MinioClient {
 
     String base64md5sum = "";
     if (md5sum != null) {
-      base64md5sum = DatatypeConverter.printBase64Binary(md5sum);
+      base64md5sum = BaseEncoding.base64().encode(md5sum);
     }
 
     Request request = getRequest("PUT", url, data);
