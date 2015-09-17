@@ -76,6 +76,7 @@ NOTE: `minio-0.2.5-all.jar` includes all the necessary dependencies to run these
 
 ```bash
 $ git clone https://github.com/minio/minio-java
+$ cd minio-java
 [edit examples/ListBuckets.java]
 $ cd minio-java/examples; wget http://repo1.maven.org/maven2/io/minio/minio/0.2.5/minio-0.2.5-all.jar;
 $ javac -cp 'minio-0.2.5-all.jar' ListBuckets.java
