@@ -22,7 +22,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-public class ExampleDropIncompleteUpload {
+public class ExampleRemoveIncompleteUpload {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
         System.out.println("Example app");
 
@@ -32,7 +32,7 @@ public class ExampleDropIncompleteUpload {
         // Set access and secret keys
         s3Client.setKeys("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-        // recursively drop every in progress active multipart upload sessions for a given bucket and key
-        s3Client.dropIncompleteUpload("mybucket", "myobject");
+        // recursively remove every in progress active multipart upload sessions for a given bucket and key
+        s3Client.removeIncompleteUpload("mybucket", "myobject");
     }
 }
