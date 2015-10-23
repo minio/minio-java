@@ -20,14 +20,14 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-public class DropIncompleteUpload {
+public class RemoveIncompleteUpload {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-    System.out.println("DropIncompleteUpload app");
+    System.out.println("RemoveIncompleteUpload app");
 
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // recursively drop every in progress active multipart upload sessions for a given bucket and key
-    s3Client.dropIncompleteUpload("mybucket", "myobject");
+    // recursively remove every in progress active multipart upload sessions for a given bucket and key
+    s3Client.removeIncompleteUpload("mybucket", "myobject");
   }
 }
