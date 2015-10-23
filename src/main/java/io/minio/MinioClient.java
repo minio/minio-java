@@ -68,12 +68,11 @@ import java.util.logging.Logger;
  * <li> Creating an object, including automatic upload resuming for large objects.</li>
  * <li> Listing objects in a bucket</li>
  * <li> Listing active multipart uploads</li>
- * <li> Dropping all active multipart uploads</li>
  * <li> Setting canned ACLs on buckets</li>
  * </ul>
  * <h2>Object</h2>
  * <ul>
- * <li>Dropping an active multipart upload for a specific object and uploadId</li>
+ * <li>Removing an active multipart upload for a specific object and uploadId</li>
  * <li>Read object metadata</li>
  * <li>Reading an object</li>
  * <li>Reading a range of bytes of an object</li>
@@ -1022,7 +1021,7 @@ public final class MinioClient {
    * before uploading any more data. Otherwise, it will resume uploading where the session left off.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or dropping the session.
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
    * </p>
    *
    * @param bucket      Bucket to use
@@ -1170,10 +1169,6 @@ public final class MinioClient {
     throw new IOException();
   }
 
-  private Iterator<Result<Upload>> listAllIncompleteUploads(String bucket) {
-    return listAllIncompleteUploads(bucket, null);
-  }
-
   private Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket,
                                                             final String prefix) {
     return new MinioIterator<Result<Upload>>() {
@@ -1249,22 +1244,6 @@ public final class MinioClient {
       }
     }
     throw new IOException();
-  }
-
-  /**
-   * Drop all active multipart uploads in a given bucket.
-   *
-   * @param bucket to drop all active multipart uploads in
-   *
-   * @throws IOException     upon connection failure
-   * @throws ClientException upon failure from server
-   */
-  public void dropAllIncompleteUploads(String bucket) throws IOException, ClientException {
-    Iterator<Result<Upload>> uploads = listAllIncompleteUploads(bucket);
-    while (uploads.hasNext()) {
-      Upload upload = uploads.next().getResult();
-      abortMultipartUpload(bucket, upload.getKey(), upload.getUploadID());
-    }
   }
 
   private String newMultipartUpload(String bucket, String key) throws IOException, ClientException {
@@ -1402,15 +1381,15 @@ public final class MinioClient {
   }
 
   /**
-   * Drop active multipart uploads, starting from key
+   * Remove active multipart uploads, starting from key
    *
-   * @param bucket of multipart upload to drop
-   * @param key    of multipart upload to drop
+   * @param bucket of multipart upload to remove
+   * @param key    of multipart upload to remove
    *
    * @throws IOException     upon connection failure
    * @throws ClientException upon failure from server
    */
-  public void dropIncompleteUpload(String bucket, String key) throws IOException, ClientException {
+  public void removeIncompleteUpload(String bucket, String key) throws IOException, ClientException {
     Iterator<Result<Upload>> uploads = listAllIncompleteUploads(bucket, key);
     while (uploads.hasNext()) {
       Upload upload = uploads.next().getResult();

@@ -26,7 +26,6 @@ public class BucketExists {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // recursively drop every in progress active multipart upload sessions for a given bucket
     boolean bucketExists = s3Client.bucketExists("mymultipartbucket");
     System.out.println(bucketExists);
   }
