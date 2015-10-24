@@ -59,6 +59,7 @@ public class HelloListBuckets {
 * [SetBucketAcl.java](./examples/SetBucketAcl.java)
 * [GetBucketAcl.java](./examples/GetBucketAcl.java)
 * [RemoveBucket.java](./examples/RemoveBucket.java)
+* [ListIncompleteUploads.java](./examples/ListIncompleteUploads.java)
 
 #### Object Operations
 
@@ -70,7 +71,7 @@ public class HelloListBuckets {
 
 ### How to run these examples?
 
-Simply edit the example java program to include your access credentials and follow the steps below. 
+Simply edit the example java program to include your access credentials and follow the steps below.
 
 NOTE: `minio-0.2.5-all.jar` includes all the necessary dependencies to run these examples.
 
