@@ -1047,7 +1047,7 @@ public final class MinioClient {
 
     if (size > minimumPartSize) {
       // check if multipart exists
-      Iterator<Result<Upload>> multipartUploads = listAllIncompleteUploads(bucket, key);
+      Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucket, key);
       while (multipartUploads.hasNext()) {
         Upload upload = multipartUploads.next().getResult();
         if (upload.getKey().equals(key)) {
@@ -1169,8 +1169,24 @@ public final class MinioClient {
     throw new IOException();
   }
 
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucket) {
+    return listAllIncompleteUploads(bucket, null, null);
+  }
+
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix) {
+    return listAllIncompleteUploads(bucket, prefix, null);
+  }
+
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix, boolean recursive) {
+    if (recursive) {
+        return listAllIncompleteUploads(bucket, prefix, null);
+    }
+    return listAllIncompleteUploads(bucket, prefix, "/");
+  }
+
   private Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket,
-                                                            final String prefix) {
+                                                            final String prefix,
+                                                            final String delimiter) {
     return new MinioIterator<Result<Upload>>() {
       private boolean isComplete = false;
       private String keyMarker = null;
@@ -1184,7 +1200,7 @@ public final class MinioClient {
           try {
             uploadResult = listAllIncompleteUploads(bucket, keyMarker,
                                                     uploadIdMarker, prefix,
-                                                    null, 1000);
+                                                    delimiter, 1000);
             if (uploadResult.isTruncated()) {
               keyMarker = uploadResult.getNextKeyMarker();
               uploadIdMarker = uploadResult.getNextUploadIDMarker();
@@ -1390,7 +1406,7 @@ public final class MinioClient {
    * @throws ClientException upon failure from server
    */
   public void removeIncompleteUpload(String bucket, String key) throws IOException, ClientException {
-    Iterator<Result<Upload>> uploads = listAllIncompleteUploads(bucket, key);
+    Iterator<Result<Upload>> uploads = listIncompleteUploads(bucket, key);
     while (uploads.hasNext()) {
       Upload upload = uploads.next().getResult();
       if (key.equals(upload.getKey())) {
