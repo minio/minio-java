@@ -69,6 +69,9 @@ public class HelloListBuckets {
 * [RemoveObject.java](./examples/RemoveObject.java)
 * [StatObject.java](./examples/StatObject.java)
 
+#### Presigned Operations
+* [PresignedGetObject.java](./examples/PresignedGetObject.java)
+
 ### How to run these examples?
 
 Simply edit the example java program to include your access credentials and follow the steps below.

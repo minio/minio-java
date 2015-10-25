@@ -494,7 +494,7 @@ public final class MinioClient {
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignGetObject(String bucket, String key, Integer expires) throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException, InvalidKeyNameException, InternalClientException, InvalidBucketNameException {
+  public String presignedGetObject(String bucket, String key, Integer expires) throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException, InvalidKeyNameException, InternalClientException, InvalidBucketNameException {
     if (expires < 1 || expires > expiresDefault) {
       throw new InvalidExpiresRangeException();
     }
@@ -516,8 +516,8 @@ public final class MinioClient {
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignGetObject(String bucket, String key) throws IOException, NoSuchAlgorithmException, InvalidKeyNameException, InvalidExpiresRangeException, InvalidKeyException, InternalClientException, InvalidBucketNameException {
-    return presignGetObject(bucket, key, expiresDefault);
+  public String presignedGetObject(String bucket, String key) throws IOException, NoSuchAlgorithmException, InvalidKeyNameException, InvalidExpiresRangeException, InvalidKeyException, InternalClientException, InvalidBucketNameException {
+    return presignedGetObject(bucket, key, expiresDefault);
   }
 
   /** Returns an InputStream containing a subset of the object. The InputStream must be

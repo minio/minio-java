@@ -28,7 +28,7 @@ public class PresignGetObject {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException, NoSuchAlgorithmException, InvalidKeyException {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-    String str = s3Client.presignGetObject("bucket", "object", 1000);
+    String str = s3Client.presignedGetObject("bucket", "object", 1000);
     System.out.println(str);
   }
 }
