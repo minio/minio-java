@@ -171,7 +171,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.getUrl(""));
-    client.presignGetObject("bucket", "key", 604801);
+    client.presignedGetObject("bucket", "key", 604801);
   }
 
   @Test
@@ -181,7 +181,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.getUrl(""));
-    String presignedObjectUrl = client.presignGetObject("bucket", "key");
+    String presignedObjectUrl = client.presignedGetObject("bucket", "key");
     assertEquals(presignedObjectUrl.isEmpty(), false);
   }
 
