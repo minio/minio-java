@@ -520,6 +520,44 @@ public final class MinioClient {
     return presignedGetObject(bucket, key, expiresDefault);
   }
 
+  /** Returns an presigned URL for PUT
+   *
+   * @param bucket  object's bucket
+   * @param key     object's key
+   * @param expires object expiration
+   *
+   * @throws IOException     upon signature calculation failure
+   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException upon input expires is out of range
+   */
+  public String presignedPutObject(String bucket, String key, Integer expires) throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException, InvalidKeyNameException, InternalClientException, InvalidBucketNameException {
+    if (expires < 1 || expires > expiresDefault) {
+      throw new InvalidExpiresRangeException();
+    }
+    // place holder data to avoid okhttp's request builder's exception
+    byte[] dummy = "".getBytes("UTF-8");
+    HttpUrl url = getRequestUrl(bucket, key);
+    Request request = getRequest("PUT", url, dummy);
+    DateTime date = new DateTime();
+
+    RequestSigner signer = new RequestSigner(null, this.accessKey,
+                                             this.secretKey, date);
+    return signer.presignURL(request, expires);
+  }
+
+  /** Returns an presigned URL for PUT
+   *
+   * @param bucket  object's bucket
+   * @param key     object's key
+   *
+   * @throws IOException     upon connection error
+   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException upon input expires is out of range
+   */
+  public String presignedPutObject(String bucket, String key) throws IOException, NoSuchAlgorithmException, InvalidKeyNameException, InvalidExpiresRangeException, InvalidKeyException, InternalClientException, InvalidBucketNameException {
+    return presignedPutObject(bucket, key, expiresDefault);
+  }
+
   /** Returns an InputStream containing a subset of the object. The InputStream must be
    *  closed or the connection will remain open.
    *
