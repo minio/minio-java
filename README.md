@@ -71,6 +71,7 @@ public class HelloListBuckets {
 
 #### Presigned Operations
 * [PresignedGetObject.java](./examples/PresignedGetObject.java)
+* [PresignedPutObject.java](./examples/PresignedPutObject.java)
 
 ### How to run these examples?
 
