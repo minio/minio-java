@@ -182,7 +182,7 @@ class RequestSigner implements Interceptor {
     return sumHmac(signingKey, stringToSign.getBytes("UTF-8"));
   }
 
-  private String getScope(String region, DateTime date) {
+  public String getScope(String region, DateTime date) {
     String formattedDate = date.toString(dateFormatyyyyMMdd);
     return formattedDate
         + "/"
@@ -366,6 +366,12 @@ class RequestSigner implements Interceptor {
         + requestQuery
         + "&X-Amz-Signature="
         + signature;
+  }
+
+  public String postPresignSignature(String stringToSign, DateTime date, String region) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+    byte[] signingKey = getSigningKey(date, region, this.secretKey);
+    String signature = BaseEncoding.base16().encode(getSignature(signingKey, stringToSign)).toLowerCase();
+    return signature;
   }
 
   @Override
