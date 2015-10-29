@@ -356,7 +356,7 @@ class RequestSigner implements Interceptor {
     String stringToSign = getStringToSign(region, canonicalRequestHash, date);
     byte[] signingKey = getSigningKey(date, region, this.secretKey);
     String signature = BaseEncoding.base16().encode(getSignature(signingKey,
-                                                                     stringToSign)).toLowerCase();
+                                                                 stringToSign)).toLowerCase();
     String scheme = signedRequest.uri().getScheme();
     return scheme
         + "://"

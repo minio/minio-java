@@ -445,8 +445,8 @@ public final class MinioClient {
     }
 
     HttpUrl url = this.url.newBuilder()
-                  .addPathSegment(bucket)
-                  .build();
+        .addPathSegment(bucket)
+        .build();
 
     return url;
   }
@@ -561,7 +561,7 @@ public final class MinioClient {
   /** Returns an Policy for POST
    */
   public PostPolicy newPostPolicy() {
-      return new PostPolicy();
+    return new PostPolicy();
   }
 
   /** Returns an Map for POST form data
@@ -572,18 +572,18 @@ public final class MinioClient {
    */
 
   public Map<String, String> presignedPostPolicy(PostPolicy policy) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
-      DateTime date = new DateTime();
-      RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, date);
-      String region = Regions.INSTANCE.getRegion(this.url.uri().getHost());
-      policy.setAlgorithm("AWS4-HMAC-SHA256");
-      policy.setCredential(this.accessKey + "/" + signer.getScope(region, date));
-      policy.setDate(date);
+    DateTime date = new DateTime();
+    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, date);
+    String region = Regions.INSTANCE.getRegion(this.url.uri().getHost());
+    policy.setAlgorithm("AWS4-HMAC-SHA256");
+    policy.setCredential(this.accessKey + "/" + signer.getScope(region, date));
+    policy.setDate(date);
 
-      String policybase64 = policy.base64();
-      String signature = signer.postPresignSignature(policybase64, date, region);
-      policy.setPolicy(policybase64);
-      policy.setSignature(signature);
-      return policy.getFormData();
+    String policybase64 = policy.base64();
+    String signature = signer.postPresignSignature(policybase64, date, region);
+    policy.setPolicy(policybase64);
+    policy.setSignature(signature);
+    return policy.getFormData();
   }
 
   /** Returns an InputStream containing a subset of the object. The InputStream must be
@@ -704,7 +704,7 @@ public final class MinioClient {
       private boolean isComplete = false;
 
       @Override
-        protected List<Result<Item>> populate() {
+      protected List<Result<Item>> populate() {
         if (!isComplete) {
           String delimiter = null;
           // set delimiter  to '/' if not recursive to emulate directories
@@ -1245,7 +1245,7 @@ public final class MinioClient {
 
   public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix, boolean recursive) {
     if (recursive) {
-        return listAllIncompleteUploads(bucket, prefix, null);
+      return listAllIncompleteUploads(bucket, prefix, null);
     }
     return listAllIncompleteUploads(bucket, prefix, "/");
   }
@@ -1259,7 +1259,7 @@ public final class MinioClient {
       private String uploadIdMarker;
 
       @Override
-        protected List<Result<Upload>> populate() {
+      protected List<Result<Upload>> populate() {
         List<Result<Upload>> ret = new LinkedList<Result<Upload>>();
         if (!isComplete) {
           ListMultipartUploadsResult uploadResult;
@@ -1386,7 +1386,7 @@ public final class MinioClient {
       private boolean isComplete = false;
 
       @Override
-        protected List<Part> populate() throws IOException, ClientException {
+      protected List<Part> populate() throws IOException, ClientException {
         if (!isComplete) {
           ListPartsResult result;
           result = listObjectParts(bucket, key, uploadID, marker);
