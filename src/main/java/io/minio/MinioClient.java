@@ -558,6 +558,34 @@ public final class MinioClient {
     return presignedPutObject(bucket, key, expiresDefault);
   }
 
+  /** Returns an Policy for POST
+   */
+  public PostPolicy newPostPolicy() {
+      return new PostPolicy();
+  }
+
+  /** Returns an Map for POST form data
+   *
+   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws UnsupportedEncodingException upon unsupported Encoding error
+   */
+
+  public Map<String, String> presignedPostPolicy(PostPolicy policy) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
+      DateTime date = new DateTime();
+      RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, date);
+      String region = Regions.INSTANCE.getRegion(this.url.uri().getHost());
+      policy.setAlgorithm("AWS4-HMAC-SHA256");
+      policy.setCredential(this.accessKey + "/" + signer.getScope(region, date));
+      policy.setDate(date);
+
+      String policybase64 = policy.base64();
+      String signature = signer.postPresignSignature(policybase64, date, region);
+      policy.setPolicy(policybase64);
+      policy.setSignature(signature);
+      return policy.getFormData();
+  }
+
   /** Returns an InputStream containing a subset of the object. The InputStream must be
    *  closed or the connection will remain open.
    *
