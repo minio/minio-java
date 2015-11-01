@@ -16,7 +16,6 @@
 
 package io.minio;
 
-
 import com.google.common.io.BaseEncoding;
 import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.Request;
@@ -318,7 +317,7 @@ class RequestSigner implements Interceptor {
     return canonicalWriter.toString();
   }
 
-  public String presignURL(Request originalRequest, Integer expiresInt) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+  public String preSignV4(Request originalRequest, Integer expiresInt) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     String host = originalRequest.uri().getHost();
     String path = originalRequest.uri().getRawPath();
     String region = getRegion(originalRequest);
@@ -368,7 +367,7 @@ class RequestSigner implements Interceptor {
         + signature;
   }
 
-  public String postPresignSignature(String stringToSign, DateTime date, String region) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+  public String postPreSignV4(String stringToSign, DateTime date, String region) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
     byte[] signingKey = getSigningKey(date, region, this.secretKey);
     String signature = BaseEncoding.base16().encode(getSignature(signingKey, stringToSign)).toLowerCase();
     return signature;
