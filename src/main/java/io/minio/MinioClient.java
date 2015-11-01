@@ -677,6 +677,18 @@ public final class MinioClient {
   }
 
   /**
+   * listObjects is a wrapper around listObjects(bucket, null, true)
+   *
+   * @param bucket is the bucket to list objects from
+   *
+   * @return an iterator of Items.
+   * @see #listObjects(String, String, boolean)
+   */
+  public Iterator<Result<Item>> listObjects(final String bucket) {
+    return listObjects(bucket, null);
+  }
+
+  /**
    * listObjects is a wrapper around listObjects(bucket, prefix, true)
    *
    * @param bucket to list objects of
@@ -749,19 +761,11 @@ public final class MinioClient {
     };
   }
 
-  /**
-   * listObjects is a wrapper around listObjects(bucket, null, true)
-   *
-   * @param bucket is the bucket to list objects from
-   *
-   * @return an iterator of Items.
-   * @see #listObjects(String, String, boolean)
-   */
-  public Iterator<Result<Item>> listObjects(final String bucket) {
-    return listObjects(bucket, null);
-  }
-
-  private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys) throws IOException, ClientException {
+  private ListBucketResult listObjects(String bucket,
+                                       String marker,
+                                       String prefix,
+                                       String delimiter,
+                                       int maxKeys) throws IOException, ClientException {
     HttpUrl url = getRequestUrl(bucket);
 
     // max keys limits the number of keys returned, max limit is 1000
@@ -1233,24 +1237,45 @@ public final class MinioClient {
     throw new IOException();
   }
 
+  /**
+   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, null, true)
+   *
+   * @param bucket is the bucket to list objects from
+   *
+   * @return an iterator of Upload.
+   * @see #listIncompleteUploads(String, String, boolean)
+   */
   public Iterator<Result<Upload>> listIncompleteUploads(String bucket) {
-    return listAllIncompleteUploads(bucket, null, null);
+    return listIncompleteUploads(bucket, null, true);
   }
 
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix) {
-    return listAllIncompleteUploads(bucket, prefix, null);
+  /**
+   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, prefix, true)
+   *
+   * @param bucket is the bucket to list incomplete uploads from
+   * @param prefix filters the list of uploads to include only those that start with prefix
+   *
+   * @return an iterator of Upload.
+   * @see #listIncompleteUploads(String, String, boolean)
+   */
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucket,
+                                                        String prefix) {
+    return listIncompleteUploads(bucket, prefix, true);
   }
 
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix, boolean recursive) {
-    if (recursive) {
-      return listAllIncompleteUploads(bucket, prefix, null);
-    }
-    return listAllIncompleteUploads(bucket, prefix, "/");
-  }
+  /**
+   * @param bucket    bucket to list incomplete uploads from
+   * @param prefix    filters all uploads returned where each object must begin with the given prefix
+   * @param recursive when false, emulates a directory structure where each listing returned is either a full object
+   *                  or part of the object's key up to the first '/'. All uploads with the same prefix up to the first
+   *                  '/' will be merged into one entry.
+   *
+   * @return an iterator of Upload.
+   */
+  public Iterator<Result<Upload>> listIncompleteUploads(final String bucket,
+                                                        final String prefix,
+                                                        final boolean recursive) {
 
-  private Iterator<Result<Upload>> listAllIncompleteUploads(final String bucket,
-                                                            final String prefix,
-                                                            final String delimiter) {
     return new MinioIterator<Result<Upload>>() {
       private boolean isComplete = false;
       private String keyMarker = null;
@@ -1261,10 +1286,15 @@ public final class MinioClient {
         List<Result<Upload>> ret = new LinkedList<Result<Upload>>();
         if (!isComplete) {
           ListMultipartUploadsResult uploadResult;
+          String delimiter = null;
+          // set delimiter  to '/' if not recursive to emulate directories
+          if (!recursive) {
+            delimiter = "/";
+          }
           try {
-            uploadResult = listAllIncompleteUploads(bucket, keyMarker,
-                                                    uploadIdMarker, prefix,
-                                                    delimiter, 1000);
+            uploadResult = listIncompleteUploads(bucket, keyMarker,
+                                                 uploadIdMarker, prefix,
+                                                 delimiter, 1000);
             if (uploadResult.isTruncated()) {
               keyMarker = uploadResult.getNextKeyMarker();
               uploadIdMarker = uploadResult.getNextUploadIDMarker();
@@ -1288,12 +1318,12 @@ public final class MinioClient {
     };
   }
 
-  private ListMultipartUploadsResult listAllIncompleteUploads(String bucket,
-                                                              String keyMarker,
-                                                              String uploadIDMarker,
-                                                              String prefix,
-                                                              String delimiter,
-                                                              int maxUploads) throws IOException, ClientException {
+  private ListMultipartUploadsResult listIncompleteUploads(String bucket,
+                                                           String keyMarker,
+                                                           String uploadIDMarker,
+                                                           String prefix,
+                                                           String delimiter,
+                                                           int maxUploads) throws IOException, ClientException {
     HttpUrl url = getRequestUrl(bucket);
     // max uploads limits the number of uploads returned, max limit is 1000
     if (maxUploads >= 1000 || maxUploads < 0) {
