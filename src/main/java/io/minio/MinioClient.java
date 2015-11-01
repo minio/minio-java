@@ -504,7 +504,7 @@ public final class MinioClient {
 
     RequestSigner signer = new RequestSigner(null, this.accessKey,
                                              this.secretKey, date);
-    return signer.presignURL(request, expires);
+    return signer.preSignV4(request, expires);
   }
 
   /** Returns an presigned URL containing the object.
@@ -542,7 +542,7 @@ public final class MinioClient {
 
     RequestSigner signer = new RequestSigner(null, this.accessKey,
                                              this.secretKey, date);
-    return signer.presignURL(request, expires);
+    return signer.preSignV4(request, expires);
   }
 
   /** Returns an presigned URL for PUT
@@ -566,11 +566,12 @@ public final class MinioClient {
 
   /** Returns an Map for POST form data
    *
+   * @param policy new PostPolicy
+   *
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    * @throws UnsupportedEncodingException upon unsupported Encoding error
    */
-
   public Map<String, String> presignedPostPolicy(PostPolicy policy) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
     DateTime date = new DateTime();
     RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, date);
@@ -580,7 +581,7 @@ public final class MinioClient {
     policy.setDate(date);
 
     String policybase64 = policy.base64();
-    String signature = signer.postPresignSignature(policybase64, date, region);
+    String signature = signer.postPreSignV4(policybase64, date, region);
     policy.setPolicy(policybase64);
     policy.setSignature(signature);
     return policy.getFormData();
@@ -632,8 +633,9 @@ public final class MinioClient {
         .header("Range", "bytes=" + offsetStart + "-" + offsetEnd)
         .build();
 
-    // we close the response only on failure or the user will be unable to retrieve the object
-    // it is the user's responsibility to close the input stream
+    // we close the response only on failure or the user will be unable
+    // to retrieve the object it is the user's responsibility to close
+    // the input stream
     Response response = this.transport.newCall(rangeRequest).execute();
     if (response != null) {
       if (response.isSuccessful()) {
@@ -681,7 +683,6 @@ public final class MinioClient {
    * @param prefix filters the list of objects to include only those that start with prefix
    *
    * @return an iterator of Items.
-   *
    * @see #listObjects(String, String, boolean)
    */
   public Iterator<Result<Item>> listObjects(final String bucket, final String prefix) {
@@ -754,7 +755,6 @@ public final class MinioClient {
    * @param bucket is the bucket to list objects from
    *
    * @return an iterator of Items.
-   *
    * @see #listObjects(String, String, boolean)
    */
   public Iterator<Result<Item>> listObjects(final String bucket) {
@@ -1098,8 +1098,6 @@ public final class MinioClient {
    *
    * @throws IOException     upon connection error
    * @throws ClientException upon failure from server
-   * @see #listAllIncompleteUploads(String)
-   * @see #abortMultipartUpload(String, String, String)
    */
   public void putObject(String bucket, String key, String contentType, long size, InputStream body) throws IOException, ClientException {
     boolean isMultipart = false;

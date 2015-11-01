@@ -52,7 +52,7 @@ public class PostPolicy {
     if (Strings.isNullOrEmpty(key)) {
       throw new InvalidArgumentException();
     }
-    conditions.add(new String[]{"eq","$key",key});
+    conditions.add(new String[]{"eq", "$key", key});
     formData.put("key", key);
   }
 
@@ -60,7 +60,7 @@ public class PostPolicy {
     if (Strings.isNullOrEmpty(prefix)) {
       throw new InvalidArgumentException();
     }
-    conditions.add(new String[]{"starts-with","$key",prefix});
+    conditions.add(new String[]{"starts-with", "$key", prefix});
     formData.put("key", prefix);
   }
 
@@ -68,7 +68,7 @@ public class PostPolicy {
     if (Strings.isNullOrEmpty(bucket)) {
       throw new InvalidArgumentException();
     }
-    conditions.add(new String[]{"eq","$bucket",bucket});
+    conditions.add(new String[]{"eq", "$bucket", bucket});
     formData.put("bucket", bucket);
   }
 
@@ -76,17 +76,17 @@ public class PostPolicy {
     if (Strings.isNullOrEmpty(type)) {
       throw new InvalidArgumentException();
     }
-    conditions.add(new String[]{"eq","$Content-Type",type});
+    conditions.add(new String[]{"eq", "$Content-Type", type});
     formData.put("Content-Type", type);
   }
 
   public void setAlgorithm(String algorithm) {
-    conditions.add(new String[]{"eq","$x-amz-algorithm",algorithm});
+    conditions.add(new String[]{"eq", "$x-amz-algorithm", algorithm});
     formData.put("x-amz-algorithm", algorithm);
   }
 
   public void setCredential(String credential) {
-    conditions.add(new String[]{"eq","$x-amz-credential",credential});
+    conditions.add(new String[]{"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
   }
 
