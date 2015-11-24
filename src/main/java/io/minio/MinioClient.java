@@ -890,7 +890,7 @@ public final class MinioClient {
     // ``us-east-1`` is not a valid location constraint according to amazon, so we skip it
     // Valid constraints are
     // [ us-west-1 | us-west-2 | EU or eu-west-1 | eu-central-1 | ap-southeast-1 | ap-northeast-1 | ap-southeast-2 | sa-east-1 ]
-    if (!("milkyway".equals(region) || "us-east-1".equals(region))) {
+    if (!"us-east-1".equals(region)) {
       config.setLocationConstraint(region);
       byte[] data = config.toString().getBytes("UTF-8");
       byte[] md5sum = calculateMd5sum(data);

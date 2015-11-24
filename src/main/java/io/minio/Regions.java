@@ -47,7 +47,7 @@ public enum Regions {
   public String getRegion(String host) {
     String s = Regions.INSTANCE.regions.get(host);
     if (s == null) {
-      s = "milkyway";
+      s = "us-east-1";
     }
     return s;
   }
