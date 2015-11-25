@@ -31,24 +31,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-
-public class PresignedPostObject {
+public class PresignedPostPolicy {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException, NoSuchAlgorithmException, InvalidKeyException {
-    // Set s3 endpoint, region is calculated automatically
+    // Set s3 endpoint, region is calculated automatically.
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
     PostPolicy policy = s3Client.newPostPolicy();
+
     DateTime date = new DateTime();
-    date = date.plusMonths(1); // Expire in one month
+    date = date.plusMonths(1); // Expire in one month.
+
+    // set policy parameters.
     policy.setKey("objectname");
     policy.setBucket("bucketname");
     policy.setExpires(date);
     policy.setContentType("image/png");
-    Map<String, String> formData = s3Client.presignedPostPolicy(policy);
 
+    Map<String, String> formData = s3Client.presignedPostPolicy(policy);
     System.out.print("curl -X POST ");
+
     for (Map.Entry<String, String> entry : formData.entrySet()) {
         System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
     }
-    System.out.print("-F file=@/tmp/userpic.png https://s3-us-west-2.amazonaws.com/bucketname\n");
+    System.out.print("-F file=@/tmp/userpic.png https://s3.amazonaws.com/bucketname\n");
   }
 }
