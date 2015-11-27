@@ -81,6 +81,7 @@ Simply edit the example java program to include your access credentials and foll
 NOTE: `minio-0.2.6-all.jar` includes all the necessary dependencies to run these examples.
 
 ```bash
+$ sudo apt-get install openjdk-7-jdk
 $ git clone https://github.com/minio/minio-java
 $ cd minio-java
 [edit examples/ListBuckets.java]
@@ -92,7 +93,6 @@ bucket2
 ....
 ...
 bucketN
-
 ```
 
 ## Contribute
