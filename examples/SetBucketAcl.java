@@ -29,6 +29,6 @@ public class SetBucketAcl {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // set bucket canned acl
-    s3Client.setBucketACL("mybucket", Acl.PRIVATE);
+    s3Client.setBucketACL("bucketName", Acl.PRIVATE);
   }
 }

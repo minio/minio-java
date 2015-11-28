@@ -29,7 +29,7 @@ public class GetBucketAcl {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // get bucket canned acl
-    Acl acl = s3Client.getBucketACL("mybucket");
+    Acl acl = s3Client.getBucketACL("bucketName");
     System.out.println(acl);
   }
 }

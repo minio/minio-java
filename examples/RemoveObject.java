@@ -28,6 +28,6 @@ public class RemoveObject {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // remove object
-    s3Client.removeObject("mybucket", "my/object");
+    s3Client.removeObject("bucketName", "objectName");
   }
 }

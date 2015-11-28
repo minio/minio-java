@@ -31,7 +31,7 @@ public class ListObjects {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // list objects
-    Iterator<Result<Item>> myObjects = s3Client.listObjects("mybucket");
+    Iterator<Result<Item>> myObjects = s3Client.listObjects("bucketName");
     while (myObjects.hasNext()) {
       Result<Item> result = myObjects.next();
       Item object = result.getResult();
