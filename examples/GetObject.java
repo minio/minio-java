@@ -30,7 +30,7 @@ public class GetObject {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // get object
-    InputStream object = s3Client.getObject("mybucket", "myobject");
+    InputStream object = s3Client.getObject("bucketName", "objectName");
     try {
       System.out.println("Printing object: ");
       IOUtils.copy(object, System.out);

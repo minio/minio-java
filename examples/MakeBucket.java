@@ -29,6 +29,6 @@ public class MakeBucket {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // create bucket
-    s3Client.makeBucket("mybucket", Acl.PUBLIC_READ_WRITE);
+    s3Client.makeBucket("bucketName");
   }
 }

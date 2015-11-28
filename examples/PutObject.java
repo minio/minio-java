@@ -33,6 +33,8 @@ public class PutObject {
       builder.append('a');
     }
     // create object
-    s3Client.putObject("mybucket", "my/object", "application/octet-stream", 11 * 1024 * 1024, new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
+    s3Client.putObject("bucketName", "objectName", "application/octet-stream",
+                       11 * 1024 * 1024,
+                       new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
   }
 }

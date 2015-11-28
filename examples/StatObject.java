@@ -29,7 +29,7 @@ public class StatObject {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // stat an object
-    ObjectStat objectStat = s3Client.statObject("mybucket", "my/object");
+    ObjectStat objectStat = s3Client.statObject("bucketName", "objectName");
     System.out.println(objectStat);
   }
 }

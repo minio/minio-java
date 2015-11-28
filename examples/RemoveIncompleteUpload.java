@@ -28,6 +28,6 @@ public class RemoveIncompleteUpload {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // recursively remove every in progress active multipart upload sessions for a given bucket and key
-    s3Client.removeIncompleteUpload("mybucket", "myobject");
+    s3Client.removeIncompleteUpload("bucketName", "objectName");
   }
 }

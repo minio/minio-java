@@ -261,10 +261,9 @@ public final class MinioClient {
 
     if (response.body().contentLength() == -1 || response.body().contentLength() == 0) {
       int statusCode = response.code();
-      ClientException e;
+      ClientException e = new ClientException();
       ErrorResponse errorResponse = new ErrorResponse();
       String hostId = String.valueOf(response.headers().get("x-amz-id-2"));
-
       if ("null".equals(hostId)) {
         hostId = null;
       }
@@ -283,22 +282,33 @@ public final class MinioClient {
       int pathLength = resource.split("/").length;
       errorResponse.setResource(resource);
 
-      if (statusCode == 404) {
-        if (pathLength > 2) {
-          errorResponse.setCode("NoSuchKey");
-          e = new ObjectNotFoundException();
-        } else if (pathLength == 2) {
-          errorResponse.setCode("NoSuchBucket");
-          e = new BucketNotFoundException();
-        } else {
-          e = new InternalClientException("404 without body resulted in path with less than two components");
-        }
-      } else if (statusCode == 501 || statusCode == 405) {
-        errorResponse.setCode("MethodNotAllowed");
-        e = new MethodNotAllowedException();
-      } else {
-        errorResponse.setCode("AccessDenied");
-        e = new AccessDeniedException();
+      switch (statusCode) {
+        case 404:
+          if (pathLength > 2) {
+            errorResponse.setCode("NoSuchKey");
+            e = new ObjectNotFoundException();
+          } else if (pathLength == 2) {
+            errorResponse.setCode("NoSuchBucket");
+            e = new BucketNotFoundException();
+          } else {
+            e = new InternalClientException("404 without body resulted in path with less than two components");
+          }
+          break;
+        case 501: case 405:
+          errorResponse.setCode("MethodNotAllowed");
+          e = new MethodNotAllowedException();
+          break;
+        case 409:
+          errorResponse.setCode("BucketNotEmpty");
+          e = new BucketNotEmptyException();
+          break;
+        case 403:
+          errorResponse.setCode("AccessDenied");
+          e = new AccessDeniedException();
+          break;
+        default:
+          e = new InternalClientException("Unhandled error please report this issue at https://github.com/minio/minio-java/issues");
+          break;
       }
       e.setErrorResponse(errorResponse);
       throw e;

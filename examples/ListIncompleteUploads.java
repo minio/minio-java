@@ -31,7 +31,7 @@ public class ListIncompleteUploads {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // list objects
-    Iterator<Result<Upload>> myObjects = s3Client.listIncompleteUploads("mybucket");
+    Iterator<Result<Upload>> myObjects = s3Client.listIncompleteUploads("bucketName");
     while (myObjects.hasNext()) {
       Result<Upload> result = myObjects.next();
       Upload object = result.getResult();
