@@ -15,7 +15,12 @@ Downloading https://services.gradle.org/distributions/gradle-2.5-bin.zip
 ...
 
 BUILD SUCCESSFUL
-
+...
+$ ls build/libs/
+[2015-11-27 19:44:07 PST] 6.6MiB minio-0.2.6-all.jar
+[2015-11-27 19:43:59 PST] 182KiB minio-0.2.6-javadoc.jar
+[2015-11-27 19:44:08 PST]  53KiB minio-0.2.6-sources.jar
+[2015-11-27 19:43:47 PST]  64KiB minio-0.2.6.jar
 ```
 
 ### Gradle startup script for Windows
@@ -24,6 +29,17 @@ On windows command prompt
 
 ```bat
 C:\minio-java\>gradlew.bat check
+Downloading https://services.gradle.org/distributions/gradle-2.5-bin.zip
+...
+...
+
+BUILD SUCCESSFUL
+
+$ dir build\libs\
+[2015-11-27 19:44:07 PST] 6.6MiB minio-0.2.6-all.jar
+[2015-11-27 19:43:59 PST] 182KiB minio-0.2.6-javadoc.jar
+[2015-11-27 19:44:08 PST]  53KiB minio-0.2.6-sources.jar
+[2015-11-27 19:43:47 PST]  64KiB minio-0.2.6.jar
 ```
 
 ###  Developer Guidelines
