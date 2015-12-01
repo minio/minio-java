@@ -17,4 +17,7 @@
 package io.minio.errors;
 
 public class InvalidExpiresRangeException extends ClientException {
+  public InvalidExpiresRangeException() {
+    super("Invalid expires range");
+  }
 }

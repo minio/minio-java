@@ -18,4 +18,10 @@ package io.minio.errors;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class InvalidBucketNameException extends ClientException {
+  private String bucketName;
+
+  public InvalidBucketNameException(String bucketName) {
+    super("Invalid bucket name " + bucketName);
+    this.bucketName = bucketName;
+  }
 }

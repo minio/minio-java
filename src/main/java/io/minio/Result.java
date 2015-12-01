@@ -21,23 +21,26 @@ import io.minio.errors.ClientException;
 import java.io.IOException;
 
 public class Result<T> {
-  private final T t;
-  private final Exception e;
+  private final T type;
+  private final Exception ex;
 
-  public Result(T t, Exception e) {
-    this.t = t;
-    this.e = e;
+  public Result(T type, Exception ex) {
+    this.type = type;
+    this.ex = ex;
   }
 
+  /**
+   * get result.
+   */
   public T getResult() throws IOException, ClientException {
-    if (e != null) {
-      if (e instanceof IOException) {
-        throw (IOException) e;
+    if (ex != null) {
+      if (ex instanceof IOException) {
+        throw (IOException) ex;
       }
-      if (e instanceof ClientException) {
-        throw (ClientException) e;
+      if (ex instanceof ClientException) {
+        throw (ClientException) ex;
       }
     }
-    return t;
+    return type;
   }
 }

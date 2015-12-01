@@ -17,4 +17,7 @@
 package io.minio.errors;
 
 public class InternalServerException extends ClientException {
+  public InternalServerException() {
+    super("Internal server exception");
+  }
 }

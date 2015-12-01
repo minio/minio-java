@@ -17,4 +17,10 @@
 package io.minio.errors;
 
 public class BucketNotEmptyException extends ClientException {
+  private String bucketName;
+
+  public BucketNotEmptyException(String bucketName) {
+    super("Bucket " + bucketName + " not empty");
+    this.bucketName = bucketName;
+  }
 }

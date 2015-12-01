@@ -36,11 +36,11 @@ public class Grantee extends XmlEntity {
     this.name = "Grantee";
   }
 
-  public String getID() {
+  public String getId() {
     return id;
   }
 
-  public void setID(String id) {
+  public void setId(String id) {
     this.id = id;
   }
 
@@ -68,11 +68,11 @@ public class Grantee extends XmlEntity {
     this.type = type;
   }
 
-  public String getURI() {
+  public String getUri() {
     return uri;
   }
 
-  public void setURI(String uri) {
+  public void setUri(String uri) {
     this.uri = uri;
   }
 }

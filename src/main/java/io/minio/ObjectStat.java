@@ -27,6 +27,9 @@ public class ObjectStat {
   private final String md5sum;
   private final String contentType;
 
+  /**
+   * this comment fixes checkstyle javadoc error.
+   */
   public ObjectStat(String bucket, String name, Date createdTime, long length, String md5sum, String contentType) {
     this.bucket = bucket;
     this.key = name;

@@ -17,4 +17,7 @@
 package io.minio.errors;
 
 public class AccessDeniedException extends ClientException {
+  public AccessDeniedException() {
+    super("Access denied");
+  }
 }

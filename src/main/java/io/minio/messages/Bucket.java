@@ -51,6 +51,9 @@ public class Bucket extends XmlEntity {
     this.creationDate = creationDate;
   }
 
+  /**
+   * get parsed creation date.
+   */
   public Date getParsedCreationDate() throws ParseException {
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"));

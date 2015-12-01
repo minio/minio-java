@@ -16,5 +16,11 @@
 
 package io.minio.errors;
 
-public class InvalidKeyNameException extends ClientException {
+public class InvalidObjectNameException extends ClientException {
+  private String objectName;
+
+  public InvalidObjectNameException(String objectName) {
+    super("Invalid object name " + objectName);
+    this.objectName = objectName;
+  }
 }

@@ -17,4 +17,7 @@
 package io.minio.errors;
 
 public class MaxBucketsReachedException extends ClientException {
+  public MaxBucketsReachedException() {
+    super("Maximum bucket reached");
+  }
 }

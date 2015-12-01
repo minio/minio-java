@@ -16,5 +16,12 @@
 
 package io.minio.errors;
 
-public class BucketExistsException extends ClientException {
+public class ObjectAlreadyExistsException extends ClientException {
+  private String objectName;
+  private String bucketName;
+
+  public ObjectAlreadyExistsException(String objectName, String bucketName) {
+    super("Object " + objectName + " in bucket " + bucketName + " already exists");
+    this.objectName = objectName;
+  }
 }

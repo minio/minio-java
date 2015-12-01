@@ -19,14 +19,19 @@ package io.minio.errors;
 import io.minio.messages.ErrorResponse;
 
 @SuppressWarnings("unused")
-public class ClientException extends Exception {
+public class ClientException extends MinioException {
   private ErrorResponse errorResponse;
+
+  public ClientException(String message) {
+    super(message);
+  }
+
+  public ClientException(ErrorResponse errorResponse) {
+    super(); // TODO: pass error message from errorResponse
+    this.errorResponse = errorResponse;
+  }
 
   public ErrorResponse getErrorResponse() {
     return errorResponse;
-  }
-
-  public void setErrorResponse(ErrorResponse errorResponse) {
-    this.errorResponse = errorResponse;
   }
 }

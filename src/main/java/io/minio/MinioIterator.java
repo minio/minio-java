@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import io.minio.errors.ClientException;
+import io.minio.errors.MinioException;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -27,17 +27,23 @@ import java.util.NoSuchElementException;
 public abstract class MinioIterator<T1> implements Iterator<T1> {
   private final List<T1> items = new LinkedList<T1>();
 
+  /**
+   * returns boolean denotes whether next element is available or not.
+   */
   public boolean hasNext() {
     try {
       populateIfEmpty();
     } catch (IOException e) {
       e.printStackTrace();
-    } catch (ClientException e) {
+    } catch (MinioException e) {
       e.printStackTrace();
     }
     return !items.isEmpty();
   }
 
+  /**
+   * returns next element.
+   */
   public T1 next() {
     try {
       populateIfEmpty();
@@ -56,12 +62,12 @@ public abstract class MinioIterator<T1> implements Iterator<T1> {
     throw new UnsupportedOperationException();
   }
 
-  private synchronized void populateIfEmpty() throws ClientException, IOException {
+  private synchronized void populateIfEmpty() throws IOException, MinioException {
     if (items.isEmpty()) {
       List<T1> list = populate();
       this.items.addAll(list);
     }
   }
 
-  protected abstract List<T1> populate() throws ClientException, IOException;
+  protected abstract List<T1> populate() throws IOException, MinioException;
 }

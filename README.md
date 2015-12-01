@@ -35,7 +35,7 @@ import java.io.IOException;
 public class HelloListBuckets {
     public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
         // Set s3 endpoint, region is calculated automatically
-        Client s3client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+        Client s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         // list buckets
         Iterator<Bucket> bucketList = s3Client.listBuckets();

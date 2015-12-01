@@ -17,5 +17,10 @@
 package io.minio.errors;
 
 public class BucketNotFoundException extends ClientException {
+  private String bucketName;
 
+  public BucketNotFoundException(String bucketName) {
+    super("Bucket " + bucketName + " not found");
+    this.bucketName = bucketName;
+  }
 }

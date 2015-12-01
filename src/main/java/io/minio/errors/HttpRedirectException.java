@@ -16,5 +16,8 @@
 
 package io.minio.errors;
 
-public class HTTPRedirectException extends ClientException {
+public class HttpRedirectException extends ClientException {
+  public HttpRedirectException() {
+    super("HTTP redirect exception");
+  }
 }

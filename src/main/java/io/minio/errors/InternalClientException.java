@@ -17,23 +17,19 @@
 package io.minio.errors;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class InternalClientException extends ClientException {
-  private String errorString;
-
-  public InternalClientException() {
+public class InternalClientException extends MinioException {
+  public InternalClientException(Exception cause) {
     super();
+    this.initCause(cause);
   }
 
   public InternalClientException(String errorString) {
-    super();
-    this.errorString = errorString;
+    super(errorString);
   }
 
   @Override
   public String toString() {
     return "Please open an issue with this bug at http://github.com/minio/minio-java\n"
-        + this.errorString
-        + "\n"
         + super.toString();
   }
 }

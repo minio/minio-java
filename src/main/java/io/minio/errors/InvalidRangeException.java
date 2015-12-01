@@ -17,4 +17,8 @@
 package io.minio.errors;
 
 public class InvalidRangeException extends ClientException {
+  public InvalidRangeException() {
+    // TODO: add range as param
+    super("Invalid range");
+  }
 }

@@ -17,7 +17,7 @@
 package io.minio.acl;
 
 public enum Acl {
-  /** Canned acl: public-read-write
+  /** Canned acl: public-read-write.
    * <p>
    * Read: public
    * Write: public
@@ -28,7 +28,7 @@ public enum Acl {
       return "public-read-write";
     }
   },
-  /** Canned acl: private
+  /** Canned acl: private.
    * <p>
    * Read: authorized users only
    * Write: authorized users only
@@ -40,7 +40,7 @@ public enum Acl {
       return "private";
     }
   },
-  /** Canned acl: public-read
+  /** Canned acl: public-read.
    * <p>
    * Read: public
    * Write: authorized users only
@@ -52,7 +52,7 @@ public enum Acl {
       return "public-read";
     }
   },
-  /** Canned acl: authenticated-read
+  /** Canned acl: authenticated-read.
    * <p>
    * Read: Only users with a valid account, all valid users authorized
    * Write: acl authorized users only

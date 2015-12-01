@@ -25,9 +25,9 @@ public class ErrorResponse extends XmlEntity {
   @Key("Message")
   private String message;
   @Key("RequestId")
-  private String requestID;
+  private String requestId;
   @Key("HostId")
-  private String hostID;
+  private String hostId;
   @Key("Resource")
   private String resource;
 
@@ -52,20 +52,20 @@ public class ErrorResponse extends XmlEntity {
     this.message = message;
   }
 
-  public String getRequestID() {
-    return requestID;
+  public String getRequestId() {
+    return requestId;
   }
 
-  public void setRequestID(String requestID) {
-    this.requestID = requestID;
+  public void setRequestId(String requestId) {
+    this.requestId = requestId;
   }
 
-  public String getHostID() {
-    return hostID;
+  public String getHostId() {
+    return hostId;
   }
 
-  public void setHostID(String hostID) {
-    this.hostID = hostID;
+  public void setHostId(String hostId) {
+    this.hostId = hostId;
   }
 
   public String getResource() {
