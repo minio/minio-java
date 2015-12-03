@@ -110,6 +110,9 @@ public class ListBucketResult extends XmlEntity {
     this.contents = contents;
   }
 
+  /**
+   * get common prefixes.
+   */
   public List<Prefix> getCommonPrefixes() {
     if (commonPrefixes == null) {
       return new LinkedList<Prefix>();

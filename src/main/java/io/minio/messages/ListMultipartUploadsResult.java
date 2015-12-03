@@ -30,11 +30,11 @@ public class ListMultipartUploadsResult extends XmlEntity {
   @Key("KeyMarker")
   private String keyMarker;
   @Key("UploadIdMarker")
-  private String uploadIDMarker;
+  private String uploadIdMarker;
   @Key("NextKeyMarker")
   private String nextKeyMarker;
   @Key("NextUploadIdMarker")
-  private String nextUploadIDMarker;
+  private String nextUploadIdMarker;
   @Key("MaxUploads")
   private int maxUploads;
   @Key("IsTruncated")
@@ -69,12 +69,12 @@ public class ListMultipartUploadsResult extends XmlEntity {
     this.keyMarker = keyMarker;
   }
 
-  public String getUploadIDMarker() {
-    return uploadIDMarker;
+  public String getUploadIdMarker() {
+    return uploadIdMarker;
   }
 
-  public void setUploadIDMarker(String uploadIDMarker) {
-    this.uploadIDMarker = uploadIDMarker;
+  public void setUploadIdMarker(String uploadIdMarker) {
+    this.uploadIdMarker = uploadIdMarker;
   }
 
   public String getNextKeyMarker() {
@@ -85,12 +85,12 @@ public class ListMultipartUploadsResult extends XmlEntity {
     this.nextKeyMarker = nextKeyMarker;
   }
 
-  public String getNextUploadIDMarker() {
-    return nextUploadIDMarker;
+  public String getNextUploadIdMarker() {
+    return nextUploadIdMarker;
   }
 
-  public void setNextUploadIDMarker(String nextUploadIDMarker) {
-    this.nextUploadIDMarker = nextUploadIDMarker;
+  public void setNextUploadIdMarker(String nextUploadIdMarker) {
+    this.nextUploadIdMarker = nextUploadIdMarker;
   }
 
   public int getMaxUploads() {
@@ -101,6 +101,9 @@ public class ListMultipartUploadsResult extends XmlEntity {
     this.maxUploads = maxUploads;
   }
 
+  /**
+   * get uploads.
+   */
   public List<Upload> getUploads() {
     if (uploads == null) {
       return new ArrayList<Upload>();

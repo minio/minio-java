@@ -38,9 +38,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 class RequestSigner implements Interceptor {
-  private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
+  private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ =
+      DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
   private static final DateTimeFormatter dateFormatyyyyMMdd = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC();
-  private static final DateTimeFormatter dateFormat = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withZoneUTC();
+  private static final DateTimeFormatter dateFormat =
+      DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withZoneUTC();
 
   private byte[] data = new byte[0];
   private DateTime date = null;
@@ -93,7 +95,9 @@ class RequestSigner implements Interceptor {
   }
 
 
-  private static byte[] getSigningKey(DateTime date, String region, String secretKey) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+  private static byte[] getSigningKey(DateTime date, String region,
+                                      String secretKey) throws NoSuchAlgorithmException,
+                                                               UnsupportedEncodingException, InvalidKeyException {
     String formattedDate = date.toString(dateFormatyyyyMMdd);
     String dateKeyLine = "AWS4" + secretKey;
     byte[] dateKey = sumHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
@@ -110,7 +114,9 @@ class RequestSigner implements Interceptor {
     return hmacSha256.doFinal();
   }
 
-  private Request signV4(Request originalRequest, byte[] data) throws NoSuchAlgorithmException, UnsupportedEncodingException, IOException, InvalidKeyException {
+  private Request signV4(Request originalRequest, byte[] data) throws NoSuchAlgorithmException,
+                                                                      UnsupportedEncodingException, IOException,
+                                                                      InvalidKeyException {
     if (this.accessKey == null || this.secretKey == null) {
       return originalRequest;
     }
@@ -174,10 +180,13 @@ class RequestSigner implements Interceptor {
   }
 
   private String getAuthorizationHeader(String signedHeaders, String signature, DateTime date, String region) {
-    return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region, date) + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
+    return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region, date) + ", SignedHeaders="
+        + signedHeaders + ", Signature=" + signature;
   }
 
-  private byte[] getSignature(byte[] signingKey, String stringToSign) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
+  private byte[] getSignature(byte[] signingKey, String stringToSign) throws UnsupportedEncodingException,
+                                                                             NoSuchAlgorithmException,
+                                                                             InvalidKeyException {
     return sumHmac(signingKey, stringToSign.getBytes("UTF-8"));
   }
 
@@ -202,7 +211,8 @@ class RequestSigner implements Interceptor {
         + canonicalHash;
   }
 
-  private String getCanonicalRequest(Request request, String bodySha256Hash, String signedHeaders) throws IOException, InvalidKeyException {
+  private String getCanonicalRequest(Request request, String bodySha256Hash,
+                                     String signedHeaders) throws IOException, InvalidKeyException {
     StringWriter canonicalWriter = new StringWriter();
     PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
     String method = request.method();
@@ -293,7 +303,8 @@ class RequestSigner implements Interceptor {
     return map;
   }
 
-  private String getPresignCanonicalRequest(Request request, String requestQuery, String expires, DateTime date) throws IOException, InvalidKeyException {
+  private String getPresignCanonicalRequest(Request request, String requestQuery, String expires,
+                                            DateTime date) throws IOException, InvalidKeyException {
     StringWriter canonicalWriter = new StringWriter();
     PrintWriter canonicalPrinter = new PrintWriter(canonicalWriter, true);
 
@@ -317,7 +328,8 @@ class RequestSigner implements Interceptor {
     return canonicalWriter.toString();
   }
 
-  public String preSignV4(Request originalRequest, Integer expiresInt) throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+  public String preSignV4(Request originalRequest, Integer expiresInt) throws IOException, NoSuchAlgorithmException,
+                                                                              InvalidKeyException {
     String host = originalRequest.uri().getHost();
     String path = originalRequest.uri().getRawPath();
     String region = getRegion(originalRequest);
@@ -367,7 +379,9 @@ class RequestSigner implements Interceptor {
         + signature;
   }
 
-  public String postPreSignV4(String stringToSign, DateTime date, String region) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+  public String postPreSignV4(String stringToSign, DateTime date, String region) throws NoSuchAlgorithmException,
+                                                                                        UnsupportedEncodingException,
+                                                                                        InvalidKeyException {
     byte[] signingKey = getSigningKey(date, region, this.secretKey);
     String signature = BaseEncoding.base16().encode(getSignature(signingKey, stringToSign)).toLowerCase();
     return signature;

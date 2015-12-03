@@ -17,4 +17,15 @@
 package io.minio.errors;
 
 public class ObjectNotFoundException extends ClientException {
+  private String objectName;
+  private String bucketName;
+
+  /**
+   * this comment fixes checkstyle javadoc error.
+   */
+  public ObjectNotFoundException(String objectName, String bucketName) {
+    super("Object " + objectName + " not found in bucket " + bucketName);
+    this.objectName = objectName;
+    this.bucketName = bucketName;
+  }
 }

@@ -41,6 +41,9 @@ public class AccessControlPolicy extends XmlEntity {
     this.owner = owner;
   }
 
+  /**
+   * get access control list.
+   */
   public List<Grant> getAccessControlList() {
     if (grants == null) {
       return new LinkedList<Grant>();

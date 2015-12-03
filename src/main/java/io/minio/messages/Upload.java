@@ -23,7 +23,7 @@ public class Upload extends XmlEntity {
   @Key("Key")
   private String key;
   @Key("UploadId")
-  private String uploadID;
+  private String uploadId;
   @Key("Initiator")
   private Initiator initiator;
   @Key("Owner")
@@ -46,12 +46,12 @@ public class Upload extends XmlEntity {
     this.key = key;
   }
 
-  public String getUploadID() {
-    return uploadID;
+  public String getUploadId() {
+    return uploadId;
   }
 
-  public void setUploadID(String uploadID) {
-    this.uploadID = uploadID;
+  public void setUploadId(String uploadId) {
+    this.uploadId = uploadId;
   }
 
   public Initiator getInitiator() {

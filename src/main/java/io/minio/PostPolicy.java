@@ -29,8 +29,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 public class PostPolicy {
-  private DateTimeFormatter expirationDateFormat = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH':'mm':'ss'.'SSS'Z'").withZoneUTC();
-  private DateTimeFormatter dateFormatyyyyMMddThhmmssZ = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
+  private DateTimeFormatter expirationDateFormat =
+      DateTimeFormat.forPattern("yyyy-MM-dd'T'HH':'mm':'ss'.'SSS'Z'").withZoneUTC();
+  private DateTimeFormatter dateFormatyyyyMMddThhmmssZ =
+      DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
 
   private String expiration;
   private ArrayList<String[]> conditions;
@@ -41,6 +43,9 @@ public class PostPolicy {
     formData = new HashMap<String, String>();
   }
 
+  /**
+   * set expiry time.
+   */
   public void setExpires(DateTime date) throws InvalidArgumentException {
     if (date == null) {
       throw new InvalidArgumentException();
@@ -48,6 +53,9 @@ public class PostPolicy {
     expiration = date.toString(expirationDateFormat);
   }
 
+  /**
+   * set key.
+   */
   public void setKey(String key) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(key)) {
       throw new InvalidArgumentException();
@@ -56,6 +64,9 @@ public class PostPolicy {
     formData.put("key", key);
   }
 
+  /**
+   * set key starts with.
+   */
   public void setKeyStartsWith(String prefix) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(prefix)) {
       throw new InvalidArgumentException();
@@ -64,6 +75,9 @@ public class PostPolicy {
     formData.put("key", prefix);
   }
 
+  /**
+   * set bucket.
+   */
   public void setBucket(String bucket) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(bucket)) {
       throw new InvalidArgumentException();
@@ -72,6 +86,9 @@ public class PostPolicy {
     formData.put("bucket", bucket);
   }
 
+  /**
+   * set content type.
+   */
   public void setContentType(String type) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(type)) {
       throw new InvalidArgumentException();
@@ -90,6 +107,9 @@ public class PostPolicy {
     formData.put("x-amz-credential", credential);
   }
 
+  /**
+   * set date.
+   */
   public void setDate(DateTime date) {
     String dateStr = date.toString(dateFormatyyyyMMddThhmmssZ);
     conditions.add(new String[]{"eq","$x-amz-date",dateStr});
@@ -106,6 +126,9 @@ public class PostPolicy {
     formData.put("policy", policybase64);
   }
 
+  /**
+   * marshal JSON.
+   */
   public byte[] marshalJson() throws UnsupportedEncodingException {
     StringBuilder sb = new StringBuilder();
     Joiner joiner = Joiner.on("\",\"");
@@ -127,9 +150,11 @@ public class PostPolicy {
     sb.append("}");
     return sb.toString().getBytes("UTF-8");
   }
+
   public String base64() throws UnsupportedEncodingException {
     return BaseEncoding.base64().encode(marshalJson());
   }
+
   public Map<String, String> getFormData() {
     return formData;
   }

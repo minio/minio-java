@@ -17,4 +17,7 @@
 package io.minio.errors;
 
 public class MethodNotAllowedException extends ClientException {
+  public MethodNotAllowedException() {
+    super("Method not allowed");
+  }
 }

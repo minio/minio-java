@@ -41,6 +41,9 @@ public class ListAllMyBucketsResult extends XmlEntity {
     this.owner = owner;
   }
 
+  /**
+   * get buckets.
+   */
   public List<Bucket> getBuckets() {
     if (buckets == null) {
       return new LinkedList<Bucket>();

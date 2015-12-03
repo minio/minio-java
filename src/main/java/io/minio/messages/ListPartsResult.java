@@ -121,6 +121,9 @@ public class ListPartsResult extends XmlEntity {
     this.nextPartNumberMarker = nextPartNumberMarker;
   }
 
+  /**
+   * get parts.
+   */
   public List<Part> getParts() {
     if (parts == null) {
       return new LinkedList<Part>();

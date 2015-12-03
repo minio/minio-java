@@ -30,7 +30,7 @@ public class Item extends XmlEntity {
   @Key("LastModified")
   private String lastModified;
   @Key("ETag")
-  private String eTag;
+  private String etag;
   @Key("Size")
   private long size;
   @Key("StorageClass")
@@ -60,6 +60,9 @@ public class Item extends XmlEntity {
     this.lastModified = lastModified;
   }
 
+  /**
+   * get parsed last modified date.
+   */
   public Date getParsedLastModified() throws ParseException {
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -67,11 +70,11 @@ public class Item extends XmlEntity {
   }
 
   public String getETag() {
-    return eTag;
+    return etag;
   }
 
-  public void setETag(String eTag) {
-    this.eTag = eTag.replaceAll("\"", "");
+  public void setETag(String etag) {
+    this.etag = etag.replaceAll("\"", "");
   }
 
   public long getSize() {

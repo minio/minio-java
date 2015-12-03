@@ -44,6 +44,9 @@ public enum Regions {
     regions.put("s3-us-west-2.amazonaws.com", "us-west-2");
   }
 
+  /**
+   * get region.
+   */
   public String getRegion(String host) {
     String s = Regions.INSTANCE.regions.get(host);
     if (s == null) {

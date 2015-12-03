@@ -31,6 +31,9 @@ public class Buckets extends XmlEntity {
     super.name = "Buckets";
   }
 
+  /**
+   * get bucket.
+   */
   public List<Bucket> getBucket() {
     if (bucket == null) {
       return new LinkedList<Bucket>();
