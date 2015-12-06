@@ -14,35 +14,27 @@
  * limitations under the License.
  */
 
-package io.minio.messages;
+package io.minio;
 
-import com.google.api.client.util.Key;
+public enum HttpScheme {
+  HTTP("http"), HTTPS("https");
+  private String value;
 
-import java.util.LinkedList;
-import java.util.List;
-
-@SuppressWarnings("WeakerAccess")
-public class Buckets extends XmlEntity {
-  @Key("Bucket")
-  private List<Bucket> bucketList = new LinkedList<Bucket>();
-
-  public Buckets() {
-    super();
-    super.name = "Buckets";
+  private HttpScheme(String value) {
+    this.value = value;
   }
 
-  public List<Bucket> get() {
-    return bucketList;
-  }
+  public static HttpScheme fromString(String scheme) {
+    if (scheme == null) {
+      throw new IllegalArgumentException("null scheme");
+    }
 
-  public void set(List<Bucket> bucketList) {
-    this.bucketList = bucketList;
-  }
+    for (HttpScheme s : HttpScheme.values()) {
+      if (scheme.equalsIgnoreCase(s.value)) {
+        return s;
+      }
+    }
 
-  /**
-   * This function must be there for XML parsing.
-   */
-  public void setBucket(List<Bucket> bucketList) {
-    set(bucketList);
+    throw new IllegalArgumentException("invalid HTTP scheme '" + scheme + "'");
   }
 }
