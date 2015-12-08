@@ -1,5 +1,14 @@
 # For maintainers only
 
+## Responsibilities
+
+Please go through this link [Maintainer Responsibility](https://gist.github.com/abperiasamy/f4d9b31d3186bbd26522)
+
+## Current Maintainers
+
+- Balamurugan Arumugam
+- Harshavardhana
+
 ### Setup your minio-java Github Repository
 
 Fork [minio-java upstream](https://github.com/minio/minio-java/fork) source repository to your own personal repository.
