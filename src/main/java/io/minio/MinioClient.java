@@ -34,7 +34,6 @@ import org.joda.time.format.DateTimeFormatter;
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
 import com.google.common.io.BaseEncoding;
-import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.io.IOException;
@@ -183,7 +182,7 @@ public final class MinioClient {
       throw new MinioException("null endpoint");
     }
 
-    // for valid endpoint, port and scheme are ignored
+    // for valid URL endpoint, port and scheme are ignored
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
@@ -203,8 +202,8 @@ public final class MinioClient {
       return;
     }
 
-    // endpoint may be valid domain name, IPv4 or IPv6 address
-    if (!(DomainValidator.getInstance().isValid(endpoint) || InetAddressValidator.getInstance().isValid(endpoint))) {
+    // endpoint may be a valid hostname, IPv4 or IPv6 address
+    if (!this.isValidEndpoint(endpoint)) {
       throw new MinioException("invalid host '" + endpoint + "'");
     }
 
@@ -239,6 +238,32 @@ public final class MinioClient {
     }
     this.accessKey = accessKey;
     this.secretKey = secretKey;
+  }
+
+
+  private boolean isValidEndpoint(String endpoint) {
+    if (InetAddressValidator.getInstance().isValid(endpoint)) {
+      return true;
+    }
+
+    // endpoint may be a hostname
+    // refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
+    // why checks are done like below
+    if (endpoint.length() < 1 || endpoint.length() > 253) {
+      return false;
+    }
+
+    for (String label : endpoint.split("\\.")) {
+      if (label.length() < 1 || label.length() > 63) {
+        return false;
+      }
+
+      if (!(label.matches("^[a-zA-Z0-9][a-zA-Z0-9-]*") && endpoint.matches(".*[a-zA-Z0-9]$"))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
 
