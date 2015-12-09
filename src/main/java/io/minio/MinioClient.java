@@ -87,8 +87,16 @@ import java.util.logging.Logger;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public final class MinioClient {
-  private static final DateTimeFormatter amzDateFormat = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
+  private static final DateTimeFormatter AMZ_DATE_FORMAT = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
       .withZoneUTC();
+  // default multipart upload size is 5MiB, maximum is 5GiB
+  private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
+  private static final int MAX_MULTIPART_SIZE = 5 * 1024 * 1024 * 1024;
+  // default expiration for a presigned URL is 7 days in seconds
+  private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
+  private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
+      + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
+
   // the current client instance's base URL.
   private HttpUrl url;
   // access key to sign all requests with
@@ -99,25 +107,10 @@ public final class MinioClient {
   // default Transport
   private final OkHttpClient transport = new OkHttpClient();
 
-  // default multipart upload size is 5MB, maximum is 5GB
-  private static final int minimumPartSize = 5 * 1024 * 1024;
-  private static final int maximumPartSize = 5 * 1024 * 1024 * 1024;
-
   // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers
   // from being instantiated
   private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
-
-  // default expiration for a presigned URL is 7 days in seconds
-  private static final int expiresDefault = 7 * 24 * 3600;
-
-  // user agent to tag all requests with
-  private String userAgent = "minio-java/"
-      + MinioProperties.INSTANCE.getVersion()
-      + " ("
-      + System.getProperty("os.name")
-      + "; "
-      + System.getProperty("os.arch")
-      + ")";
+  private String userAgent = DEFAULT_USER_AGENT;
 
 
   public MinioClient(String endpoint) throws MinioException {
@@ -268,29 +261,21 @@ public final class MinioClient {
 
 
   /**
-   * Set user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+   * Set application info to user agent - see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
    *
-   * @param name     name of your application
-   * @param version  version of your application
-   * @param comments optional list of comments
-   *
-   * @throws IOException attempt to overwrite an already set useragent
+   * @param name     your application name
+   * @param version  your application version
    */
   @SuppressWarnings("unused")
-  public void setUserAgent(String name, String version, String... comments) throws IOException {
-    if (name != null && version != null) {
-      String newUserAgent = name.trim() + "/" + version.trim() + " (";
-      StringBuilder sb = new StringBuilder();
-      for (String comment : comments) {
-        if (comment != null) {
-          sb.append(comment.trim()).append("; ");
-        }
-      }
-      this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
+  public void setAppInfo(String name, String version) {
+    if (name == null || version == null) {
+      // nothing to do
       return;
     }
-    throw new IOException("User agent already set");
+
+    this.userAgent = DEFAULT_USER_AGENT + " " + name.trim() + "/" + version.trim();
   }
+
 
   /**
    * Returns the URL this client uses
@@ -464,7 +449,7 @@ public final class MinioClient {
         .url(url)
         .method(method.toString(), requestBody)
         .header("User-Agent", this.userAgent)
-        .header("x-amz-date", date.toString(amzDateFormat))
+        .header("x-amz-date", date.toString(AMZ_DATE_FORMAT))
         .build();
 
     return request;
@@ -571,7 +556,7 @@ public final class MinioClient {
                                                                                       InvalidObjectNameException,
                                                                                       InternalClientException,
                                                                                       InvalidBucketNameException {
-    if (expires < 1 || expires > expiresDefault) {
+    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException();
     }
     HttpUrl url = getRequestUrl(bucket, key);
@@ -597,7 +582,7 @@ public final class MinioClient {
                                                                      InvalidExpiresRangeException,
                                                                      InvalidKeyException, InternalClientException,
                                                                      InvalidBucketNameException {
-    return presignedGetObject(bucket, key, expiresDefault);
+    return presignedGetObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
 
   /** Returns an presigned URL for PUT.
@@ -617,7 +602,7 @@ public final class MinioClient {
                                                                                       InvalidObjectNameException,
                                                                                       InternalClientException,
                                                                                       InvalidBucketNameException {
-    if (expires < 1 || expires > expiresDefault) {
+    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException();
     }
     // place holder data to avoid okhttp's request builder's exception
@@ -645,7 +630,7 @@ public final class MinioClient {
                                                                      InvalidExpiresRangeException, InvalidKeyException,
                                                                      InternalClientException,
                                                                      InvalidBucketNameException {
-    return presignedPutObject(bucket, key, expiresDefault);
+    return presignedPutObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
 
   /** Returns an Policy for POST.
@@ -1206,7 +1191,7 @@ public final class MinioClient {
       contentType = "application/octet-stream";
     }
 
-    if (size > minimumPartSize) {
+    if (size > MIN_MULTIPART_SIZE) {
       // check if multipart exists
       Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucket, key);
       while (multipartUploads.hasNext()) {
@@ -1598,13 +1583,13 @@ public final class MinioClient {
   private int calculatePartSize(long size) {
     // 9999 is used instead of 10000 to cater for the last part being too small
     int partSize = (int) (size / 9999);
-    if (partSize > minimumPartSize) {
-      if (partSize > maximumPartSize) {
-        return maximumPartSize;
+    if (partSize > MIN_MULTIPART_SIZE) {
+      if (partSize > MAX_MULTIPART_SIZE) {
+        return MAX_MULTIPART_SIZE;
       }
       return partSize;
     }
-    return minimumPartSize;
+    return MIN_MULTIPART_SIZE;
   }
 
   private byte[] calculateMd5sum(byte[] data) {

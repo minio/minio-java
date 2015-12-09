@@ -20,10 +20,15 @@ public enum HttpScheme {
   HTTP("http"), HTTPS("https");
   private String value;
 
+
   private HttpScheme(String value) {
     this.value = value;
   }
 
+
+  /**
+   * returns HttpScheme of given scheme string.
+   */
   public static HttpScheme fromString(String scheme) {
     if (scheme == null) {
       throw new IllegalArgumentException("null scheme");
