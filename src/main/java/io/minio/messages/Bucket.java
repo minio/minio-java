@@ -23,6 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import io.minio.errors.InvalidBucketNameException;
+
 @SuppressWarnings("SameParameterValue")
 public class Bucket extends XmlEntity {
   @Key("Name")
@@ -30,6 +32,7 @@ public class Bucket extends XmlEntity {
   @Key("CreationDate")
   private String creationDate;
   private final SimpleDateFormat dateFormat;
+
 
   /**
    * constructor.
@@ -41,17 +44,57 @@ public class Bucket extends XmlEntity {
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
+
+  /**
+   * constructor allow bucket name as argument.
+   */
+  public Bucket(String name) throws InvalidBucketNameException {
+    this();
+
+    if (name == null) {
+      throw new InvalidBucketNameException("(null)", "null bucket name");
+    }
+
+    if (name.length() < 3 || name.length() > 63) {
+      String msg = "bucket name must be at least 3 and no more than 63 characters long";
+      throw new InvalidBucketNameException(name, msg);
+    }
+
+    if (name.indexOf(".") != -1) {
+      String msg = "bucket name with '.' is not allowed due to SSL cerificate verification error.  "
+          + "For more information refer http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
+      throw new InvalidBucketNameException(name, msg);
+    }
+
+    if (!name.matches("^[a-z0-9][a-z0-9\\-]+[a-z0-9]$")) {
+      String msg = "bucket name does not follow Amazon S3 standards.  For more information refer "
+          + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
+      throw new InvalidBucketNameException(name, msg);
+    }
+
+    this.name = name;
+  }
+
+
   public String getName() {
     return name;
   }
+
 
   public void setName(String name) {
     this.name = name;
   }
 
+
   public Date getCreationDate() throws ParseException {
     return dateFormat.parse(creationDate);
   }
+
+
+  public void setCreationDate(Date creationDate) {
+    this.creationDate = dateFormat.format(creationDate);
+  }
+
 
   /**
    * setter for creationDate.

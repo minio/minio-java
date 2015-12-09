@@ -20,8 +20,15 @@ package io.minio.errors;
 public class InvalidBucketNameException extends ClientException {
   private String bucketName;
 
-  public InvalidBucketNameException(String bucketName) {
-    super("Invalid bucket name " + bucketName);
+
+  public InvalidBucketNameException(String bucketName, String message) {
+    super(message);
     this.bucketName = bucketName;
+  }
+
+
+  @Override
+  public String toString() {
+    return this.bucketName + ": " + super.toString();
   }
 }

@@ -34,7 +34,6 @@ import org.joda.time.format.DateTimeFormatter;
 import com.google.api.client.xml.Xml;
 import com.google.api.client.xml.XmlNamespaceDictionary;
 import com.google.common.io.BaseEncoding;
-import org.apache.commons.validator.routines.DomainValidator;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.io.IOException;
@@ -88,8 +87,16 @@ import java.util.logging.Logger;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public final class MinioClient {
-  private static final DateTimeFormatter amzDateFormat = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
+  private static final DateTimeFormatter AMZ_DATE_FORMAT = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
       .withZoneUTC();
+  // default multipart upload size is 5MiB, maximum is 5GiB
+  private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
+  private static final int MAX_MULTIPART_SIZE = 5 * 1024 * 1024 * 1024;
+  // default expiration for a presigned URL is 7 days in seconds
+  private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
+  private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
+      + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
+
   // the current client instance's base URL.
   private HttpUrl url;
   // access key to sign all requests with
@@ -100,25 +107,10 @@ public final class MinioClient {
   // default Transport
   private final OkHttpClient transport = new OkHttpClient();
 
-  // default multipart upload size is 5MB, maximum is 5GB
-  private static final int minimumPartSize = 5 * 1024 * 1024;
-  private static final int maximumPartSize = 5 * 1024 * 1024 * 1024;
-
   // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers
   // from being instantiated
   private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
-
-  // default expiration for a presigned URL is 7 days in seconds
-  private static final int expiresDefault = 7 * 24 * 3600;
-
-  // user agent to tag all requests with
-  private String userAgent = "minio-java/"
-      + MinioProperties.INSTANCE.getVersion()
-      + " ("
-      + System.getProperty("os.name")
-      + "; "
-      + System.getProperty("os.arch")
-      + ")";
+  private String userAgent = DEFAULT_USER_AGENT;
 
 
   public MinioClient(String endpoint) throws MinioException {
@@ -183,7 +175,7 @@ public final class MinioClient {
       throw new MinioException("null endpoint");
     }
 
-    // for valid endpoint, port and scheme are ignored
+    // for valid URL endpoint, port and scheme are ignored
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
@@ -203,8 +195,8 @@ public final class MinioClient {
       return;
     }
 
-    // endpoint may be valid domain name, IPv4 or IPv6 address
-    if (!(DomainValidator.getInstance().isValid(endpoint) || InetAddressValidator.getInstance().isValid(endpoint))) {
+    // endpoint may be a valid hostname, IPv4 or IPv6 address
+    if (!this.isValidEndpoint(endpoint)) {
       throw new MinioException("invalid host '" + endpoint + "'");
     }
 
@@ -242,30 +234,48 @@ public final class MinioClient {
   }
 
 
+  private boolean isValidEndpoint(String endpoint) {
+    if (InetAddressValidator.getInstance().isValid(endpoint)) {
+      return true;
+    }
+
+    // endpoint may be a hostname
+    // refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
+    // why checks are done like below
+    if (endpoint.length() < 1 || endpoint.length() > 253) {
+      return false;
+    }
+
+    for (String label : endpoint.split("\\.")) {
+      if (label.length() < 1 || label.length() > 63) {
+        return false;
+      }
+
+      if (!(label.matches("^[a-zA-Z0-9][a-zA-Z0-9-]*") && endpoint.matches(".*[a-zA-Z0-9]$"))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+
   /**
-   * Set user agent string of the app - http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+   * Set application info to user agent - see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
    *
-   * @param name     name of your application
-   * @param version  version of your application
-   * @param comments optional list of comments
-   *
-   * @throws IOException attempt to overwrite an already set useragent
+   * @param name     your application name
+   * @param version  your application version
    */
   @SuppressWarnings("unused")
-  public void setUserAgent(String name, String version, String... comments) throws IOException {
-    if (name != null && version != null) {
-      String newUserAgent = name.trim() + "/" + version.trim() + " (";
-      StringBuilder sb = new StringBuilder();
-      for (String comment : comments) {
-        if (comment != null) {
-          sb.append(comment.trim()).append("; ");
-        }
-      }
-      this.userAgent = this.userAgent + newUserAgent + sb.toString() + ") ";
+  public void setAppInfo(String name, String version) {
+    if (name == null || version == null) {
+      // nothing to do
       return;
     }
-    throw new IOException("User agent already set");
+
+    this.userAgent = DEFAULT_USER_AGENT + " " + name.trim() + "/" + version.trim();
   }
+
 
   /**
    * Returns the URL this client uses
@@ -379,7 +389,7 @@ public final class MinioClient {
         case "NoSuchKey":
           throw new ObjectNotFoundException(objectName, bucketName);
         case "InvalidBucketName":
-          throw new InvalidBucketNameException(bucketName);
+          throw new InvalidBucketNameException(bucketName, "invalid bucket name");
         case "InvalidObjectName": case "KeyTooLong":
           throw new InvalidObjectNameException(objectName);
         case "AccessDenied":
@@ -439,7 +449,7 @@ public final class MinioClient {
         .url(url)
         .method(method.toString(), requestBody)
         .header("User-Agent", this.userAgent)
-        .header("x-amz-date", date.toString(amzDateFormat))
+        .header("x-amz-date", date.toString(AMZ_DATE_FORMAT))
         .build();
 
     return request;
@@ -469,9 +479,9 @@ public final class MinioClient {
                                                                   InvalidObjectNameException,
                                                                   UnsupportedEncodingException {
     if (bucket == null || "".equals(bucket.trim())) {
-      throw new InvalidBucketNameException(bucket);
+      throw new InvalidBucketNameException(bucket, "invalid bucket name");
     }
-    if (key == null || "".equals(bucket.trim())) {
+    if (key == null || "".equals(key.trim())) {
       throw new InvalidObjectNameException(key);
     }
     HttpUrl.Builder urlBuilder = this.url.newBuilder();
@@ -486,7 +496,7 @@ public final class MinioClient {
 
   private HttpUrl getRequestUrl(String bucket) throws InvalidBucketNameException {
     if (bucket == null || "".equals(bucket.trim())) {
-      throw new InvalidBucketNameException(bucket);
+      throw new InvalidBucketNameException(bucket, "invalid bucket name");
     }
 
     HttpUrl url = this.url.newBuilder()
@@ -546,7 +556,7 @@ public final class MinioClient {
                                                                                       InvalidObjectNameException,
                                                                                       InternalClientException,
                                                                                       InvalidBucketNameException {
-    if (expires < 1 || expires > expiresDefault) {
+    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException();
     }
     HttpUrl url = getRequestUrl(bucket, key);
@@ -572,7 +582,7 @@ public final class MinioClient {
                                                                      InvalidExpiresRangeException,
                                                                      InvalidKeyException, InternalClientException,
                                                                      InvalidBucketNameException {
-    return presignedGetObject(bucket, key, expiresDefault);
+    return presignedGetObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
 
   /** Returns an presigned URL for PUT.
@@ -592,7 +602,7 @@ public final class MinioClient {
                                                                                       InvalidObjectNameException,
                                                                                       InternalClientException,
                                                                                       InvalidBucketNameException {
-    if (expires < 1 || expires > expiresDefault) {
+    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException();
     }
     // place holder data to avoid okhttp's request builder's exception
@@ -620,7 +630,7 @@ public final class MinioClient {
                                                                      InvalidExpiresRangeException, InvalidKeyException,
                                                                      InternalClientException,
                                                                      InvalidBucketNameException {
-    return presignedPutObject(bucket, key, expiresDefault);
+    return presignedPutObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
 
   /** Returns an Policy for POST.
@@ -1181,7 +1191,7 @@ public final class MinioClient {
       contentType = "application/octet-stream";
     }
 
-    if (size > minimumPartSize) {
+    if (size > MIN_MULTIPART_SIZE) {
       // check if multipart exists
       Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucket, key);
       while (multipartUploads.hasNext()) {
@@ -1521,7 +1531,7 @@ public final class MinioClient {
   private void abortMultipartUpload(String bucket, String key, String uploadId)
     throws XmlPullParserException, IOException, MinioException {
     if (bucket == null) {
-      throw new InvalidBucketNameException("null");
+      throw new InvalidBucketNameException("(null)", "null bucket name");
     }
     if (key == null) {
       throw new InvalidObjectNameException("null");
@@ -1573,13 +1583,13 @@ public final class MinioClient {
   private int calculatePartSize(long size) {
     // 9999 is used instead of 10000 to cater for the last part being too small
     int partSize = (int) (size / 9999);
-    if (partSize > minimumPartSize) {
-      if (partSize > maximumPartSize) {
-        return maximumPartSize;
+    if (partSize > MIN_MULTIPART_SIZE) {
+      if (partSize > MAX_MULTIPART_SIZE) {
+        return MAX_MULTIPART_SIZE;
       }
       return partSize;
     }
-    return minimumPartSize;
+    return MIN_MULTIPART_SIZE;
   }
 
   private byte[] calculateMd5sum(byte[] data) {
