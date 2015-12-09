@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import org.xmlpull.v1.XmlPullParserException;
 import io.minio.errors.MinioException;
 
 import java.io.IOException;
@@ -36,6 +37,8 @@ public abstract class MinioIterator<T1> implements Iterator<T1> {
     } catch (IOException e) {
       e.printStackTrace();
     } catch (MinioException e) {
+      e.printStackTrace();
+    } catch (XmlPullParserException e) {
       e.printStackTrace();
     }
     return !items.isEmpty();
@@ -62,12 +65,12 @@ public abstract class MinioIterator<T1> implements Iterator<T1> {
     throw new UnsupportedOperationException();
   }
 
-  private synchronized void populateIfEmpty() throws IOException, MinioException {
+  private synchronized void populateIfEmpty() throws XmlPullParserException, IOException, MinioException {
     if (items.isEmpty()) {
       List<T1> list = populate();
       this.items.addAll(list);
     }
   }
 
-  protected abstract List<T1> populate() throws IOException, MinioException;
+  protected abstract List<T1> populate() throws XmlPullParserException, IOException, MinioException;
 }

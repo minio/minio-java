@@ -29,10 +29,16 @@ public class Bucket extends XmlEntity {
   private String name;
   @Key("CreationDate")
   private String creationDate;
+  private final SimpleDateFormat dateFormat;
 
+  /**
+   * constructor.
+   */
   public Bucket() {
     super();
     super.name = "Bucket";
+    dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
   public String getName() {
@@ -43,20 +49,16 @@ public class Bucket extends XmlEntity {
     this.name = name;
   }
 
-  public String getCreationDate() {
-    return creationDate;
-  }
-
-  public void setCreationDate(String creationDate) {
-    this.creationDate = creationDate;
+  public Date getCreationDate() throws ParseException {
+    return dateFormat.parse(creationDate);
   }
 
   /**
-   * get parsed creation date.
+   * setter for creationDate.
    */
-  public Date getParsedCreationDate() throws ParseException {
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-    return formatter.parse(this.getCreationDate());
+  public void setCreationDate(String creationDate) throws ParseException {
+    // make sure creationDate is formatted correctly
+    dateFormat.parse(creationDate);
+    this.creationDate = creationDate;
   }
 }

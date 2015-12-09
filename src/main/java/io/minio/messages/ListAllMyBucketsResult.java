@@ -48,7 +48,8 @@ public class ListAllMyBucketsResult extends XmlEntity {
     if (buckets == null) {
       return new LinkedList<Bucket>();
     }
-    return buckets.getBucket();
+
+    return buckets.get();
   }
 
   public void setBuckets(Buckets buckets) {

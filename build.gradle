@@ -33,6 +33,7 @@ ext.googleHttpClientVersion = '1.20.0'
 ext.googleGuavaVersion = '18.0'
 ext.okHttpClientVersion = '2.4.0'
 ext.jodaTimeVersion = '2.7'
+ext.apacheCommonsValidatorVersion = '1.5.0'
 
 ext.deployUsername = ''
 if (project.properties.containsKey('ossrhUsername')) {
@@ -66,6 +67,7 @@ dependencies {
   compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpClientVersion
   compile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpClientVersion
   compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
+  compile group: 'commons-validator', name: 'commons-validator', version: apacheCommonsValidatorVersion
 
   testCompile group: 'junit', name: 'junit', version: junitVersion
 }

@@ -41,6 +41,7 @@ import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -78,36 +79,28 @@ public class MinioClientTest {
     client.setUserAgent("testApp", "1.0.0", "");
   }
 
-  @Test(expected = IOException.class)
-  public void setUserAgentTwiceSet() throws IOException, MinioException {
-    String expectedHost = "example.com";
-    MinioClient client = new MinioClient("http://" + expectedHost + "/");
-    client.setUserAgent("testApp", "1.0.0", "");
-    client.setUserAgent("testApp", "1.0.0", "");
-  }
-
-  @Test(expected = MalformedURLException.class)
-  public void newClientWithPathFails() throws MalformedURLException, MinioException {
+  @Test(expected = MinioException.class)
+  public void newClientWithPathFails() throws MinioException {
     new MinioClient("http://example.com/path");
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  @Test(expected = InvalidArgumentException.class)
-  public void newClientWithNullUrlFails() throws InvalidArgumentException, MalformedURLException, MinioException {
+  @Test(expected = NullPointerException.class)
+  public void newClientWithNullUrlFails() throws NullPointerException, MinioException {
     URL url = null;
     new MinioClient(url);
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  @Test(expected = MalformedURLException.class)
-  public void newClientWithNullStringFails() throws InvalidArgumentException, MalformedURLException, MinioException {
+  @Test(expected = MinioException.class)
+  public void newClientWithNullStringFails() throws InvalidArgumentException, MinioException {
     String url = null;
     new MinioClient(url);
     throw new RuntimeException("Expected exception did not fire");
   }
 
   @Test(expected = AccessDeniedException.class)
-  public void testForbidden() throws IOException, MinioException {
+  public void testForbidden() throws XmlPullParserException, IOException, MinioException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(403));
 
@@ -120,7 +113,7 @@ public class MinioClientTest {
   }
 
   @Test(expected = ObjectNotFoundException.class)
-  public void getMissingObjectHeaders() throws IOException, MinioException {
+  public void getMissingObjectHeaders() throws XmlPullParserException, IOException, MinioException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(404));
 
@@ -133,8 +126,8 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testGetObjectHeaders() throws IOException, NoSuchAlgorithmException, InvalidKeyException,
-                                            MinioException {
+  public void testGetObjectHeaders()
+    throws XmlPullParserException, IOException, NoSuchAlgorithmException, InvalidKeyException, MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
     response.setResponseCode(200);
@@ -189,7 +182,7 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testGetObject() throws IOException, MinioException {
+  public void testGetObject() throws XmlPullParserException, IOException, MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
     final String expectedObject = "hello world";
@@ -215,7 +208,7 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testPartialObject() throws IOException, MinioException {
+  public void testPartialObject() throws XmlPullParserException, IOException, MinioException {
     final String expectedObject = "hello";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -242,7 +235,7 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidRangeException.class)
-  public void testGetObjectOffsetIsNegativeReturnsError() throws IOException, MinioException {
+  public void testGetObjectOffsetIsNegativeReturnsError() throws XmlPullParserException, IOException, MinioException {
     final String expectedObject = "hello";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -265,7 +258,7 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidRangeException.class)
-  public void testGetObjectLengthIsZeroReturnsError() throws IOException, MinioException {
+  public void testGetObjectLengthIsZeroReturnsError() throws XmlPullParserException, IOException, MinioException {
     final String expectedObject = "hello";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -291,7 +284,7 @@ public class MinioClientTest {
   /**
    * test GetObjectWithOffset.
    */
-  public void testGetObjectWithOffset() throws IOException, MinioException {
+  public void testGetObjectWithOffset() throws XmlPullParserException, IOException, MinioException {
     final String expectedObject = "world";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -355,6 +348,9 @@ public class MinioClientTest {
 
   @Test
   public void testListBuckets() throws IOException, XmlPullParserException, ParseException, MinioException {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
     final String body = "<ListAllMyBucketsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner><Buckets><Bucket><Name>bucket</Name><CreationDate>2015-05-05T20:35:51.410Z</CreationDate></Bucket><Bucket><Name>foo</Name><CreationDate>2015-05-05T20:35:47.170Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -373,18 +369,18 @@ public class MinioClientTest {
 
     Bucket bucket = buckets.next();
     assertEquals("bucket", bucket.getName());
-    assertEquals("2015-05-05T20:35:51.410Z", bucket.getCreationDate());
+    assertEquals(dateFormat.parse("2015-05-05T20:35:51.410Z"), bucket.getCreationDate());
 
     bucket = buckets.next();
     assertEquals("foo", bucket.getName());
-    assertEquals("2015-05-05T20:35:47.170Z", bucket.getCreationDate());
+    assertEquals(dateFormat.parse("2015-05-05T20:35:47.170Z"), bucket.getCreationDate());
 
     Calendar expectedDate = Calendar.getInstance();
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
     expectedDate.set(2015, Calendar.MAY, 5, 20, 35, 47);
     expectedDate.set(Calendar.MILLISECOND, 170);
-    assertEquals(expectedDate.getTime(), bucket.getParsedCreationDate());
+    assertEquals(expectedDate.getTime(), bucket.getCreationDate());
   }
 
   @Test
@@ -528,7 +524,7 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidAclNameException.class)
-  public void testSetNullAclFails() throws IOException, MinioException {
+  public void testSetNullAclFails() throws XmlPullParserException, IOException, MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -678,7 +674,7 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testNullContentTypeWorks() throws IOException, MinioException {
+  public void testNullContentTypeWorks() throws XmlPullParserException, IOException, MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -699,7 +695,8 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testSigningKey() throws IOException, NoSuchAlgorithmException, InvalidKeyException, MinioException {
+  public void testSigningKey()
+    throws XmlPullParserException, IOException, NoSuchAlgorithmException, InvalidKeyException, MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
