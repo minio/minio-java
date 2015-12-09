@@ -404,7 +404,7 @@ public final class MinioClient {
         case "NoSuchKey":
           throw new ObjectNotFoundException(objectName, bucketName);
         case "InvalidBucketName":
-          throw new InvalidBucketNameException(bucketName);
+          throw new InvalidBucketNameException(bucketName, "invalid bucket name");
         case "InvalidObjectName": case "KeyTooLong":
           throw new InvalidObjectNameException(objectName);
         case "AccessDenied":
@@ -494,9 +494,9 @@ public final class MinioClient {
                                                                   InvalidObjectNameException,
                                                                   UnsupportedEncodingException {
     if (bucket == null || "".equals(bucket.trim())) {
-      throw new InvalidBucketNameException(bucket);
+      throw new InvalidBucketNameException(bucket, "invalid bucket name");
     }
-    if (key == null || "".equals(bucket.trim())) {
+    if (key == null || "".equals(key.trim())) {
       throw new InvalidObjectNameException(key);
     }
     HttpUrl.Builder urlBuilder = this.url.newBuilder();
@@ -511,7 +511,7 @@ public final class MinioClient {
 
   private HttpUrl getRequestUrl(String bucket) throws InvalidBucketNameException {
     if (bucket == null || "".equals(bucket.trim())) {
-      throw new InvalidBucketNameException(bucket);
+      throw new InvalidBucketNameException(bucket, "invalid bucket name");
     }
 
     HttpUrl url = this.url.newBuilder()
@@ -1546,7 +1546,7 @@ public final class MinioClient {
   private void abortMultipartUpload(String bucket, String key, String uploadId)
     throws XmlPullParserException, IOException, MinioException {
     if (bucket == null) {
-      throw new InvalidBucketNameException("null");
+      throw new InvalidBucketNameException("(null)", "null bucket name");
     }
     if (key == null) {
       throw new InvalidObjectNameException("null");
