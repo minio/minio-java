@@ -25,6 +25,7 @@ import java.util.TimeZone;
 
 import io.minio.errors.InvalidBucketNameException;
 
+
 @SuppressWarnings("SameParameterValue")
 public class Bucket extends XmlEntity {
   @Key("Name")
@@ -40,6 +41,7 @@ public class Bucket extends XmlEntity {
   public Bucket() {
     super();
     super.name = "Bucket";
+
     dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   }

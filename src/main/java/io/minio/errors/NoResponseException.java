@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.errors;
 
-public enum HttpMethod {
-  GET("GET"), HEAD("HEAD"), POST("POST"), PUT("PUT"), DELETE("DELETE");
-  private final String value;
+import com.squareup.okhttp.Request;
 
-  private HttpMethod(String value) {
-    this.value = value;
+
+public class NoResponseException extends MinioException {
+  private Request request;
+
+
+  public NoResponseException() {
+    super("no response from server");
+  }
+
+
+  public NoResponseException(Request request) {
+    this();
+    this.request = request;
   }
 }

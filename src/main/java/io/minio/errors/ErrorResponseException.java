@@ -14,13 +14,28 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.errors;
 
-public enum HttpMethod {
-  GET("GET"), HEAD("HEAD"), POST("POST"), PUT("PUT"), DELETE("DELETE");
-  private final String value;
+import com.squareup.okhttp.Request;
 
-  private HttpMethod(String value) {
-    this.value = value;
+import io.minio.messages.ErrorResponse;
+import io.minio.ErrorCode;
+
+
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class ErrorResponseException extends MinioException {
+  private ErrorResponse errorResponse;
+  private Request request;
+
+
+  public ErrorResponseException(ErrorResponse errorResponse) {
+    super(ErrorCode.fromString(errorResponse.getCode()).message());
+    this.errorResponse = errorResponse;
+  }
+
+
+  public ErrorResponseException(ErrorResponse errorResponse, Request request) {
+    this(errorResponse);
+    this.request = request;
   }
 }
