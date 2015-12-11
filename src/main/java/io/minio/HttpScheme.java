@@ -18,7 +18,7 @@ package io.minio;
 
 public enum HttpScheme {
   HTTP("http"), HTTPS("https");
-  private String value;
+  private final String value;
 
 
   private HttpScheme(String value) {

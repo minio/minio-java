@@ -25,6 +25,7 @@ import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.Headers;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -39,6 +40,7 @@ import org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.io.Reader;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -141,6 +143,7 @@ public final class MinioClient {
   public MinioClient(String endpoint, HttpScheme scheme, String accessKey, String secretKey) throws MinioException {
     this(endpoint, 0, scheme, accessKey, secretKey);
   }
+
 
   /**
    * Create a new client.
@@ -475,6 +478,59 @@ public final class MinioClient {
     return getRequest(HttpMethod.POST, url, data);
   }
 
+
+  private void executeGet(HttpUrl url, XmlEntity entity)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
+    Request request = getRequest(HttpMethod.GET, url, null);
+    Response response = this.transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new NoResponseException();
+    }
+
+    Reader bodyStream = response.body().charStream();
+
+    try {
+      if (!response.isSuccessful()) {
+        throw new ErrorResponseException(new ErrorResponse(bodyStream));
+      } else {
+        entity.parseXml(bodyStream);
+      }
+    } finally {
+      response.body().close();
+    }
+  }
+
+
+  private ResponseBody executeGet(Request request)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
+    Response response = this.transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new NoResponseException();
+    }
+
+    ResponseBody body = response.body();
+
+    if (response.isSuccessful()) {
+      return body;
+    }
+
+    try {
+      throw new ErrorResponseException(new ErrorResponse(body.charStream()));
+    } finally {
+      body.close();
+    }
+  }
+
+
+  private ResponseBody executeGet(HttpUrl url)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
+    Request request = getRequest(HttpMethod.GET, url, null);
+    return executeGet(request);
+  }
+
+
   private HttpUrl getRequestUrl(String bucket, String key) throws InvalidBucketNameException,
                                                                   InvalidObjectNameException,
                                                                   UnsupportedEncodingException {
@@ -506,38 +562,25 @@ public final class MinioClient {
     return url;
   }
 
+
   /**
    * Returns an InputStream containing the object. The InputStream must be closed when
    * complete or the connection will remain open.
    *
-   * @param bucket object's bucket
-   * @param key    object's key
+   * @param bucketName bucket name
+   * @param objectName object name in the bucket
    *
    * @return an InputStream containing the object. Close the InputStream when done.
    *
    * @throws IOException     upon connection error
    * @throws ClientException upon failure from server
    */
-  public InputStream getObject(String bucket, String key) throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket, key);
-
-    Request request = getGetRequest(url);
-    Response response = this.transport.newCall(request).execute();
-    // we close the response only on failure or the user will be unable to retrieve the object
-    // it is the user's responsibility to close the input stream
-    if (response != null) {
-      if (!(response.isSuccessful())) {
-        try {
-          parseError(response);
-        } finally {
-          response.body().close();
-        }
-      }
-      return response.body().byteStream();
-    }
-    // TODO create a better exception
-    throw new IOException();
+  public InputStream getObject(String bucketName, String objectName)
+    throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
+    ResponseBody body = executeGet(getRequestUrl(bucketName, objectName));
+    return body.byteStream();
   }
+
 
   /** Returns an presigned URL containing the object.
    *
@@ -683,12 +726,13 @@ public final class MinioClient {
     return getPartialObject(bucket, key, offsetStart, length);
   }
 
+
   /**
    * Returns an InputStream containing a subset of the object. The InputStream must be
    * closed or the connection will remain open.
    *
-   * @param bucket      object's bucket
-   * @param key         object's key
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
    * @param offsetStart Offset from the start of the object.
    * @param length      Length of bytes to retrieve.
    *
@@ -697,37 +741,23 @@ public final class MinioClient {
    * @throws IOException     upon connection failure
    * @throws ClientException upon failure from server
    */
-  public InputStream getPartialObject(String bucket, String key, long offsetStart, long length)
-    throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket, key);
-
+  public InputStream getPartialObject(String bucketName, String objectName, long offsetStart, long length)
+    throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
     if (offsetStart < 0 || length <= 0) {
       throw new InvalidRangeException();
     }
 
+    HttpUrl url = getRequestUrl(bucketName, objectName);
     Request request = getGetRequest(url);
     long offsetEnd = offsetStart + length - 1;
-
     Request rangeRequest = request.newBuilder()
         .header("Range", "bytes=" + offsetStart + "-" + offsetEnd)
         .build();
+    ResponseBody body = executeGet(rangeRequest);
 
-    // we close the response only on failure or the user will be unable
-    // to retrieve the object it is the user's responsibility to close
-    // the input stream
-    Response response = this.transport.newCall(rangeRequest).execute();
-    if (response != null) {
-      if (response.isSuccessful()) {
-        return response.body().byteStream();
-      }
-      try {
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    return body.byteStream();
   }
+
 
   /** Remove an object from a bucket.
    *
@@ -843,7 +873,7 @@ public final class MinioClient {
   }
 
   private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys)
-    throws XmlPullParserException, IOException, MinioException {
+    throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
     HttpUrl url = getRequestUrl(bucket);
 
     // max keys limits the number of keys returned, max limit is 1000
@@ -857,22 +887,9 @@ public final class MinioClient {
         .addQueryParameter("delimiter", delimiter)
         .build();
 
-    Request request = getGetRequest(url);
-    Response response = this.transport.newCall(request).execute();
-
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          ListBucketResult result = new ListBucketResult();
-          parseXml(response, result);
-          return result;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    ListBucketResult result = new ListBucketResult();
+    executeGet(url, result);
+    return result;
   }
 
   /**
@@ -883,26 +900,11 @@ public final class MinioClient {
    * @throws IOException     upon connection failure
    * @throws ClientException upon failure from server
    */
-  public Iterator<Bucket> listBuckets() throws XmlPullParserException, IOException, MinioException {
-    Request request = getGetRequest(this.url);
-    Response response = this.transport.newCall(request).execute();
-
-    if (response == null) {
-      throw new MinioException("no response from server");
-    }
-
-    try {
-      if (response.isSuccessful()) {
-        ListAllMyBucketsResult retrievedBuckets = new ListAllMyBucketsResult();
-        parseXml(response, retrievedBuckets);
-        return retrievedBuckets.getBuckets().iterator();
-      } else {
-        parseError(response);
-        return null;
-      }
-    } finally {
-      response.body().close();
-    }
+  public Iterator<Bucket> listBuckets()
+    throws XmlPullParserException, IOException, NoResponseException, ErrorResponseException {
+    ListAllMyBucketsResult retrievedBuckets = new ListAllMyBucketsResult();
+    executeGet(this.url, retrievedBuckets);
+    return retrievedBuckets.getBuckets().iterator();
   }
 
   /**
@@ -1091,29 +1093,20 @@ public final class MinioClient {
     return acl;
   }
 
+
   private AccessControlPolicy getAccessPolicy(String bucket)
-    throws XmlPullParserException, IOException, MinioException {
+    throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
     HttpUrl url = getRequestUrl(bucket);
     url = url.newBuilder()
         .addQueryParameter("acl", "")
         .build();
 
-    Request request = getGetRequest(url);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          AccessControlPolicy policy = new AccessControlPolicy();
-          parseXml(response, policy);
-          return policy;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    AccessControlPolicy policy = new AccessControlPolicy();
+    executeGet(url, policy);
+    System.out.println(policy);
+    return policy;
   }
+
 
   /**
    * Set the bucket's ACL.
@@ -1390,7 +1383,7 @@ public final class MinioClient {
 
   private ListMultipartUploadsResult listIncompleteUploads(String bucket, String keyMarker, String uploadIdMarker,
                                                            String prefix, String delimiter, int maxUploads)
-    throws XmlPullParserException, IOException, MinioException {
+    throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
     HttpUrl url = getRequestUrl(bucket);
     // max uploads limits the number of uploads returned, max limit is 1000
     if (maxUploads >= 1000 || maxUploads < 0) {
@@ -1406,21 +1399,9 @@ public final class MinioClient {
         .addQueryParameter("delimiter", delimiter)
         .build();
 
-    Request request = getGetRequest(url);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          ListMultipartUploadsResult result = new ListMultipartUploadsResult();
-          parseXml(response, result);
-          return result;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    ListMultipartUploadsResult result = new ListMultipartUploadsResult();
+    executeGet(url, result);
+    return result;
   }
 
   private String newMultipartUpload(String bucket, String key)
@@ -1499,7 +1480,7 @@ public final class MinioClient {
   }
 
   private ListPartsResult listObjectParts(String bucket, String key, String uploadId, int partNumberMarker)
-    throws XmlPullParserException, IOException, MinioException {
+    throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
     if (partNumberMarker <= 0) {
       throw new InvalidArgumentException();
     }
@@ -1511,21 +1492,9 @@ public final class MinioClient {
                            Integer.toString(partNumberMarker))
         .build();
 
-    Request request = getGetRequest(url);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          ListPartsResult result = new ListPartsResult();
-          parseXml(response, result);
-          return result;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    ListPartsResult result = new ListPartsResult();
+    executeGet(url, result);
+    return result;
   }
 
   private void abortMultipartUpload(String bucket, String key, String uploadId)
