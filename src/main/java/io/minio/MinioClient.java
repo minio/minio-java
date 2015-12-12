@@ -262,113 +262,6 @@ public final class MinioClient {
   }
 
 
-  private void parseError(Response response) throws XmlPullParserException, IOException, MinioException {
-    if (response == null) {
-      throw new MinioException("null response");
-    }
-
-    if (response.isRedirect()) {
-      throw new HttpRedirectException();
-    }
-
-    String resource = response.request().url().getPath();
-    if (resource == null) {
-      resource = "/";
-    }
-    String[] tokens = resource.split("/");
-    int pathLength = tokens.length;
-    String bucketName = tokens[1];
-    String objectName = null;
-    if (pathLength > 2) {
-      objectName = tokens[2];
-    }
-    ErrorResponse errorResponse = new ErrorResponse();
-
-    if (response.body().contentLength() == -1 || response.body().contentLength() == 0) {
-      int statusCode = response.code();
-      String hostId = String.valueOf(response.headers().get("x-amz-id-2"));
-      if ("null".equals(hostId)) {
-        hostId = null;
-      }
-      String requestId = String.valueOf(response.headers().get("x-amz-request-id"));
-      if ("null".equals(requestId)) {
-        requestId = null;
-      }
-      errorResponse.setHostId(hostId);
-      errorResponse.setRequestId(requestId);
-      errorResponse.setResource(resource);
-
-      switch (statusCode) {
-        case 404:
-          if (pathLength > 2) {
-            throw new ObjectNotFoundException(objectName, bucketName);
-          } else if (pathLength == 2) {
-            throw new BucketNotFoundException(bucketName);
-          } else {
-            throw new InternalClientException("404 without body resulted in path with less than two components");
-          }
-        case 501: case 405:
-          throw new MethodNotAllowedException();
-        case 409:
-          throw new BucketNotEmptyException(bucketName);
-        case 403:
-          throw new AccessDeniedException();
-        default:
-          throw new InternalClientException("Unhandled error.  Please report this issue at "
-                                              + "https://github.com/minio/minio-java/issues");
-      }
-    } else {
-      parseXml(response, errorResponse);
-      switch (errorResponse.getCode()) {
-        case "NoSuchBucket":
-          throw new BucketNotFoundException(bucketName);
-        case "NoSuchKey":
-          throw new ObjectNotFoundException(objectName, bucketName);
-        case "InvalidBucketName":
-          throw new InvalidBucketNameException(bucketName, "invalid bucket name");
-        case "InvalidObjectName": case "KeyTooLong":
-          throw new InvalidObjectNameException(objectName);
-        case "AccessDenied":
-          throw new AccessDeniedException();
-        case "BucketAlreadyExists": case "BucketAlreadyOwnedByYou":
-          throw new BucketAlreadyExistsException(bucketName);
-        case "InternalError":
-          throw new InternalServerException();
-        case "TooManyBuckets":
-          throw new MaxBucketsReachedException();
-        case "PermanentRedirect": case "TemporaryRedirect":
-          throw new HttpRedirectException();
-        case "MethodNotAllowed":
-          throw new ObjectAlreadyExistsException(objectName, bucketName);
-        default:
-          throw new InternalClientException(errorResponse.toString());
-      }
-    }
-  }
-
-
-  private void parseXml(Response response, Object objectToPopulate) throws XmlPullParserException, IOException,
-                                                                           MinioException {
-    if (response == null) {
-      throw new MinioException("null response");
-    }
-
-    if (objectToPopulate == null) {
-      throw new MinioException("objectToPopulate is null.  This should not happen.  "
-                               + "Please file a bug at https://github.com/minio/minio-java/issues");
-    }
-
-    XmlPullParser parser = Xml.createParser();
-    parser.setInput(response.body().charStream());
-    XmlNamespaceDictionary dictionary = new XmlNamespaceDictionary();
-    if (objectToPopulate instanceof ErrorResponse) {
-      // Errors have no namespace, so we set a default empty alias and namespace
-      dictionary.set("", "");
-    }
-    Xml.parseElement(parser, objectToPopulate, dictionary, null);
-  }
-
-
   private Request getRequest(Method method, HttpUrl url, final byte[] data) {
     if (url == null) {
       return null;
@@ -393,13 +286,16 @@ public final class MinioClient {
     return request;
   }
 
+
   private Request getGetRequest(HttpUrl url) {
     return getRequest(Method.GET, url, null);
   }
 
+
   private Request getPutRequest(HttpUrl url, final byte[] data) {
     return getRequest(Method.PUT, url, data);
   }
+
 
   private void executeGet(HttpUrl url, XmlEntity entity)
     throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
@@ -583,6 +479,39 @@ public final class MinioClient {
   }
 
 
+  private HttpUrl getRequestUrl(String bucket, String key) throws InvalidBucketNameException,
+                                                                  InvalidObjectNameException,
+                                                                  UnsupportedEncodingException {
+    if (bucket == null || "".equals(bucket.trim())) {
+      throw new InvalidBucketNameException(bucket, "invalid bucket name");
+    }
+    if (key == null || "".equals(key.trim())) {
+      throw new InvalidObjectNameException(key);
+    }
+    HttpUrl.Builder urlBuilder = this.url.newBuilder();
+    urlBuilder.addPathSegment(bucket);
+    // URLEncoder.encode replaces space with + and / with %2F
+    for (String tok: URLEncoder.encode(key, "UTF-8").replace("+", "%20").replace("%2F", "/").split("/")) {
+      urlBuilder.addEncodedPathSegment(tok);
+    }
+    HttpUrl url = urlBuilder.build();
+    return url;
+  }
+
+
+  private HttpUrl getRequestUrl(String bucket) throws InvalidBucketNameException {
+    if (bucket == null || "".equals(bucket.trim())) {
+      throw new InvalidBucketNameException(bucket, "invalid bucket name");
+    }
+
+    HttpUrl url = this.url.newBuilder()
+        .addPathSegment(bucket)
+        .build();
+
+    return url;
+  }
+
+
   /**
    * Set application info to user agent - see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
    *
@@ -617,38 +546,6 @@ public final class MinioClient {
     ResponseHeader header = executeHead(getRequestUrl(bucketName, objectName));
     return new ObjectStat(bucketName, objectName, header.getLastModified(), header.getContentLength(),
                           header.getEtag(), header.getContentType());
-  }
-
-
-  private HttpUrl getRequestUrl(String bucket, String key) throws InvalidBucketNameException,
-                                                                  InvalidObjectNameException,
-                                                                  UnsupportedEncodingException {
-    if (bucket == null || "".equals(bucket.trim())) {
-      throw new InvalidBucketNameException(bucket, "invalid bucket name");
-    }
-    if (key == null || "".equals(key.trim())) {
-      throw new InvalidObjectNameException(key);
-    }
-    HttpUrl.Builder urlBuilder = this.url.newBuilder();
-    urlBuilder.addPathSegment(bucket);
-    // URLEncoder.encode replaces space with + and / with %2F
-    for (String tok: URLEncoder.encode(key, "UTF-8").replace("+", "%20").replace("%2F", "/").split("/")) {
-      urlBuilder.addEncodedPathSegment(tok);
-    }
-    HttpUrl url = urlBuilder.build();
-    return url;
-  }
-
-  private HttpUrl getRequestUrl(String bucket) throws InvalidBucketNameException {
-    if (bucket == null || "".equals(bucket.trim())) {
-      throw new InvalidBucketNameException(bucket, "invalid bucket name");
-    }
-
-    HttpUrl url = this.url.newBuilder()
-        .addPathSegment(bucket)
-        .build();
-
-    return url;
   }
 
 
@@ -700,6 +597,7 @@ public final class MinioClient {
     return signer.preSignV4(request, expires);
   }
 
+
   /** Returns an presigned URL containing the object.
    *
    * @param bucket  object's bucket
@@ -716,6 +614,7 @@ public final class MinioClient {
                                                                      InvalidBucketNameException {
     return presignedGetObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
+
 
   /** Returns an presigned URL for PUT.
    *
@@ -748,6 +647,7 @@ public final class MinioClient {
     return signer.preSignV4(request, expires);
   }
 
+
   /** Returns an presigned URL for PUT.
    *
    * @param bucket  object's bucket
@@ -765,11 +665,6 @@ public final class MinioClient {
     return presignedPutObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
 
-  /** Returns an Policy for POST.
-   */
-  public PostPolicy newPostPolicy() {
-    return new PostPolicy();
-  }
 
   /** Returns an Map for POST form data.
    *
@@ -795,6 +690,7 @@ public final class MinioClient {
     policy.setSignature(signature);
     return policy.getFormData();
   }
+
 
   /** Returns an InputStream containing a subset of the object. The InputStream must be
    *  closed or the connection will remain open.
@@ -875,6 +771,7 @@ public final class MinioClient {
     return listObjects(bucket, null);
   }
 
+
   /**
    * listObjects is a wrapper around listObjects(bucket, prefix, true)
    *
@@ -889,6 +786,7 @@ public final class MinioClient {
     // list all objects recursively
     return listObjects(bucket, prefix, true);
   }
+
 
   /**
    * @param bucket    bucket to list objects from
@@ -950,6 +848,7 @@ public final class MinioClient {
     };
   }
 
+
   private ListBucketResult listObjects(String bucket, String marker, String prefix, String delimiter, int maxKeys)
     throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
     HttpUrl url = getRequestUrl(bucket);
@@ -969,6 +868,7 @@ public final class MinioClient {
     executeGet(url, result);
     return result;
   }
+
 
   /**
    * List buckets owned by the current user.
@@ -1160,7 +1060,6 @@ public final class MinioClient {
 
     AccessControlPolicy policy = new AccessControlPolicy();
     executeGet(url, policy);
-    System.out.println(policy);
     return policy;
   }
 
@@ -1348,6 +1247,7 @@ public final class MinioClient {
     return listIncompleteUploads(bucket, null, true);
   }
 
+
   /**
    * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, prefix, true)
    *
@@ -1360,6 +1260,7 @@ public final class MinioClient {
   public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix) throws XmlPullParserException {
     return listIncompleteUploads(bucket, prefix, true);
   }
+
 
   /**
    * @param bucket    bucket to list incomplete uploads from
@@ -1414,6 +1315,7 @@ public final class MinioClient {
       }
     };
   }
+
 
   private ListMultipartUploadsResult listIncompleteUploads(String bucket, String keyMarker, String uploadIdMarker,
                                                            String prefix, String delimiter, int maxUploads)
@@ -1492,6 +1394,7 @@ public final class MinioClient {
     };
   }
 
+
   private ListPartsResult listObjectParts(String bucket, String key, String uploadId, int partNumberMarker)
     throws XmlPullParserException, IOException, MinioException, NoResponseException, ErrorResponseException {
     if (partNumberMarker <= 0) {
@@ -1548,6 +1451,7 @@ public final class MinioClient {
     }
   }
 
+
   private int calculatePartSize(long size) {
     // 9999 is used instead of 10000 to cater for the last part being too small
     int partSize = (int) (size / 9999);
@@ -1559,6 +1463,7 @@ public final class MinioClient {
     }
     return MIN_MULTIPART_SIZE;
   }
+
 
   private byte[] calculateMd5sum(byte[] data) {
     byte[] md5sum;
@@ -1574,6 +1479,7 @@ public final class MinioClient {
     }
     return md5sum;
   }
+
 
   private Data readData(int size, InputStream data) throws IOException {
     int amountRead = 0;
@@ -1595,6 +1501,7 @@ public final class MinioClient {
     return d;
   }
 
+
   private boolean destructiveHasMore(InputStream data) {
     try {
       return data.read() > -1;
@@ -1602,6 +1509,7 @@ public final class MinioClient {
       return false;
     }
   }
+
 
   /**
    * Enable logging to a java logger for debugging purposes. This will enable logging for all http requests.
@@ -1634,6 +1542,7 @@ public final class MinioClient {
     }
   }
 
+
   /**
    * Disable logging http requests.
    */
@@ -1643,6 +1552,7 @@ public final class MinioClient {
       this.logger.get().setLevel(Level.OFF);
     }
   }
+
 
   public URL getUrl() {
     return this.url.url();
