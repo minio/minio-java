@@ -23,8 +23,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import io.minio.errors.InvalidBucketNameException;
-
 
 @SuppressWarnings("SameParameterValue")
 public class Bucket extends XmlEntity {
@@ -44,37 +42,6 @@ public class Bucket extends XmlEntity {
 
     dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-  }
-
-
-  /**
-   * constructor allow bucket name as argument.
-   */
-  public Bucket(String name) throws InvalidBucketNameException {
-    this();
-
-    if (name == null) {
-      throw new InvalidBucketNameException("(null)", "null bucket name");
-    }
-
-    if (name.length() < 3 || name.length() > 63) {
-      String msg = "bucket name must be at least 3 and no more than 63 characters long";
-      throw new InvalidBucketNameException(name, msg);
-    }
-
-    if (name.indexOf(".") != -1) {
-      String msg = "bucket name with '.' is not allowed due to SSL cerificate verification error.  "
-          + "For more information refer http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-      throw new InvalidBucketNameException(name, msg);
-    }
-
-    if (!name.matches("^[a-z0-9][a-z0-9\\-]+[a-z0-9]$")) {
-      String msg = "bucket name does not follow Amazon S3 standards.  For more information refer "
-          + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-      throw new InvalidBucketNameException(name, msg);
-    }
-
-    this.name = name;
   }
 
 
