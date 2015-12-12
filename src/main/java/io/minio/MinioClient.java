@@ -399,10 +399,6 @@ public final class MinioClient {
     return getRequest(HttpMethod.GET, url, null);
   }
 
-  private Request getDeleteRequest(HttpUrl url) {
-    return getRequest(HttpMethod.DELETE, url, null);
-  }
-
   private Request getPutRequest(HttpUrl url, final byte[] data) {
     return getRequest(HttpMethod.PUT, url, data);
   }
@@ -525,6 +521,25 @@ public final class MinioClient {
     }
 
     return header;
+  }
+
+
+  private void executeDelete(HttpUrl url)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
+    Request request = getRequest(HttpMethod.DELETE, url, null);
+    Response response = this.transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new NoResponseException();
+    }
+
+    try {
+      if (!response.isSuccessful()) {
+        throw new ErrorResponseException(new ErrorResponse(response.body().charStream()));
+      }
+    } finally {
+      response.body().close();
+    }
   }
 
 
@@ -795,29 +810,18 @@ public final class MinioClient {
 
   /** Remove an object from a bucket.
    *
-   * @param bucket object's bucket
-   * @param key    object's key
+   * @param bucketName Bucket name
+   * @param objectName Object name in the bucket
    *
    * @throws IOException     upon connection error
    * @throws ClientException upon failure from server
    */
-  public void removeObject(String bucket, String key) throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket, key);
-
-    Request request = getDeleteRequest(url);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          return;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+  public void removeObject(String bucketName, String objectName)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException,
+           InvalidBucketNameException, InvalidObjectNameException {
+    executeDelete(getRequestUrl(bucketName, objectName));
   }
+
 
   /**
    * listObjects is a wrapper around listObjects(bucket, null, true)
@@ -1032,6 +1036,7 @@ public final class MinioClient {
     throw new IOException();
   }
 
+
   /**
    * Remove a bucket with a given name.
    * <p>
@@ -1040,28 +1045,17 @@ public final class MinioClient {
    * must be deleted prior, this API will not recursively delete objects
    * </p>
    *
-   * @param bucket bucket to create
+   * @param bucketName Bucket name
    *
    * @throws IOException     upon connection error
    * @throws ClientException upon failure from server
    */
-  public void removeBucket(String bucket) throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket);
-
-    Request request = getDeleteRequest(url);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          return;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+  public void removeBucket(String bucketName)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException,
+           InvalidBucketNameException {
+    executeDelete(getRequestUrl(bucketName));
   }
+
 
   /**
    * Get the bucket's ACL.
@@ -1526,36 +1520,22 @@ public final class MinioClient {
     return result;
   }
 
-  private void abortMultipartUpload(String bucket, String key, String uploadId)
-    throws XmlPullParserException, IOException, MinioException {
-    if (bucket == null) {
-      throw new InvalidBucketNameException("(null)", "null bucket name");
+
+  private void abortMultipartUpload(String bucketName, String objectName, String uploadId)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException, MinioException,
+           InvalidBucketNameException {
+    if (bucketName == null || objectName == null || uploadId == null) {
+      throw new MinioException("Illegal argument");
     }
-    if (key == null) {
-      throw new InvalidObjectNameException("null");
-    }
-    if (uploadId == null) {
-      throw new InternalClientException("UploadId cannot be null");
-    }
-    HttpUrl url = getRequestUrl(bucket, key);
+
+    HttpUrl url = getRequestUrl(bucketName, objectName);
     url = url.newBuilder()
         .addQueryParameter("uploadId", uploadId)
         .build();
 
-    Request request = getDeleteRequest(url);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          return;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    executeDelete(url);
   }
+
 
   /**
    * Remove active multipart uploads, starting from key.
