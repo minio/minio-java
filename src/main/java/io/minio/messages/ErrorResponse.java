@@ -61,6 +61,22 @@ public class ErrorResponse extends XmlEntity {
   }
 
 
+  /**
+   * constructor.
+   */
+  public ErrorResponse(String code, String message, String bucketName, String objectName, String resource,
+                       String requestId, String hostId) {
+    this();
+    this.code       = code;
+    this.message    = message;
+    this.bucketName = bucketName;
+    this.objectName = objectName;
+    this.resource   = resource;
+    this.requestId  = requestId;
+    this.hostId     = hostId;
+  }
+
+
   public String getCode() {
     return code;
   }

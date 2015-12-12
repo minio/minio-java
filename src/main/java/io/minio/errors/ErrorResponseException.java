@@ -38,4 +38,9 @@ public class ErrorResponseException extends MinioException {
     this(errorResponse);
     this.request = request;
   }
+
+
+  public ErrorCode getErrorCode() {
+    return ErrorCode.fromString(this.errorResponse.getCode());
+  }
 }

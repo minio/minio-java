@@ -20,6 +20,8 @@ package io.minio;
 public enum ErrorCode {
   // custom error codes
   NO_SUCH_OBJECT("NoSuchKey", "Object does not exist"),
+  RESOURCE_NOT_FOUND("ResourceNotFound", "Request resource not found"),
+  RESOURCE_CONFLICT("ResourceConflict", "Request resource conflicts"),
 
   // S3 error codes
   ACCESS_DENIED("AccessDenied", "Access denied"),

@@ -14,13 +14,24 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.http;
 
-public enum HttpMethod {
-  GET("GET"), HEAD("HEAD"), POST("POST"), PUT("PUT"), DELETE("DELETE");
-  private final String value;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 
-  private HttpMethod(String value) {
-    this.value = value;
-  }
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD})
+public @interface Header {
+  /**
+   * HTTP header name.
+   */
+  String value();
+
+  /**
+   * setter method name. 'setFieldName' is used if empty.
+   */
+  String setter() default "";
 }
