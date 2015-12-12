@@ -401,11 +401,6 @@ public final class MinioClient {
     return getRequest(Method.PUT, url, data);
   }
 
-  private Request getPostRequest(HttpUrl url, final byte[] data) {
-    return getRequest(Method.POST, url, data);
-  }
-
-
   private void executeGet(HttpUrl url, XmlEntity entity)
     throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
     Request request = getRequest(Method.GET, url, null);
@@ -534,6 +529,31 @@ public final class MinioClient {
     try {
       if (!response.isSuccessful()) {
         throw new ErrorResponseException(new ErrorResponse(response.body().charStream()));
+      }
+    } finally {
+      response.body().close();
+    }
+  }
+
+
+  private void executePost(HttpUrl url, byte[] data, XmlEntity entity)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
+    Request request = getRequest(Method.POST, url, data);
+    Response response = this.transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new NoResponseException();
+    }
+
+    Reader bodyStream = response.body().charStream();
+
+    try {
+      if (!response.isSuccessful()) {
+        throw new ErrorResponseException(new ErrorResponse(bodyStream));
+      } else {
+        if (entity != null) {
+          entity.parseXml(bodyStream);
+        }
       }
     } finally {
       response.body().close();
@@ -1274,12 +1294,10 @@ public final class MinioClient {
     if (totalSeen != size) {
       throw new InputSizeMismatchException();
     }
-    try {
-      completeMultipart(bucket, key, uploadId, parts);
-    } catch (MethodNotAllowedException ex) {
-      throw new ObjectAlreadyExistsException(key, bucket);
-    }
+
+    completeMultipart(bucket, key, uploadId, parts);
   }
+
 
   private void putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum)
     throws XmlPullParserException, IOException, MinioException {
@@ -1425,35 +1443,25 @@ public final class MinioClient {
     return result;
   }
 
-  private String newMultipartUpload(String bucket, String key)
-    throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket, key);
+
+  private String newMultipartUpload(String bucketName, String objectName)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException,
+           InvalidBucketNameException, InvalidObjectNameException {
+    InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
+    HttpUrl url = getRequestUrl(bucketName, objectName);
     url = url.newBuilder()
         .addQueryParameter("uploads", "")
         .build();
 
-    // okhttp requires POST to have non-nil body, so we send a dummy not "null"
-    byte[] dummy = "".getBytes("UTF-8");
-    Request request = getPostRequest(url, dummy);
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
-          parseXml(response, result);
-          return result.getUploadId();
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    executePost(url, "".getBytes("UTF-8"), result);
+    return result.getUploadId();
   }
 
-  private void completeMultipart(String bucket, String key, String uploadId, List<Part> parts)
-    throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket, key);
+
+  private void completeMultipart(String bucketName, String objectName, String uploadId, List<Part> parts)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException,
+           InvalidBucketNameException, InvalidObjectNameException {
+    HttpUrl url = getRequestUrl(bucketName, objectName);
     url = url.newBuilder()
         .addQueryParameter("uploadId", uploadId)
         .build();
@@ -1461,21 +1469,10 @@ public final class MinioClient {
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
     completeManifest.setParts(parts);
 
-    byte[] data = completeManifest.toString().getBytes("UTF-8");
-    Request request = getPostRequest(url, data);
-
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          return;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
+    // TODO: handle response xml properly than null
+    executePost(url, completeManifest.toString().getBytes("UTF-8"), null);
   }
+
 
   private Iterator<Part> listObjectParts(final String bucket, final String key,
                                          final String uploadId) throws XmlPullParserException {
