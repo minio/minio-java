@@ -14,32 +14,13 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.http;
 
-public enum HttpScheme {
-  HTTP("http"), HTTPS("https");
+public enum Method {
+  GET("GET"), HEAD("HEAD"), POST("POST"), PUT("PUT"), DELETE("DELETE");
   private final String value;
 
-
-  private HttpScheme(String value) {
+  private Method(String value) {
     this.value = value;
-  }
-
-
-  /**
-   * returns HttpScheme of given scheme string.
-   */
-  public static HttpScheme fromString(String scheme) {
-    if (scheme == null) {
-      throw new IllegalArgumentException("null scheme");
-    }
-
-    for (HttpScheme s : HttpScheme.values()) {
-      if (scheme.equalsIgnoreCase(s.value)) {
-        return s;
-      }
-    }
-
-    throw new IllegalArgumentException("invalid HTTP scheme '" + scheme + "'");
   }
 }

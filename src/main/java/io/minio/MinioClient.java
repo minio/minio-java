@@ -117,32 +117,32 @@ public final class MinioClient {
 
 
   public MinioClient(String endpoint) throws MinioException {
-    this(endpoint, 0, null, null, null);
+    this(endpoint, 0, null, null, false);
   }
 
 
   public MinioClient(URL url) throws NullPointerException, MinioException {
-    this(url.toString(), 0, null, null, null);
+    this(url.toString(), 0, null, null, false);
   }
 
 
   public MinioClient(String endpoint, String accessKey, String secretKey) throws MinioException {
-    this(endpoint, 0, null, accessKey, secretKey);
+    this(endpoint, 0, accessKey, secretKey, false);
   }
 
 
   public MinioClient(URL url, String accessKey, String secretKey) throws NullPointerException, MinioException {
-    this(url.toString(), 0, null, accessKey, secretKey);
+    this(url.toString(), 0, accessKey, secretKey, false);
   }
 
 
   public MinioClient(String endpoint, int port, String accessKey, String secretKey) throws MinioException {
-    this(endpoint, port, null, accessKey, secretKey);
+    this(endpoint, port, accessKey, secretKey, false);
   }
 
 
-  public MinioClient(String endpoint, HttpScheme scheme, String accessKey, String secretKey) throws MinioException {
-    this(endpoint, 0, scheme, accessKey, secretKey);
+  public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure) throws MinioException {
+    this(endpoint, 0, accessKey, secretKey, insecure);
   }
 
 
@@ -154,7 +154,7 @@ public final class MinioClient {
    *                  * https://s3.amazonaws.com
    *                  * https://s3.amazonaws.com/
    *                  * https://play.minio.io:9000
-   *                  * https://play.minio.io:9000/
+   *                  * http://play.minio.io:9010/
    *                  * localhost
    *                  * localhost.localdomain
    *                  * play.minio.io
@@ -162,24 +162,24 @@ public final class MinioClient {
    *                  * 192.168.1.60
    *                  * ::1
    * @param port      valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
-   * @param scheme    valid HttpScheme.  Unused if endpoint is an URL.
    * @param accessKey access key to access service in endpoint.
    * @param secretKey secret key to access service in endpoint.
+   * @param insecure  to access endpoint, use HTTP if true else HTTPS.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, HttpScheme scheme, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
    */
-  public MinioClient(String endpoint, int port, HttpScheme scheme, String accessKey, String secretKey)
+  public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
     throws MinioException {
     if (endpoint == null) {
       throw new MinioException("null endpoint");
     }
 
-    // for valid URL endpoint, port and scheme are ignored
+    // for valid URL endpoint, port and insecure are ignored
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
@@ -214,21 +214,19 @@ public final class MinioClient {
       throw new MinioException("port must be in range of 1 to 65535");
     }
 
-    HttpScheme httpScheme;
-    if (scheme == null) {
-      httpScheme = HttpScheme.HTTPS;
-    } else {
-      httpScheme = scheme;
+    Scheme scheme = Scheme.HTTPS;
+    if (insecure) {
+      scheme = Scheme.HTTP;
     }
 
     if (port == 0) {
       this.url = new HttpUrl.Builder()
-          .scheme(httpScheme.toString())
+          .scheme(scheme.toString())
           .host(endpoint)
           .build();
     } else {
       this.url = new HttpUrl.Builder()
-          .scheme(httpScheme.toString())
+          .scheme(scheme.toString())
           .host(endpoint)
           .port(port)
           .build();
@@ -371,7 +369,7 @@ public final class MinioClient {
   }
 
 
-  private Request getRequest(HttpMethod method, HttpUrl url, final byte[] data) {
+  private Request getRequest(Method method, HttpUrl url, final byte[] data) {
     if (url == null) {
       return null;
     }
@@ -396,21 +394,21 @@ public final class MinioClient {
   }
 
   private Request getGetRequest(HttpUrl url) {
-    return getRequest(HttpMethod.GET, url, null);
+    return getRequest(Method.GET, url, null);
   }
 
   private Request getPutRequest(HttpUrl url, final byte[] data) {
-    return getRequest(HttpMethod.PUT, url, data);
+    return getRequest(Method.PUT, url, data);
   }
 
   private Request getPostRequest(HttpUrl url, final byte[] data) {
-    return getRequest(HttpMethod.POST, url, data);
+    return getRequest(Method.POST, url, data);
   }
 
 
   private void executeGet(HttpUrl url, XmlEntity entity)
     throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
-    Request request = getRequest(HttpMethod.GET, url, null);
+    Request request = getRequest(Method.GET, url, null);
     Response response = this.transport.newCall(request).execute();
 
     if (response == null) {
@@ -455,14 +453,14 @@ public final class MinioClient {
 
   private ResponseBody executeGet(HttpUrl url)
     throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
-    Request request = getRequest(HttpMethod.GET, url, null);
+    Request request = getRequest(Method.GET, url, null);
     return executeGet(request);
   }
 
 
   private ResponseHeader executeHead(HttpUrl url)
     throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException, MinioException {
-    Request request = getRequest(HttpMethod.HEAD, url, null);
+    Request request = getRequest(Method.HEAD, url, null);
     Response response = this.transport.newCall(request).execute();
 
     if (response == null) {
@@ -526,7 +524,7 @@ public final class MinioClient {
 
   private void executeDelete(HttpUrl url)
     throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
-    Request request = getRequest(HttpMethod.DELETE, url, null);
+    Request request = getRequest(Method.DELETE, url, null);
     Response response = this.transport.newCall(request).execute();
 
     if (response == null) {
