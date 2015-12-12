@@ -542,7 +542,7 @@ public class MinioClientTest {
   }
 
 
-  @Test(expected = BucketAlreadyExistsException.class)
+  @Test(expected = ErrorResponseException.class)
   public void testMakeBucketFails() throws IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -589,7 +589,7 @@ public class MinioClientTest {
   }
 
   // this case only occurs for minio cloud storage
-  @Test(expected = ObjectAlreadyExistsException.class)
+  @Test(expected = ErrorResponseException.class)
   public void testPutSmallObjectFails() throws IOException, NoSuchAlgorithmException, XmlPullParserException,
                                                MinioException {
     MockWebServer server = new MockWebServer();

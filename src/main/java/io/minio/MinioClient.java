@@ -561,6 +561,28 @@ public final class MinioClient {
   }
 
 
+  private ResponseHeader executePut(Request request)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException {
+    Response response = this.transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new NoResponseException();
+    }
+
+    if (response.isSuccessful()) {
+      ResponseHeader header = new ResponseHeader();
+      HeaderParser.set(response.headers(), header);
+      return header;
+    }
+
+    try {
+      throw new ErrorResponseException(new ErrorResponse(response.body().charStream()));
+    } finally {
+      response.body().close();
+    }
+  }
+
+
   /**
    * Set application info to user agent - see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
    *
@@ -998,17 +1020,24 @@ public final class MinioClient {
     this.makeBucket(bucket, Acl.PRIVATE);
   }
 
+
   /**
    * Create a bucket with a given name and ACL.
    *
-   * @param bucket bucket to create
-   * @param acl    canned acl
+   * @param bucketName Bucket name
+   * @param acl        Canned ACL
    *
    * @throws IOException     upon connection error
    * @throws ClientException upon failure from server
    */
-  public void makeBucket(String bucket, Acl acl) throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket);
+  public void makeBucket(String bucketName, Acl acl)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException,
+           InvalidBucketNameException, InvalidObjectNameException, InvalidAclNameException {
+    if (acl == null) {
+      acl = Acl.PRIVATE;
+    }
+
+    HttpUrl url = getRequestUrl(bucketName);
     Request request = null;
 
     CreateBucketConfiguration config = new CreateBucketConfiguration();
@@ -1031,27 +1060,14 @@ public final class MinioClient {
           .header("Content-MD5", base64md5sum)
           .build();
     } else {
-      // okhttp requires PUT objects to have non-nil body, so we send a dummy not "null"
-      byte[] dummy = "".getBytes("UTF-8");
-      request = getPutRequest(url, dummy) ;
-    }
-
-    if (acl == null) {
-      acl = Acl.PRIVATE;
+      request = getPutRequest(url, "".getBytes("UTF-8"));
     }
 
     request = request.newBuilder()
         .header("x-amz-acl", acl.toString())
         .build();
 
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      if (response.isSuccessful()) {
-        return;
-      }
-      parseError(response);
-    }
-    throw new IOException();
+    executePut(request);
   }
 
 
@@ -1152,43 +1168,32 @@ public final class MinioClient {
   /**
    * Set the bucket's ACL.
    *
-   * @param bucket bucket to set ACL on
-   * @param acl    canned acl
+   * @param bucketName Bucket name
+   * @param acl        Canned ACL
    *
    * @throws IOException     upon connection error
    * @throws ClientException upon failure from server
    */
-  public void setBucketAcl(String bucket, Acl acl) throws XmlPullParserException, IOException, MinioException {
+  public void setBucketAcl(String bucketName, Acl acl)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException,
+           InvalidBucketNameException, InvalidObjectNameException, InvalidAclNameException {
     if (acl == null) {
       throw new InvalidAclNameException();
     }
 
-    HttpUrl url = getRequestUrl(bucket);
-    // make sure to set this, otherwise it would convert this call into a regular makeBucket operation
+    HttpUrl url = getRequestUrl(bucketName);
     url = url.newBuilder()
         .addQueryParameter("acl", "")
         .build();
 
-    // okhttp requires PUT objects to have non-nil body, so we send a dummy not "null"
-    byte[] data = "".getBytes("UTF-8");
-    Request request = getPutRequest(url, data);
+    Request request = getPutRequest(url, "".getBytes("UTF-8"));
     request = request.newBuilder()
         .header("x-amz-acl", acl.toString())
         .build();
 
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          return;
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    executePut(request);
   }
+
 
   /**
    * Create an object.
@@ -1304,9 +1309,12 @@ public final class MinioClient {
     putObject(bucket, key, contentType, data, md5sum, "", 0);
   }
 
-  private String putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum, String uploadId,
-                           int partId) throws XmlPullParserException, IOException, MinioException {
-    HttpUrl url = getRequestUrl(bucket, key);
+
+  private String putObject(String bucketName, String objectName, String contentType, byte[] data, byte[] md5sum,
+                           String uploadId, int partId)
+    throws IOException, XmlPullParserException, NoResponseException, ErrorResponseException,
+           InvalidBucketNameException, InvalidObjectNameException {
+    HttpUrl url = getRequestUrl(bucketName, objectName);
 
     if (partId > 0 && uploadId != null && !"".equals(uploadId.trim())) {
       url = url.newBuilder()
@@ -1315,31 +1323,18 @@ public final class MinioClient {
           .build();
     }
 
-    String base64md5sum = "";
-    if (md5sum != null) {
-      base64md5sum = BaseEncoding.base64().encode(md5sum);
-    }
-
     Request request = getPutRequest(url, data);
+
     if (md5sum != null) {
       request = request.newBuilder()
-          .header("Content-MD5", base64md5sum)
+          .header("Content-MD5", BaseEncoding.base64().encode(md5sum))
           .build();
     }
 
-    Response response = this.transport.newCall(request).execute();
-    if (response != null) {
-      try {
-        if (response.isSuccessful()) {
-          return response.headers().get("ETag").replaceAll("\"", "");
-        }
-        parseError(response);
-      } finally {
-        response.body().close();
-      }
-    }
-    throw new IOException();
+    ResponseHeader header = executePut(request);
+    return header.getEtag();
   }
+
 
   /**
    * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, null, true)
