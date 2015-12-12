@@ -99,7 +99,7 @@ public class MinioClientTest {
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  @Test(expected = AccessDeniedException.class)
+  @Test(expected = ErrorResponseException.class)
   public void testForbidden() throws XmlPullParserException, IOException, MinioException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(403));
@@ -112,7 +112,7 @@ public class MinioClientTest {
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  @Test(expected = ObjectNotFoundException.class)
+  @Test(expected = ErrorResponseException.class)
   public void getMissingObjectHeaders() throws XmlPullParserException, IOException, MinioException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(404));
