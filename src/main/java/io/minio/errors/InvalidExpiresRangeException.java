@@ -16,8 +16,19 @@
 
 package io.minio.errors;
 
-public class InvalidExpiresRangeException extends ClientException {
-  public InvalidExpiresRangeException() {
-    super("Invalid expires range");
+
+public class InvalidExpiresRangeException extends MinioException {
+  private int expires;
+
+
+  public InvalidExpiresRangeException(int expires, String message) {
+    super(message);
+    this.expires = expires;
+  }
+
+
+  @Override
+  public String toString() {
+    return this.expires + ": " + super.toString();
   }
 }

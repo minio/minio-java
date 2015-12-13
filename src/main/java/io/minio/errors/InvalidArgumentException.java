@@ -16,8 +16,9 @@
 
 package io.minio.errors;
 
-public class InvalidArgumentException extends ClientException {
-  public InvalidArgumentException() {
-    super("Invalid argument exception");
+
+public class InvalidArgumentException extends MinioException {
+  public InvalidArgumentException(String message) {
+    super(message);
   }
 }

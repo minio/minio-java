@@ -16,8 +16,20 @@
 
 package io.minio.errors;
 
-public class HttpRedirectException extends ClientException {
-  public HttpRedirectException() {
-    super("HTTP redirect exception");
+
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class InvalidEndpointException extends MinioException {
+  private String endpoint;
+
+
+  public InvalidEndpointException(String endpoint, String message) {
+    super(message);
+    this.endpoint = endpoint;
+  }
+
+
+  @Override
+  public String toString() {
+    return this.endpoint + ": " + super.toString();
   }
 }

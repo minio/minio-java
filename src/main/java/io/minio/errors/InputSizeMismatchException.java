@@ -16,7 +16,8 @@
 
 package io.minio.errors;
 
-public class InputSizeMismatchException extends ClientException {
+
+public class InputSizeMismatchException extends MinioException {
   public InputSizeMismatchException() {
     super("Input size mismatch exception");
   }

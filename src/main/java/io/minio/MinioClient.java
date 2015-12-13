@@ -108,32 +108,36 @@ public final class MinioClient {
   private String userAgent = DEFAULT_USER_AGENT;
 
 
-  public MinioClient(String endpoint) throws MinioException {
+  public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, null, null, false);
   }
 
 
-  public MinioClient(URL url) throws NullPointerException, MinioException {
+  public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null, false);
   }
 
 
-  public MinioClient(String endpoint, String accessKey, String secretKey) throws MinioException {
+  public MinioClient(String endpoint, String accessKey, String secretKey)
+    throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, false);
   }
 
 
-  public MinioClient(URL url, String accessKey, String secretKey) throws NullPointerException, MinioException {
+  public MinioClient(URL url, String accessKey, String secretKey)
+    throws NullPointerException, InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, accessKey, secretKey, false);
   }
 
 
-  public MinioClient(String endpoint, int port, String accessKey, String secretKey) throws MinioException {
+  public MinioClient(String endpoint, int port, String accessKey, String secretKey)
+    throws InvalidEndpointException, InvalidPortException {
     this(endpoint, port, accessKey, secretKey, false);
   }
 
 
-  public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure) throws MinioException {
+  public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+    throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, insecure);
   }
 
@@ -166,22 +170,22 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
-    throws MinioException {
+    throws InvalidEndpointException, InvalidPortException {
     if (endpoint == null) {
-      throw new MinioException("null endpoint");
+      throw new InvalidEndpointException("(null)", "null endpoint");
     }
 
     // for valid URL endpoint, port and insecure are ignored
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
-        throw new MinioException("no path allowed in endpoint '" + endpoint + "'");
+        throw new InvalidEndpointException(endpoint, "no path allowed in endpoint");
       }
 
       // treat Amazon S3 host as special case
       String amzHost = url.host();
       if (amzHost.endsWith(".amazonaws.com") && !amzHost.equals("s3.amazonaws.com")) {
-        throw new MinioException("for Amazon S3, host should be 's3.amazonaws.com' in endpoint '" + endpoint + "'");
+        throw new InvalidEndpointException(endpoint, "for Amazon S3, host should be 's3.amazonaws.com' in endpoint");
       }
 
       this.baseUrl = url;
@@ -193,17 +197,16 @@ public final class MinioClient {
 
     // endpoint may be a valid hostname, IPv4 or IPv6 address
     if (!this.isValidEndpoint(endpoint)) {
-      throw new MinioException("invalid host '" + endpoint + "'");
+      throw new InvalidEndpointException(endpoint, "invalid host");
     }
 
     // treat Amazon S3 host as special case
     if (endpoint.endsWith(".amazonaws.com") && !endpoint.equals("s3.amazonaws.com")) {
-      throw new MinioException("unsupported host '" + endpoint
-                                 + "'.  For amazon S3, host should be 's3.amazonaws.com'");
+      throw new InvalidEndpointException(endpoint, "for amazon S3, host should be 's3.amazonaws.com'");
     }
 
     if (port < 0 || port > 65535) {
-      throw new MinioException("port must be in range of 1 to 65535");
+      throw new InvalidPortException(port, "port must be in range of 1 to 65535");
     }
 
     Scheme scheme = Scheme.HTTPS;
@@ -508,7 +511,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, InvalidKeyException, IOException, NoSuchAlgorithmException,
            InvalidExpiresRangeException {
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException();
+      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
     Request request = getRequest(Method.GET, bucketName, objectName, null, null, null);
@@ -527,9 +530,8 @@ public final class MinioClient {
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String presignedGetObject(String bucket, String key) throws IOException, NoSuchAlgorithmException,
-                                                                     InvalidObjectNameException,
                                                                      InvalidExpiresRangeException,
-                                                                     InvalidKeyException, InternalClientException,
+                                                                     InvalidKeyException,
                                                                      InvalidBucketNameException {
     return presignedGetObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
@@ -551,7 +553,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, InvalidKeyException, IOException, NoSuchAlgorithmException,
            InvalidExpiresRangeException {
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException();
+      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
     Request request = getRequest(Method.PUT, bucketName, objectName, "".getBytes("UTF-8"), null, null);
@@ -570,9 +572,7 @@ public final class MinioClient {
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String presignedPutObject(String bucket, String key) throws IOException, NoSuchAlgorithmException,
-                                                                     InvalidObjectNameException,
                                                                      InvalidExpiresRangeException, InvalidKeyException,
-                                                                     InternalClientException,
                                                                      InvalidBucketNameException {
     return presignedPutObject(bucket, key, DEFAULT_EXPIRY_TIME);
   }
@@ -691,7 +691,7 @@ public final class MinioClient {
    * @return an iterator of Items.
    * @see #listObjects(String, String, boolean)
    */
-  public Iterator<Result<Item>> listObjects(final String bucket) throws XmlPullParserException, MinioException {
+  public Iterator<Result<Item>> listObjects(final String bucket) throws XmlPullParserException {
     return listObjects(bucket, null);
   }
 
@@ -706,7 +706,7 @@ public final class MinioClient {
    * @see #listObjects(String, String, boolean)
    */
   public Iterator<Result<Item>> listObjects(final String bucket, final String prefix)
-    throws XmlPullParserException, MinioException {
+    throws XmlPullParserException {
     // list all objects recursively
     return listObjects(bucket, prefix, true);
   }
@@ -948,13 +948,9 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public Acl getBucketAcl(String bucketName)
-    throws InvalidArgumentException, InternalClientException,
-           InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     AccessControlPolicy policy = this.getAccessPolicy(bucketName);
-    if (policy == null) {
-      throw new InvalidArgumentException();
-    }
     Acl acl = Acl.PRIVATE;
     List<Grant> accessControlList = policy.getAccessControlList();
     switch (accessControlList.size()) {
@@ -993,8 +989,8 @@ public final class MinioClient {
         }
         break;
       default:
-        throw new InternalClientException("Invalid control flow.  Please report this issue at "
-                                          + "https://github.com/minio/minio-java/issues");
+        throw new InternalException("Invalid control flow.  Please report this issue at "
+                                      + "https://github.com/minio/minio-java/issues");
     }
     return acl;
   }
@@ -1074,8 +1070,7 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void putObject(String bucketName, String objectName, String contentType, long size, InputStream body)
-    throws ClientException, UnexpectedShortReadException, ObjectAlreadyExistsException, InputSizeMismatchException,
-           MinioException,
+    throws MinioException, UnexpectedShortReadException, InputSizeMismatchException,
            InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     boolean isMultipart = false;
@@ -1107,11 +1102,7 @@ public final class MinioClient {
       if (data.getData().length != size || destructiveHasMore(body)) {
         throw new UnexpectedShortReadException();
       }
-      try {
-        putObject(bucketName, objectName, contentType, data.getData(), data.getMD5());
-      } catch (MethodNotAllowedException ex) {
-        throw new ObjectAlreadyExistsException(objectName, bucketName);
-      }
+      putObject(bucketName, objectName, contentType, data.getData(), data.getMD5());
       return;
     }
     long totalSeen = 0;
@@ -1161,9 +1152,10 @@ public final class MinioClient {
   }
 
 
-  private void putObject(String bucket, String key, String contentType, byte[] data, byte[] md5sum)
-    throws XmlPullParserException, IOException, MinioException {
-    putObject(bucket, key, contentType, data, md5sum, "", 0);
+  private void putObject(String bucketName, String objectName, String contentType, byte[] data, byte[] md5sum)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    putObject(bucketName, objectName, contentType, data, md5sum, "", 0);
   }
 
 
@@ -1326,7 +1318,9 @@ public final class MinioClient {
       private boolean isComplete = false;
 
       @Override
-      protected List<Part> populate() throws XmlPullParserException, IOException, MinioException {
+      protected List<Part> populate()
+        throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
+        XmlPullParserException, ErrorResponseException, InternalException {
         if (!isComplete) {
           ListPartsResult result;
           result = listObjectParts(bucket, key, uploadId, marker);
@@ -1347,7 +1341,7 @@ public final class MinioClient {
     throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
            XmlPullParserException, ErrorResponseException, InternalException {
     if (partNumberMarker <= 0) {
-      throw new InvalidArgumentException();
+      throw new InvalidArgumentException("part number marker should be greater than 0");
     }
 
     Map<String,String> queryParamMap = new HashMap<String,String>();
@@ -1385,7 +1379,7 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void removeIncompleteUpload(String bucketName, String objectName)
-    throws ClientException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+    throws MinioException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     Iterator<Result<Upload>> uploads = listIncompleteUploads(bucketName, objectName);
     while (uploads.hasNext()) {

@@ -48,7 +48,7 @@ public class PostPolicy {
    */
   public void setExpires(DateTime date) throws InvalidArgumentException {
     if (date == null) {
-      throw new InvalidArgumentException();
+      throw new InvalidArgumentException("null date");
     }
     expiration = date.toString(expirationDateFormat);
   }
@@ -58,7 +58,7 @@ public class PostPolicy {
    */
   public void setKey(String key) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(key)) {
-      throw new InvalidArgumentException();
+      throw new InvalidArgumentException("empty key");
     }
     conditions.add(new String[]{"eq", "$key", key});
     formData.put("key", key);
@@ -69,7 +69,7 @@ public class PostPolicy {
    */
   public void setKeyStartsWith(String prefix) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(prefix)) {
-      throw new InvalidArgumentException();
+      throw new InvalidArgumentException("empty prefix");
     }
     conditions.add(new String[]{"starts-with", "$key", prefix});
     formData.put("key", prefix);
@@ -80,7 +80,7 @@ public class PostPolicy {
    */
   public void setBucket(String bucket) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(bucket)) {
-      throw new InvalidArgumentException();
+      throw new InvalidArgumentException("empty bucket name");
     }
     conditions.add(new String[]{"eq", "$bucket", bucket});
     formData.put("bucket", bucket);
@@ -91,7 +91,7 @@ public class PostPolicy {
    */
   public void setContentType(String type) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(type)) {
-      throw new InvalidArgumentException();
+      throw new InvalidArgumentException("empty type");
     }
     conditions.add(new String[]{"eq", "$Content-Type", type});
     formData.put("Content-Type", type);

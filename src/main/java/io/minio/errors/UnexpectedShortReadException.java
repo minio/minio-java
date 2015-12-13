@@ -16,7 +16,9 @@
 
 package io.minio.errors;
 
-public class UnexpectedShortReadException extends ClientException {
+
+// TODO: inspect the need of this exception over IOException
+public class UnexpectedShortReadException extends MinioException {
   public UnexpectedShortReadException() {
     super("Unexpected short read");
   }

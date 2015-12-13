@@ -16,8 +16,9 @@
 
 package io.minio.errors;
 
+
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class InvalidBucketNameException extends ClientException {
+public class InvalidBucketNameException extends MinioException {
   private String bucketName;
 
 

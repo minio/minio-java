@@ -16,7 +16,8 @@
 
 package io.minio.errors;
 
-public class InvalidAclNameException extends ClientException {
+
+public class InvalidAclNameException extends MinioException {
   public InvalidAclNameException() {
     super("Invalid ACL name exception");
   }

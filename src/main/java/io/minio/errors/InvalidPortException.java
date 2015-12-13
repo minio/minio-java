@@ -16,8 +16,20 @@
 
 package io.minio.errors;
 
-public class MethodNotAllowedException extends ClientException {
-  public MethodNotAllowedException() {
-    super("Method not allowed");
+
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class InvalidPortException extends MinioException {
+  private int port;
+
+
+  public InvalidPortException(int port, String message) {
+    super(message);
+    this.port = port;
+  }
+
+
+  @Override
+  public String toString() {
+    return this.port + ": " + super.toString();
   }
 }
