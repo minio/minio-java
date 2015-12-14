@@ -29,7 +29,7 @@ public class ErrorResponseException extends MinioException {
 
 
   public ErrorResponseException(ErrorResponse errorResponse) {
-    super(ErrorCode.fromString(errorResponse.getCode()).message());
+    super(errorResponse.getMessage());
     this.errorResponse = errorResponse;
   }
 
@@ -41,6 +41,6 @@ public class ErrorResponseException extends MinioException {
 
 
   public ErrorCode getErrorCode() {
-    return ErrorCode.fromString(this.errorResponse.getCode());
+    return this.errorResponse.getErrorCode();
   }
 }

@@ -385,9 +385,8 @@ public final class MinioClient {
                                     + "https://github.com/minio/minio-java/issues");
     }
 
-    throw new ErrorResponseException(new ErrorResponse(ec.code(), ec.message(), bucketName, objectName,
-                                                       request.httpUrl().encodedPath(), header.getXamzRequestId(),
-                                                       header.getXamzId2()));
+    throw new ErrorResponseException(new ErrorResponse(ec, bucketName, objectName, request.httpUrl().encodedPath(),
+                                                       header.getXamzRequestId(), header.getXamzId2()));
   }
 
 

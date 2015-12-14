@@ -64,11 +64,12 @@ public class ErrorResponse extends XmlEntity {
   /**
    * constructor.
    */
-  public ErrorResponse(String code, String message, String bucketName, String objectName, String resource,
-                       String requestId, String hostId) {
+  public ErrorResponse(ErrorCode errorCode, String bucketName, String objectName, String resource, String requestId,
+                       String hostId) {
     this();
-    this.code       = code;
-    this.message    = message;
+    this.errorCode  = errorCode;
+    this.code       = errorCode.code();
+    this.message    = errorCode.message();
     this.bucketName = bucketName;
     this.objectName = objectName;
     this.resource   = resource;
@@ -77,25 +78,27 @@ public class ErrorResponse extends XmlEntity {
   }
 
 
-  public String getCode() {
-    return code;
+  public ErrorCode getErrorCode() {
+    return this.errorCode;
+  }
+
+
+  // Must be there for XML parsing.
+  public void setCode(String code) {
+    this.code = code;
+    this.errorCode = ErrorCode.fromString(this.code);
   }
 
 
   /**
-   * set code.
+   * returns `message` or `errorCode.message`
    */
-  public void setCode(String code) {
-    this.code = code;
-    if (this.errorCode != null) {
-      return;
-    }
-    this.errorCode = ErrorCode.fromString(code);
-  }
-
-
   public String getMessage() {
-    return message;
+    if (this.message != null) {
+      return this.message;
+    } else {
+      return this.errorCode.message();
+    }
   }
 
 
@@ -124,7 +127,7 @@ public class ErrorResponse extends XmlEntity {
   }
 
 
-  // must to be there for XML parsing
+  // must be there for XML parsing
   public void setKey(String objectName) {
     this.setObjectName(objectName);
   }
