@@ -16,8 +16,20 @@
 
 package io.minio.errors;
 
-public class MethodNotAllowedException extends ClientException {
-  public MethodNotAllowedException() {
-    super("Method not allowed");
+
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class InvalidEndpointException extends MinioException {
+  private String endpoint;
+
+
+  public InvalidEndpointException(String endpoint, String message) {
+    super(message);
+    this.endpoint = endpoint;
+  }
+
+
+  @Override
+  public String toString() {
+    return this.endpoint + ": " + super.toString();
   }
 }

@@ -21,55 +21,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.annotation.Annotation;
-import java.util.Hashtable;
-import java.util.Map;
 
 import com.squareup.okhttp.Headers;
 
 
 public class HeaderParser {
-  /**
-   * method to set destination from header map.
-   */
-  public static void set(Map<String,String> headerMap, Object destination) {
-    Field[] publicFields;
-    Field[] privateFields;
-    Field[] fields;
-
-    Class<?> cls = destination.getClass();
-    publicFields = cls.getFields();
-    privateFields = cls.getDeclaredFields();
-    fields = new Field[publicFields.length + privateFields.length];
-    System.arraycopy(publicFields, 0, fields, 0, publicFields.length);
-    System.arraycopy(privateFields, 0, fields, publicFields.length, privateFields.length);
-
-    for (Field field : fields) {
-      Annotation annotation = field.getAnnotation(Header.class);
-      if (annotation == null) {
-        continue;
-      }
-
-      Header httpHeader = (Header) annotation;
-      String value = httpHeader.value();
-      String setter = httpHeader.setter();
-      if (setter.isEmpty()) {
-        // assume setter name as 'setFieldName'
-        String name = field.getName();
-        setter = "set" + name.substring(0, 1).toUpperCase() + name.substring(1);
-      }
-
-      try {
-        Method setterMethod = cls.getMethod(setter, new Class[]{String.class});
-        setterMethod.invoke(destination, headerMap.get(value));
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException
-               | IllegalArgumentException e) {
-        // ignore these exceptions
-        System.out.println(e);
-      }
-    }
-  }
-
-
   /**
    * method to set destination from Headers object.
    */
@@ -102,26 +58,18 @@ public class HeaderParser {
 
       try {
         Method setterMethod = cls.getMethod(setter, new Class[]{String.class});
-        setterMethod.invoke(destination, headers.get(value));
+        String valueString = headers.get(value);
+        if (valueString != null) {
+          setterMethod.invoke(destination, valueString);
+        }
       } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException
                | IllegalArgumentException e) {
-        // ignore these exceptions
-        System.out.println(e);
+        // TODO: log the error than printing to stdout
+        System.out.println("exception occured: " + e);
+        System.out.println("setter: " + setter);
+        System.out.println("annotation: " + value);
+        System.out.println("value: " + headers.get(value));
       }
     }
-  }
-
-
-  /**
-   * parse list of header strings and set to destination.
-   */
-  public static void parse(String[] headerStrings, Object destination) {
-    Map<String,String> headerMap = new Hashtable<String,String>();
-    for (String s : headerStrings) {
-      String[] tokens = s.split(": ");
-      headerMap.put(tokens[0], tokens[1]);
-    }
-
-    set(headerMap, destination);
   }
 }

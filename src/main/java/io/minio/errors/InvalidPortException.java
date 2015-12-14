@@ -16,8 +16,20 @@
 
 package io.minio.errors;
 
-public class MaxBucketsReachedException extends ClientException {
-  public MaxBucketsReachedException() {
-    super("Maximum bucket reached");
+
+@SuppressWarnings({"WeakerAccess", "unused"})
+public class InvalidPortException extends MinioException {
+  private int port;
+
+
+  public InvalidPortException(int port, String message) {
+    super(message);
+    this.port = port;
+  }
+
+
+  @Override
+  public String toString() {
+    return this.port + ": " + super.toString();
   }
 }

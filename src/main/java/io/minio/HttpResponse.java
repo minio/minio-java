@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-package io.minio.errors;
+package io.minio;
 
-public class ObjectAlreadyExistsException extends ClientException {
-  private String objectName;
-  private String bucketName;
+import com.squareup.okhttp.ResponseBody;
 
-  public ObjectAlreadyExistsException(String objectName, String bucketName) {
-    super("Object " + objectName + " in bucket " + bucketName + " already exists");
-    this.objectName = objectName;
+
+public class HttpResponse {
+  ResponseHeader header;
+  ResponseBody body;
+
+
+  public HttpResponse(ResponseHeader header, ResponseBody body) {
+    this.header = header;
+    this.body = body;
+  }
+
+
+  public ResponseHeader header() {
+    return this.header;
+  }
+
+
+  public ResponseBody body() {
+    return this.body;
   }
 }

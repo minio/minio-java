@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import io.minio.errors.ClientException;
+import io.minio.errors.MinioException;
 
 import java.io.IOException;
 
@@ -32,13 +32,13 @@ public class Result<T> {
   /**
    * get result.
    */
-  public T getResult() throws IOException, ClientException {
+  public T getResult() throws IOException, MinioException {
     if (ex != null) {
       if (ex instanceof IOException) {
         throw (IOException) ex;
       }
-      if (ex instanceof ClientException) {
-        throw (ClientException) ex;
+      if (ex instanceof MinioException) {
+        throw (MinioException) ex;
       }
     }
     return type;
