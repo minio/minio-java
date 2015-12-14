@@ -522,18 +522,17 @@ public final class MinioClient {
 
   /** Returns an presigned URL containing the object.
    *
-   * @param bucket  object's bucket
-   * @param key     object's key
+   * @param bucketName  Bucket name
+   * @param objectName  Object name in the bucket
    *
    * @throws IOException     upon connection error
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignedGetObject(String bucket, String key) throws IOException, NoSuchAlgorithmException,
-                                                                     InvalidExpiresRangeException,
-                                                                     InvalidKeyException,
-                                                                     InvalidBucketNameException {
-    return presignedGetObject(bucket, key, DEFAULT_EXPIRY_TIME);
+  public String presignedGetObject(String bucketName, String objectName)
+    throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException,
+           InvalidBucketNameException {
+    return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
   }
 
 
@@ -564,17 +563,17 @@ public final class MinioClient {
 
   /** Returns an presigned URL for PUT.
    *
-   * @param bucket  object's bucket
-   * @param key     object's key
+   * @param bucketName  Bucket name
+   * @param objectName  Object name in the bucket
    *
    * @throws IOException     upon connection error
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignedPutObject(String bucket, String key) throws IOException, NoSuchAlgorithmException,
-                                                                     InvalidExpiresRangeException, InvalidKeyException,
-                                                                     InvalidBucketNameException {
-    return presignedPutObject(bucket, key, DEFAULT_EXPIRY_TIME);
+  public String presignedPutObject(String bucketName, String objectName)
+    throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException,
+           InvalidBucketNameException {
+    return presignedPutObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
   }
 
 
@@ -684,44 +683,44 @@ public final class MinioClient {
 
 
   /**
-   * listObjects is a wrapper around listObjects(bucket, null, true)
+   * listObjects is a wrapper around listObjects(bucketName, null)
    *
-   * @param bucket is the bucket to list objects from
+   * @param bucketName Bucket name
    *
    * @return an iterator of Items.
    * @see #listObjects(String, String, boolean)
    */
-  public Iterator<Result<Item>> listObjects(final String bucket) throws XmlPullParserException {
-    return listObjects(bucket, null);
+  public Iterator<Result<Item>> listObjects(final String bucketName) throws XmlPullParserException {
+    return listObjects(bucketName, null);
   }
 
 
   /**
-   * listObjects is a wrapper around listObjects(bucket, prefix, true)
+   * listObjects is a wrapper around listObjects(bucketName, prefix, true)
    *
-   * @param bucket to list objects of
-   * @param prefix filters the list of objects to include only those that start with prefix
+   * @param bucketName Bucket name
+   * @param prefix     Prefix string.  List objects whose name starts with `prefix`
    *
    * @return an iterator of Items.
    * @see #listObjects(String, String, boolean)
    */
-  public Iterator<Result<Item>> listObjects(final String bucket, final String prefix)
+  public Iterator<Result<Item>> listObjects(final String bucketName, final String prefix)
     throws XmlPullParserException {
     // list all objects recursively
-    return listObjects(bucket, prefix, true);
+    return listObjects(bucketName, prefix, true);
   }
 
 
   /**
-   * @param bucket    bucket to list objects from
-   * @param prefix    filters all objects returned where each object must begin with the given prefix
+   * @param bucketName Bucket name
+   * @param prefix     Prefix string.  List objects whose name starts with `prefix`
    * @param recursive when false, emulates a directory structure where each listing returned is either a full object
    *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
    *                  '/' will be merged into one entry.
    *
    * @return an iterator of Items.
    */
-  public Iterator<Result<Item>> listObjects(final String bucket, final String prefix, final boolean recursive)
+  public Iterator<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive)
     throws XmlPullParserException {
     return new MinioIterator<Result<Item>>() {
       private String marker = null;
@@ -738,7 +737,7 @@ public final class MinioClient {
           ListBucketResult listBucketResult;
           List<Result<Item>> items = new LinkedList<Result<Item>>();
           try {
-            listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
+            listBucketResult = listObjects(bucketName, marker, prefix, delimiter, 1000);
             for (Item item : listBucketResult.getContents()) {
               items.add(new Result<Item>(item, null));
               if (listBucketResult.isTruncated()) {
@@ -1179,42 +1178,43 @@ public final class MinioClient {
 
 
   /**
-   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, null, true)
+   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucketName, null, true)
    *
-   * @param bucket is the bucket to list objects from
+   * @param bucketName Bucket name
    *
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucket) throws XmlPullParserException {
-    return listIncompleteUploads(bucket, null, true);
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucketName) throws XmlPullParserException {
+    return listIncompleteUploads(bucketName, null, true);
   }
 
 
   /**
-   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, prefix, true)
+   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucketName, prefix, true)
    *
-   * @param bucket is the bucket to list incomplete uploads from
+   * @param bucketName Bucket name
    * @param prefix filters the list of uploads to include only those that start with prefix
    *
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix) throws XmlPullParserException {
-    return listIncompleteUploads(bucket, prefix, true);
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
+    throws XmlPullParserException {
+    return listIncompleteUploads(bucketName, prefix, true);
   }
 
 
   /**
-   * @param bucket    bucket to list incomplete uploads from
-   * @param prefix    filters all uploads returned where each object must begin with the given prefix
+   * @param bucketName  Bucket name
+   * @param prefix      Prefix string.  List objects whose name starts with `prefix`
    * @param recursive when false, emulates a directory structure where each listing returned is either a full object
    *                  or part of the object's key up to the first '/'. All uploads with the same prefix up to the first
    *                  '/' will be merged into one entry.
    *
    * @return an iterator of Upload.
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(final String bucket, final String prefix,
+  public Iterator<Result<Upload>> listIncompleteUploads(final String bucketName, final String prefix,
                                                         final boolean recursive) throws XmlPullParserException {
 
     return new MinioIterator<Result<Upload>>() {
@@ -1233,7 +1233,7 @@ public final class MinioClient {
             delimiter = "/";
           }
           try {
-            uploadResult = listIncompleteUploads(bucket, keyMarker,
+            uploadResult = listIncompleteUploads(bucketName, keyMarker,
                                                  uploadIdMarker, prefix,
                                                  delimiter, 1000);
             if (uploadResult.isTruncated()) {
@@ -1311,7 +1311,7 @@ public final class MinioClient {
   }
 
 
-  private Iterator<Part> listObjectParts(final String bucket, final String key,
+  private Iterator<Part> listObjectParts(final String bucketName, final String objectName,
                                          final String uploadId) throws XmlPullParserException {
     return new MinioIterator<Part>() {
       public int marker;
@@ -1323,7 +1323,7 @@ public final class MinioClient {
         XmlPullParserException, ErrorResponseException, InternalException {
         if (!isComplete) {
           ListPartsResult result;
-          result = listObjectParts(bucket, key, uploadId, marker);
+          result = listObjectParts(bucketName, objectName, uploadId, marker);
           if (result.isTruncated()) {
             marker = result.getNextPartNumberMarker();
           } else {
