@@ -21,7 +21,7 @@ import com.google.api.client.util.Key;
 @SuppressWarnings("unused")
 public class Upload extends XmlEntity {
   @Key("Key")
-  private String key;
+  private String objectName;
   @Key("UploadId")
   private String uploadId;
   @Key("Initiator")
@@ -38,13 +38,22 @@ public class Upload extends XmlEntity {
     super.name = "Upload";
   }
 
-  public String getKey() {
-    return key;
+
+  public String getObjectName() {
+    return objectName;
   }
 
-  public void setKey(String key) {
-    this.key = key;
+
+  public void setObjectName(String objectName) {
+    this.objectName = objectName;
   }
+
+
+  // must be there for XML parsing
+  public void setKey(String objectName) {
+    setObjectName(objectName);
+  }
+
 
   public String getUploadId() {
     return uploadId;

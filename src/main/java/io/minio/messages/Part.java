@@ -39,6 +39,18 @@ public class Part extends XmlEntity {
     super.name = "Part";
   }
 
+
+  /**
+   * constructor.
+   */
+  public Part(int partNumber, String etag) {
+    this();
+
+    this.partNumber = partNumber;
+    this.etag = etag;
+  }
+
+
   public int getPartNumber() {
     return partNumber;
   }

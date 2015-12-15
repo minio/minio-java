@@ -418,7 +418,7 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testMakeBucket() throws IOException, XmlPullParserException, MinioException {
+  public void testMakeBucket() throws IOException, XmlPullParserException, MinioException, NoSuchAlgorithmException {
     MockWebServer server = new MockWebServer();
     MockResponse response1 = new MockResponse();
     MockResponse response2 = new MockResponse();
@@ -524,7 +524,8 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidAclNameException.class)
-  public void testSetNullAclFails() throws XmlPullParserException, IOException, MinioException {
+  public void testSetNullAclFails()
+    throws XmlPullParserException, IOException, MinioException, NoSuchAlgorithmException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -543,7 +544,8 @@ public class MinioClientTest {
 
 
   @Test(expected = ErrorResponseException.class)
-  public void testMakeBucketFails() throws IOException, XmlPullParserException, MinioException {
+  public void testMakeBucketFails()
+    throws IOException, XmlPullParserException, MinioException, NoSuchAlgorithmException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -617,7 +619,7 @@ public class MinioClientTest {
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  @Test(expected = UnexpectedShortReadException.class)
+  @Test(expected = InsufficientDataException.class)
   public void testPutIncompleteSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException,
                                                  MinioException {
     MockWebServer server = new MockWebServer();
@@ -645,7 +647,7 @@ public class MinioClientTest {
     throw new RuntimeException("Expected exception did not fire");
   }
 
-  @Test(expected = UnexpectedShortReadException.class)
+  @Test(expected = ErrorResponseException.class)
   public void testPutOversizedSmallPut() throws IOException, NoSuchAlgorithmException, XmlPullParserException,
                                                 MinioException {
     MockWebServer server = new MockWebServer();
@@ -674,7 +676,8 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testNullContentTypeWorks() throws XmlPullParserException, IOException, MinioException {
+  public void testNullContentTypeWorks()
+    throws XmlPullParserException, IOException, MinioException, NoSuchAlgorithmException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 

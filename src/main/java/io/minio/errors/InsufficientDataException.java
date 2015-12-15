@@ -17,9 +17,8 @@
 package io.minio.errors;
 
 
-// TODO: inspect the need of this exception over IOException
-public class UnexpectedShortReadException extends MinioException {
-  public UnexpectedShortReadException() {
-    super("Unexpected short read");
+public class InsufficientDataException extends MinioException {
+  public InsufficientDataException(String message) {
+    super(message);
   }
 }
