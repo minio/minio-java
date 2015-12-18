@@ -46,6 +46,9 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 
 
 /**
@@ -84,9 +87,14 @@ import java.util.logging.Logger;
 public final class MinioClient {
   private static final DateTimeFormatter AMZ_DATE_FORMAT = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
       .withZoneUTC();
-  // default multipart upload size is 5MiB, maximum is 5GiB
+  // minimum allowed multipart size is 5MiB
   private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
+  // maximum allowed multipart size is 5GiB
   private static final int MAX_MULTIPART_SIZE = 5 * 1024 * 1024 * 1024;
+  private static final int MAX_MULTIPART_COUNT = 10000;
+  private static final long MAX_OBJECT_SIZE = MAX_MULTIPART_SIZE * (long) MAX_MULTIPART_COUNT;
+  // TODO: fix the limitation, but set it to 50GiB now
+  private static final long CURRENT_OBJECT_SIZE_LIMIT = 50 * 1024 * 1024 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
@@ -385,9 +393,8 @@ public final class MinioClient {
                                     + "https://github.com/minio/minio-java/issues");
     }
 
-    throw new ErrorResponseException(new ErrorResponse(ec.code(), ec.message(), bucketName, objectName,
-                                                       request.httpUrl().encodedPath(), header.getXamzRequestId(),
-                                                       header.getXamzId2()));
+    throw new ErrorResponseException(new ErrorResponse(ec, bucketName, objectName, request.httpUrl().encodedPath(),
+                                                       header.getXamzRequestId(), header.getXamzId2()));
   }
 
 
@@ -522,18 +529,17 @@ public final class MinioClient {
 
   /** Returns an presigned URL containing the object.
    *
-   * @param bucket  object's bucket
-   * @param key     object's key
+   * @param bucketName  Bucket name
+   * @param objectName  Object name in the bucket
    *
    * @throws IOException     upon connection error
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignedGetObject(String bucket, String key) throws IOException, NoSuchAlgorithmException,
-                                                                     InvalidExpiresRangeException,
-                                                                     InvalidKeyException,
-                                                                     InvalidBucketNameException {
-    return presignedGetObject(bucket, key, DEFAULT_EXPIRY_TIME);
+  public String presignedGetObject(String bucketName, String objectName)
+    throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException,
+           InvalidBucketNameException {
+    return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
   }
 
 
@@ -564,17 +570,17 @@ public final class MinioClient {
 
   /** Returns an presigned URL for PUT.
    *
-   * @param bucket  object's bucket
-   * @param key     object's key
+   * @param bucketName  Bucket name
+   * @param objectName  Object name in the bucket
    *
    * @throws IOException     upon connection error
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignedPutObject(String bucket, String key) throws IOException, NoSuchAlgorithmException,
-                                                                     InvalidExpiresRangeException, InvalidKeyException,
-                                                                     InvalidBucketNameException {
-    return presignedPutObject(bucket, key, DEFAULT_EXPIRY_TIME);
+  public String presignedPutObject(String bucketName, String objectName)
+    throws IOException, NoSuchAlgorithmException, InvalidExpiresRangeException, InvalidKeyException,
+           InvalidBucketNameException {
+    return presignedPutObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
   }
 
 
@@ -684,44 +690,44 @@ public final class MinioClient {
 
 
   /**
-   * listObjects is a wrapper around listObjects(bucket, null, true)
+   * listObjects is a wrapper around listObjects(bucketName, null)
    *
-   * @param bucket is the bucket to list objects from
+   * @param bucketName Bucket name
    *
    * @return an iterator of Items.
    * @see #listObjects(String, String, boolean)
    */
-  public Iterator<Result<Item>> listObjects(final String bucket) throws XmlPullParserException {
-    return listObjects(bucket, null);
+  public Iterator<Result<Item>> listObjects(final String bucketName) throws XmlPullParserException {
+    return listObjects(bucketName, null);
   }
 
 
   /**
-   * listObjects is a wrapper around listObjects(bucket, prefix, true)
+   * listObjects is a wrapper around listObjects(bucketName, prefix, true)
    *
-   * @param bucket to list objects of
-   * @param prefix filters the list of objects to include only those that start with prefix
+   * @param bucketName Bucket name
+   * @param prefix     Prefix string.  List objects whose name starts with `prefix`
    *
    * @return an iterator of Items.
    * @see #listObjects(String, String, boolean)
    */
-  public Iterator<Result<Item>> listObjects(final String bucket, final String prefix)
+  public Iterator<Result<Item>> listObjects(final String bucketName, final String prefix)
     throws XmlPullParserException {
     // list all objects recursively
-    return listObjects(bucket, prefix, true);
+    return listObjects(bucketName, prefix, true);
   }
 
 
   /**
-   * @param bucket    bucket to list objects from
-   * @param prefix    filters all objects returned where each object must begin with the given prefix
+   * @param bucketName Bucket name
+   * @param prefix     Prefix string.  List objects whose name starts with `prefix`
    * @param recursive when false, emulates a directory structure where each listing returned is either a full object
    *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
    *                  '/' will be merged into one entry.
    *
    * @return an iterator of Items.
    */
-  public Iterator<Result<Item>> listObjects(final String bucket, final String prefix, final boolean recursive)
+  public Iterator<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive)
     throws XmlPullParserException {
     return new MinioIterator<Result<Item>>() {
       private String marker = null;
@@ -738,7 +744,7 @@ public final class MinioClient {
           ListBucketResult listBucketResult;
           List<Result<Item>> items = new LinkedList<Result<Item>>();
           try {
-            listBucketResult = listObjects(bucket, marker, prefix, delimiter, 1000);
+            listBucketResult = listObjects(bucketName, marker, prefix, delimiter, 1000);
             for (Item item : listBucketResult.getContents()) {
               items.add(new Result<Item>(item, null));
               if (listBucketResult.isTruncated()) {
@@ -859,7 +865,7 @@ public final class MinioClient {
    */
   public void makeBucket(String bucketName)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
+           ErrorResponseException, NoSuchAlgorithmException, InternalException {
     this.makeBucket(bucketName, null);
   }
 
@@ -879,7 +885,7 @@ public final class MinioClient {
    */
   public void makeBucket(String bucketName, Acl acl)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
+           ErrorResponseException, NoSuchAlgorithmException, InternalException {
     byte[] data = null;
     Map<String,String> headerMap = new HashMap<String,String>();
 
@@ -893,7 +899,7 @@ public final class MinioClient {
       config.setLocationConstraint(region);
       data = config.toString().getBytes("UTF-8");
 
-      byte[] md5sum = calculateMd5sum(data);
+      byte[] md5sum = getMd5Digest(data, data.length);
       if (md5sum != null) {
         headerMap.put("Content-MD5", BaseEncoding.base64().encode(md5sum));
       }
@@ -1041,6 +1047,25 @@ public final class MinioClient {
   }
 
 
+  private String putObject(String bucketName, String objectName, String contentType, byte[] data, byte[] md5sum,
+                           String uploadId, int partNumber)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    Map<String,String> headerMap = new HashMap<String,String>();
+    headerMap.put("Content-MD5", BaseEncoding.base64().encode(md5sum));
+
+    Map<String,String> queryParamMap = null;
+    if (partNumber > 0 && uploadId != null && !"".equals(uploadId.trim())) {
+      queryParamMap = new HashMap<String,String>();
+      queryParamMap.put("partNumber", Integer.toString(partNumber));
+      queryParamMap.put("uploadId", uploadId);
+    }
+
+    HttpResponse response = executePut(bucketName, objectName, data, headerMap, queryParamMap);
+    return response.header().getEtag();
+  }
+
+
   /**
    * Create an object.
    * <p>
@@ -1070,151 +1095,177 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void putObject(String bucketName, String objectName, String contentType, long size, InputStream body)
-    throws MinioException, UnexpectedShortReadException, InputSizeMismatchException,
+    throws MinioException, InsufficientDataException, InputSizeMismatchException,
            InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    boolean isMultipart = false;
-    boolean newUpload = true;
-    int partSize = 0;
-    String uploadId = null;
-
+           ErrorResponseException, NoSuchAlgorithmException, InternalException {
     if (contentType == null || "".equals(contentType.trim())) {
       contentType = "application/octet-stream";
     }
 
-    if (size > MIN_MULTIPART_SIZE) {
-      // check if multipart exists
-      Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucketName, objectName);
-      while (multipartUploads.hasNext()) {
-        Upload upload = multipartUploads.next().getResult();
-        if (upload.getKey().equals(objectName)) {
-          uploadId = upload.getUploadId();
-          newUpload = false;
-        }
-      }
-
-      isMultipart = true;
-      partSize = calculatePartSize(size);
-    }
-
-    if (!isMultipart) {
-      Data data = readData((int) size, body);
-      if (data.getData().length != size || destructiveHasMore(body)) {
-        throw new UnexpectedShortReadException();
-      }
-      putObject(bucketName, objectName, contentType, data.getData(), data.getMD5());
+    if (size <= MIN_MULTIPART_SIZE) {
+      byte[] buf = new byte[(int) size];
+      readStream(body, buf, (int) size);
+      putObject(bucketName, objectName, contentType, buf, getMd5Digest(buf, (int) size), null, 0);
       return;
     }
-    long totalSeen = 0;
-    List<Part> parts = new LinkedList<Part>();
-    int partNumber = 1;
-    Iterator<Part> existingParts = new LinkedList<Part>().iterator();
-    if (newUpload) {
-      uploadId = newMultipartUpload(bucketName, objectName);
-    } else {
-      existingParts = listObjectParts(bucketName, objectName, uploadId);
+
+    int partSize = calculatePartSize(size);
+    int partCount = (int) (size / (long) partSize);
+    if (size % partSize != 0) {
+      partCount++;
     }
-    while (true) {
-      Data data = readData(partSize, body);
-      if (data.getData().length == 0) {
+    long lastPartSize = size - (long) (partSize * (partCount - 1));
+    String uploadId = null;
+
+    // get incomplete multipart upload of the same object if any
+    Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucketName, objectName);
+    while (multipartUploads.hasNext()) {
+      Upload upload = multipartUploads.next().getResult();
+      if (upload.getObjectName().equals(objectName)) {
+        // TODO: its possible to have multiple mutlipart upload session for the same object
+        // TODO: if found we would need to error out
+        uploadId = upload.getUploadId();
         break;
       }
-      if (data.getData().length < partSize) {
-        long expectedSize = size - totalSeen;
-        if (expectedSize != data.getData().length) {
-          throw new UnexpectedShortReadException();
-        }
+    }
+
+    Part part = null;
+    // TODO: as partCount is known always, it better to use array than LinkedList
+    List<Part> totalParts = new LinkedList<Part>();
+    Iterator<Part> existingParts = null;
+    if (uploadId != null) {
+      existingParts = listObjectParts(bucketName, objectName, uploadId);
+      if (existingParts.hasNext()) {
+        part = existingParts.next();
       }
-      if (!newUpload && existingParts.hasNext()) {
-        Part existingPart = existingParts.next();
-        if (existingPart.getPartNumber() == partNumber
-            &&
-            existingPart.getETag().toLowerCase().equals(BaseEncoding.base16().encode(data.getMD5()).toLowerCase())) {
-          partNumber++;
-          continue;
+    } else {
+      uploadId = initMultipartUpload(bucketName, objectName);
+    }
+
+    byte[] buf = new byte[partSize];
+    int bytesRead = 0;
+    int expectedReadSize = partSize;
+    for (int partNumber = 1; partNumber <= partCount; partNumber++) {
+      if (part != null && partNumber == part.getPartNumber() && part.getSize() == partSize) {
+        // this part is already uploaded
+        // TODO: validate the integrity of the part by md5sum etc
+        // TODO: to make it simpler, we check the size time being
+        totalParts.add(part);
+        skipStream(body, partSize);
+        part = null;
+
+        if (existingParts.hasNext()) {
+          part = existingParts.next();
         }
+
+        continue;
       }
-      String etag = putObject(bucketName, objectName, contentType, data.getData(),
-                              data.getMD5(), uploadId, partNumber);
-      totalSeen += data.getData().length;
 
-      Part part = new Part();
-      part.setPartNumber(partNumber);
-      part.setETag(etag);
-      parts.add(part);
-      partNumber++;
-    }
-    if (totalSeen != size) {
-      throw new InputSizeMismatchException();
+      if (partNumber == partCount) {
+        expectedReadSize = (int) lastPartSize;
+      }
+
+      readStream(body, buf, expectedReadSize);
+      String etag = putObject(bucketName, objectName, contentType, buf, getMd5Digest(buf, expectedReadSize),
+                              uploadId, partNumber);
+      totalParts.add(new Part(partNumber, etag));
     }
 
-    completeMultipart(bucketName, objectName, uploadId, parts);
-  }
-
-
-  private void putObject(String bucketName, String objectName, String contentType, byte[] data, byte[] md5sum)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    putObject(bucketName, objectName, contentType, data, md5sum, "", 0);
-  }
-
-
-  private String putObject(String bucketName, String objectName, String contentType, byte[] data, byte[] md5sum,
-                           String uploadId, int partId)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    Map<String,String> headerMap = new HashMap<String,String>();
-    headerMap.put("Content-MD5", BaseEncoding.base64().encode(md5sum));
-
-    Map<String,String> queryParamMap = null;
-    if (partId > 0 && uploadId != null && !"".equals(uploadId.trim())) {
-      queryParamMap = new HashMap<String,String>();
-      queryParamMap.put("partNumber", Integer.toString(partId));
-      queryParamMap.put("uploadId", uploadId);
-    }
-
-    HttpResponse response = executePut(bucketName, objectName, data, headerMap, queryParamMap);
-    return response.header().getEtag();
+    completeMultipart(bucketName, objectName, uploadId, totalParts);
   }
 
 
   /**
-   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, null, true)
+   * Create an object.
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
    *
-   * @param bucket is the bucket to list objects from
+   * @param bucketName  Bucket name
+   * @param objectName  Object name to create in the bucket
+   * @param fileName    File name to upload
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void putObject(String bucketName, String objectName, String fileName)
+    throws MinioException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InvalidArgumentException, NoSuchAlgorithmException, InternalException {
+    if (fileName == null || "".equals(fileName.trim())) {
+      throw new InvalidArgumentException("empty file name is not allowed");
+    }
+
+    Path filePath = Paths.get(fileName);
+    if (!Files.isRegularFile(filePath)) {
+      throw new InvalidArgumentException("'" + fileName + "': not a regular file");
+    }
+
+    String contentType = Files.probeContentType(filePath);
+    long size = Files.size(filePath);
+
+    if (size > MAX_OBJECT_SIZE) {
+      throw new InvalidArgumentException("file size should be <= " + MAX_OBJECT_SIZE + " bytes");
+    }
+
+    if (size > CURRENT_OBJECT_SIZE_LIMIT) {
+      throw new InternalException("currently file size > 50GiB is not supported");
+    }
+
+    putObject(bucketName, objectName, contentType, size, Files.newInputStream(filePath));
+  }
+
+
+  /**
+   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucketName, null, true)
+   *
+   * @param bucketName Bucket name
    *
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucket) throws XmlPullParserException {
-    return listIncompleteUploads(bucket, null, true);
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucketName) throws XmlPullParserException {
+    return listIncompleteUploads(bucketName, null, true);
   }
 
 
   /**
-   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucket, prefix, true)
+   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucketName, prefix, true)
    *
-   * @param bucket is the bucket to list incomplete uploads from
+   * @param bucketName Bucket name
    * @param prefix filters the list of uploads to include only those that start with prefix
    *
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucket, String prefix) throws XmlPullParserException {
-    return listIncompleteUploads(bucket, prefix, true);
+  public Iterator<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
+    throws XmlPullParserException {
+    return listIncompleteUploads(bucketName, prefix, true);
   }
 
 
   /**
-   * @param bucket    bucket to list incomplete uploads from
-   * @param prefix    filters all uploads returned where each object must begin with the given prefix
+   * @param bucketName  Bucket name
+   * @param prefix      Prefix string.  List objects whose name starts with `prefix`
    * @param recursive when false, emulates a directory structure where each listing returned is either a full object
    *                  or part of the object's key up to the first '/'. All uploads with the same prefix up to the first
    *                  '/' will be merged into one entry.
    *
    * @return an iterator of Upload.
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(final String bucket, final String prefix,
+  public Iterator<Result<Upload>> listIncompleteUploads(final String bucketName, final String prefix,
                                                         final boolean recursive) throws XmlPullParserException {
 
     return new MinioIterator<Result<Upload>>() {
@@ -1233,7 +1284,7 @@ public final class MinioClient {
             delimiter = "/";
           }
           try {
-            uploadResult = listIncompleteUploads(bucket, keyMarker,
+            uploadResult = listIncompleteUploads(bucketName, keyMarker,
                                                  uploadIdMarker, prefix,
                                                  delimiter, 1000);
             if (uploadResult.isTruncated()) {
@@ -1284,7 +1335,7 @@ public final class MinioClient {
   }
 
 
-  private String newMultipartUpload(String bucketName, String objectName)
+  private String initMultipartUpload(String bucketName, String objectName)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     Map<String,String> queryParamMap = new HashMap<String,String>();
@@ -1311,7 +1362,7 @@ public final class MinioClient {
   }
 
 
-  private Iterator<Part> listObjectParts(final String bucket, final String key,
+  private Iterator<Part> listObjectParts(final String bucketName, final String objectName,
                                          final String uploadId) throws XmlPullParserException {
     return new MinioIterator<Part>() {
       public int marker;
@@ -1323,7 +1374,7 @@ public final class MinioClient {
         XmlPullParserException, ErrorResponseException, InternalException {
         if (!isComplete) {
           ListPartsResult result;
-          result = listObjectParts(bucket, key, uploadId, marker);
+          result = listObjectParts(bucketName, objectName, uploadId, marker);
           if (result.isTruncated()) {
             marker = result.getNextPartNumberMarker();
           } else {
@@ -1384,7 +1435,7 @@ public final class MinioClient {
     Iterator<Result<Upload>> uploads = listIncompleteUploads(bucketName, objectName);
     while (uploads.hasNext()) {
       Upload upload = uploads.next().getResult();
-      if (objectName.equals(upload.getKey())) {
+      if (objectName.equals(upload.getObjectName())) {
         abortMultipartUpload(bucketName, objectName, upload.getUploadId());
         return;
       }
@@ -1394,7 +1445,7 @@ public final class MinioClient {
 
   private int calculatePartSize(long size) {
     // 9999 is used instead of 10000 to cater for the last part being too small
-    int partSize = (int) (size / 9999);
+    int partSize = (int) (size / (MAX_MULTIPART_COUNT - 1));
     if (partSize > MIN_MULTIPART_SIZE) {
       if (partSize > MAX_MULTIPART_SIZE) {
         return MAX_MULTIPART_SIZE;
@@ -1405,49 +1456,40 @@ public final class MinioClient {
   }
 
 
-  private byte[] calculateMd5sum(byte[] data) {
-    byte[] md5sum;
-    try {
-      MessageDigest md5Digest = MessageDigest.getInstance("MD5");
-      md5sum = md5Digest.digest(data);
-    } catch (NoSuchAlgorithmException e) {
-      // we should never see this, unless the underlying JVM is broken.
-      // Throw a runtime exception if we run into this, the environment
-      // is not sane
-      System.err.println("MD5 message digest type not found, the current JVM is likely broken.");
-      throw new RuntimeException(e);
-    }
-    return md5sum;
+  private static byte[] getMd5Digest(byte[] data, int length) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("MD5");
+    digest.update(data, 0, length);
+    return digest.digest();
   }
 
 
-  private Data readData(int size, InputStream data) throws IOException {
-    int amountRead = 0;
-    byte[] fullData = new byte[size];
-    while (amountRead != size) {
-      byte[] buf = new byte[size - amountRead];
-      int curRead = data.read(buf);
-      if (curRead == -1) {
-        break;
+  private void readStream(InputStream is, byte[] buf, int bufSize) throws IOException, InsufficientDataException {
+    int bytesRead = 0;
+    int totalBytesRead = 0;
+
+    while ((bytesRead = is.read(buf, totalBytesRead, (bufSize - totalBytesRead))) >= 0) {
+      totalBytesRead += bytesRead;
+      if (totalBytesRead == bufSize) {
+        return;
       }
-      buf = Arrays.copyOf(buf, curRead);
-      System.arraycopy(buf, 0, fullData, amountRead, curRead);
-      amountRead += curRead;
     }
-    fullData = Arrays.copyOfRange(fullData, 0, amountRead);
-    Data d = new Data();
-    d.setData(fullData);
-    d.setMD5(calculateMd5sum(fullData));
-    return d;
+
+    throw new InsufficientDataException("Insufficient data.  bytes read " + totalBytesRead + " expected " + bufSize);
   }
 
 
-  private boolean destructiveHasMore(InputStream data) {
-    try {
-      return data.read() > -1;
-    } catch (IOException e) {
-      return false;
+  private void skipStream(InputStream is, long n) throws IOException, InsufficientDataException {
+    long bytesSkipped = 0;
+    long totalBytesSkipped = 0;
+
+    while ((bytesSkipped = is.skip(n - totalBytesSkipped)) >= 0) {
+      totalBytesSkipped += bytesSkipped;
+      if (totalBytesSkipped == n) {
+        return;
+      }
     }
+
+    throw new InsufficientDataException("Insufficient data.  bytes skipped " + totalBytesSkipped + " expected " + n);
   }
 
 

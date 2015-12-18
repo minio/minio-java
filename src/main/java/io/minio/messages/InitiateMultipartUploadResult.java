@@ -21,9 +21,9 @@ import com.google.api.client.util.Key;
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class InitiateMultipartUploadResult extends XmlEntity {
   @Key("Bucket")
-  private String bucket;
+  private String bucketName;
   @Key("Key")
-  private String key;
+  private String objectName;
   @Key("UploadId")
   private String uploadId;
 
@@ -32,20 +32,30 @@ public class InitiateMultipartUploadResult extends XmlEntity {
     this.name = "InitiateMultipartUploadResult";
   }
 
-  public String getBucket() {
-    return bucket;
+  public String getBucketName() {
+    return bucketName;
   }
 
-  public void setBucket(String bucket) {
-    this.bucket = bucket;
+  public void setBucketName(String bucketName) {
+    this.bucketName = bucketName;
   }
 
-  public String getKey() {
-    return key;
+  // must be there for XML parsing
+  public void setBucket(String bucketName) {
+    this.setBucketName(bucketName);
   }
 
-  public void setKey(String key) {
-    this.key = key;
+  public String getObjectName() {
+    return objectName;
+  }
+
+  public void setObjectName(String objectName) {
+    this.objectName = objectName;
+  }
+
+  // must be there for XML parsing
+  public void setKey(String objectName) {
+    this.setObjectName(objectName);
   }
 
   public String getUploadId() {
