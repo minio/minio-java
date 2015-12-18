@@ -87,14 +87,13 @@ import java.nio.file.Files;
 public final class MinioClient {
   private static final DateTimeFormatter AMZ_DATE_FORMAT = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
       .withZoneUTC();
+  // maximum allowed object size is 5TiB
+  private static final long MAX_OBJECT_SIZE = 5 * 1024 * 1024 * 1024 * 1024;
+  private static final int MAX_MULTIPART_COUNT = 10000;
   // minimum allowed multipart size is 5MiB
   private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
-  // maximum allowed multipart size is 5GiB
-  private static final int MAX_MULTIPART_SIZE = 5 * 1024 * 1024 * 1024;
-  private static final int MAX_MULTIPART_COUNT = 10000;
-  private static final long MAX_OBJECT_SIZE = MAX_MULTIPART_SIZE * (long) MAX_MULTIPART_COUNT;
-  // TODO: fix the limitation, but set it to 50GiB now
-  private static final long CURRENT_OBJECT_SIZE_LIMIT = 50 * 1024 * 1024 * 1024;
+  // maximum possible multipart size is 535MiB = MAX_OBJECT_SIZE / MAX_MULTIPART_COUNT
+  private static final int MAX_MULTIPART_SIZE = 535 * 1024 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
@@ -1083,6 +1082,56 @@ public final class MinioClient {
    *
    * @param bucketName  Bucket name
    * @param objectName  Object name to create in the bucket
+   * @param fileName    File name to upload
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void putObject(String bucketName, String objectName, String fileName)
+    throws MinioException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InvalidArgumentException, NoSuchAlgorithmException, InternalException {
+    if (fileName == null || "".equals(fileName.trim())) {
+      throw new InvalidArgumentException("empty file name is not allowed");
+    }
+
+    Path filePath = Paths.get(fileName);
+    if (!Files.isRegularFile(filePath)) {
+      throw new InvalidArgumentException("'" + fileName + "': not a regular file");
+    }
+
+    String contentType = Files.probeContentType(filePath);
+    long size = Files.size(filePath);
+
+    InputStream is = Files.newInputStream(filePath);
+    try {
+      putObject(bucketName, objectName, contentType, size, is);
+    } finally {
+      is.close();
+    }
+  }
+
+
+  /**
+   * Create an object.
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   *
+   * @param bucketName  Bucket name
+   * @param objectName  Object name to create in the bucket
    * @param contentType Content type to set this object to
    * @param size        Size of all the data that will be uploaded.
    * @param body        Data to upload
@@ -1095,7 +1144,7 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void putObject(String bucketName, String objectName, String contentType, long size, InputStream body)
-    throws MinioException, InsufficientDataException, InputSizeMismatchException,
+    throws InvalidArgumentException, MinioException, InsufficientDataException, InputSizeMismatchException,
            InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, NoSuchAlgorithmException, InternalException {
     if (contentType == null || "".equals(contentType.trim())) {
@@ -1172,59 +1221,6 @@ public final class MinioClient {
     }
 
     completeMultipart(bucketName, objectName, uploadId, totalParts);
-  }
-
-
-  /**
-   * Create an object.
-   * <p>
-   * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * </p>
-   * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
-   * </p>
-   * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
-   * </p>
-   *
-   * @param bucketName  Bucket name
-   * @param objectName  Object name to create in the bucket
-   * @param fileName    File name to upload
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public void putObject(String bucketName, String objectName, String fileName)
-    throws MinioException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InvalidArgumentException, NoSuchAlgorithmException, InternalException {
-    if (fileName == null || "".equals(fileName.trim())) {
-      throw new InvalidArgumentException("empty file name is not allowed");
-    }
-
-    Path filePath = Paths.get(fileName);
-    if (!Files.isRegularFile(filePath)) {
-      throw new InvalidArgumentException("'" + fileName + "': not a regular file");
-    }
-
-    String contentType = Files.probeContentType(filePath);
-    long size = Files.size(filePath);
-
-    if (size > MAX_OBJECT_SIZE) {
-      throw new InvalidArgumentException("file size should be <= " + MAX_OBJECT_SIZE + " bytes");
-    }
-
-    if (size > CURRENT_OBJECT_SIZE_LIMIT) {
-      throw new InternalException("currently file size > 50GiB is not supported");
-    }
-
-    putObject(bucketName, objectName, contentType, size, Files.newInputStream(filePath));
   }
 
 
@@ -1443,7 +1439,11 @@ public final class MinioClient {
   }
 
 
-  private int calculatePartSize(long size) {
+  private int calculatePartSize(long size) throws InvalidArgumentException {
+    if (size > MAX_OBJECT_SIZE) {
+      throw new InvalidArgumentException("size " + size + " is greater than allowed size 5TiB");
+    }
+
     // 9999 is used instead of 10000 to cater for the last part being too small
     int partSize = (int) (size / (MAX_MULTIPART_COUNT - 1));
     if (partSize > MIN_MULTIPART_SIZE) {
