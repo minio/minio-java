@@ -22,8 +22,6 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -38,12 +36,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 class RequestSigner implements Interceptor {
-  private static final DateTimeFormatter dateFormatyyyyMMddThhmmssZ =
-      DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
-  private static final DateTimeFormatter dateFormatyyyyMMdd = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC();
-  private static final DateTimeFormatter dateFormat =
-      DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss zzz").withZoneUTC();
-
   private byte[] data = new byte[0];
   private DateTime date = null;
   private String accessKey = null;
@@ -98,7 +90,7 @@ class RequestSigner implements Interceptor {
   private static byte[] getSigningKey(DateTime date, String region,
                                       String secretKey) throws NoSuchAlgorithmException,
                                                                UnsupportedEncodingException, InvalidKeyException {
-    String formattedDate = date.toString(dateFormatyyyyMMdd);
+    String formattedDate = date.toString(DateFormat.SIGNER_DATE_FORMAT);
     String dateKeyLine = "AWS4" + secretKey;
     byte[] dateKey = sumHmac(dateKeyLine.getBytes("UTF-8"), formattedDate.getBytes("UTF-8"));
     byte[] dateRegionKey = sumHmac(dateKey, region.getBytes("UTF-8"));
@@ -191,7 +183,7 @@ class RequestSigner implements Interceptor {
   }
 
   public String getScope(String region, DateTime date) {
-    String formattedDate = date.toString(dateFormatyyyyMMdd);
+    String formattedDate = date.toString(DateFormat.SIGNER_DATE_FORMAT);
     return formattedDate
         + "/"
         + region
@@ -204,7 +196,7 @@ class RequestSigner implements Interceptor {
   private String getStringToSign(String region, String canonicalHash, DateTime date) {
     return "AWS4-HMAC-SHA256"
         + "\n"
-        + date.toString(dateFormatyyyyMMddThhmmssZ)
+        + date.toString(DateFormat.AMZ_DATE_FORMAT)
         + "\n"
         + getScope(region, date)
         + "\n"
@@ -351,7 +343,7 @@ class RequestSigner implements Interceptor {
                             "UTF-8")
         + "&";
     requestQuery += "X-Amz-Date="
-        + date.toString(dateFormatyyyyMMddThhmmssZ)
+        + date.toString(DateFormat.AMZ_DATE_FORMAT)
         + "&";
     requestQuery += "X-Amz-Expires="
         + expires

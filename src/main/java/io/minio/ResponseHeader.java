@@ -16,26 +16,23 @@
 
 package io.minio;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.text.ParseException;
+import org.joda.time.DateTime;
 
 import io.minio.http.Header;
 
 
 public class ResponseHeader {
-  private final SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-
   @Header("Content-Length")
   private long contentLength;
   @Header("Content-Type")
   private String contentType;
   @Header("Date")
-  private String date;
+  private DateTime date;
   @Header("ETag")
   private String etag;
   @Header("Last-Modified")
-  private Date lastModified;
+  private DateTime lastModified;
   @Header("Server")
   private String server;
   @Header("Status Code")
@@ -71,12 +68,12 @@ public class ResponseHeader {
 
 
   public void setDate(String date) {
-    this.date = date;
+    this.date = DateFormat.HTTP_HEADER_DATE_FORMAT.parseDateTime(date);
   }
 
 
-  public String getDate() {
-    return this.date;
+  public Date getDate() {
+    return this.date.toDate();
   }
 
 
@@ -90,13 +87,13 @@ public class ResponseHeader {
   }
 
 
-  public void setLastModified(String lastModified) throws ParseException {
-    this.lastModified = dateFormat.parse(lastModified);
+  public void setLastModified(String lastModified) {
+    this.lastModified = DateFormat.HTTP_HEADER_DATE_FORMAT.parseDateTime(lastModified);
   }
 
 
   public Date getLastModified() {
-    return new Date(this.lastModified.getTime());
+    return this.lastModified.toDate();
   }
 
 
