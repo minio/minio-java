@@ -517,7 +517,7 @@ public final class MinioClient {
     }
 
     Request request = getRequest(Method.GET, bucketName, objectName, null, null, null);
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, new DateTime());
+    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey);
     return signer.preSignV4(request, expires);
   }
 
@@ -558,7 +558,7 @@ public final class MinioClient {
     }
 
     Request request = getRequest(Method.PUT, bucketName, objectName, "".getBytes("UTF-8"), null, null);
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, new DateTime());
+    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey);
     return signer.preSignV4(request, expires);
   }
 

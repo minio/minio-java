@@ -71,11 +71,18 @@ class RequestSigner implements Interceptor {
   //
   private Set<String> ignoredHeaders = new HashSet<String>();
 
-  RequestSigner(byte[] data, String accessKey, String secretKey, DateTime date) {
+
+  public RequestSigner(byte[] data, String accessKey, String secretKey) {
+    this(data, accessKey, secretKey, new DateTime());
+  }
+
+
+  public RequestSigner(byte[] data, String accessKey, String secretKey, DateTime date) {
     if (data == null) {
-      data = new byte[0];
+      this.data = new byte[0];
+    } else {
+      this.data = data;
     }
-    this.data = data;
     this.date = date;
     this.accessKey = accessKey;
     this.secretKey = secretKey;
