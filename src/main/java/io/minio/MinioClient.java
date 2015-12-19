@@ -28,8 +28,6 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import org.xmlpull.v1.XmlPullParserException;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import com.google.common.io.BaseEncoding;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
@@ -85,8 +83,6 @@ import java.nio.file.Files;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public final class MinioClient {
-  private static final DateTimeFormatter AMZ_DATE_FORMAT = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'")
-      .withZoneUTC();
   // maximum allowed object size is 5TiB
   private static final long MAX_OBJECT_SIZE = 5 * 1024 * 1024 * 1024 * 1024;
   private static final int MAX_MULTIPART_COUNT = 10000;
@@ -330,7 +326,7 @@ public final class MinioClient {
     DateTime date = new DateTime();
     this.transport.setFollowRedirects(false);
     this.transport.interceptors().add(new RequestSigner(data, accessKey, secretKey, date));
-    requestBuilder.header("x-amz-date", date.toString(AMZ_DATE_FORMAT));
+    requestBuilder.header("x-amz-date", date.toString(DateFormat.AMZ_DATE_FORMAT));
 
     return requestBuilder.build();
   }
@@ -521,7 +517,7 @@ public final class MinioClient {
     }
 
     Request request = getRequest(Method.GET, bucketName, objectName, null, null, null);
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, new DateTime());
+    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey);
     return signer.preSignV4(request, expires);
   }
 
@@ -562,7 +558,7 @@ public final class MinioClient {
     }
 
     Request request = getRequest(Method.PUT, bucketName, objectName, "".getBytes("UTF-8"), null, null);
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, new DateTime());
+    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey);
     return signer.preSignV4(request, expires);
   }
 

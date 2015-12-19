@@ -22,18 +22,11 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.base.Strings;
 import com.google.common.base.Joiner;
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 public class PostPolicy {
-  private DateTimeFormatter expirationDateFormat =
-      DateTimeFormat.forPattern("yyyy-MM-dd'T'HH':'mm':'ss'.'SSS'Z'").withZoneUTC();
-  private DateTimeFormatter dateFormatyyyyMMddThhmmssZ =
-      DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
-
   private String expiration;
   private ArrayList<String[]> conditions;
   private Map<String, String> formData;
@@ -50,7 +43,7 @@ public class PostPolicy {
     if (date == null) {
       throw new InvalidArgumentException("null date");
     }
-    expiration = date.toString(expirationDateFormat);
+    expiration = date.toString(DateFormat.EXPIRATION_DATE_FORMAT);
   }
 
   /**
@@ -111,7 +104,7 @@ public class PostPolicy {
    * set date.
    */
   public void setDate(DateTime date) {
-    String dateStr = date.toString(dateFormatyyyyMMddThhmmssZ);
+    String dateStr = date.toString(DateFormat.AMZ_DATE_FORMAT);
     conditions.add(new String[]{"eq","$x-amz-date",dateStr});
     formData.put("x-amz-date", dateStr);
   }

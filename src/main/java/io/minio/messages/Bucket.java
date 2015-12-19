@@ -16,12 +16,9 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
+import com.google.api.client.util.Key;
+import io.minio.DateFormat;
 
 
 @SuppressWarnings("SameParameterValue")
@@ -30,18 +27,11 @@ public class Bucket extends XmlEntity {
   private String name;
   @Key("CreationDate")
   private String creationDate;
-  private final SimpleDateFormat dateFormat;
 
 
-  /**
-   * constructor.
-   */
   public Bucket() {
     super();
     super.name = "Bucket";
-
-    dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
 
@@ -50,27 +40,7 @@ public class Bucket extends XmlEntity {
   }
 
 
-  public void setName(String name) {
-    this.name = name;
-  }
-
-
-  public Date getCreationDate() throws ParseException {
-    return dateFormat.parse(creationDate);
-  }
-
-
-  public void setCreationDate(Date creationDate) {
-    this.creationDate = dateFormat.format(creationDate);
-  }
-
-
-  /**
-   * setter for creationDate.
-   */
-  public void setCreationDate(String creationDate) throws ParseException {
-    // make sure creationDate is formatted correctly
-    dateFormat.parse(creationDate);
-    this.creationDate = creationDate;
+  public Date getCreationDate() {
+    return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(creationDate).toDate();
   }
 }

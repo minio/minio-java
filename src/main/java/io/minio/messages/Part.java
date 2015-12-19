@@ -16,12 +16,9 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
+import com.google.api.client.util.Key;
+import io.minio.DateFormat;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Part extends XmlEntity {
@@ -75,13 +72,8 @@ public class Part extends XmlEntity {
     this.lastModified = lastModified;
   }
 
-  /**
-   * get parted last modified date.
-   */
-  public Date getParsedLastModified() throws ParseException {
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-    return formatter.parse(this.getLastModified());
+  public Date getParsedLastModified() {
+    return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(lastModified).toDate();
   }
 
   public long getSize() {
