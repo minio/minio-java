@@ -28,6 +28,7 @@ public enum ErrorCode {
   ACCOUNT_PROBLEM("AccountProblem", "Problem with provided account"),
   AMBIGUOUS_GRANT_BY_EMAIL_ADDRESS("AmbiguousGrantByEmailAddress",
                                    "The email address you provided is associated with more than one account"),
+  AUTHORIZATION_HEADER_MALFORMED("AuthorizationHeaderMalformed", "The authorization header is malformed"),
   BAD_DIGEST("BadDigest", "Specified Content-MD5 does not match"),
   BUCKET_ALREADY_EXISTS("BucketAlreadyExists", "Bucket already exists"),
   BUCKET_ALREADY_OWNED_BY_YOU("BucketAlreadyOwnedByYou", "Bucket is already owned by you"),
