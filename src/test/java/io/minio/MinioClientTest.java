@@ -159,8 +159,9 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidExpiresRangeException.class)
-  public void testPresignGetObjectFail() throws IOException, InvalidKeyException, MinioException,
-                                                NoSuchAlgorithmException, InvalidExpiresRangeException {
+  public void testPresignGetObjectFail()
+    throws IOException, InvalidKeyException, MinioException, NoSuchAlgorithmException, InvalidExpiresRangeException,
+           XmlPullParserException {
     MockWebServer server = new MockWebServer();
     server.start();
 
@@ -170,8 +171,9 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testPresignGetObject() throws IOException, InvalidKeyException, MinioException, NoSuchAlgorithmException,
-                                            InvalidExpiresRangeException {
+  public void testPresignGetObject()
+    throws IOException, InvalidKeyException, MinioException, NoSuchAlgorithmException, InvalidExpiresRangeException,
+           XmlPullParserException {
     MockWebServer server = new MockWebServer();
     server.start();
 

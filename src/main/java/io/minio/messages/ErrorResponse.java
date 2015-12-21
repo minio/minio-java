@@ -78,7 +78,14 @@ public class ErrorResponse extends XmlEntity {
   }
 
 
+  /**
+   * returns ErrorCode.
+   */
   public ErrorCode getErrorCode() {
+    if (this.errorCode == null) {
+      this.errorCode = ErrorCode.fromString(this.code);
+    }
+
     return this.errorCode;
   }
 

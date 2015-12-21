@@ -16,42 +16,55 @@
 
 package io.minio;
 
-import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
+
 
 public enum Regions {
   INSTANCE;
-  private final Map<String, String> regions = new HashMap<String, String>();
+  private final Map<String, String> regionMap = new Hashtable<String, String>();
 
-  Regions() {
-    // ap-northeast-1
-    regions.put("s3-ap-northeast-1.amazonaws.com", "ap-northeast-1");
-    // ap-southeast-1
-    regions.put("s3-ap-southeast-1.amazonaws.com", "ap-southeast-1");
-    // ap-southeast-2
-    regions.put("s3-ap-southeast-2.amazonaws.com", "ap-southeast-2");
-    // eu-central-1
-    regions.put("s3-eu-central-1.amazonaws.com", "eu-central-1");
-    // eu-west-1
-    regions.put("s3-eu-west-1.amazonaws.com", "eu-west-1");
-    // sa-east-1
-    regions.put("s3-sa-east-1.amazonaws.com", "sa-east-1");
-    // us-east-1
-    regions.put("s3.amazonaws.com", "us-east-1");
-    // us-west-1
-    regions.put("s3-us-west-1.amazonaws.com", "us-west-1");
-    // us-west-2
-    regions.put("s3-us-west-2.amazonaws.com", "us-west-2");
-  }
 
   /**
-   * get region.
+   * returns AWS region for given bucket name.
    */
-  public String getRegion(String host) {
-    String s = Regions.INSTANCE.regions.get(host);
-    if (s == null) {
-      s = "us-east-1";
+  public String region(String bucketName) {
+    if (bucketName == null) {
+      return "us-east-1";
     }
-    return s;
+
+    String region = this.regionMap.get(bucketName);
+    if (region == null) {
+      return "us-east-1";
+    } else {
+      return region;
+    }
+  }
+
+
+  public void add(String bucketName, String region) {
+    this.regionMap.put(bucketName, region);
+  }
+
+
+  /**
+   * remove region cache of the bucket if any.
+   */
+  public void remove(String bucketName) {
+    if (bucketName != null) {
+      this.regionMap.remove(bucketName);
+    }
+  }
+
+
+  /**
+   * returns true if given bucket name is in the map else false.
+   */
+  public boolean exists(String bucketName) {
+    if (this.regionMap.get(bucketName) == null) {
+      return false;
+    } else {
+      return true;
+    }
   }
 }

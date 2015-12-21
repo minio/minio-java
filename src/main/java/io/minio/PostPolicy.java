@@ -79,6 +79,12 @@ public class PostPolicy {
     formData.put("bucket", bucket);
   }
 
+
+  public String getBucket() {
+    return formData.get("bucket");
+  }
+
+
   /**
    * set content type.
    */
