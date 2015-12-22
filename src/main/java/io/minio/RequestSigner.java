@@ -76,22 +76,35 @@ class RequestSigner implements Interceptor {
   }
 
   private byte[] data;
+  private int length;
   private DateTime date;
   private String accessKey;
   private String secretKey;
   private String region;
 
 
-  public RequestSigner(byte[] data, String accessKey, String secretKey, String region) {
-    this(data, accessKey, secretKey, region, new DateTime());
+  public RequestSigner(String accessKey, String secretKey, String region) {
+    this(accessKey, secretKey, region, new DateTime(), null, 0);
   }
 
 
-  public RequestSigner(byte[] data, String accessKey, String secretKey, String region, DateTime date) {
+  public RequestSigner(String accessKey, String secretKey, String region, byte[] data, int length) {
+    this(accessKey, secretKey, region, new DateTime(), data, length);
+  }
+
+
+  public RequestSigner(String accessKey, String secretKey, String region, DateTime date) {
+    this(accessKey, secretKey, region, date, null, 0);
+  }
+
+
+  public RequestSigner(String accessKey, String secretKey, String region, DateTime date, byte[] data, int length) {
     if (data == null) {
       this.data = new byte[0];
+      this.length = this.data.length;
     } else {
       this.data = data;
+      this.length = length;
     }
     this.accessKey = accessKey;
     this.secretKey = secretKey;
@@ -126,7 +139,7 @@ class RequestSigner implements Interceptor {
           .build();
     }
 
-    byte[] dataHashBytes = computeSha256(data);
+    byte[] dataHashBytes = computeSha256(this.data, this.length);
     String dataHash = BaseEncoding.base16().encode(dataHashBytes).toLowerCase();
 
     Request signedRequest = originalRequest.newBuilder()
@@ -167,6 +180,14 @@ class RequestSigner implements Interceptor {
     MessageDigest digest = MessageDigest.getInstance("SHA-256");
     return digest.digest(data);
   }
+
+
+  private byte[] computeSha256(byte[] data, int length) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    digest.update(data, 0, length);
+    return digest.digest();
+  }
+
 
   private String getAuthorizationHeader(String signedHeaders, String signature, String region) {
     return "AWS4-HMAC-SHA256 Credential=" + this.accessKey + "/" + getScope(region) + ", SignedHeaders="
