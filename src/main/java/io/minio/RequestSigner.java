@@ -328,9 +328,6 @@ class RequestSigner implements Interceptor {
         .header("Host", host)
         .build();
 
-    // remove x-amz-date proactively
-    ignoredHeaders.add("x-amz-date");
-
     requestQuery = "X-Amz-Algorithm=AWS4-HMAC-SHA256&";
     requestQuery += "X-Amz-Credential="
         + this.accessKey
