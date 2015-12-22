@@ -26,6 +26,8 @@ import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlPullParserException;
 import org.joda.time.DateTime;
 import com.google.common.io.BaseEncoding;
@@ -283,8 +285,7 @@ public final class MinioClient {
 
 
   private Request getRequest(Method method, String bucketName, String objectName, byte[] data,
-                             Map<String,String> headerMap, Map<String,String> queryParamMap,
-                             boolean locationQuery)
+                             Map<String,String> headerMap, Map<String,String> queryParamMap)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     if (bucketName == null && objectName != null) {
@@ -295,10 +296,19 @@ public final class MinioClient {
 
     if (bucketName != null) {
       checkBucketName(bucketName);
-      if (!locationQuery) {
-        updateRegionMap(bucketName);
+
+      // special case:
+      // if the request is for s3.amazonaws.com and location query,
+      // use s3.amazonaws.com/BUCKETNAME
+      if (baseUrl.host().equals("s3.amazonaws.com")) {
+        if (queryParamMap != null && queryParamMap.containsKey("location")) {
+          urlBuilder.addPathSegment(bucketName);
+        } else {
+          urlBuilder.host(bucketName + ".s3.amazonaws.com");
+        }
+      } else {
+        urlBuilder.addPathSegment(bucketName);
       }
-      urlBuilder.addPathSegment(bucketName);
     }
 
     if (objectName != null) {
@@ -330,23 +340,14 @@ public final class MinioClient {
   }
 
 
-  private Request getRequest(Method method, String bucketName, String objectName, byte[] data,
-                             Map<String,String> headerMap, Map<String,String> queryParamMap)
+  private HttpResponse execute(Method method, String region, String bucketName, String objectName, byte[] data,
+                               Map<String,String> headerMap, Map<String,String> queryParamMap)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    return getRequest(method, bucketName, objectName, data, headerMap, queryParamMap, false);
-  }
-
-
-  private HttpResponse execute(Method method, String bucketName, String objectName,
-                               byte[] data, Map<String,String> headerMap, Map<String,String> queryParamMap,
-                               boolean locationQuery)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    Request request = getRequest(method, bucketName, objectName, data, headerMap, queryParamMap, locationQuery);
+    Request request = getRequest(method, bucketName, objectName, data, headerMap, queryParamMap);
 
     OkHttpClient transport = new OkHttpClient();
-    transport.interceptors().add(new RequestSigner(data, accessKey, secretKey, Regions.INSTANCE.region(bucketName)));
+    transport.interceptors().add(new RequestSigner(data, accessKey, secretKey, region));
 
     Response response = transport.newCall(request).execute();
     if (response == null) {
@@ -406,6 +407,7 @@ public final class MinioClient {
                                         header.getXamzRequestId(), header.getXamzId2());
     }
 
+    // invalidate region cache if needed
     if (errorResponse.getErrorCode() == ErrorCode.NO_SUCH_BUCKET) {
       Regions.INSTANCE.remove(bucketName);
       // TODO: handle for other cases as well
@@ -416,67 +418,42 @@ public final class MinioClient {
   }
 
 
-  private HttpResponse execute(Method method, String bucketName, String objectName,
-                               byte[] data, Map<String,String> headerMap, Map<String,String> queryParamMap)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    return execute(method, bucketName, objectName, data, headerMap, queryParamMap, false);
-  }
-
-
-  private HttpResponse executeGet(String bucketName, String objectName, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    return execute(Method.GET, bucketName, objectName, null, headerMap, queryParamMap);
-  }
-
-
-  private HttpResponse executeHead(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    return execute(Method.HEAD, bucketName, objectName, null, null, null);
-  }
-
-
-  private HttpResponse executeDelete(String bucketName, String objectName, Map<String,String> queryParamMap)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    return execute(Method.DELETE, bucketName, objectName, null, null, queryParamMap);
-  }
-
-
-  private HttpResponse executePost(String bucketName, String objectName, byte[] data, Map<String,String> queryParamMap)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    return execute(Method.POST, bucketName, objectName, data, null, queryParamMap);
-  }
-
-
-  private HttpResponse executePut(String bucketName, String objectName, byte[] data, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    return execute(Method.PUT, bucketName, objectName, data, headerMap, queryParamMap);
-  }
-
-
   private void updateRegionMap(String bucketName)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    if ("s3.amazonaws.com".equals(this.baseUrl.host()) && this.accessKey != null && this.secretKey != null
-          && Regions.INSTANCE.exists(bucketName) == false) {
-      String region = "us-east-1";
+    if (bucketName != null && "s3.amazonaws.com".equals(this.baseUrl.host()) && this.accessKey != null
+          && this.secretKey != null && Regions.INSTANCE.exists(bucketName) == false) {
       Map<String,String> queryParamMap = new HashMap<String,String>();
       queryParamMap.put("location", null);
 
       try {
-        HttpResponse response = execute(Method.GET, bucketName, null, null, null, queryParamMap, true);
-        LocationConstraint result = new LocationConstraint();
-        result.parseXml(response.body().charStream());
+        HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null, null, null, queryParamMap);
 
-        String location = result.getLocationConstraint();
-        if (location != null) {
+        // existing XmlEntity does not work, so fallback to regular parsing.
+        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        XmlPullParser xpp = factory.newPullParser();
+        String location = null;
+
+        xpp.setInput(response.body().charStream());
+        while (xpp.getEventType() != xpp.END_DOCUMENT) {
+          if (xpp.getEventType() ==  xpp.START_TAG && xpp.getName() == "LocationConstraint") {
+            xpp.next();
+            if (xpp.getEventType() == xpp.TEXT) {
+              location = xpp.getText();
+            }
+            break;
+          }
+
+          xpp.next();
+        }
+
+        response.body().close();
+
+        String region;
+        if (location == null) {
+          region = "us-east-1";
+        } else {
           if ("EU".equals(location)) {
             region = "eu-west-1";
           } else {
@@ -491,6 +468,59 @@ public final class MinioClient {
         }
       }
     }
+  }
+
+
+  private HttpResponse executeGet(String bucketName, String objectName, Map<String,String> headerMap,
+                                  Map<String,String> queryParamMap)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    updateRegionMap(bucketName);
+    return execute(Method.GET, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, headerMap,
+                   queryParamMap);
+  }
+
+
+  private HttpResponse executeHead(String bucketName, String objectName)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    updateRegionMap(bucketName);
+    return execute(Method.HEAD, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, null, null);
+  }
+
+
+  private HttpResponse executeDelete(String bucketName, String objectName, Map<String,String> queryParamMap)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    updateRegionMap(bucketName);
+    return execute(Method.DELETE, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, null,
+                   queryParamMap);
+  }
+
+
+  private HttpResponse executePost(String bucketName, String objectName, byte[] data, Map<String,String> queryParamMap)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    updateRegionMap(bucketName);
+    return execute(Method.POST, Regions.INSTANCE.region(bucketName), bucketName, objectName, data, null,
+                   queryParamMap);
+  }
+
+
+  private HttpResponse executePut(String bucketName, String objectName, byte[] data, Map<String,String> headerMap,
+                                  Map<String,String> queryParamMap, String region)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    return execute(Method.PUT, region, bucketName, objectName, data, headerMap, queryParamMap);
+  }
+
+
+  private HttpResponse executePut(String bucketName, String objectName, byte[] data, Map<String,String> headerMap,
+                                  Map<String,String> queryParamMap)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    updateRegionMap(bucketName);
+    return executePut(bucketName, objectName, data, headerMap, queryParamMap, Regions.INSTANCE.region(bucketName));
   }
 
 
@@ -917,7 +947,7 @@ public final class MinioClient {
 
 
   /**
-   * Create a bucket with default ACL.
+   * Create a bucket with default region and ACL.
    *
    * @param bucketName Bucket name
    *
@@ -931,12 +961,32 @@ public final class MinioClient {
   public void makeBucket(String bucketName)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, NoSuchAlgorithmException, InternalException {
-    this.makeBucket(bucketName, null);
+    this.makeBucket(bucketName, null, null);
   }
 
 
   /**
-   * Create a bucket with a given ACL.
+   * Create a bucket with given region and default ACL.
+   *
+   * @param bucketName Bucket name
+   * @param region     region in which the bucket will be created
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void makeBucket(String bucketName, String region)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, NoSuchAlgorithmException, InternalException {
+    this.makeBucket(bucketName, region, null);
+  }
+
+
+  /**
+   * Create a bucket with given ACL and default region.
    *
    * @param bucketName Bucket name
    * @param acl        Canned ACL
@@ -951,11 +1001,31 @@ public final class MinioClient {
   public void makeBucket(String bucketName, Acl acl)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, NoSuchAlgorithmException, InternalException {
+    this.makeBucket(bucketName, null, acl);
+  }
+
+
+  /**
+   * Create a bucket with given region and ACL.
+   *
+   * @param bucketName Bucket name
+   * @param region     region in which the bucket will be created
+   * @param acl        Canned ACL
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void makeBucket(String bucketName, String region, Acl acl)
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, NoSuchAlgorithmException, InternalException {
     byte[] data = null;
     Map<String,String> headerMap = new HashMap<String,String>();
 
-    String region = Regions.INSTANCE.region(bucketName);
-    if ("us-east-1".equals(region)) {
+    if (region == null || "us-east-1".equals(region)) {
       // for 'us-east-1', location constraint is not required.  for more info
       // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
       data = "".getBytes("UTF-8");
@@ -976,7 +1046,7 @@ public final class MinioClient {
       headerMap.put("x-amz-acl", acl.toString());
     }
 
-    executePut(bucketName, null, data, headerMap, null);
+    executePut(bucketName, null, data, headerMap, null, "us-east-1");
   }
 
 
