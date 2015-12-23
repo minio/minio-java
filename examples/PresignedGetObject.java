@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import com.google.api.client.util.IOUtils;
 import io.minio.MinioClient;
 import io.minio.errors.ClientException;
@@ -26,10 +27,13 @@ import java.io.InputStream;
 
 public class PresignedGetObject {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException, NoSuchAlgorithmException, InvalidKeyException {
+
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname and my-objectname
+    // are dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    String str = s3Client.presignedGetObject("bucketName", "objectName", 1000);
+    String str = s3Client.presignedGetObject("my-bucketname", "my-objectname", 1000);
 
     System.out.println(str);
   }

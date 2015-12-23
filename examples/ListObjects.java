@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.ClientException;
@@ -25,13 +26,15 @@ import java.util.Iterator;
 
 public class ListObjects {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-    System.out.println("ListObjects app");
 
-    // Set s3 endpoint, region is calculated automatically
+
+      // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname
+     // are dummy values, please replace them with original values.
+     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // list objects
-    Iterator<Result<Item>> myObjects = s3Client.listObjects("bucketName");
+    Iterator<Result<Item>> myObjects = s3Client.listObjects("my-bucketname");
     while (myObjects.hasNext()) {
       Result<Item> result = myObjects.next();
       Item object = result.getResult();

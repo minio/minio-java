@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.errors.ClientException;
@@ -23,13 +24,14 @@ import java.io.IOException;
 
 public class StatObject {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-    System.out.println("StatObject app");
 
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname and my-objectname
+    // are dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // stat an object
-    ObjectStat objectStat = s3Client.statObject("bucketName", "objectName");
+    ObjectStat objectStat = s3Client.statObject("my-bucketname", "my-objectname");
     System.out.println(objectStat);
   }
 }

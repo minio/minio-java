@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.minio.MinioClient;
 import io.minio.PostPolicy;
 import io.minio.errors.ClientException;
@@ -33,6 +34,9 @@ import java.util.Map;
 
 public class PresignedPostPolicy {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException, NoSuchAlgorithmException, InvalidKeyException {
+
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname and my-objectname
+    // are dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically.
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
@@ -41,8 +45,8 @@ public class PresignedPostPolicy {
     date = date.plusMonths(1); // Expire in one month.
 
     // set policy parameters.
-    policy.setKey("objectName");
-    policy.setBucket("bucketName");
+    policy.setKey("my-objectname");
+    policy.setBucket("my-bucketname");
     policy.setExpires(date);
     policy.setContentType("image/png");
 
@@ -52,6 +56,6 @@ public class PresignedPostPolicy {
     for (Map.Entry<String, String> entry : formData.entrySet()) {
         System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
     }
-    System.out.print("-F file=@/tmp/userpic.png https://s3.amazonaws.com/bucketName\n");
+    System.out.print("-F file=@/tmp/userpic.png https://s3.amazonaws.com/my-bucketname\n");
   }
 }

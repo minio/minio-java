@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+
+ // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname and
+ // my-objectname are dummy values, please replace them with original values.
+
 import io.minio.MinioClient;
 import io.minio.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
@@ -23,8 +27,9 @@ import java.io.IOException;
 
 public class PutObject {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-    System.out.println("PutObject app");
 
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname and my-objectname
+    // are dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
@@ -33,7 +38,7 @@ public class PutObject {
       builder.append('a');
     }
     // create object
-    s3Client.putObject("bucketName", "objectName", "application/octet-stream",
+    s3Client.putObject("my-bucketname", "my-objectname", "application/octet-stream",
                        11 * 1024 * 1024,
                        new ByteArrayInputStream(builder.toString().getBytes("UTF-8")));
   }

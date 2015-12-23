@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.minio.MinioClient;
 import io.minio.errors.ClientException;
 import io.minio.messages.Bucket;
@@ -24,8 +25,9 @@ import java.util.Iterator;
 
 public class ListBuckets {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-    System.out.println("ListBuckets app");
 
+    // Note: YOUR-ACCESSKEYID and YOUR-SECRETACCESSKEY are
+    // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
