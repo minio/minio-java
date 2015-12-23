@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.minio.MinioClient;
 import io.minio.acl.Acl;
 import io.minio.errors.ClientException;
@@ -23,13 +24,14 @@ import java.io.IOException;
 
 public class GetBucketAcl {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-    System.out.println("GetBucketAcl app");
 
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
+    // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // get bucket canned acl
-    Acl acl = s3Client.getBucketACL("bucketName");
+    Acl acl = s3Client.getBucketACL("my-bucketname");
     System.out.println(acl);
   }
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 import io.minio.MinioClient;
 import io.minio.errors.ClientException;
 import org.xmlpull.v1.XmlPullParserException;
@@ -22,12 +23,13 @@ import java.io.IOException;
 
 public class RemoveObject {
   public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-    System.out.println("RemoveObject app");
 
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname and my-objectname
+    // are dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // remove object
-    s3Client.removeObject("bucketName", "objectName");
+    s3Client.removeObject("my-bucketname", "my-objectname");
   }
 }

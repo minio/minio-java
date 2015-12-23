@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+
+
 import io.minio.MinioClient;
 import io.minio.errors.ClientException;
 
@@ -21,12 +23,14 @@ import java.io.IOException;
 
 public class BucketExists {
   public static void main(String[] args) throws IOException, ClientException {
-    System.out.println("BucketExists app");
 
+
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
+    // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    boolean bucketExists = s3Client.bucketExists("mymultipartbucket");
+    boolean bucketExists = s3Client.bucketExists("my-bucketname");
     System.out.println(bucketExists);
   }
 }
