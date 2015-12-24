@@ -35,6 +35,7 @@ import org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.EOFException;
 import java.net.URL;
@@ -50,6 +51,9 @@ import java.util.logging.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import com.google.common.io.ByteStreams;
+import java.nio.file.StandardCopyOption;
 
 
 /**
@@ -581,10 +585,161 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public InputStream getObject(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    HttpResponse response = executeGet(bucketName, objectName, null, null);
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    return getObject(bucketName, objectName, 0, null);
+  }
+
+
+  /** Returns an InputStream containing a subset of the object. The InputStream must be
+   *  closed or the connection will remain open.
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param offset      Offset to read at.
+   *
+   * @return an InputStream containing the object. Close the InputStream when done.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public InputStream getObject(String bucketName, String objectName, long offset)
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    return getObject(bucketName, objectName, offset, null);
+  }
+
+
+  /**
+   * Returns an InputStream containing a subset of the object. The InputStream must be
+   * closed or the connection will remain open.
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param offset      Offset to read at.
+   * @param length      Length to read.
+   *
+   * @return an InputStream containing the object. Close the InputStream when done.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public InputStream getObject(String bucketName, String objectName, long offset, Long length)
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    if (offset < 0) {
+      throw new InvalidArgumentException("offset should be zero or greater");
+    }
+
+    if (length != null && length <= 0) {
+      throw new InvalidArgumentException("length should be greater than zero");
+    }
+
+    Map<String,String> headerMap = new Hashtable<String,String>();
+    if (length != null) {
+      headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
+    } else {
+      headerMap.put("Range", "bytes=" + offset + "-");
+    }
+
+    HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
     return response.body().byteStream();
+  }
+
+
+  /**
+   * Get object and store it to given file name.
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param fileName    file name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void getObject(String bucketName, String objectName, String fileName)
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException,
+           IOException, XmlPullParserException, ErrorResponseException, InternalException {
+    Path filePath = Paths.get(fileName);
+    boolean fileExists = Files.exists(filePath);
+
+    if (fileExists && !Files.isRegularFile(filePath)) {
+      throw new InvalidArgumentException(fileName + ": not a regular file");
+    }
+
+    ObjectStat objectStat = statObject(bucketName, objectName);
+    long length = objectStat.getLength();
+    String md5sum = objectStat.getMd5sum();
+
+    String tempFileName = fileName + "." + md5sum + ".part.minio";
+    Path tempFilePath = Paths.get(tempFileName);
+    boolean tempFileExists = Files.exists(filePath);
+
+    if (tempFileExists && !Files.isRegularFile(tempFilePath)) {
+      throw new IOException(tempFileName + ": not a regular file");
+    }
+
+    long tempFileSize = 0;
+    if (tempFileExists) {
+      tempFileSize = Files.size(tempFilePath);
+      if (tempFileSize > length) {
+        Files.delete(tempFilePath);
+        tempFileExists = false;
+        tempFileSize = 0;
+      }
+    }
+
+    if (fileExists) {
+      long fileSize = Files.size(filePath);
+      if (fileSize == length) {
+        // already downloaded. nothing to do
+        return;
+      } else if (fileSize > length) {
+        throw new InvalidArgumentException("'" + fileName + "': object size " + length + " is smaller than file size "
+                                           + fileSize);
+      } else if (!tempFileExists) {
+        // before resuming the download, copy filename to tempfilename
+        Files.copy(filePath, tempFilePath);
+        tempFileSize = fileSize;
+        tempFileExists = true;
+      }
+    }
+
+    InputStream is = null;
+    OutputStream os = null;
+    try {
+      is = getObject(bucketName, objectName, tempFileSize);
+      os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+      long bytesWritten = ByteStreams.copy(is, os);
+      is.close();
+      os.close();
+
+      if (bytesWritten != length - tempFileSize) {
+        throw new IOException(tempFileName + ": unexpected data written.  expected = " + (length - tempFileSize)
+                                + ", written = " + bytesWritten);
+      }
+
+      Files.move(tempFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
+    } finally {
+      if (is != null) {
+        is.close();
+      }
+      if (os != null) {
+        os.close();
+      }
+    }
   }
 
 
@@ -701,66 +856,6 @@ public final class MinioClient {
     policy.setPolicy(policybase64);
     policy.setSignature(signature);
     return policy.getFormData();
-  }
-
-
-  /** Returns an InputStream containing a subset of the object. The InputStream must be
-   *  closed or the connection will remain open.
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offsetStart Offset from the start of the object.
-   *
-   * @return an InputStream containing the object. Close the InputStream when done.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidRangeException       upon invalid offsetStart and/or length
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public InputStream getPartialObject(String bucketName, String objectName, long offsetStart)
-    throws InvalidRangeException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    ObjectStat stat = statObject(bucketName, objectName);
-    long length = stat.getLength() - offsetStart;
-    return getPartialObject(bucketName, objectName, offsetStart, length);
-  }
-
-
-  /**
-   * Returns an InputStream containing a subset of the object. The InputStream must be
-   * closed or the connection will remain open.
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offsetStart Offset from the start of the object.
-   * @param length      Length of bytes to retrieve.
-   *
-   * @return an InputStream containing the object. Close the InputStream when done.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidRangeException       upon invalid offsetStart and/or length
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public InputStream getPartialObject(String bucketName, String objectName, long offsetStart, long length)
-    throws InvalidRangeException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    if (offsetStart < 0 || length <= 0) {
-      throw new InvalidRangeException();
-    }
-
-    Map<String,String> headerMap = new Hashtable<String,String>();
-    headerMap.put("Range", "bytes=" + offsetStart + "-" + (offsetStart + length - 1));
-
-    HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
-    return response.body().byteStream();
   }
 
 
