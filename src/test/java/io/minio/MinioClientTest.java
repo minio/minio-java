@@ -22,7 +22,7 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 
 import okio.Buffer;
 
-import io.minio.acl.Acl;
+import io.minio.Acl;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;

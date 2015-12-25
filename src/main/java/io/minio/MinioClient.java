@@ -16,7 +16,6 @@
 
 package io.minio;
 
-import io.minio.acl.Acl;
 import io.minio.errors.*;
 import io.minio.messages.*;
 import io.minio.http.*;
