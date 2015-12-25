@@ -24,20 +24,22 @@ public class ObjectStat {
   private final String name;
   private final Date createdTime;
   private final long length;
-  private final String md5sum;
+  private final String etag;
   private final String contentType;
+
 
   /**
    * this comment fixes checkstyle javadoc error.
    */
-  public ObjectStat(String bucketName, String name, Date createdTime, long length, String md5sum, String contentType) {
+  public ObjectStat(String bucketName, String name, Date createdTime, long length, String etag, String contentType) {
     this.bucketName = bucketName;
     this.name = name;
     this.contentType = contentType;
     this.createdTime = (Date) createdTime.clone();
     this.length = length;
-    this.md5sum = md5sum.replaceAll("\"", "");
+    this.etag = etag.replaceAll("\"", "");
   }
+
 
   @Override
   public boolean equals(Object o) {
@@ -62,12 +64,13 @@ public class ObjectStat {
     if (!createdTime.equals(that.createdTime)) {
       return false;
     }
-    if (!md5sum.equals(that.md5sum)) {
+    if (!etag.equals(that.etag)) {
       return false;
     }
     return contentType.equals(that.contentType);
 
   }
+
 
   @Override
   public int hashCode() {
@@ -75,30 +78,36 @@ public class ObjectStat {
     result = 31 * result + name.hashCode();
     result = 31 * result + createdTime.hashCode();
     result = 31 * result + (int) (length ^ (length >>> 32));
-    result = 31 * result + md5sum.hashCode();
+    result = 31 * result + etag.hashCode();
     result = 31 * result + contentType.hashCode();
     return result;
   }
 
-  public String getName() {
+
+  public String name() {
     return name;
   }
 
-  public Date getCreatedTime() {
+
+  public Date createdTime() {
     return (Date) createdTime.clone();
   }
 
-  public long getLength() {
+
+  public long length() {
     return length;
   }
 
-  public String getBucketName() {
+
+  public String bucketName() {
     return bucketName;
   }
 
-  public String getMd5sum() {
-    return md5sum;
+
+  public String etag() {
+    return etag;
   }
+
 
   @Override
   public String toString() {
@@ -115,8 +124,8 @@ public class ObjectStat {
         + createdTime
         + ", length="
         + length
-        + ", md5sum='"
-        + md5sum
+        + ", etag='"
+        + etag
         + '\''
         + '}';
   }

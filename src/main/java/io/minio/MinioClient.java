@@ -679,10 +679,10 @@ public final class MinioClient {
     }
 
     ObjectStat objectStat = statObject(bucketName, objectName);
-    long length = objectStat.getLength();
-    String md5sum = objectStat.getMd5sum();
+    long length = objectStat.length();
+    String etag = objectStat.etag();
 
-    String tempFileName = fileName + "." + md5sum + ".part.minio";
+    String tempFileName = fileName + "." + etag + ".part.minio";
     Path tempFilePath = Paths.get(tempFileName);
     boolean tempFileExists = Files.exists(filePath);
 
