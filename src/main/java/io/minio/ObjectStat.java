@@ -20,8 +20,8 @@ import java.util.Date;
 
 @SuppressWarnings("unused")
 public class ObjectStat {
-  private final String bucket;
-  private final String key;
+  private final String bucketName;
+  private final String name;
   private final Date createdTime;
   private final long length;
   private final String md5sum;
@@ -30,9 +30,9 @@ public class ObjectStat {
   /**
    * this comment fixes checkstyle javadoc error.
    */
-  public ObjectStat(String bucket, String name, Date createdTime, long length, String md5sum, String contentType) {
-    this.bucket = bucket;
-    this.key = name;
+  public ObjectStat(String bucketName, String name, Date createdTime, long length, String md5sum, String contentType) {
+    this.bucketName = bucketName;
+    this.name = name;
     this.contentType = contentType;
     this.createdTime = (Date) createdTime.clone();
     this.length = length;
@@ -53,10 +53,10 @@ public class ObjectStat {
     if (length != that.length) {
       return false;
     }    
-    if (!bucket.equals(that.bucket)) {
+    if (!bucketName.equals(that.bucketName)) {
       return false;
     }
-    if (!key.equals(that.key)) {
+    if (!name.equals(that.name)) {
       return false;
     }
     if (!createdTime.equals(that.createdTime)) {
@@ -71,8 +71,8 @@ public class ObjectStat {
 
   @Override
   public int hashCode() {
-    int result = bucket.hashCode();
-    result = 31 * result + key.hashCode();
+    int result = bucketName.hashCode();
+    result = 31 * result + name.hashCode();
     result = 31 * result + createdTime.hashCode();
     result = 31 * result + (int) (length ^ (length >>> 32));
     result = 31 * result + md5sum.hashCode();
@@ -80,8 +80,8 @@ public class ObjectStat {
     return result;
   }
 
-  public String getKey() {
-    return key;
+  public String getName() {
+    return name;
   }
 
   public Date getCreatedTime() {
@@ -92,8 +92,8 @@ public class ObjectStat {
     return length;
   }
 
-  public String getBucket() {
-    return bucket;
+  public String getBucketName() {
+    return bucketName;
   }
 
   public String getMd5sum() {
@@ -104,10 +104,10 @@ public class ObjectStat {
   public String toString() {
     return "ObjectStat{"
         + "bucket='"
-        + bucket
+        + bucketName
         + '\''
-        + ", key='"
-        + key + '\''
+        + ", name='"
+        + name + '\''
         + ", contentType='"
         + contentType
         + '\''

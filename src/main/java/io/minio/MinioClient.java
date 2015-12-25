@@ -35,6 +35,7 @@ import org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.EOFException;
 import java.net.URL;
@@ -50,6 +51,9 @@ import java.util.logging.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import com.google.common.io.ByteStreams;
+import java.nio.file.StandardCopyOption;
 
 
 /**
@@ -87,7 +91,7 @@ import java.nio.file.Files;
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public final class MinioClient {
   // maximum allowed object size is 5TiB
-  private static final long MAX_OBJECT_SIZE = 5 * 1024 * 1024 * 1024 * 1024;
+  private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
   private static final int MAX_MULTIPART_COUNT = 10000;
   // minimum allowed multipart size is 5MiB
   private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
@@ -284,8 +288,9 @@ public final class MinioClient {
   }
 
 
-  private Request getRequest(Method method, String bucketName, String objectName, byte[] data,
-                             Map<String,String> headerMap, Map<String,String> queryParamMap)
+  private Request getRequest(Method method, String bucketName, String objectName,
+                             Map<String,String> headerMap, Map<String,String> queryParamMap,
+                             byte[] data, int length)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     if (bucketName == null && objectName != null) {
@@ -323,7 +328,7 @@ public final class MinioClient {
 
     RequestBody requestBody = null;
     if (data != null) {
-      requestBody = RequestBody.create(null, data);
+      requestBody = RequestBody.create(null, data, 0, length);
     }
 
     Request.Builder requestBuilder = new Request.Builder();
@@ -340,14 +345,15 @@ public final class MinioClient {
   }
 
 
-  private HttpResponse execute(Method method, String region, String bucketName, String objectName, byte[] data,
-                               Map<String,String> headerMap, Map<String,String> queryParamMap)
+  private HttpResponse execute(Method method, String region, String bucketName, String objectName,
+                               Map<String,String> headerMap, Map<String,String> queryParamMap,
+                               byte[] data, int length)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    Request request = getRequest(method, bucketName, objectName, data, headerMap, queryParamMap);
+    Request request = getRequest(method, bucketName, objectName, headerMap, queryParamMap, data, length);
 
     OkHttpClient transport = new OkHttpClient();
-    transport.interceptors().add(new RequestSigner(data, accessKey, secretKey, region));
+    transport.interceptors().add(new RequestSigner(accessKey, secretKey, region, data, length));
 
     Response response = transport.newCall(request).execute();
     if (response == null) {
@@ -426,47 +432,41 @@ public final class MinioClient {
       Map<String,String> queryParamMap = new HashMap<String,String>();
       queryParamMap.put("location", null);
 
-      try {
-        HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null, null, null, queryParamMap);
+      HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null, null, queryParamMap, null, 0);
 
-        // existing XmlEntity does not work, so fallback to regular parsing.
-        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        XmlPullParser xpp = factory.newPullParser();
-        String location = null;
+      // existing XmlEntity does not work, so fallback to regular parsing.
+      XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+      factory.setNamespaceAware(true);
+      XmlPullParser xpp = factory.newPullParser();
+      String location = null;
 
-        xpp.setInput(response.body().charStream());
-        while (xpp.getEventType() != xpp.END_DOCUMENT) {
-          if (xpp.getEventType() ==  xpp.START_TAG && xpp.getName() == "LocationConstraint") {
-            xpp.next();
-            if (xpp.getEventType() == xpp.TEXT) {
-              location = xpp.getText();
-            }
-            break;
-          }
-
+      xpp.setInput(response.body().charStream());
+      while (xpp.getEventType() != xpp.END_DOCUMENT) {
+        if (xpp.getEventType() ==  xpp.START_TAG && xpp.getName() == "LocationConstraint") {
           xpp.next();
-        }
-
-        response.body().close();
-
-        String region;
-        if (location == null) {
-          region = "us-east-1";
-        } else {
-          if ("EU".equals(location)) {
-            region = "eu-west-1";
-          } else {
-            region = location;
+          if (xpp.getEventType() == xpp.TEXT) {
+            location = xpp.getText();
           }
+          break;
         }
 
-        Regions.INSTANCE.add(bucketName, region);
-      } catch (ErrorResponseException e) {
-        if (e.getErrorCode() != ErrorCode.NO_SUCH_BUCKET) {
-          throw e;
+        xpp.next();
+      }
+
+      response.body().close();
+
+      String region;
+      if (location == null) {
+        region = "us-east-1";
+      } else {
+        if ("EU".equals(location)) {
+          region = "eu-west-1";
+        } else {
+          region = location;
         }
       }
+
+      Regions.INSTANCE.add(bucketName, region);
     }
   }
 
@@ -476,8 +476,8 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     updateRegionMap(bucketName);
-    return execute(Method.GET, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, headerMap,
-                   queryParamMap);
+    return execute(Method.GET, Regions.INSTANCE.region(bucketName), bucketName, objectName, headerMap,
+                   queryParamMap, null, 0);
   }
 
 
@@ -485,7 +485,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     updateRegionMap(bucketName);
-    return execute(Method.HEAD, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, null, null);
+    return execute(Method.HEAD, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, null, null, 0);
   }
 
 
@@ -493,34 +493,35 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     updateRegionMap(bucketName);
-    return execute(Method.DELETE, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, null,
-                   queryParamMap);
+    return execute(Method.DELETE, Regions.INSTANCE.region(bucketName), bucketName, objectName, null,
+                   queryParamMap, null, 0);
   }
 
 
-  private HttpResponse executePost(String bucketName, String objectName, byte[] data, Map<String,String> queryParamMap)
+  private HttpResponse executePost(String bucketName, String objectName, Map<String,String> queryParamMap, byte[] data)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     updateRegionMap(bucketName);
-    return execute(Method.POST, Regions.INSTANCE.region(bucketName), bucketName, objectName, data, null,
-                   queryParamMap);
+    return execute(Method.POST, Regions.INSTANCE.region(bucketName), bucketName, objectName, null,
+                   queryParamMap, data, data.length);
   }
 
 
-  private HttpResponse executePut(String bucketName, String objectName, byte[] data, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap, String region)
+  private HttpResponse executePut(String bucketName, String objectName, Map<String,String> headerMap,
+                                  Map<String,String> queryParamMap, String region, byte[] data, int length)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    return execute(Method.PUT, region, bucketName, objectName, data, headerMap, queryParamMap);
+    return execute(Method.PUT, region, bucketName, objectName, headerMap, queryParamMap, data, length);
   }
 
 
-  private HttpResponse executePut(String bucketName, String objectName, byte[] data, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap)
+  private HttpResponse executePut(String bucketName, String objectName, Map<String,String> headerMap,
+                                  Map<String,String> queryParamMap, byte[] data, int length)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     updateRegionMap(bucketName);
-    return executePut(bucketName, objectName, data, headerMap, queryParamMap, Regions.INSTANCE.region(bucketName));
+    return executePut(bucketName, objectName, headerMap, queryParamMap, Regions.INSTANCE.region(bucketName),
+                      data, length);
   }
 
 
@@ -584,10 +585,161 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public InputStream getObject(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    HttpResponse response = executeGet(bucketName, objectName, null, null);
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    return getObject(bucketName, objectName, 0, null);
+  }
+
+
+  /** Returns an InputStream containing a subset of the object. The InputStream must be
+   *  closed or the connection will remain open.
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param offset      Offset to read at.
+   *
+   * @return an InputStream containing the object. Close the InputStream when done.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public InputStream getObject(String bucketName, String objectName, long offset)
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    return getObject(bucketName, objectName, offset, null);
+  }
+
+
+  /**
+   * Returns an InputStream containing a subset of the object. The InputStream must be
+   * closed or the connection will remain open.
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param offset      Offset to read at.
+   * @param length      Length to read.
+   *
+   * @return an InputStream containing the object. Close the InputStream when done.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public InputStream getObject(String bucketName, String objectName, long offset, Long length)
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    if (offset < 0) {
+      throw new InvalidArgumentException("offset should be zero or greater");
+    }
+
+    if (length != null && length <= 0) {
+      throw new InvalidArgumentException("length should be greater than zero");
+    }
+
+    Map<String,String> headerMap = new Hashtable<String,String>();
+    if (length != null) {
+      headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
+    } else {
+      headerMap.put("Range", "bytes=" + offset + "-");
+    }
+
+    HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
     return response.body().byteStream();
+  }
+
+
+  /**
+   * Get object and store it to given file name.
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param fileName    file name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void getObject(String bucketName, String objectName, String fileName)
+    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException,
+           IOException, XmlPullParserException, ErrorResponseException, InternalException {
+    Path filePath = Paths.get(fileName);
+    boolean fileExists = Files.exists(filePath);
+
+    if (fileExists && !Files.isRegularFile(filePath)) {
+      throw new InvalidArgumentException(fileName + ": not a regular file");
+    }
+
+    ObjectStat objectStat = statObject(bucketName, objectName);
+    long length = objectStat.getLength();
+    String md5sum = objectStat.getMd5sum();
+
+    String tempFileName = fileName + "." + md5sum + ".part.minio";
+    Path tempFilePath = Paths.get(tempFileName);
+    boolean tempFileExists = Files.exists(filePath);
+
+    if (tempFileExists && !Files.isRegularFile(tempFilePath)) {
+      throw new IOException(tempFileName + ": not a regular file");
+    }
+
+    long tempFileSize = 0;
+    if (tempFileExists) {
+      tempFileSize = Files.size(tempFilePath);
+      if (tempFileSize > length) {
+        Files.delete(tempFilePath);
+        tempFileExists = false;
+        tempFileSize = 0;
+      }
+    }
+
+    if (fileExists) {
+      long fileSize = Files.size(filePath);
+      if (fileSize == length) {
+        // already downloaded. nothing to do
+        return;
+      } else if (fileSize > length) {
+        throw new InvalidArgumentException("'" + fileName + "': object size " + length + " is smaller than file size "
+                                           + fileSize);
+      } else if (!tempFileExists) {
+        // before resuming the download, copy filename to tempfilename
+        Files.copy(filePath, tempFilePath);
+        tempFileSize = fileSize;
+        tempFileExists = true;
+      }
+    }
+
+    InputStream is = null;
+    OutputStream os = null;
+    try {
+      is = getObject(bucketName, objectName, tempFileSize);
+      os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+      long bytesWritten = ByteStreams.copy(is, os);
+      is.close();
+      os.close();
+
+      if (bytesWritten != length - tempFileSize) {
+        throw new IOException(tempFileName + ": unexpected data written.  expected = " + (length - tempFileSize)
+                                + ", written = " + bytesWritten);
+      }
+
+      Files.move(tempFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
+    } finally {
+      if (is != null) {
+        is.close();
+      }
+      if (os != null) {
+        os.close();
+      }
+    }
   }
 
 
@@ -607,13 +759,14 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException, InvalidKeyException, NoSuchAlgorithmException,
            InvalidExpiresRangeException {
+    updateRegionMap(bucketName);
+
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
-    Request request = getRequest(Method.GET, bucketName, objectName, null, null, null);
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey,
-                                             Regions.INSTANCE.region(bucketName));
+    Request request = getRequest(Method.GET, bucketName, objectName, null, null, null, 0);
+    RequestSigner signer = new RequestSigner(this.accessKey, this.secretKey, Regions.INSTANCE.region(bucketName));
     return signer.preSignV4(request, expires);
   }
 
@@ -651,13 +804,14 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException, InvalidKeyException, NoSuchAlgorithmException,
            InvalidExpiresRangeException {
+    updateRegionMap(bucketName);
+
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
-    Request request = getRequest(Method.PUT, bucketName, objectName, "".getBytes("UTF-8"), null, null);
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey,
-                                             Regions.INSTANCE.region(bucketName));
+    Request request = getRequest(Method.PUT, bucketName, objectName, null, null, "".getBytes("UTF-8"), 0);
+    RequestSigner signer = new RequestSigner(this.accessKey, this.secretKey, Regions.INSTANCE.region(bucketName));
     return signer.preSignV4(request, expires);
   }
 
@@ -683,16 +837,16 @@ public final class MinioClient {
    *
    * @param policy new PostPolicy
    *
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
-   * @throws UnsupportedEncodingException upon unsupported Encoding error
    */
-  public Map<String, String> presignedPostPolicy(PostPolicy policy) throws UnsupportedEncodingException,
-                                                                           NoSuchAlgorithmException,
-                                                                           InvalidKeyException {
+  public Map<String, String> presignedPostPolicy(PostPolicy policy)
+    throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException,
+           InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
+    updateRegionMap(policy.getBucket());
+
     DateTime date = new DateTime();
     String region = Regions.INSTANCE.region(policy.getBucket());
-    RequestSigner signer = new RequestSigner(null, this.accessKey, this.secretKey, region, date);
+    RequestSigner signer = new RequestSigner(this.accessKey, this.secretKey, region, date);
     policy.setAlgorithm("AWS4-HMAC-SHA256");
     policy.setCredential(this.accessKey + "/" + signer.getScope(region));
     policy.setDate(date);
@@ -702,66 +856,6 @@ public final class MinioClient {
     policy.setPolicy(policybase64);
     policy.setSignature(signature);
     return policy.getFormData();
-  }
-
-
-  /** Returns an InputStream containing a subset of the object. The InputStream must be
-   *  closed or the connection will remain open.
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offsetStart Offset from the start of the object.
-   *
-   * @return an InputStream containing the object. Close the InputStream when done.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidRangeException       upon invalid offsetStart and/or length
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public InputStream getPartialObject(String bucketName, String objectName, long offsetStart)
-    throws InvalidRangeException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    ObjectStat stat = statObject(bucketName, objectName);
-    long length = stat.getLength() - offsetStart;
-    return getPartialObject(bucketName, objectName, offsetStart, length);
-  }
-
-
-  /**
-   * Returns an InputStream containing a subset of the object. The InputStream must be
-   * closed or the connection will remain open.
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offsetStart Offset from the start of the object.
-   * @param length      Length of bytes to retrieve.
-   *
-   * @return an InputStream containing the object. Close the InputStream when done.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidRangeException       upon invalid offsetStart and/or length
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public InputStream getPartialObject(String bucketName, String objectName, long offsetStart, long length)
-    throws InvalidRangeException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    if (offsetStart < 0 || length <= 0) {
-      throw new InvalidRangeException();
-    }
-
-    Map<String,String> headerMap = new Hashtable<String,String>();
-    headerMap.put("Range", "bytes=" + offsetStart + "-" + (offsetStart + length - 1));
-
-    HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
-    return response.body().byteStream();
   }
 
 
@@ -1046,7 +1140,7 @@ public final class MinioClient {
       headerMap.put("x-amz-acl", acl.toString());
     }
 
-    executePut(bucketName, null, data, headerMap, null, "us-east-1");
+    executePut(bucketName, null, headerMap, null, "us-east-1", data, data.length);
   }
 
 
@@ -1178,12 +1272,12 @@ public final class MinioClient {
     Map<String,String> headerMap = new HashMap<String,String>();
     headerMap.put("x-amz-acl", acl.toString());
 
-    executePut(bucketName, null, "".getBytes("UTF-8"), headerMap, queryParamMap);
+    executePut(bucketName, null, headerMap, queryParamMap, "".getBytes("UTF-8"), 0);
   }
 
 
-  private String putObject(String bucketName, String objectName, String contentType, byte[] data, byte[] md5sum,
-                           String uploadId, int partNumber)
+  private String putObject(String bucketName, String objectName, String contentType, byte[] data, int length,
+                           byte[] md5sum, String uploadId, int partNumber)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
     Map<String,String> headerMap = new HashMap<String,String>();
@@ -1196,7 +1290,7 @@ public final class MinioClient {
       queryParamMap.put("uploadId", uploadId);
     }
 
-    HttpResponse response = executePut(bucketName, objectName, data, headerMap, queryParamMap);
+    HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
     return response.header().getEtag();
   }
 
@@ -1290,7 +1384,7 @@ public final class MinioClient {
     if (size <= MIN_MULTIPART_SIZE) {
       byte[] buf = new byte[(int) size];
       readStream(body, buf, (int) size);
-      putObject(bucketName, objectName, contentType, buf, getMd5Digest(buf, (int) size), null, 0);
+      putObject(bucketName, objectName, contentType, buf, (int) size, getMd5Digest(buf, (int) size), null, 0);
       return;
     }
 
@@ -1351,8 +1445,8 @@ public final class MinioClient {
       }
 
       readStream(body, buf, expectedReadSize);
-      String etag = putObject(bucketName, objectName, contentType, buf, getMd5Digest(buf, expectedReadSize),
-                              uploadId, partNumber);
+      String etag = putObject(bucketName, objectName, contentType, buf, expectedReadSize,
+                              getMd5Digest(buf, expectedReadSize), uploadId, partNumber);
       totalParts.add(new Part(partNumber, etag));
     }
 
@@ -1473,7 +1567,7 @@ public final class MinioClient {
     Map<String,String> queryParamMap = new HashMap<String,String>();
     queryParamMap.put("uploads", "");
 
-    HttpResponse response = executePost(bucketName, objectName, "".getBytes("UTF-8"), queryParamMap);
+    HttpResponse response = executePost(bucketName, objectName, queryParamMap, "".getBytes("UTF-8"));
 
     InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
     result.parseXml(response.body().charStream());
@@ -1490,7 +1584,7 @@ public final class MinioClient {
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
     completeManifest.setParts(parts);
 
-    executePost(bucketName, objectName, completeManifest.toString().getBytes("UTF-8"), queryParamMap);
+    executePost(bucketName, objectName, queryParamMap, completeManifest.toString().getBytes("UTF-8"));
   }
 
 

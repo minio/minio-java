@@ -229,14 +229,14 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.getUrl(""));
-    InputStream object = client.getPartialObject("bucket", "key", 0, 5);
+    InputStream object = client.getObject("bucket", "key", 0L, 5L);
     byte[] result = new byte[20];
     int read = object.read(result);
     result = Arrays.copyOf(result, read);
     assertEquals(expectedObject, new String(result, "UTF-8"));
   }
 
-  @Test(expected = InvalidRangeException.class)
+  @Test(expected = InvalidArgumentException.class)
   public void testGetObjectOffsetIsNegativeReturnsError() throws XmlPullParserException, IOException, MinioException {
     final String expectedObject = "hello";
     MockWebServer server = new MockWebServer();
@@ -255,11 +255,11 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.getUrl(""));
-    client.getPartialObject("bucket", "key", -1, 5);
+    client.getObject("bucket", "key", -1L, 5L);
     Assert.fail("Should of thrown an exception");
   }
 
-  @Test(expected = InvalidRangeException.class)
+  @Test(expected = InvalidArgumentException.class)
   public void testGetObjectLengthIsZeroReturnsError() throws XmlPullParserException, IOException, MinioException {
     final String expectedObject = "hello";
     MockWebServer server = new MockWebServer();
@@ -279,7 +279,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.getUrl(""));
-    client.getPartialObject("bucket", "key", 0, 0);
+    client.getObject("bucket", "key", 0L, 0L);
     Assert.fail("Should of thrown an exception");
   }
 
@@ -305,7 +305,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.getUrl(""));
-    InputStream object = client.getPartialObject("bucket", "key", 6);
+    InputStream object = client.getObject("bucket", "key", 6);
     byte[] result = new byte[5];
     int read = object.read(result);
     result = Arrays.copyOf(result, read);
