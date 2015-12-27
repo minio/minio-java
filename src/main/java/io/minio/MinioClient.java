@@ -1171,39 +1171,42 @@ public final class MinioClient {
   public Acl getBucketAcl(String bucketName)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    AccessControlPolicy policy = this.getAccessPolicy(bucketName);
+    Map<String,String> queryParamMap = new HashMap<String,String>();
+    queryParamMap.put("acl", "");
+
+    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
+
+    AccessControlPolicy result = new AccessControlPolicy();
+    result.parseXml(response.body().charStream());
+
     Acl acl = Acl.PRIVATE;
-    List<Grant> accessControlList = policy.getAccessControlList();
-    switch (accessControlList.size()) {
+    List<Grant> grants = result.grants();
+    switch (grants.size()) {
       case 1:
-        for (Grant grant : accessControlList) {
-          if (grant.getGrantee().getUri() == null && "FULL_CONTROL".equals(grant.getPermission())) {
+        for (Grant grant : grants) {
+          if (grant.grantee().uri() == null && "FULL_CONTROL".equals(grant.permission())) {
             acl = Acl.PRIVATE;
             break;
           }
         }
         break;
       case 2:
-        for (Grant grant : accessControlList) {
-          if ("http://acs.amazonaws.com/groups/global/AuthenticatedUsers".equals(grant.getGrantee().getUri())
-              &&
-              "READ".equals(grant.getPermission())) {
+        for (Grant grant : grants) {
+          if ("http://acs.amazonaws.com/groups/global/AuthenticatedUsers".equals(grant.grantee().uri())
+              && "READ".equals(grant.permission())) {
             acl = Acl.AUTHENTICATED_READ;
             break;
-          }
-          if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.getGrantee().getUri())
-              &&
-              "READ".equals(grant.getPermission())) {
+          } else if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.grantee().uri())
+                     && "READ".equals(grant.permission())) {
             acl = Acl.PUBLIC_READ;
             break;
           }
         }
         break;
       case 3:
-        for (Grant grant : accessControlList) {
-          if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.getGrantee().getUri())
-              &&
-              "WRITE".equals(grant.getPermission())) {
+        for (Grant grant : grants) {
+          if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.grantee().uri())
+              && "WRITE".equals(grant.permission())) {
             acl = Acl.PUBLIC_READ_WRITE;
             break;
           }
@@ -1214,20 +1217,6 @@ public final class MinioClient {
                                       + "https://github.com/minio/minio-java/issues");
     }
     return acl;
-  }
-
-
-  private AccessControlPolicy getAccessPolicy(String bucketName)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<String,String>();
-    queryParamMap.put("acl", "");
-
-    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
-
-    AccessControlPolicy result = new AccessControlPolicy();
-    result.parseXml(response.body().charStream());
-    return result;
   }
 
 

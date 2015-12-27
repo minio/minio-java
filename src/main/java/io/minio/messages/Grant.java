@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import com.google.api.client.util.Key;
 
+
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Grant extends XmlEntity {
   @Key("Grantee")
@@ -25,24 +26,19 @@ public class Grant extends XmlEntity {
   @Key("Permission")
   private String permission;
 
+
   public Grant() {
     super();
     this.name = "Grant";
   }
 
-  public String getPermission() {
-    return permission;
-  }
 
-  public void setPermission(String permission) {
-    this.permission = permission;
-  }
-
-  public Grantee getGrantee() {
+  public Grantee grantee() {
     return grantee;
   }
 
-  public void setGrantee(Grantee grantee) {
-    this.grantee = grantee;
+
+  public String permission() {
+    return permission;
   }
 }

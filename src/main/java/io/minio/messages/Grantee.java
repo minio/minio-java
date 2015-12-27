@@ -31,48 +31,34 @@ public class Grantee extends XmlEntity {
   @Key("URI")
   private String uri;
 
+
   public Grantee() {
     super();
     this.name = "Grantee";
   }
 
-  public String getId() {
+
+  public String id() {
     return id;
   }
 
-  public void setId(String id) {
-    this.id = id;
-  }
 
-  public String getDisplayName() {
+  public String displayName() {
     return displayName;
   }
 
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
-  }
 
-  public String getEmailAddress() {
+  public String emailAddress() {
     return emailAddress;
   }
 
-  public void setEmailAddress(String emailAddress) {
-    this.emailAddress = emailAddress;
-  }
 
-  public String getType() {
+  public String type() {
     return type;
   }
 
-  public void setType(String type) {
-    this.type = type;
-  }
 
-  public String getUri() {
+  public String uri() {
     return uri;
-  }
-
-  public void setUri(String uri) {
-    this.uri = uri;
   }
 }

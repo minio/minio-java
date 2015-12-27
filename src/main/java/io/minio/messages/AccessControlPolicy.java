@@ -21,38 +21,34 @@ import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
 
+
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class AccessControlPolicy extends XmlEntity {
   @Key("Owner")
   private Owner owner;
   @Key("AccessControlList")
-  private AccessControlList grants;
+  private AccessControlList accessControlList;
+
 
   public AccessControlPolicy() {
     super();
     this.name = "AccessControlPolicy";
   }
 
-  public Owner getOwner() {
+
+  public Owner owner() {
     return owner;
   }
 
-  public void setOwner(Owner owner) {
-    this.owner = owner;
-  }
 
   /**
    * get access control list.
    */
-  public List<Grant> getAccessControlList() {
-    if (grants == null) {
+  public List<Grant> grants() {
+    if (accessControlList == null) {
       return new LinkedList<Grant>();
     }
-    return grants.getGrant();
-  }
 
-  public void setAccessControlList(AccessControlList grants) {
-    this.grants = grants;
+    return accessControlList.grantList();
   }
-
 }
