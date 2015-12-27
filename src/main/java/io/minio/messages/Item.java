@@ -24,7 +24,7 @@ import io.minio.DateFormat;
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Item extends XmlEntity {
   @Key("Key")
-  private String key;
+  private String objectName;
   @Key("LastModified")
   private String lastModified;
   @Key("ETag")
@@ -37,68 +37,55 @@ public class Item extends XmlEntity {
   private Owner owner;
   private boolean isDir = false;
 
+
   public Item() {
+    this(null, false);
+  }
+
+
+  /**
+   * constructor to set object name and isDir flag.
+   */
+  public Item(String objectName, boolean isDir) {
     super();
     this.name = "Item";
+
+    this.objectName = objectName;
+    this.isDir = isDir;
   }
 
-  public String getKey() {
-    return key;
+
+  public String objectName() {
+    return objectName;
   }
 
-  public void setKey(String key) {
-    this.key = key;
-  }
 
-  public String getLastModified() {
-    return lastModified;
-  }
-
-  public void setLastModified(String lastModified) {
-    this.lastModified = lastModified;
-  }
-
-  public Date getParsedLastModified() {
+  public Date lastModified() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(lastModified).toDate();
   }
 
-  public String getETag() {
+
+  public String etag() {
     return etag;
   }
 
-  public void setETag(String etag) {
-    this.etag = etag.replaceAll("\"", "");
-  }
 
-  public long getSize() {
+  public long objectSize() {
     return size;
   }
 
-  public void setSize(long size) {
-    this.size = size;
-  }
 
-  public String getStorageClass() {
+  public String storageClass() {
     return storageClass;
   }
 
-  public void setStorageClass(String storageClass) {
-    this.storageClass = storageClass;
-  }
 
-  public Owner getOwner() {
+  public Owner owner() {
     return owner;
   }
 
-  public void setOwner(Owner owner) {
-    this.owner = owner;
-  }
 
   public boolean isDir() {
     return isDir;
-  }
-
-  public void setIsDir(boolean isDir) {
-    this.isDir = isDir;
   }
 }

@@ -920,20 +920,18 @@ public final class MinioClient {
           List<Result<Item>> items = new LinkedList<Result<Item>>();
           try {
             listBucketResult = listObjects(bucketName, marker, prefix, delimiter, 1000);
-            for (Item item : listBucketResult.getContents()) {
+            for (Item item : listBucketResult.contents()) {
               items.add(new Result<Item>(item, null));
               if (listBucketResult.isTruncated()) {
-                marker = item.getKey();
+                marker = item.objectName();
               }
             }
-            for (Prefix prefix : listBucketResult.getCommonPrefixes()) {
-              Item item = new Item();
-              item.setKey(prefix.getPrefix());
-              item.setIsDir(true);
+            for (Prefix prefix : listBucketResult.commonPrefixes()) {
+              Item item = new Item(prefix.prefix(), true);
               items.add(new Result<Item>(item, null));
             }
             if (listBucketResult.isTruncated() && delimiter != null) {
-              marker = listBucketResult.getNextMarker();
+              marker = listBucketResult.nextMarker();
             } else if (!listBucketResult.isTruncated()) {
               isComplete = true;
             }

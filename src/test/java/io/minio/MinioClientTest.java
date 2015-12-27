@@ -332,19 +332,18 @@ public class MinioClientTest {
     Iterator<Result<Item>> objectsInBucket = client.listObjects("bucket");
 
     Item item = objectsInBucket.next().getResult();
-    assertEquals("key", item.getKey());
-    assertEquals("2015-05-05T02:21:15.716Z", item.getLastModified());
-    assertEquals(11, item.getSize());
-    assertEquals("STANDARD", item.getStorageClass());
+    assertEquals("key", item.objectName());
+    assertEquals(11, item.objectSize());
+    assertEquals("STANDARD", item.storageClass());
 
     Calendar expectedDate = Calendar.getInstance();
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
     expectedDate.set(2015, Calendar.MAY, 5, 2, 21, 15);
     expectedDate.set(Calendar.MILLISECOND, 716);
-    assertEquals(expectedDate.getTime(), item.getParsedLastModified());
+    assertEquals(expectedDate.getTime(), item.lastModified());
 
-    Owner owner = item.getOwner();
+    Owner owner = item.owner();
     assertEquals("minio", owner.id());
     assertEquals("minio", owner.displayName());
   }
