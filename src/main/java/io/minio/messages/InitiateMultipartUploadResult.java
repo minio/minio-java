@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import com.google.api.client.util.Key;
 
+
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class InitiateMultipartUploadResult extends XmlEntity {
   @Key("Bucket")
@@ -27,42 +28,24 @@ public class InitiateMultipartUploadResult extends XmlEntity {
   @Key("UploadId")
   private String uploadId;
 
+
   public InitiateMultipartUploadResult() {
     super();
     this.name = "InitiateMultipartUploadResult";
   }
 
-  public String getBucketName() {
+
+  public String bucketName() {
     return bucketName;
   }
 
-  public void setBucketName(String bucketName) {
-    this.bucketName = bucketName;
-  }
 
-  // must be there for XML parsing
-  public void setBucket(String bucketName) {
-    this.setBucketName(bucketName);
-  }
-
-  public String getObjectName() {
+  public String objectName() {
     return objectName;
   }
 
-  public void setObjectName(String objectName) {
-    this.objectName = objectName;
-  }
 
-  // must be there for XML parsing
-  public void setKey(String objectName) {
-    this.setObjectName(objectName);
-  }
-
-  public String getUploadId() {
+  public String uploadId() {
     return uploadId;
-  }
-
-  public void setUploadId(String uploadId) {
-    this.uploadId = uploadId;
   }
 }

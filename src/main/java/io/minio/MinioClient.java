@@ -1545,7 +1545,7 @@ public final class MinioClient {
 
     InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
     result.parseXml(response.body().charStream());
-    return result.getUploadId();
+    return result.uploadId();
   }
 
 
