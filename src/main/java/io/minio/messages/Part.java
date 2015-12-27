@@ -20,6 +20,7 @@ import java.util.Date;
 import com.google.api.client.util.Key;
 import io.minio.DateFormat;
 
+
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Part extends XmlEntity {
   @Key("PartNumber")
@@ -31,9 +32,9 @@ public class Part extends XmlEntity {
   @Key("Size")
   private Long size;
 
+
   public Part() {
-    super();
-    super.name = "Part";
+    this(0, null);
   }
 
 
@@ -41,47 +42,30 @@ public class Part extends XmlEntity {
    * constructor.
    */
   public Part(int partNumber, String etag) {
-    this();
+    super();
+    super.name = "Part";
 
     this.partNumber = partNumber;
     this.etag = etag;
   }
 
 
-  public int getPartNumber() {
+  public int partNumber() {
     return partNumber;
   }
 
-  public void setPartNumber(int partNumber) {
-    this.partNumber = partNumber;
-  }
 
-  public String getETag() {
+  public String etag() {
     return etag.replaceAll("\"", "");
   }
 
-  public void setETag(String etag) {
-    this.etag = etag.replaceAll("\"", "");
-  }
 
-  public String getLastModified() {
-    return lastModified;
-  }
-
-  public void setLastModified(String lastModified) {
-    this.lastModified = lastModified;
-  }
-
-  public Date getParsedLastModified() {
+  public Date lastModified() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(lastModified).toDate();
   }
 
-  public long getSize() {
+
+  public long partSize() {
     return size;
   }
-
-  public void setSize(long size) {
-    this.size = size;
-  }
-
 }

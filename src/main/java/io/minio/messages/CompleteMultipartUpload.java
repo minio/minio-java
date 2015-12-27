@@ -20,21 +20,30 @@ import com.google.api.client.util.Key;
 
 import java.util.List;
 
+
 @SuppressWarnings("unused")
 public class CompleteMultipartUpload extends XmlEntity {
   @Key("Part")
-  private List<Part> parts;
+  private List<Part> partList;
+
 
   public CompleteMultipartUpload() {
+    this(null);
+  }
+
+
+  /**
+   * constructor to init partList.
+   */
+  public CompleteMultipartUpload(List<Part> partList) {
     super();
     super.name = "CompleteMultipartUpload";
+
+    this.partList = partList;
   }
 
-  public List<Part> getParts() {
-    return parts;
-  }
 
-  public void setParts(List<Part> parts) {
-    this.parts = parts;
+  public List<Part> partList() {
+    return partList;
   }
 }

@@ -1400,7 +1400,7 @@ public final class MinioClient {
     int bytesRead = 0;
     int expectedReadSize = partSize;
     for (int partNumber = 1; partNumber <= partCount; partNumber++) {
-      if (part != null && partNumber == part.getPartNumber() && part.getSize() == partSize) {
+      if (part != null && partNumber == part.partNumber() && part.partSize() == partSize) {
         // this part is already uploaded
         // TODO: validate the integrity of the part by md5sum etc
         // TODO: to make it simpler, we check the size time being
@@ -1556,8 +1556,7 @@ public final class MinioClient {
     Map<String,String> queryParamMap = new HashMap<String,String>();
     queryParamMap.put("uploadId", uploadId);
 
-    CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
-    completeManifest.setParts(parts);
+    CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
 
     executePost(bucketName, objectName, queryParamMap, completeManifest.toString().getBytes("UTF-8"));
   }
@@ -1577,11 +1576,11 @@ public final class MinioClient {
           ListPartsResult result;
           result = listObjectParts(bucketName, objectName, uploadId, marker);
           if (result.isTruncated()) {
-            marker = result.getNextPartNumberMarker();
+            marker = result.nextPartNumberMarker();
           } else {
             isComplete = true;
           }
-          return result.getParts();
+          return result.partList();
         }
         return new LinkedList<Part>();
       }

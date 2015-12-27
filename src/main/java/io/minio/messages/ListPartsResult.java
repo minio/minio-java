@@ -21,12 +21,13 @@ import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
 
+
 @SuppressWarnings("unused")
 public class ListPartsResult extends XmlEntity {
   @Key("Bucket")
-  private String bucket;
+  private String bucketName;
   @Key("Key")
-  private String key;
+  private String objectName;
   @Key("Initiator")
   private Initiator initiator;
   @Key("Owner")
@@ -42,97 +43,68 @@ public class ListPartsResult extends XmlEntity {
   @Key("IsTruncated")
   private boolean isTruncated;
   @Key("Part")
-  private List<Part> parts;
+  private List<Part> partList;
+
 
   public ListPartsResult() {
     super();
     this.name = "ListPartsResult";
   }
 
-  public String getBucket() {
-    return bucket;
+
+  public String bucketName() {
+    return bucketName;
   }
 
-  public void setBucket(String bucket) {
-    this.bucket = bucket;
+
+  public String objectName() {
+    return objectName;
   }
 
-  public String getKey() {
-    return key;
-  }
 
-  public void setKey(String key) {
-    this.key = key;
-  }
-
-  public String getStorageClass() {
+  public String storageClass() {
     return storageClass;
   }
 
-  public void setStorageClass(String storageClass) {
-    this.storageClass = storageClass;
-  }
 
-  public Initiator getInitiator() {
+  public Initiator initiator() {
     return initiator;
   }
 
-  public void setInitiator(Initiator initiator) {
-    this.initiator = initiator;
-  }
 
-  public Owner getOwner() {
+  public Owner owner() {
     return owner;
   }
 
-  public void setOwner(Owner owner) {
-    this.owner = owner;
-  }
 
-  public int getMaxParts() {
+  public int maxParts() {
     return maxParts;
   }
 
-  public void setMaxParts(int maxParts) {
-    this.maxParts = maxParts;
-  }
 
   public boolean isTruncated() {
     return isTruncated;
   }
 
-  public void setIsTruncated(boolean isTruncated) {
-    this.isTruncated = isTruncated;
-  }
 
-  public int getPartNumberMarker() {
+  public int partNumberMarker() {
     return partNumberMarker;
   }
 
-  public void setPartNumberMarker(int partNumberMarker) {
-    this.partNumberMarker = partNumberMarker;
-  }
 
-  public int getNextPartNumberMarker() {
+  public int nextPartNumberMarker() {
     return nextPartNumberMarker;
   }
 
-  public void setNextPartNumberMarker(int nextPartNumberMarker) {
-    this.nextPartNumberMarker = nextPartNumberMarker;
-  }
 
   /**
-   * get parts.
+   * get part list.
    */
-  public List<Part> getParts() {
-    if (parts == null) {
+  public List<Part> partList() {
+    if (partList == null) {
       return new LinkedList<Part>();
     }
-    return parts;
-  }
 
-  public void setParts(List<Part> parts) {
-    this.parts = parts;
+    return partList;
   }
-
 }
