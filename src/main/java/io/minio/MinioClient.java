@@ -1110,8 +1110,7 @@ public final class MinioClient {
       // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
       data = "".getBytes("UTF-8");
     } else {
-      CreateBucketConfiguration config = new CreateBucketConfiguration();
-      config.setLocationConstraint(region);
+      CreateBucketConfiguration config = new CreateBucketConfiguration(region);
       data = config.toString().getBytes("UTF-8");
 
       byte[] md5sum = getMd5Digest(data, data.length);
