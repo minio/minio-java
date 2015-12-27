@@ -412,7 +412,7 @@ public final class MinioClient {
     }
 
     // invalidate region cache if needed
-    if (errorResponse.getErrorCode() == ErrorCode.NO_SUCH_BUCKET) {
+    if (errorResponse.errorCode() == ErrorCode.NO_SUCH_BUCKET) {
       Regions.INSTANCE.remove(bucketName);
       // TODO: handle for other cases as well
       // observation: on HEAD of a bucket with wrong region gives 400 without body
@@ -1017,7 +1017,7 @@ public final class MinioClient {
       executeHead(bucketName, null);
       return true;
     } catch (ErrorResponseException e) {
-      if (e.getErrorCode() != ErrorCode.NO_SUCH_BUCKET) {
+      if (e.errorCode() != ErrorCode.NO_SUCH_BUCKET) {
         throw e;
       }
     }

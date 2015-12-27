@@ -23,6 +23,7 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 import okio.Buffer;
 
 import io.minio.Acl;
+import io.minio.ErrorCode;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
@@ -551,11 +552,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("BucketAlreadyExists");
-    errResponse.setMessage("Bucket Already Exists");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.BUCKET_ALREADY_EXISTS, null, null, "/bucket", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(409); // status conflict
@@ -599,11 +597,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("MethodNotAllowed");
-    errResponse.setMessage("The specified method is not allowed against this resource.");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket/key");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(405); // method not allowed set by minio cloud storage
@@ -627,11 +622,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("MethodNotAllowed");
-    errResponse.setMessage("The specified method is not allowed against this resource.");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket/key");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(405); // method not allowed set by minio cloud storage
@@ -655,11 +647,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("MethodNotAllowed");
-    errResponse.setMessage("The specified method is not allowed against this resource.");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket/key");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(405); // method not allowed set by minio cloud storage

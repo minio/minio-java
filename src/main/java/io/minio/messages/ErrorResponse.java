@@ -81,7 +81,7 @@ public class ErrorResponse extends XmlEntity {
   /**
    * returns ErrorCode.
    */
-  public ErrorCode getErrorCode() {
+  public ErrorCode errorCode() {
     if (this.errorCode == null) {
       this.errorCode = ErrorCode.fromString(this.code);
     }
@@ -90,17 +90,10 @@ public class ErrorResponse extends XmlEntity {
   }
 
 
-  // Must be there for XML parsing.
-  public void setCode(String code) {
-    this.code = code;
-    this.errorCode = ErrorCode.fromString(this.code);
-  }
-
-
   /**
    * returns `message` or `errorCode.message`
    */
-  public String getMessage() {
+  public String message() {
     if (this.message != null) {
       return this.message;
     } else {
@@ -109,64 +102,28 @@ public class ErrorResponse extends XmlEntity {
   }
 
 
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-
-  public String getBucketName() {
+  public String bucketName() {
     return bucketName;
   }
 
 
-  public void setBucketName(String bucketName) {
-    this.bucketName = bucketName;
-  }
-
-
-  public String getObjectName() {
+  public String objectName() {
     return objectName;
   }
 
 
-  public void setObjectName(String objectName) {
-    this.objectName = objectName;
-  }
-
-
-  // must be there for XML parsing
-  public void setKey(String objectName) {
-    this.setObjectName(objectName);
-  }
-
-
-  public String getResource() {
-    return resource;
-  }
-
-
-  public void setResource(String resource) {
-    this.resource = resource;
-  }
-
-
-  public String getRequestId() {
-    return requestId;
-  }
-
-
-  public void setRequestId(String requestId) {
-    this.requestId = requestId;
-  }
-
-
-  public String getHostId() {
+  public String hostId() {
     return hostId;
   }
 
 
-  public void setHostId(String hostId) {
-    this.hostId = hostId;
+  public String requestId() {
+    return requestId;
+  }
+
+
+  public String resource() {
+    return resource;
   }
 
 
