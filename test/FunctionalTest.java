@@ -24,6 +24,7 @@ import java.nio.file.*;
 import java.io.*;
 
 import org.xmlpull.v1.XmlPullParserException;
+import org.joda.time.DateTime;
 
 import io.minio.*;
 import io.minio.messages.*;
@@ -649,9 +650,7 @@ public class FunctionalTest {
   public static void presignedPostPolicy_test() {
     try {
       println("Test: presignedPostPolicy(PostPolicy policy)");
-      PostPolicy policy = new PostPolicy();
-      policy.setBucket(bucketName);
-      policy.setKey(getRandomName());
+      PostPolicy policy = new PostPolicy(bucketName, getRandomName(), DateTime.now().plusDays(7));
       println(client.presignedPostPolicy(policy));
     } catch (Exception e) {
       e.printStackTrace();

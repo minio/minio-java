@@ -23,120 +23,82 @@ import com.google.common.base.Strings;
 import com.google.common.base.Joiner;
 import org.joda.time.DateTime;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
+
 public class PostPolicy {
-  private String expiration;
-  private ArrayList<String[]> conditions;
-  private Map<String, String> formData;
+  private static final String ALGORITHM = "AWS4-HMAC-SHA256";
 
-  public PostPolicy() {
-    conditions = new ArrayList<String[]>();
-    formData = new HashMap<String, String>();
+  private String bucketName;
+  private String objectName;
+  private boolean startsWith;
+  private DateTime expirationDate;
+  private String contentType;
+
+
+  public PostPolicy(String bucketName, String objectName, DateTime expirationDate)
+    throws InvalidArgumentException {
+    this(bucketName, objectName, false, expirationDate);
   }
+
 
   /**
-   * set expiry time.
+   * constructor.
    */
-  public void setExpires(DateTime date) throws InvalidArgumentException {
-    if (date == null) {
-      throw new InvalidArgumentException("null date");
+  public PostPolicy(String bucketName, String objectName, boolean startsWith, DateTime expirationDate)
+    throws InvalidArgumentException {
+    if (bucketName == null) {
+      throw new InvalidArgumentException("null bucket name");
     }
-    expiration = date.toString(DateFormat.EXPIRATION_DATE_FORMAT);
-  }
+    this.bucketName = bucketName;
 
-  /**
-   * set key.
-   */
-  public void setKey(String key) throws InvalidArgumentException {
-    if (Strings.isNullOrEmpty(key)) {
-      throw new InvalidArgumentException("empty key");
+    if (objectName == null) {
+      throw new InvalidArgumentException("null object name or prefix");
     }
-    conditions.add(new String[]{"eq", "$key", key});
-    formData.put("key", key);
-  }
+    this.objectName = objectName;
 
-  /**
-   * set key starts with.
-   */
-  public void setKeyStartsWith(String prefix) throws InvalidArgumentException {
-    if (Strings.isNullOrEmpty(prefix)) {
-      throw new InvalidArgumentException("empty prefix");
+    this.startsWith = startsWith;
+
+    if (expirationDate == null) {
+      throw new InvalidArgumentException("null expiration date");
     }
-    conditions.add(new String[]{"starts-with", "$key", prefix});
-    formData.put("key", prefix);
-  }
-
-  /**
-   * set bucket.
-   */
-  public void setBucket(String bucket) throws InvalidArgumentException {
-    if (Strings.isNullOrEmpty(bucket)) {
-      throw new InvalidArgumentException("empty bucket name");
-    }
-    conditions.add(new String[]{"eq", "$bucket", bucket});
-    formData.put("bucket", bucket);
-  }
-
-
-  public String getBucket() {
-    return formData.get("bucket");
+    this.expirationDate = expirationDate;
   }
 
 
   /**
    * set content type.
    */
-  public void setContentType(String type) throws InvalidArgumentException {
-    if (Strings.isNullOrEmpty(type)) {
-      throw new InvalidArgumentException("empty type");
+  public void setContentType(String contentType) throws InvalidArgumentException {
+    if (Strings.isNullOrEmpty(contentType)) {
+      throw new InvalidArgumentException("empty content type");
     }
-    conditions.add(new String[]{"eq", "$Content-Type", type});
-    formData.put("Content-Type", type);
+
+    this.contentType = contentType;
   }
 
-  public void setAlgorithm(String algorithm) {
-    conditions.add(new String[]{"eq", "$x-amz-algorithm", algorithm});
-    formData.put("x-amz-algorithm", algorithm);
+
+  public String bucketName() {
+    return this.bucketName;
   }
 
-  public void setCredential(String credential) {
-    conditions.add(new String[]{"eq", "$x-amz-credential", credential});
-    formData.put("x-amz-credential", credential);
-  }
 
-  /**
-   * set date.
-   */
-  public void setDate(DateTime date) {
-    String dateStr = date.toString(DateFormat.AMZ_DATE_FORMAT);
-    conditions.add(new String[]{"eq","$x-amz-date",dateStr});
-    formData.put("x-amz-date", dateStr);
-  }
-
-  // Set only formData
-  public void setSignature(String signature) {
-    formData.put("x-amz-signature", signature);
-  }
-
-  // Set only formData
-  public void setPolicy(String policybase64) {
-    formData.put("policy", policybase64);
-  }
-
-  /**
-   * marshal JSON.
-   */
-  public byte[] marshalJson() throws UnsupportedEncodingException {
+  private byte[] marshalJson(ArrayList<String[]> conditions) throws UnsupportedEncodingException {
     StringBuilder sb = new StringBuilder();
     Joiner joiner = Joiner.on("\",\"");
+
     sb.append("{");
-    if (expiration != null) {
-      sb.append("\"expiration\":" + "\"" + expiration + "\"");
+
+    if (expirationDate != null) {
+      sb.append("\"expiration\":" + "\"" + expirationDate.toString(DateFormat.EXPIRATION_DATE_FORMAT) + "\"");
     }
+
     if (conditions.size() > 0) {
       sb.append(",\"conditions\":[");
+
       ListIterator<String[]> iterator = conditions.listIterator();
       while (iterator.hasNext()) {
         sb.append("[\"" + joiner.join(iterator.next()) + "\"]");
@@ -144,17 +106,59 @@ public class PostPolicy {
           sb.append(",");
         }
       }
+
       sb.append("]");
     }
+
     sb.append("}");
+
     return sb.toString().getBytes("UTF-8");
   }
 
-  public String base64() throws UnsupportedEncodingException {
-    return BaseEncoding.base64().encode(marshalJson());
-  }
 
-  public Map<String, String> getFormData() {
+  /**
+   * returns form data of this post policy.
+   */
+  public Map<String,String> formData(String accessKey, String secretKey)
+    throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
+    ArrayList<String[]> conditions = new ArrayList<String[]>();
+    Map<String, String> formData = new HashMap<String, String>();
+
+    conditions.add(new String[]{"eq", "$bucket", this.bucketName});
+    formData.put("bucket", this.bucketName);
+
+    if (this.startsWith) {
+      conditions.add(new String[]{"starts-with", "$key", this.objectName});
+      formData.put("key", this.objectName);
+    } else {
+      conditions.add(new String[]{"eq", "$key", this.objectName});
+      formData.put("key", this.objectName);
+    }
+
+    if (this.contentType != null) {
+      conditions.add(new String[]{"eq", "$Content-Type", this.contentType});
+      formData.put("Content-Type", this.contentType);
+    }
+
+    conditions.add(new String[]{"eq", "$x-amz-algorithm", ALGORITHM});
+    formData.put("x-amz-algorithm", ALGORITHM);
+
+    RequestSigner signer = new RequestSigner(accessKey, secretKey, Regions.INSTANCE.region(this.bucketName));
+
+    String credential = accessKey + "/" + signer.getScope();
+    conditions.add(new String[]{"eq", "$x-amz-credential", credential});
+    formData.put("x-amz-credential", credential);
+
+    String amzDate = signer.date().toString(DateFormat.AMZ_DATE_FORMAT);
+    conditions.add(new String[]{"eq","$x-amz-date", amzDate});
+    formData.put("x-amz-date", amzDate);
+
+    String policybase64 = BaseEncoding.base64().encode(this.marshalJson(conditions));
+    String signature = signer.postPreSignV4(policybase64);
+
+    formData.put("policy", policybase64);
+    formData.put("x-amz-signature", signature);
+
     return formData;
   }
 }

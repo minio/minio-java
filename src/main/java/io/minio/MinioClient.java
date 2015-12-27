@@ -28,7 +28,6 @@ import com.squareup.okhttp.Response;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlPullParserException;
-import org.joda.time.DateTime;
 import com.google.common.io.BaseEncoding;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
@@ -841,20 +840,8 @@ public final class MinioClient {
     throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException,
            InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    updateRegionMap(policy.getBucket());
-
-    DateTime date = new DateTime();
-    String region = Regions.INSTANCE.region(policy.getBucket());
-    RequestSigner signer = new RequestSigner(this.accessKey, this.secretKey, region, date);
-    policy.setAlgorithm("AWS4-HMAC-SHA256");
-    policy.setCredential(this.accessKey + "/" + signer.getScope(region));
-    policy.setDate(date);
-
-    String policybase64 = policy.base64();
-    String signature = signer.postPreSignV4(policybase64, region);
-    policy.setPolicy(policybase64);
-    policy.setSignature(signature);
-    return policy.getFormData();
+    updateRegionMap(policy.bucketName());
+    return policy.formData(this.accessKey, this.secretKey);
   }
 
 
