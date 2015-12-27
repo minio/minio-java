@@ -992,7 +992,7 @@ public final class MinioClient {
     HttpResponse response = executeGet(null, null, null, null);
     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
     result.parseXml(response.body().charStream());
-    return result.getBuckets().iterator();
+    return result.buckets().iterator();
   }
 
 

@@ -21,28 +21,20 @@ import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
 
+
 @SuppressWarnings("WeakerAccess")
 public class Buckets extends XmlEntity {
   @Key("Bucket")
   private List<Bucket> bucketList = new LinkedList<Bucket>();
+
 
   public Buckets() {
     super();
     super.name = "Buckets";
   }
 
-  public List<Bucket> get() {
+
+  public List<Bucket> bucketList() {
     return bucketList;
-  }
-
-  public void set(List<Bucket> bucketList) {
-    this.bucketList = bucketList;
-  }
-
-  /**
-   * This function must be there for XML parsing.
-   */
-  public void setBucket(List<Bucket> bucketList) {
-    set(bucketList);
   }
 }

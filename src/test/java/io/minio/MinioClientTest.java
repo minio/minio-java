@@ -344,8 +344,8 @@ public class MinioClientTest {
     assertEquals(expectedDate.getTime(), item.getParsedLastModified());
 
     Owner owner = item.getOwner();
-    assertEquals("minio", owner.getId());
-    assertEquals("minio", owner.getDisplayName());
+    assertEquals("minio", owner.id());
+    assertEquals("minio", owner.displayName());
   }
 
   @Test
@@ -370,19 +370,19 @@ public class MinioClientTest {
     Iterator<Bucket> buckets = client.listBuckets();
 
     Bucket bucket = buckets.next();
-    assertEquals("bucket", bucket.getName());
-    assertEquals(dateFormat.parse("2015-05-05T20:35:51.410Z"), bucket.getCreationDate());
+    assertEquals("bucket", bucket.name());
+    assertEquals(dateFormat.parse("2015-05-05T20:35:51.410Z"), bucket.creationDate());
 
     bucket = buckets.next();
-    assertEquals("foo", bucket.getName());
-    assertEquals(dateFormat.parse("2015-05-05T20:35:47.170Z"), bucket.getCreationDate());
+    assertEquals("foo", bucket.name());
+    assertEquals(dateFormat.parse("2015-05-05T20:35:47.170Z"), bucket.creationDate());
 
     Calendar expectedDate = Calendar.getInstance();
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
     expectedDate.set(2015, Calendar.MAY, 5, 20, 35, 47);
     expectedDate.set(Calendar.MILLISECOND, 170);
-    assertEquals(expectedDate.getTime(), bucket.getCreationDate());
+    assertEquals(expectedDate.getTime(), bucket.creationDate());
   }
 
   @Test

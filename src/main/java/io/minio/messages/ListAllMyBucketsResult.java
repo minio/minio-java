@@ -21,38 +21,34 @@ import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
 
+
 public class ListAllMyBucketsResult extends XmlEntity {
   @Key("Owner")
   private Owner owner;
   @Key("Buckets")
   private Buckets buckets;
 
+
   public ListAllMyBucketsResult() {
     super();
     this.name = "ListAllMyBucketsResult";
   }
 
+
   @SuppressWarnings("unused")
-  public Owner getOwner() {
+  public Owner owner() {
     return owner;
   }
 
-  public void setOwner(Owner owner) {
-    this.owner = owner;
-  }
 
   /**
    * get buckets.
    */
-  public List<Bucket> getBuckets() {
+  public List<Bucket> buckets() {
     if (buckets == null) {
       return new LinkedList<Bucket>();
     }
 
-    return buckets.get();
-  }
-
-  public void setBuckets(Buckets buckets) {
-    this.buckets = buckets;
+    return buckets.bucketList();
   }
 }

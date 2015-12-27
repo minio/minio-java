@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import com.google.api.client.util.Key;
 
+
 @SuppressWarnings("SameParameterValue")
 public class Owner extends XmlEntity {
   @Key("ID")
@@ -25,24 +26,19 @@ public class Owner extends XmlEntity {
   @Key("DisplayName")
   private String displayName;
 
+
   public Owner() {
     super();
     this.name = "Owner";
   }
 
-  public String getId() {
+
+  public String id() {
     return id;
   }
 
-  public void setId(String id) {
-    this.id = id;
-  }
 
-  public String getDisplayName() {
+  public String displayName() {
     return displayName;
-  }
-
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
   }
 }
