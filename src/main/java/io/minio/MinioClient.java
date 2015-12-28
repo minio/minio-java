@@ -978,6 +978,7 @@ public final class MinioClient {
 
     ListBucketResult result = new ListBucketResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result;
   }
 
@@ -999,6 +1000,7 @@ public final class MinioClient {
     HttpResponse response = executeGet(null, null, null, null);
     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result.buckets().iterator();
   }
 
@@ -1184,6 +1186,7 @@ public final class MinioClient {
 
     AccessControlPolicy result = new AccessControlPolicy();
     result.parseXml(response.body().charStream());
+    response.body().close();
 
     Acl acl = Acl.PRIVATE;
     List<Grant> grants = result.grants();
@@ -1538,6 +1541,7 @@ public final class MinioClient {
 
     ListMultipartUploadsResult result = new ListMultipartUploadsResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result;
   }
 
@@ -1552,6 +1556,7 @@ public final class MinioClient {
 
     InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result.uploadId();
   }
 
@@ -1609,6 +1614,7 @@ public final class MinioClient {
 
     ListPartsResult result = new ListPartsResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result;
   }
 
