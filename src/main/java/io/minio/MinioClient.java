@@ -408,7 +408,7 @@ public final class MinioClient {
       }
 
       errorResponse = new ErrorResponse(ec, bucketName, objectName, request.httpUrl().encodedPath(),
-                                        header.getXamzRequestId(), header.getXamzId2());
+                                        header.xamzRequestId(), header.xamzId2());
     }
 
     // invalidate region cache if needed
@@ -561,8 +561,8 @@ public final class MinioClient {
            ErrorResponseException, InternalException {
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
-    return new ObjectStat(bucketName, objectName, header.getLastModified(), header.getContentLength(),
-                          header.getEtag(), header.getContentType());
+    return new ObjectStat(bucketName, objectName, header.lastModified(), header.contentLength(),
+                          header.etag(), header.contentType());
   }
 
 
@@ -1263,7 +1263,7 @@ public final class MinioClient {
     }
 
     HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
-    return response.header().getEtag();
+    return response.header().etag();
   }
 
 
