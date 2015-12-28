@@ -1372,10 +1372,10 @@ public final class MinioClient {
     Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucketName, objectName);
     while (multipartUploads.hasNext()) {
       Upload upload = multipartUploads.next().getResult();
-      if (upload.getObjectName().equals(objectName)) {
+      if (upload.objectName().equals(objectName)) {
         // TODO: its possible to have multiple mutlipart upload session for the same object
         // TODO: if found we would need to error out
-        uploadId = upload.getUploadId();
+        uploadId = upload.uploadId();
         break;
       }
     }
@@ -1486,12 +1486,12 @@ public final class MinioClient {
                                                  uploadIdMarker, prefix,
                                                  delimiter, 1000);
             if (uploadResult.isTruncated()) {
-              keyMarker = uploadResult.getNextKeyMarker();
-              uploadIdMarker = uploadResult.getNextUploadIdMarker();
+              keyMarker = uploadResult.nextKeyMarker();
+              uploadIdMarker = uploadResult.nextUploadIdMarker();
             } else {
               isComplete = true;
             }
-            List<Upload> uploads = uploadResult.getUploads();
+            List<Upload> uploads = uploadResult.uploads();
             for (Upload upload : uploads) {
               ret.add(new Result<Upload>(upload, null));
             }
@@ -1632,8 +1632,8 @@ public final class MinioClient {
     Iterator<Result<Upload>> uploads = listIncompleteUploads(bucketName, objectName);
     while (uploads.hasNext()) {
       Upload upload = uploads.next().getResult();
-      if (objectName.equals(upload.getObjectName())) {
-        abortMultipartUpload(bucketName, objectName, upload.getUploadId());
+      if (objectName.equals(upload.objectName())) {
+        abortMultipartUpload(bucketName, objectName, upload.uploadId());
         return;
       }
     }
