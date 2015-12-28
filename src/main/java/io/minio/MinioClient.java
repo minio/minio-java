@@ -100,6 +100,17 @@ public final class MinioClient {
   private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
       + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
 
+  private static XmlPullParserFactory xmlPullParserFactory = null;
+
+  static {
+    try {
+      xmlPullParserFactory = XmlPullParserFactory.newInstance();
+      xmlPullParserFactory.setNamespaceAware(true);
+    } catch (XmlPullParserException e) {
+      throw new ExceptionInInitializerError(e);
+    }
+  }
+
   // the current client instance's base URL.
   private HttpUrl baseUrl;
   // access key to sign all requests with
@@ -433,9 +444,7 @@ public final class MinioClient {
       HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null, null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
-      XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-      factory.setNamespaceAware(true);
-      XmlPullParser xpp = factory.newPullParser();
+      XmlPullParser xpp = xmlPullParserFactory.newPullParser();
       String location = null;
 
       xpp.setInput(response.body().charStream());
