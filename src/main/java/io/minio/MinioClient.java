@@ -111,6 +111,8 @@ public final class MinioClient {
     }
   }
 
+  private OutputStream traceStream;
+
   // the current client instance's base URL.
   private HttpUrl baseUrl;
   // access key to sign all requests with
@@ -367,6 +369,22 @@ public final class MinioClient {
     Response response = transport.newCall(request).execute();
     if (response == null) {
       throw new NoResponseException();
+    }
+
+    if (this.traceStream != null) {
+      Request req = response.request();
+      String str = "request={"
+          + "method=" + req.method() + ", "
+          + "url=" + req.httpUrl() + ", "
+          + "headers=" + req.headers()
+          + "}\n"
+          + "response={"
+          + "code=" + response.code() + ", "
+          + "headers=" + response.headers()
+          + "}\n";
+
+      this.traceStream.write(str.getBytes("UTF-8"));
+      this.traceStream.flush();
     }
 
     ResponseHeader header = new ResponseHeader();
@@ -1754,5 +1772,22 @@ public final class MinioClient {
 
   public URL getUrl() {
     return this.baseUrl.url();
+  }
+
+
+  /**
+   * enable trace of HTTP calls and written to traceStream.
+   */
+  public void traceOn(OutputStream traceStream) throws NullPointerException {
+    if (traceStream == null) {
+      throw new NullPointerException();
+    } else {
+      this.traceStream = traceStream;
+    }
+  }
+
+
+  public void traceOff() throws IOException {
+    this.traceStream = null;
   }
 }
