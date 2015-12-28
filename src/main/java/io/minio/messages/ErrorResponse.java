@@ -133,4 +133,20 @@ public class ErrorResponse extends XmlEntity {
     namespaceDictionary.set("", "");
     super.parseXml(reader, namespaceDictionary);
   }
+
+
+  /**
+   * returns string with field values.
+   */
+  public String getString() {
+    return "ErrorResponse("
+        + "code=" + code + ", "
+        + "message=" + message + ", "
+        + "bucketName=" + bucketName + ", "
+        + "objectName=" + objectName + ", "
+        + "resouce=" + resource + ", "
+        + "requestId=" + requestId + ", "
+        + "hostId=" + hostId
+        + ")";
+  }
 }

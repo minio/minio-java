@@ -429,7 +429,7 @@ public final class MinioClient {
       // observation: on HEAD of a bucket with wrong region gives 400 without body
     }
 
-    throw new ErrorResponseException(errorResponse);
+    throw new ErrorResponseException(errorResponse, response);
   }
 
 
