@@ -26,6 +26,13 @@ import java.io.*;
 import org.xmlpull.v1.XmlPullParserException;
 import org.joda.time.DateTime;
 
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.google.common.io.ByteStreams;
+
 import io.minio.*;
 import io.minio.messages.*;
 import io.minio.errors.*;
@@ -597,10 +604,36 @@ public class FunctionalTest {
       println("Test: presignedGetObject(String bucketName, String objectName)");
       String fileName = createFile(3 * MB);
       client.putObject(bucketName, fileName, fileName);
+
+      String urlString = client.presignedGetObject(bucketName, fileName);
+      Request.Builder requestBuilder = new Request.Builder();
+      Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("GET", null)
+        .build();
+      OkHttpClient transport = new OkHttpClient();
+      Response response = transport.newCall(request).execute();
+
+      if (response != null) {
+        if (response.isSuccessful()) {
+          OutputStream os = Files.newOutputStream(Paths.get(fileName + ".downloaded"), StandardOpenOption.CREATE);
+          ByteStreams.copy(response.body().byteStream(), os);
+          response.body().close();
+          os.close();
+        } else {
+          println("FAILED");
+        }
+      } else {
+        println("NO RESPONSE");
+      }
+
+      if (!Arrays.equals(Files.readAllBytes(Paths.get(fileName)),
+                         Files.readAllBytes(Paths.get(fileName + ".downloaded")))) {
+        println("CONTENT DIFFERS");
+      }
+
       Files.delete(Paths.get(fileName));
-
-      println(client.presignedGetObject(bucketName, fileName));
-
+      Files.delete(Paths.get(fileName + ".downloaded"));
       client.removeObject(bucketName, fileName);
     } catch (Exception e) {
       e.printStackTrace();
@@ -613,10 +646,36 @@ public class FunctionalTest {
       println("Test: presignedGetObject(String bucketName, String objectName, Integer expires)");
       String fileName = createFile(3 * MB);
       client.putObject(bucketName, fileName, fileName);
+
+      String urlString = client.presignedGetObject(bucketName, fileName, 3600);
+      Request.Builder requestBuilder = new Request.Builder();
+      Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("GET", null)
+        .build();
+      OkHttpClient transport = new OkHttpClient();
+      Response response = transport.newCall(request).execute();
+
+      if (response != null) {
+        if (response.isSuccessful()) {
+          OutputStream os = Files.newOutputStream(Paths.get(fileName + ".downloaded"), StandardOpenOption.CREATE);
+          ByteStreams.copy(response.body().byteStream(), os);
+          response.body().close();
+          os.close();
+        } else {
+          println("FAILED");
+        }
+      } else {
+        println("NO RESPONSE");
+      }
+
+      if (!Arrays.equals(Files.readAllBytes(Paths.get(fileName)),
+                         Files.readAllBytes(Paths.get(fileName + ".downloaded")))) {
+        println("CONTENT DIFFERS");
+      }
+
       Files.delete(Paths.get(fileName));
-
-      println(client.presignedGetObject(bucketName, fileName, 3600));
-
+      Files.delete(Paths.get(fileName + ".downloaded"));
       client.removeObject(bucketName, fileName);
     } catch (Exception e) {
       e.printStackTrace();
@@ -628,7 +687,27 @@ public class FunctionalTest {
   public static void presignedPutObject_test1() {
     try {
       println("Test: presignedPutObject(String bucketName, String objectName)");
-      println(client.presignedPutObject(bucketName, getRandomName()));
+      String fileName = createFile(3 * MB);
+      String urlString = client.presignedPutObject(bucketName, fileName);
+
+      Request.Builder requestBuilder = new Request.Builder();
+      Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(fileName))))
+        .build();
+      OkHttpClient transport = new OkHttpClient();
+      Response response = transport.newCall(request).execute();
+
+      if (response != null) {
+        if (!response.isSuccessful()) {
+          println("FAILED");
+        }
+      } else {
+        println("NO RESPONSE");
+      }
+
+      Files.delete(Paths.get(fileName));
+      client.removeObject(bucketName, fileName);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -639,7 +718,27 @@ public class FunctionalTest {
   public static void presignedPutObject_test2() {
     try {
       println("Test: presignedPutObject(String bucketName, String objectName, Integer expires)");
-      println(client.presignedPutObject(bucketName, getRandomName(), 3600));
+      String fileName = createFile(3 * MB);
+      String urlString = client.presignedPutObject(bucketName, fileName, 3600);
+
+      Request.Builder requestBuilder = new Request.Builder();
+      Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(fileName))))
+        .build();
+      OkHttpClient transport = new OkHttpClient();
+      Response response = transport.newCall(request).execute();
+
+      if (response != null) {
+        if (!response.isSuccessful()) {
+          println("FAILED");
+        }
+      } else {
+        println("NO RESPONSE");
+      }
+
+      Files.delete(Paths.get(fileName));
+      client.removeObject(bucketName, fileName);
     } catch (Exception e) {
       e.printStackTrace();
     }
