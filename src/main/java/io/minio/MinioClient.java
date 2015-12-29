@@ -1431,7 +1431,7 @@ public final class MinioClient {
         // this part is already uploaded
         // TODO: validate the integrity of the part by md5sum etc
         // TODO: to make it simpler, we check the size time being
-        totalParts.add(part);
+        totalParts.add(new Part(part.partNumber(), part.etag()));
         skipStream(body, partSize);
         part = null;
 
@@ -1620,13 +1620,11 @@ public final class MinioClient {
   private ListPartsResult listObjectParts(String bucketName, String objectName, String uploadId, int partNumberMarker)
     throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
            XmlPullParserException, ErrorResponseException, InternalException {
-    if (partNumberMarker <= 0) {
-      throw new InvalidArgumentException("part number marker should be greater than 0");
-    }
-
     Map<String,String> queryParamMap = new HashMap<String,String>();
     queryParamMap.put("uploadId", uploadId);
-    queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
+    if (partNumberMarker > 0) {
+      queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
+    }
 
     HttpResponse response = executeGet(bucketName, objectName, null, queryParamMap);
 
