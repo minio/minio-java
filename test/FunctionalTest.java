@@ -659,14 +659,14 @@ public class FunctionalTest {
 
 
   public static void main(String[] args) {
-    if (args.length != 4) {
+    if (args.length != 3) {
       println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY>");
       return;
     }
 
-    endpoint = args[1];
-    accessKey = args[2];
-    secretKey = args[3];
+    endpoint = args[0];
+    accessKey = args[1];
+    secretKey = args[2];
 
     try {
       client = new MinioClient(endpoint, accessKey, secretKey);
