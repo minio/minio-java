@@ -18,16 +18,19 @@ package io.minio.messages;
 
 import com.google.api.client.util.Key;
 
+
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Prefix extends XmlEntity {
   @Key("Prefix")
   private String prefix;
 
-  public String getPrefix() {
-    return prefix;
+
+  public Prefix() {
+    super.name = "Prefix";
   }
 
-  public void setPrefix(String prefix) {
-    this.prefix = prefix;
+
+  public String prefix() {
+    return prefix;
   }
 }

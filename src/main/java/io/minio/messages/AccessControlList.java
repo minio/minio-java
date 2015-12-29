@@ -20,10 +20,12 @@ import com.google.api.client.util.Key;
 
 import java.util.List;
 
+
 @SuppressWarnings("WeakerAccess")
 public class AccessControlList extends XmlEntity {
   @Key("Grant")
-  private List<Grant> grant;
+  private List<Grant> grantList;
+
 
   @SuppressWarnings("unused")
   public AccessControlList() {
@@ -31,11 +33,8 @@ public class AccessControlList extends XmlEntity {
     super.name = "AccessControlList";
   }
 
-  public List<Grant> getGrant() {
-    return grant;
-  }
 
-  public void setGrant(List<Grant> grant) {
-    this.grant = grant;
+  public List<Grant> grantList() {
+    return grantList;
   }
 }

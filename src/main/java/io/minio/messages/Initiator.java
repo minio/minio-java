@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import com.google.api.client.util.Key;
 
+
 @SuppressWarnings("unused")
 public class Initiator extends XmlEntity {
   @Key("ID")
@@ -25,24 +26,19 @@ public class Initiator extends XmlEntity {
   @Key("DisplayName")
   private String displayName;
 
+
   public Initiator() {
     super();
     this.name = "Initiator";
   }
 
-  public String getId() {
+
+  public String id() {
     return id;
   }
 
-  public void setId(String id) {
-    this.id = id;
-  }
 
-  public String getDisplayName() {
+  public String displayName() {
     return displayName;
-  }
-
-  public void setDisplayName(String displayName) {
-    this.displayName = displayName;
   }
 }

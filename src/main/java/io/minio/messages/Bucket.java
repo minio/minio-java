@@ -35,12 +35,12 @@ public class Bucket extends XmlEntity {
   }
 
 
-  public String getName() {
+  public String name() {
     return name;
   }
 
 
-  public Date getCreationDate() {
+  public Date creationDate() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(creationDate).toDate();
   }
 }

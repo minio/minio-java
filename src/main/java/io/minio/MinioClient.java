@@ -16,7 +16,6 @@
 
 package io.minio;
 
-import io.minio.acl.Acl;
 import io.minio.errors.*;
 import io.minio.messages.*;
 import io.minio.http.*;
@@ -29,7 +28,6 @@ import com.squareup.okhttp.Response;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlPullParserException;
-import org.joda.time.DateTime;
 import com.google.common.io.BaseEncoding;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
@@ -101,6 +99,19 @@ public final class MinioClient {
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
       + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
+
+  private static XmlPullParserFactory xmlPullParserFactory = null;
+
+  static {
+    try {
+      xmlPullParserFactory = XmlPullParserFactory.newInstance();
+      xmlPullParserFactory.setNamespaceAware(true);
+    } catch (XmlPullParserException e) {
+      throw new ExceptionInInitializerError(e);
+    }
+  }
+
+  private OutputStream traceStream;
 
   // the current client instance's base URL.
   private HttpUrl baseUrl;
@@ -360,6 +371,22 @@ public final class MinioClient {
       throw new NoResponseException();
     }
 
+    if (this.traceStream != null) {
+      Request req = response.request();
+      String str = "request={"
+          + "method=" + req.method() + ", "
+          + "url=" + req.httpUrl() + ", "
+          + "headers=" + req.headers()
+          + "}\n"
+          + "response={"
+          + "code=" + response.code() + ", "
+          + "headers=" + response.headers()
+          + "}\n";
+
+      this.traceStream.write(str.getBytes("UTF-8"));
+      this.traceStream.flush();
+    }
+
     ResponseHeader header = new ResponseHeader();
     HeaderParser.set(response.headers(), header);
 
@@ -410,17 +437,17 @@ public final class MinioClient {
       }
 
       errorResponse = new ErrorResponse(ec, bucketName, objectName, request.httpUrl().encodedPath(),
-                                        header.getXamzRequestId(), header.getXamzId2());
+                                        header.xamzRequestId(), header.xamzId2());
     }
 
     // invalidate region cache if needed
-    if (errorResponse.getErrorCode() == ErrorCode.NO_SUCH_BUCKET) {
+    if (errorResponse.errorCode() == ErrorCode.NO_SUCH_BUCKET) {
       Regions.INSTANCE.remove(bucketName);
       // TODO: handle for other cases as well
       // observation: on HEAD of a bucket with wrong region gives 400 without body
     }
 
-    throw new ErrorResponseException(errorResponse);
+    throw new ErrorResponseException(errorResponse, response);
   }
 
 
@@ -435,9 +462,7 @@ public final class MinioClient {
       HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null, null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
-      XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-      factory.setNamespaceAware(true);
-      XmlPullParser xpp = factory.newPullParser();
+      XmlPullParser xpp = xmlPullParserFactory.newPullParser();
       String location = null;
 
       xpp.setInput(response.body().charStream());
@@ -563,8 +588,8 @@ public final class MinioClient {
            ErrorResponseException, InternalException {
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
-    return new ObjectStat(bucketName, objectName, header.getLastModified(), header.getContentLength(),
-                          header.getEtag(), header.getContentType());
+    return new ObjectStat(bucketName, objectName, header.lastModified(), header.contentLength(),
+                          header.etag(), header.contentType());
   }
 
 
@@ -680,10 +705,10 @@ public final class MinioClient {
     }
 
     ObjectStat objectStat = statObject(bucketName, objectName);
-    long length = objectStat.getLength();
-    String md5sum = objectStat.getMd5sum();
+    long length = objectStat.length();
+    String etag = objectStat.etag();
 
-    String tempFileName = fileName + "." + md5sum + ".part.minio";
+    String tempFileName = fileName + "." + etag + ".part.minio";
     Path tempFilePath = Paths.get(tempFileName);
     boolean tempFileExists = Files.exists(filePath);
 
@@ -842,20 +867,8 @@ public final class MinioClient {
     throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException,
            InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    updateRegionMap(policy.getBucket());
-
-    DateTime date = new DateTime();
-    String region = Regions.INSTANCE.region(policy.getBucket());
-    RequestSigner signer = new RequestSigner(this.accessKey, this.secretKey, region, date);
-    policy.setAlgorithm("AWS4-HMAC-SHA256");
-    policy.setCredential(this.accessKey + "/" + signer.getScope(region));
-    policy.setDate(date);
-
-    String policybase64 = policy.base64();
-    String signature = signer.postPreSignV4(policybase64, region);
-    policy.setPolicy(policybase64);
-    policy.setSignature(signature);
-    return policy.getFormData();
+    updateRegionMap(policy.bucketName());
+    return policy.formData(this.accessKey, this.secretKey);
   }
 
 
@@ -934,20 +947,18 @@ public final class MinioClient {
           List<Result<Item>> items = new LinkedList<Result<Item>>();
           try {
             listBucketResult = listObjects(bucketName, marker, prefix, delimiter, 1000);
-            for (Item item : listBucketResult.getContents()) {
+            for (Item item : listBucketResult.contents()) {
               items.add(new Result<Item>(item, null));
               if (listBucketResult.isTruncated()) {
-                marker = item.getKey();
+                marker = item.objectName();
               }
             }
-            for (Prefix prefix : listBucketResult.getCommonPrefixes()) {
-              Item item = new Item();
-              item.setKey(prefix.getPrefix());
-              item.setIsDir(true);
+            for (Prefix prefix : listBucketResult.commonPrefixes()) {
+              Item item = new Item(prefix.prefix(), true);
               items.add(new Result<Item>(item, null));
             }
             if (listBucketResult.isTruncated() && delimiter != null) {
-              marker = listBucketResult.getNextMarker();
+              marker = listBucketResult.nextMarker();
             } else if (!listBucketResult.isTruncated()) {
               isComplete = true;
             }
@@ -985,6 +996,7 @@ public final class MinioClient {
 
     ListBucketResult result = new ListBucketResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result;
   }
 
@@ -1006,7 +1018,8 @@ public final class MinioClient {
     HttpResponse response = executeGet(null, null, null, null);
     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
     result.parseXml(response.body().charStream());
-    return result.getBuckets().iterator();
+    response.body().close();
+    return result.buckets().iterator();
   }
 
 
@@ -1031,7 +1044,7 @@ public final class MinioClient {
       executeHead(bucketName, null);
       return true;
     } catch (ErrorResponseException e) {
-      if (e.getErrorCode() != ErrorCode.NO_SUCH_BUCKET) {
+      if (e.errorCode() != ErrorCode.NO_SUCH_BUCKET) {
         throw e;
       }
     }
@@ -1124,8 +1137,7 @@ public final class MinioClient {
       // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
       data = "".getBytes("UTF-8");
     } else {
-      CreateBucketConfiguration config = new CreateBucketConfiguration();
-      config.setLocationConstraint(region);
+      CreateBucketConfiguration config = new CreateBucketConfiguration(region);
       data = config.toString().getBytes("UTF-8");
 
       byte[] md5sum = getMd5Digest(data, data.length);
@@ -1185,39 +1197,43 @@ public final class MinioClient {
   public Acl getBucketAcl(String bucketName)
     throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    AccessControlPolicy policy = this.getAccessPolicy(bucketName);
+    Map<String,String> queryParamMap = new HashMap<String,String>();
+    queryParamMap.put("acl", "");
+
+    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
+
+    AccessControlPolicy result = new AccessControlPolicy();
+    result.parseXml(response.body().charStream());
+    response.body().close();
+
     Acl acl = Acl.PRIVATE;
-    List<Grant> accessControlList = policy.getAccessControlList();
-    switch (accessControlList.size()) {
+    List<Grant> grants = result.grants();
+    switch (grants.size()) {
       case 1:
-        for (Grant grant : accessControlList) {
-          if (grant.getGrantee().getUri() == null && "FULL_CONTROL".equals(grant.getPermission())) {
+        for (Grant grant : grants) {
+          if (grant.grantee().uri() == null && "FULL_CONTROL".equals(grant.permission())) {
             acl = Acl.PRIVATE;
             break;
           }
         }
         break;
       case 2:
-        for (Grant grant : accessControlList) {
-          if ("http://acs.amazonaws.com/groups/global/AuthenticatedUsers".equals(grant.getGrantee().getUri())
-              &&
-              "READ".equals(grant.getPermission())) {
+        for (Grant grant : grants) {
+          if ("http://acs.amazonaws.com/groups/global/AuthenticatedUsers".equals(grant.grantee().uri())
+              && "READ".equals(grant.permission())) {
             acl = Acl.AUTHENTICATED_READ;
             break;
-          }
-          if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.getGrantee().getUri())
-              &&
-              "READ".equals(grant.getPermission())) {
+          } else if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.grantee().uri())
+                     && "READ".equals(grant.permission())) {
             acl = Acl.PUBLIC_READ;
             break;
           }
         }
         break;
       case 3:
-        for (Grant grant : accessControlList) {
-          if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.getGrantee().getUri())
-              &&
-              "WRITE".equals(grant.getPermission())) {
+        for (Grant grant : grants) {
+          if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.grantee().uri())
+              && "WRITE".equals(grant.permission())) {
             acl = Acl.PUBLIC_READ_WRITE;
             break;
           }
@@ -1228,20 +1244,6 @@ public final class MinioClient {
                                       + "https://github.com/minio/minio-java/issues");
     }
     return acl;
-  }
-
-
-  private AccessControlPolicy getAccessPolicy(String bucketName)
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<String,String>();
-    queryParamMap.put("acl", "");
-
-    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
-
-    AccessControlPolicy result = new AccessControlPolicy();
-    result.parseXml(response.body().charStream());
-    return result;
   }
 
 
@@ -1291,7 +1293,7 @@ public final class MinioClient {
     }
 
     HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
-    return response.header().getEtag();
+    return response.header().etag();
   }
 
 
@@ -1400,10 +1402,10 @@ public final class MinioClient {
     Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucketName, objectName);
     while (multipartUploads.hasNext()) {
       Upload upload = multipartUploads.next().getResult();
-      if (upload.getObjectName().equals(objectName)) {
+      if (upload.objectName().equals(objectName)) {
         // TODO: its possible to have multiple mutlipart upload session for the same object
         // TODO: if found we would need to error out
-        uploadId = upload.getUploadId();
+        uploadId = upload.uploadId();
         break;
       }
     }
@@ -1425,7 +1427,7 @@ public final class MinioClient {
     int bytesRead = 0;
     int expectedReadSize = partSize;
     for (int partNumber = 1; partNumber <= partCount; partNumber++) {
-      if (part != null && partNumber == part.getPartNumber() && part.getSize() == partSize) {
+      if (part != null && partNumber == part.partNumber() && part.partSize() == partSize) {
         // this part is already uploaded
         // TODO: validate the integrity of the part by md5sum etc
         // TODO: to make it simpler, we check the size time being
@@ -1514,12 +1516,12 @@ public final class MinioClient {
                                                  uploadIdMarker, prefix,
                                                  delimiter, 1000);
             if (uploadResult.isTruncated()) {
-              keyMarker = uploadResult.getNextKeyMarker();
-              uploadIdMarker = uploadResult.getNextUploadIdMarker();
+              keyMarker = uploadResult.nextKeyMarker();
+              uploadIdMarker = uploadResult.nextUploadIdMarker();
             } else {
               isComplete = true;
             }
-            List<Upload> uploads = uploadResult.getUploads();
+            List<Upload> uploads = uploadResult.uploads();
             for (Upload upload : uploads) {
               ret.add(new Result<Upload>(upload, null));
             }
@@ -1557,6 +1559,7 @@ public final class MinioClient {
 
     ListMultipartUploadsResult result = new ListMultipartUploadsResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result;
   }
 
@@ -1571,7 +1574,8 @@ public final class MinioClient {
 
     InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
     result.parseXml(response.body().charStream());
-    return result.getUploadId();
+    response.body().close();
+    return result.uploadId();
   }
 
 
@@ -1581,8 +1585,7 @@ public final class MinioClient {
     Map<String,String> queryParamMap = new HashMap<String,String>();
     queryParamMap.put("uploadId", uploadId);
 
-    CompleteMultipartUpload completeManifest = new CompleteMultipartUpload();
-    completeManifest.setParts(parts);
+    CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
 
     executePost(bucketName, objectName, queryParamMap, completeManifest.toString().getBytes("UTF-8"));
   }
@@ -1602,11 +1605,11 @@ public final class MinioClient {
           ListPartsResult result;
           result = listObjectParts(bucketName, objectName, uploadId, marker);
           if (result.isTruncated()) {
-            marker = result.getNextPartNumberMarker();
+            marker = result.nextPartNumberMarker();
           } else {
             isComplete = true;
           }
-          return result.getParts();
+          return result.partList();
         }
         return new LinkedList<Part>();
       }
@@ -1629,6 +1632,7 @@ public final class MinioClient {
 
     ListPartsResult result = new ListPartsResult();
     result.parseXml(response.body().charStream());
+    response.body().close();
     return result;
   }
 
@@ -1661,8 +1665,8 @@ public final class MinioClient {
     Iterator<Result<Upload>> uploads = listIncompleteUploads(bucketName, objectName);
     while (uploads.hasNext()) {
       Upload upload = uploads.next().getResult();
-      if (objectName.equals(upload.getObjectName())) {
-        abortMultipartUpload(bucketName, objectName, upload.getUploadId());
+      if (objectName.equals(upload.objectName())) {
+        abortMultipartUpload(bucketName, objectName, upload.uploadId());
         return;
       }
     }
@@ -1768,5 +1772,22 @@ public final class MinioClient {
 
   public URL getUrl() {
     return this.baseUrl.url();
+  }
+
+
+  /**
+   * enable trace of HTTP calls and written to traceStream.
+   */
+  public void traceOn(OutputStream traceStream) throws NullPointerException {
+    if (traceStream == null) {
+      throw new NullPointerException();
+    } else {
+      this.traceStream = traceStream;
+    }
+  }
+
+
+  public void traceOff() throws IOException {
+    this.traceStream = null;
   }
 }

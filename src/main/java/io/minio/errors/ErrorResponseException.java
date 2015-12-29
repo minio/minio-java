@@ -17,6 +17,7 @@
 package io.minio.errors;
 
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
 import io.minio.messages.ErrorResponse;
 import io.minio.ErrorCode;
@@ -25,22 +26,37 @@ import io.minio.ErrorCode;
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ErrorResponseException extends MinioException {
   private ErrorResponse errorResponse;
-  private Request request;
+  private Response response;
 
 
-  public ErrorResponseException(ErrorResponse errorResponse) {
-    super(errorResponse.getMessage());
+  /**
+   * constructor.
+   */
+  public ErrorResponseException(ErrorResponse errorResponse, Response response) {
+    super(errorResponse.message());
     this.errorResponse = errorResponse;
+    this.response = response;
   }
 
 
-  public ErrorResponseException(ErrorResponse errorResponse, Request request) {
-    this(errorResponse);
-    this.request = request;
+  public ErrorCode errorCode() {
+    return this.errorResponse.errorCode();
   }
 
 
-  public ErrorCode getErrorCode() {
-    return this.errorResponse.getErrorCode();
+  @Override
+  public String toString() {
+    Request request = response.request();
+    return "error occured\n"
+        + errorResponse.getString() + "\n"
+        + "request={"
+        + "method=" + request.method() + ", "
+        + "url=" + request.httpUrl() + ", "
+        + "headers=" + request.headers()
+        + "}\n"
+        + "response={"
+        + "code=" + response.code() + ", "
+        + "headers=" + response.headers()
+        + "}\n";
   }
 }

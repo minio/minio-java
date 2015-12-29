@@ -21,6 +21,7 @@ import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
 
+
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class ListBucketResult extends XmlEntity {
   @Key("Name")
@@ -42,85 +43,59 @@ public class ListBucketResult extends XmlEntity {
   @Key("CommonPrefixes")
   private List<Prefix> commonPrefixes;
 
+
   public ListBucketResult() {
     super.name = "ListBucketResult";
   }
 
-  public String getNextMarker() {
+
+  public String nextMarker() {
     return nextMarker;
   }
 
-  public void setNextMarker(String nextMarker) {
-    this.nextMarker = nextMarker;
-  }
 
-  public String getName() {
+  public String name() {
     return name;
   }
 
-  public void setName(String name) {
-    this.name = name;
-  }
 
-  public String getPrefix() {
+  public String prefix() {
     return prefix;
   }
 
-  public void setPrefix(String prefix) {
-    this.prefix = prefix;
-  }
 
-  public String getMarker() {
+  public String marker() {
     return marker;
   }
 
-  public void setMarker(String marker) {
-    this.marker = marker;
-  }
 
-  public int getMaxKeys() {
+  public int maxKeys() {
     return maxKeys;
   }
 
-  public void setMaxKeys(int maxKeys) {
-    this.maxKeys = maxKeys;
-  }
 
-  public String getDelimiter() {
+  public String delimiter() {
     return delimiter;
   }
 
-  public void setDelimiter(String delimiter) {
-    this.delimiter = delimiter;
-  }
 
   public boolean isTruncated() {
     return isTruncated;
   }
 
-  public void setIsTruncated(boolean isTruncated) {
-    this.isTruncated = isTruncated;
-  }
 
-  public List<Item> getContents() {
+  public List<Item> contents() {
     return contents;
   }
 
-  public void setContents(List<Item> contents) {
-    this.contents = contents;
-  }
 
   /**
    * get common prefixes.
    */
-  public List<Prefix> getCommonPrefixes() {
+  public List<Prefix> commonPrefixes() {
     if (commonPrefixes == null) {
       return new LinkedList<Prefix>();
     }
     return commonPrefixes;
-  }
-
-  public void setCommonPrefixes(List<Prefix> commonPrefixes) {
-    this.commonPrefixes = commonPrefixes;
   }
 }

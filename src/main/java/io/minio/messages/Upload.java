@@ -33,65 +33,39 @@ public class Upload extends XmlEntity {
   @Key("Initiated")
   private String initiated;
 
+
   public Upload() {
     super();
     super.name = "Upload";
   }
 
 
-  public String getObjectName() {
+  public String objectName() {
     return objectName;
   }
 
 
-  public void setObjectName(String objectName) {
-    this.objectName = objectName;
-  }
-
-
-  // must be there for XML parsing
-  public void setKey(String objectName) {
-    setObjectName(objectName);
-  }
-
-
-  public String getUploadId() {
+  public String uploadId() {
     return uploadId;
   }
 
-  public void setUploadId(String uploadId) {
-    this.uploadId = uploadId;
-  }
 
-  public Initiator getInitiator() {
+  public Initiator initiator() {
     return initiator;
   }
 
-  public void setInitiator(Initiator initiator) {
-    this.initiator = initiator;
-  }
 
-  public Owner getOwner() {
+  public Owner owner() {
     return owner;
   }
 
-  public void setOwner(Owner owner) {
-    this.owner = owner;
-  }
 
-  public String getStorageClass() {
+  public String storageClass() {
     return storageClass;
   }
 
-  public void setStorageClass(String storageClass) {
-    this.storageClass = storageClass;
-  }
 
-  public String getInitiated() {
+  public String initiated() {
     return initiated;
-  }
-
-  public void setInitiated(String initiated) {
-    this.initiated = initiated;
   }
 }

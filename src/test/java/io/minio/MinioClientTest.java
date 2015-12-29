@@ -22,7 +22,8 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 
 import okio.Buffer;
 
-import io.minio.acl.Acl;
+import io.minio.Acl;
+import io.minio.ErrorCode;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
@@ -331,21 +332,20 @@ public class MinioClientTest {
     Iterator<Result<Item>> objectsInBucket = client.listObjects("bucket");
 
     Item item = objectsInBucket.next().getResult();
-    assertEquals("key", item.getKey());
-    assertEquals("2015-05-05T02:21:15.716Z", item.getLastModified());
-    assertEquals(11, item.getSize());
-    assertEquals("STANDARD", item.getStorageClass());
+    assertEquals("key", item.objectName());
+    assertEquals(11, item.objectSize());
+    assertEquals("STANDARD", item.storageClass());
 
     Calendar expectedDate = Calendar.getInstance();
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
     expectedDate.set(2015, Calendar.MAY, 5, 2, 21, 15);
     expectedDate.set(Calendar.MILLISECOND, 716);
-    assertEquals(expectedDate.getTime(), item.getParsedLastModified());
+    assertEquals(expectedDate.getTime(), item.lastModified());
 
-    Owner owner = item.getOwner();
-    assertEquals("minio", owner.getId());
-    assertEquals("minio", owner.getDisplayName());
+    Owner owner = item.owner();
+    assertEquals("minio", owner.id());
+    assertEquals("minio", owner.displayName());
   }
 
   @Test
@@ -370,19 +370,19 @@ public class MinioClientTest {
     Iterator<Bucket> buckets = client.listBuckets();
 
     Bucket bucket = buckets.next();
-    assertEquals("bucket", bucket.getName());
-    assertEquals(dateFormat.parse("2015-05-05T20:35:51.410Z"), bucket.getCreationDate());
+    assertEquals("bucket", bucket.name());
+    assertEquals(dateFormat.parse("2015-05-05T20:35:51.410Z"), bucket.creationDate());
 
     bucket = buckets.next();
-    assertEquals("foo", bucket.getName());
-    assertEquals(dateFormat.parse("2015-05-05T20:35:47.170Z"), bucket.getCreationDate());
+    assertEquals("foo", bucket.name());
+    assertEquals(dateFormat.parse("2015-05-05T20:35:47.170Z"), bucket.creationDate());
 
     Calendar expectedDate = Calendar.getInstance();
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
     expectedDate.set(2015, Calendar.MAY, 5, 20, 35, 47);
     expectedDate.set(Calendar.MILLISECOND, 170);
-    assertEquals(expectedDate.getTime(), bucket.getCreationDate());
+    assertEquals(expectedDate.getTime(), bucket.creationDate());
   }
 
   @Test
@@ -551,11 +551,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("BucketAlreadyExists");
-    errResponse.setMessage("Bucket Already Exists");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.BUCKET_ALREADY_EXISTS, null, null, "/bucket", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(409); // status conflict
@@ -599,11 +596,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("MethodNotAllowed");
-    errResponse.setMessage("The specified method is not allowed against this resource.");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket/key");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(405); // method not allowed set by minio cloud storage
@@ -627,11 +621,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("MethodNotAllowed");
-    errResponse.setMessage("The specified method is not allowed against this resource.");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket/key");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(405); // method not allowed set by minio cloud storage
@@ -655,11 +646,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse();
-    errResponse.setCode("MethodNotAllowed");
-    errResponse.setMessage("The specified method is not allowed against this resource.");
-    errResponse.setRequestId("1");
-    errResponse.setResource("/bucket/key");
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+                                                        null);
 
     response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
     response.setResponseCode(405); // method not allowed set by minio cloud storage

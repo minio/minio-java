@@ -52,7 +52,7 @@ public class ResponseHeader {
   }
 
 
-  public long getContentLength() {
+  public long contentLength() {
     return this.contentLength;
   }
 
@@ -62,7 +62,7 @@ public class ResponseHeader {
   }
 
 
-  public String getContentType() {
+  public String contentType() {
     return this.contentType;
   }
 
@@ -72,7 +72,7 @@ public class ResponseHeader {
   }
 
 
-  public Date getDate() {
+  public Date date() {
     return this.date.toDate();
   }
 
@@ -82,7 +82,7 @@ public class ResponseHeader {
   }
 
 
-  public String getEtag() {
+  public String etag() {
     return this.etag;
   }
 
@@ -92,7 +92,7 @@ public class ResponseHeader {
   }
 
 
-  public Date getLastModified() {
+  public Date lastModified() {
     return this.lastModified.toDate();
   }
 
@@ -102,7 +102,7 @@ public class ResponseHeader {
   }
 
 
-  public String getServer() {
+  public String server() {
     return this.server;
   }
 
@@ -112,7 +112,7 @@ public class ResponseHeader {
   }
 
 
-  public String getStatusCode() {
+  public String statusCode() {
     return this.statusCode;
   }
 
@@ -122,7 +122,7 @@ public class ResponseHeader {
   }
 
 
-  public String getTransferEncoding() {
+  public String transferEncoding() {
     return this.transferEncoding;
   }
 
@@ -132,7 +132,7 @@ public class ResponseHeader {
   }
 
 
-  public String getXamzBucketRegion() {
+  public String xamzBucketRegion() {
     return this.xamzBucketRegion;
   }
 
@@ -142,7 +142,7 @@ public class ResponseHeader {
   }
 
 
-  public String getXamzId2() {
+  public String xamzId2() {
     return this.xamzId2;
   }
 
@@ -152,7 +152,7 @@ public class ResponseHeader {
   }
 
 
-  public String getXamzRequestId() {
+  public String xamzRequestId() {
     return this.xamzRequestId;
   }
 }

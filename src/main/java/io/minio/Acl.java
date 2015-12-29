@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package io.minio.acl;
+package io.minio;
+
 
 public enum Acl {
   /** Canned acl: public-read-write.

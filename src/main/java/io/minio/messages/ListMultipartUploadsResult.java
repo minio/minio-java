@@ -21,12 +21,13 @@ import com.google.api.client.util.Key;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ListMultipartUploadsResult extends XmlEntity {
   @Key("Upload")
   List<Upload> uploads;
   @Key("Bucket")
-  private String bucket;
+  private String bucketName;
   @Key("KeyMarker")
   private String keyMarker;
   @Key("UploadIdMarker")
@@ -45,73 +46,49 @@ public class ListMultipartUploadsResult extends XmlEntity {
     super.name = "ListMultipartUploadsResult";
   }
 
+
   public boolean isTruncated() {
     return isTruncated;
   }
 
-  public void setIsTruncated(boolean isTruncated) {
-    this.isTruncated = isTruncated;
+
+  public String bucketName() {
+    return bucketName;
   }
 
-  public String getBucket() {
-    return bucket;
-  }
 
-  public void setBucket(String bucket) {
-    this.bucket = bucket;
-  }
-
-  public String getKeyMarker() {
+  public String keyMarker() {
     return keyMarker;
   }
 
-  public void setKeyMarker(String keyMarker) {
-    this.keyMarker = keyMarker;
-  }
 
-  public String getUploadIdMarker() {
+  public String uploadIdMarker() {
     return uploadIdMarker;
   }
 
-  public void setUploadIdMarker(String uploadIdMarker) {
-    this.uploadIdMarker = uploadIdMarker;
-  }
 
-  public String getNextKeyMarker() {
+  public String nextKeyMarker() {
     return nextKeyMarker;
   }
 
-  public void setNextKeyMarker(String nextKeyMarker) {
-    this.nextKeyMarker = nextKeyMarker;
-  }
 
-  public String getNextUploadIdMarker() {
+  public String nextUploadIdMarker() {
     return nextUploadIdMarker;
   }
 
-  public void setNextUploadIdMarker(String nextUploadIdMarker) {
-    this.nextUploadIdMarker = nextUploadIdMarker;
-  }
 
-  public int getMaxUploads() {
+  public int maxUploads() {
     return maxUploads;
   }
 
-  public void setMaxUploads(int maxUploads) {
-    this.maxUploads = maxUploads;
-  }
 
   /**
    * get uploads.
    */
-  public List<Upload> getUploads() {
+  public List<Upload> uploads() {
     if (uploads == null) {
       return new ArrayList<Upload>();
     }
     return uploads;
-  }
-
-  public void setUploads(List<Upload> uploads) {
-    this.uploads = uploads;
   }
 }
