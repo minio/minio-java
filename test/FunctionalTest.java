@@ -30,6 +30,8 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.Response;
 import com.google.common.io.ByteStreams;
 
@@ -749,8 +751,32 @@ public class FunctionalTest {
   public static void presignedPostPolicy_test() {
     try {
       println("Test: presignedPostPolicy(PostPolicy policy)");
-      PostPolicy policy = new PostPolicy(bucketName, getRandomName(), DateTime.now().plusDays(7));
-      println(client.presignedPostPolicy(policy));
+      String fileName = createFile(3 * MB);
+      PostPolicy policy = new PostPolicy(bucketName, fileName, DateTime.now().plusDays(7));
+      Map<String, String> formData = client.presignedPostPolicy(policy);
+
+      MultipartBuilder multipartBuilder = new MultipartBuilder();
+      multipartBuilder.type(MultipartBuilder.FORM);
+      for (Map.Entry<String, String> entry : formData.entrySet()) {
+        multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
+      }
+      multipartBuilder.addFormDataPart("file", fileName, RequestBody.create(null, new File(fileName)));
+
+      Request.Builder requestBuilder = new Request.Builder();
+      Request request = requestBuilder.url(endpoint + "/" + bucketName).post(multipartBuilder.build()).build();
+      OkHttpClient transport = new OkHttpClient();
+      Response response = transport.newCall(request).execute();
+
+      if (response != null) {
+        if (!response.isSuccessful()) {
+          println("FAILED");
+        }
+      } else {
+        println("NO RESPONSE");
+      }
+
+      Files.delete(Paths.get(fileName));
+      client.removeObject(bucketName, fileName);
     } catch (Exception e) {
       e.printStackTrace();
     }
