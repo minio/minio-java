@@ -41,6 +41,7 @@ public class ListMultipartUploadsResult extends XmlEntity {
   @Key("IsTruncated")
   private boolean isTruncated;
 
+
   public ListMultipartUploadsResult() {
     super();
     super.name = "ListMultipartUploadsResult";

@@ -899,7 +899,7 @@ public final class MinioClient {
    * @return an iterator of Items.
    * @see #listObjects(String, String, boolean)
    */
-  public Iterator<Result<Item>> listObjects(final String bucketName) throws XmlPullParserException {
+  public Iterable<Result<Item>> listObjects(final String bucketName) throws XmlPullParserException {
     return listObjects(bucketName, null);
   }
 
@@ -913,7 +913,7 @@ public final class MinioClient {
    * @return an iterator of Items.
    * @see #listObjects(String, String, boolean)
    */
-  public Iterator<Result<Item>> listObjects(final String bucketName, final String prefix)
+  public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix)
     throws XmlPullParserException {
     // list all objects recursively
     return listObjects(bucketName, prefix, true);
@@ -929,51 +929,124 @@ public final class MinioClient {
    *
    * @return an iterator of Items.
    */
-  public Iterator<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive)
-    throws XmlPullParserException {
-    return new MinioIterator<Result<Item>>() {
-      private String marker = null;
-      private boolean isComplete = false;
-
+  public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive) {
+    return new Iterable<Result<Item>>() {
       @Override
-      protected List<Result<Item>> populate() throws XmlPullParserException {
-        if (!isComplete) {
-          String delimiter = null;
-          // set delimiter  to '/' if not recursive to emulate directories
-          if (!recursive) {
-            delimiter = "/";
-          }
-          ListBucketResult listBucketResult;
-          List<Result<Item>> items = new LinkedList<Result<Item>>();
-          try {
-            listBucketResult = listObjects(bucketName, marker, prefix, delimiter, 1000);
-            for (Item item : listBucketResult.contents()) {
-              items.add(new Result<Item>(item, null));
-              if (listBucketResult.isTruncated()) {
-                marker = item.objectName();
+      public Iterator<Result<Item>> iterator() {
+        return new Iterator<Result<Item>>() {
+          private String lastObjectName;
+          private ListBucketResult listBucketResult;
+          private Result<Item> error;
+          private Iterator<Item> itemIterator;
+          private Iterator<Prefix> prefixIterator;
+          private boolean completed = false;
+
+          private synchronized void populate() {
+            String delimiter = "/";
+            if (recursive) {
+              delimiter = null;
+            }
+
+            String marker = null;
+            if (this.listBucketResult != null) {
+              if (delimiter != null) {
+                marker = listBucketResult.nextMarker();
+              } else {
+                marker = this.lastObjectName;
               }
             }
-            for (Prefix prefix : listBucketResult.commonPrefixes()) {
-              Item item = new Item(prefix.prefix(), true);
-              items.add(new Result<Item>(item, null));
+
+            this.listBucketResult = null;
+            this.itemIterator = null;
+            this.prefixIterator = null;
+
+            try {
+              this.listBucketResult = listObjects(bucketName, marker, prefix, delimiter, 1000);
+            } catch (InvalidBucketNameException | NoResponseException | IOException | XmlPullParserException
+                       | ErrorResponseException | InternalException e) {
+              this.error = new Result<Item>(null, e);
+            } finally {
+              if (this.listBucketResult != null) {
+                this.itemIterator = this.listBucketResult.contents().iterator();
+                this.prefixIterator = this.listBucketResult.commonPrefixes().iterator();
+              } else {
+                this.itemIterator = new LinkedList<Item>().iterator();
+                this.prefixIterator = new LinkedList<Prefix>().iterator();
+              }
             }
-            if (listBucketResult.isTruncated() && delimiter != null) {
-              marker = listBucketResult.nextMarker();
-            } else if (!listBucketResult.isTruncated()) {
-              isComplete = true;
-            }
-          } catch (IOException e) {
-            items.add(new Result<Item>(null, e));
-            isComplete = true;
-            return items;
-          } catch (MinioException e) {
-            items.add(new Result<Item>(null, e));
-            isComplete = true;
-            return items;
           }
-          return items;
-        }
-        return new LinkedList<Result<Item>>();
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) {
+              return false;
+            }
+
+            if (this.error == null && this.itemIterator == null && this.prefixIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.itemIterator.hasNext() && !this.prefixIterator.hasNext()
+                && this.listBucketResult.isTruncated()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              return true;
+            }
+
+            if (this.itemIterator.hasNext()) {
+              return true;
+            }
+
+            if (this.prefixIterator.hasNext()) {
+              return true;
+            }
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<Item> next() {
+            if (this.completed) {
+              throw new NoSuchElementException();
+            }
+
+            if (this.error == null && this.itemIterator == null && this.prefixIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.itemIterator.hasNext() && !this.prefixIterator.hasNext()
+                && this.listBucketResult.isTruncated()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            if (this.itemIterator.hasNext()) {
+              Item item = this.itemIterator.next();
+              this.lastObjectName = item.objectName();
+              return new Result<Item>(item, null);
+            }
+
+            if (this.prefixIterator.hasNext()) {
+              Prefix prefix = this.prefixIterator.next();
+              return new Result<Item>(new Item(prefix.prefix(), true), null);
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
       }
     };
   }
@@ -1399,9 +1472,8 @@ public final class MinioClient {
     String uploadId = null;
 
     // get incomplete multipart upload of the same object if any
-    Iterator<Result<Upload>> multipartUploads = listIncompleteUploads(bucketName, objectName);
-    while (multipartUploads.hasNext()) {
-      Upload upload = multipartUploads.next().getResult();
+    for (Result<Upload> r : listIncompleteUploads(bucketName, objectName)) {
+      Upload upload = r.get();
       if (upload.objectName().equals(objectName)) {
         // TODO: its possible to have multiple mutlipart upload session for the same object
         // TODO: if found we would need to error out
@@ -1413,11 +1485,11 @@ public final class MinioClient {
     Part part = null;
     // TODO: as partCount is known always, it better to use array than LinkedList
     List<Part> totalParts = new LinkedList<Part>();
-    Iterator<Part> existingParts = null;
+    Iterator<Result<Part>> existingParts = null;
     if (uploadId != null) {
-      existingParts = listObjectParts(bucketName, objectName, uploadId);
+      existingParts = listObjectParts(bucketName, objectName, uploadId).iterator();
       if (existingParts.hasNext()) {
-        part = existingParts.next();
+        part = existingParts.next().get();
       }
     } else {
       uploadId = initMultipartUpload(bucketName, objectName);
@@ -1436,7 +1508,7 @@ public final class MinioClient {
         part = null;
 
         if (existingParts.hasNext()) {
-          part = existingParts.next();
+          part = existingParts.next().get();
         }
 
         continue;
@@ -1464,7 +1536,7 @@ public final class MinioClient {
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucketName) throws XmlPullParserException {
+  public Iterable<Result<Upload>> listIncompleteUploads(String bucketName) throws XmlPullParserException {
     return listIncompleteUploads(bucketName, null, true);
   }
 
@@ -1478,7 +1550,7 @@ public final class MinioClient {
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
+  public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
     throws XmlPullParserException {
     return listIncompleteUploads(bucketName, prefix, true);
   }
@@ -1493,47 +1565,107 @@ public final class MinioClient {
    *
    * @return an iterator of Upload.
    */
-  public Iterator<Result<Upload>> listIncompleteUploads(final String bucketName, final String prefix,
-                                                        final boolean recursive) throws XmlPullParserException {
-
-    return new MinioIterator<Result<Upload>>() {
-      private boolean isComplete = false;
-      private String keyMarker = null;
-      private String uploadIdMarker;
-
+  public Iterable<Result<Upload>> listIncompleteUploads(final String bucketName, final String prefix,
+                                                        final boolean recursive) {
+    return new Iterable<Result<Upload>>() {
       @Override
-      protected List<Result<Upload>> populate() throws XmlPullParserException {
-        List<Result<Upload>> ret = new LinkedList<Result<Upload>>();
-        if (!isComplete) {
-          ListMultipartUploadsResult uploadResult;
-          String delimiter = null;
-          // set delimiter  to '/' if not recursive to emulate directories
-          if (!recursive) {
-            delimiter = "/";
-          }
-          try {
-            uploadResult = listIncompleteUploads(bucketName, keyMarker,
-                                                 uploadIdMarker, prefix,
-                                                 delimiter, 1000);
-            if (uploadResult.isTruncated()) {
-              keyMarker = uploadResult.nextKeyMarker();
-              uploadIdMarker = uploadResult.nextUploadIdMarker();
-            } else {
-              isComplete = true;
+      public Iterator<Result<Upload>> iterator() {
+        return new Iterator<Result<Upload>>() {
+          private String nextKeyMarker;
+          private String nextUploadIdMarker;
+          private ListMultipartUploadsResult listMultipartUploadsResult;
+          private Result<Upload> error;
+          private Iterator<Upload> uploadIterator;
+          private boolean completed = false;
+
+          private synchronized void populate() {
+            String delimiter = "/";
+            if (recursive) {
+              delimiter = null;
             }
-            List<Upload> uploads = uploadResult.uploads();
-            for (Upload upload : uploads) {
-              ret.add(new Result<Upload>(upload, null));
+
+            this.listMultipartUploadsResult = null;
+            this.uploadIterator = null;
+
+            try {
+              this.listMultipartUploadsResult = listIncompleteUploads(bucketName, nextKeyMarker, nextUploadIdMarker,
+                                                                      prefix, delimiter, 1000);
+            } catch (InvalidBucketNameException | NoResponseException | IOException | XmlPullParserException
+                       | ErrorResponseException | InternalException e) {
+              this.error = new Result<Upload>(null, e);
+            } finally {
+              if (this.listMultipartUploadsResult != null) {
+                this.uploadIterator = this.listMultipartUploadsResult.uploads().iterator();
+              } else {
+                this.uploadIterator = new LinkedList<Upload>().iterator();
+              }
             }
-          } catch (IOException e) {
-            ret.add(new Result<Upload>(null, e));
-            isComplete = true;
-          } catch (MinioException e) {
-            ret.add(new Result<Upload>(null, e));
-            isComplete = true;
           }
-        }
-        return ret;
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) {
+              return false;
+            }
+
+            if (this.error == null && this.uploadIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.uploadIterator.hasNext()
+                  && this.listMultipartUploadsResult.isTruncated()) {
+              this.nextKeyMarker = this.listMultipartUploadsResult.nextKeyMarker();
+              this.nextUploadIdMarker = this.listMultipartUploadsResult.nextUploadIdMarker();
+              populate();
+            }
+
+            if (this.error != null) {
+              return true;
+            }
+
+            if (this.uploadIterator.hasNext()) {
+              return true;
+            }
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<Upload> next() {
+            if (this.completed) {
+              throw new NoSuchElementException();
+            }
+
+            if (this.error == null && this.uploadIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.uploadIterator.hasNext()
+                  && this.listMultipartUploadsResult.isTruncated()) {
+              this.nextKeyMarker = this.listMultipartUploadsResult.nextKeyMarker();
+              this.nextUploadIdMarker = this.listMultipartUploadsResult.nextUploadIdMarker();
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            if (this.uploadIterator.hasNext()) {
+              return new Result<Upload>(this.uploadIterator.next(), null);
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
       }
     };
   }
@@ -1591,35 +1723,104 @@ public final class MinioClient {
   }
 
 
-  private Iterator<Part> listObjectParts(final String bucketName, final String objectName,
-                                         final String uploadId) throws XmlPullParserException {
-    return new MinioIterator<Part>() {
-      public int marker;
-      private boolean isComplete = false;
-
+  private Iterable<Result<Part>> listObjectParts(final String bucketName, final String objectName,
+                                                 final String uploadId) {
+    return new Iterable<Result<Part>>() {
       @Override
-      protected List<Part> populate()
-        throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
-        XmlPullParserException, ErrorResponseException, InternalException {
-        if (!isComplete) {
-          ListPartsResult result;
-          result = listObjectParts(bucketName, objectName, uploadId, marker);
-          if (result.isTruncated()) {
-            marker = result.nextPartNumberMarker();
-          } else {
-            isComplete = true;
+      public Iterator<Result<Part>> iterator() {
+        return new Iterator<Result<Part>>() {
+          private int nextPartNumberMarker;
+          private ListPartsResult listPartsResult;
+          private Result<Part> error;
+          private Iterator<Part> partIterator;
+          private boolean completed = false;
+
+          private synchronized void populate() {
+            this.listPartsResult = null;
+            this.partIterator = null;
+
+            try {
+              this.listPartsResult = listObjectParts(bucketName, objectName, uploadId, nextPartNumberMarker);
+            } catch (InvalidBucketNameException | NoResponseException | IOException | XmlPullParserException
+                       | ErrorResponseException | InternalException e) {
+              this.error = new Result<Part>(null, e);
+            } finally {
+              if (this.listPartsResult != null) {
+                this.partIterator = this.listPartsResult.partList().iterator();
+              } else {
+                this.partIterator = new LinkedList<Part>().iterator();
+              }
+            }
           }
-          return result.partList();
-        }
-        return new LinkedList<Part>();
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) {
+              return false;
+            }
+
+            if (this.error == null && this.partIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.partIterator.hasNext() && this.listPartsResult.isTruncated()) {
+              this.nextPartNumberMarker = this.listPartsResult.nextPartNumberMarker();
+              populate();
+            }
+
+            if (this.error != null) {
+              return true;
+            }
+
+            if (this.partIterator.hasNext()) {
+              return true;
+            }
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<Part> next() {
+            if (this.completed) {
+              throw new NoSuchElementException();
+            }
+
+            if (this.error == null && this.partIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.partIterator.hasNext() && this.listPartsResult.isTruncated()) {
+              this.nextPartNumberMarker = this.listPartsResult.nextPartNumberMarker();
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            if (this.partIterator.hasNext()) {
+              return new Result<Part>(this.partIterator.next(), null);
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
       }
     };
   }
 
 
   private ListPartsResult listObjectParts(String bucketName, String objectName, String uploadId, int partNumberMarker)
-    throws InvalidArgumentException, InvalidBucketNameException, NoResponseException, IOException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+           ErrorResponseException, InternalException {
     Map<String,String> queryParamMap = new HashMap<String,String>();
     queryParamMap.put("uploadId", uploadId);
     if (partNumberMarker > 0) {
@@ -1658,11 +1859,10 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void removeIncompleteUpload(String bucketName, String objectName)
-    throws MinioException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
+    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, InternalException {
-    Iterator<Result<Upload>> uploads = listIncompleteUploads(bucketName, objectName);
-    while (uploads.hasNext()) {
-      Upload upload = uploads.next().getResult();
+    for (Result<Upload> r : listIncompleteUploads(bucketName, objectName)) {
+      Upload upload = r.get();
       if (objectName.equals(upload.objectName())) {
         abortMultipartUpload(bucketName, objectName, upload.uploadId());
         return;
