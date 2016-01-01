@@ -1397,8 +1397,9 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void putObject(String bucketName, String objectName, String fileName)
-    throws MinioException, InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-           ErrorResponseException, InvalidArgumentException, NoSuchAlgorithmException, InternalException {
+    throws InsufficientDataException, InputSizeMismatchException, InvalidBucketNameException, NoResponseException,
+           IOException, XmlPullParserException, ErrorResponseException, InvalidArgumentException,
+           NoSuchAlgorithmException, InternalException {
     if (fileName == null || "".equals(fileName.trim())) {
       throw new InvalidArgumentException("empty file name is not allowed");
     }
@@ -1449,7 +1450,7 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void putObject(String bucketName, String objectName, String contentType, long size, InputStream body)
-    throws InvalidArgumentException, MinioException, InsufficientDataException, InputSizeMismatchException,
+    throws InvalidArgumentException, InsufficientDataException, InputSizeMismatchException,
            InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
            ErrorResponseException, NoSuchAlgorithmException, InternalException {
     if (contentType == null || "".equals(contentType.trim())) {
