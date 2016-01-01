@@ -376,26 +376,25 @@ public class FunctionalTest {
   // Test: listObjects(final String bucketName)
   public static void listObject_test1() {
     try {
+      int i;
       println("Test: listObjects(final String bucketName)");
       String[] fileNames = new String[3];
-      for (int i = 0; i < 3; i++) {
+      for (i = 0; i < 3; i++) {
         String fileName = createFile(1 * MB);
         client.putObject(bucketName, fileName, fileName);
         Files.delete(Paths.get(fileName));
         fileNames[i] = fileName;
       }
 
-      Iterator<Result<Item>> objectIter = client.listObjects(bucketName);
-      for (int i = 0; i < 10; i++) {
-        if (objectIter.hasNext()) {
-          Result r = objectIter.next();
-          println(i, r.getResult());
-        } else {
+      i = 0;
+      for (Result r : client.listObjects(bucketName)) {
+        println(i++, r.get());
+        if (i == 10) {
           break;
         }
       }
 
-      for (int i = 0; i < 3; i++) {
+      for (i = 0; i < 3; i++) {
         client.removeObject(bucketName, fileNames[i]);
       }
     } catch (Exception e) {
@@ -407,26 +406,25 @@ public class FunctionalTest {
   // Test: listObjects(bucketName, final String prefix)
   public static void listObject_test2() {
     try {
+      int i;
       println("Test: listObjects(final String bucketName, final String prefix)");
       String[] fileNames = new String[3];
-      for (int i = 0; i < 3; i++) {
+      for (i = 0; i < 3; i++) {
         String fileName = createFile(1 * MB);
         client.putObject(bucketName, fileName, fileName);
         Files.delete(Paths.get(fileName));
         fileNames[i] = fileName;
       }
 
-      Iterator<Result<Item>> objectIter = client.listObjects(bucketName, "minio");
-      for (int i = 0; i < 10; i++) {
-        if (objectIter.hasNext()) {
-          Result r = objectIter.next();
-          println(i, r.getResult());
-        } else {
+      i = 0;
+      for (Result r : client.listObjects(bucketName, "minio")) {
+        println(i++, r.get());
+        if (i == 10) {
           break;
         }
       }
 
-      for (int i = 0; i < 3; i++) {
+      for (i = 0; i < 3; i++) {
         client.removeObject(bucketName, fileNames[i]);
       }
     } catch (Exception e) {
@@ -438,26 +436,25 @@ public class FunctionalTest {
   // Test: listObjects(bucketName, final String prefix, final boolean recursive)
   public static void listObject_test3() {
     try {
+      int i;
       println("Test: listObjects(final String bucketName, final String prefix, final boolean recursive)");
       String[] fileNames = new String[3];
-      for (int i = 0; i < 3; i++) {
+      for (i = 0; i < 3; i++) {
         String fileName = createFile(1 * MB);
         client.putObject(bucketName, fileName, fileName);
         Files.delete(Paths.get(fileName));
         fileNames[i] = fileName;
       }
 
-      Iterator<Result<Item>> objectIter = client.listObjects(bucketName, "minio", true);
-      for (int i = 0; i < 10; i++) {
-        if (objectIter.hasNext()) {
-          Result r = objectIter.next();
-          println(i, r.getResult());
-        } else {
+      i = 0;
+      for (Result r : client.listObjects(bucketName, "minio", true)) {
+        println(i++, r.get());
+        if (i == 10) {
           break;
         }
       }
 
-      for (int i = 0; i < 3; i++) {
+      for (i = 0; i < 3; i++) {
         client.removeObject(bucketName, fileNames[i]);
       }
     } catch (Exception e) {
@@ -492,12 +489,10 @@ public class FunctionalTest {
       }
       is.close();
 
-      Iterator<Result<Upload>> uploadIter = client.listIncompleteUploads(bucketName);
-      for (int i = 0; i < 10; i++) {
-        if (uploadIter.hasNext()) {
-          Result r = uploadIter.next();
-          println(i, r.getResult());
-        } else {
+      int i = 0;
+      for (Result<Upload> r : client.listIncompleteUploads(bucketName)) {
+        println(i++, r.get());
+        if (i == 10) {
           break;
         }
       }
@@ -522,12 +517,10 @@ public class FunctionalTest {
       }
       is.close();
 
-      Iterator<Result<Upload>> uploadIter = client.listIncompleteUploads(bucketName, "minio");
-      for (int i = 0; i < 10; i++) {
-        if (uploadIter.hasNext()) {
-          Result r = uploadIter.next();
-          println(i, r.getResult());
-        } else {
+      int i = 0;
+      for (Result<Upload> r : client.listIncompleteUploads(bucketName, "minio")) {
+        println(i++, r.get());
+        if (i == 10) {
           break;
         }
       }
@@ -552,12 +545,10 @@ public class FunctionalTest {
       }
       is.close();
 
-      Iterator<Result<Upload>> uploadIter = client.listIncompleteUploads(bucketName, "minio", true);
-      for (int i = 0; i < 10; i++) {
-        if (uploadIter.hasNext()) {
-          Result r = uploadIter.next();
-          println(i, r.getResult());
-        } else {
+      int i = 0;
+      for (Result<Upload> r : client.listIncompleteUploads(bucketName, "minio", true)) {
+        println(i++, r.get());
+        if (i == 10) {
           break;
         }
       }
@@ -582,12 +573,10 @@ public class FunctionalTest {
       }
       is.close();
 
-      Iterator<Result<Upload>> uploadIter = client.listIncompleteUploads(bucketName);
-      for (int i = 0; i < 10; i++) {
-        if (uploadIter.hasNext()) {
-          Result r = uploadIter.next();
-          println(i, r.getResult());
-        } else {
+      int i = 0;
+      for (Result<Upload> r : client.listIncompleteUploads(bucketName)) {
+        println(i++, r.get());
+        if (i == 10) {
           break;
         }
       }

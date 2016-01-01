@@ -329,9 +329,9 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.getUrl(""));
-    Iterator<Result<Item>> objectsInBucket = client.listObjects("bucket");
+    Iterator<Result<Item>> objectsInBucket = client.listObjects("bucket").iterator();
 
-    Item item = objectsInBucket.next().getResult();
+    Item item = objectsInBucket.next().get();
     assertEquals("key", item.objectName());
     assertEquals(11, item.objectSize());
     assertEquals("STANDARD", item.storageClass());
