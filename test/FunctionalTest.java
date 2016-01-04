@@ -264,7 +264,7 @@ public class FunctionalTest {
       String fileName = createFile(13 * MB);
       InputStream is = Files.newInputStream(Paths.get(fileName));
       try {
-        client.putObject(bucketName, fileName, null, 20 * 1024 * 1024, is);
+        client.putObject(bucketName, fileName, is, 20 * 1024 * 1024, null);
       } catch (InsufficientDataException e) {
       }
       is.close();
@@ -284,7 +284,7 @@ public class FunctionalTest {
       println("Test: putObject(String bucketName, String objectName, String contentType, long size, InputStream body)");
       String fileName = createFile(3 * MB);
       InputStream is = Files.newInputStream(Paths.get(fileName));
-      client.putObject(bucketName, fileName, null, 1024 * 1024, is);
+      client.putObject(bucketName, fileName, is, 1024 * 1024, null);
       is.close();
       Files.delete(Paths.get(fileName));
       client.removeObject(bucketName, fileName);
@@ -484,7 +484,7 @@ public class FunctionalTest {
       String fileName = createFile(6 * MB);
       InputStream is = Files.newInputStream(Paths.get(fileName));
       try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
+        client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
       } catch (InsufficientDataException e) {
       }
       is.close();
@@ -512,7 +512,7 @@ public class FunctionalTest {
       String fileName = createFile(6 * MB);
       InputStream is = Files.newInputStream(Paths.get(fileName));
       try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
+        client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
       } catch (InsufficientDataException e) {
       }
       is.close();
@@ -540,7 +540,7 @@ public class FunctionalTest {
       String fileName = createFile(6 * MB);
       InputStream is = Files.newInputStream(Paths.get(fileName));
       try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
+        client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
       } catch (InsufficientDataException e) {
       }
       is.close();
@@ -568,7 +568,7 @@ public class FunctionalTest {
       String fileName = createFile(6 * MB);
       InputStream is = Files.newInputStream(Paths.get(fileName));
       try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
+        client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
       } catch (InsufficientDataException e) {
       }
       is.close();

@@ -32,6 +32,7 @@ ext.junitVersion = '4.12'
 ext.googleHttpClientVersion = '1.20.0'
 ext.googleGuavaVersion = '18.0'
 ext.okHttpClientVersion = '2.4.0'
+ext.okioVersion = '1.6.0'
 ext.jodaTimeVersion = '2.7'
 ext.apacheCommonsValidatorVersion = '1.5.0'
 
@@ -66,6 +67,7 @@ dependencies {
   compile group: 'com.google.guava', name: 'guava', version: googleGuavaVersion
   compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpClientVersion
   compile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpClientVersion
+  compile group: 'com.squareup.okio', name: 'okio', version: okioVersion
   compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
   compile group: 'commons-validator', name: 'commons-validator', version: apacheCommonsValidatorVersion
 

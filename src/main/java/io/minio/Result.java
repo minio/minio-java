@@ -17,10 +17,13 @@
 package io.minio;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InsufficientDataException;
 import io.minio.errors.NoResponseException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InternalException;
@@ -41,20 +44,27 @@ public class Result<T> {
    * get result.
    */
   public T get()
-    throws InvalidBucketNameException, NoResponseException, IOException, XmlPullParserException,
-    ErrorResponseException, InternalException {
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
     if (ex == null) {
       return type;
     }
 
-    if (ex instanceof IOException) {
-      throw (IOException) ex;
-    } else if (ex instanceof XmlPullParserException) {
-      throw (XmlPullParserException) ex;
-    } else if (ex instanceof InvalidBucketNameException) {
+    if (ex instanceof InvalidBucketNameException) {
       throw (InvalidBucketNameException) ex;
+    } else if (ex instanceof NoSuchAlgorithmException) {
+      throw (NoSuchAlgorithmException) ex;
+    } else if (ex instanceof InsufficientDataException) {
+      throw (InsufficientDataException) ex;
+    } else if (ex instanceof IOException) {
+      throw (IOException) ex;
+    } else if (ex instanceof InvalidKeyException) {
+      throw (InvalidKeyException) ex;
     } else if (ex instanceof NoResponseException) {
       throw (NoResponseException) ex;
+    } else if (ex instanceof XmlPullParserException) {
+      throw (XmlPullParserException) ex;
     } else if (ex instanceof ErrorResponseException) {
       throw (ErrorResponseException) ex;
     } else {

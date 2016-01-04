@@ -117,7 +117,9 @@ public enum ErrorCode {
   UNEXPECTED_CONTENT("UnexpectedContent", "Request does not support content"),
   UNRESOLVABLE_GRANT_BY_EMAIL_ADDRESS("UnresolvableGrantByEmailAddress", "The email address provided does not match"),
   USER_KEY_MUST_BE_SPECIFIED("UserKeyMustBeSpecified",
-                             "The bucket POST must contain the specified field name or check the order of the fields");
+                             "The bucket POST must contain the specified field name or check the order of the fields"),
+  X_AMZ_CONTENT_SHA256_MISMATCH("XAmzContentSHA256Mismatch",
+                                "content SHA256 mismatch");
 
   private final String code;
   private final String message;
