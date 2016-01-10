@@ -14,30 +14,32 @@
  * limitations under the License.
  */
 
-
-import com.google.api.client.util.IOUtils;
 import io.minio.MinioClient;
-import io.minio.errors.ClientException;
+import io.minio.errors.MinioException;
+
+import java.io.InputStream;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.IOException;
-import java.io.InputStream;
 
 public class GetPartialObject {
-  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-
-    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname, my-objectname and
-    // my-testfile are dummy values, please replace them with original values.
+  public static void main(String[] args)
+    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
+    // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    InputStream stream = s3Client.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
 
-    // get object from offset, of specific length
-    InputStream object = s3Client.getPartialObject("my-bucketname", "my-objectname", 1024, 4096);
-    try {
-      System.out.println("Printing object: ");
-      IOUtils.copy(object, System.out);
-    } finally {
-      object.close();
+    byte[] buf = new byte[16384];
+    int bytesRead;
+    while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+      System.out.println(new String(buf, 0, bytesRead));
     }
+
+    stream.close();
   }
 }

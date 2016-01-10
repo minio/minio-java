@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-
-
 import io.minio.MinioClient;
-import io.minio.errors.ClientException;
+import io.minio.errors.MinioException;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
+import org.xmlpull.v1.XmlPullParserException;
+
 
 public class BucketExists {
-  public static void main(String[] args) throws IOException, ClientException {
-
-
+  public static void main(String[] args)
+    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
     // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-    boolean bucketExists = s3Client.bucketExists("my-bucketname");
-    System.out.println(bucketExists);
+    boolean found = s3Client.bucketExists("my-bucketname");
+    if (found) {
+      System.out.println("my-bucketname exists");
+    } else {
+      System.out.println("my-bucketname does not exist");
+    }
   }
 }

@@ -14,48 +14,35 @@
  * limitations under the License.
  */
 
-
 import io.minio.MinioClient;
 import io.minio.PostPolicy;
-import io.minio.errors.ClientException;
+import io.minio.errors.MinioException;
 
-import com.google.api.client.util.IOUtils;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import org.joda.time.DateTime;
-
+import java.io.IOException;
+import java.util.Map;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
-import java.io.UnsupportedEncodingException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
+
+import org.xmlpull.v1.XmlPullParserException;
+import org.joda.time.DateTime;
+
 
 public class PresignedPostPolicy {
-  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException, NoSuchAlgorithmException, InvalidKeyException {
-
-    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY, my-bucketname and my-objectname
-    // are dummy values, please replace them with original values.
-    // Set s3 endpoint, region is calculated automatically.
+  public static void main(String[] args)
+    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
+    // dummy values, please replace them with original values.
+    // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    PostPolicy policy = s3Client.newPostPolicy();
-    DateTime date = new DateTime();
-    date = date.plusMonths(1); // Expire in one month.
-
-    // set policy parameters.
-    policy.setKey("my-objectname");
-    policy.setBucket("my-bucketname");
-    policy.setExpires(date);
+    PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
     policy.setContentType("image/png");
+    Map<String,String> formData = s3Client.presignedPostPolicy(policy);
 
-    Map<String, String> formData = s3Client.presignedPostPolicy(policy);
     System.out.print("curl -X POST ");
-
-    for (Map.Entry<String, String> entry : formData.entrySet()) {
-        System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+    for (Map.Entry<String,String> entry : formData.entrySet()) {
+      System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
     }
-    System.out.print("-F file=@/tmp/userpic.png https://s3.amazonaws.com/my-bucketname\n");
+    System.out.print(" -F file=@/tmp/userpic.png https://my-bucketname.s3.amazonaws.com/\n");
   }
 }
