@@ -39,7 +39,6 @@ import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -51,30 +50,6 @@ import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("unused")
 public class MinioClientTest {
-  @Test()
-  public void instantiateNewClient() throws MalformedURLException, MinioException {
-    String expectedHost = "example.com";
-    MinioClient client = new MinioClient("http://" + expectedHost);
-
-    URL url = client.getUrl();
-    // check schema
-    assertEquals("http", url.getProtocol());
-    // check host
-    assertEquals(expectedHost, url.getHost());
-  }
-
-  @Test()
-  public void instantiateNewClientWithTrailingSlash() throws MalformedURLException, MinioException {
-    String expectedHost = "example.com";
-    MinioClient client = new MinioClient("http://" + expectedHost + "/");
-
-    URL url = client.getUrl();
-    // check schema
-    assertEquals("http", url.getProtocol());
-    // check host
-    assertEquals(expectedHost, url.getHost());
-  }
-
   @Test()
   public void setUserAgentOnceSet() throws IOException, MinioException {
     String expectedHost = "example.com";

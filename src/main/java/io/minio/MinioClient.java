@@ -48,11 +48,6 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 import java.nio.charset.StandardCharsets;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
@@ -127,9 +122,6 @@ public final class MinioClient {
   // Secret key to sign all requests with
   private String secretKey;
 
-  // logger which is set only on enableLogger. Atomic reference is used to prevent multiple loggers
-  // from being instantiated
-  private final AtomicReference<Logger> logger = new AtomicReference<Logger>();
   private String userAgent = DEFAULT_USER_AGENT;
 
 
@@ -2044,54 +2036,6 @@ public final class MinioClient {
     }
 
     throw new InsufficientDataException("Insufficient data.  bytes skipped " + totalBytesSkipped + " expected " + n);
-  }
-
-
-  /**
-   * Enable logging to a java logger for debugging purposes. This will enable logging for all http requests.
-   */
-  @SuppressWarnings("unused")
-  public void enableLogging() {
-    if (this.logger.get() == null) {
-      this.logger.set(Logger.getLogger(OkHttpClient.class.getName()));
-      this.logger.get().setLevel(Level.CONFIG);
-      this.logger.get().addHandler(new Handler() {
-
-        @Override
-        public void close() throws SecurityException {
-        }
-
-        @Override
-        public void flush() {
-        }
-
-        @Override
-        public void publish(LogRecord record) {
-          // default ConsoleHandler will print >= INFO to System.err
-          if (record.getLevel().intValue() < Level.INFO.intValue()) {
-            System.out.println(record.getMessage());
-          }
-        }
-      });
-    } else {
-      this.logger.get().setLevel(Level.CONFIG);
-    }
-  }
-
-
-  /**
-   * Disable logging http requests.
-   */
-  @SuppressWarnings("unused")
-  public void disableLogging() {
-    if (this.logger.get() != null) {
-      this.logger.get().setLevel(Level.OFF);
-    }
-  }
-
-
-  public URL getUrl() {
-    return this.baseUrl.url();
   }
 
 
