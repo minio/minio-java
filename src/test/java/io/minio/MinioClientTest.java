@@ -352,7 +352,7 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.getUrl(""));
-    Iterator<Bucket> buckets = client.listBuckets();
+    Iterator<Bucket> buckets = client.listBuckets().iterator();
 
     Bucket bucket = buckets.next();
     assertEquals("bucket", bucket.name());

@@ -1186,7 +1186,7 @@ public final class MinioClient {
   /**
    * List buckets owned by the current user.
    *
-   * @return an iterator of Bucket type.
+   * @return List of bucket type.
    *
    * @throws NoResponseException     upon no response from server
    * @throws IOException             upon connection error
@@ -1194,7 +1194,7 @@ public final class MinioClient {
    * @throws ErrorResponseException  upon unsuccessful execution
    * @throws InternalException       upon internal library error
    */
-  public Iterator<Bucket> listBuckets()
+  public List<Bucket> listBuckets()
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
@@ -1202,7 +1202,7 @@ public final class MinioClient {
     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
     result.parseXml(response.body().charStream());
     response.body().close();
-    return result.buckets().iterator();
+    return result.buckets();
   }
 
 

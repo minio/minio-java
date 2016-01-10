@@ -141,9 +141,8 @@ public class FunctionalTest {
   public static void listBuckets_test() {
     try {
       println("Test: listBuckets()");
-      Iterator<Bucket> bucketIter = client.listBuckets();
-      while (bucketIter.hasNext()) {
-        bucketIter.next();
+      for (Bucket bucket : client.listBuckets()) {
+        println(bucket);
       }
     } catch (Exception e) {
       e.printStackTrace();
