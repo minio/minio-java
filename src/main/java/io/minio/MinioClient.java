@@ -602,8 +602,10 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     updateRegionMap(bucketName);
-    return execute(Method.HEAD, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, null,
-                   null, null, 0);
+    HttpResponse response = execute(Method.HEAD, Regions.INSTANCE.region(bucketName), bucketName, objectName, null,
+                                    null, null, null, 0);
+    response.body().close();
+    return response;
   }
 
 
@@ -612,8 +614,10 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     updateRegionMap(bucketName);
-    return execute(Method.DELETE, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, queryParamMap,
-                   null, null, 0);
+    HttpResponse response = execute(Method.DELETE, Regions.INSTANCE.region(bucketName), bucketName, objectName, null,
+                                    queryParamMap, null, null, 0);
+    response.body().close();
+    return response;
   }
 
 
@@ -632,8 +636,10 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    return execute(Method.PUT, region, bucketName, objectName, headerMap, queryParamMap,
-                   null, data, length);
+    HttpResponse response = execute(Method.PUT, region, bucketName, objectName, headerMap, queryParamMap,
+                                    null, data, length);
+    response.body().close();
+    return response;
   }
 
 
