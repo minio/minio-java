@@ -134,6 +134,9 @@ public final class MinioClient {
     this(url.toString(), 0, null, null, false);
   }
 
+  public MinioClient(HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
+    this(url.toString(), 0, null, null, false);
+  }
 
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
@@ -146,12 +149,15 @@ public final class MinioClient {
     this(url.toString(), 0, accessKey, secretKey, false);
   }
 
+  public MinioClient(HttpUrl url, String accessKey, String secretKey)
+      throws NullPointerException, InvalidEndpointException, InvalidPortException {
+    this(url.toString(), 0, accessKey, secretKey, false);
+  }
 
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, port, accessKey, secretKey, false);
   }
-
 
   public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
     throws InvalidEndpointException, InvalidPortException {

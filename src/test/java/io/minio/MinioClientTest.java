@@ -85,7 +85,7 @@ public class MinioClientTest {
 
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.statObject("bucket", "key");
 
     throw new RuntimeException("Expected exception did not fire");
@@ -99,7 +99,7 @@ public class MinioClientTest {
 
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.statObject("bucket", "key");
 
     throw new RuntimeException("Expected exception did not fire");
@@ -132,7 +132,7 @@ public class MinioClientTest {
                                                  "application/octet-stream");
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     ObjectStat objectStatInfo = client.statObject("bucket", "key");
 
     assertEquals(expectedStatInfo, objectStatInfo);
@@ -145,7 +145,7 @@ public class MinioClientTest {
     server.start();
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.presignedGetObject("bucket", "key", 604801);
   }
 
@@ -156,7 +156,7 @@ public class MinioClientTest {
     server.start();
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     String presignedObjectUrl = client.presignedGetObject("bucket", "key");
     assertEquals(presignedObjectUrl.isEmpty(), false);
   }
@@ -180,7 +180,7 @@ public class MinioClientTest {
     server.start();
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     InputStream object = client.getObject("bucket", "key");
     byte[] result = new byte[20];
     int read = object.read(result);
@@ -208,7 +208,7 @@ public class MinioClientTest {
     server.start();
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     InputStream object = client.getObject("bucket", "key", 0L, 5L);
     byte[] result = new byte[20];
     int read = object.read(result);
@@ -235,7 +235,7 @@ public class MinioClientTest {
     server.start();
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.getObject("bucket", "key", -1L, 5L);
     Assert.fail("Should of thrown an exception");
   }
@@ -260,7 +260,7 @@ public class MinioClientTest {
     server.start();
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.getObject("bucket", "key", 0L, 0L);
     Assert.fail("Should of thrown an exception");
   }
@@ -287,7 +287,7 @@ public class MinioClientTest {
     server.start();
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     InputStream object = client.getObject("bucket", "key", 6);
     byte[] result = new byte[5];
     int read = object.read(result);
@@ -311,7 +311,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     Iterator<Result<Item>> objectsInBucket = client.listObjects("bucket").iterator();
 
     Item item = objectsInBucket.next().get();
@@ -351,7 +351,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     Iterator<Bucket> buckets = client.listBuckets().iterator();
 
     Bucket bucket = buckets.next();
@@ -382,7 +382,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     boolean result = client.bucketExists("bucket");
 
     assertEquals(true, result);
@@ -400,7 +400,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     boolean result = client.bucketExists("bucket");
 
     assertEquals(false, result);
@@ -423,7 +423,7 @@ public class MinioClientTest {
     server.enqueue(response2);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.makeBucket("bucket", Acl.PUBLIC_READ);
     client.setBucketAcl("bucket", Acl.PRIVATE);
   }
@@ -445,7 +445,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     Acl acl = client.getBucketAcl("bucket");
 
     assertEquals(acl, Acl.PUBLIC_READ_WRITE);
@@ -467,7 +467,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     Acl acl = client.getBucketAcl("bucket");
 
     assertEquals(acl, Acl.PUBLIC_READ);
@@ -489,7 +489,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     Acl acl = client.getBucketAcl("bucket");
 
     assertEquals(acl, Acl.AUTHENTICATED_READ);
@@ -511,7 +511,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     Acl acl = client.getBucketAcl("bucket");
 
     assertEquals(acl, Acl.PRIVATE);
@@ -529,7 +529,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.makeBucket("bucket");
     client.setBucketAcl("bucket", null);
 
@@ -553,7 +553,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
     client.makeBucket("bucket", Acl.PUBLIC_READ);
 
     throw new RuntimeException("Expected exception did not fire");
@@ -573,7 +573,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
 
     String inputString = "hello world";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
@@ -598,7 +598,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
 
     String inputString = "hello world";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
@@ -623,7 +623,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
 
     String inputString = "hello worl";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
@@ -648,7 +648,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
 
     String inputString = "how long is a piece of string? too long!";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
@@ -671,7 +671,7 @@ public class MinioClientTest {
     server.enqueue(response);
     server.start();
 
-    MinioClient client = new MinioClient(server.getUrl(""));
+    MinioClient client = new MinioClient(server.url(""));
 
     String inputString = "hello world";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
@@ -705,7 +705,7 @@ public class MinioClientTest {
                                                  "a670520d9d36833b3e28d1e4b73cbe22", contentType);
 
     // get request
-    MinioClient client = new MinioClient(server.getUrl(""), "foo", "bar");
+    MinioClient client = new MinioClient(server.url(""), "foo", "bar");
 
     ObjectStat objectStatInfo = client.statObject("bucket", "key");
     assertEquals(expectedStatInfo, objectStatInfo);
