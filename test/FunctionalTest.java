@@ -612,6 +612,7 @@ public class FunctionalTest {
     println("Test: presignedPostPolicy(PostPolicy policy)");
     String fileName = createFile(3 * MB);
     PostPolicy policy = new PostPolicy(bucketName, fileName, DateTime.now().plusDays(7));
+    policy.setContentRange(1 * MB, 4 * MB);
     Map<String, String> formData = client.presignedPostPolicy(policy);
 
     MultipartBuilder multipartBuilder = new MultipartBuilder();

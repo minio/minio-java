@@ -37,6 +37,8 @@ public class PostPolicy {
   private boolean startsWith;
   private DateTime expirationDate;
   private String contentType;
+  private long contentRangeStart;
+  private long contentRangeEnd;
 
 
   public PostPolicy(String bucketName, String objectName, DateTime expirationDate)
@@ -78,6 +80,35 @@ public class PostPolicy {
     }
 
     this.contentType = contentType;
+  }
+
+
+  /**
+   * set content length.
+   */
+  public void setContentLength(long contentLength) throws InvalidArgumentException {
+    if (contentLength <= 0) {
+      throw new InvalidArgumentException("negative content length");
+    }
+
+    this.setContentRange(contentLength, contentLength);
+  }
+
+
+  /**
+   * set content range.
+   */
+  public void setContentRange(long startRange, long endRange) throws InvalidArgumentException {
+    if (startRange <= 0 || endRange <= 0) {
+      throw new InvalidArgumentException("negative start/end range");
+    }
+
+    if (startRange > endRange) {
+      throw new InvalidArgumentException("start range is higher than end range");
+    }
+
+    this.contentRangeStart = startRange;
+    this.contentRangeEnd = endRange;
   }
 
 
@@ -138,6 +169,11 @@ public class PostPolicy {
     if (this.contentType != null) {
       conditions.add(new String[]{"eq", "$Content-Type", this.contentType});
       formData.put("Content-Type", this.contentType);
+    }
+
+    if (this.contentRangeStart > 0 && this.contentRangeEnd > 0) {
+      conditions.add(new String[]{"content-length-range", Long.toString(this.contentRangeStart),
+                                  Long.toString(this.contentRangeEnd)});
     }
 
     conditions.add(new String[]{"eq", "$x-amz-algorithm", ALGORITHM});
