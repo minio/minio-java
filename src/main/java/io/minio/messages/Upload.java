@@ -16,7 +16,9 @@
 
 package io.minio.messages;
 
+import java.util.Date;
 import com.google.api.client.util.Key;
+import io.minio.DateFormat;
 
 @SuppressWarnings("unused")
 public class Upload extends XmlEntity {
@@ -65,7 +67,7 @@ public class Upload extends XmlEntity {
   }
 
 
-  public String initiated() {
-    return initiated;
+  public Date initiated() {
+    return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(initiated).toDate();
   }
 }

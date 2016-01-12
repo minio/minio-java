@@ -14,31 +14,31 @@
  * limitations under the License.
  */
 
-
 import io.minio.MinioClient;
 import io.minio.Result;
-import io.minio.errors.ClientException;
 import io.minio.messages.Item;
-import org.xmlpull.v1.XmlPullParserException;
+import io.minio.errors.MinioException;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
+import org.xmlpull.v1.XmlPullParserException;
+
 
 public class ListObjects {
-  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-
-
-      // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname
-     // are dummy values, please replace them with original values.
-     // Set s3 endpoint, region is calculated automatically
+  public static void main(String[] args)
+    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
+    // dummy values, please replace them with original values.
+    // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // list objects
-    Iterator<Result<Item>> myObjects = s3Client.listObjects("my-bucketname");
-    while (myObjects.hasNext()) {
-      Result<Item> result = myObjects.next();
-      Item object = result.getResult();
-      System.out.println(object);
+    Iterable<Result<Item>> myObjects = s3Client.listObjects("my-bucketname");
+    for (Result<Item> result : myObjects) {
+      Item item = result.get();
+      System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
     }
   }
 }

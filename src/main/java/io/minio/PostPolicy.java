@@ -25,7 +25,7 @@ import org.joda.time.DateTime;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
@@ -37,6 +37,8 @@ public class PostPolicy {
   private boolean startsWith;
   private DateTime expirationDate;
   private String contentType;
+  private long contentRangeStart;
+  private long contentRangeEnd;
 
 
   public PostPolicy(String bucketName, String objectName, DateTime expirationDate)
@@ -81,12 +83,41 @@ public class PostPolicy {
   }
 
 
+  /**
+   * set content length.
+   */
+  public void setContentLength(long contentLength) throws InvalidArgumentException {
+    if (contentLength <= 0) {
+      throw new InvalidArgumentException("negative content length");
+    }
+
+    this.setContentRange(contentLength, contentLength);
+  }
+
+
+  /**
+   * set content range.
+   */
+  public void setContentRange(long startRange, long endRange) throws InvalidArgumentException {
+    if (startRange <= 0 || endRange <= 0) {
+      throw new InvalidArgumentException("negative start/end range");
+    }
+
+    if (startRange > endRange) {
+      throw new InvalidArgumentException("start range is higher than end range");
+    }
+
+    this.contentRangeStart = startRange;
+    this.contentRangeEnd = endRange;
+  }
+
+
   public String bucketName() {
     return this.bucketName;
   }
 
 
-  private byte[] marshalJson(ArrayList<String[]> conditions) throws UnsupportedEncodingException {
+  private byte[] marshalJson(ArrayList<String[]> conditions) {
     StringBuilder sb = new StringBuilder();
     Joiner joiner = Joiner.on("\",\"");
 
@@ -112,7 +143,7 @@ public class PostPolicy {
 
     sb.append("}");
 
-    return sb.toString().getBytes("UTF-8");
+    return sb.toString().getBytes(StandardCharsets.UTF_8);
   }
 
 
@@ -120,7 +151,7 @@ public class PostPolicy {
    * returns form data of this post policy.
    */
   public Map<String,String> formData(String accessKey, String secretKey)
-    throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeyException {
+    throws NoSuchAlgorithmException, InvalidKeyException {
     ArrayList<String[]> conditions = new ArrayList<String[]>();
     Map<String, String> formData = new HashMap<String, String>();
 
@@ -140,21 +171,26 @@ public class PostPolicy {
       formData.put("Content-Type", this.contentType);
     }
 
+    if (this.contentRangeStart > 0 && this.contentRangeEnd > 0) {
+      conditions.add(new String[]{"content-length-range", Long.toString(this.contentRangeStart),
+                                  Long.toString(this.contentRangeEnd)});
+    }
+
     conditions.add(new String[]{"eq", "$x-amz-algorithm", ALGORITHM});
     formData.put("x-amz-algorithm", ALGORITHM);
 
-    RequestSigner signer = new RequestSigner(accessKey, secretKey, Regions.INSTANCE.region(this.bucketName));
-
-    String credential = accessKey + "/" + signer.getScope();
+    DateTime date = new DateTime();
+    String region = Regions.INSTANCE.region(this.bucketName);
+    String credential = Signer.credential(accessKey, date, region);
     conditions.add(new String[]{"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
 
-    String amzDate = signer.date().toString(DateFormat.AMZ_DATE_FORMAT);
+    String amzDate = date.toString(DateFormat.AMZ_DATE_FORMAT);
     conditions.add(new String[]{"eq","$x-amz-date", amzDate});
     formData.put("x-amz-date", amzDate);
 
     String policybase64 = BaseEncoding.base64().encode(this.marshalJson(conditions));
-    String signature = signer.postPreSignV4(policybase64);
+    String signature =  Signer.postPresignV4(policybase64, secretKey, date, region);
 
     formData.put("policy", policybase64);
     formData.put("x-amz-signature", signature);

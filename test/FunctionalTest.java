@@ -86,689 +86,557 @@ public class FunctionalTest {
 
 
   // Test: makeBucket(String bucketName)
-  public static void makeBucket_test1() {
-    try {
-      println("Test: makeBucket(String bucketName)");
-      String name = getRandomName();
-      client.makeBucket(name);
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void makeBucket_test1() throws Exception {
+    println("Test: makeBucket(String bucketName)");
+    String name = getRandomName();
+    client.makeBucket(name);
+    client.removeBucket(name);
   }
 
 
   // Test: makeBucket(String bucketName, String region)
-  public static void makeBucket_test2() {
-    try {
-      println("Test: makeBucket(String bucketName, String region)");
-      String name = getRandomName();
-      client.makeBucket(name, "eu-west-1");
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void makeBucket_test2() throws Exception {
+    println("Test: makeBucket(String bucketName, String region)");
+    String name = getRandomName();
+    client.makeBucket(name, "eu-west-1");
+    client.removeBucket(name);
   }
 
 
   // Test: makeBucket(String bucketName, Acl acl)
-  public static void makeBucket_test3() {
-    try {
-      println("Test: makeBucket(String bucketName, Acl acl)");
-      String name = getRandomName();
-      client.makeBucket(name, Acl.PUBLIC_READ_WRITE);
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void makeBucket_test3() throws Exception {
+    println("Test: makeBucket(String bucketName, Acl acl)");
+    String name = getRandomName();
+    client.makeBucket(name, Acl.PUBLIC_READ_WRITE);
+    client.removeBucket(name);
   }
 
 
   // Test: makeBucket(String bucketName, String region, Acl acl)
-  public static void makeBucket_test4() {
-    try {
-      println("Test: makeBucket(String bucketName, String region, Acl acl)");
-      String name = getRandomName();
-      client.makeBucket(name, "eu-west-1", Acl.PUBLIC_READ_WRITE);
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void makeBucket_test4() throws Exception {
+    println("Test: makeBucket(String bucketName, String region, Acl acl)");
+    String name = getRandomName();
+    client.makeBucket(name, "eu-west-1", Acl.PUBLIC_READ_WRITE);
+    client.removeBucket(name);
   }
 
 
   // Test: listBuckets()
-  public static void listBuckets_test() {
-    try {
-      println("Test: listBuckets()");
-      Iterator<Bucket> bucketIter = client.listBuckets();
-      while (bucketIter.hasNext()) {
-        bucketIter.next();
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+  public static void listBuckets_test() throws Exception {
+    println("Test: listBuckets()");
+    for (Bucket bucket : client.listBuckets()) {
+      println(bucket);
     }
   }
 
 
   // Test: bucketExists(String bucketName)
-  public static void bucketExists_test() {
-    try {
-      println("Test: bucketExists(String bucketName)");
-      String name = getRandomName();
-      client.makeBucket(name);
-      if (!client.bucketExists(name)) {
-        println("FAILED");
-      }
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
+  public static void bucketExists_test() throws Exception {
+    println("Test: bucketExists(String bucketName)");
+    String name = getRandomName();
+    client.makeBucket(name);
+    if (!client.bucketExists(name)) {
+      println("FAILED");
     }
+    client.removeBucket(name);
   }
 
 
   // Test: removeBucket(String bucketName)
-  public static void removeBucket_test() {
-    try {
-      println("Test: removeBucket(String bucketName)");
-      String name = getRandomName();
-      client.makeBucket(name);
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void removeBucket_test() throws Exception {
+    println("Test: removeBucket(String bucketName)");
+    String name = getRandomName();
+    client.makeBucket(name);
+    client.removeBucket(name);
   }
 
 
   // Test: getBucketAcl(String bucketName)
-  public static void getBucketAcl_test() {
-    try {
-      println("Test: getBucketAcl(String bucketName)");
-      String name = getRandomName();
-      client.makeBucket(name, Acl.PRIVATE);
-      Acl acl = client.getBucketAcl(name);
-      if (acl != Acl.PRIVATE) {
-        println("FAILED.", "expected =", Acl.PRIVATE, "received =", acl);
-      }
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
+  public static void getBucketAcl_test() throws Exception {
+    println("Test: getBucketAcl(String bucketName)");
+    String name = getRandomName();
+    client.makeBucket(name, Acl.PRIVATE);
+    Acl acl = client.getBucketAcl(name);
+    if (acl != Acl.PRIVATE) {
+      println("FAILED.", "expected =", Acl.PRIVATE, "received =", acl);
     }
+    client.removeBucket(name);
   }
 
 
   // Test: setBucketAcl(String bucketName, Acl acl)
-  public static void setBucketAcl_test() {
-    try {
-      println("Test: setBucketAcl(String bucketName, Acl acl)");
-      String name = getRandomName();
-      client.makeBucket(name);
-      client.setBucketAcl(name, Acl.PUBLIC_READ_WRITE);
-      client.removeBucket(name);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void setBucketAcl_test() throws Exception {
+    println("Test: setBucketAcl(String bucketName, Acl acl)");
+    String name = getRandomName();
+    client.makeBucket(name);
+    client.setBucketAcl(name, Acl.PUBLIC_READ_WRITE);
+    client.removeBucket(name);
   }
 
 
-  public static void setup() {
-    try {
-      client.makeBucket(bucketName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void setup() throws Exception {
+    client.makeBucket(bucketName);
   }
 
 
-  public static void teardown() {
-    try {
-      client.removeBucket(bucketName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void teardown() throws Exception {
+    client.removeBucket(bucketName);
   }
 
 
   // Test: putObject(String bucketName, String objectName, String fileName)
-  public static void putObject_test1() {
-    try {
-      println("Test: putObject(String bucketName, String objectName, String fileName)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void putObject_test1() throws Exception {
+    println("Test: putObject(String bucketName, String objectName, String fileName)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: multipart: putObject(String bucketName, String objectName, String fileName)
-  public static void putObject_test2() {
-    try {
-      println("Test: multipart: putObject(String bucketName, String objectName, String fileName)");
-      String fileName = createFile(13 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void putObject_test2() throws Exception {
+    println("Test: multipart: putObject(String bucketName, String objectName, String fileName)");
+    String fileName = createFile(13 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: multipart resume: putObject(String bucketName, String objectName, String fileName)
-  public static void putObject_test3() {
+  public static void putObject_test3() throws Exception {
+    println("Test: multipart resume: putObject(String bucketName, String objectName, String fileName)");
+    String fileName = createFile(13 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
     try {
-      println("Test: multipart resume: putObject(String bucketName, String objectName, String fileName)");
-      String fileName = createFile(13 * MB);
-      InputStream is = Files.newInputStream(Paths.get(fileName));
-      try {
-        client.putObject(bucketName, fileName, null, 20 * 1024 * 1024, is);
-      } catch (InsufficientDataException e) {
-      }
-      is.close();
-
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+      client.putObject(bucketName, fileName, is, 20 * 1024 * 1024, null);
+    } catch (InsufficientDataException e) {
     }
+    is.close();
+
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: putObject(String bucketName, String objectName, String contentType, long size, InputStream body)
-  public static void putObject_test4() {
-    try {
-      println("Test: putObject(String bucketName, String objectName, String contentType, long size, InputStream body)");
-      String fileName = createFile(3 * MB);
-      InputStream is = Files.newInputStream(Paths.get(fileName));
-      client.putObject(bucketName, fileName, null, 1024 * 1024, is);
-      is.close();
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void putObject_test4() throws Exception {
+    println("Test: putObject(String bucketName, String objectName, String contentType, long size, InputStream body)");
+    String fileName = createFile(3 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
+    client.putObject(bucketName, fileName, is, 1024 * 1024, null);
+    is.close();
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: statObject(String bucketName, String objectName)
-  public static void statObject_test() {
-    try {
-      println("Test: statObject(String bucketName, String objectName)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      client.statObject(bucketName, fileName);
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void statObject_test() throws Exception {
+    println("Test: statObject(String bucketName, String objectName)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.statObject(bucketName, fileName);
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: getObject(String bucketName, String objectName)
-  public static void getObject_test1() {
-    try {
-      println("Test: getObject(String bucketName, String objectName)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      InputStream is = client.getObject(bucketName, fileName);
-      is.close();
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void getObject_test1() throws Exception {
+    println("Test: getObject(String bucketName, String objectName)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    InputStream is = client.getObject(bucketName, fileName);
+    is.close();
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: getObject(String bucketName, String objectName, long offset)
-  public static void getObject_test2() {
-    try {
-      println("Test: getObject(String bucketName, String objectName, long offset)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      InputStream is = client.getObject(bucketName, fileName, 1000L);
-      is.close();
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void getObject_test2() throws Exception {
+    println("Test: getObject(String bucketName, String objectName, long offset)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    InputStream is = client.getObject(bucketName, fileName, 1000L);
+    is.close();
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: getObject(String bucketName, String objectName, long offset, Long length)
-  public static void getObject_test3() {
-    try {
-      println("Test: getObject(String bucketName, String objectName, long offset, Long length)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      InputStream is = client.getObject(bucketName, fileName, 1000L, 1024 * 1024L);
-      is.close();
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void getObject_test3() throws Exception {
+    println("Test: getObject(String bucketName, String objectName, long offset, Long length)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    InputStream is = client.getObject(bucketName, fileName, 1000L, 1024 * 1024L);
+    is.close();
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: getObject(String bucketName, String objectName, String fileName)
-  public static void getObject_test4() {
-    try {
-      println("Test: getObject(String bucketName, String objectName, String fileName)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      client.getObject(bucketName, fileName, fileName + ".downloaded");
-      Files.delete(Paths.get(fileName + ".downloaded"));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void getObject_test4() throws Exception {
+    println("Test: getObject(String bucketName, String objectName, String fileName)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.getObject(bucketName, fileName, fileName + ".downloaded");
+    Files.delete(Paths.get(fileName + ".downloaded"));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: listObjects(final String bucketName)
-  public static void listObject_test1() {
-    try {
-      int i;
-      println("Test: listObjects(final String bucketName)");
-      String[] fileNames = new String[3];
-      for (i = 0; i < 3; i++) {
-        String fileName = createFile(1 * MB);
-        client.putObject(bucketName, fileName, fileName);
-        Files.delete(Paths.get(fileName));
-        fileNames[i] = fileName;
-      }
+  public static void listObject_test1() throws Exception {
+    int i;
+    println("Test: listObjects(final String bucketName)");
+    String[] fileNames = new String[3];
+    for (i = 0; i < 3; i++) {
+      String fileName = createFile(1 * MB);
+      client.putObject(bucketName, fileName, fileName);
+      Files.delete(Paths.get(fileName));
+      fileNames[i] = fileName;
+    }
 
-      i = 0;
-      for (Result r : client.listObjects(bucketName)) {
-        println(i++, r.get());
-        if (i == 10) {
-          break;
-        }
+    i = 0;
+    for (Result r : client.listObjects(bucketName)) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
       }
+    }
 
-      for (i = 0; i < 3; i++) {
-        client.removeObject(bucketName, fileNames[i]);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+    for (i = 0; i < 3; i++) {
+      client.removeObject(bucketName, fileNames[i]);
     }
   }
 
 
   // Test: listObjects(bucketName, final String prefix)
-  public static void listObject_test2() {
-    try {
-      int i;
-      println("Test: listObjects(final String bucketName, final String prefix)");
-      String[] fileNames = new String[3];
-      for (i = 0; i < 3; i++) {
-        String fileName = createFile(1 * MB);
-        client.putObject(bucketName, fileName, fileName);
-        Files.delete(Paths.get(fileName));
-        fileNames[i] = fileName;
-      }
+  public static void listObject_test2() throws Exception {
+    int i;
+    println("Test: listObjects(final String bucketName, final String prefix)");
+    String[] fileNames = new String[3];
+    for (i = 0; i < 3; i++) {
+      String fileName = createFile(1 * MB);
+      client.putObject(bucketName, fileName, fileName);
+      Files.delete(Paths.get(fileName));
+      fileNames[i] = fileName;
+    }
 
-      i = 0;
-      for (Result r : client.listObjects(bucketName, "minio")) {
-        println(i++, r.get());
-        if (i == 10) {
-          break;
-        }
+    i = 0;
+    for (Result r : client.listObjects(bucketName, "minio")) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
       }
+    }
 
-      for (i = 0; i < 3; i++) {
-        client.removeObject(bucketName, fileNames[i]);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+    for (i = 0; i < 3; i++) {
+      client.removeObject(bucketName, fileNames[i]);
     }
   }
 
 
   // Test: listObjects(bucketName, final String prefix, final boolean recursive)
-  public static void listObject_test3() {
-    try {
-      int i;
-      println("Test: listObjects(final String bucketName, final String prefix, final boolean recursive)");
-      String[] fileNames = new String[3];
-      for (i = 0; i < 3; i++) {
-        String fileName = createFile(1 * MB);
-        client.putObject(bucketName, fileName, fileName);
-        Files.delete(Paths.get(fileName));
-        fileNames[i] = fileName;
-      }
+  public static void listObject_test3() throws Exception {
+    int i;
+    println("Test: listObjects(final String bucketName, final String prefix, final boolean recursive)");
+    String[] fileNames = new String[3];
+    for (i = 0; i < 3; i++) {
+      String fileName = createFile(1 * MB);
+      client.putObject(bucketName, fileName, fileName);
+      Files.delete(Paths.get(fileName));
+      fileNames[i] = fileName;
+    }
 
-      i = 0;
-      for (Result r : client.listObjects(bucketName, "minio", true)) {
-        println(i++, r.get());
-        if (i == 10) {
-          break;
-        }
+    i = 0;
+    for (Result r : client.listObjects(bucketName, "minio", true)) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
       }
+    }
 
-      for (i = 0; i < 3; i++) {
-        client.removeObject(bucketName, fileNames[i]);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
+    for (i = 0; i < 3; i++) {
+      client.removeObject(bucketName, fileNames[i]);
     }
   }
 
 
   // Test: removeObject(String bucketName, String objectName)
-  public static void removeObject_test() {
-    try {
-      println("Test: removeObject(String bucketName, String objectName)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public static void removeObject_test() throws Exception {
+    println("Test: removeObject(String bucketName, String objectName)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: listIncompleteUploads(String bucketName)
-  public static void listIncompleteUploads_test1() {
+  public static void listIncompleteUploads_test1() throws Exception {
+    println("Test: listIncompleteUploads(String bucketName)");
+    String fileName = createFile(6 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
     try {
-      println("Test: listIncompleteUploads(String bucketName)");
-      String fileName = createFile(6 * MB);
-      InputStream is = Files.newInputStream(Paths.get(fileName));
-      try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
-      } catch (InsufficientDataException e) {
-      }
-      is.close();
-
-      int i = 0;
-      for (Result<Upload> r : client.listIncompleteUploads(bucketName)) {
-        println(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-
-      Files.delete(Paths.get(fileName));
-      client.removeIncompleteUpload(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+      client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
+    } catch (InsufficientDataException e) {
     }
+    is.close();
+
+    int i = 0;
+    for (Result<Upload> r : client.listIncompleteUploads(bucketName)) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
+      }
+    }
+
+    Files.delete(Paths.get(fileName));
+    client.removeIncompleteUpload(bucketName, fileName);
   }
 
 
   // Test: listIncompleteUploads(String bucketName, String prefix)
-  public static void listIncompleteUploads_test2() {
+  public static void listIncompleteUploads_test2() throws Exception {
+    println("Test: listIncompleteUploads(String bucketName, String prefix)");
+    String fileName = createFile(6 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
     try {
-      println("Test: listIncompleteUploads(String bucketName, String prefix)");
-      String fileName = createFile(6 * MB);
-      InputStream is = Files.newInputStream(Paths.get(fileName));
-      try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
-      } catch (InsufficientDataException e) {
-      }
-      is.close();
-
-      int i = 0;
-      for (Result<Upload> r : client.listIncompleteUploads(bucketName, "minio")) {
-        println(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-
-      Files.delete(Paths.get(fileName));
-      client.removeIncompleteUpload(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+      client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
+    } catch (InsufficientDataException e) {
     }
+    is.close();
+
+    int i = 0;
+    for (Result<Upload> r : client.listIncompleteUploads(bucketName, "minio")) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
+      }
+    }
+
+    Files.delete(Paths.get(fileName));
+    client.removeIncompleteUpload(bucketName, fileName);
   }
 
 
   // Test: listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)
-  public static void listIncompleteUploads_test3() {
+  public static void listIncompleteUploads_test3() throws Exception {
+    println("Test: listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)");
+    String fileName = createFile(6 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
     try {
-      println("Test: listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)");
-      String fileName = createFile(6 * MB);
-      InputStream is = Files.newInputStream(Paths.get(fileName));
-      try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
-      } catch (InsufficientDataException e) {
-      }
-      is.close();
-
-      int i = 0;
-      for (Result<Upload> r : client.listIncompleteUploads(bucketName, "minio", true)) {
-        println(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-
-      Files.delete(Paths.get(fileName));
-      client.removeIncompleteUpload(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+      client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
+    } catch (InsufficientDataException e) {
     }
+    is.close();
+
+    int i = 0;
+    for (Result<Upload> r : client.listIncompleteUploads(bucketName, "minio", true)) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
+      }
+    }
+
+    Files.delete(Paths.get(fileName));
+    client.removeIncompleteUpload(bucketName, fileName);
   }
 
 
   // Test: removeIncompleteUpload(String bucketName, String objectName)
-  public static void removeIncompleteUploads_test() {
+  public static void removeIncompleteUploads_test() throws Exception {
+    println("Test: removeIncompleteUpload(String bucketName, String objectName)");
+    String fileName = createFile(6 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
     try {
-      println("Test: removeIncompleteUpload(String bucketName, String objectName)");
-      String fileName = createFile(6 * MB);
-      InputStream is = Files.newInputStream(Paths.get(fileName));
-      try {
-        client.putObject(bucketName, fileName, null, 9 * 1024 * 1024, is);
-      } catch (InsufficientDataException e) {
-      }
-      is.close();
-
-      int i = 0;
-      for (Result<Upload> r : client.listIncompleteUploads(bucketName)) {
-        println(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-
-      Files.delete(Paths.get(fileName));
-      client.removeIncompleteUpload(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+      client.putObject(bucketName, fileName, is, 9 * 1024 * 1024, null);
+    } catch (InsufficientDataException e) {
     }
+    is.close();
+
+    int i = 0;
+    for (Result<Upload> r : client.listIncompleteUploads(bucketName)) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
+      }
+    }
+
+    Files.delete(Paths.get(fileName));
+    client.removeIncompleteUpload(bucketName, fileName);
   }
 
 
   // public String presignedGetObject(String bucketName, String objectName)
-  public static void presignedGetObject_test1() {
-    try {
-      println("Test: presignedGetObject(String bucketName, String objectName)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
+  public static void presignedGetObject_test1() throws Exception {
+    println("Test: presignedGetObject(String bucketName, String objectName)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
 
-      String urlString = client.presignedGetObject(bucketName, fileName);
-      Request.Builder requestBuilder = new Request.Builder();
-      Request request = requestBuilder
-        .url(HttpUrl.parse(urlString))
-        .method("GET", null)
-        .build();
-      OkHttpClient transport = new OkHttpClient();
-      Response response = transport.newCall(request).execute();
+    String urlString = client.presignedGetObject(bucketName, fileName);
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+      .url(HttpUrl.parse(urlString))
+      .method("GET", null)
+      .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
 
-      if (response != null) {
-        if (response.isSuccessful()) {
-          OutputStream os = Files.newOutputStream(Paths.get(fileName + ".downloaded"), StandardOpenOption.CREATE);
-          ByteStreams.copy(response.body().byteStream(), os);
-          response.body().close();
-          os.close();
-        } else {
-          println("FAILED");
-        }
+    if (response != null) {
+      if (response.isSuccessful()) {
+        OutputStream os = Files.newOutputStream(Paths.get(fileName + ".downloaded"), StandardOpenOption.CREATE);
+        ByteStreams.copy(response.body().byteStream(), os);
+        response.body().close();
+        os.close();
       } else {
-        println("NO RESPONSE");
+        println("FAILED");
       }
-
-      if (!Arrays.equals(Files.readAllBytes(Paths.get(fileName)),
-                         Files.readAllBytes(Paths.get(fileName + ".downloaded")))) {
-        println("CONTENT DIFFERS");
-      }
-
-      Files.delete(Paths.get(fileName));
-      Files.delete(Paths.get(fileName + ".downloaded"));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+    } else {
+      println("NO RESPONSE");
     }
+
+    if (!Arrays.equals(Files.readAllBytes(Paths.get(fileName)),
+                       Files.readAllBytes(Paths.get(fileName + ".downloaded")))) {
+      println("CONTENT DIFFERS");
+    }
+
+    Files.delete(Paths.get(fileName));
+    Files.delete(Paths.get(fileName + ".downloaded"));
+    client.removeObject(bucketName, fileName);
   }
 
   // Test: presignedGetObject(String bucketName, String objectName, Integer expires)
-  public static void presignedGetObject_test2() {
-    try {
-      println("Test: presignedGetObject(String bucketName, String objectName, Integer expires)");
-      String fileName = createFile(3 * MB);
-      client.putObject(bucketName, fileName, fileName);
+  public static void presignedGetObject_test2() throws Exception {
+    println("Test: presignedGetObject(String bucketName, String objectName, Integer expires)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
 
-      String urlString = client.presignedGetObject(bucketName, fileName, 3600);
-      Request.Builder requestBuilder = new Request.Builder();
-      Request request = requestBuilder
-        .url(HttpUrl.parse(urlString))
-        .method("GET", null)
-        .build();
-      OkHttpClient transport = new OkHttpClient();
-      Response response = transport.newCall(request).execute();
+    String urlString = client.presignedGetObject(bucketName, fileName, 3600);
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+      .url(HttpUrl.parse(urlString))
+      .method("GET", null)
+      .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
 
-      if (response != null) {
-        if (response.isSuccessful()) {
-          OutputStream os = Files.newOutputStream(Paths.get(fileName + ".downloaded"), StandardOpenOption.CREATE);
-          ByteStreams.copy(response.body().byteStream(), os);
-          response.body().close();
-          os.close();
-        } else {
-          println("FAILED");
-        }
+    if (response != null) {
+      if (response.isSuccessful()) {
+        OutputStream os = Files.newOutputStream(Paths.get(fileName + ".downloaded"), StandardOpenOption.CREATE);
+        ByteStreams.copy(response.body().byteStream(), os);
+        response.body().close();
+        os.close();
       } else {
-        println("NO RESPONSE");
+        println("FAILED");
       }
-
-      if (!Arrays.equals(Files.readAllBytes(Paths.get(fileName)),
-                         Files.readAllBytes(Paths.get(fileName + ".downloaded")))) {
-        println("CONTENT DIFFERS");
-      }
-
-      Files.delete(Paths.get(fileName));
-      Files.delete(Paths.get(fileName + ".downloaded"));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+    } else {
+      println("NO RESPONSE");
     }
+
+    if (!Arrays.equals(Files.readAllBytes(Paths.get(fileName)),
+                       Files.readAllBytes(Paths.get(fileName + ".downloaded")))) {
+      println("CONTENT DIFFERS");
+    }
+
+    Files.delete(Paths.get(fileName));
+    Files.delete(Paths.get(fileName + ".downloaded"));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // public String presignedPutObject(String bucketName, String objectName)
-  public static void presignedPutObject_test1() {
-    try {
-      println("Test: presignedPutObject(String bucketName, String objectName)");
-      String fileName = createFile(3 * MB);
-      String urlString = client.presignedPutObject(bucketName, fileName);
+  public static void presignedPutObject_test1() throws Exception {
+    println("Test: presignedPutObject(String bucketName, String objectName)");
+    String fileName = createFile(3 * MB);
+    String urlString = client.presignedPutObject(bucketName, fileName);
 
-      Request.Builder requestBuilder = new Request.Builder();
-      Request request = requestBuilder
-        .url(HttpUrl.parse(urlString))
-        .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(fileName))))
-        .build();
-      OkHttpClient transport = new OkHttpClient();
-      Response response = transport.newCall(request).execute();
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+      .url(HttpUrl.parse(urlString))
+      .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(fileName))))
+      .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
 
-      if (response != null) {
-        if (!response.isSuccessful()) {
-          println("FAILED");
-        }
-      } else {
-        println("NO RESPONSE");
+    if (response != null) {
+      if (!response.isSuccessful()) {
+        println("FAILED");
       }
-
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+    } else {
+      println("NO RESPONSE");
     }
+
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: presignedPutObject(String bucketName, String objectName, Integer expires)
-  public static void presignedPutObject_test2() {
-    try {
-      println("Test: presignedPutObject(String bucketName, String objectName, Integer expires)");
-      String fileName = createFile(3 * MB);
-      String urlString = client.presignedPutObject(bucketName, fileName, 3600);
+  public static void presignedPutObject_test2() throws Exception {
+    println("Test: presignedPutObject(String bucketName, String objectName, Integer expires)");
+    String fileName = createFile(3 * MB);
+    String urlString = client.presignedPutObject(bucketName, fileName, 3600);
 
-      Request.Builder requestBuilder = new Request.Builder();
-      Request request = requestBuilder
-        .url(HttpUrl.parse(urlString))
-        .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(fileName))))
-        .build();
-      OkHttpClient transport = new OkHttpClient();
-      Response response = transport.newCall(request).execute();
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+      .url(HttpUrl.parse(urlString))
+      .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(fileName))))
+      .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
 
-      if (response != null) {
-        if (!response.isSuccessful()) {
-          println("FAILED");
-        }
-      } else {
-        println("NO RESPONSE");
+    if (response != null) {
+      if (!response.isSuccessful()) {
+        println("FAILED");
       }
-
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+    } else {
+      println("NO RESPONSE");
     }
+
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
   // Test: presignedPostPolicy(PostPolicy policy)
-  public static void presignedPostPolicy_test() {
-    try {
-      println("Test: presignedPostPolicy(PostPolicy policy)");
-      String fileName = createFile(3 * MB);
-      PostPolicy policy = new PostPolicy(bucketName, fileName, DateTime.now().plusDays(7));
-      Map<String, String> formData = client.presignedPostPolicy(policy);
+  public static void presignedPostPolicy_test() throws Exception {
+    println("Test: presignedPostPolicy(PostPolicy policy)");
+    String fileName = createFile(3 * MB);
+    PostPolicy policy = new PostPolicy(bucketName, fileName, DateTime.now().plusDays(7));
+    policy.setContentRange(1 * MB, 4 * MB);
+    Map<String, String> formData = client.presignedPostPolicy(policy);
 
-      MultipartBuilder multipartBuilder = new MultipartBuilder();
-      multipartBuilder.type(MultipartBuilder.FORM);
-      for (Map.Entry<String, String> entry : formData.entrySet()) {
-        multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
-      }
-      multipartBuilder.addFormDataPart("file", fileName, RequestBody.create(null, new File(fileName)));
-
-      Request.Builder requestBuilder = new Request.Builder();
-      Request request = requestBuilder.url(endpoint + "/" + bucketName).post(multipartBuilder.build()).build();
-      OkHttpClient transport = new OkHttpClient();
-      Response response = transport.newCall(request).execute();
-
-      if (response != null) {
-        if (!response.isSuccessful()) {
-          println("FAILED");
-        }
-      } else {
-        println("NO RESPONSE");
-      }
-
-      Files.delete(Paths.get(fileName));
-      client.removeObject(bucketName, fileName);
-    } catch (Exception e) {
-      e.printStackTrace();
+    MultipartBuilder multipartBuilder = new MultipartBuilder();
+    multipartBuilder.type(MultipartBuilder.FORM);
+    for (Map.Entry<String, String> entry : formData.entrySet()) {
+      multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
     }
+    multipartBuilder.addFormDataPart("file", fileName, RequestBody.create(null, new File(fileName)));
+
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder.url(endpoint + "/" + bucketName).post(multipartBuilder.build()).build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
+
+    if (response != null) {
+      if (!response.isSuccessful()) {
+        println("FAILED");
+      }
+    } else {
+      println("NO RESPONSE");
+    }
+
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
 
@@ -784,60 +652,60 @@ public class FunctionalTest {
 
     try {
       client = new MinioClient(endpoint, accessKey, secretKey);
+
+      makeBucket_test1();
+      // makeBucket_test2(); - throws exception due to Amazon S3 region issue
+      makeBucket_test3();
+      // makeBucket_test4(); - throws exception due to Amazon S3 region issue
+
+      listBuckets_test();
+
+      bucketExists_test();
+
+      removeBucket_test();
+
+      getBucketAcl_test();
+
+      setBucketAcl_test();
+
+      setup();
+
+      putObject_test1();
+      putObject_test2();
+      putObject_test3();
+      putObject_test4();
+
+      statObject_test();
+
+      getObject_test1();
+      getObject_test2();
+      getObject_test3();
+      getObject_test4();
+
+      listObject_test1();
+      listObject_test2();
+      listObject_test3();
+
+      removeObject_test();
+
+      listIncompleteUploads_test1();
+      listIncompleteUploads_test2();
+      listIncompleteUploads_test3();
+
+      removeIncompleteUploads_test();
+
+      presignedGetObject_test1();
+      presignedGetObject_test2();
+
+      presignedPutObject_test1();
+      presignedPutObject_test2();
+
+      presignedPostPolicy_test();
+
+      teardown();
     } catch (Exception e) {
       e.printStackTrace();
       return;
     }
-
-    makeBucket_test1();
-    // makeBucket_test2(); - throws exception due to Amazon S3 region issue
-    makeBucket_test3();
-    // makeBucket_test4(); - throws exception due to Amazon S3 region issue
-
-    listBuckets_test();
-
-    bucketExists_test();
-
-    removeBucket_test();
-
-    getBucketAcl_test();
-
-    setBucketAcl_test();
-
-    setup();
-
-    putObject_test1();
-    putObject_test2();
-    putObject_test3();
-    putObject_test4();
-
-    statObject_test();
-
-    getObject_test1();
-    getObject_test2();
-    getObject_test3();
-    getObject_test4();
-
-    listObject_test1();
-    listObject_test2();
-    listObject_test3();
-
-    removeObject_test();
-
-    listIncompleteUploads_test1();
-    listIncompleteUploads_test2();
-    listIncompleteUploads_test3();
-
-    removeIncompleteUploads_test();
-
-    presignedGetObject_test1();
-    presignedGetObject_test2();
-
-    presignedPutObject_test1();
-    presignedPutObject_test2();
-
-    presignedPostPolicy_test();
-
-    teardown();
   }
 }

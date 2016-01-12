@@ -19,6 +19,7 @@ package io.minio.messages;
 import com.google.api.client.util.Key;
 
 import java.util.List;
+import java.util.Arrays;
 
 
 @SuppressWarnings("unused")
@@ -35,11 +36,15 @@ public class CompleteMultipartUpload extends XmlEntity {
   /**
    * constructor to init partList.
    */
-  public CompleteMultipartUpload(List<Part> partList) {
+  public CompleteMultipartUpload(Part[] parts) {
     super();
     super.name = "CompleteMultipartUpload";
 
-    this.partList = partList;
+    if (parts == null) {
+      this.partList = null;
+    } else {
+      this.partList = Arrays.asList(parts);
+    }
   }
 
 

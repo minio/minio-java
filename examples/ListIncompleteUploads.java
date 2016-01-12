@@ -14,30 +14,31 @@
  * limitations under the License.
  */
 
-
 import io.minio.MinioClient;
 import io.minio.Result;
-import io.minio.errors.ClientException;
 import io.minio.messages.Upload;
-import org.xmlpull.v1.XmlPullParserException;
+import io.minio.errors.MinioException;
 
 import java.io.IOException;
-import java.util.Iterator;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
+import org.xmlpull.v1.XmlPullParserException;
+
 
 public class ListIncompleteUploads {
-  public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-
-    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname
-    // are dummy values, please replace them with original values.
+  public static void main(String[] args)
+    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
+    // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // list objects
-    Iterator<Result<Upload>> myObjects = s3Client.listIncompleteUploads("my-bucketname");
-    while (myObjects.hasNext()) {
-      Result<Upload> result = myObjects.next();
-      Upload object = result.getResult();
-      System.out.println(object.getKey());
+    Iterable<Result<Upload>> myObjects = s3Client.listIncompleteUploads("my-bucketname");
+    for (Result<Upload> result : myObjects) {
+      Upload upload = result.get();
+      System.out.println(upload.uploadId() + ", " + upload.objectName());
     }
   }
 }
