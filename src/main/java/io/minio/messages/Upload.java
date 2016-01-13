@@ -34,6 +34,7 @@ public class Upload extends XmlEntity {
   private String storageClass;
   @Key("Initiated")
   private String initiated;
+  private long aggregatedPartSize;
 
 
   public Upload() {
@@ -69,5 +70,15 @@ public class Upload extends XmlEntity {
 
   public Date initiated() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(initiated).toDate();
+  }
+
+
+  public long aggregatedPartSize() {
+    return aggregatedPartSize;
+  }
+
+
+  public void setAggregatedPartSize(long size) {
+    this.aggregatedPartSize = size;
   }
 }
