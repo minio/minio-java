@@ -1653,7 +1653,7 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     Upload latestUpload = null;
-    for (Result<Upload> result : listIncompleteUploads(bucketName, objectName)) {
+    for (Result<Upload> result : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = result.get();
       if (upload.objectName().equals(objectName)
             && (latestUpload == null || latestUpload.initiated().compareTo(upload.initiated()) < 0)) {
@@ -1678,7 +1678,7 @@ public final class MinioClient {
    * @see #listIncompleteUploads(String, String, boolean)
    */
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName) throws XmlPullParserException {
-    return listIncompleteUploads(bucketName, null, true);
+    return listIncompleteUploads(bucketName, null, true, true);
   }
 
 
@@ -1693,7 +1693,7 @@ public final class MinioClient {
    */
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
     throws XmlPullParserException {
-    return listIncompleteUploads(bucketName, prefix, true);
+    return listIncompleteUploads(bucketName, prefix, true, true);
   }
 
 
@@ -1706,8 +1706,13 @@ public final class MinioClient {
    *
    * @return an iterator of Upload.
    */
-  public Iterable<Result<Upload>> listIncompleteUploads(final String bucketName, final String prefix,
-                                                        final boolean recursive) {
+  public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive) {
+    return listIncompleteUploads(bucketName, prefix, recursive, true);
+  }
+
+
+  private Iterable<Result<Upload>> listIncompleteUploads(final String bucketName, final String prefix,
+                                                         final boolean recursive, final boolean aggregatePartSize) {
     return new Iterable<Result<Upload>>() {
       @Override
       public Iterator<Result<Upload>> iterator() {
@@ -1742,6 +1747,19 @@ public final class MinioClient {
                 this.uploadIterator = new LinkedList<Upload>().iterator();
               }
             }
+          }
+
+          private synchronized long getAggregatedPartSize(String objectName, String uploadId)
+            throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+                   InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+                   InternalException {
+            long aggregatedPartSize = 0;
+
+            for (Result<Part> result : listObjectParts(bucketName, objectName, uploadId)) {
+              aggregatedPartSize += result.get().partSize();
+            }
+
+            return aggregatedPartSize;
           }
 
           @Override
@@ -1796,7 +1814,24 @@ public final class MinioClient {
             }
 
             if (this.uploadIterator.hasNext()) {
-              return new Result<Upload>(this.uploadIterator.next(), null);
+              Upload upload = this.uploadIterator.next();
+
+              if (aggregatePartSize) {
+                long aggregatedPartSize;
+
+                try {
+                  aggregatedPartSize = getAggregatedPartSize(upload.objectName(), upload.uploadId());
+                } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
+                         | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                         | InternalException e) {
+                  // special case: ignore the error as we can't propagate the exception in next()
+                  aggregatedPartSize = -1;
+                }
+
+                upload.setAggregatedPartSize(aggregatedPartSize);
+              }
+
+              return new Result<Upload>(upload, null);
             }
 
             this.completed = true;
@@ -2018,7 +2053,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    for (Result<Upload> r : listIncompleteUploads(bucketName, objectName)) {
+    for (Result<Upload> r : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = r.get();
       if (objectName.equals(upload.objectName())) {
         abortMultipartUpload(bucketName, objectName, upload.uploadId());
