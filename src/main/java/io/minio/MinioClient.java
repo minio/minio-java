@@ -627,12 +627,13 @@ public final class MinioClient {
   }
 
 
-  private HttpResponse executePost(String bucketName, String objectName, Map<String,String> queryParamMap, Object data)
+  private HttpResponse executePost(String bucketName, String objectName, Map<String,String> headerMap,
+                                   Map<String,String> queryParamMap, Object data)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     updateRegionMap(bucketName);
-    return execute(Method.POST, Regions.INSTANCE.region(bucketName), bucketName, objectName, null, queryParamMap,
+    return execute(Method.POST, Regions.INSTANCE.region(bucketName), bucketName, objectName, headerMap, queryParamMap,
                    null, data, 0);
   }
 
@@ -1614,7 +1615,7 @@ public final class MinioClient {
     } else {
       // initiate new multipart upload ie no previous multipart found or no previous valid parts for
       // multipart found
-      uploadId = initMultipartUpload(bucketName, objectName);
+      uploadId = initMultipartUpload(bucketName, objectName, contentType);
     }
 
     int expectedReadSize = partSize;
@@ -1838,14 +1839,21 @@ public final class MinioClient {
   }
 
 
-  private String initMultipartUpload(String bucketName, String objectName)
+  private String initMultipartUpload(String bucketName, String objectName, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
+    Map<String,String> headerMap = new Hashtable<String,String>();
+    if (contentType != null) {
+      headerMap.put("Content-Type", contentType);
+    } else {
+      headerMap.put("Content-Type", "application/octet-stream");
+    }
+
     Map<String,String> queryParamMap = new HashMap<String,String>();
     queryParamMap.put("uploads", "");
 
-    HttpResponse response = executePost(bucketName, objectName, queryParamMap, "");
+    HttpResponse response = executePost(bucketName, objectName, headerMap, queryParamMap, "");
 
     InitiateMultipartUploadResult result = new InitiateMultipartUploadResult();
     result.parseXml(response.body().charStream());
@@ -1863,7 +1871,7 @@ public final class MinioClient {
 
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
 
-    HttpResponse response = executePost(bucketName, objectName, queryParamMap, completeManifest);
+    HttpResponse response = executePost(bucketName, objectName, null, queryParamMap, completeManifest);
     response.body().close();
   }
 
