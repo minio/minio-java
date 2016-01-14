@@ -124,6 +124,8 @@ public final class MinioClient {
 
   private String userAgent = DEFAULT_USER_AGENT;
 
+  private OkHttpClient httpClient = new OkHttpClient();
+
 
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, null, null, false);
@@ -458,8 +460,7 @@ public final class MinioClient {
       this.traceStream.println(headers);
     }
 
-    OkHttpClient transport = new OkHttpClient();
-    Response response = transport.newCall(request).execute();
+    Response response = this.httpClient.newCall(request).execute();
     if (response == null) {
       if (this.traceStream != null) {
         this.traceStream.println("<NO RESPONSE>");

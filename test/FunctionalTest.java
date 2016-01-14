@@ -640,6 +640,29 @@ public class FunctionalTest {
   }
 
 
+  public static void threadedPutObject() throws Exception {
+    println("Test: threadedPutObject");
+    Thread[] threads = new Thread[7];
+
+    for (int i = 0; i < 7; i++) {
+      threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile(17 * MB)));
+      println("[MAIN] thread", i, "is created");
+    }
+
+    for (int i = 0; i < 7; i++) {
+      threads[i].start();
+      println("[MAIN] thread", i, "is started");
+    }
+
+    println("[MAIN] waiting for threads complete");
+    for (int i = 0; i < 7; i++) {
+      threads[i].join();
+    }
+
+    println("[MAIN] all threads are completed");
+  }
+
+
   public static void main(String[] args) {
     if (args.length != 3) {
       println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY>");
@@ -702,10 +725,38 @@ public class FunctionalTest {
 
       presignedPostPolicy_test();
 
+      threadedPutObject();
+
       teardown();
     } catch (Exception e) {
       e.printStackTrace();
       return;
+    }
+  }
+}
+
+
+class PutObjectRunnable implements Runnable {
+  MinioClient client;
+  String bucketName;
+  String fileName;
+
+  public PutObjectRunnable(MinioClient client, String bucketName, String fileName) {
+    this.client = client;
+    this.bucketName = bucketName;
+    this.fileName = fileName;
+  }
+
+  public void run() {
+    try {
+      System.out.println("[" + fileName + "]: threaded put object");
+      client.putObject(bucketName, fileName, fileName);
+      System.out.println("[" + fileName + "]: delete file");
+      Files.delete(Paths.get(fileName));
+      System.out.println("[" + fileName + "]: delete object");
+      client.removeObject(bucketName, fileName);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 }
