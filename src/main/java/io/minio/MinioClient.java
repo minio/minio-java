@@ -448,8 +448,14 @@ public final class MinioClient {
 
     if (this.traceStream != null) {
       this.traceStream.println("---------START-HTTP---------");
-      this.traceStream.println(request.method() + " " + request.httpUrl().encodedPath() + " HTTP/1.1");
-      this.traceStream.println(request.headers());
+      String encodedPath = request.httpUrl().encodedPath();
+      String encodedQuery = request.httpUrl().encodedQuery();
+      if (encodedQuery != null) {
+        encodedPath += "?" + encodedQuery;
+      }
+      this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
+      String headers = request.headers().toString().replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*");
+      this.traceStream.println(headers);
     }
 
     OkHttpClient transport = new OkHttpClient();
