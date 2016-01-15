@@ -9,7 +9,7 @@ Minio Java Library uses gradle for its dependency management https://gradle.org/
 
 ### Gradle start up script for UN*X
 ```sh
-$ ./gradlew check
+$ ./gradlew build
 Downloading https://services.gradle.org/distributions/gradle-2.5-bin.zip
 ...
 ...
@@ -38,7 +38,7 @@ bucketN
 On windows command prompt
 
 ```bat
-C:\minio-java\> gradlew.bat check
+C:\minio-java\> gradlew.bat build
 Downloading https://services.gradle.org/distributions/gradle-2.5-bin.zip
 ...
 ...
