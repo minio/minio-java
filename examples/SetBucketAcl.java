@@ -35,5 +35,6 @@ public class SetBucketAcl {
 
     // set bucket canned acl
     s3Client.setBucketAcl("my-bucketname", Acl.PRIVATE);
+    System.out.println("Canned ACL " + Acl.PRIVATE + " is set successfully to my-bucketname");
   }
 }

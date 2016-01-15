@@ -34,5 +34,6 @@ public class RemoveObject {
 
     // remove object
     s3Client.removeObject("my-bucketname", "my-objectname");
+    System.out.println("successfully removed my-bucketname/my-objectname");
   }
 }
