@@ -56,5 +56,7 @@ public class PutObject {
     ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
     // create object
     s3Client.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
+    bais.close();
+    System.out.println("my-bucketname is uploaded successfully");
   }
 }

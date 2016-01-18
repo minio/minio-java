@@ -35,5 +35,6 @@ public class RemoveBucket {
     // remove bucket
     // This operation will only work if your bucket is empty.
     s3Client.removeBucket("my-bucketname");
+    System.out.println("my-bucketname is removed successfully");
   }
 }

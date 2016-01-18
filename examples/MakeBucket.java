@@ -34,5 +34,6 @@ public class MakeBucket {
 
     // create bucket
     s3Client.makeBucket("my-bucketname");
+    System.out.println("my-bucketname is created successfully");
   }
 }

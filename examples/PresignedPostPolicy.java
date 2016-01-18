@@ -43,6 +43,6 @@ public class PresignedPostPolicy {
     for (Map.Entry<String,String> entry : formData.entrySet()) {
       System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
     }
-    System.out.print(" -F file=@/tmp/userpic.png https://my-bucketname.s3.amazonaws.com/\n");
+    System.out.println(" -F file=@/tmp/userpic.png https://my-bucketname.s3.amazonaws.com/");
   }
 }
