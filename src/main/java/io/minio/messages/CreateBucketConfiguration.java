@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 public class CreateBucketConfiguration extends XmlEntity {
@@ -27,7 +28,7 @@ public class CreateBucketConfiguration extends XmlEntity {
   /**
    * constructor.
    */
-  public CreateBucketConfiguration(String locationConstraint) {
+  public CreateBucketConfiguration(String locationConstraint) throws XmlPullParserException {
     super();
     super.name = "CreateBucketConfiguration";
 

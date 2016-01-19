@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +47,7 @@ public class ListPartsResult extends XmlEntity {
   private List<Part> partList;
 
 
-  public ListPartsResult() {
+  public ListPartsResult() throws XmlPullParserException {
     super();
     this.name = "ListPartsResult";
   }

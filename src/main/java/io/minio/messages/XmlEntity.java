@@ -27,26 +27,20 @@ import java.io.IOException;
 
 
 public abstract class XmlEntity extends GenericXml {
-  private static final XmlPullParser XML_PULL_PARSER;
-
-  static {
-    try {
-      XML_PULL_PARSER = Xml.createParser();
-    } catch (XmlPullParserException e) {
-      throw new ExceptionInInitializerError(e);
-    }
-  }
-
-  private XmlNamespaceDictionary defaultNamespaceDictionary = new XmlNamespaceDictionary();
+  private XmlPullParser xmlPullParser;
+  private XmlNamespaceDictionary defaultNamespaceDictionary;
 
 
   /**
    * constructor.
    */
-  public XmlEntity() {
+  public XmlEntity() throws XmlPullParserException {
     super.namespaceDictionary = new XmlNamespaceDictionary();
     super.namespaceDictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01");
     super.namespaceDictionary.set("", "");
+
+    this.xmlPullParser = Xml.createParser();
+    this.defaultNamespaceDictionary = new XmlNamespaceDictionary();
   }
 
 
@@ -57,14 +51,14 @@ public abstract class XmlEntity extends GenericXml {
 
 
   public void parseXml(Reader reader) throws IOException, XmlPullParserException {
-    XML_PULL_PARSER.setInput(reader);
-    Xml.parseElement(XML_PULL_PARSER, this, this.defaultNamespaceDictionary, null);
+    this.xmlPullParser.setInput(reader);
+    Xml.parseElement(this.xmlPullParser, this, this.defaultNamespaceDictionary, null);
   }
 
 
   protected void parseXml(Reader reader, XmlNamespaceDictionary namespaceDictionary)
     throws IOException, XmlPullParserException {
-    XML_PULL_PARSER.setInput(reader);
-    Xml.parseElement(XML_PULL_PARSER, this, namespaceDictionary, null);
+    this.xmlPullParser.setInput(reader);
+    Xml.parseElement(this.xmlPullParser, this, namespaceDictionary, null);
   }
 }

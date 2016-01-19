@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -44,7 +45,8 @@ public class ListBucketResult extends XmlEntity {
   private List<Prefix> commonPrefixes;
 
 
-  public ListBucketResult() {
+  public ListBucketResult() throws XmlPullParserException {
+    super();
     super.name = "ListBucketResult";
   }
 

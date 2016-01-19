@@ -46,7 +46,7 @@ public class ErrorResponse extends XmlEntity {
   private ErrorCode errorCode;
 
 
-  public ErrorResponse() {
+  public ErrorResponse() throws XmlPullParserException {
     super();
     super.name = "ErrorResponse";
   }
@@ -65,7 +65,7 @@ public class ErrorResponse extends XmlEntity {
    * constructor.
    */
   public ErrorResponse(ErrorCode errorCode, String bucketName, String objectName, String resource, String requestId,
-                       String hostId) {
+                       String hostId) throws XmlPullParserException {
     this();
     this.errorCode  = errorCode;
     this.code       = errorCode.code();

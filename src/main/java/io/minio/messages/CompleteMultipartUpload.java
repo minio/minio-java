@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.List;
 import java.util.Arrays;
@@ -28,7 +29,7 @@ public class CompleteMultipartUpload extends XmlEntity {
   private List<Part> partList;
 
 
-  public CompleteMultipartUpload() {
+  public CompleteMultipartUpload() throws XmlPullParserException {
     this(null);
   }
 
@@ -36,7 +37,7 @@ public class CompleteMultipartUpload extends XmlEntity {
   /**
    * constructor to init partList.
    */
-  public CompleteMultipartUpload(Part[] parts) {
+  public CompleteMultipartUpload(Part[] parts) throws XmlPullParserException {
     super();
     super.name = "CompleteMultipartUpload";
 

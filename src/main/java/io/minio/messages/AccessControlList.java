@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class AccessControlList extends XmlEntity {
 
 
   @SuppressWarnings("unused")
-  public AccessControlList() {
+  public AccessControlList() throws XmlPullParserException {
     super();
     super.name = "AccessControlList";
   }

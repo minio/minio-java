@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import java.util.Date;
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
 
@@ -33,7 +34,7 @@ public class Part extends XmlEntity {
   private Long size;
 
 
-  public Part() {
+  public Part() throws XmlPullParserException {
     this(0, null);
   }
 
@@ -41,7 +42,7 @@ public class Part extends XmlEntity {
   /**
    * constructor.
    */
-  public Part(int partNumber, String etag) {
+  public Part(int partNumber, String etag) throws XmlPullParserException {
     super();
     super.name = "Part";
 
