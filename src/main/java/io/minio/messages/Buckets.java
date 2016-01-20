@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +29,7 @@ public class Buckets extends XmlEntity {
   private List<Bucket> bucketList = new LinkedList<Bucket>();
 
 
-  public Buckets() {
+  public Buckets() throws XmlPullParserException {
     super();
     super.name = "Buckets";
   }

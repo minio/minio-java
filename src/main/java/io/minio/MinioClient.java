@@ -1163,7 +1163,15 @@ public final class MinioClient {
 
             if (this.prefixIterator.hasNext()) {
               Prefix prefix = this.prefixIterator.next();
-              return new Result<Item>(new Item(prefix.prefix(), true), null);
+              Item item;
+              try {
+                item = new Item(prefix.prefix(), true);
+              } catch (XmlPullParserException e) {
+                // special case: ignore the error as we can't propagate the exception in next()
+                item = null;
+              }
+
+              return new Result<Item>(item, null);
             }
 
             this.completed = true;

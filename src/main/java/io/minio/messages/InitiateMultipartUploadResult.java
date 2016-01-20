@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 @SuppressWarnings({"SameParameterValue", "unused"})
@@ -29,7 +30,7 @@ public class InitiateMultipartUploadResult extends XmlEntity {
   private String uploadId;
 
 
-  public InitiateMultipartUploadResult() {
+  public InitiateMultipartUploadResult() throws XmlPullParserException {
     super();
     this.name = "InitiateMultipartUploadResult";
   }

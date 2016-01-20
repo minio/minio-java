@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class AccessControlPolicy extends XmlEntity {
   private AccessControlList accessControlList;
 
 
-  public AccessControlPolicy() {
+  public AccessControlPolicy() throws XmlPullParserException {
     super();
     this.name = "AccessControlPolicy";
   }

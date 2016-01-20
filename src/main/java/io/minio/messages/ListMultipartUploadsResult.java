@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class ListMultipartUploadsResult extends XmlEntity {
   private boolean isTruncated;
 
 
-  public ListMultipartUploadsResult() {
+  public ListMultipartUploadsResult() throws XmlPullParserException {
     super();
     super.name = "ListMultipartUploadsResult";
   }

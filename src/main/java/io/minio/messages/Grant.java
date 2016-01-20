@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 @SuppressWarnings({"SameParameterValue", "unused"})
@@ -27,7 +28,7 @@ public class Grant extends XmlEntity {
   private String permission;
 
 
-  public Grant() {
+  public Grant() throws XmlPullParserException {
     super();
     this.name = "Grant";
   }

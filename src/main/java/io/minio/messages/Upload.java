@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import java.util.Date;
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
 @SuppressWarnings("unused")
@@ -37,7 +38,7 @@ public class Upload extends XmlEntity {
   private long aggregatedPartSize;
 
 
-  public Upload() {
+  public Upload() throws XmlPullParserException {
     super();
     super.name = "Upload";
   }

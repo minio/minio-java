@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import java.util.Date;
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
 
@@ -38,7 +39,7 @@ public class Item extends XmlEntity {
   private boolean isDir = false;
 
 
-  public Item() {
+  public Item() throws XmlPullParserException {
     this(null, false);
   }
 
@@ -46,7 +47,7 @@ public class Item extends XmlEntity {
   /**
    * constructor to set object name and isDir flag.
    */
-  public Item(String objectName, boolean isDir) {
+  public Item(String objectName, boolean isDir) throws XmlPullParserException {
     super();
     this.name = "Item";
 

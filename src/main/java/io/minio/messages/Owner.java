@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 @SuppressWarnings("SameParameterValue")
@@ -27,7 +28,7 @@ public class Owner extends XmlEntity {
   private String displayName;
 
 
-  public Owner() {
+  public Owner() throws XmlPullParserException {
     super();
     this.name = "Owner";
   }

@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import java.util.Date;
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
 
@@ -29,7 +30,7 @@ public class Bucket extends XmlEntity {
   private String creationDate;
 
 
-  public Bucket() {
+  public Bucket() throws XmlPullParserException {
     super();
     super.name = "Bucket";
   }

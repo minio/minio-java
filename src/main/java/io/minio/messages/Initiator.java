@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 @SuppressWarnings("unused")
@@ -27,7 +28,7 @@ public class Initiator extends XmlEntity {
   private String displayName;
 
 
-  public Initiator() {
+  public Initiator() throws XmlPullParserException {
     super();
     this.name = "Initiator";
   }

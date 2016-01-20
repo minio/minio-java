@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 @SuppressWarnings({"WeakerAccess", "unused"})
@@ -25,7 +26,8 @@ public class Prefix extends XmlEntity {
   private String prefix;
 
 
-  public Prefix() {
+  public Prefix() throws XmlPullParserException {
+    super();
     super.name = "Prefix";
   }
 
