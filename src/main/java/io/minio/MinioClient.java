@@ -282,24 +282,41 @@ public final class MinioClient {
   }
 
 
+  // host style validates if bucket name can be used along with host name.
+  private boolean hostStyle(HttpUrl url, String bucketName) throws InvalidBucketNameException {
+    // Validate bucket name.
+    checkBucketName(bucketName);
+
+    // bucketName can be valid but '.' in the hostname will fail SSL
+    // certificate validation. So do not use host-style for such buckets.
+    if (baseUrl.isHttps() && bucketName.contains(".")) {
+      return false;
+    }
+
+    // For all other cases for Amazon S3 we default to host-style.
+    return baseUrl.host().equals("s3.amazonaws.com");
+  }
+
+  // Validates if input bucket name is DNS compatible.
   private void checkBucketName(String name) throws InvalidBucketNameException {
     if (name == null) {
       throw new InvalidBucketNameException("(null)", "null bucket name");
     }
 
+    // Bucket names cannot be no less than 3 and no more than 63 characters long.
     if (name.length() < 3 || name.length() > 63) {
       String msg = "bucket name must be at least 3 and no more than 63 characters long";
       throw new InvalidBucketNameException(name, msg);
     }
-
-    if (name.indexOf(".") != -1) {
-      String msg = "bucket name with '.' is not allowed due to SSL cerificate verification error.  "
-          + "For more information refer http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
+    // Successive periods in bucket names are not allowed.
+    if (name.matches("\\.\\.")) {
+      String msg = "bucket name cannot contain successive periods. For more information refer "
+          + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
       throw new InvalidBucketNameException(name, msg);
     }
-
-    if (!name.matches("^[a-z0-9][a-z0-9\\-]+[a-z0-9]$")) {
-      String msg = "bucket name does not follow Amazon S3 standards.  For more information refer "
+    // Bucket names should be dns compatible.
+    if (!name.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
+      String msg = "bucket name does not follow Amazon S3 standards. For more information refer "
           + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
       throw new InvalidBucketNameException(name, msg);
     }
@@ -307,8 +324,9 @@ public final class MinioClient {
 
 
   private Request createRequest(Method method, String bucketName, String objectName,
-                                Map<String,String> headerMap, Map<String,String> queryParamMap,
-                                final String contentType, final Object body, final int length)
+                                String region, Map<String,String> headerMap,
+                                Map<String,String> queryParamMap, final String contentType,
+                                final Object body, final int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException {
     if (bucketName == null && objectName != null) {
       throw new InvalidBucketNameException("(null)", "null bucket name for object '" + objectName + "'");
@@ -316,17 +334,23 @@ public final class MinioClient {
 
     HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
 
-    if (bucketName != null) {
-      checkBucketName(bucketName);
+    String host = this.baseUrl.host();
+    if (region != null && host.equals("s3.amazonaws.com")) {
+      host = AwsS3Endpoints.INSTANCE.endpoint(region);
+    }
+    urlBuilder.host(host);
 
-      // special case:
+    if (bucketName != null) {
+      boolean isHostStyle = hostStyle(baseUrl, bucketName);
+
+      // Special case:
       // if the request is for s3.amazonaws.com and location query,
-      // use s3.amazonaws.com/BUCKETNAME
-      if (baseUrl.host().equals("s3.amazonaws.com")) {
+      // use s3.amazonaws.com/BUCKETNAME.
+      if (isHostStyle) {
         if (queryParamMap != null && queryParamMap.containsKey("location")) {
           urlBuilder.addPathSegment(bucketName);
         } else {
-          urlBuilder.host(bucketName + ".s3.amazonaws.com");
+          urlBuilder.host(bucketName + "." + host);
         }
       } else {
         urlBuilder.addPathSegment(bucketName);
@@ -441,7 +465,8 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Request request = createRequest(method, bucketName, objectName, headerMap, queryParamMap,
+    Request request = createRequest(method, bucketName, objectName, region,
+                                    headerMap, queryParamMap,
                                     contentType, body, length);
 
     if (this.accessKey != null && this.secretKey != null) {
@@ -544,7 +569,7 @@ public final class MinioClient {
 
     // invalidate region cache if needed
     if (errorResponse.errorCode() == ErrorCode.NO_SUCH_BUCKET) {
-      Regions.INSTANCE.remove(bucketName);
+      BucketRegionCache.INSTANCE.remove(bucketName);
       // TODO: handle for other cases as well
       // observation: on HEAD of a bucket with wrong region gives 400 without body
     }
@@ -553,16 +578,17 @@ public final class MinioClient {
   }
 
 
-  private void updateRegionMap(String bucketName)
+  private void updateRegionCache(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     if (bucketName != null && "s3.amazonaws.com".equals(this.baseUrl.host()) && this.accessKey != null
-          && this.secretKey != null && Regions.INSTANCE.exists(bucketName) == false) {
+          && this.secretKey != null && BucketRegionCache.INSTANCE.exists(bucketName) == false) {
       Map<String,String> queryParamMap = new HashMap<String,String>();
       queryParamMap.put("location", null);
 
-      HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null, null, queryParamMap, null, null, 0);
+      HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null,
+                                      null, queryParamMap, null, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
       XmlPullParser xpp = xmlPullParserFactory.newPullParser();
@@ -577,16 +603,17 @@ public final class MinioClient {
           }
           break;
         }
-
         xpp.next();
       }
 
+      // close response body.
       response.body().close();
 
       String region;
       if (location == null) {
         region = "us-east-1";
       } else {
+        // eu-west-1 can be sometimes 'EU'.
         if ("EU".equals(location)) {
           region = "eu-west-1";
         } else {
@@ -594,7 +621,8 @@ public final class MinioClient {
         }
       }
 
-      Regions.INSTANCE.add(bucketName, region);
+      // Add the new location.
+      BucketRegionCache.INSTANCE.add(bucketName, region);
     }
   }
 
@@ -604,8 +632,9 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionMap(bucketName);
-    return execute(Method.GET, Regions.INSTANCE.region(bucketName), bucketName, objectName, headerMap, queryParamMap,
+    updateRegionCache(bucketName);
+    return execute(Method.GET, BucketRegionCache.INSTANCE.region(bucketName),
+                   bucketName, objectName, headerMap, queryParamMap,
                    null, null, 0);
   }
 
@@ -614,8 +643,9 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionMap(bucketName);
-    HttpResponse response = execute(Method.HEAD, Regions.INSTANCE.region(bucketName), bucketName, objectName, null,
+    updateRegionCache(bucketName);
+    HttpResponse response = execute(Method.HEAD, BucketRegionCache.INSTANCE.region(bucketName),
+                                    bucketName, objectName, null,
                                     null, null, null, 0);
     response.body().close();
     return response;
@@ -626,8 +656,9 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionMap(bucketName);
-    HttpResponse response = execute(Method.DELETE, Regions.INSTANCE.region(bucketName), bucketName, objectName, null,
+    updateRegionCache(bucketName);
+    HttpResponse response = execute(Method.DELETE, BucketRegionCache.INSTANCE.region(bucketName),
+                                    bucketName, objectName, null,
                                     queryParamMap, null, null, 0);
     response.body().close();
     return response;
@@ -639,8 +670,9 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionMap(bucketName);
-    return execute(Method.POST, Regions.INSTANCE.region(bucketName), bucketName, objectName, headerMap, queryParamMap,
+    updateRegionCache(bucketName);
+    return execute(Method.POST, BucketRegionCache.INSTANCE.region(bucketName),
+                   bucketName, objectName, headerMap, queryParamMap,
                    null, data, 0);
   }
 
@@ -650,7 +682,8 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    HttpResponse response = execute(Method.PUT, region, bucketName, objectName, headerMap, queryParamMap,
+    HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
+                                    headerMap, queryParamMap,
                                     null, data, length);
     response.body().close();
     return response;
@@ -662,8 +695,9 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionMap(bucketName);
-    return executePut(bucketName, objectName, headerMap, queryParamMap, Regions.INSTANCE.region(bucketName),
+    updateRegionCache(bucketName);
+    return executePut(bucketName, objectName, headerMap, queryParamMap,
+                      BucketRegionCache.INSTANCE.region(bucketName),
                       data, length);
   }
 
@@ -910,14 +944,17 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    updateRegionMap(bucketName);
-
+    // Validate input.
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
-    Request request = createRequest(Method.GET, bucketName, objectName, null, null, null, null, 0);
-    HttpUrl url = Signer.presignV4(request, Regions.INSTANCE.region(bucketName), accessKey, secretKey, expires);
+    updateRegionCache(bucketName);
+    String region = BucketRegionCache.INSTANCE.region(bucketName);
+
+    Request request = createRequest(Method.GET, bucketName, objectName, region,
+                                    null, null, null, null, 0);
+    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
 
@@ -955,14 +992,16 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    updateRegionMap(bucketName);
-
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
-    Request request = createRequest(Method.PUT, bucketName, objectName, null, null, null, "", 0);
-    HttpUrl url = Signer.presignV4(request, Regions.INSTANCE.region(bucketName), accessKey, secretKey, expires);
+    updateRegionCache(bucketName);
+    String region = BucketRegionCache.INSTANCE.region(bucketName);
+
+    Request request = createRequest(Method.PUT, bucketName, objectName, region,
+                                    null, null, null, "", 0);
+    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
 
@@ -993,7 +1032,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionMap(policy.bucketName());
+    updateRegionCache(policy.bucketName());
     return policy.formData(this.accessKey, this.secretKey);
   }
 
