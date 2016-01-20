@@ -21,7 +21,6 @@ import java.io.*;
 import java.lang.*;
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
-import java.io.*;
 
 import org.xmlpull.v1.XmlPullParserException;
 import org.joda.time.DateTime;
@@ -120,6 +119,14 @@ public class FunctionalTest {
     client.removeBucket(name);
   }
 
+  // Test: makeBucket(String bucketName, String region) where bucketName has
+  // periods in its name.
+  public static void makeBucket_test5() throws Exception {
+    println("Test: makeBucket(String bucketName, String region)");
+    String name = getRandomName() + ".withperiod";
+    client.makeBucket(name, "eu-central-1");
+    client.removeBucket(name);
+  }
 
   // Test: listBuckets()
   public static void listBuckets_test() throws Exception {
@@ -676,10 +683,14 @@ public class FunctionalTest {
     try {
       client = new MinioClient(endpoint, accessKey, secretKey);
 
+      // Enable trace for debugging.
+      // client.traceOn(System.out);
+
       makeBucket_test1();
-      // makeBucket_test2(); - throws exception due to Amazon S3 region issue
+      makeBucket_test2();
       makeBucket_test3();
-      // makeBucket_test4(); - throws exception due to Amazon S3 region issue
+      makeBucket_test4();
+      makeBucket_test5();
 
       listBuckets_test();
 
