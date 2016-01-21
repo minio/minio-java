@@ -20,7 +20,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 
-public enum Regions {
+public enum BucketRegionCache {
   INSTANCE;
   private final Map<String, String> regionMap = new Hashtable<String, String>();
 

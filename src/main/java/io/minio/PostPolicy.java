@@ -180,7 +180,7 @@ public class PostPolicy {
     formData.put("x-amz-algorithm", ALGORITHM);
 
     DateTime date = new DateTime();
-    String region = Regions.INSTANCE.region(this.bucketName);
+    String region = BucketRegionCache.INSTANCE.region(this.bucketName);
     String credential = Signer.credential(accessKey, date, region);
     conditions.add(new String[]{"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
