@@ -57,6 +57,7 @@ import java.nio.file.StandardOpenOption;
 import com.google.common.io.ByteStreams;
 import java.nio.file.StandardCopyOption;
 
+import java.time.Duration;
 
 /**
  * <p>
@@ -98,7 +99,7 @@ public final class MinioClient {
   // minimum allowed multipart size is 5MiB
   private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
-  private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
+  private static final long DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
       + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
 
@@ -940,13 +941,14 @@ public final class MinioClient {
    * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignedGetObject(String bucketName, String objectName, Integer expires)
+  public String presignedGetObject(String bucketName, String objectName, Duration expires)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
     // Validate input.
-    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
+    if (expires.isNegative() || expires.isZero() || expires.getSeconds() > DEFAULT_EXPIRY_TIME) {
+      throw new InvalidExpiresRangeException(expires.getSeconds(),
+                                             "expires must be in range of 1s to " + DEFAULT_EXPIRY_TIME);
     }
 
     updateRegionCache(bucketName);
@@ -954,7 +956,8 @@ public final class MinioClient {
 
     Request request = createRequest(Method.GET, bucketName, objectName, region,
                                     null, null, null, null, 0);
-    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
+    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey,
+                                   expires.getSeconds());
     return url.toString();
   }
 
@@ -972,7 +975,8 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
+    return presignedGetObject(bucketName, objectName,
+                              Duration.ofSeconds(DEFAULT_EXPIRY_TIME));
   }
 
 
@@ -988,12 +992,13 @@ public final class MinioClient {
    * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignedPutObject(String bucketName, String objectName, Integer expires)
+  public String presignedPutObject(String bucketName, String objectName, Duration expires)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
+    if (expires.isNegative() || expires.isZero() || expires.getSeconds() > DEFAULT_EXPIRY_TIME) {
+      throw new InvalidExpiresRangeException(expires.getSeconds(),
+                                             "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
     updateRegionCache(bucketName);
@@ -1001,7 +1006,8 @@ public final class MinioClient {
 
     Request request = createRequest(Method.PUT, bucketName, objectName, region,
                                     null, null, null, "", 0);
-    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
+    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey,
+                                   expires.getSeconds());
     return url.toString();
   }
 
@@ -1015,11 +1021,12 @@ public final class MinioClient {
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
-  public String presignedPutObject(String bucketName, String objectName)
+  public String presignedDEFAULT_EXPIRY_TIMEPutObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    return presignedPutObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
+    return presignedPutObject(bucketName, objectName,
+                              Duration.ofSeconds(DEFAULT_EXPIRY_TIME));
   }
 
 

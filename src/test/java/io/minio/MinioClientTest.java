@@ -46,6 +46,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import java.time.Duration;
+
 import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("unused")
@@ -146,7 +148,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    client.presignedGetObject("bucket", "key", 604801);
+    client.presignedGetObject("bucket", "key", Duration.ofSeconds(604801));
   }
 
   @Test
