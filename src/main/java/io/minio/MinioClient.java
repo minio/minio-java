@@ -282,21 +282,6 @@ public final class MinioClient {
   }
 
 
-  // host style validates if bucket name can be used along with host name.
-  private boolean hostStyle(HttpUrl url, String bucketName) throws InvalidBucketNameException {
-    // Validate bucket name.
-    checkBucketName(bucketName);
-
-    // bucketName can be valid but '.' in the hostname will fail SSL
-    // certificate validation. So do not use host-style for such buckets.
-    if (baseUrl.isHttps() && bucketName.contains(".")) {
-      return false;
-    }
-
-    // For all other cases for Amazon S3 we default to host-style.
-    return baseUrl.host().equals("s3.amazonaws.com");
-  }
-
   // Validates if input bucket name is DNS compatible.
   private void checkBucketName(String name) throws InvalidBucketNameException {
     if (name == null) {
@@ -334,20 +319,30 @@ public final class MinioClient {
 
     HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
 
-    String host = this.baseUrl.host();
-    if (region != null && host.equals("s3.amazonaws.com")) {
-      host = AwsS3Endpoints.INSTANCE.endpoint(region);
-    }
-    urlBuilder.host(host);
-
     if (bucketName != null) {
-      boolean isHostStyle = hostStyle(baseUrl, bucketName);
+      checkBucketName(bucketName);
 
-      // Special case:
-      // if the request is for s3.amazonaws.com and location query,
-      // use s3.amazonaws.com/BUCKETNAME.
-      if (isHostStyle) {
-        if (queryParamMap != null && queryParamMap.containsKey("location")) {
+      String host = this.baseUrl.host();
+      if (host.equals("s3.amazonaws.com")) {
+        // special case: handle s3.amazonaws.com separately
+        if (region != null) {
+          host = AwsS3Endpoints.INSTANCE.endpoint(region);
+        }
+
+        boolean usePathStyle = false;
+        if (method == Method.PUT && objectName == null && queryParamMap == null) {
+          // use path style for make bucket to workaround "AuthorizationHeaderMalformed" error from s3.amazonaws.com
+          usePathStyle = true;
+        } else if (queryParamMap != null && queryParamMap.containsKey("location")) {
+          // use path style for location query
+          usePathStyle = true;
+        } else if (bucketName.contains(".") && this.baseUrl.isHttps()) {
+          // use path style where '.' in bucketName causes SSL certificate validation error
+          usePathStyle = true;
+        }
+
+        if (usePathStyle) {
+          urlBuilder.host(host);
           urlBuilder.addPathSegment(bucketName);
         } else {
           urlBuilder.host(bucketName + "." + host);
