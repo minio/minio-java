@@ -18,10 +18,10 @@ package io.minio.errors;
 
 
 public class InvalidExpiresRangeException extends MinioException {
-  private int expires;
+  private Long expires;
 
 
-  public InvalidExpiresRangeException(int expires, String message) {
+  public InvalidExpiresRangeException(Long expires, String message) {
     super(message);
     this.expires = expires;
   }
@@ -29,6 +29,6 @@ public class InvalidExpiresRangeException extends MinioException {
 
   @Override
   public String toString() {
-    return this.expires + ": " + super.toString();
+    return this.expires.toString() + ": " + super.toString();
   }
 }

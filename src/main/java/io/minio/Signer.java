@@ -238,7 +238,7 @@ public class Signer {
   }
 
 
-  private void setPresignCanonicalRequest(int expires) throws NoSuchAlgorithmException {
+  private void setPresignCanonicalRequest(Long expires) throws NoSuchAlgorithmException {
     this.canonicalHeaders = new TreeMap<String,String>();
     this.canonicalHeaders.put("host", this.request.headers().get("Host"));
     this.signedHeaders = "host";
@@ -248,7 +248,7 @@ public class Signer {
     urlBuilder.addQueryParameter("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
     urlBuilder.addQueryParameter("X-Amz-Credential", this.accessKey + "/" + this.scope);
     urlBuilder.addQueryParameter("X-Amz-Date", this.date.toString(DateFormat.AMZ_DATE_FORMAT));
-    urlBuilder.addQueryParameter("X-Amz-Expires", Integer.toString(expires));
+    urlBuilder.addQueryParameter("X-Amz-Expires", expires.toString());
     urlBuilder.addQueryParameter("X-Amz-SignedHeaders", this.signedHeaders);
     this.url = urlBuilder.build();
 
@@ -268,7 +268,9 @@ public class Signer {
   /**
    * pre-sign request.
    */
-  public static HttpUrl presignV4(Request request, String region, String accessKey, String secretKey, int expires)
+  public static HttpUrl presignV4(Request request, String region,
+                                  String accessKey, String secretKey,
+                                  Long expires)
     throws NoSuchAlgorithmException, InvalidKeyException {
     String contentSha256 = "UNSIGNED-PAYLOAD";
     DateTime date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(request.header("x-amz-date"));

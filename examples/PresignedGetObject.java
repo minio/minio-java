@@ -20,9 +20,9 @@ import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
+import java.time.Duration;
 
 import org.xmlpull.v1.XmlPullParserException;
-
 
 public class PresignedGetObject {
   public static void main(String[] args)
@@ -32,7 +32,8 @@ public class PresignedGetObject {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    String url = s3Client.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+    String url = s3Client.presignedGetObject("my-bucketname", "my-objectname",
+                                             Duration.ofSeconds(60 * 60 * 24));
     System.out.println(url);
   }
 }

@@ -21,6 +21,7 @@ import java.io.*;
 import java.lang.*;
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
+import java.time.Duration;
 
 import org.xmlpull.v1.XmlPullParserException;
 import org.joda.time.DateTime;
@@ -521,13 +522,14 @@ public class FunctionalTest {
     client.removeObject(bucketName, fileName);
   }
 
-  // Test: presignedGetObject(String bucketName, String objectName, Integer expires)
+  // Test: presignedGetObject(String bucketName, String objectName, Duration expires)
   public static void presignedGetObject_test2() throws Exception {
-    println("Test: presignedGetObject(String bucketName, String objectName, Integer expires)");
+    println("Test: presignedGetObject(String bucketName, String objectName, Duration expires)");
     String fileName = createFile(3 * MB);
     client.putObject(bucketName, fileName, fileName);
 
-    String urlString = client.presignedGetObject(bucketName, fileName, 3600);
+    String urlString = client.presignedGetObject(bucketName, fileName,
+                                                 Duration.ofSeconds(3600));
     Request.Builder requestBuilder = new Request.Builder();
     Request request = requestBuilder
       .url(HttpUrl.parse(urlString))
@@ -587,11 +589,12 @@ public class FunctionalTest {
   }
 
 
-  // Test: presignedPutObject(String bucketName, String objectName, Integer expires)
+  // Test: presignedPutObject(String bucketName, String objectName, Duration expires)
   public static void presignedPutObject_test2() throws Exception {
-    println("Test: presignedPutObject(String bucketName, String objectName, Integer expires)");
+    println("Test: presignedPutObject(String bucketName, String objectName, Duration expires)");
     String fileName = createFile(3 * MB);
-    String urlString = client.presignedPutObject(bucketName, fileName, 3600);
+    String urlString = client.presignedPutObject(bucketName, fileName,
+                                                 Duration.ofSeconds(3600));
 
     Request.Builder requestBuilder = new Request.Builder();
     Request request = requestBuilder
