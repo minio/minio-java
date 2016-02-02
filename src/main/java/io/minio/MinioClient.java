@@ -1122,7 +1122,7 @@ public final class MinioClient {
             this.prefixIterator = null;
 
             try {
-              this.listBucketResult = listObjects(bucketName, marker, prefix, delimiter, 1000);
+              this.listBucketResult = listObjects(bucketName, marker, prefix, delimiter, null);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException e) {
@@ -1222,19 +1222,28 @@ public final class MinioClient {
   }
 
 
-  private ListBucketResult listObjects(String bucketName, String marker, String prefix, String delimiter, int maxKeys)
+  private ListBucketResult listObjects(String bucketName, String marker, String prefix, String delimiter,
+                                       Integer maxKeys)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    if (maxKeys < 0 || maxKeys > 1000) {
-      maxKeys = 1000;
+    Map<String,String> queryParamMap = new HashMap<String,String>();
+
+    if (marker != null) {
+      queryParamMap.put("marker", marker);
     }
 
-    Map<String,String> queryParamMap = new HashMap<String,String>();
-    queryParamMap.put("max-keys", Integer.toString(maxKeys));
-    queryParamMap.put("marker", marker);
-    queryParamMap.put("prefix", prefix);
-    queryParamMap.put("delimiter", delimiter);
+    if (prefix != null) {
+      queryParamMap.put("prefix", prefix);
+    }
+
+    if (delimiter != null) {
+      queryParamMap.put("delimiter", delimiter);
+    }
+
+    if (maxKeys != null) {
+      queryParamMap.put("max-keys", maxKeys.toString());
+    }
 
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
 
