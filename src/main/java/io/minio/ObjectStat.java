@@ -37,7 +37,11 @@ public class ObjectStat {
     this.contentType = contentType;
     this.createdTime = (Date) createdTime.clone();
     this.length = length;
-    this.etag = etag.replaceAll("\"", "");
+    if (etag != null) {
+      this.etag = etag.replaceAll("\"", "");
+    } else {
+      this.etag = "";
+    }
   }
 
 
