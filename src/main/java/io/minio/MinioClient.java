@@ -442,7 +442,11 @@ public final class MinioClient {
     if (md5Hash != null) {
       requestBuilder.header("Content-MD5", md5Hash);
     }
-    requestBuilder.header("Host", url.host());
+    if (url.port() == 80 || url.port() == 443) {
+      requestBuilder.header("Host", url.host());
+    } else {
+      requestBuilder.header("Host", url.host() + ":" + url.port());
+    }
     requestBuilder.header("User-Agent", this.userAgent);
     if (sha256Hash != null) {
       requestBuilder.header("x-amz-content-sha256", sha256Hash);
