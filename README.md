@@ -26,26 +26,30 @@ You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/1
 ```java
 
 import io.minio.MinioClient;
-import io.minio.errors.ClientException;
-import io.minio.messages.ListAllMyBucketsResult;
+import io.minio.messages.Bucket;
+import io.minio.errors.MinioException;
+import java.util.Iterator;
+import java.util.List;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.IOException;
-
 public class HelloListBuckets {
-    public static void main(String[] args) throws IOException, XmlPullParserException, ClientException {
-        // Set s3 endpoint, region is calculated automatically
-        Client s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException,     XmlPullParserException, MinioException {
+        // Create a s3Client.
+        MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
         // list buckets
-        Iterator<Bucket> bucketList = s3Client.listBuckets();
-        while (bucketList.hasNext()) {
-            Bucket bucket = bucketList.next();
-            System.out.println(bucket.getName());
+        List<Bucket> bucketList = s3Client.listBuckets();
+        Iterator<Bucket> bucketIterator = bucketList.iterator();
+
+        while (bucketIterator.hasNext()) {
+            Bucket bucket = bucketIterator.next();
+            System.out.println(bucket.name());
         }
     }
 }
-
 ```
 
 ### Additional Examples
