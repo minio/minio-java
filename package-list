@@ -1,0 +1,4 @@
+io.minio
+io.minio.errors
+io.minio.http
+io.minio.messages
