@@ -168,24 +168,28 @@ public final class MinioClient {
 
 
   /**
-   * Create a new client.
+   * Creates Minio client object.
    *
-   * @param endpoint  request endpoint.  Valid endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *                  Valid endpoints:
-   *                  * https://s3.amazonaws.com
-   *                  * https://s3.amazonaws.com/
-   *                  * https://play.minio.io:9000
-   *                  * http://play.minio.io:9010/
-   *                  * localhost
-   *                  * localhost.localdomain
-   *                  * play.minio.io
-   *                  * 127.0.0.1
-   *                  * 192.168.1.60
-   *                  * ::1
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *
+   * @param endpoint  request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   *
    * @param port      valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
    * @param accessKey access key to access service in endpoint.
    * @param secretKey secret key to access service in endpoint.
-   * @param insecure  to access endpoint, use HTTP if true else HTTPS.
+   * @param insecure  if true, access endpoint using HTTP else access it using HTTPS.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -706,7 +710,8 @@ public final class MinioClient {
 
 
   /**
-   * Set application info to user agent - see http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+   * Sets application's name/version to user agent. For more information about user agent
+   * refer <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">#rfc2616</a>.
    *
    * @param name     your application name
    * @param version  your application version
@@ -724,6 +729,10 @@ public final class MinioClient {
 
   /**
    * Returns metadata of given object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code ObjectStat objectStat = s3Client.statObject("my-bucketname", "my-objectname");
+   * System.out.println(objectStat); }</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -750,13 +759,22 @@ public final class MinioClient {
 
 
   /**
-   * Returns an InputStream containing the object. The InputStream must be closed when
-   * complete or the connection will remain open.
+   * Returns an {@link InputStream} containing the object. The InputStream must be closed
+   * after use else the connection will remain open.
+   *
+   * <p><b>Example:</b>
+   * <pre>{@code InputStream stream = s3Client.getObject("my-bucketname", "my-objectname");
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
    *
    * @param bucketName Bucket name
    * @param objectName Object name in the bucket
    *
-   * @return an InputStream containing the object. Close the InputStream when done.
+   * @return {@link InputStream} containing the object
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoResponseException         upon no response from server
@@ -774,14 +792,24 @@ public final class MinioClient {
   }
 
 
-  /** Returns an InputStream containing a subset of the object. The InputStream must be
-   *  closed or the connection will remain open.
+  /**
+   * Returns an {@link InputStream} containing a subset of the object. The InputStream must be
+   * closed after use else the connection will remain open.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code InputStream stream = s3Client.getObject("my-bucketname", "my-objectname", 1024L);
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
    *
    * @param bucketName  Bucket name.
    * @param objectName  Object name in the bucket.
    * @param offset      Offset to read at.
    *
-   * @return an InputStream containing the object. Close the InputStream when done.
+   * @return {@link InputStream} containing the object.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoResponseException         upon no response from server
@@ -800,15 +828,24 @@ public final class MinioClient {
 
 
   /**
-   * Returns an InputStream containing a subset of the object. The InputStream must be
-   * closed or the connection will remain open.
+   * Returns an {@link InputStream} containing a subset of the object. The InputStream must be
+   * closed after use else the connection will remain open.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code InputStream stream = s3Client.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
    *
    * @param bucketName  Bucket name.
    * @param objectName  Object name in the bucket.
    * @param offset      Offset to read at.
    * @param length      Length to read.
    *
-   * @return an InputStream containing the object. Close the InputStream when done.
+   * @return {@link InputStream} containing the object.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoResponseException         upon no response from server
@@ -843,7 +880,10 @@ public final class MinioClient {
 
 
   /**
-   * Get object and store it to given file name.
+   * Downloads object and store it to given file name.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code s3Client.getObject("my-bucketname", "my-objectname", "photo.jpg"); }</pre>
    *
    * @param bucketName  Bucket name.
    * @param objectName  Object name in the bucket.
@@ -931,11 +971,18 @@ public final class MinioClient {
   }
 
 
-  /** Returns an presigned URL containing the object.
+  /**
+   * Returns an presigned URL containing the object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String url = s3Client.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name
    * @param objectName  Object name in the bucket
    * @param expires     object expiration
+   *
+   * @return string contains URL to download the object
    *
    * @throws InvalidBucketNameException   upon an invalid bucket name
    * @throws InvalidKeyException          upon an invalid access key or secret key
@@ -962,10 +1009,17 @@ public final class MinioClient {
   }
 
 
-  /** Returns an presigned URL containing the object.
+  /**
+   * Returns an presigned URL containing the object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String url = s3Client.presignedGetObject("my-bucketname", "my-objectname");
+   * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name
    * @param objectName  Object name in the bucket
+   *
+   * @return string contains URL to download the object
    *
    * @throws IOException     upon connection error
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
@@ -979,11 +1033,18 @@ public final class MinioClient {
   }
 
 
-  /** Returns an presigned URL for PUT.
+  /**
+   * Returns an presigned URL for PUT.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String url = s3Client.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name
    * @param objectName  Object name in the bucket
    * @param expires     object expiration
+   *
+   * @return string contains URL to upload the object
    *
    * @throws InvalidBucketNameException   upon an invalid bucket name
    * @throws InvalidKeyException          upon an invalid access key or secret key
@@ -1009,10 +1070,17 @@ public final class MinioClient {
   }
 
 
-  /** Returns an presigned URL for PUT.
+  /**
+   * Returns an presigned URL for PUT.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String url = s3Client.presignedPutObject("my-bucketname", "my-objectname");
+   * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name
    * @param objectName  Object name in the bucket
+   *
+   * @return string contains URL to upload the object
    *
    * @throws IOException     upon connection error
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
@@ -1026,10 +1094,23 @@ public final class MinioClient {
   }
 
 
-  /** Returns an Map for POST form data.
+  /**
+   * Returns string map for given {@link PostPolicy}.
    *
-   * @param policy new PostPolicy
+   * </p><b>Example:</b><br>
+   * <pre>{@code PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
+   * policy.setContentType("image/png");
+   * Map<String,String> formData = s3Client.presignedPostPolicy(policy);
+   * System.out.print("curl -X POST ");
+   * for (Map.Entry<String,String> entry : formData.entrySet()) {
+   *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+   * }
+   * System.out.println(" -F file=@/tmp/userpic.png https://my-bucketname.s3.amazonaws.com/"); }</pre>
    *
+   * @param policy Post policy
+   * @return Map of strings to construct form-data
+   *
+   * @see PostPolicy
    */
   public Map<String, String> presignedPostPolicy(PostPolicy policy)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -1040,7 +1121,11 @@ public final class MinioClient {
   }
 
 
-  /** Remove an object from a bucket.
+  /**
+   * Removes an object from a bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code s3Client.removeObject("my-bucketname", "my-objectname"); }</pre>
    *
    * @param bucketName Bucket name
    * @param objectName Object name in the bucket
@@ -1061,12 +1146,11 @@ public final class MinioClient {
 
 
   /**
-   * listObjects is a wrapper around listObjects(bucketName, null)
+   * Returns all object information of given bucket name.
    *
    * @param bucketName Bucket name
    *
    * @return an iterator of Items.
-   * @see #listObjects(String, String, boolean)
    */
   public Iterable<Result<Item>> listObjects(final String bucketName) throws XmlPullParserException {
     return listObjects(bucketName, null);
@@ -1074,13 +1158,12 @@ public final class MinioClient {
 
 
   /**
-   * listObjects is a wrapper around listObjects(bucketName, prefix, true)
+   * Returns all object information those has given prefix and bucket name.
    *
    * @param bucketName Bucket name
    * @param prefix     Prefix string.  List objects whose name starts with `prefix`
    *
    * @return an iterator of Items.
-   * @see #listObjects(String, String, boolean)
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix)
     throws XmlPullParserException {
@@ -1090,6 +1173,15 @@ public final class MinioClient {
 
 
   /**
+   * Returns {@code Iterable<Result><Item>>} of object information.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code Iterable<Result<Item>> myObjects = s3Client.listObjects("my-bucketname");
+   * for (Result<Item> result : myObjects) {
+   *   Item item = result.get();
+   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * } }</pre>
+   *
    * @param bucketName Bucket name
    * @param prefix     Prefix string.  List objects whose name starts with `prefix`
    * @param recursive when false, emulates a directory structure where each listing returned is either a full object
@@ -1097,6 +1189,9 @@ public final class MinioClient {
    *                  '/' will be merged into one entry.
    *
    * @return an iterator of Items.
+   *
+   * @see #listObjects(String bucketName)
+   * @see #listObjects(String bucketName, String prefix)
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive) {
     return new Iterable<Result<Item>>() {
@@ -1263,7 +1358,13 @@ public final class MinioClient {
 
 
   /**
-   * List buckets owned by the current user.
+   * Returns all bucket information owned by the current user.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code List<Bucket> bucketList = s3Client.listBuckets();
+   * for (Bucket bucket : bucketList) {
+   *   System.out.println(bucket.creationDate() + ", " + bucket.name());
+   * } }</pre>
    *
    * @return List of bucket type.
    *
@@ -1286,7 +1387,15 @@ public final class MinioClient {
 
 
   /**
-   * Test whether a bucket exists and the user has at least read access.
+   * Checks if given bucket exist and is having read access.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code boolean found = s3Client.bucketExists("my-bucketname");
+   * if (found) {
+   *   System.out.println("my-bucketname exists");
+   * } else {
+   *   System.out.println("my-bucketname does not exist");
+   * } }</pre>
    *
    * @param bucketName Bucket name
    *
@@ -1317,7 +1426,7 @@ public final class MinioClient {
 
 
   /**
-   * Create a bucket with default region and ACL.
+   * Creates a bucket with default region and ACL.
    *
    * @param bucketName Bucket name
    *
@@ -1337,7 +1446,7 @@ public final class MinioClient {
 
 
   /**
-   * Create a bucket with given region and default ACL.
+   * Creates a bucket with given region and default ACL.
    *
    * @param bucketName Bucket name
    * @param region     region in which the bucket will be created
@@ -1358,7 +1467,7 @@ public final class MinioClient {
 
 
   /**
-   * Create a bucket with given ACL and default region.
+   * Creates a bucket with given ACL and default region.
    *
    * @param bucketName Bucket name
    * @param acl        Canned ACL
@@ -1379,7 +1488,11 @@ public final class MinioClient {
 
 
   /**
-   * Create a bucket with given region and ACL.
+   * Creates a bucket with given region and ACL.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code s3Client.makeBucket("my-bucketname");
+   * System.out.println("my-bucketname is created successfully"); }</pre>
    *
    * @param bucketName Bucket name
    * @param region     region in which the bucket will be created
@@ -1418,12 +1531,16 @@ public final class MinioClient {
 
 
   /**
-   * Remove a bucket with a given name.
+   * Removes a bucket.
    * <p>
    * NOTE: -
    * All objects (including all object versions and delete markers) in the bucket
    * must be deleted prior, this API will not recursively delete objects
    * </p>
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code s3Client.removeBucket("my-bucketname");
+   * System.out.println("my-bucketname is removed successfully"); }</pre>
    *
    * @param bucketName Bucket name
    *
@@ -1443,7 +1560,11 @@ public final class MinioClient {
 
 
   /**
-   * Get the bucket's ACL.
+   * Returns {@link Acl} of given bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code Acl acl = s3Client.getBucketAcl("my-bucketname");
+   * System.out.println(acl); }</pre>
    *
    * @param bucketName Bucket name
    *
@@ -1511,7 +1632,11 @@ public final class MinioClient {
 
 
   /**
-   * Set the bucket's ACL.
+   * Sets {@link Acl} to given bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code s3Client.setBucketAcl("my-bucketname", Acl.PUBLIC_READ_WRITE);
+   * System.out.println("Canned ACL " + Acl.PUBLIC_READ_WRITE + " is set successfully to my-bucketname"); }</pre>
    *
    * @param bucketName Bucket name
    * @param acl        Canned ACL
@@ -1544,7 +1669,7 @@ public final class MinioClient {
 
 
   /**
-   * Create an object.
+   * Uploads given file as object.
    * <p>
    * If the object is larger than 5MB, the client will automatically use a multipart session.
    * </p>
@@ -1596,7 +1721,7 @@ public final class MinioClient {
 
 
   /**
-   * Create an object.
+   * Uploads data from given stream as object.
    * <p>
    * If the object is larger than 5MB, the client will automatically use a multipart session.
    * </p>
@@ -1610,6 +1735,31 @@ public final class MinioClient {
    * If the multipart session fails, the user is responsible for resuming or removing the session.
    * </p>
    *
+   * </p><b>Example:</b><br>
+   * <pre>{@code StringBuilder builder = new StringBuilder();
+   * for (int i = 0; i < 1000; i++) {
+   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *   builder.append("(29 letters)\n");
+   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *   builder.append("(31 letters)\n");
+   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *   builder.append("(39 letters)\n");
+   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *   builder.append("computers after System 7.\n");
+   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *   builder.append("---\n");
+   * }
+   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   * // create object
+   * s3Client.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
+   * bais.close();
+   * System.out.println("my-bucketname is uploaded successfully"); }</pre>
+   *
    * @param bucketName  Bucket name
    * @param objectName  Object name to create in the bucket
    * @param stream      stream to upload
@@ -1622,6 +1772,8 @@ public final class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -1742,7 +1894,7 @@ public final class MinioClient {
 
 
   /**
-   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucketName, null, true)
+   * Returns {@code Iterable<Result><Upload>>} of incomplete uploads of given bucket name.
    *
    * @param bucketName Bucket name
    *
@@ -1755,7 +1907,7 @@ public final class MinioClient {
 
 
   /**
-   * listIncompleteUploads is a wrapper around listIncompleteUploads(bucketName, prefix, true)
+   * Returns {@code Iterable<Result><Upload>>} of incomplete uploads of given bucket name and prefix.
    *
    * @param bucketName Bucket name
    * @param prefix filters the list of uploads to include only those that start with prefix
@@ -1770,6 +1922,15 @@ public final class MinioClient {
 
 
   /**
+   * Returns {@code Iterable<Result><Upload>>} of incomplete uploads.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code Iterable<Result<Upload>> myObjects = s3Client.listIncompleteUploads("my-bucketname");
+   * for (Result<Upload> result : myObjects) {
+   *   Upload upload = result.get();
+   *   System.out.println(upload.uploadId() + ", " + upload.objectName());
+   * } }</pre>
+   *
    * @param bucketName  Bucket name
    * @param prefix      Prefix string.  List objects whose name starts with `prefix`
    * @param recursive when false, emulates a directory structure where each listing returned is either a full object
@@ -1777,6 +1938,9 @@ public final class MinioClient {
    *                  '/' will be merged into one entry.
    *
    * @return an iterator of Upload.
+   *
+   * @see #listIncompleteUploads(String bucketName)
+   * @see #listIncompleteUploads(String bucketName, String prefix)
    */
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive) {
     return listIncompleteUploads(bucketName, prefix, recursive, true);
@@ -2109,7 +2273,11 @@ public final class MinioClient {
 
 
   /**
-   * Remove active incomplete multipart upload of an object.
+   * Removes incomplete multipart upload of given object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code s3Client.removeIncompleteUpload("my-bucketname", "my-objectname");
+   * System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname"); }</pre>
    *
    * @param bucketName Bucket name
    * @param objectName Object name in the bucket
@@ -2189,7 +2357,11 @@ public final class MinioClient {
 
 
   /**
-   * enable trace of HTTP calls and written to traceStream.
+   * Enables HTTP call tracing and written to traceStream.
+   *
+   * @param traceStream {@link OutputStream} for writing HTTP call tracing.
+   *
+   * @see #traceOff
    */
   public void traceOn(OutputStream traceStream) throws NullPointerException {
     if (traceStream == null) {
@@ -2200,6 +2372,11 @@ public final class MinioClient {
   }
 
 
+  /**
+   * Disables HTTP call tracing previously enabled.
+   *
+   * @see #traceOn
+   */
   public void traceOff() throws IOException {
     this.traceStream = null;
   }
