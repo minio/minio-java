@@ -32,8 +32,26 @@ a[name]:hover {
     color:#353833;
 }
 pre {
-    font-family:'DejaVu Sans Mono', monospace;
-    font-size:14px;
+    display: block;
+    padding: 10px;    
+    margin: 0 0 10.5px;
+    font-family:'DejaVu Sans Mono', monospace;    
+    font-size: 14px;
+    line-height: 1.42857143;
+    word-break: break-all;
+    word-wrap: break-word;
+    color: #7b8a8b;
+    background-color: #ecf0f1;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+}
+pre code {
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+    white-space: pre-wrap;
+    background-color: transparent;
+    border-radius: 0;
 }
 h1 {
     font-size:20px;
