@@ -387,7 +387,6 @@ public final class MinioClient {
 
         @Override
         public void writeTo(BufferedSink sink) throws IOException {
-          Source source = null;
           byte[] data = null;
 
           if (body instanceof InputStream) {
@@ -1399,7 +1398,7 @@ public final class MinioClient {
       headerMap.put("x-amz-acl", acl.toString());
     }
 
-    String configString = null;
+    String configString;
     if (region == null || "us-east-1".equals(region)) {
       // for 'us-east-1', location constraint is not required.  for more info
       // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
@@ -2142,7 +2141,7 @@ public final class MinioClient {
       return;
     }
 
-    long bytesSkipped = 0;
+    long bytesSkipped;
     long totalBytesSkipped = 0;
 
     while ((bytesSkipped = stream.skip(n - totalBytesSkipped)) >= 0) {
