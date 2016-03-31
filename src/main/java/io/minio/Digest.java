@@ -88,13 +88,13 @@ public class Digest {
       throw new IllegalArgumentException("unsupported input stream object");
     }
 
-    MessageDigest md5Digest = null;
+    MessageDigest md5Digest;
     md5Digest = MessageDigest.getInstance("MD5");
 
     // 16KiB buffer for optimization
     byte[] buf = new byte[16384];
     int bytesToRead = buf.length;
-    int bytesRead = 0;
+    int bytesRead;
     int totalBytesRead = 0;
     int length = len;
     long pos = 0;
@@ -173,8 +173,8 @@ public class Digest {
       throw new IllegalArgumentException("unsupported input stream object");
     }
 
-    MessageDigest sha256Digest = null;
-    MessageDigest md5Digest = null;
+    MessageDigest sha256Digest;
+    MessageDigest md5Digest;
 
     sha256Digest = MessageDigest.getInstance("SHA-256");
     md5Digest = MessageDigest.getInstance("MD5");
@@ -182,7 +182,7 @@ public class Digest {
     // 16KiB buffer for optimization
     byte[] buf = new byte[16384];
     int bytesToRead = buf.length;
-    int bytesRead = 0;
+    int bytesRead;
     int totalBytesRead = 0;
     int length = len;
     long pos = 0;
