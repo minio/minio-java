@@ -19,7 +19,7 @@ package io.minio.errors;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class InvalidEndpointException extends MinioException {
-  private String endpoint;
+  private final String endpoint;
 
 
   public InvalidEndpointException(String endpoint, String message) {

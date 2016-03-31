@@ -22,7 +22,7 @@ import java.util.Map;
 
 public enum AwsS3Endpoints {
   INSTANCE;
-  private final Map<String, String> endpoints = new Hashtable<String, String>();
+  private final Map<String, String> endpoints = new Hashtable<>();
 
   AwsS3Endpoints() {
     // ap-northeast-1

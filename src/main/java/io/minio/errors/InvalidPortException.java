@@ -19,7 +19,7 @@ package io.minio.errors;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class InvalidPortException extends MinioException {
-  private int port;
+  private final int port;
 
 
   public InvalidPortException(int port, String message) {

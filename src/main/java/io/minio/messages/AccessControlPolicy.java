@@ -47,7 +47,7 @@ public class AccessControlPolicy extends XmlEntity {
    */
   public List<Grant> grants() {
     if (accessControlList == null) {
-      return new LinkedList<Grant>();
+      return new LinkedList<>();
     }
 
     return accessControlList.grantList();

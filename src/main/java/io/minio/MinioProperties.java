@@ -25,7 +25,7 @@ import java.util.jar.Manifest;
 
 enum MinioProperties {
   INSTANCE;
-  private final AtomicReference<String> version = new AtomicReference<String>(null);
+  private final AtomicReference<String> version = new AtomicReference<>(null);
 
   public String getVersion() {
     String result = version.get();

@@ -96,7 +96,7 @@ public class ListBucketResult extends XmlEntity {
    */
   public List<Prefix> commonPrefixes() {
     if (commonPrefixes == null) {
-      return new LinkedList<Prefix>();
+      return new LinkedList<>();
     }
     return commonPrefixes;
   }

@@ -583,7 +583,7 @@ public final class MinioClient {
            InternalException {
     if (bucketName != null && "s3.amazonaws.com".equals(this.baseUrl.host()) && this.accessKey != null
           && this.secretKey != null && BucketRegionCache.INSTANCE.exists(bucketName) == false) {
-      Map<String,String> queryParamMap = new HashMap<String,String>();
+      Map<String,String> queryParamMap = new HashMap<>();
       queryParamMap.put("location", null);
 
       HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null,
@@ -826,7 +826,7 @@ public final class MinioClient {
       throw new InvalidArgumentException("length should be greater than zero");
     }
 
-    Map<String,String> headerMap = new Hashtable<String,String>();
+    Map<String,String> headerMap = new Hashtable<>();
     if (length != null) {
       headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
     } else {
@@ -1130,7 +1130,7 @@ public final class MinioClient {
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException e) {
-              this.error = new Result<Item>(null, e);
+              this.error = new Result<>(null, e);
             } finally {
               if (this.listBucketResult != null) {
                 this.itemIterator = this.listBucketResult.contents().iterator();
@@ -1196,7 +1196,7 @@ public final class MinioClient {
             if (this.itemIterator.hasNext()) {
               Item item = this.itemIterator.next();
               this.lastObjectName = item.objectName();
-              return new Result<Item>(item, null);
+              return new Result<>(item, null);
             }
 
             if (this.prefixIterator.hasNext()) {
@@ -1209,7 +1209,7 @@ public final class MinioClient {
                 item = null;
               }
 
-              return new Result<Item>(item, null);
+              return new Result<>(item, null);
             }
 
             this.completed = true;
@@ -1231,7 +1231,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
 
     if (marker != null) {
       queryParamMap.put("marker", marker);
@@ -1392,7 +1392,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> headerMap = new HashMap<String,String>();
+    Map<String,String> headerMap = new HashMap<>();
     if (acl == null) {
       headerMap.put("x-amz-acl", Acl.PRIVATE.toString());
     } else {
@@ -1456,7 +1456,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("acl", "");
 
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
@@ -1529,10 +1529,10 @@ public final class MinioClient {
       throw new InvalidAclNameException("(null) ACL");
     }
 
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("acl", "");
 
-    Map<String,String> headerMap = new HashMap<String,String>();
+    Map<String,String> headerMap = new HashMap<>();
     headerMap.put("x-amz-acl", acl.toString());
 
     executePut(bucketName, null, headerMap, queryParamMap, "", 0);
@@ -1635,7 +1635,7 @@ public final class MinioClient {
            InternalException {
     Map<String,String> queryParamMap = null;
     if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
-      queryParamMap = new HashMap<String,String>();
+      queryParamMap = new HashMap<>();
       queryParamMap.put("partNumber", Integer.toString(partNumber));
       queryParamMap.put("uploadId", uploadId);
     }
@@ -1801,7 +1801,7 @@ public final class MinioClient {
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException e) {
-              this.error = new Result<Upload>(null, e);
+              this.error = new Result<>(null, e);
             } finally {
               if (this.listMultipartUploadsResult != null) {
                 this.uploadIterator = this.listMultipartUploadsResult.uploads().iterator();
@@ -1893,7 +1893,7 @@ public final class MinioClient {
                 upload.setAggregatedPartSize(aggregatedPartSize);
               }
 
-              return new Result<Upload>(upload, null);
+              return new Result<>(upload, null);
             }
 
             this.completed = true;
@@ -1919,7 +1919,7 @@ public final class MinioClient {
       maxUploads = 1000;
     }
 
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploads", "");
     queryParamMap.put("max-uploads", Integer.toString(maxUploads));
     queryParamMap.put("prefix", prefix);
@@ -1940,14 +1940,14 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> headerMap = new Hashtable<String,String>();
+    Map<String,String> headerMap = new Hashtable<>();
     if (contentType != null) {
       headerMap.put("Content-Type", contentType);
     } else {
       headerMap.put("Content-Type", "application/octet-stream");
     }
 
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploads", "");
 
     HttpResponse response = executePost(bucketName, objectName, headerMap, queryParamMap, "");
@@ -1963,7 +1963,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploadId", uploadId);
 
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
@@ -1994,7 +1994,7 @@ public final class MinioClient {
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException e) {
-              this.error = new Result<Part>(null, e);
+              this.error = new Result<>(null, e);
             } finally {
               if (this.listPartsResult != null) {
                 this.partIterator = this.listPartsResult.partList().iterator();
@@ -2052,7 +2052,7 @@ public final class MinioClient {
             }
 
             if (this.partIterator.hasNext()) {
-              return new Result<Part>(this.partIterator.next(), null);
+              return new Result<>(this.partIterator.next(), null);
             }
 
             this.completed = true;
@@ -2073,7 +2073,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploadId", uploadId);
     if (partNumberMarker > 0) {
       queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
@@ -2092,7 +2092,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> queryParamMap = new HashMap<String,String>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploadId", uploadId);
     executeDelete(bucketName, objectName, queryParamMap);
   }

@@ -89,7 +89,7 @@ public class ListMultipartUploadsResult extends XmlEntity {
    */
   public List<Upload> uploads() {
     if (uploads == null) {
-      return new ArrayList<Upload>();
+      return new ArrayList<>();
     }
     return uploads;
   }

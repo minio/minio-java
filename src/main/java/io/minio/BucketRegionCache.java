@@ -22,7 +22,7 @@ import java.util.Map;
 
 public enum BucketRegionCache {
   INSTANCE;
-  private final Map<String, String> regionMap = new Hashtable<String, String>();
+  private final Map<String, String> regionMap = new Hashtable<>();
 
 
   /**

@@ -68,7 +68,7 @@ public class Signer {
   //
   //      Is skipped for obvious reasons
   //
-  private static final Set<String> IGNORED_HEADERS = new HashSet<String>();
+  private static final Set<String> IGNORED_HEADERS = new HashSet<>();
 
   static {
     IGNORED_HEADERS.add("authorization");
@@ -125,7 +125,7 @@ public class Signer {
 
 
   private void setCanonicalHeaders() {
-    this.canonicalHeaders = new TreeMap<String,String>();
+    this.canonicalHeaders = new TreeMap<>();
 
     Headers headers = this.request.headers();
     for (String name : headers.names()) {
@@ -140,7 +140,7 @@ public class Signer {
 
 
   private void setCanonicalQueryString() {
-    Map<String,String> signedQueryParams = new TreeMap<String,String>();
+    Map<String,String> signedQueryParams = new TreeMap<>();
 
     String encodedQuery = this.url.encodedQuery();
     if (encodedQuery == null) {
@@ -239,7 +239,7 @@ public class Signer {
 
 
   private void setPresignCanonicalRequest(int expires) throws NoSuchAlgorithmException {
-    this.canonicalHeaders = new TreeMap<String,String>();
+    this.canonicalHeaders = new TreeMap<>();
     this.canonicalHeaders.put("host", this.request.headers().get("Host"));
     this.signedHeaders = "host";
 

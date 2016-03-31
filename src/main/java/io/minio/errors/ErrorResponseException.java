@@ -25,8 +25,8 @@ import io.minio.ErrorCode;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ErrorResponseException extends MinioException {
-  private ErrorResponse errorResponse;
-  private Response response;
+  private final ErrorResponse errorResponse;
+  private final Response response;
 
 
   /**

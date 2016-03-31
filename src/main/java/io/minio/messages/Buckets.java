@@ -26,7 +26,7 @@ import java.util.List;
 @SuppressWarnings("WeakerAccess")
 public class Buckets extends XmlEntity {
   @Key("Bucket")
-  private List<Bucket> bucketList = new LinkedList<Bucket>();
+  private List<Bucket> bucketList = new LinkedList<>();
 
 
   public Buckets() throws XmlPullParserException {
