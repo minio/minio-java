@@ -47,7 +47,7 @@ public class ListAllMyBucketsResult extends XmlEntity {
    */
   public List<Bucket> buckets() {
     if (buckets == null) {
-      return new LinkedList<Bucket>();
+      return new LinkedList<>();
     }
 
     return buckets.bucketList();

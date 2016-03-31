@@ -152,8 +152,8 @@ public class PostPolicy {
    */
   public Map<String,String> formData(String accessKey, String secretKey)
     throws NoSuchAlgorithmException, InvalidKeyException {
-    ArrayList<String[]> conditions = new ArrayList<String[]>();
-    Map<String, String> formData = new HashMap<String, String>();
+    ArrayList<String[]> conditions = new ArrayList<>();
+    Map<String, String> formData = new HashMap<>();
 
     conditions.add(new String[]{"eq", "$bucket", this.bucketName});
     formData.put("bucket", this.bucketName);

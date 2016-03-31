@@ -103,7 +103,7 @@ public class ListPartsResult extends XmlEntity {
    */
   public List<Part> partList() {
     if (partList == null) {
-      return new LinkedList<Part>();
+      return new LinkedList<>();
     }
 
     return partList;

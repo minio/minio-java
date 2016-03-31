@@ -18,7 +18,7 @@ package io.minio.errors;
 
 
 public class InvalidExpiresRangeException extends MinioException {
-  private int expires;
+  private final int expires;
 
 
   public InvalidExpiresRangeException(int expires, String message) {
