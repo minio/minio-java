@@ -72,4 +72,6 @@ public class HeaderParser {
       }
     }
   }
+
+  private HeaderParser() {}
 }

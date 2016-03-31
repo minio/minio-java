@@ -228,4 +228,6 @@ public class Digest {
 
     return hashes;
   }
+
+  private Digest() {}
 }

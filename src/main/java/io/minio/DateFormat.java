@@ -33,4 +33,6 @@ public class DateFormat {
 
   public static final DateTimeFormatter HTTP_HEADER_DATE_FORMAT =
       DateTimeFormat.forPattern("EEE',' dd MMM yyyy HH':'mm':'ss zzz").withZoneUTC();
+
+  private DateFormat() {}
 }
