@@ -596,9 +596,7 @@ public final class MinioClient {
       while (xpp.getEventType() != xpp.END_DOCUMENT) {
         if (xpp.getEventType() ==  xpp.START_TAG && xpp.getName() == "LocationConstraint") {
           xpp.next();
-          if (xpp.getEventType() == xpp.TEXT) {
-            location = xpp.getText();
-          }
+          location = getText(xpp, location);
           break;
         }
         xpp.next();
@@ -622,6 +620,13 @@ public final class MinioClient {
       // Add the new location.
       BucketRegionCache.INSTANCE.add(bucketName, region);
     }
+  }
+
+  private String getText(XmlPullParser xpp, String location) throws XmlPullParserException {
+    if (xpp.getEventType() == xpp.TEXT) {
+      location = xpp.getText();
+    }
+    return location;
   }
 
 
@@ -1692,10 +1697,7 @@ public final class MinioClient {
           totalParts[partNumber - 1] = new Part(part.partNumber(), part.etag());
           skipStream(data, expectedReadSize);
 
-          part = null;
-          if (existingParts.hasNext()) {
-            part = existingParts.next().get();
-          }
+          part = getPart(existingParts);
 
           continue;
         }
@@ -1706,6 +1708,15 @@ public final class MinioClient {
     }
 
     completeMultipart(bucketName, objectName, uploadId, totalParts);
+  }
+
+  private Part getPart(Iterator<Result<Part>> existingParts) throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Part part;
+    part = null;
+    if (existingParts.hasNext()) {
+      part = existingParts.next().get();
+    }
+    return part;
   }
 
 
