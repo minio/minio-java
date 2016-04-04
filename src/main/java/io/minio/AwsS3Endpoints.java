@@ -16,13 +16,13 @@
 
 package io.minio;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
 
 public enum AwsS3Endpoints {
   INSTANCE;
-  private final Map<String, String> endpoints = new Hashtable<>();
+  private final Map<String, String> endpoints = new HashMap<>();
 
   AwsS3Endpoints() {
     // ap-northeast-1

@@ -825,7 +825,7 @@ public final class MinioClient {
       throw new InvalidArgumentException("length should be greater than zero");
     }
 
-    Map<String,String> headerMap = new Hashtable<>();
+    Map<String,String> headerMap = new HashMap<>();
     if (length != null) {
       headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
     } else {
@@ -1939,7 +1939,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> headerMap = new Hashtable<>();
+    Map<String,String> headerMap = new HashMap<>();
     if (contentType != null) {
       headerMap.put("Content-Type", contentType);
     } else {

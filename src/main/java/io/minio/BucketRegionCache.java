@@ -16,14 +16,13 @@
 
 package io.minio;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
 
 public enum BucketRegionCache {
   INSTANCE;
-  private final Map<String, String> regionMap = new Hashtable<>();
-
+  private final Map<String, String> regionMap = new HashMap<>();
 
   /**
    * returns AWS region for given bucket name.
