@@ -34,21 +34,8 @@ enum MinioProperties {
         if (version.get() == null) {
           try {
             ClassLoader classLoader = getClass().getClassLoader();
-            if (classLoader != null) {
-              Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
-              while (resources.hasMoreElements()) {
-                Manifest manifest = new Manifest(resources.nextElement().openStream());
-                for (Object k : manifest.getMainAttributes().keySet()) {
-                  String versionString = "Minio-Client-Java-Version";
-                  if (k.toString().equals(versionString)) {
-                    version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
-                  }
-                }
-              }
-            }
-            if (version.get() == null) {
-              version.set("dev");
-            }
+            setMinioClientJavaVersion(classLoader);
+            setDevelopmentVersion();
           } catch (IOException e) {
             version.set("unknown");
           }
@@ -57,5 +44,26 @@ enum MinioProperties {
       }
     }
     return result;
+  }
+
+  private void setDevelopmentVersion() {
+    if (version.get() == null) {
+      version.set("dev");
+    }
+  }
+
+  private void setMinioClientJavaVersion(ClassLoader classLoader) throws IOException {
+    if (classLoader != null) {
+      Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
+      while (resources.hasMoreElements()) {
+        Manifest manifest = new Manifest(resources.nextElement().openStream());
+        for (Object k : manifest.getMainAttributes().keySet()) {
+          String versionString = "Minio-Client-Java-Version";
+          if (k.toString().equals(versionString)) {
+            version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
+          }
+        }
+      }
+    }
   }
 }

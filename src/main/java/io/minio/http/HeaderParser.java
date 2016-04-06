@@ -21,15 +21,20 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.annotation.Annotation;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.squareup.okhttp.Headers;
 
 
 public class HeaderParser {
+  private static final Logger LOGGER = Logger.getLogger(HeaderParser.class.getName());
+
   /**
    * method to set destination from Headers object.
    */
   public static void set(Headers headers, Object destination) {
+
     Field[] publicFields;
     Field[] privateFields;
     Field[] fields;
@@ -64,11 +69,10 @@ public class HeaderParser {
         }
       } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException
                | IllegalArgumentException e) {
-        // TODO: log the error than printing to stdout
-        System.out.println("exception occured: " + e);
-        System.out.println("setter: " + setter);
-        System.out.println("annotation: " + value);
-        System.out.println("value: " + headers.get(value));
+        LOGGER.log(Level.SEVERE, "exception occured: ", e);
+        LOGGER.log(Level.INFO, "setter: " + setter);
+        LOGGER.log(Level.INFO, "annotation: " + value);
+        LOGGER.log(Level.INFO, "value: " + headers.get(value));
       }
     }
   }
