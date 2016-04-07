@@ -155,7 +155,7 @@ System.out.println(acl);
 ---------------------------------------
 <a name="setBucketAcl">
 #### setBucketAcl(String bucketName, Acl acl)
-Sets Acl to given bucket.
+Sets ACL to given bucket.
 
 __Arguments__
 * `bucketName` : Bucket name
@@ -199,7 +199,7 @@ for (Result<Item> result : myObjects) {
 ---------------------------------------
 <a name="listIncompleteUploads">
 #### listIncompleteUploads(String bucketName, String prefix, boolean recursive)
-Returns Iterable<Result><Upload>> of incomplete uploads.
+Returns `Iterable<Result><Upload>>` of incomplete uploads.
 
 __Arguments__
 * `bucketName` : Bucket name
@@ -454,7 +454,7 @@ System.out.println("successfully removed all incomplete upload session of my-buc
 ---------------------------------------
 ### Presigned operations
 <a name="presignedGetObject">
-#### public String presignedGetObject(String bucketName, String objectName, Integer expires)
+#### presignedGetObject(String bucketName, String objectName, Integer expires)
 Returns an presigned URL containing the object.
 
 __Arguments__
@@ -517,7 +517,7 @@ __Throws__
 * `NoSuchAlgorithmException` : upon requested algorithm was not found during signature calculation
 
 __Return value__
-* Map<String,String> - Map of strings to construct form-data
+* `Map<String,String>` - Map of strings to construct form-data
 
 __Example__
 ```java
@@ -530,3 +530,4 @@ for (Map.Entry<String,String> entry : formData.entrySet()) {
 }
 System.out.println(" -F file=@/tmp/userpic.png https://my-bucketname.s3.amazonaws.com/");
 ```
+---------------------------------------
