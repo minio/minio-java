@@ -28,7 +28,6 @@ import com.squareup.okhttp.Response;
 import com.squareup.okhttp.MediaType;
 import okio.BufferedSink;
 import okio.Okio;
-import okio.Source;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlPullParserException;
@@ -1862,7 +1861,10 @@ public final class MinioClient {
     completeMultipart(bucketName, objectName, uploadId, totalParts);
   }
 
-  private Part getPart(Iterator<Result<Part>> existingParts) throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+  private Part getPart(Iterator<Result<Part>> existingParts)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
     Part part;
     part = null;
     if (existingParts.hasNext()) {
