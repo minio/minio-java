@@ -17,15 +17,15 @@ Downloading https://services.gradle.org/distributions/gradle-2.5-bin.zip
 BUILD SUCCESSFUL
 ...
 $ ls build/libs/
-[2015-11-27 19:44:07 PST] 6.6MiB minio-1.0.1-all.jar
-[2015-11-27 19:43:59 PST] 182KiB minio-1.0.1-javadoc.jar
-[2015-11-27 19:44:08 PST]  53KiB minio-1.0.1-sources.jar
-[2015-11-27 19:43:47 PST]  64KiB minio-1.0.1.jar
+[2015-11-27 19:44:07 PST] 6.6MiB minio-1.0.2-all.jar
+[2015-11-27 19:43:59 PST] 182KiB minio-1.0.2-javadoc.jar
+[2015-11-27 19:44:08 PST]  53KiB minio-1.0.2-sources.jar
+[2015-11-27 19:43:47 PST]  64KiB minio-1.0.2.jar
 $ cd minio-java/examples
-$ cp ../build/libs/minio-1.0.1-all.jar .
+$ cp ../build/libs/minio-1.0.2-all.jar .
 [ edit ListBuckets.java ]
-$ javac -cp 'minio-1.0.1-all.jar' ListBuckets.java
-$ java -cp '.:minio-1.0.1-all.jar' ListBuckets
+$ javac -cp 'minio-1.0.2-all.jar' ListBuckets.java
+$ java -cp '.:minio-1.0.2-all.jar' ListBuckets
 bucket1
 bucket2
 ....
@@ -46,15 +46,15 @@ Downloading https://services.gradle.org/distributions/gradle-2.5-bin.zip
 BUILD SUCCESSFUL
 
 C:\minio-java\> dir build\libs\
-[2015-11-27 19:44:07 PST] 6.6MiB minio-1.0.1-all.jar
-[2015-11-27 19:43:59 PST] 182KiB minio-1.0.1-javadoc.jar
-[2015-11-27 19:44:08 PST]  53KiB minio-1.0.1-sources.jar
-[2015-11-27 19:43:47 PST]  64KiB minio-1.0.1.jar
+[2015-11-27 19:44:07 PST] 6.6MiB minio-1.0.2-all.jar
+[2015-11-27 19:43:59 PST] 182KiB minio-1.0.2-javadoc.jar
+[2015-11-27 19:44:08 PST]  53KiB minio-1.0.2-sources.jar
+[2015-11-27 19:43:47 PST]  64KiB minio-1.0.2.jar
 C:\minio-java\examples> cd minio-java/examples
-C:\minio-java\examples> mv ..\build\libs\minio-1.0.1-all.jar .
+C:\minio-java\examples> mv ..\build\libs\minio-1.0.2-all.jar .
 [ edit ListBuckets.java ]
-C:\minio-java\examples> javac -cp 'minio-1.0.1-all.jar' ListBuckets.java
-C:\minio-java\examples> java -cp '.:minio-1.0.1-all.jar' ListBuckets
+C:\minio-java\examples> javac -cp 'minio-1.0.2-all.jar' ListBuckets.java
+C:\minio-java\examples> java -cp '.:minio-1.0.2-all.jar' ListBuckets
 bucket1
 bucket2
 ....

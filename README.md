@@ -6,7 +6,7 @@
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```
 
@@ -14,13 +14,13 @@
 
 ```gradle
 dependencies {
-    compile 'io.minio:minio:1.0.1'
+    compile 'io.minio:minio:1.0.2'
 }
 ```
 
 ## Download from JAR
 
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/1.0.1/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/1.0.2/) directly from maven.
 
 ## Example
 ```java
@@ -82,16 +82,16 @@ public class HelloListBuckets {
 
 Simply edit the example java program to include your access credentials and follow the steps below.
 
-NOTE: `minio-1.0.1-all.jar` includes all the necessary dependencies to run these examples.
+NOTE: `minio-1.0.2-all.jar` includes all the necessary dependencies to run these examples.
 
 ```bash
 $ sudo apt-get install openjdk-7-jdk
 $ git clone https://github.com/minio/minio-java
 $ cd minio-java
 [edit examples/ListBuckets.java]
-$ cd minio-java/examples; wget http://repo1.maven.org/maven2/io/minio/minio/1.0.1/minio-1.0.1-all.jar;
-$ javac -cp 'minio-1.0.1-all.jar' ListBuckets.java
-$ java -cp '.:minio-1.0.1-all.jar' ListBuckets
+$ cd minio-java/examples; wget http://repo1.maven.org/maven2/io/minio/minio/1.0.2/minio-1.0.2-all.jar;
+$ javac -cp 'minio-1.0.2-all.jar' ListBuckets.java
+$ java -cp '.:minio-1.0.2-all.jar' ListBuckets
 bucket1
 bucket2
 ....
