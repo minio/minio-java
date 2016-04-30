@@ -39,7 +39,7 @@ s3Client can be used to perform operations on S3 storage. APIs are described bel
 Creates a bucket with default region and ACL.
 
 __Arguments__
-* `bucketName` : Bucket name
+* `bucketName` _String_: Bucket name
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -83,7 +83,7 @@ for (Bucket bucket : bucketList)
 Checks if given bucket exist and is having read access.
 
 __Arguments__
-* `bucketName` : Bucket name
+* `bucketName` _String_: Bucket name
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -113,7 +113,7 @@ Removes a bucket.
 *NOTE: - All objects (including all object versions and delete markers) in the bucket must be deleted prior, this API will not recursively delete objects*
 
 __Arguments__
-* `bucketName` : Bucket name
+* `bucketName` _String_: Bucket name
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -134,7 +134,7 @@ System.out.println("my-bucketname is removed successfully");
 Returns ACL of given bucket.
 
 __Arguments__
-* `bucketName` : Bucket name
+* `bucketName` _String_: Bucket name
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -158,8 +158,8 @@ System.out.println(acl);
 Sets ACL to given bucket.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `acl` : Canned ACL
+* `bucketName` _String_: Bucket name
+* `acl` _Acl_: Canned ACL
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -181,9 +181,9 @@ System.out.println("Canned ACL " + Acl.PUBLIC_READ_WRITE + " is set successfully
 Returns `Iterable<Result><Item>>` of object information.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `prefix` : Prefix string. List objects whose name starts with `prefix`
-* `recursive` : when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry.
+* `bucketName` _String_: Bucket name
+* `prefix` _String_: Prefix string. List objects whose name starts with `prefix`
+* `recursive` _boolean_: when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry.
 
 __Returns__
 * `Iterable<Result<Item>>` : an iterator of Items
@@ -202,9 +202,9 @@ for (Result<Item> result : myObjects) {
 Returns `Iterable<Result><Upload>>` of incomplete uploads.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `prefix` : Prefix string. List objects whose name starts with `prefix`
-* `recursive` : when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All uploads with the same prefix up to the first '/' will be merged into one entry.
+* `bucketName` _String_: Bucket name
+* `prefix` _String_: Prefix string. List objects whose name starts with `prefix`
+* `recursive` _boolean_: when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All uploads with the same prefix up to the first '/' will be merged into one entry.
 
 __Returns__
 * `Iterable<Result<Upload>>` : an iterator of Upload.
@@ -224,8 +224,8 @@ for (Result<Upload> result : myObjects) {
 Returns an InputStream containing the object. The InputStream must be closed after use else the connection will remain open.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `objectName` : Object name in the bucket
+* `bucketName` _String_: Bucket name
+* `objectName` _String_: Object name in the bucket
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -254,10 +254,10 @@ stream.close();
 Returns an InputStream containing a subset of the object. The InputStream must be closed after use else the connection will remain open.
 
 __Arguments__
-* `bucketName` : Bucket name.
-* `objectName` : Object name in the bucket.
-* `offset` : Offset to read at.
-* `length` : Length to read.
+* `bucketName` _String_: Bucket name.
+* `objectName` _String_: Object name in the bucket.
+* `offset` _long_: Offset to read at.
+* `length` _Long_: Length to read.
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -285,9 +285,9 @@ stream.close();
 Downloads object and store it to given file name.
 
 __Arguments__
-* `bucketName` : Bucket name.
-* `objectName` : Object name in the bucket.
-* `fileName` : file name.
+* `bucketName` _String_: Bucket name.
+* `objectName` _String_: Object name in the bucket.
+* `fileName` _String_: file name.
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -313,11 +313,11 @@ If the session fails, the user may attempt to re-upload the object by attempting
 If the multipart session fails, the user is responsible for resuming or removing the session.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `objectName` : Object name to create in the bucket
-* `stream` : stream to upload
-* `size` : Size of all the data that will be uploaded
-* `contentType` : Content type of the stream
+* `bucketName` _String_: Bucket name
+* `objectName` _String_: Object name to create in the bucket
+* `stream` _InputStream_: stream to upload
+* `size` _long_: Size of all the data that will be uploaded
+* `contentType` _String_: Content type of the stream
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -365,9 +365,9 @@ If the session fails, the user may attempt to re-upload the object by attempting
 If the multipart session fails, the user is responsible for resuming or removing the session.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `objectName` : Object name to create in the bucket
-* `fileName` : File name to upload
+* `bucketName` _String_: Bucket name
+* `objectName` _String_: Object name to create in the bucket
+* `fileName` _String_: File name to upload
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -388,8 +388,8 @@ System.out.println("island.jpg is uploaded successfully");
 Returns metadata of given object.
 
 __Arguments__
-* `bucketName` : Bucket name.
-* `objectName` : Object name in the bucket.
+* `bucketName` _String_: Bucket name.
+* `objectName` _String_: Object name in the bucket.
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -413,8 +413,8 @@ System.out.println(objectStat);
 Removes an object from a bucket.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `objectName` : Object name in the bucket
+* `bucketName` _String_: Bucket name
+* `objectName` _String_: Object name in the bucket
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -435,8 +435,8 @@ System.out.println("my-objectname is removed successfully");
 Removes incomplete multipart upload of given object.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `objectName` : Object name in the bucket
+* `bucketName` _String_: Bucket name
+* `objectName` _String_: Object name in the bucket
 
 __Throws__
 * `InvalidBucketNameException` : upon invalid bucket name is given
@@ -458,9 +458,9 @@ System.out.println("successfully removed all incomplete upload session of my-buc
 Returns an presigned URL containing the object.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `objectName` : Object name in the bucket
-* `expires` : object expiration
+* `bucketName` _String_: Bucket name
+* `objectName` _String_: Object name in the bucket
+* `expires` _Integer_: object expiration
 
 __Throws__
 * `InvalidBucketNameException` : upon an invalid bucket name
@@ -483,9 +483,9 @@ System.out.println(url);
 Returns an presigned URL for PUT.
 
 __Arguments__
-* `bucketName` : Bucket name
-* `objectName` : Object name in the bucket
-* `expires` : object expiration
+* `bucketName` _String_: Bucket name
+* `objectName` _String_: Object name in the bucket
+* `expires` _Integer_: object expiration
 
 __Throws__
 * `InvalidBucketNameException` : upon an invalid bucket name
@@ -508,7 +508,7 @@ System.out.println(url);
 Returns string map for given PostPolicy.
 
 __Arguments__
-* `policy` : Post policy
+* `policy` _PostPolicy_: Post policy
 
 __Throws__
 * `InvalidBucketNameException` : upon an invalid bucket name
