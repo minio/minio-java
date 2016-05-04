@@ -126,40 +126,220 @@ public final class MinioClient {
   private OkHttpClient httpClient = new OkHttpClient();
 
 
+  /**
+   * Creates Minio client object with given endpoint using anonymous access.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient("https://s3.amazonaws.com"); }</pre>
+   *
+   * @param endpoint  request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   *
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, null, null, false);
   }
 
 
+  /**
+   * Creates Minio client object with given URL object using anonymous access.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient(new URL("https://s3.amazonaws.com")); }</pre>
+   *
+   * @param url endpoint URL object.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null, false);
   }
 
+  /**
+   * Creates Minio client object with given HttpUrl object using anonymous access.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient(new HttpUrl.parse("https://s3.amazonaws.com")); }</pre>
+   *
+   * @param url endpoint HttpUrl object.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null, false);
   }
 
+  /**
+   * Creates Minio client object with given endpoint, access key and secret key.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *
+   * @param endpoint  request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   * @param accessKey access key to access service in endpoint.
+   * @param secretKey secret key to access service in endpoint.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, false);
   }
 
 
+  /**
+   * Creates Minio client object with given URL object, access key and secret key.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient(new URL("https://s3.amazonaws.com"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *
+   * @param url endpoint URL object.
+   * @param accessKey access key to access service in endpoint.
+   * @param secretKey secret key to access service in endpoint.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(URL url, String accessKey, String secretKey)
     throws NullPointerException, InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, accessKey, secretKey, false);
   }
 
+  /**
+   * Creates Minio client object with given URL object, access key and secret key.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient(HttpUrl.parse("https://s3.amazonaws.com"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *
+   * @param url endpoint HttpUrl object.
+   * @param accessKey access key to access service in endpoint.
+   * @param secretKey secret key to access service in endpoint.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
       throws NullPointerException, InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, accessKey, secretKey, false);
   }
 
+  /**
+   * Creates Minio client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *
+   * @param endpoint  request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   *
+   * @param port      valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
+   * @param accessKey access key to access service in endpoint.
+   * @param secretKey secret key to access service in endpoint.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, port, accessKey, secretKey, false);
   }
 
+  /**
+   * Creates Minio client object with given endpoint, access key and secret key using insecure (HTTP) connection.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true); }</pre>
+   *
+   * @param endpoint  request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   *
+   * @param accessKey access key to access service in endpoint.
+   * @param secretKey secret key to access service in endpoint.
+   * @param insecure  if true, access endpoint using HTTP else access it using HTTPS.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   */
   public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, insecure);
@@ -167,10 +347,10 @@ public final class MinioClient {
 
 
   /**
-   * Creates Minio client object.
+   * Creates Minio client object using given endpoint, port, access key, secret key and insecure option.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false); }</pre>
    *
    * @param endpoint  request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
