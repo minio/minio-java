@@ -17,7 +17,13 @@
 package io.minio.errors;
 
 
+/**
+ * Thrown to indicate that invalid value is passed to a method.
+ */
 public class InvalidArgumentException extends MinioException {
+  /**
+   * Constructs a new InvalidArgumentException with given error message.
+   */
   public InvalidArgumentException(String message) {
     super(message);
   }

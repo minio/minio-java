@@ -19,6 +19,9 @@ package io.minio.errors;
 import com.squareup.okhttp.Request;
 
 
+/**
+ * Thrown to indicate that no response is received from Amazon AWS S3 service.
+ */
 public class NoResponseException extends MinioException {
   private Request request;
 
@@ -28,6 +31,9 @@ public class NoResponseException extends MinioException {
   }
 
 
+/**
+ * Constructs a new NoResponseException with HTTP request object causes the error.
+ */
   public NoResponseException(Request request) {
     this();
     this.request = request;

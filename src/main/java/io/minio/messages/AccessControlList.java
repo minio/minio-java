@@ -22,6 +22,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.util.List;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing access control list.
+ */
 @SuppressWarnings("WeakerAccess")
 public class AccessControlList extends XmlEntity {
   @Key("Grant")
@@ -35,6 +38,9 @@ public class AccessControlList extends XmlEntity {
   }
 
 
+  /**
+   * Returns List of Grant.
+   */
   public List<Grant> grantList() {
     return grantList;
   }

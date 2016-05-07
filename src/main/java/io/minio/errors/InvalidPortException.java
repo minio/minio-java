@@ -17,11 +17,17 @@
 package io.minio.errors;
 
 
+/**
+ * Thrown to indicate that given port number is not valid.
+ */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class InvalidPortException extends MinioException {
   private final int port;
 
 
+  /**
+   * Constructs a new InvalidPortException with port number caused the error and error message.
+   */
   public InvalidPortException(int port, String message) {
     super(message);
     this.port = port;

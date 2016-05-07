@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing ListMultipartUploadResult information.
+ */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ListMultipartUploadsResult extends XmlEntity {
   @Key("Upload")
@@ -49,43 +52,64 @@ public class ListMultipartUploadsResult extends XmlEntity {
   }
 
 
+  /**
+   * Returns whether the result is truncated or not.
+   */
   public boolean isTruncated() {
     return isTruncated;
   }
 
 
+  /**
+   * Returns bucket name.
+   */
   public String bucketName() {
     return bucketName;
   }
 
 
+  /**
+   * Returns key marker.
+   */
   public String keyMarker() {
     return keyMarker;
   }
 
 
+  /**
+   * Returns upload ID marker.
+   */
   public String uploadIdMarker() {
     return uploadIdMarker;
   }
 
 
+  /**
+   * Returns next key marker.
+   */
   public String nextKeyMarker() {
     return nextKeyMarker;
   }
 
 
+  /**
+   * Returns next upload ID marker.
+   */
   public String nextUploadIdMarker() {
     return nextUploadIdMarker;
   }
 
 
+  /**
+   * Returns max uploads received.
+   */
   public int maxUploads() {
     return maxUploads;
   }
 
 
   /**
-   * get uploads.
+   * Returns List of Upload.
    */
   public List<Upload> uploads() {
     if (uploads == null) {

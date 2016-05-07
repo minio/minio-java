@@ -18,6 +18,9 @@ package io.minio;
 
 import java.util.Date;
 
+/**
+ * Object stat information.
+ */
 @SuppressWarnings("unused")
 public class ObjectStat {
   private final String bucketName;
@@ -29,7 +32,7 @@ public class ObjectStat {
 
 
   /**
-   * this comment fixes checkstyle javadoc error.
+   * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and content type.
    */
   public ObjectStat(String bucketName, String name, Date createdTime, long length, String etag, String contentType) {
     this.bucketName = bucketName;
@@ -45,6 +48,9 @@ public class ObjectStat {
   }
 
 
+  /**
+   * Checks whether given object is same as this ObjectStat.
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -76,6 +82,9 @@ public class ObjectStat {
   }
 
 
+  /**
+   * Returns hash of this ObjectStat.
+   */
   @Override
   public int hashCode() {
     int result = bucketName.hashCode();
@@ -88,31 +97,49 @@ public class ObjectStat {
   }
 
 
+  /**
+   * Returns object name.
+   */
   public String name() {
     return name;
   }
 
 
+  /**
+   * Returns created time.
+   */
   public Date createdTime() {
     return (Date) createdTime.clone();
   }
 
 
+  /**
+   * Returns object length.
+   */
   public long length() {
     return length;
   }
 
 
+  /**
+   * Returns bucket name.
+   */
   public String bucketName() {
     return bucketName;
   }
 
 
+  /**
+   * Returns ETag.
+   */
   public String etag() {
     return etag;
   }
 
 
+  /**
+   * Returns ObjectStat as string.
+   */
   @Override
   public String toString() {
     return "ObjectStat{"

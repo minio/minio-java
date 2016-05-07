@@ -20,12 +20,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public enum BucketRegionCache {
+/**
+ * A singleton bucket/region cache map.
+ */
+enum BucketRegionCache {
   INSTANCE;
   private final Map<String, String> regionMap = new HashMap<>();
 
   /**
-   * returns AWS region for given bucket name.
+   * Returns AWS region for given bucket name.
    */
   public String region(String bucketName) {
     if (bucketName == null) {
@@ -41,13 +44,16 @@ public enum BucketRegionCache {
   }
 
 
+  /**
+   * Adds bucket name and its region to BucketRegionCache.
+   */
   public void add(String bucketName, String region) {
     this.regionMap.put(bucketName, region);
   }
 
 
   /**
-   * remove region cache of the bucket if any.
+   * Removes region cache of the bucket if any.
    */
   public void remove(String bucketName) {
     if (bucketName != null) {
@@ -57,7 +63,7 @@ public enum BucketRegionCache {
 
 
   /**
-   * returns true if given bucket name is in the map else false.
+   * Returns true if given bucket name is in the map else false.
    */
   public boolean exists(String bucketName) {
     if (this.regionMap.get(bucketName) == null) {

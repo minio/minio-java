@@ -28,19 +28,28 @@ import com.google.common.io.BaseEncoding;
 import io.minio.errors.InsufficientDataException;
 
 
-public class Digest {
+/**
+ * Various global static functions used.
+ */
+class Digest {
+  /**
+   * Returns SHA-256 hash of given string.
+   */
   public static String sha256Hash(String string) throws NoSuchAlgorithmException {
     return sha256Hash(string.getBytes(StandardCharsets.UTF_8));
   }
 
 
+  /**
+   * Returns SHA-256 hash of given byte array.
+   */
   public static String sha256Hash(byte[] data) throws NoSuchAlgorithmException {
     return sha256Hash(data, data.length);
   }
 
 
   /**
-   * returns SHA-256 hash string.
+   * Returns SHA-256 hash string of given byte array and it's length.
    */
   public static String sha256Hash(byte[] data, int length) throws NoSuchAlgorithmException {
     MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
@@ -51,18 +60,24 @@ public class Digest {
   }
 
 
+  /**
+   * Returns MD5 hash of given string.
+   */
   public static String md5Hash(String string) throws NoSuchAlgorithmException {
     return md5Hash(string.getBytes(StandardCharsets.UTF_8));
   }
 
 
+  /**
+   * Returns MD5 hash of given byte array.
+   */
   public static String md5Hash(byte[] data) throws NoSuchAlgorithmException {
     return md5Hash(data, data.length);
   }
 
 
   /**
-   * returns MD5 hash string.
+   * Returns MD5 hash of given byte array and it's length.
    */
   public static String md5Hash(byte[] data, int length) throws NoSuchAlgorithmException {
     MessageDigest messageDigest = MessageDigest.getInstance("MD5");
@@ -74,7 +89,10 @@ public class Digest {
 
 
   /**
-   * returns MD5 hash string.
+   * Returns MD5 hash of given input stream and it's length.
+   *
+   * @param inputStream  Input stream whose type is either {@link RandomAccessFile} or {@link BufferedInputStream}.
+   * @param len          Length of Input stream.
    */
   public static String md5Hash(Object inputStream, int len)
     throws IllegalArgumentException, NoSuchAlgorithmException, IOException, InsufficientDataException {
@@ -138,18 +156,24 @@ public class Digest {
   }
 
 
+  /**
+   * Returns SHA-256 and MD5 hashes for given string.
+   */
   public static String[] sha256md5Hashes(String string) throws NoSuchAlgorithmException {
     return sha256md5Hashes(string.getBytes(StandardCharsets.UTF_8));
   }
 
 
+  /**
+   * Returns SHA-256 and MD5 hashes for given byte array.
+   */
   public static String[] sha256md5Hashes(byte[] data) throws NoSuchAlgorithmException {
     return sha256md5Hashes(data, data.length);
   }
 
 
   /**
-   * returns SHA-256 and MD5 hash strings.
+   * Returns SHA-256 and MD5 hashes for given byte array and it's length.
    */
   public static String[] sha256md5Hashes(byte[] data, int length) throws NoSuchAlgorithmException {
     String[] hashes = { sha256Hash(data, length), md5Hash(data, length) };
@@ -159,7 +183,10 @@ public class Digest {
 
 
   /**
-   * returns SHA-256 and MD5 hash strings.
+   * Returns SHA-256 and MD5 hashes of given input stream and it's length.
+   *
+   * @param inputStream  Input stream whose type is either {@link RandomAccessFile} or {@link BufferedInputStream}.
+   * @param len          Length of Input stream.
    */
   public static String[] sha256md5Hashes(Object inputStream, int len)
     throws IllegalArgumentException, NoSuchAlgorithmException, IOException, InsufficientDataException {

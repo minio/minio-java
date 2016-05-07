@@ -20,6 +20,9 @@ import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing initator information.
+ */
 @SuppressWarnings("unused")
 public class Initiator extends XmlEntity {
   @Key("ID")
@@ -34,11 +37,17 @@ public class Initiator extends XmlEntity {
   }
 
 
+  /**
+   * Returns initiator ID.
+   */
   public String id() {
     return id;
   }
 
 
+  /**
+   * Returns initiator display name.
+   */
   public String displayName() {
     return displayName;
   }

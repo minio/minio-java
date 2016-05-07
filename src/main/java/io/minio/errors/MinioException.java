@@ -16,11 +16,22 @@
 
 package io.minio.errors;
 
+
+/**
+ * Base Exception class for all minio-java exceptions.
+ */
 public class MinioException extends Exception {
+  /**
+   * Constructs a new MinioException.
+   */
   public MinioException() {
     super();
   }
 
+
+  /**
+   * Constructs a new MinioException with given error message.
+   */
   public MinioException(String message) {
     super(message);
   }

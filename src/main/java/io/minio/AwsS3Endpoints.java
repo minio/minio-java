@@ -20,7 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public enum AwsS3Endpoints {
+/**
+ * Amazon AWS S3 endpoints for various regions.
+ */
+enum AwsS3Endpoints {
   INSTANCE;
   private final Map<String, String> endpoints = new HashMap<>();
 
@@ -46,7 +49,7 @@ public enum AwsS3Endpoints {
   }
 
   /**
-   * get Amazon S3 endpoint for the relevant region.
+   * Gets Amazon S3 endpoint for the relevant region.
    */
   public String endpoint(String region) {
     String s = AwsS3Endpoints.INSTANCE.endpoints.get(region);

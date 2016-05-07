@@ -20,13 +20,16 @@ import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
 
+/**
+ * Helper class to construct create bucket configuration request XML for Amazon AWS S3.
+ */
 public class CreateBucketConfiguration extends XmlEntity {
   @Key("LocationConstraint")
   private String locationConstraint;
 
 
   /**
-   * constructor.
+   * Constructs a new CreateBucketConfiguration object with given location constraint.
    */
   public CreateBucketConfiguration(String locationConstraint) throws XmlPullParserException {
     super();
@@ -36,6 +39,9 @@ public class CreateBucketConfiguration extends XmlEntity {
   }
 
 
+  /**
+   * Returns location constraint.
+   */
   @SuppressWarnings("unused")
   public String locationConstraint() {
     return locationConstraint;

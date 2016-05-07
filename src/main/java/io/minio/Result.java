@@ -29,6 +29,9 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InternalException;
 
 
+/**
+ * A container class keeps any type and exception occured.
+ */
 public class Result<T> {
   private final T type;
   private final Exception ex;
@@ -41,7 +44,7 @@ public class Result<T> {
 
 
   /**
-   * get result.
+   * Returns given Type if exception is null, else respective exception is thrown.
    */
   public T get()
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,

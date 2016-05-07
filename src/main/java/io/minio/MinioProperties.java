@@ -23,6 +23,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
+
+/**
+ * Identifies and stores version information of minio-java package at run time.
+ */
 enum MinioProperties {
   INSTANCE;
   private final AtomicReference<String> version = new AtomicReference<>(null);

@@ -17,11 +17,17 @@
 package io.minio.errors;
 
 
+/**
+ * Thrown to indicate that given endpoint is not valid.
+ */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class InvalidEndpointException extends MinioException {
   private final String endpoint;
 
 
+  /**
+   * Constructs a new InvalidEndpointException with endpoint caused the error and error message.
+   */
   public InvalidEndpointException(String endpoint, String message) {
     super(message);
     this.endpoint = endpoint;

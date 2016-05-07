@@ -22,6 +22,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing bucket information.
+ */
 @SuppressWarnings("SameParameterValue")
 public class Bucket extends XmlEntity {
   @Key("Name")
@@ -36,11 +39,17 @@ public class Bucket extends XmlEntity {
   }
 
 
+  /**
+   * Returns bucket name.
+   */
   public String name() {
     return name;
   }
 
 
+  /**
+   * Returns creation date.
+   */
   public Date creationDate() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(creationDate).toDate();
   }

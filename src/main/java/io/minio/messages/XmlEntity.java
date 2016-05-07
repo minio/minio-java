@@ -26,13 +26,16 @@ import java.io.Reader;
 import java.io.IOException;
 
 
+/**
+ * XML parser interface class extended from GenericXML.
+ */
 public abstract class XmlEntity extends GenericXml {
   private XmlPullParser xmlPullParser;
   private XmlNamespaceDictionary defaultNamespaceDictionary;
 
 
   /**
-   * constructor.
+   * Constructs a new XmlEntity class.
    */
   public XmlEntity() throws XmlPullParserException {
     super.namespaceDictionary = new XmlNamespaceDictionary();
@@ -44,18 +47,27 @@ public abstract class XmlEntity extends GenericXml {
   }
 
 
+  /**
+   * Constructs a new XmlEntity class by parsing content from given reader input stream.
+   */
   public XmlEntity(Reader reader) throws IOException, XmlPullParserException {
     this();
     this.parseXml(reader);
   }
 
 
+  /**
+   * Parses content from given reader input stream.
+   */
   public void parseXml(Reader reader) throws IOException, XmlPullParserException {
     this.xmlPullParser.setInput(reader);
     Xml.parseElement(this.xmlPullParser, this, this.defaultNamespaceDictionary, null);
   }
 
 
+  /**
+   * Parses content from given reader input stream and namespace dictionary.
+   */
   protected void parseXml(Reader reader, XmlNamespaceDictionary namespaceDictionary)
     throws IOException, XmlPullParserException {
     this.xmlPullParser.setInput(reader);

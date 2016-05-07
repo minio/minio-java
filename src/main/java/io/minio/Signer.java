@@ -38,7 +38,10 @@ import com.google.common.io.BaseEncoding;
 import io.minio.Digest;
 
 
-public class Signer {
+/**
+ * Amazon AWS S3 signature V4 signer.
+ */
+class Signer {
   public static final Escaper QUERY_ESCAPER = UrlEscapers.urlPathSegmentEscaper();
   //
   // Excerpts from @lsegal - https://github.com/aws/aws-sdk-js/issues/659#issuecomment-120477258
@@ -219,7 +222,7 @@ public class Signer {
 
 
   /**
-   * sign request.
+   * Returns signed request object for given request, region, access key and secret key.
    */
   public static Request signV4(Request request, String region, String accessKey, String secretKey)
     throws NoSuchAlgorithmException, InvalidKeyException {
@@ -266,7 +269,7 @@ public class Signer {
 
 
   /**
-   * pre-sign request.
+   * Returns pre-signed HttpUrl object for given request, region, access key, secret key and expires time.
    */
   public static HttpUrl presignV4(Request request, String region, String accessKey, String secretKey, int expires)
     throws NoSuchAlgorithmException, InvalidKeyException {
@@ -286,13 +289,16 @@ public class Signer {
   }
 
 
+  /**
+   * Returns credential string of given access key, date and region.
+   */
   public static String credential(String accessKey, DateTime date, String region) {
     return accessKey + "/" + date.toString(DateFormat.SIGNER_DATE_FORMAT) + "/" + region + "/s3/aws4_request";
   }
 
 
   /**
-   * pre-sign post policy.
+   * Returns pre-signed post policy string for given stringToSign, secret key, date and region.
    */
   public static String postPresignV4(String stringToSign, String secretKey, DateTime date, String region)
     throws NoSuchAlgorithmException, InvalidKeyException {
@@ -306,7 +312,7 @@ public class Signer {
 
 
   /**
-   * return HMacSHA256 digest.
+   * Returns HMacSHA256 digest of given key and data.
    */
   public static byte[] sumHmac(byte[] key, byte[] data)
     throws NoSuchAlgorithmException, InvalidKeyException {

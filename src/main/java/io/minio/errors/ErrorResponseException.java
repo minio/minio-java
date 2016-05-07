@@ -23,6 +23,9 @@ import io.minio.messages.ErrorResponse;
 import io.minio.ErrorCode;
 
 
+/**
+ * Thrown to indicate that error response is received when executing Amazon S3 operation.
+ */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ErrorResponseException extends MinioException {
   private final ErrorResponse errorResponse;
@@ -30,7 +33,7 @@ public class ErrorResponseException extends MinioException {
 
 
   /**
-   * constructor.
+   * Constructs a new ErrorResponseException with error response and HTTP response object.
    */
   public ErrorResponseException(ErrorResponse errorResponse, Response response) {
     super(errorResponse.message());
@@ -39,6 +42,9 @@ public class ErrorResponseException extends MinioException {
   }
 
 
+  /**
+   * Returns Amazon S3 error code to indicate what error occured.
+   */
   public ErrorCode errorCode() {
     return this.errorResponse.errorCode();
   }

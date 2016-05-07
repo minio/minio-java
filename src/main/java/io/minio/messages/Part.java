@@ -22,6 +22,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing Part information.
+ */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Part extends XmlEntity {
   @Key("PartNumber")
@@ -40,7 +43,7 @@ public class Part extends XmlEntity {
 
 
   /**
-   * constructor.
+   * Constructs a new Part object with given part number and ETag.
    */
   public Part(int partNumber, String etag) throws XmlPullParserException {
     super();
@@ -51,21 +54,33 @@ public class Part extends XmlEntity {
   }
 
 
+  /**
+   * Returns part number.
+   */
   public int partNumber() {
     return partNumber;
   }
 
 
+  /**
+   * Returns ETag.
+   */
   public String etag() {
     return etag.replaceAll("\"", "");
   }
 
 
+  /**
+   * Returns last modified time.
+   */
   public Date lastModified() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(lastModified).toDate();
   }
 
 
+  /**
+   * Returns part size.
+   */
   public long partSize() {
     return size;
   }

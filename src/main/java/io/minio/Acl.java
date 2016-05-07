@@ -17,6 +17,9 @@
 package io.minio;
 
 
+/**
+ * Amazon AWS S3 access control list.
+ */
 public enum Acl {
   /** Canned acl: public-read-write.
    * <p>

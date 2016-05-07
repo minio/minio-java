@@ -22,6 +22,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
 
+/**
+ * HTTP header annotation interface.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface Header {
@@ -31,7 +34,7 @@ public @interface Header {
   String value();
 
   /**
-   * setter method name. 'setFieldName' is used if empty.
+   * Setter method name. 'setFieldName' is used if empty.
    */
   String setter() default "";
 }

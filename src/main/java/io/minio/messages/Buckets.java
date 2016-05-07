@@ -23,6 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing list of bucket information.
+ */
 @SuppressWarnings("WeakerAccess")
 public class Buckets extends XmlEntity {
   @Key("Bucket")
@@ -35,6 +38,9 @@ public class Buckets extends XmlEntity {
   }
 
 
+  /**
+   * Returns List of Buckets.
+   */
   public List<Bucket> bucketList() {
     return bucketList;
   }
