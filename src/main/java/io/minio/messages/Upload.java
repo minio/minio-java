@@ -21,6 +21,10 @@ import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
+
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing Upload information.
+ */
 @SuppressWarnings("unused")
 public class Upload extends XmlEntity {
   @Key("Key")
@@ -44,41 +48,65 @@ public class Upload extends XmlEntity {
   }
 
 
+  /**
+   * Returns object name.
+   */
   public String objectName() {
     return objectName;
   }
 
 
+  /**
+   * Returns upload ID.
+   */
   public String uploadId() {
     return uploadId;
   }
 
 
+  /**
+   * Returns initator information.
+   */
   public Initiator initiator() {
     return initiator;
   }
 
 
+  /**
+   * Returns owner information.
+   */
   public Owner owner() {
     return owner;
   }
 
 
+  /**
+   * Returns storage class.
+   */
   public String storageClass() {
     return storageClass;
   }
 
 
+  /**
+   * Returns initated time.
+   */
   public Date initiated() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(initiated).toDate();
   }
 
 
+  /**
+   * Returns aggregated part size.
+   */
   public long aggregatedPartSize() {
     return aggregatedPartSize;
   }
 
 
+  /**
+   * Sets given aggregated part size.
+   */
   public void setAggregatedPartSize(long size) {
     this.aggregatedPartSize = size;
   }

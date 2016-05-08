@@ -20,6 +20,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 
+/**
+ * Global constants for various date formats.  They are used to convert string to DateTime object and vise verse.
+ */
 public class DateFormat {
   public static final DateTimeFormatter AMZ_DATE_FORMAT =
       DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();

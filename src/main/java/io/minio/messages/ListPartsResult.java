@@ -23,6 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing ListPartsResult information.
+ */
 @SuppressWarnings("unused")
 public class ListPartsResult extends XmlEntity {
   @Key("Bucket")
@@ -53,53 +56,80 @@ public class ListPartsResult extends XmlEntity {
   }
 
 
+  /**
+   * Returns bucket name.
+   */
   public String bucketName() {
     return bucketName;
   }
 
 
+  /**
+   * Returns object name.
+   */
   public String objectName() {
     return objectName;
   }
 
 
+  /**
+   * Returns storage class.
+   */
   public String storageClass() {
     return storageClass;
   }
 
 
+  /**
+   * Returns initator information.
+   */
   public Initiator initiator() {
     return initiator;
   }
 
 
+  /**
+   * Returns owner information.
+   */
   public Owner owner() {
     return owner;
   }
 
 
+  /**
+   * Returns maximum parts information received.
+   */
   public int maxParts() {
     return maxParts;
   }
 
 
+  /**
+   * Returns whether the result is truncated or not.
+   */
   public boolean isTruncated() {
     return isTruncated;
   }
 
 
+  /**
+   * Returns part number marker.
+   */
   public int partNumberMarker() {
     return partNumberMarker;
   }
 
 
+  /**
+   * Returns next part number marker.
+   */
   public int nextPartNumberMarker() {
     return nextPartNumberMarker;
   }
 
 
   /**
-   * get part list.
+   * Returns List of Part.
    */
   public List<Part> partList() {
     if (partList == null) {

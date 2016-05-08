@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Arrays;
 
 
+/**
+ * Helper class to construct complete multipart upload request XML for Amazon AWS S3.
+ */
 @SuppressWarnings("unused")
 public class CompleteMultipartUpload extends XmlEntity {
   @Key("Part")
@@ -35,7 +38,7 @@ public class CompleteMultipartUpload extends XmlEntity {
 
 
   /**
-   * constructor to init partList.
+   * Constucts a new CompleteMultipartUpload object with given parts.
    */
   public CompleteMultipartUpload(Part[] parts) throws XmlPullParserException {
     super();
@@ -49,6 +52,9 @@ public class CompleteMultipartUpload extends XmlEntity {
   }
 
 
+  /**
+   * Returns List of Parts of mulitpart upload.
+   */
   public List<Part> partList() {
     return partList;
   }

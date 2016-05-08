@@ -23,6 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing access control policy.
+ */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class AccessControlPolicy extends XmlEntity {
   @Key("Owner")
@@ -37,13 +40,16 @@ public class AccessControlPolicy extends XmlEntity {
   }
 
 
+  /**
+   * Returns Owner.
+   */
   public Owner owner() {
     return owner;
   }
 
 
   /**
-   * get access control list.
+   * Returns List of Grant in access control list.
    */
   public List<Grant> grants() {
     if (accessControlList == null) {

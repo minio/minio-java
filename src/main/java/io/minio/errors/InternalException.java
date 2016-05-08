@@ -16,7 +16,14 @@
 
 package io.minio.errors;
 
+
+/**
+ * Thrown to indicate that unexpected internal library error occured while processing given request.
+ */
 public class InternalException extends MinioException {
+  /**
+   * Constructs a new InternalException with given error message.
+   */
   public InternalException(String message) {
     super(message);
   }

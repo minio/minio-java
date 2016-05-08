@@ -20,6 +20,9 @@ import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing Prefix information.
+ */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Prefix extends XmlEntity {
   @Key("Prefix")
@@ -32,6 +35,9 @@ public class Prefix extends XmlEntity {
   }
 
 
+  /**
+   * Returns prefix.
+   */
   public String prefix() {
     return prefix;
   }

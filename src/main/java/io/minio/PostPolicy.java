@@ -29,6 +29,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
+/**
+ * Post policy information to be used to generate presigned post policy form-data.
+ */
 public class PostPolicy {
   private static final String ALGORITHM = "AWS4-HMAC-SHA256";
 
@@ -48,7 +51,8 @@ public class PostPolicy {
 
 
   /**
-   * constructor.
+   * Creates PostPolicy for given bucket name, object name, string to match object name starting with
+   * and expiration time.
    */
   public PostPolicy(String bucketName, String objectName, boolean startsWith, DateTime expirationDate)
     throws InvalidArgumentException {
@@ -72,7 +76,7 @@ public class PostPolicy {
 
 
   /**
-   * set content type.
+   * Sets content type.
    */
   public void setContentType(String contentType) throws InvalidArgumentException {
     if (Strings.isNullOrEmpty(contentType)) {
@@ -84,7 +88,7 @@ public class PostPolicy {
 
 
   /**
-   * set content length.
+   * Sets content length.
    */
   public void setContentLength(long contentLength) throws InvalidArgumentException {
     if (contentLength <= 0) {
@@ -96,7 +100,7 @@ public class PostPolicy {
 
 
   /**
-   * set content range.
+   * Sets content range.
    */
   public void setContentRange(long startRange, long endRange) throws InvalidArgumentException {
     if (startRange <= 0 || endRange <= 0) {
@@ -112,6 +116,9 @@ public class PostPolicy {
   }
 
 
+  /**
+   * Returns bucket name.
+   */
   public String bucketName() {
     return this.bucketName;
   }
@@ -148,7 +155,7 @@ public class PostPolicy {
 
 
   /**
-   * returns form data of this post policy.
+   * Returns form data of this post policy.
    */
   public Map<String,String> formData(String accessKey, String secretKey)
     throws NoSuchAlgorithmException, InvalidKeyException {

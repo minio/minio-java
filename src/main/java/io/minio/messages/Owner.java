@@ -20,6 +20,9 @@ import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing Owner information.
+ */
 @SuppressWarnings("SameParameterValue")
 public class Owner extends XmlEntity {
   @Key("ID")
@@ -34,11 +37,17 @@ public class Owner extends XmlEntity {
   }
 
 
+  /**
+   * Returns owner ID.
+   */
   public String id() {
     return id;
   }
 
 
+  /**
+   * Returns owner display name.
+   */
   public String displayName() {
     return displayName;
   }

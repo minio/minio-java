@@ -20,6 +20,9 @@ import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing Grant information.
+ */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Grant extends XmlEntity {
   @Key("Grantee")
@@ -34,11 +37,17 @@ public class Grant extends XmlEntity {
   }
 
 
+  /**
+   * Returns Grantee.
+   */
   public Grantee grantee() {
     return grantee;
   }
 
 
+  /**
+   * Returns permission.
+   */
   public String permission() {
     return permission;
   }

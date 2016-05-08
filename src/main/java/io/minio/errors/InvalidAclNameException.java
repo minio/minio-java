@@ -17,7 +17,13 @@
 package io.minio.errors;
 
 
+/**
+ * Thrown to indicate that invalid ACL name is passed to set bucket ACL method.
+ */
 public class InvalidAclNameException extends MinioException {
+  /**
+   * Constructs a new InvalidAclNameException with given error message.
+   */
   public InvalidAclNameException(String message) {
     super(message);
   }

@@ -22,6 +22,9 @@ import org.joda.time.DateTime;
 import io.minio.http.Header;
 
 
+/**
+ * HTTP response header class.
+ */
 public class ResponseHeader {
   @Header("Content-Length")
   private long contentLength;
@@ -47,111 +50,177 @@ public class ResponseHeader {
   private String xamzRequestId;
 
 
+  /**
+   * Sets content length.
+   */
   public void setContentLength(String contentLength) {
     this.contentLength = Long.parseLong(contentLength);
   }
 
 
+  /**
+   * Returns content length.
+   */
   public long contentLength() {
     return this.contentLength;
   }
 
 
+  /**
+   * Sets content type.
+   */
   public void setContentType(String contentType) {
     this.contentType = contentType;
   }
 
 
+  /**
+   * Returns content type.
+   */
   public String contentType() {
     return this.contentType;
   }
 
 
+  /**
+   * Sets date.
+   */
   public void setDate(String date) {
     this.date = DateFormat.HTTP_HEADER_DATE_FORMAT.parseDateTime(date);
   }
 
 
+  /**
+   * Returns date.
+   */
   public Date date() {
     return this.date.toDate();
   }
 
 
+  /**
+   * Sets ETag.
+   */
   public void setEtag(String etag) {
     this.etag = etag.replaceAll("\"", "");
   }
 
 
+  /**
+   * Returns ETag.
+   */
   public String etag() {
     return this.etag;
   }
 
 
+  /**
+   * Sets last modified time.
+   */
   public void setLastModified(String lastModified) {
     this.lastModified = DateFormat.HTTP_HEADER_DATE_FORMAT.parseDateTime(lastModified);
   }
 
 
+  /**
+   * Returns last modified time.
+   */
   public Date lastModified() {
     return this.lastModified.toDate();
   }
 
 
+  /**
+   * Sets server name.
+   */
   public void setServer(String server) {
     this.server = server;
   }
 
 
+  /**
+   * Returns server name.
+   */
   public String server() {
     return this.server;
   }
 
 
+  /**
+   * Sets status code.
+   */
   public void setStatusCode(String statusCode) {
     this.statusCode = statusCode;
   }
 
 
+  /**
+   * Returns status code.
+   */
   public String statusCode() {
     return this.statusCode;
   }
 
 
+  /**
+   * Sets transfer encoding.
+   */
   public void setTransferEncoding(String transferEncoding) {
     this.transferEncoding = transferEncoding;
   }
 
 
+  /**
+   * Returns transfer encoding.
+   */
   public String transferEncoding() {
     return this.transferEncoding;
   }
 
 
+  /**
+   * Sets Amazon bucket region.
+   */
   public void setXamzBucketRegion(String xamzBucketRegion) {
     this.xamzBucketRegion = xamzBucketRegion;
   }
 
 
+  /**
+   * Returns Amazon bucket region.
+   */
   public String xamzBucketRegion() {
     return this.xamzBucketRegion;
   }
 
 
+  /**
+   * Sets Amazon ID2.
+   */
   public void setXamzId2(String xamzId2) {
     this.xamzId2 = xamzId2;
   }
 
 
+  /**
+   * Returns Amazon ID2.
+   */
   public String xamzId2() {
     return this.xamzId2;
   }
 
 
+  /**
+   * Sets Amazon request ID.
+   */
   public void setXamzRequestId(String xamzRequestId) {
     this.xamzRequestId = xamzRequestId;
   }
 
 
+  /**
+   * Returns Amazon request ID.
+   */
   public String xamzRequestId() {
     return this.xamzRequestId;
   }

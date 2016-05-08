@@ -23,6 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing ListAllMyBucketsResult information.
+ */
 public class ListAllMyBucketsResult extends XmlEntity {
   @Key("Owner")
   private Owner owner;
@@ -36,6 +39,9 @@ public class ListAllMyBucketsResult extends XmlEntity {
   }
 
 
+  /**
+   * Returns owner.
+   */
   @SuppressWarnings("unused")
   public Owner owner() {
     return owner;
@@ -43,7 +49,7 @@ public class ListAllMyBucketsResult extends XmlEntity {
 
 
   /**
-   * get buckets.
+   * Returns List of buckets.
    */
   public List<Bucket> buckets() {
     if (buckets == null) {

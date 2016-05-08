@@ -26,6 +26,9 @@ import java.io.IOException;
 import io.minio.ErrorCode;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 error response XML.
+ */
 @SuppressWarnings("unused")
 public class ErrorResponse extends XmlEntity {
   @Key("Code")
@@ -53,7 +56,7 @@ public class ErrorResponse extends XmlEntity {
 
 
   /**
-   * constructor.
+   * Constructs a new ErrorResponse object by reading given reader stream.
    */
   public ErrorResponse(Reader reader) throws IOException, XmlPullParserException {
     this();
@@ -62,7 +65,7 @@ public class ErrorResponse extends XmlEntity {
 
 
   /**
-   * constructor.
+   * Constructs a new ErrorResponse object with error code, bucket name, object name, resource, request ID and host ID.
    */
   public ErrorResponse(ErrorCode errorCode, String bucketName, String objectName, String resource, String requestId,
                        String hostId) throws XmlPullParserException {
@@ -79,7 +82,7 @@ public class ErrorResponse extends XmlEntity {
 
 
   /**
-   * returns ErrorCode.
+   * Returns error code.
    */
   public ErrorCode errorCode() {
     if (this.errorCode == null) {
@@ -91,7 +94,7 @@ public class ErrorResponse extends XmlEntity {
 
 
   /**
-   * returns `message` or `errorCode.message`
+   * Returns error message.
    */
   public String message() {
     if (this.message != null) {
@@ -102,31 +105,49 @@ public class ErrorResponse extends XmlEntity {
   }
 
 
+  /**
+   * Returns bucket name.
+   */
   public String bucketName() {
     return bucketName;
   }
 
 
+  /**
+   * Returns object name.
+   */
   public String objectName() {
     return objectName;
   }
 
 
+  /**
+   * Returns host ID.
+   */
   public String hostId() {
     return hostId;
   }
 
 
+  /**
+   * Returns request ID.
+   */
   public String requestId() {
     return requestId;
   }
 
 
+  /**
+   * Returns resource.
+   */
   public String resource() {
     return resource;
   }
 
 
+  /**
+   * Fills up this ErrorResponse object's fields by reading/parsing values from given Reader input stream.
+   */
   @Override
   public void parseXml(Reader reader) throws IOException, XmlPullParserException {
     XmlNamespaceDictionary namespaceDictionary = new XmlNamespaceDictionary();
@@ -136,7 +157,7 @@ public class ErrorResponse extends XmlEntity {
 
 
   /**
-   * returns string with field values.
+   * Returns string with field values.
    */
   public String getString() {
     return "ErrorResponse("

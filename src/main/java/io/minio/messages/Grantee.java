@@ -19,6 +19,10 @@ package io.minio.messages;
 import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
+
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing Grantee information.
+ */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Grantee extends XmlEntity {
   @Key("ID")
@@ -39,26 +43,41 @@ public class Grantee extends XmlEntity {
   }
 
 
+  /**
+   * Returns grantee id.
+   */
   public String id() {
     return id;
   }
 
 
+  /**
+   * Returns grantee display name.
+   */
   public String displayName() {
     return displayName;
   }
 
 
+  /**
+   * Returns grantee email address.
+   */
   public String emailAddress() {
     return emailAddress;
   }
 
 
+  /**
+   * Returns grantee type.
+   */
   public String type() {
     return type;
   }
 
 
+  /**
+   * Returns grantee URI.
+   */
   public String uri() {
     return uri;
   }

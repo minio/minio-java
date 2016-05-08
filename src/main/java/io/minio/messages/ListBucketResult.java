@@ -23,6 +23,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult information.
+ */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class ListBucketResult extends XmlEntity {
   @Key("Name")
@@ -51,48 +54,72 @@ public class ListBucketResult extends XmlEntity {
   }
 
 
+  /**
+   * Returns next marker.
+   */
   public String nextMarker() {
     return nextMarker;
   }
 
 
+  /**
+   * Returns bucket name.
+   */
   public String name() {
     return name;
   }
 
 
+  /**
+   * Returns prefix.
+   */
   public String prefix() {
     return prefix;
   }
 
 
+  /**
+   * Returns marker.
+   */
   public String marker() {
     return marker;
   }
 
 
+  /**
+   * Returns max keys.
+   */
   public int maxKeys() {
     return maxKeys;
   }
 
 
+  /**
+   * Returns delimiter.
+   */
   public String delimiter() {
     return delimiter;
   }
 
 
+  /**
+   * Returns whether the result is truncated or not.
+   */
   public boolean isTruncated() {
     return isTruncated;
   }
 
 
+  /**
+   * Returns List of Items.
+   */
   public List<Item> contents() {
     return contents;
   }
 
 
   /**
-   * get common prefixes.
+   * Returns List of Prefix.
    */
   public List<Prefix> commonPrefixes() {
     if (commonPrefixes == null) {

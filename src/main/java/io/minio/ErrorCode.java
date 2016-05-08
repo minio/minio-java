@@ -17,6 +17,9 @@
 package io.minio;
 
 
+/**
+ * Amazon AWS S3 error codes.
+ */
 public enum ErrorCode {
   // custom error codes
   NO_SUCH_OBJECT("NoSuchKey", "Object does not exist"),
@@ -141,7 +144,7 @@ public enum ErrorCode {
   }
 
   /**
-   * returns ErrorCode of given code string.
+   * Returns ErrorCode of given code string.
    */
   public static ErrorCode fromString(String codeString) {
     if (codeString == null) {

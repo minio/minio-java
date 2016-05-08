@@ -22,6 +22,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import io.minio.DateFormat;
 
 
+/**
+ * Helper class to parse Amazon AWS S3 response XML containing object item information.
+ */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Item extends XmlEntity {
   @Key("Key")
@@ -45,7 +48,7 @@ public class Item extends XmlEntity {
 
 
   /**
-   * constructor to set object name and isDir flag.
+   * Constructs a new Item object with given object name and IsDir flag.
    */
   public Item(String objectName, boolean isDir) throws XmlPullParserException {
     super();
@@ -56,36 +59,57 @@ public class Item extends XmlEntity {
   }
 
 
+  /**
+   * Returns object name.
+   */
   public String objectName() {
     return objectName;
   }
 
 
+  /**
+   * Returns last modified time of the object.
+   */
   public Date lastModified() {
     return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(lastModified).toDate();
   }
 
 
+  /**
+   * Returns ETag of the object.
+   */
   public String etag() {
     return etag;
   }
 
 
+  /**
+   * Returns object size.
+   */
   public long objectSize() {
     return size;
   }
 
 
+  /**
+   * Returns storage class of the object.
+   */
   public String storageClass() {
     return storageClass;
   }
 
 
+  /**
+   * Returns owner object of given the object.
+   */
   public Owner owner() {
     return owner;
   }
 
 
+  /**
+   * Returns whether the object is a directory or not.
+   */
   public boolean isDir() {
     return isDir;
   }

@@ -27,11 +27,14 @@ import java.util.logging.Logger;
 import com.squareup.okhttp.Headers;
 
 
+/**
+ * HTTP header parser class.
+ */
 public class HeaderParser {
   private static final Logger LOGGER = Logger.getLogger(HeaderParser.class.getName());
 
   /**
-   * method to set destination from Headers object.
+   * Sets destination object from Headers object.
    */
   public static void set(Headers headers, Object destination) {
 
