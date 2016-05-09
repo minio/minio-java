@@ -42,10 +42,8 @@ public class HelloListBuckets {
 
         // list buckets
         List<Bucket> bucketList = s3Client.listBuckets();
-        Iterator<Bucket> bucketIterator = bucketList.iterator();
 
-        while (bucketIterator.hasNext()) {
-            Bucket bucket = bucketIterator.next();
+        for (Bucket bucket : bucketList) {
             System.out.println(bucket.name());
         }
     }
