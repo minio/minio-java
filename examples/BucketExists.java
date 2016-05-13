@@ -31,6 +31,8 @@ public class BucketExists {
     // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+
+    // Check whether 'my-bucketname' exist or not.
     boolean found = s3Client.bucketExists("my-bucketname");
     if (found) {
       System.out.println("my-bucketname exists");

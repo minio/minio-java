@@ -32,7 +32,8 @@ public class GetBucketAcl {
     // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-    // get bucket canned acl
+
+    // Get current ACL of bucket 'my-bucketname'.
     Acl acl = s3Client.getBucketAcl("my-bucketname");
     System.out.println(acl);
   }

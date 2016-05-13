@@ -33,7 +33,7 @@ public class SetBucketAcl {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // set bucket canned acl
+    // Set public read and write ACL to bucket 'my-bucketname'.
     s3Client.setBucketAcl("my-bucketname", Acl.PUBLIC_READ_WRITE);
     System.out.println("Canned ACL " + Acl.PUBLIC_READ_WRITE + " is set successfully to my-bucketname");
   }

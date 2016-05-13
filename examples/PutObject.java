@@ -34,6 +34,7 @@ public class PutObject {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
+    // Create some content for the object.
     StringBuilder builder = new StringBuilder();
     for (int i = 0; i < 1000; i++) {
       builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
@@ -53,8 +54,10 @@ public class PutObject {
       builder.append("---\n");
     }
 
+    // Create a InputStream for object upload.
     ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-    // create object
+
+    // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
     s3Client.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
     bais.close();
     System.out.println("my-bucketname is uploaded successfully");

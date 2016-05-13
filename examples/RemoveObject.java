@@ -32,7 +32,7 @@ public class RemoveObject {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // remove object
+    // Remove object 'my-objectname' in 'my-bucketname'.
     s3Client.removeObject("my-bucketname", "my-objectname");
     System.out.println("successfully removed my-bucketname/my-objectname");
   }

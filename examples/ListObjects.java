@@ -34,7 +34,7 @@ public class ListObjects {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // list objects
+    // List objects from 'my-bucketname'
     Iterable<Result<Item>> myObjects = s3Client.listObjects("my-bucketname");
     for (Result<Item> result : myObjects) {
       Item item = result.get();

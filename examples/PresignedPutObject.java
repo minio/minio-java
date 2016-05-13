@@ -32,6 +32,7 @@ public class PresignedPutObject {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
+    // Get presigned URL string to upload 'my-objectname' in 'my-bucketname' and its life time is one day.
     String url = s3Client.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
     System.out.println(url);
   }

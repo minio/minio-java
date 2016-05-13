@@ -32,7 +32,7 @@ public class RemoveIncompleteUpload {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // remove all incomplete multipart upload sessions for a given bucket and object name
+    // Remove all incomplete multipart upload sessions for a given bucket and object name.
     s3Client.removeIncompleteUpload("my-bucketname", "my-objectname");
     System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname");
   }
