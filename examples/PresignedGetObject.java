@@ -32,6 +32,7 @@ public class PresignedGetObject {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
+    // Get presigned URL string to download 'my-objectname' in 'my-bucketname' and its life time is one day.
     String url = s3Client.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
     System.out.println(url);
   }

@@ -32,14 +32,19 @@ public class GetPartialObject {
     // dummy values, please replace them with original values.
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+
+    // Get input stream to have content of 'my-objectname' from 'my-bucketname' starts from
+    // byte position 1024 and length 4096.
     InputStream stream = s3Client.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
 
+    // Read the input stream and print to the console till EOF.
     byte[] buf = new byte[16384];
     int bytesRead;
     while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
       System.out.println(new String(buf, 0, bytesRead));
     }
 
+    // Close the input stream.
     stream.close();
   }
 }

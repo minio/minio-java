@@ -33,7 +33,7 @@ public class StatObject {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // stat an object
+    // Get object stat information.
     ObjectStat objectStat = s3Client.statObject("my-bucketname", "my-objectname");
     System.out.println(objectStat);
   }

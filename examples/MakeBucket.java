@@ -32,7 +32,7 @@ public class MakeBucket {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // create bucket
+    // Create bucket 'my-bucketname'.
     s3Client.makeBucket("my-bucketname");
     System.out.println("my-bucketname is created successfully");
   }

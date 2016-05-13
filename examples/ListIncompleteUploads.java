@@ -34,7 +34,7 @@ public class ListIncompleteUploads {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // list objects
+    // List all incomplete multipart upload of objects in 'my-bucketname'
     Iterable<Result<Upload>> myObjects = s3Client.listIncompleteUploads("my-bucketname");
     for (Result<Upload> result : myObjects) {
       Upload upload = result.get();

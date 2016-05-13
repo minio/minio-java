@@ -34,7 +34,7 @@ public class ListBuckets {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // list buckets
+    // List buckets we have atleast read access.
     List<Bucket> bucketList = s3Client.listBuckets();
     for (Bucket bucket : bucketList) {
       System.out.println(bucket.creationDate() + ", " + bucket.name());
