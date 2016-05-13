@@ -35,10 +35,13 @@ public class PresignedPostPolicy {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
+    // Create new PostPolicy object for 'my-bucketname', 'my-objectname' and 7 days expire time from now.
     PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
+    // 'my-objectname' should be 'image/png' content type
     policy.setContentType("image/png");
     Map<String,String> formData = s3Client.presignedPostPolicy(policy);
 
+    // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
     System.out.print("curl -X POST ");
     for (Map.Entry<String,String> entry : formData.entrySet()) {
       System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
