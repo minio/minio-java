@@ -337,6 +337,21 @@ public class FunctionalTest {
   }
 
 
+  // Test: listObjects(final string bucketName)
+  public static void listObject_test4() throws Exception {
+    int i;
+    println("Test: empty bucket: listObjects(final String bucketName)");
+
+    i = 0;
+    for (Result r : client.listObjects(bucketName, "minio", true)) {
+      println(i++, r.get());
+      if (i == 10) {
+        break;
+      }
+    }
+  }
+
+
   // Test: removeObject(String bucketName, String objectName)
   public static void removeObject_test() throws Exception {
     println("Test: removeObject(String bucketName, String objectName)");
@@ -673,6 +688,7 @@ public class FunctionalTest {
       listObject_test1();
       listObject_test2();
       listObject_test3();
+      listObject_test4();
 
       removeObject_test();
 

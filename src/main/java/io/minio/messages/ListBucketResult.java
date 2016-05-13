@@ -114,6 +114,9 @@ public class ListBucketResult extends XmlEntity {
    * Returns List of Items.
    */
   public List<Item> contents() {
+    if (contents == null) {
+      return new LinkedList<>();
+    }
     return contents;
   }
 
