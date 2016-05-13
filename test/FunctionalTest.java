@@ -102,26 +102,9 @@ public class FunctionalTest {
   }
 
 
-  // Test: makeBucket(String bucketName, Acl acl)
-  public static void makeBucket_test3() throws Exception {
-    println("Test: makeBucket(String bucketName, Acl acl)");
-    String name = getRandomName();
-    client.makeBucket(name, Acl.PUBLIC_READ_WRITE);
-    client.removeBucket(name);
-  }
-
-
-  // Test: makeBucket(String bucketName, String region, Acl acl)
-  public static void makeBucket_test4() throws Exception {
-    println("Test: makeBucket(String bucketName, String region, Acl acl)");
-    String name = getRandomName();
-    client.makeBucket(name, "eu-west-1", Acl.PUBLIC_READ_WRITE);
-    client.removeBucket(name);
-  }
-
   // Test: makeBucket(String bucketName, String region) where bucketName has
   // periods in its name.
-  public static void makeBucket_test5() throws Exception {
+  public static void makeBucket_test3() throws Exception {
     println("Test: makeBucket(String bucketName, String region)");
     String name = getRandomName() + ".withperiod";
     client.makeBucket(name, "eu-central-1");
@@ -154,29 +137,6 @@ public class FunctionalTest {
     println("Test: removeBucket(String bucketName)");
     String name = getRandomName();
     client.makeBucket(name);
-    client.removeBucket(name);
-  }
-
-
-  // Test: getBucketAcl(String bucketName)
-  public static void getBucketAcl_test() throws Exception {
-    println("Test: getBucketAcl(String bucketName)");
-    String name = getRandomName();
-    client.makeBucket(name, Acl.PRIVATE);
-    Acl acl = client.getBucketAcl(name);
-    if (acl != Acl.PRIVATE) {
-      println("FAILED.", "expected =", Acl.PRIVATE, "received =", acl);
-    }
-    client.removeBucket(name);
-  }
-
-
-  // Test: setBucketAcl(String bucketName, Acl acl)
-  public static void setBucketAcl_test() throws Exception {
-    println("Test: setBucketAcl(String bucketName, Acl acl)");
-    String name = getRandomName();
-    client.makeBucket(name);
-    client.setBucketAcl(name, Acl.PUBLIC_READ_WRITE);
     client.removeBucket(name);
   }
 
@@ -689,18 +649,12 @@ public class FunctionalTest {
       makeBucket_test1();
       makeBucket_test2();
       makeBucket_test3();
-      makeBucket_test4();
-      makeBucket_test5();
 
       listBuckets_test();
 
       bucketExists_test();
 
       removeBucket_test();
-
-      getBucketAcl_test();
-
-      setBucketAcl_test();
 
       setup();
 
