@@ -34,6 +34,7 @@ public class CreateBucketConfiguration extends XmlEntity {
   public CreateBucketConfiguration(String locationConstraint) throws XmlPullParserException {
     super();
     super.name = "CreateBucketConfiguration";
+    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01");
 
     this.locationConstraint = locationConstraint;
   }
