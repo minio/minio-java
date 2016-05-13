@@ -58,8 +58,6 @@ public class HelloListBuckets {
 * [ListObjects.java](./examples/ListObjects.java)
 * [BucketExists.java](./examples/BucketExists.java)
 * [MakeBucket.java](./examples/MakeBucket.java)
-* [SetBucketAcl.java](./examples/SetBucketAcl.java)
-* [GetBucketAcl.java](./examples/GetBucketAcl.java)
 * [RemoveBucket.java](./examples/RemoveBucket.java)
 * [ListIncompleteUploads.java](./examples/ListIncompleteUploads.java)
 

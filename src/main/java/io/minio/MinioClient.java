@@ -72,7 +72,6 @@ import java.nio.file.StandardCopyOption;
  * <li> Creating an object, including automatic upload resuming for large objects.</li>
  * <li> Listing objects in a bucket</li>
  * <li> Listing active multipart uploads</li>
- * <li> Setting canned ACLs on buckets</li>
  * </ul>
  * <h2>Object</h2>
  * <ul>
@@ -1708,7 +1707,7 @@ public final class MinioClient {
 
 
   /**
-   * Creates a bucket with default region and ACL.
+   * Creates a bucket with default region.
    *
    * @param bucketName Bucket name.
    *
@@ -1723,12 +1722,16 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    this.makeBucket(bucketName, null, null);
+    this.makeBucket(bucketName, null);
   }
 
 
   /**
-   * Creates a bucket with given region and default ACL.
+   * Creates a bucket with given region.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code s3Client.makeBucket("my-bucketname");
+   * System.out.println("my-bucketname is created successfully"); }</pre>
    *
    * @param bucketName Bucket name.
    * @param region     region in which the bucket will be created.
@@ -1744,59 +1747,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    this.makeBucket(bucketName, region, null);
-  }
-
-
-  /**
-   * Creates a bucket with given ACL and default region.
-   *
-   * @param bucketName Bucket name.
-   * @param acl        Canned ACL.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public void makeBucket(String bucketName, Acl acl)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    this.makeBucket(bucketName, null, acl);
-  }
-
-
-  /**
-   * Creates a bucket with given region and ACL.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code s3Client.makeBucket("my-bucketname");
-   * System.out.println("my-bucketname is created successfully"); }</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param region     region in which the bucket will be created.
-   * @param acl        Canned ACL.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public void makeBucket(String bucketName, String region, Acl acl)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
     Map<String,String> headerMap = new HashMap<>();
-    if (acl == null) {
-      headerMap.put("x-amz-acl", Acl.PRIVATE.toString());
-    } else {
-      headerMap.put("x-amz-acl", acl.toString());
-    }
 
     String configString;
     if (region == null || "us-east-1".equals(region)) {
@@ -1838,115 +1789,6 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     executeDelete(bucketName, null, null);
-  }
-
-
-  /**
-   * Returns {@link Acl} of given bucket.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code Acl acl = s3Client.getBucketAcl("my-bucketname");
-   * System.out.println(acl); }</pre>
-   *
-   * @param bucketName Bucket name.
-   *
-   * @return Acl type.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public Acl getBucketAcl(String bucketName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("acl", "");
-
-    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
-
-    AccessControlPolicy result = new AccessControlPolicy();
-    result.parseXml(response.body().charStream());
-    response.body().close();
-
-    Acl acl = Acl.PRIVATE;
-    List<Grant> grants = result.grants();
-    switch (grants.size()) {
-      case 1:
-        for (Grant grant : grants) {
-          if (grant.grantee().uri() == null && "FULL_CONTROL".equals(grant.permission())) {
-            acl = Acl.PRIVATE;
-            break;
-          }
-        }
-        break;
-      case 2:
-        for (Grant grant : grants) {
-          if ("http://acs.amazonaws.com/groups/global/AuthenticatedUsers".equals(grant.grantee().uri())
-              && "READ".equals(grant.permission())) {
-            acl = Acl.AUTHENTICATED_READ;
-            break;
-          } else if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.grantee().uri())
-                     && "READ".equals(grant.permission())) {
-            acl = Acl.PUBLIC_READ;
-            break;
-          }
-        }
-        break;
-      case 3:
-        for (Grant grant : grants) {
-          if ("http://acs.amazonaws.com/groups/global/AllUsers".equals(grant.grantee().uri())
-              && "WRITE".equals(grant.permission())) {
-            acl = Acl.PUBLIC_READ_WRITE;
-            break;
-          }
-        }
-        break;
-      default:
-        throw new InternalException("Invalid control flow.  Please report this issue at "
-                                      + "https://github.com/minio/minio-java/issues");
-    }
-    return acl;
-  }
-
-
-  /**
-   * Sets {@link Acl} to given bucket.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code s3Client.setBucketAcl("my-bucketname", Acl.PUBLIC_READ_WRITE);
-   * System.out.println("Canned ACL " + Acl.PUBLIC_READ_WRITE + " is set successfully to my-bucketname"); }</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param acl        Canned ACL.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidAclNameException     upon invalid ACL is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public void setBucketAcl(String bucketName, Acl acl)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidAclNameException {
-    if (acl == null) {
-      throw new InvalidAclNameException("(null) ACL");
-    }
-
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("acl", "");
-
-    Map<String,String> headerMap = new HashMap<>();
-    headerMap.put("x-amz-acl", acl.toString());
-
-    executePut(bucketName, null, headerMap, queryParamMap, "", 0);
   }
 
 

@@ -22,7 +22,6 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 
 import okio.Buffer;
 
-import io.minio.Acl;
 import io.minio.ErrorCode;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
@@ -424,116 +423,7 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    client.makeBucket("bucket", Acl.PUBLIC_READ);
-    client.setBucketAcl("bucket", Acl.PRIVATE);
-  }
-
-
-  @Test
-  public void testGetBucketAclPublicRw()
-    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String body = "<AccessControlPolicy xmlns=\"http://s3.amazonaws.com/doc/2006-03-01\"><Owner><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Owner><AccessControlList><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName><URI>http://acs.amazonaws.com/groups/global/AllUsers</URI></Grantee><Permission>WRITE</Permission></Grant><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName><URI>http://acs.amazonaws.com/groups/global/AllUsers</URI></Grantee><Permission>READ</Permission></Grant><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Grantee><Permission>FULL_CONTROL</Permission></Grant></AccessControlList></AccessControlPolicy>";
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "124");
-    response.addHeader("Content-Type", "application/xml");
-    response.setBody(new Buffer().writeUtf8(body));
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-    Acl acl = client.getBucketAcl("bucket");
-
-    assertEquals(acl, Acl.PUBLIC_READ_WRITE);
-  }
-
-  @Test
-  public void testGetBucketAclPublicRead()
-    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String body = "<AccessControlPolicy xmlns=\"http://s3.amazonaws.com/doc/2006-03-01\"><Owner><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Owner><AccessControlList><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName><URI>http://acs.amazonaws.com/groups/global/AllUsers</URI></Grantee><Permission>READ</Permission></Grant><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Grantee><Permission>FULL_CONTROL</Permission></Grant></AccessControlList></AccessControlPolicy>";
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "124");
-    response.addHeader("Content-Type", "application/xml");
-    response.setBody(new Buffer().writeUtf8(body));
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-    Acl acl = client.getBucketAcl("bucket");
-
-    assertEquals(acl, Acl.PUBLIC_READ);
-  }
-
-  @Test
-  public void testGetBucketAclAuthenticatedRead()
-    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String body = "<AccessControlPolicy xmlns=\"http://s3.amazonaws.com/doc/2006-03-01\"><Owner><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Owner><AccessControlList><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName><URI>http://acs.amazonaws.com/groups/global/AuthenticatedUsers</URI></Grantee><Permission>READ</Permission></Grant><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Grantee><Permission>FULL_CONTROL</Permission></Grant></AccessControlList></AccessControlPolicy>";
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "124");
-    response.addHeader("Content-Type", "application/xml");
-    response.setBody(new Buffer().writeUtf8(body));
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-    Acl acl = client.getBucketAcl("bucket");
-
-    assertEquals(acl, Acl.AUTHENTICATED_READ);
-  }
-
-  @Test
-  public void testGetBucketAclPrivate()
-    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String body = "<AccessControlPolicy xmlns=\"http://s3.amazonaws.com/doc/2006-03-01\"><Owner><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Owner><AccessControlList><Grant><Grantee xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"CanonicalUser\"><ID>75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a</ID><DisplayName>CustomersName@amazon.com</DisplayName></Grantee><Permission>FULL_CONTROL</Permission></Grant></AccessControlList></AccessControlPolicy>";
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "124");
-    response.addHeader("Content-Type", "application/xml");
-    response.setBody(new Buffer().writeUtf8(body));
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-    Acl acl = client.getBucketAcl("bucket");
-
-    assertEquals(acl, Acl.PRIVATE);
-  }
-
-  @Test(expected = InvalidAclNameException.class)
-  public void testSetNullAclFails()
-    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
     client.makeBucket("bucket");
-    client.setBucketAcl("bucket", null);
-
-    throw new RuntimeException("Expected exception did not fire");
   }
 
 
@@ -554,7 +444,7 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    client.makeBucket("bucket", Acl.PUBLIC_READ);
+    client.makeBucket("bucket");
 
     throw new RuntimeException("Expected exception did not fire");
   }

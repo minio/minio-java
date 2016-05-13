@@ -13,8 +13,6 @@ s3Client can be used to perform operations on S3 storage. APIs are described bel
 * [`listBuckets`](#listBuckets)
 * [`bucketExists`](#bucketExists)
 * [`removeBucket`](#removeBucket)
-* [`getBucketAcl`](#getBucketAcl)
-* [`setBucketAcl`](#setBucketAcl)
 * [`listObjects`](#listObjects)
 * [`listIncompleteUploads`](#listIncompleteUploads)
 
@@ -36,7 +34,7 @@ s3Client can be used to perform operations on S3 storage. APIs are described bel
 ---------------------------------------
 <a name="makeBucket">
 #### makeBucket(String bucketName)
-Creates a bucket with default region and ACL.
+Creates a bucket with default region.
 
 __Arguments__
 * `bucketName` _String_: Bucket name
@@ -127,53 +125,6 @@ __Example__
 ```java
 s3Client.removeBucket("my-bucketname");
 System.out.println("my-bucketname is removed successfully");
-```
----------------------------------------
-<a name="getBucketAcl">
-#### getBucketAcl(String bucketName)
-Returns ACL of given bucket.
-
-__Arguments__
-* `bucketName` _String_: Bucket name
-
-__Throws__
-* `InvalidBucketNameException` : upon invalid bucket name is given
-* `NoResponseException` : upon no response from server
-* `IOException` : upon connection error
-* `org.xmlpull.v1.XmlPullParserException` : upon parsing response xml
-* `ErrorResponseException` : upon unsuccessful execution
-* `InternalException` : upon internal library error
-
-__Returns__
-* `Acl` : Acl type
-
-__Example__
-```java
-Acl acl = s3Client.getBucketAcl("my-bucketname");
-System.out.println(acl);
-```
----------------------------------------
-<a name="setBucketAcl">
-#### setBucketAcl(String bucketName, Acl acl)
-Sets ACL to given bucket.
-
-__Arguments__
-* `bucketName` _String_: Bucket name
-* `acl` _Acl_: Canned ACL
-
-__Throws__
-* `InvalidBucketNameException` : upon invalid bucket name is given
-* `InvalidAclNameException` : upon invalid ACL is given
-* `NoResponseException` : upon no response from server
-* `IOException` : upon connection error
-* `org.xmlpull.v1.XmlPullParserException` : upon parsing response xml
-* `ErrorResponseException` : upon unsuccessful execution
-* `InternalException` : upon internal library error
-
-__Example__
-```java
-s3Client.setBucketAcl("my-bucketname", Acl.PUBLIC_READ_WRITE);
-System.out.println("Canned ACL " + Acl.PUBLIC_READ_WRITE + " is set successfully to my-bucketname");
 ```
 ---------------------------------------
 <a name="listObjects">
