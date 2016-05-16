@@ -148,11 +148,11 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, null, null, false);
+    this(endpoint, 0, null, null, true);
   }
 
 
@@ -168,11 +168,11 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null, false);
+    this(url.toString(), 0, null, null, true);
   }
 
   /**
@@ -188,11 +188,11 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null, false);
+    this(url.toString(), 0, null, null, true);
   }
 
   /**
@@ -220,12 +220,12 @@ public final class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, accessKey, secretKey, false);
+    this(endpoint, 0, accessKey, secretKey, true);
   }
 
 
@@ -243,12 +243,12 @@ public final class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(URL url, String accessKey, String secretKey)
     throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey, false);
+    this(url.toString(), 0, accessKey, secretKey, true);
   }
 
   /**
@@ -266,12 +266,12 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
       throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey, false);
+    this(url.toString(), 0, accessKey, secretKey, true);
   }
 
   /**
@@ -301,16 +301,16 @@ public final class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, port, accessKey, secretKey, false);
+    this(endpoint, port, accessKey, secretKey, true);
   }
 
   /**
-   * Creates Minio client object with given endpoint, access key and secret key using insecure (HTTP) connection.
+   * Creates Minio client object with given endpoint, access key and secret key using secure (HTTPS) connection.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true); }</pre>
@@ -330,23 +330,23 @@ public final class MinioClient {
    *
    * @param accessKey Access key to access service in endpoint.
    * @param secretKey Secret key to access service in endpoint.
-   * @param insecure  If true, access endpoint using HTTP else access it using HTTPS.
+   * @param secure If true, access endpoint using HTTPS else access it using HTTP.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
-  public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+  public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, accessKey, secretKey, insecure);
+    this(endpoint, 0, accessKey, secretKey, secure);
   }
 
 
   /**
-   * Creates Minio client object using given endpoint, port, access key, secret key and insecure option.
+   * Creates Minio client object using given endpoint, port, access key, secret key and secure option.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false); }</pre>
@@ -367,22 +367,22 @@ public final class MinioClient {
    * @param port      Valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
    * @param accessKey Access key to access service in endpoint.
    * @param secretKey Secret key to access service in endpoint.
-   * @param insecure  If true, access endpoint using HTTP else access it using HTTPS.
+   * @param secure  If true, access endpoint using HTTPS else access it using HTTP.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    */
-  public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean insecure)
+  public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
     throws InvalidEndpointException, InvalidPortException {
     if (endpoint == null) {
       throw new InvalidEndpointException("(null)", "null endpoint");
     }
 
-    // for valid URL endpoint, port and insecure are ignored
+    // for valid URL endpoint, port and secure are ignored
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
@@ -416,9 +416,9 @@ public final class MinioClient {
       throw new InvalidPortException(port, "port must be in range of 1 to 65535");
     }
 
-    Scheme scheme = Scheme.HTTPS;
-    if (insecure) {
-      scheme = Scheme.HTTP;
+    Scheme scheme = Scheme.HTTP;
+    if (secure) {
+      scheme = Scheme.HTTPS;
     }
 
     if (port == 0) {
