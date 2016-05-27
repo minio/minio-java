@@ -599,4 +599,9 @@ public class MinioClientTest {
     ObjectStat objectStatInfo = client.statObject("bucket", "key");
     assertEquals(expectedStatInfo, objectStatInfo);
   }
+
+  @Test(expected = MinioException.class)
+  public void testForMissingHttps() throws MinioException{
+    MinioClient client = new MinioClient("http://exampleHost.com/", "foo", "bar", true);
+  }
 }
