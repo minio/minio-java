@@ -22,7 +22,6 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 
 import okio.Buffer;
 
-import io.minio.ErrorCode;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;

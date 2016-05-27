@@ -382,26 +382,6 @@ public final class MinioClient {
       throw new InvalidEndpointException("(null)", "null endpoint");
     }
 
-    // for valid URL endpoint, port and secure are ignored
-    HttpUrl url = HttpUrl.parse(endpoint);
-    if (url != null) {
-      if (!"/".equals(url.encodedPath())) {
-        throw new InvalidEndpointException(endpoint, "no path allowed in endpoint");
-      }
-
-      // treat Amazon S3 host as special case
-      String amzHost = url.host();
-      if (amzHost.endsWith(".amazonaws.com") && !amzHost.equals("s3.amazonaws.com")) {
-        throw new InvalidEndpointException(endpoint, "for Amazon S3, host should be 's3.amazonaws.com' in endpoint");
-      }
-
-      this.baseUrl = url;
-      this.accessKey = accessKey;
-      this.secretKey = secretKey;
-
-      return;
-    }
-
     // endpoint may be a valid hostname, IPv4 or IPv6 address
     if (!this.isValidEndpoint(endpoint)) {
       throw new InvalidEndpointException(endpoint, "invalid host");
