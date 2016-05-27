@@ -601,7 +601,8 @@ public class MinioClientTest {
   }
 
   @Test(expected = MinioException.class)
-  public void testForMissingHttps() throws MinioException{
-    MinioClient client = new MinioClient("http://exampleHost.com/", "foo", "bar", true);
+  public void testForMissingHttps() throws MinioException {
+    new MinioClient("http://exampleHost.com/", "foo", "bar", true);
+    throw new RuntimeException("Expected exception did not fire");
   }
 }

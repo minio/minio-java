@@ -152,7 +152,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, null, null, endpoint==null?false:(endpoint.startsWith("https://")));
+    this(endpoint, 0, null, null, endpoint==null?false:endpoint.startsWith("https://"));
   }
 
 
@@ -225,7 +225,7 @@ public final class MinioClient {
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, accessKey, secretKey, endpoint==null?false:(endpoint.startsWith("https://")));
+    this(endpoint, 0, accessKey, secretKey, endpoint==null?false:endpoint.startsWith("https://"));
   }
 
 
@@ -306,7 +306,7 @@ public final class MinioClient {
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, port, accessKey, secretKey, endpoint==null?false:(endpoint.startsWith("https://")));
+    this(endpoint, port, accessKey, secretKey, endpoint==null?false:endpoint.startsWith("https://"));
   }
 
   /**
