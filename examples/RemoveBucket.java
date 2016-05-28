@@ -32,9 +32,14 @@ public class RemoveBucket {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // Remove bucket 'my-bucketname'.
+    // Remove bucket 'my-bucketname' if it exists.
     // This operation will only work if your bucket is empty.
-    s3Client.removeBucket("my-bucketname");
-    System.out.println("my-bucketname is removed successfully");
+    boolean found = s3Client.bucketExists("my-bucketname");
+    if (found) {
+      s3Client.removeBucket("my-bucketname");
+      System.out.println("my-bucketname is removed successfully");
+    } else {
+      System.out.println("my-bucketname does not exist");
+    }
   }
 }
