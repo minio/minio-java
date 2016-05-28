@@ -32,8 +32,14 @@ public class MakeBucket {
     // Set s3 endpoint, region is calculated automatically
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // Create bucket 'my-bucketname'.
-    s3Client.makeBucket("my-bucketname");
-    System.out.println("my-bucketname is created successfully");
+    // Create bucket if it doesn't exist.
+    boolean found = s3Client.bucketExists("my-bucketname");
+    if (found) {
+      System.out.println("my-bucketname already exists");
+    } else {
+      // Create bucket 'my-bucketname'.
+      s3Client.makeBucket("my-bucketname");
+      System.out.println("my-bucketname is created successfully");
+    }
   }
 }

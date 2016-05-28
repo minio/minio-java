@@ -33,7 +33,12 @@ public class RemoveObject {
     MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
     // Remove object 'my-objectname' in 'my-bucketname'.
-    s3Client.removeObject("my-bucketname", "my-objectname");
-    System.out.println("successfully removed my-bucketname/my-objectname");
+    try {
+      s3Client.removeObject("my-bucketname", "my-objectname");
+      System.out.println("successfully removed my-bucketname/my-objectname");
+    } catch (MinioException e) {
+      System.out.println("Failed to remove object");
+      System.out.println("Error: " + e);
+    }
   }
 }
