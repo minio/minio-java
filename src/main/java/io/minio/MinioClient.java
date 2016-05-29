@@ -1180,7 +1180,7 @@ public final class MinioClient {
 
     String tempFileName = fileName + "." + etag + ".part.minio";
     Path tempFilePath = Paths.get(tempFileName);
-    boolean tempFileExists = Files.exists(filePath);
+    boolean tempFileExists = Files.exists(tempFilePath);
 
     if (tempFileExists && !Files.isRegularFile(tempFilePath)) {
       throw new IOException(tempFileName + ": not a regular file");
