@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-import io.minio.MinioClient;
-import io.minio.PostPolicy;
-import io.minio.errors.MinioException;
-
 import java.io.IOException;
 import java.util.Map;
 import java.security.NoSuchAlgorithmException;
@@ -26,26 +22,33 @@ import java.security.InvalidKeyException;
 import org.xmlpull.v1.XmlPullParserException;
 import org.joda.time.DateTime;
 
+import io.minio.MinioClient;
+import io.minio.PostPolicy;
+import io.minio.errors.MinioException;
 
 public class PresignedPostPolicy {
   public static void main(String[] args)
-    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
     // dummy values, please replace them with original values.
-    // Set s3 endpoint, region is calculated automatically
-    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // For Amazon S3 endpoint, region is calculated automatically
+    try {
+      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // Create new PostPolicy object for 'my-bucketname', 'my-objectname' and 7 days expire time from now.
-    PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
-    // 'my-objectname' should be 'image/png' content type
-    policy.setContentType("image/png");
-    Map<String,String> formData = s3Client.presignedPostPolicy(policy);
+      // Create new PostPolicy object for 'my-bucketname', 'my-objectname' and 7 days expire time from now.
+      PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
+      // 'my-objectname' should be 'image/png' content type
+      policy.setContentType("image/png");
+      Map<String,String> formData = minioClient.presignedPostPolicy(policy);
 
-    // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
-    System.out.print("curl -X POST ");
-    for (Map.Entry<String,String> entry : formData.entrySet()) {
-      System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+      // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
+      System.out.print("curl -X POST ");
+      for (Map.Entry<String,String> entry : formData.entrySet()) {
+        System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+      }
+      System.out.println(" -F file=@/tmp/userpic.png https://play.minio.io:9000/my-bucketname");
+    } catch (MinioException e) {
+      System.out.println("Error occured: " + e);
     }
-    System.out.println(" -F file=@/tmp/userpic.png https://my-bucketname.s3.amazonaws.com/");
   }
 }

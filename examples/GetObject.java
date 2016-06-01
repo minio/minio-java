@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-import io.minio.MinioClient;
-import io.minio.errors.MinioException;
-
 import java.io.InputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -24,26 +21,37 @@ import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import io.minio.MinioClient;
+import io.minio.errors.MinioException;
 
 public class GetObject {
   public static void main(String[] args)
-    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
     // dummy values, please replace them with original values.
-    // Set s3 endpoint, region is calculated automatically
-    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // For Amazon S3 endpoint, region is calculated automatically
+    try {
+      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // Get input stream to have content of 'my-objectname' from 'my-bucketname'
-    InputStream stream = s3Client.getObject("my-bucketname", "my-objectname");
+      // Check whether the object exists using statObject().  If the object is not found,
+      // statObject() throws an exception.  It means that the object exists when statObject()
+      // execution is successful.
+      minioClient.statObject("my-bucketname", "my-objectname");
 
-    // Read the input stream and print to the console till EOF.
-    byte[] buf = new byte[16384];
-    int bytesRead;
-    while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-      System.out.println(new String(buf, 0, bytesRead));
+      // Get input stream to have content of 'my-objectname' from 'my-bucketname'
+      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");
+
+      // Read the input stream and print to the console till EOF.
+      byte[] buf = new byte[16384];
+      int bytesRead;
+      while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+        System.out.println(new String(buf, 0, bytesRead));
+      }
+
+      // Close the input stream.
+      stream.close();
+    } catch (MinioException e) {
+      System.out.println("Error occured: " + e);
     }
-
-    // Close the input stream.
-    stream.close();
   }
 }
