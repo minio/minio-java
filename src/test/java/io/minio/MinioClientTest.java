@@ -548,6 +548,28 @@ public class MinioClientTest {
   }
 
   @Test
+  public void testSpecialCharsNameWorks()
+    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = "hello world";
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject("bucket", "世界+!\"#$&'()*,:;=?@", data, 11, null);
+  }
+
+  @Test
   public void testNullContentTypeWorks()
     throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
