@@ -129,7 +129,7 @@ public final class MinioClient {
    * Creates Minio client object with given endpoint using anonymous access.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient("https://s3.amazonaws.com"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000"); }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -160,7 +160,7 @@ public final class MinioClient {
    * Creates Minio client object with given URL object using anonymous access.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient(new URL("https://s3.amazonaws.com")); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000")); }</pre>
    *
    * @param url Endpoint URL object.
    *
@@ -179,7 +179,7 @@ public final class MinioClient {
    * Creates Minio client object with given HttpUrl object using anonymous access.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient(new HttpUrl.parse("https://s3.amazonaws.com")); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000")); }</pre>
    *
    * @param url Endpoint HttpUrl object.
    *
@@ -199,7 +199,7 @@ public final class MinioClient {
    * Creates Minio client object with given endpoint, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -233,7 +233,7 @@ public final class MinioClient {
    * Creates Minio client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient(new URL("https://s3.amazonaws.com"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param url Endpoint URL object.
    * @param accessKey Access key to access service in endpoint.
@@ -255,7 +255,7 @@ public final class MinioClient {
    * Creates Minio client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient(HttpUrl.parse("https://s3.amazonaws.com"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param url Endpoint HttpUrl object.
    * @param accessKey Access key to access service in endpoint.
@@ -278,7 +278,7 @@ public final class MinioClient {
    * Creates Minio client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -313,7 +313,7 @@ public final class MinioClient {
    * Creates Minio client object with given endpoint, access key and secret key using secure (HTTPS) connection.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true); }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -349,7 +349,7 @@ public final class MinioClient {
    * Creates Minio client object using given endpoint, port, access key, secret key and secure option.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false); }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -998,7 +998,7 @@ public final class MinioClient {
    * Returns meta data information of given object in given bucket.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code ObjectStat objectStat = s3Client.statObject("my-bucketname", "my-objectname");
+   * <pre>{@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
    * System.out.println(objectStat); }</pre>
    *
    * @param bucketName Bucket name.
@@ -1030,7 +1030,7 @@ public final class MinioClient {
    * after use else the connection will remain open.
    *
    * <p><b>Example:</b>
-   * <pre>{@code InputStream stream = s3Client.getObject("my-bucketname", "my-objectname");
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");
    * byte[] buf = new byte[16384];
    * int bytesRead;
    * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
@@ -1064,7 +1064,7 @@ public final class MinioClient {
    * closed after use else the connection will remain open.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = s3Client.getObject("my-bucketname", "my-objectname", 1024L);
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
    * byte[] buf = new byte[16384];
    * int bytesRead;
    * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
@@ -1099,7 +1099,7 @@ public final class MinioClient {
    * closed after use else the connection will remain open.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = s3Client.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
    * byte[] buf = new byte[16384];
    * int bytesRead;
    * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
@@ -1150,7 +1150,7 @@ public final class MinioClient {
    * Gets object's data in the given bucket and stores it to given file name.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code s3Client.getObject("my-bucketname", "my-objectname", "photo.jpg"); }</pre>
+   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg"); }</pre>
    *
    * @param bucketName  Bucket name.
    * @param objectName  Object name in the bucket.
@@ -1242,7 +1242,7 @@ public final class MinioClient {
    * Returns an presigned URL to download the object in the bucket with given expiry time.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code String url = s3Client.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
    * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name.
@@ -1281,7 +1281,7 @@ public final class MinioClient {
    * Default expiry time is 7 days in seconds.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code String url = s3Client.presignedGetObject("my-bucketname", "my-objectname");
+   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");
    * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name.
@@ -1305,7 +1305,7 @@ public final class MinioClient {
    * Returns a presigned URL to upload an object in the bucket with given expiry time.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code String url = s3Client.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   * <pre>{@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
    * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name
@@ -1343,7 +1343,7 @@ public final class MinioClient {
    * Default expiry time is 7 days in seconds.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code String url = s3Client.presignedPutObject("my-bucketname", "my-objectname");
+   * <pre>{@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");
    * System.out.println(url); }</pre>
    *
    * @param bucketName  Bucket name.
@@ -1371,13 +1371,13 @@ public final class MinioClient {
    * PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
    * // 'my-objectname' should be 'image/png' content type
    * policy.setContentType("image/png");
-   * Map<String,String> formData = s3Client.presignedPostPolicy(policy);
+   * Map<String,String> formData = minioClient.presignedPostPolicy(policy);
    * // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
    * System.out.print("curl -X POST ");
    * for (Map.Entry<String,String> entry : formData.entrySet()) {
    *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
    * }
-   * System.out.println(" -F file=@/tmp/userpic.png https://my-bucketname.s3.amazonaws.com/"); }</pre>
+   * System.out.println(" -F file=@/tmp/userpic.png https://play.minio.io:9000/my-bucketname"); }</pre>
    *
    * @param policy Post policy of an object.
    * @return Map of strings to construct form-data.
@@ -1397,7 +1397,7 @@ public final class MinioClient {
    * Removes an object from a bucket.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code s3Client.removeObject("my-bucketname", "my-objectname"); }</pre>
+   * <pre>{@code minioClient.removeObject("my-bucketname", "my-objectname"); }</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1448,7 +1448,7 @@ public final class MinioClient {
    * Lists object information as {@code Iterable<Result><Item>>} in given bucket, prefix and recursive flag.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code Iterable<Result<Item>> myObjects = s3Client.listObjects("my-bucketname");
+   * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname");
    * for (Result<Item> result : myObjects) {
    *   Item item = result.get();
    *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
@@ -1642,7 +1642,7 @@ public final class MinioClient {
    * Returns all bucket information owned by the current user.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code List<Bucket> bucketList = s3Client.listBuckets();
+   * <pre>{@code List<Bucket> bucketList = minioClient.listBuckets();
    * for (Bucket bucket : bucketList) {
    *   System.out.println(bucket.creationDate() + ", " + bucket.name());
    * } }</pre>
@@ -1671,7 +1671,7 @@ public final class MinioClient {
    * Checks if given bucket exist and is having read access.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code boolean found = s3Client.bucketExists("my-bucketname");
+   * <pre>{@code boolean found = minioClient.bucketExists("my-bucketname");
    * if (found) {
    *   System.out.println("my-bucketname exists");
    * } else {
@@ -1730,7 +1730,7 @@ public final class MinioClient {
    * Creates a bucket with given region.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code s3Client.makeBucket("my-bucketname");
+   * <pre>{@code minioClient.makeBucket("my-bucketname");
    * System.out.println("my-bucketname is created successfully"); }</pre>
    *
    * @param bucketName Bucket name.
@@ -1772,7 +1772,7 @@ public final class MinioClient {
    * </p>
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code s3Client.removeBucket("my-bucketname");
+   * <pre>{@code minioClient.removeBucket("my-bucketname");
    * System.out.println("my-bucketname is removed successfully"); }</pre>
    *
    * @param bucketName Bucket name.
@@ -1880,7 +1880,7 @@ public final class MinioClient {
    * }
    * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
    * // create object
-   * s3Client.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
+   * minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
    * bais.close();
    * System.out.println("my-bucketname is uploaded successfully"); }</pre>
    *
@@ -2080,7 +2080,7 @@ public final class MinioClient {
    * Lists incomplete uploads of objects in given bucket, prefix and recursive flag.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code Iterable<Result<Upload>> myObjects = s3Client.listIncompleteUploads("my-bucketname");
+   * <pre>{@code Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname");
    * for (Result<Upload> result : myObjects) {
    *   Upload upload = result.get();
    *   System.out.println(upload.uploadId() + ", " + upload.objectName());
@@ -2456,7 +2456,7 @@ public final class MinioClient {
    * Removes incomplete multipart upload of given object.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code s3Client.removeIncompleteUpload("my-bucketname", "my-objectname");
+   * <pre>{@code minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
    * System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname"); }</pre>
    *
    * @param bucketName Bucket name.
