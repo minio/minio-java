@@ -14,31 +14,40 @@
  * limitations under the License.
  */
 
-import io.minio.MinioClient;
-import io.minio.Result;
-import io.minio.messages.Upload;
-import io.minio.errors.MinioException;
-
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import io.minio.MinioClient;
+import io.minio.Result;
+import io.minio.errors.MinioException;
+import io.minio.messages.Upload;
 
 public class ListIncompleteUploads {
   public static void main(String[] args)
-    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
     // dummy values, please replace them with original values.
-    // Set s3 endpoint, region is calculated automatically
-    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // For Amazon S3 endpoint, region is calculated automatically
+    try {
+      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // List all incomplete multipart upload of objects in 'my-bucketname'
-    Iterable<Result<Upload>> myObjects = s3Client.listIncompleteUploads("my-bucketname");
-    for (Result<Upload> result : myObjects) {
-      Upload upload = result.get();
-      System.out.println(upload.uploadId() + ", " + upload.objectName());
+      // Check whether 'my-bucketname' exist or not.
+      boolean found = minioClient.bucketExists("my-bucketname");
+      if (found) {
+        // List all incomplete multipart upload of objects in 'my-bucketname'
+        Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname");
+        for (Result<Upload> result : myObjects) {
+          Upload upload = result.get();
+          System.out.println(upload.uploadId() + ", " + upload.objectName());
+        }
+      } else {
+        System.out.println("my-bucketname does not exist");
+      }
+    } catch (MinioException e) {
+      System.out.println("Error occured: " + e);
     }
   }
 }

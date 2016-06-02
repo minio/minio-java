@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-import io.minio.MinioClient;
-import io.minio.messages.Bucket;
-import io.minio.errors.MinioException;
-
 import java.util.List;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -25,19 +21,26 @@ import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import io.minio.MinioClient;
+import io.minio.errors.MinioException;
+import io.minio.messages.Bucket;
 
 public class ListBuckets {
   public static void main(String[] args)
-    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException, MinioException {
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
     // dummy values, please replace them with original values.
-    // Set s3 endpoint, region is calculated automatically
-    MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+    // For Amazon S3 endpoint, region is calculated automatically
+    try {
+      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-    // List buckets we have atleast read access.
-    List<Bucket> bucketList = s3Client.listBuckets();
-    for (Bucket bucket : bucketList) {
-      System.out.println(bucket.creationDate() + ", " + bucket.name());
+      // List buckets we have atleast read access.
+      List<Bucket> bucketList = minioClient.listBuckets();
+      for (Bucket bucket : bucketList) {
+        System.out.println(bucket.creationDate() + ", " + bucket.name());
+      }
+    } catch (MinioException e) {
+      System.out.println("Error occured: " + e);
     }
   }
 }
