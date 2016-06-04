@@ -20,7 +20,6 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import io.minio.messages.ErrorResponse;
-import io.minio.ErrorCode;
 
 
 /**
@@ -43,10 +42,10 @@ public class ErrorResponseException extends MinioException {
 
 
   /**
-   * Returns Amazon S3 error code to indicate what error occured.
+   * Returns ErrorResponse contains detail of what error occured.
    */
-  public ErrorCode errorCode() {
-    return this.errorResponse.errorCode();
+  public ErrorResponse errorResponse() {
+    return this.errorResponse;
   }
 
 

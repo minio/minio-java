@@ -1727,7 +1727,7 @@ public final class MinioClient {
       executeHead(bucketName, null);
       return true;
     } catch (ErrorResponseException e) {
-      if (e.errorCode() != ErrorCode.NO_SUCH_BUCKET) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET) {
         throw e;
       }
     }
