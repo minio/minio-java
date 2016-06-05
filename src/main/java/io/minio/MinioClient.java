@@ -581,6 +581,10 @@ public final class MinioClient {
 
         @Override
         public long contentLength() {
+          if (body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[]) {
+            return length;
+          }
+
           if (length == 0) {
             return -1;
           } else {
