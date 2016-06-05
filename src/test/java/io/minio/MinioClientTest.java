@@ -22,7 +22,6 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 
 import okio.Buffer;
 
-import io.minio.ErrorCode;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
@@ -625,5 +624,11 @@ public class MinioClientTest {
 
     ObjectStat objectStatInfo = client.statObject("bucket", "key");
     assertEquals(expectedStatInfo, objectStatInfo);
+  }
+
+  @Test(expected = MinioException.class)
+  public void testForMissingHttps() throws MinioException {
+    new MinioClient("http://exampleHost.com/", "foo", "bar", true);
+    throw new RuntimeException("Expected exception did not fire");
   }
 }

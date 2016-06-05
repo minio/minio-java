@@ -152,7 +152,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, null, null, true);
+    this(endpoint, 0, null, null, endpoint==null?false:endpoint.startsWith("https://"));
   }
 
 
@@ -172,7 +172,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null, true);
+    this(url.toString(), 0, null, null, url.getProtocol().equals(Scheme.HTTPS.toString()));
   }
 
   /**
@@ -192,7 +192,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null, true);
+    this(url.toString(), 0, null, null, url.isHttps());
   }
 
   /**
@@ -225,7 +225,7 @@ public final class MinioClient {
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, accessKey, secretKey, true);
+    this(endpoint, 0, accessKey, secretKey, endpoint==null?false:endpoint.startsWith("https://"));
   }
 
 
@@ -248,7 +248,7 @@ public final class MinioClient {
    */
   public MinioClient(URL url, String accessKey, String secretKey)
     throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey, true);
+    this(url.toString(), 0, accessKey, secretKey, url.getProtocol().equals(Scheme.HTTPS.toString()));
   }
 
   /**
@@ -271,7 +271,7 @@ public final class MinioClient {
    */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
       throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey, true);
+    this(url.toString(), 0, accessKey, secretKey, url.isHttps());
   }
 
   /**
@@ -306,7 +306,7 @@ public final class MinioClient {
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, port, accessKey, secretKey, true);
+    this(endpoint, port, accessKey, secretKey, endpoint==null?false:endpoint.startsWith("https://"));
   }
 
   /**
@@ -381,12 +381,14 @@ public final class MinioClient {
     if (endpoint == null) {
       throw new InvalidEndpointException("(null)", "null endpoint");
     }
-
-    // for valid URL endpoint, port and secure are ignored
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
         throw new InvalidEndpointException(endpoint, "no path allowed in endpoint");
+      }
+
+      if(secure && !url.isHttps()){
+        throw new InvalidEndpointException(endpoint, "endpoint is not https, but a secured connection is required");
       }
 
       // treat Amazon S3 host as special case
@@ -398,8 +400,9 @@ public final class MinioClient {
       this.baseUrl = url;
       this.accessKey = accessKey;
       this.secretKey = secretKey;
-
-      return;
+      if (port == 0 || url.port() == port){
+        return;
+      }
     }
 
     // endpoint may be a valid hostname, IPv4 or IPv6 address
