@@ -152,7 +152,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, null, null, true);
+    this(endpoint, 0, null, null);
   }
 
 
@@ -172,7 +172,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null, true);
+    this(url.toString(), 0, null, null);
   }
 
   /**
@@ -192,7 +192,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null, true);
+    this(url.toString(), 0, null, null);
   }
 
   /**
@@ -225,7 +225,7 @@ public final class MinioClient {
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, accessKey, secretKey, true);
+    this(endpoint, 0, accessKey, secretKey);
   }
 
 
@@ -248,7 +248,7 @@ public final class MinioClient {
    */
   public MinioClient(URL url, String accessKey, String secretKey)
     throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey, true);
+    this(url.toString(), 0, accessKey, secretKey);
   }
 
   /**
@@ -271,7 +271,7 @@ public final class MinioClient {
    */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
       throws NullPointerException, InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey, true);
+    this(url.toString(), 0, accessKey, secretKey);
   }
 
   /**
@@ -306,7 +306,7 @@ public final class MinioClient {
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, port, accessKey, secretKey, true);
+    this(endpoint, port, accessKey, secretKey, !(endpoint != null && endpoint.startsWith("http://")));
   }
 
   /**
@@ -367,7 +367,7 @@ public final class MinioClient {
    * @param port      Valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
    * @param accessKey Access key to access service in endpoint.
    * @param secretKey Secret key to access service in endpoint.
-   * @param secure  If true, access endpoint using HTTPS else access it using HTTP.
+   * @param secure    If true, access endpoint using HTTPS else access it using HTTP.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -382,7 +382,10 @@ public final class MinioClient {
       throw new InvalidEndpointException("(null)", "null endpoint");
     }
 
-    // for valid URL endpoint, port and secure are ignored
+    if (port < 0 || port > 65535) {
+      throw new InvalidPortException(port, "port must be in range of 1 to 65535");
+    }
+
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
@@ -395,7 +398,19 @@ public final class MinioClient {
         throw new InvalidEndpointException(endpoint, "for Amazon S3, host should be 's3.amazonaws.com' in endpoint");
       }
 
-      this.baseUrl = url;
+      HttpUrl.Builder urlBuilder = url.newBuilder();
+      Scheme scheme = Scheme.HTTP;
+      if (secure) {
+        scheme = Scheme.HTTPS;
+      }
+
+      urlBuilder.scheme(scheme.toString());
+
+      if (port > 0) {
+        urlBuilder.port(port);
+      }
+
+      this.baseUrl = urlBuilder.build();
       this.accessKey = accessKey;
       this.secretKey = secretKey;
 
@@ -410,10 +425,6 @@ public final class MinioClient {
     // treat Amazon S3 host as special case
     if (endpoint.endsWith(".amazonaws.com") && !endpoint.equals("s3.amazonaws.com")) {
       throw new InvalidEndpointException(endpoint, "for amazon S3, host should be 's3.amazonaws.com'");
-    }
-
-    if (port < 0 || port > 65535) {
-      throw new InvalidPortException(port, "port must be in range of 1 to 65535");
     }
 
     Scheme scheme = Scheme.HTTP;
