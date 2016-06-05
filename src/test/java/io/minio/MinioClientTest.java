@@ -566,7 +566,11 @@ public class MinioClientTest {
     String inputString = "hello world";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject("bucket", "世界+!\"#$&'()*,:;=?@", data, 11, null);
+    byte[] ascii = new byte[255];
+    for (int i = 1; i < 256; i++) {
+      ascii[i - 1] = (byte) i;
+    }
+    client.putObject("bucket", "世界" + new String(ascii, "UTF-8"), data, 11, null);
   }
 
   @Test

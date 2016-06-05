@@ -554,6 +554,9 @@ public final class MinioClient {
 
     if (objectName != null) {
       for (String pathSegment : objectName.split("/")) {
+        // Limitation:
+        // 1. OkHttp does not allow to add '.' and '..' as path segment.
+        // 2. Its not allowed to add path segment as '/', '//', '/usr' or 'usr/'.
         urlBuilder.addPathSegment(pathSegment);
       }
     }
@@ -635,7 +638,6 @@ public final class MinioClient {
     urlBuilder = url.newBuilder();
     for (int i = 0; i < pathSegments.size(); i++) {
       urlBuilder.setEncodedPathSegment(i, pathSegments.get(i)
-                                       .replaceAll("\\+", "%2B")
                                        .replaceAll("\\!", "%21")
                                        .replaceAll("\\$", "%24")
                                        .replaceAll("\\&", "%26")
@@ -643,11 +645,14 @@ public final class MinioClient {
                                        .replaceAll("\\(", "%28")
                                        .replaceAll("\\)", "%29")
                                        .replaceAll("\\*", "%2A")
+                                       .replaceAll("\\+", "%2B")
                                        .replaceAll("\\,", "%2C")
                                        .replaceAll("\\:", "%3A")
                                        .replaceAll("\\;", "%3B")
                                        .replaceAll("\\=", "%3D")
-                                       .replaceAll("\\@", "%40"));
+                                       .replaceAll("\\@", "%40")
+                                       .replaceAll("\\[", "%5B")
+                                       .replaceAll("\\]", "%5D"));
     }
     url = urlBuilder.build();
 
@@ -768,6 +773,9 @@ public final class MinioClient {
     if (emptyBody || errorResponse == null) {
       ErrorCode ec;
       switch (response.code()) {
+        case 400:
+          ec = ErrorCode.INVALID_URI;
+          break;
         case 404:
           if (objectName != null) {
             ec = ErrorCode.NO_SUCH_KEY;
@@ -1719,7 +1727,7 @@ public final class MinioClient {
       executeHead(bucketName, null);
       return true;
     } catch (ErrorResponseException e) {
-      if (e.errorCode() != ErrorCode.NO_SUCH_BUCKET) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET) {
         throw e;
       }
     }

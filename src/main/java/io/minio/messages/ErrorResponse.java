@@ -92,16 +92,19 @@ public class ErrorResponse extends XmlEntity {
     return this.errorCode;
   }
 
+  /**
+   * Returns error code string.
+   */
+  public String code() {
+    return this.code;
+  }
+
 
   /**
    * Returns error message.
    */
   public String message() {
-    if (this.message != null) {
-      return this.message;
-    } else {
-      return this.errorCode.message();
-    }
+    return this.message;
   }
 
 
@@ -165,7 +168,7 @@ public class ErrorResponse extends XmlEntity {
         + "message=" + message + ", "
         + "bucketName=" + bucketName + ", "
         + "objectName=" + objectName + ", "
-        + "resouce=" + resource + ", "
+        + "resource=" + resource + ", "
         + "requestId=" + requestId + ", "
         + "hostId=" + hostId
         + ")";

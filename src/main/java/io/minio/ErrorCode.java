@@ -148,7 +148,7 @@ public enum ErrorCode {
    */
   public static ErrorCode fromString(String codeString) {
     if (codeString == null) {
-      throw new IllegalArgumentException("null code string");
+      return null;
     }
 
     for (ErrorCode ec : ErrorCode.values()) {
@@ -157,6 +157,7 @@ public enum ErrorCode {
       }
     }
 
-    throw new IllegalArgumentException("invalid error code string '" + codeString + "'");
+    // Unknown error code string.  Its not a standard Amazon S3 error.
+    return null;
   }
 }
