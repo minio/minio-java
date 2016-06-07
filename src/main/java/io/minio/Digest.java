@@ -106,45 +106,9 @@ class Digest {
       throw new IllegalArgumentException("unsupported input stream object");
     }
 
-    MessageDigest md5Digest;
-    md5Digest = MessageDigest.getInstance("MD5");
-
-    // 16KiB buffer for optimization
-    byte[] buf = new byte[16384];
-    int bytesToRead = buf.length;
-    int bytesRead;
-    int totalBytesRead = 0;
-    int length = len;
     long pos = 0;
-
-    if (file != null) {
-      pos = file.getFilePointer();
-    } else {
-      stream.mark(len);
-    }
-
-    do {
-      if ((length - totalBytesRead) < bytesToRead) {
-        bytesToRead = length - totalBytesRead;
-      }
-
-      if (file != null) {
-        bytesRead = file.read(buf, 0, bytesToRead);
-      } else {
-        bytesRead = stream.read(buf, 0, bytesToRead);
-      }
-
-      if (bytesRead < 0) {
-        throw new InsufficientDataException("Insufficient data.  bytes read " + totalBytesRead + " expected "
-                                              + length);
-      } else if (bytesRead == 0) {
-        continue;
-      }
-
-      md5Digest.update(buf, 0, bytesRead);
-
-      totalBytesRead += bytesRead;
-    } while (totalBytesRead < length);
+    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+    pos = readBytes(len, file, stream, pos, null, md5Digest);
 
     if (file != null) {
       file.seek(pos);
@@ -154,7 +118,6 @@ class Digest {
 
     return BaseEncoding.base64().encode(md5Digest.digest());
   }
-
 
   /**
    * Returns SHA-256 and MD5 hashes for given string.
@@ -200,19 +163,49 @@ class Digest {
       throw new IllegalArgumentException("unsupported input stream object");
     }
 
-    MessageDigest sha256Digest;
-    MessageDigest md5Digest;
+    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
+    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+    long pos = 0;
+    pos = readBytes(len, file, stream, pos, sha256Digest, md5Digest);
 
-    sha256Digest = MessageDigest.getInstance("SHA-256");
-    md5Digest = MessageDigest.getInstance("MD5");
+    if (file != null) {
+      file.seek(pos);
+    } else {
+      stream.reset();
+    }
 
+    String[] hashes = { BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
+                        BaseEncoding.base64().encode(md5Digest.digest()) };
+
+    return hashes;
+  }
+
+
+  /**
+   * Updated MessageDigest with bytes read from file and stream
+   *
+   * @param len
+   * @param file
+   * @param stream
+   * @param pos
+   * @param sha256Digest
+   * @param md5Digest
+   * @return
+   * @throws IOException
+   * @throws InsufficientDataException
+   */
+  private static long readBytes(int len,
+                                RandomAccessFile file,
+                                BufferedInputStream stream,
+                                long pos,
+                                MessageDigest sha256Digest,
+                                MessageDigest md5Digest) throws IOException, InsufficientDataException {
     // 16KiB buffer for optimization
     byte[] buf = new byte[16384];
     int bytesToRead = buf.length;
     int bytesRead;
     int totalBytesRead = 0;
     int length = len;
-    long pos = 0;
 
     if (file != null) {
       pos = file.getFilePointer();
@@ -233,28 +226,25 @@ class Digest {
 
       if (bytesRead < 0) {
         throw new InsufficientDataException("Insufficient data.  bytes read " + totalBytesRead + " expected "
-                                              + length);
+                + length);
       } else if (bytesRead == 0) {
         continue;
       }
 
-      sha256Digest.update(buf, 0, bytesRead);
-      md5Digest.update(buf, 0, bytesRead);
+      if(sha256Digest != null) {
+        sha256Digest.update(buf, 0, bytesRead);
+      }
+      if(md5Digest != null) {
+        md5Digest.update(buf, 0, bytesRead);
+      }
 
       totalBytesRead += bytesRead;
     } while (totalBytesRead < length);
-
-    if (file != null) {
-      file.seek(pos);
-    } else {
-      stream.reset();
-    }
-
-    String[] hashes = { BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
-                        BaseEncoding.base64().encode(md5Digest.digest()) };
-
-    return hashes;
+    return pos;
   }
 
+  /**
+   * Private constructor
+   */
   private Digest() {}
 }
