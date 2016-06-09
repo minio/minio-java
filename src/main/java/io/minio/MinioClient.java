@@ -99,6 +99,12 @@ public final class MinioClient {
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
       + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
+  private static final String NULL_STRING = "(null)";
+  private static final String S3_AMAZONAWS_COM = "s3.amazonaws.com";
+  private static final String AMAZONAWS_COM = ".amazonaws.com";
+  private static final String END_HTTP = "----------END-HTTP----------";
+  private static final String US_EAST_1 = "us-east-1";
+  private static final String UPLOAD_ID = "uploadId";
 
   private static XmlPullParserFactory xmlPullParserFactory = null;
 
@@ -379,7 +385,7 @@ public final class MinioClient {
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
     throws InvalidEndpointException, InvalidPortException {
     if (endpoint == null) {
-      throw new InvalidEndpointException("(null)", "null endpoint");
+      throw new InvalidEndpointException(NULL_STRING, "null endpoint");
     }
 
     if (port < 0 || port > 65535) {
@@ -394,7 +400,7 @@ public final class MinioClient {
 
       // treat Amazon S3 host as special case
       String amzHost = url.host();
-      if (amzHost.endsWith(".amazonaws.com") && !amzHost.equals("s3.amazonaws.com")) {
+      if (amzHost.endsWith(AMAZONAWS_COM) && !amzHost.equals(S3_AMAZONAWS_COM)) {
         throw new InvalidEndpointException(endpoint, "for Amazon S3, host should be 's3.amazonaws.com' in endpoint");
       }
 
@@ -423,7 +429,7 @@ public final class MinioClient {
     }
 
     // treat Amazon S3 host as special case
-    if (endpoint.endsWith(".amazonaws.com") && !endpoint.equals("s3.amazonaws.com")) {
+    if (endpoint.endsWith(AMAZONAWS_COM) && !endpoint.equals(S3_AMAZONAWS_COM)) {
       throw new InvalidEndpointException(endpoint, "for amazon S3, host should be 's3.amazonaws.com'");
     }
 
@@ -483,7 +489,7 @@ public final class MinioClient {
    */
   private void checkBucketName(String name) throws InvalidBucketNameException {
     if (name == null) {
-      throw new InvalidBucketNameException("(null)", "null bucket name");
+      throw new InvalidBucketNameException(NULL_STRING, "null bucket name");
     }
 
     // Bucket names cannot be no less than 3 and no more than 63 characters long.
@@ -525,7 +531,7 @@ public final class MinioClient {
                                 final Object body, final int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException {
     if (bucketName == null && objectName != null) {
-      throw new InvalidBucketNameException("(null)", "null bucket name for object '" + objectName + "'");
+      throw new InvalidBucketNameException(NULL_STRING, "null bucket name for object '" + objectName + "'");
     }
 
     HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
@@ -534,7 +540,7 @@ public final class MinioClient {
       checkBucketName(bucketName);
 
       String host = this.baseUrl.host();
-      if (host.equals("s3.amazonaws.com")) {
+      if (host.equals(S3_AMAZONAWS_COM)) {
         // special case: handle s3.amazonaws.com separately
         if (region != null) {
           host = AwsS3Endpoints.INSTANCE.endpoint(region);
@@ -742,7 +748,7 @@ public final class MinioClient {
     if (response == null) {
       if (this.traceStream != null) {
         this.traceStream.println("<NO RESPONSE>");
-        this.traceStream.println("----------END-HTTP----------");
+        this.traceStream.println(END_HTTP);
       }
       throw new NoResponseException();
     }
@@ -757,7 +763,7 @@ public final class MinioClient {
 
     if (response.isSuccessful()) {
       if (this.traceStream != null) {
-        this.traceStream.println("----------END-HTTP----------");
+        this.traceStream.println(END_HTTP);
       }
       return new HttpResponse(header, response.body());
     }
@@ -782,7 +788,7 @@ public final class MinioClient {
 
     if (this.traceStream != null) {
       this.traceStream.println(errorXml);
-      this.traceStream.println("----------END-HTTP----------");
+      this.traceStream.println(END_HTTP);
     }
 
     if (emptyBody || errorResponse == null) {
@@ -841,12 +847,12 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    if (bucketName != null && "s3.amazonaws.com".equals(this.baseUrl.host()) && this.accessKey != null
+    if (bucketName != null && S3_AMAZONAWS_COM.equals(this.baseUrl.host()) && this.accessKey != null
           && this.secretKey != null && BucketRegionCache.INSTANCE.exists(bucketName) == false) {
       Map<String,String> queryParamMap = new HashMap<>();
       queryParamMap.put("location", null);
 
-      HttpResponse response = execute(Method.GET, "us-east-1", bucketName, null,
+      HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
                                       null, queryParamMap, null, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
@@ -868,7 +874,7 @@ public final class MinioClient {
 
       String region;
       if (location == null) {
-        region = "us-east-1";
+        region = US_EAST_1;
       } else {
         // eu-west-1 can be sometimes 'EU'.
         if ("EU".equals(location)) {
@@ -1795,7 +1801,7 @@ public final class MinioClient {
     Map<String,String> headerMap = new HashMap<>();
 
     String configString;
-    if (region == null || "us-east-1".equals(region)) {
+    if (region == null || US_EAST_1.equals(region)) {
       // for 'us-east-1', location constraint is not required.  for more info
       // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
       configString = "";
@@ -1804,7 +1810,7 @@ public final class MinioClient {
       configString = config.toString();
     }
 
-    executePut(bucketName, null, headerMap, null, "us-east-1", configString, 0);
+    executePut(bucketName, null, headerMap, null, US_EAST_1, configString, 0);
   }
 
 
@@ -1973,7 +1979,7 @@ public final class MinioClient {
     if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
       queryParamMap = new HashMap<>();
       queryParamMap.put("partNumber", Integer.toString(partNumber));
-      queryParamMap.put("uploadId", uploadId);
+      queryParamMap.put(UPLOAD_ID, uploadId);
     }
 
     HttpResponse response = executePut(bucketName, objectName, null, queryParamMap, data, length);
@@ -2352,7 +2358,7 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("uploadId", uploadId);
+    queryParamMap.put(UPLOAD_ID, uploadId);
 
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
 
@@ -2470,7 +2476,7 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("uploadId", uploadId);
+    queryParamMap.put(UPLOAD_ID, uploadId);
     if (partNumberMarker > 0) {
       queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
     }
@@ -2492,7 +2498,7 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("uploadId", uploadId);
+    queryParamMap.put(UPLOAD_ID, uploadId);
     executeDelete(bucketName, objectName, queryParamMap);
   }
 

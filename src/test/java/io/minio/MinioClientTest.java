@@ -49,6 +49,22 @@ import static org.junit.Assert.assertEquals;
 
 @SuppressWarnings("unused")
 public class MinioClientTest {
+  private static final String EXPECTED_EXCEPTION_DID_NOT_FIRE = "Expected exception did not fire";
+  private static final String BUCKET = "bucket";
+  private static final String CONTENT_LENGTH = "Content-Length";
+  private static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
+  private static final String CONTENT_TYPE = "Content-Type";
+  private static final String MON_04_MAY_2015_07_58_51_GMT = "Mon, 04 May 2015 07:58:51 GMT";
+  private static final String LAST_MODIFIED = "Last-Modified";
+  private static final String HELLO_WORLD = "hello world";
+  private static final String HELLO = "hello";
+  private static final String BYTES = "bytes";
+  private static final String ACCEPT_RANGES = "Accept-Ranges";
+  private static final String CONTENT_RANGE = "Content-Range";
+  private static final String SUN_29_JUN_2015_22_01_10_GMT = "Sun, 29 Jun 2015 22:01:10 GMT";
+  private static final String MON_04_MAY_2015_07_58_51_UTC = "Mon, 04 May 2015 07:58:51 UTC";
+  private static final String BUCKET_KEY = "/bucket/key";
+
   @Test()
   public void setUserAgentOnceSet() throws IOException, MinioException {
     String expectedHost = "example.com";
@@ -59,21 +75,21 @@ public class MinioClientTest {
   @Test(expected = MinioException.class)
   public void newClientWithPathFails() throws MinioException {
     new MinioClient("http://example.com/path");
-    throw new RuntimeException("Expected exception did not fire");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test(expected = NullPointerException.class)
   public void newClientWithNullUrlFails() throws NullPointerException, MinioException {
     URL url = null;
     new MinioClient(url);
-    throw new RuntimeException("Expected exception did not fire");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test(expected = MinioException.class)
   public void newClientWithNullStringFails() throws InvalidArgumentException, MinioException {
     String url = null;
     new MinioClient(url);
-    throw new RuntimeException("Expected exception did not fire");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test(expected = ErrorResponseException.class)
@@ -85,9 +101,9 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    client.statObject("bucket", "key");
+    client.statObject(BUCKET, "key");
 
-    throw new RuntimeException("Expected exception did not fire");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test(expected = ErrorResponseException.class)
@@ -99,9 +115,9 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    client.statObject("bucket", "key");
+    client.statObject(BUCKET, "key");
 
-    throw new RuntimeException("Expected exception did not fire");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test
@@ -111,10 +127,10 @@ public class MinioClientTest {
     MockResponse response = new MockResponse();
     response.setResponseCode(200);
     response.setHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
-    response.setHeader("Content-Length", "5080");
-    response.setHeader("Content-Type", "application/octet-stream");
+    response.setHeader(CONTENT_LENGTH, "5080");
+    response.setHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.setHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
-    response.setHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
+    response.setHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
 
     server.enqueue(response);
     server.start();
@@ -124,15 +140,15 @@ public class MinioClientTest {
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("GMT"));
     expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-    ObjectStat expectedStatInfo = new ObjectStat("bucket", "key",
+    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key",
                                                  expectedDate.getTime(),
                                                  5080,
                                                  "a670520d9d36833b3e28d1e4b73cbe22",
-                                                 "application/octet-stream");
+            APPLICATION_OCTET_STREAM);
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    ObjectStat objectStatInfo = client.statObject("bucket", "key");
+    ObjectStat objectStatInfo = client.statObject(BUCKET, "key");
 
     assertEquals(expectedStatInfo, objectStatInfo);
   }
@@ -145,7 +161,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    client.presignedGetObject("bucket", "key", 604801);
+    client.presignedGetObject(BUCKET, "key", 604801);
   }
 
   @Test
@@ -156,7 +172,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    String presignedObjectUrl = client.presignedGetObject("bucket", "key");
+    String presignedObjectUrl = client.presignedGetObject(BUCKET, "key");
     assertEquals(presignedObjectUrl.isEmpty(), false);
   }
 
@@ -165,13 +181,13 @@ public class MinioClientTest {
     throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
-    final String expectedObject = "hello world";
+    final String expectedObject = HELLO_WORLD;
 
     response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "5080");
-    response.addHeader("Content-Type", "application/octet-stream");
+    response.addHeader(CONTENT_LENGTH, "5080");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
     response.setResponseCode(200);
     response.setBody(new Buffer().writeUtf8(expectedObject));
 
@@ -180,7 +196,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    InputStream object = client.getObject("bucket", "key");
+    InputStream object = client.getObject(BUCKET, "key");
     byte[] result = new byte[20];
     int read = object.read(result);
     result = Arrays.copyOf(result, read);
@@ -190,16 +206,16 @@ public class MinioClientTest {
   @Test
   public void testPartialObject()
     throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String expectedObject = "hello";
+    final String expectedObject = HELLO;
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Content-Length", "5");
-    response.addHeader("Content-Type", "application/octet-stream");
+    response.addHeader(CONTENT_LENGTH, "5");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
-    response.addHeader("Accept-Ranges", "bytes");
-    response.addHeader("Content-Range", "0-4/11");
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response.addHeader(ACCEPT_RANGES, BYTES);
+    response.addHeader(CONTENT_RANGE, "0-4/11");
     response.setResponseCode(206);
     response.setBody(new Buffer().writeUtf8(expectedObject));
 
@@ -208,7 +224,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    InputStream object = client.getObject("bucket", "key", 0L, 5L);
+    InputStream object = client.getObject(BUCKET, "key", 0L, 5L);
     byte[] result = new byte[20];
     int read = object.read(result);
     result = Arrays.copyOf(result, read);
@@ -218,15 +234,15 @@ public class MinioClientTest {
   @Test(expected = InvalidArgumentException.class)
   public void testGetObjectOffsetIsNegativeReturnsError()
     throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String expectedObject = "hello";
+    final String expectedObject = HELLO;
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
-    response.addHeader("Content-Length", "5");
-    response.addHeader("Content-Type", "application/octet-stream");
+    response.addHeader(CONTENT_LENGTH, "5");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
-    response.addHeader("Accept-Ranges", "bytes");
-    response.addHeader("Content-Range", "0-4/11");
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response.addHeader(ACCEPT_RANGES, BYTES);
+    response.addHeader(CONTENT_RANGE, "0-4/11");
     response.setResponseCode(206);
     response.setBody(new Buffer().writeUtf8(expectedObject));
 
@@ -235,23 +251,23 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    client.getObject("bucket", "key", -1L, 5L);
+    client.getObject(BUCKET, "key", -1L, 5L);
     Assert.fail("Should of thrown an exception");
   }
 
   @Test(expected = InvalidArgumentException.class)
   public void testGetObjectLengthIsZeroReturnsError()
     throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String expectedObject = "hello";
+    final String expectedObject = HELLO;
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Content-Length", "5");
-    response.addHeader("Content-Type", "application/octet-stream");
+    response.addHeader(CONTENT_LENGTH, "5");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
-    response.addHeader("Accept-Ranges", "bytes");
-    response.addHeader("Content-Range", "0-4/11");
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response.addHeader(ACCEPT_RANGES, BYTES);
+    response.addHeader(CONTENT_RANGE, "0-4/11");
     response.setResponseCode(206);
     response.setBody(new Buffer().writeUtf8(expectedObject));
 
@@ -260,7 +276,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    client.getObject("bucket", "key", 0L, 0L);
+    client.getObject(BUCKET, "key", 0L, 0L);
     Assert.fail("Should of thrown an exception");
   }
 
@@ -273,12 +289,12 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Content-Length", "6");
-    response.addHeader("Content-Type", "application/octet-stream");
+    response.addHeader(CONTENT_LENGTH, "6");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 GMT");
-    response.addHeader("Accept-Ranges", "bytes");
-    response.addHeader("Content-Range", "5-10/11");
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response.addHeader(ACCEPT_RANGES, BYTES);
+    response.addHeader(CONTENT_RANGE, "5-10/11");
     response.setResponseCode(206);
     response.setBody(new Buffer().writeUtf8(expectedObject));
 
@@ -287,7 +303,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    InputStream object = client.getObject("bucket", "key", 6);
+    InputStream object = client.getObject(BUCKET, "key", 6);
     byte[] result = new byte[5];
     int read = object.read(result);
     result = Arrays.copyOf(result, read);
@@ -301,9 +317,9 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "414");
-    response.addHeader("Content-Type", "application/xml");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(CONTENT_LENGTH, "414");
+    response.addHeader(CONTENT_TYPE, "application/xml");
     response.setBody(new Buffer().writeUtf8(body));
     response.setResponseCode(200);
 
@@ -311,7 +327,7 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    Iterator<Result<Item>> objectsInBucket = client.listObjects("bucket").iterator();
+    Iterator<Result<Item>> objectsInBucket = client.listObjects(BUCKET).iterator();
 
     Item item = objectsInBucket.next().get();
     assertEquals("key", item.objectName());
@@ -341,9 +357,9 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "351");
-    response.addHeader("Content-Type", "application/xml");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(CONTENT_LENGTH, "351");
+    response.addHeader(CONTENT_TYPE, "application/xml");
     response.setBody(new Buffer().writeUtf8(body));
     response.setResponseCode(200);
 
@@ -354,7 +370,7 @@ public class MinioClientTest {
     Iterator<Bucket> buckets = client.listBuckets().iterator();
 
     Bucket bucket = buckets.next();
-    assertEquals("bucket", bucket.name());
+    assertEquals(BUCKET, bucket.name());
     assertEquals(dateFormat.parse("2015-05-05T20:35:51.410Z"), bucket.creationDate());
 
     bucket = buckets.next();
@@ -375,14 +391,14 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
 
     server.enqueue(response);
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    boolean result = client.bucketExists("bucket");
+    boolean result = client.bucketExists(BUCKET);
 
     assertEquals(true, result);
   }
@@ -393,14 +409,14 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(404);
 
     server.enqueue(response);
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    boolean result = client.bucketExists("bucket");
+    boolean result = client.bucketExists(BUCKET);
 
     assertEquals(false, result);
   }
@@ -412,10 +428,10 @@ public class MinioClientTest {
     MockResponse response1 = new MockResponse();
     MockResponse response2 = new MockResponse();
 
-    response1.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response1.setResponseCode(200);
 
-    response2.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response2.setResponseCode(200);
 
     server.enqueue(response1);
@@ -423,7 +439,7 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    client.makeBucket("bucket");
+    client.makeBucket(BUCKET);
   }
 
 
@@ -436,7 +452,7 @@ public class MinioClientTest {
     final ErrorResponse errResponse = new ErrorResponse(ErrorCode.BUCKET_ALREADY_EXISTS, null, null, "/bucket", "1",
                                                         null);
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(409); // status conflict
     response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
@@ -444,9 +460,9 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
-    client.makeBucket("bucket");
+    client.makeBucket(BUCKET);
 
-    throw new RuntimeException("Expected exception did not fire");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test
@@ -455,8 +471,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
     response.setResponseCode(200);
 
@@ -465,10 +481,10 @@ public class MinioClientTest {
 
     MinioClient client = new MinioClient(server.url(""));
 
-    String inputString = "hello world";
+    String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject("bucket", "key", data, 11, "application/octet-stream");
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
   }
 
   // this case only occurs for minio cloud storage
@@ -478,10 +494,10 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, BUCKET_KEY, "1",
                                                         null);
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(405); // method not allowed set by minio cloud storage
     response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
@@ -490,11 +506,11 @@ public class MinioClientTest {
 
     MinioClient client = new MinioClient(server.url(""));
 
-    String inputString = "hello world";
+    String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject("bucket", "key", data, 11, "application/octet-stream");
-    throw new RuntimeException("Expected exception did not fire");
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test(expected = EOFException.class)
@@ -503,10 +519,10 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, BUCKET_KEY, "1",
                                                         null);
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(405); // method not allowed set by minio cloud storage
     response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
@@ -518,8 +534,8 @@ public class MinioClientTest {
     String inputString = "hello worl";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject("bucket", "key", data, 11, "application/octet-stream");
-    throw new RuntimeException("Expected exception did not fire");
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test(expected = ErrorResponseException.class)
@@ -528,10 +544,10 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, "/bucket/key", "1",
+    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, BUCKET_KEY, "1",
                                                         null);
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(405); // method not allowed set by minio cloud storage
     response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
@@ -543,8 +559,8 @@ public class MinioClientTest {
     String inputString = "how long is a piece of string? too long!";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject("bucket", "key", data, 11, "application/octet-stream");
-    throw new RuntimeException("Expected exception did not fire");
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
   @Test
@@ -553,8 +569,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
     response.setResponseCode(200);
 
@@ -563,14 +579,14 @@ public class MinioClientTest {
 
     MinioClient client = new MinioClient(server.url(""));
 
-    String inputString = "hello world";
+    String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
     byte[] ascii = new byte[255];
     for (int i = 1; i < 256; i++) {
       ascii[i - 1] = (byte) i;
     }
-    client.putObject("bucket", "世界" + new String(ascii, "UTF-8"), data, 11, null);
+    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11, null);
   }
 
   @Test
@@ -579,8 +595,8 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
     response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
     response.setResponseCode(200);
 
@@ -589,10 +605,10 @@ public class MinioClientTest {
 
     MinioClient client = new MinioClient(server.url(""));
 
-    String inputString = "hello world";
+    String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject("bucket", "key", data, 11, null);
+    client.putObject(BUCKET, "key", data, 11, null);
   }
 
   @Test
@@ -601,11 +617,11 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", "Sun, 29 Jun 2015 22:01:10 GMT");
-    response.addHeader("Content-Length", "5080");
-    response.addHeader("Content-Type", "application/octet-stream");
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(CONTENT_LENGTH, "5080");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.addHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
-    response.addHeader("Last-Modified", "Mon, 04 May 2015 07:58:51 UTC");
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
     response.setResponseCode(200);
 
     server.enqueue(response);
@@ -616,14 +632,14 @@ public class MinioClientTest {
     expectedDate.clear();
     expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
     expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-    String contentType = "application/octet-stream";
-    ObjectStat expectedStatInfo = new ObjectStat("bucket", "key", expectedDate.getTime(), 5080,
+    String contentType = APPLICATION_OCTET_STREAM;
+    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key", expectedDate.getTime(), 5080,
                                                  "a670520d9d36833b3e28d1e4b73cbe22", contentType);
 
     // get request
     MinioClient client = new MinioClient(server.url(""), "foo", "bar");
 
-    ObjectStat objectStatInfo = client.statObject("bucket", "key");
+    ObjectStat objectStatInfo = client.statObject(BUCKET, "key");
     assertEquals(expectedStatInfo, objectStatInfo);
   }
 }
