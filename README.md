@@ -30,7 +30,26 @@ dependencies {
 
 You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/2.0.0/) directly from maven.
 
-## Example
+## Quick Start Example - File Uploader
+This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
+
+You need three items in order to connect to an object storage server.
+
+```java
+
+MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
+```
+
+| Params     | Desc |  
+| :------- | :---- |  
+| Endpoint | URL to object storage service. |  
+| Access Key    | Access key is like user ID that uniquely identifies your account.   |   
+| Secret Key     | Secret key is the password to your account.    |
+
+We will use the Minio server running at [https://play.minio.io:9000](https://play.minio.io:9000) in this example. Feel free to use this service for testing and development. Access credentials shown in this example are open to the public.
+
+#### FileUploader.java
 ```java
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -66,10 +85,25 @@ public class FileUploader {
 }
  
 ```
-### API Reference
+#### Compile FileUploader
+```bash
+$ javac -cp "minio-2.0.0.jar"  FileUploader.java
+```
+
+#### Run FileUploader
+```bash
+$ java -cp "minio-2.0.0.jar" FileUploader.java
+/tmp/asiaphotos.zip is successfully uploaded as asiaphotos.zip in asiatrip bucket.
+
+$  mc ls play/asiatrip/
+[2016-06-02 18:10:29 PDT]  82KiB asiaphotos.zip
+```
+
+## API Reference
+The full API Reference is available here. 
 * [Complete API Reference] (https://docs.minio.io/docs/java-client-api-reference)
 
-#### Bucket Operations
+### API Reference : Bucket Operations
 * [`makeBucket`](https://docs.minio.io/docs/java-client-api-reference#makeBucket)
 * [`listBuckets`](https://docs.minio.io/docs/java-client-api-reference#listBuckets)
 * [`bucketExists`](https://docs.minio.io/docs/java-client-api-reference#bucketExists)
@@ -77,22 +111,22 @@ public class FileUploader {
 * [`listObjects`](https://docs.minio.io/docs/java-client-api-reference#listObjects)
 * [`listIncompleteUploads`](https://docs.minio.io/docs/java-client-api-reference#listIncompleteUploads)
 
-#### Object Operations
+### API Reference : Object Operations
 * [`getObject`](https://docs.minio.io/docs/java-client-api-reference#getObject)
 * [`putObject`](https://docs.minio.io/docs/java-client-api-reference#putObject)
 * [`statObject`](https://docs.minio.io/docs/java-client-api-reference#statObject)
 * [`removeObject`](https://docs.minio.io/docs/java-client-api-reference#removeObject)
 * [`removeIncompleteUpload`](https://docs.minio.io/docs/java-client-api-reference#removeIncompleteUpload)
 
-#### Presigned Operations
+### API Reference : Presigned Operations
 * [`presignedGetObject`](https://docs.minio.io/docs/java-client-api-reference#presignedGetObject)
 * [`presignedPutObject`](https://docs.minio.io/docs/java-client-api-reference#presignedPutObject)
 * [`presignedPostPolicy`](https://docs.minio.io/docs/java-client-api-reference#presignedPostPolicy)
 
 
-### Additional Examples
+## Full Examples
 
-#### Bucket Operations
+#### Full Examples : Bucket Operations
 
 * [ListBuckets.java](./examples/ListBuckets.java)
 * [ListObjects.java](./examples/ListObjects.java)
@@ -101,7 +135,7 @@ public class FileUploader {
 * [RemoveBucket.java](./examples/RemoveBucket.java)
 * [ListIncompleteUploads.java](./examples/ListIncompleteUploads.java)
 
-#### Object Operations
+#### Full Eamples : Object Operations
 
 * [PutObject.java](./examples/PutObject.java)
 * [GetObject.Java](./examples/GetObject.java)
@@ -109,12 +143,12 @@ public class FileUploader {
 * [RemoveObject.java](./examples/RemoveObject.java)
 * [StatObject.java](./examples/StatObject.java)
 
-#### Presigned Operations
+#### Full Examples : Presigned Operations
 * [PresignedGetObject.java](./examples/PresignedGetObject.java)
 * [PresignedPutObject.java](./examples/PresignedPutObject.java)
 * [PresignedPostPolicy.java](./examples/PresignedPostPolicy.java)
 
-### How to run these examples?
+#### How to run these full examples?
 
 Simply edit the example java program to include your access credentials and follow the steps below.
 
@@ -134,6 +168,10 @@ bucket2
 ...
 bucketN
 ```
+## Explore Further
+* [docs.minio.io](https://docs.minio.io) - Full Docs Site
+* [Minio Java Client SDK API Reference](https://docs.minio.io/docs/java-client-api-reference) 
+* [Build your own Photo API Service - Full Application Example ](https://docs.minio.io/docs/java-photo-api-service)
 
 ## Contribute
 
