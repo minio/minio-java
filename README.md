@@ -35,6 +35,12 @@ This example program connects to an object storage server, makes a bucket on the
 
 You need three items in order to connect to an object storage server.
 
+```java
+
+MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
+```
+
 | Params     | Desc |  
 | :------- | :---- |  
 | Endpoint | URL to object storage service. |  
