@@ -33,6 +33,12 @@ import io.minio.errors.InsufficientDataException;
  */
 class Digest {
   /**
+   * Private constructor
+   */
+  private Digest() {}
+
+
+  /**
    * Returns SHA-256 hash of given string.
    */
   public static String sha256Hash(String string) throws NoSuchAlgorithmException {
@@ -95,7 +101,7 @@ class Digest {
    * @param len          Length of Input stream.
    */
   public static String md5Hash(Object inputStream, int len)
-    throws IllegalArgumentException, NoSuchAlgorithmException, IOException, InsufficientDataException {
+    throws NoSuchAlgorithmException, IOException, InsufficientDataException {
     RandomAccessFile file = null;
     BufferedInputStream stream = null;
     if (inputStream instanceof RandomAccessFile) {
@@ -139,9 +145,7 @@ class Digest {
    * Returns SHA-256 and MD5 hashes for given byte array and it's length.
    */
   public static String[] sha256md5Hashes(byte[] data, int length) throws NoSuchAlgorithmException {
-    String[] hashes = { sha256Hash(data, length), md5Hash(data, length) };
-
-    return hashes;
+    return new String[] { sha256Hash(data, length), md5Hash(data, length) };
   }
 
 
@@ -152,7 +156,7 @@ class Digest {
    * @param len          Length of Input stream.
    */
   public static String[] sha256md5Hashes(Object inputStream, int len)
-    throws IllegalArgumentException, NoSuchAlgorithmException, IOException, InsufficientDataException {
+    throws NoSuchAlgorithmException, IOException, InsufficientDataException {
     RandomAccessFile file = null;
     BufferedInputStream stream = null;
     if (inputStream instanceof RandomAccessFile) {
@@ -174,10 +178,8 @@ class Digest {
       stream.reset();
     }
 
-    String[] hashes = { BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
+    return new String[] { BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
                         BaseEncoding.base64().encode(md5Digest.digest()) };
-
-    return hashes;
   }
 
 
@@ -242,9 +244,4 @@ class Digest {
     } while (totalBytesRead < length);
     return pos;
   }
-
-  /**
-   * Private constructor
-   */
-  private Digest() {}
 }

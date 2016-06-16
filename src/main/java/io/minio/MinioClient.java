@@ -177,7 +177,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
-  public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
+  public MinioClient(URL url) throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null);
   }
 
@@ -197,7 +197,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
-  public MinioClient(HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException {
+  public MinioClient(HttpUrl url) throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null);
   }
 
@@ -253,7 +253,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(URL url, String accessKey, String secretKey)
-    throws NullPointerException, InvalidEndpointException, InvalidPortException {
+    throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, accessKey, secretKey);
   }
 
@@ -276,7 +276,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
-      throws NullPointerException, InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, accessKey, secretKey);
   }
 
@@ -848,7 +848,7 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     if (bucketName != null && S3_AMAZONAWS_COM.equals(this.baseUrl.host()) && this.accessKey != null
-          && this.secretKey != null && BucketRegionCache.INSTANCE.exists(bucketName) == false) {
+          && this.secretKey != null && !BucketRegionCache.INSTANCE.exists(bucketName)) {
       Map<String,String> queryParamMap = new HashMap<>();
       queryParamMap.put("location", null);
 
@@ -895,7 +895,7 @@ public final class MinioClient {
    */
   private String getText(XmlPullParser xpp, String location) throws XmlPullParserException {
     if (xpp.getEventType() == xpp.TEXT) {
-      location = xpp.getText();
+      return xpp.getText();
     }
     return location;
   }
@@ -2541,7 +2541,7 @@ public final class MinioClient {
    * @param n            Length of bytes to skip.
    */
   private void skipStream(Object inputStream, long n)
-    throws IllegalArgumentException, IOException, InsufficientDataException {
+    throws IOException, InsufficientDataException {
     RandomAccessFile file = null;
     BufferedInputStream stream = null;
     if (inputStream instanceof RandomAccessFile) {
@@ -2591,9 +2591,7 @@ public final class MinioClient {
       lastPartSize = partSize;
     }
 
-    int[] rv = { (int) partSize, (int) partCount, (int) lastPartSize };
-
-    return rv;
+    return new int[] { (int) partSize, (int) partCount, (int) lastPartSize };
   }
 
 
@@ -2604,7 +2602,7 @@ public final class MinioClient {
    *
    * @see #traceOff
    */
-  public void traceOn(OutputStream traceStream) throws NullPointerException {
+  public void traceOn(OutputStream traceStream) {
     if (traceStream == null) {
       throw new NullPointerException();
     } else {
