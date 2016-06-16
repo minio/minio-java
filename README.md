@@ -135,7 +135,7 @@ The full API Reference is available here.
 * [RemoveBucket.java](./examples/RemoveBucket.java)
 * [ListIncompleteUploads.java](./examples/ListIncompleteUploads.java)
 
-#### Full Eamples : Object Operations
+#### Full Examples : Object Operations
 
 * [PutObject.java](./examples/PutObject.java)
 * [GetObject.Java](./examples/GetObject.java)
@@ -148,26 +148,7 @@ The full API Reference is available here.
 * [PresignedPutObject.java](./examples/PresignedPutObject.java)
 * [PresignedPostPolicy.java](./examples/PresignedPostPolicy.java)
 
-#### How to run these full examples?
-
-Simply edit the example java program to include your access credentials and follow the steps below.
-
-NOTE: `minio-2.0.0-all.jar` includes all the necessary dependencies to run these examples.
-
-```bash
-$ sudo apt-get install openjdk-7-jdk
-$ git clone https://github.com/minio/minio-java
-$ cd minio-java
-[edit examples/ListBuckets.java]
-$ cd minio-java/examples; wget http://repo1.maven.org/maven2/io/minio/minio/2.0.0/minio-2.0.0-all.jar;
-$ javac -cp 'minio-2.0.0-all.jar' ListBuckets.java
-$ java -cp '.:minio-2.0.0-all.jar' ListBuckets
-bucket1
-bucket2
-....
-...
-bucketN
-```
+ 
 ## Explore Further
 * [docs.minio.io](https://docs.minio.io) - Full Docs Site
 * [Minio Java Client SDK API Reference](https://docs.minio.io/docs/java-client-api-reference) 
