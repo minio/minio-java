@@ -135,7 +135,7 @@ The full API Reference is available here.
 * [RemoveBucket.java](./examples/RemoveBucket.java)
 * [ListIncompleteUploads.java](./examples/ListIncompleteUploads.java)
 
-#### Full Eamples : Object Operations
+#### Full Examples : Object Operations
 
 * [PutObject.java](./examples/PutObject.java)
 * [GetObject.Java](./examples/GetObject.java)
