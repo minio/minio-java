@@ -41,8 +41,8 @@ MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ
 
 ```
 
-| Params     | Desc |  
-| :------- | :---- |  
+| Params     | Description |  
+| :------- | :------------ |  
 | Endpoint | URL to object storage service. |  
 | Access Key    | Access key is like user ID that uniquely identifies your account.   |   
 | Secret Key     | Secret key is the password to your account.    |
@@ -150,7 +150,7 @@ The full API Reference is available here.
 
  
 ## Explore Further
-* [docs.minio.io](https://docs.minio.io) - Full Docs Site
+* [Complete Documentation](https://docs.minio.io)
 * [Minio Java Client SDK API Reference](https://docs.minio.io/docs/java-client-api-reference) 
 * [Build your own Photo API Service - Full Application Example ](https://docs.minio.io/docs/java-photo-api-service)
 
