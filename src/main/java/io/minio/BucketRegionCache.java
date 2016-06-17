@@ -66,10 +66,6 @@ enum BucketRegionCache {
    * Returns true if given bucket name is in the map else false.
    */
   public boolean exists(String bucketName) {
-    if (this.regionMap.get(bucketName) == null) {
-      return false;
-    } else {
-      return true;
-    }
+    return this.regionMap.get(bucketName) != null;
   }
 }
