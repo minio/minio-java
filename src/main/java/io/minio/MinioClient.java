@@ -1964,13 +1964,12 @@ public final class MinioClient {
    *
    * @param bucketName   Bucket name.
    * @param objectName   Object name in the bucket.
-   * @param contentType  Content type of object data.
    * @param length       Length of object data.
    * @param data         Object data.
    * @param uploadId     Upload ID of multipart put object.
    * @param partNumber   Part number of multipart put object.
    */
-  private String putObject(String bucketName, String objectName, String contentType, int length, Object data,
+  private String putObject(String bucketName, String objectName, int length, Object data,
                            String uploadId, int partNumber)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
@@ -2004,7 +2003,7 @@ public final class MinioClient {
            InvalidArgumentException, InsufficientDataException {
     if (size <= MIN_MULTIPART_SIZE) {
       // single put object
-      putObject(bucketName, objectName, contentType, (int) size, data, null, 0);
+      putObject(bucketName, objectName, (int) size, data, null, 0);
       return;
     }
 
@@ -2051,7 +2050,7 @@ public final class MinioClient {
         }
       }
 
-      String etag = putObject(bucketName, objectName, contentType, expectedReadSize, data, uploadId, partNumber);
+      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, partNumber);
       totalParts[partNumber - 1] = new Part(partNumber, etag);
     }
 
