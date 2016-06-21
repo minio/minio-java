@@ -16,7 +16,6 @@
 
 package io.minio.http;
 
-import java.lang.Class;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
@@ -32,6 +31,9 @@ import com.squareup.okhttp.Headers;
  */
 public class HeaderParser {
   private static final Logger LOGGER = Logger.getLogger(HeaderParser.class.getName());
+
+  /* private constructor */
+  private HeaderParser() {}
 
   /**
    * Sets destination object from Headers object.
@@ -79,6 +81,4 @@ public class HeaderParser {
       }
     }
   }
-
-  private HeaderParser() {}
 }

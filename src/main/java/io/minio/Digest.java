@@ -33,7 +33,7 @@ import io.minio.errors.InsufficientDataException;
  */
 class Digest {
   /**
-   * Private constructor
+   * Private constructor.
    */
   private Digest() {}
 
@@ -184,17 +184,7 @@ class Digest {
 
 
   /**
-   * Updated MessageDigest with bytes read from file and stream
-   *
-   * @param len
-   * @param file
-   * @param stream
-   * @param pos
-   * @param sha256Digest
-   * @param md5Digest
-   * @return
-   * @throws IOException
-   * @throws InsufficientDataException
+   * Updated MessageDigest with bytes read from file and stream.
    */
   private static long readBytes(int len,
                                 RandomAccessFile file,
@@ -233,10 +223,10 @@ class Digest {
         continue;
       }
 
-      if(sha256Digest != null) {
+      if (sha256Digest != null) {
         sha256Digest.update(buf, 0, bytesRead);
       }
-      if(md5Digest != null) {
+      if (md5Digest != null) {
         md5Digest.update(buf, 0, bytesRead);
       }
 

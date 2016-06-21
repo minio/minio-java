@@ -134,7 +134,7 @@ public class PostPolicy {
       sb.append("\"expiration\":" + "\"" + expirationDate.toString(DateFormat.EXPIRATION_DATE_FORMAT) + "\"");
     }
 
-    if (conditions.size() > 0) {
+    if (!conditions.isEmpty()) {
       sb.append(",\"conditions\":[");
 
       ListIterator<String[]> iterator = conditions.listIterator();

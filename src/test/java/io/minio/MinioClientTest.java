@@ -22,7 +22,6 @@ import com.squareup.okhttp.mockwebserver.MockResponse;
 
 import okio.Buffer;
 
-import io.minio.ErrorCode;
 import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
@@ -64,6 +63,7 @@ public class MinioClientTest {
   private static final String SUN_29_JUN_2015_22_01_10_GMT = "Sun, 29 Jun 2015 22:01:10 GMT";
   private static final String MON_04_MAY_2015_07_58_51_UTC = "Mon, 04 May 2015 07:58:51 UTC";
   private static final String BUCKET_KEY = "/bucket/key";
+  private static final String MD5_HASH_STRING = "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"";
 
   @Test()
   public void setUserAgentOnceSet() throws IOException, MinioException {
@@ -186,7 +186,7 @@ public class MinioClientTest {
     response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
     response.addHeader(CONTENT_LENGTH, "5080");
     response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
     response.setResponseCode(200);
     response.setBody(new Buffer().writeUtf8(expectedObject));
@@ -212,7 +212,7 @@ public class MinioClientTest {
 
     response.addHeader(CONTENT_LENGTH, "5");
     response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
     response.addHeader(ACCEPT_RANGES, BYTES);
     response.addHeader(CONTENT_RANGE, "0-4/11");
@@ -239,7 +239,7 @@ public class MinioClientTest {
     MockResponse response = new MockResponse();
     response.addHeader(CONTENT_LENGTH, "5");
     response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
     response.addHeader(ACCEPT_RANGES, BYTES);
     response.addHeader(CONTENT_RANGE, "0-4/11");
@@ -264,7 +264,7 @@ public class MinioClientTest {
 
     response.addHeader(CONTENT_LENGTH, "5");
     response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
     response.addHeader(ACCEPT_RANGES, BYTES);
     response.addHeader(CONTENT_RANGE, "0-4/11");
@@ -291,7 +291,7 @@ public class MinioClientTest {
 
     response.addHeader(CONTENT_LENGTH, "6");
     response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
     response.addHeader(ACCEPT_RANGES, BYTES);
     response.addHeader(CONTENT_RANGE, "5-10/11");
@@ -473,7 +473,7 @@ public class MinioClientTest {
 
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.setResponseCode(200);
 
     server.enqueue(response);
@@ -571,7 +571,7 @@ public class MinioClientTest {
 
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.setResponseCode(200);
 
     server.enqueue(response);
@@ -597,7 +597,7 @@ public class MinioClientTest {
 
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.addHeader("ETag", "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"");
+    response.addHeader("ETag", MD5_HASH_STRING);
     response.setResponseCode(200);
 
     server.enqueue(response);

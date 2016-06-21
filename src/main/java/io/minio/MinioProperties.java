@@ -22,6 +22,8 @@ import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -29,6 +31,9 @@ import java.util.jar.Manifest;
  */
 enum MinioProperties {
   INSTANCE;
+
+  private static final Logger LOGGER = Logger.getLogger(MinioProperties.class.getName());
+
   private final AtomicReference<String> version = new AtomicReference<>(null);
 
   public String getVersion() {
@@ -41,6 +46,7 @@ enum MinioProperties {
             setMinioClientJavaVersion(classLoader);
             setDevelopmentVersion();
           } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "IOException occured", e);
             version.set("unknown");
           }
           result = version.get();
