@@ -39,7 +39,7 @@ public abstract class XmlEntity extends GenericXml {
    */
   public XmlEntity() throws XmlPullParserException {
     super.namespaceDictionary = new XmlNamespaceDictionary();
-    super.namespaceDictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01");
+    super.namespaceDictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
     super.namespaceDictionary.set("", "");
 
     this.xmlPullParser = Xml.createParser();

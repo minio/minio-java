@@ -43,7 +43,7 @@ public class CompleteMultipartUpload extends XmlEntity {
   public CompleteMultipartUpload(Part[] parts) throws XmlPullParserException {
     super();
     super.name = "CompleteMultipartUpload";
-    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01");
+    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
 
     if (parts == null) {
       this.partList = null;
