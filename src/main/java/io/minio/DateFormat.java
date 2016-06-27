@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import java.util.Locale;
+
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -25,17 +27,18 @@ import org.joda.time.format.DateTimeFormatter;
  */
 public class DateFormat {
   public static final DateTimeFormatter AMZ_DATE_FORMAT =
-      DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC();
+      DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss'Z'").withZoneUTC().withLocale(Locale.US);
 
   public static final DateTimeFormatter EXPIRATION_DATE_FORMAT =
-      DateTimeFormat.forPattern("yyyy-MM-dd'T'HH':'mm':'ss'.'SSS'Z'").withZoneUTC();
+      DateTimeFormat.forPattern("yyyy-MM-dd'T'HH':'mm':'ss'.'SSS'Z'").withZoneUTC().withLocale(Locale.US);
 
   public static final DateTimeFormatter RESPONSE_DATE_FORMAT = EXPIRATION_DATE_FORMAT;
 
-  public static final DateTimeFormatter SIGNER_DATE_FORMAT = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC();
+  public static final DateTimeFormatter SIGNER_DATE_FORMAT =
+      DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC().withLocale(Locale.US);
 
   public static final DateTimeFormatter HTTP_HEADER_DATE_FORMAT =
-      DateTimeFormat.forPattern("EEE',' dd MMM yyyy HH':'mm':'ss zzz").withZoneUTC();
+      DateTimeFormat.forPattern("EEE',' dd MMM yyyy HH':'mm':'ss zzz").withZoneUTC().withLocale(Locale.US);
 
   private DateFormat() {}
 }
