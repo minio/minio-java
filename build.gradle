@@ -113,6 +113,16 @@ task javadocJar (type: Jar, dependsOn: javadoc) {
   from javadoc.destinationDir
 }
 
+task localeTest (type: Test) {
+  description = "Runs tests with locale"
+  System.setProperty('user.language', 'de')
+  System.setProperty('user.country', 'DE')
+  systemProperties = System.properties
+  dependsOn test
+}
+
+check.dependsOn localeTest
+
 javadoc.options {
   encoding = 'UTF-8'
   links 'https://docs.oracle.com/javase/8/docs/api/'
