@@ -6,13 +6,13 @@
 ```java
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 ```
-``2.AWS S3``
+``2. AWS S3``
 ```java
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
 ```
 
 | Bucket operations |  Object operations | Presigned operations  |
-|---|---|---|
+|:--- |:--- |:--- |
 | [`makeBucket`](#makeBucket)  |[`getObject`](#getObject)   |[`presignedGetObject`](#presignedGetObject)   |
 | [`listBuckets`](#listBuckets)  | [`putObject`](#putObject)  | [`presignedPutObject`](#presignedPutObject)  |
 | [`bucketExists`](#bucketExists)  | [`statObject`](#statObject)  | [`presignedPostPolicy`](#presignedPostPolicy)  |
@@ -20,8 +20,8 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listObjects`](#listObjects)  | [`removeIncompleteUpload`](#removeIncompleteUpload)  |   | 
 |[`listIncompleteUploads`](#listIncompleteUploads)  |   |  
 
-## 1.  Constructors 
---------------------------------------
+## 1. Constructors 
+
 <a name="constructors">
 
 |  |
@@ -219,7 +219,7 @@ MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID
 MinioClient s3Client = new MinioClient(HttpUrl.parse("s3.amazonaws.com"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 ```
 ## 2. Bucket operations
---------------------------------------
+
 <a name="makeBucket">
 #### makeBucket(String bucketName)
 `public void makeBucket(String bucketName)`
@@ -231,7 +231,7 @@ Creates a new bucket.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 
 
@@ -278,7 +278,6 @@ try {
 }
 ```
 
---------------------------------------
 <a name="listBuckets">
 #### listBuckets()
 `public List<Bucket> listBuckets()`
@@ -325,7 +324,7 @@ try {
   System.out.println("Error occured: " + e);
 }
 ```
---------------------------------------
+
 <a name="bucketExists">
 #### bucketExists(String bucketName)
 `public boolean bucketExists(String bucketName)`
@@ -337,7 +336,7 @@ Checks if a bucket exists.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 
 
@@ -384,7 +383,7 @@ try {
 }
 ```
 
---------------------------------------
+
 <a name="removeBucket">
 #### removeBucket(String bucketName)
 `public void removeBucket(String bucketName)`
@@ -398,7 +397,7 @@ NOTE: -  removeBucket does not delete the objects inside the bucket. The objects
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 
 <table>
@@ -446,7 +445,7 @@ try {
   System.out.println("Error occured: " + e);
 }
 ```
--------------------------------
+
 <a name="listObjects">
 #### listObjects(String bucketName, String prefix, boolean recursive)
 `public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive)`
@@ -458,13 +457,13 @@ Lists all objects in a bucket.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``prefix``  | *String*  | Prefix string. List objects whose name starts with ``prefix``. |
 | ``recursive``  | *boolean*  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
 |Return Type	  | Exceptions	  | 
-|---|---|
+|:--- |:--- |
 | ``Iterable<Result<Item>>``:an iterator of Result Items.  | *None*  |
 
 __Example__
@@ -488,7 +487,7 @@ try {
 }
 ```
 
---------------------------------------
+
 <a name="listIncompleteUploads">
 #### listIncompleteUploads(String bucketName, String prefix, boolean recursive)
 `public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive)`
@@ -500,13 +499,13 @@ Lists partially uploaded objects in a bucket.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``prefix``  | *String*  | Prefix string. List objects whose name starts with ``prefix``. |
 | ``recursive``  | *boolean*  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
 |Return Type	  | Exceptions	  | 
-|---|---|
+|:--- |:--- |
 | ``Iterable<Result<Upload>>``: an iterator of Upload.  | *None*  |
 
 __Example__
@@ -529,7 +528,7 @@ try {
    System.out.println("Error occured: " + e);
 }
 ```
---------------------------------------
+
 ## 3. Object operations
 <a name="getObject">
 #### getObject(String bucketName, String objectName)
@@ -542,7 +541,7 @@ Downloads an object as a stream.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 
@@ -598,7 +597,7 @@ try {
 }
 ```
 
---------------------------------------
+
 <a name="getObject">
 #### getObject(String bucketName, String objectName, long offset, Long length)
 `public InputStream getObject(String bucketName,  String objectName, long offset, Long length)`
@@ -610,7 +609,7 @@ Downloads the specified range bytes of an object as a stream.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``offset``  | *Long*  | ``offset`` of the object from where the stream will start. |
@@ -669,7 +668,7 @@ __Example__
     System.out.println("Error occured: " + e);
 }
 ```
---------------------------------------
+
 <a name="getObject">
 #### getObject(String bucketName, String objectName, String fileName)
 `public void getObject(String bucketName, String objectName, String fileName)`
@@ -681,7 +680,7 @@ Downloads and saves the object as a file in the local filesystem.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``fileName``  | *String*  | File name. |
@@ -726,7 +725,7 @@ try {
   } catch (MinioException e) {
     System.out.println("Error occured: " + e);
 ```
---------------------------------------
+
 <a name="putObject">
 #### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
 `public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)`
@@ -738,7 +737,7 @@ Uploads an object from an InputStream.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``stream``  | *InputStream*  | stream to upload. |
@@ -807,7 +806,7 @@ try {
   System.out.println("Error occured: " + e);
 }
 ```
---------------------------------------
+
 <a name="putObject">
 #### putObject(String bucketName, String objectName, String fileName)
 `public void putObject(String bucketName, String objectName, String fileName)`
@@ -818,7 +817,7 @@ Uploads contents from a file to objectName.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``fileName``  | *String*  | File name. |
@@ -861,7 +860,7 @@ try {
   System.out.println("Error occured: " + e);
 }
 ```
---------------------------------------
+
 <a name="statObject">
 #### statObject(String bucketName, String objectName)   
 *`ObjectStat statObject(String bucketName, String objectName)`*
@@ -873,7 +872,7 @@ Gets metadata of an object.
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 
@@ -917,7 +916,7 @@ try {
  System.out.println("Error occured: " + e); 
 }
 ```
---------------------------------------
+
 <a name="removeObject">
 #### removeObject(String bucketName, String objectName)
 `public void removeObject(String bucketName, String objectName)`
@@ -930,7 +929,7 @@ __Parameters__
 
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 
@@ -972,7 +971,7 @@ try {
       System.out.println("Error: " + e);
 }
 ```
---------------------------------------
+
 <a name="removeIncompleteUpload">
 #### removeIncompleteUpload(String bucketName, String objectName)
 `public void removeIncompleteUpload(String bucketName, String objectName)`
@@ -985,7 +984,7 @@ __Parameters__
 
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 
@@ -1029,7 +1028,7 @@ try {
   System.out.println("Error occured: " + e);
 }
 ```
----------------------------------------
+
 ## 4. Presigned operations
 <a name="presignedGetObject">
 #### presignedGetObject(String bucketName, String objectName, Integer expires)
@@ -1042,7 +1041,7 @@ Generates a presigned URL for HTTP GET operations. Browsers/Mobile clients may p
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``expiry``  | *Integer*  | Expiry in seconds. Default expiry is set to 7 days. |
@@ -1082,7 +1081,7 @@ try {
   System.out.println("Error occured: " + e);
 }
 ```
---------------------------------------
+
 <a name="presignedPutObject">
 #### presignedPutObject(String bucketName, String objectName, Integer expires)
 `public String presignedPutObject(String bucketName, String objectName, Integer expires)`
@@ -1094,7 +1093,7 @@ Generates a presigned URL for HTTP PUT operations. Browsers/Mobile clients may p
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``expiry``  | *Integer*  | Expiry in seconds. Default expiry is set to 7 days. |
@@ -1134,7 +1133,7 @@ try {
   System.out.println("Error occured: " + e);
 }
 ```
---------------------------------
+
 <a name="presignedPostPolicy">
 #### presignedPostPolicy(PostPolicy policy)
 `public Map<String,String> presignedPostPolicy(PostPolicy policy)`
@@ -1146,7 +1145,7 @@ Allows setting policy conditions to a presigned URL for POST operations. Policie
 __Parameters__
 
 |Param   | Type	  | Description  |
-|---|---|---|
+|:--- |:--- |:--- |
 | ``policy``  | *PostPolicy*  | Post policy of an object.  |
 
 
@@ -1192,7 +1191,6 @@ try {
   System.out.println("Error occured: " + e);
 ```
 ## 5. Explore Further
----------------------------------------
  
 - [Build your own photo API Service Example](/docs/java-photo-api-service)
 - [Complete JavaDoc](http://minio.github.io/minio-java/)
