@@ -628,30 +628,6 @@ public final class MinioClient {
       };
     }
 
-    String sha256Hash = null;
-    String md5Hash = null;
-    if (this.accessKey != null && this.secretKey != null) {
-      if (body == null) {
-        sha256Hash = Digest.sha256Hash(new byte[0]);
-      } else {
-        if (body instanceof BufferedInputStream) {
-          String[] hashes = Digest.sha256md5Hashes((BufferedInputStream) body, length);
-          sha256Hash = hashes[0];
-          md5Hash = hashes[1];
-        } else if (body instanceof RandomAccessFile) {
-          String[] hashes = Digest.sha256md5Hashes((RandomAccessFile) body, length);
-          sha256Hash = hashes[0];
-          md5Hash = hashes[1];
-        } else if (body instanceof byte[]) {
-          byte[] data = (byte[]) body;
-          sha256Hash = Digest.sha256Hash(data, length);
-          md5Hash = Digest.md5Hash(data, length);
-        } else {
-          sha256Hash = Digest.sha256Hash(body.toString());
-        }
-      }
-    }
-
     HttpUrl url = urlBuilder.build();
     // urlBuilder does not encode some characters properly for Amazon S3.
     // Encode such characters properly here.
@@ -683,6 +659,43 @@ public final class MinioClient {
     if (headerMap != null) {
       for (Map.Entry<String,String> entry : headerMap.entrySet()) {
         requestBuilder.header(entry.getKey(), entry.getValue());
+      }
+    }
+
+    String sha256Hash = null;
+    String md5Hash = null;
+    if (this.accessKey != null && this.secretKey != null) {
+      // No need to compute sha256 if endpoint scheme is HTTPS. Issue #415.
+      if (url.isHttps()) {
+        sha256Hash = "UNSIGNED-PAYLOAD";
+        if (body instanceof BufferedInputStream) {
+          md5Hash = Digest.md5Hash((BufferedInputStream) body, length);
+        } else if (body instanceof RandomAccessFile) {
+          md5Hash = Digest.md5Hash((RandomAccessFile) body, length);
+        } else if (body instanceof byte[]) {
+          byte[] data = (byte[]) body;
+          md5Hash = Digest.md5Hash(data, length);
+        }
+      } else {
+        if (body == null) {
+          sha256Hash = Digest.sha256Hash(new byte[0]);
+        } else {
+          if (body instanceof BufferedInputStream) {
+            String[] hashes = Digest.sha256md5Hashes((BufferedInputStream) body, length);
+            sha256Hash = hashes[0];
+            md5Hash = hashes[1];
+          } else if (body instanceof RandomAccessFile) {
+            String[] hashes = Digest.sha256md5Hashes((RandomAccessFile) body, length);
+            sha256Hash = hashes[0];
+            md5Hash = hashes[1];
+          } else if (body instanceof byte[]) {
+            byte[] data = (byte[]) body;
+            sha256Hash = Digest.sha256Hash(data, length);
+            md5Hash = Digest.md5Hash(data, length);
+          } else {
+            sha256Hash = Digest.sha256Hash(body.toString());
+          }
+        }
       }
     }
 
