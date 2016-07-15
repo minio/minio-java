@@ -47,6 +47,7 @@ import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.nio.charset.StandardCharsets;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
@@ -55,7 +56,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import com.google.common.io.ByteStreams;
 import java.nio.file.StandardCopyOption;
-
 
 /**
  * <p>
@@ -511,6 +511,23 @@ public final class MinioClient {
     }
   }
 
+
+  /**
+   * Sets HTTP connect, write and read timeouts.  A value of 0 means no timeout, otherwise values must be between 1 and
+   * Integer.MAX_VALUE when converted to milliseconds.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(30)); }</pre>
+   *
+   * @param connectTimeout    HTTP connect timeout in milliseconds.
+   * @param writeTimeout      HTTP write timeout in milliseconds.
+   * @param readTimeout       HTTP read timeout in milliseconds.
+   */
+  public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
+    httpClient.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
+    httpClient.setWriteTimeout(writeTimeout, TimeUnit.MILLISECONDS);
+    httpClient.setReadTimeout(readTimeout, TimeUnit.MILLISECONDS);
+  }
 
   /**
    * Creates Request object for given request parameters.
