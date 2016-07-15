@@ -48,6 +48,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.nio.charset.StandardCharsets;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
@@ -90,6 +92,7 @@ import java.nio.file.StandardCopyOption;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public final class MinioClient {
+  private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // maximum allowed object size is 5TiB
   private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
   private static final int MAX_MULTIPART_COUNT = 10000;
@@ -795,7 +798,7 @@ public final class MinioClient {
       if (this.traceStream != null) {
         this.traceStream.println(END_HTTP);
       }
-      return new HttpResponse(header, response.body());
+      return new HttpResponse(header, response);
     }
 
     String errorXml = "";
@@ -2392,7 +2395,30 @@ public final class MinioClient {
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
 
     HttpResponse response = executePost(bucketName, objectName, null, queryParamMap, completeManifest);
-    response.body().close();
+
+    // Fixing issue https://github.com/minio/minio-java/issues/391
+    String bodyContent = "";
+    try {
+      // read enitre body stream to string.
+      Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+      if (scanner.hasNext()) {
+        bodyContent = scanner.next();
+      }
+    } catch (EOFException e) {
+      // Getting EOF exception is not an error.
+      // Just log it.
+      LOGGER.log(Level.WARNING, "EOF exception occured: " + e);
+    }  finally {
+      response.body().close();
+    }
+
+    bodyContent = bodyContent.trim();
+    if (!bodyContent.isEmpty()) {
+      ErrorResponse errorResponse = new ErrorResponse(new StringReader(bodyContent));
+      if (errorResponse.code() != null) {
+        throw new ErrorResponseException(errorResponse, response.response());
+      }
+    }
   }
 
 
