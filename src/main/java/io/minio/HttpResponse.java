@@ -16,20 +16,21 @@
 
 package io.minio;
 
+import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 
 
 /**
- * Packs {@link ResponseHeader} and {@link ResponseBody} into one object to pass/return in various methods.
+ * Packs {@link ResponseHeader} and {@link Response} into one object to pass/return in various methods.
  */
 class HttpResponse {
   ResponseHeader header;
-  ResponseBody body;
+  Response response;
 
 
-  public HttpResponse(ResponseHeader header, ResponseBody body) {
+  public HttpResponse(ResponseHeader header, Response response) {
     this.header = header;
-    this.body = body;
+    this.response = response;
   }
 
 
@@ -45,6 +46,13 @@ class HttpResponse {
    * Gets body.
    */
   public ResponseBody body() {
-    return this.body;
+    return this.response.body();
+  }
+
+  /**
+   * Gets Response.
+   */
+  public Response response() {
+    return this.response;
   }
 }
