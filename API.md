@@ -2,11 +2,13 @@
 
 ## Initialize Minio Client object. 
 
-``1. Minio`` 
+### 1. Minio 
+
 ```java
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 ```
-``2. AWS S3``
+### 2. AWS S3
+
 ```java
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
 ```
@@ -160,7 +162,8 @@ Valid endpoints:
 
 __Example__
 
-``1. Minio``
+### 1. Minio
+
 ```java
 // 1. public MinioClient(String endpoint)
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000");
@@ -189,7 +192,8 @@ MinioClient minioClient = new MinioClient("https://play.minio.io", 9000, "Q3AM3U
 // 9. public MinioClient(URL url, String accessKey, String secretKey)
 MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"), "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 ```
-``2. AWS S3``
+2. AWS S3
+
 ```java
  // 1. public MinioClient(String endpoint)
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com");
