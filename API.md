@@ -266,6 +266,7 @@ __Parameters__
 </table>
 
 __Example__
+
 ```java
 try {
 	// Create bucket if it doesn't exist.
@@ -317,6 +318,7 @@ Lists all buckets.
 </table>
 
 __Example__
+
 ```java
 try {
   // List buckets that have read access.
