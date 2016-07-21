@@ -111,11 +111,11 @@ class BucketAccessPolicy {
     boolean writeOnly = false;
 
     for (Statement statement: this.statements()) {
-      // commonActions |= statement.isBucketPolicyStatement(bucketName, objectPrefix, Actions.writeOnlyBucket);
+      commonActions |= statement.isBucketPolicy(bucketName, objectPrefix, Actions.writeOnlyBucket);
       writeOnly |= statement.isObjectPolicy(bucketName, objectPrefix, Actions.writeOnlyObject);
     }
 
-    return /*commonActions && */ writeOnly;
+    return commonActions && writeOnly;
   }
 
   /**
@@ -159,12 +159,13 @@ class BucketAccessPolicy {
     List<Statement> returnStatements = new ArrayList<>();
 
     for (Statement statement: this.statements()) {
-      // remove all bucket and object policy statements for given bucketName and objectPrefix. 
+      // remove all bucket and object policy statements for given bucketName and objectPrefix.
       if (statement.isBucketPolicy(bucketName, objectPrefix, Actions.readWriteBucket)) {
         continue;
       } else if (statement.isBucketPolicy(bucketName, objectPrefix, Actions.readOnlyBucket)) {
         continue;
-      /* } else if (isBucketPolicy(bucketName, objectPrefix, Actions.writeOnlyBucket) {*/
+      } else if (statement.isBucketPolicy(bucketName, objectPrefix, Actions.writeOnlyBucket)) {
+        continue;
       } else if (statement.isObjectPolicy(bucketName, objectPrefix, Actions.readWriteObject)) {
         continue;
       } else if (statement.isObjectPolicy(bucketName, objectPrefix, Actions.readOnlyObject)) {
@@ -185,7 +186,7 @@ class BucketAccessPolicy {
   private static Map<String, Map<String, String>> bucketCondition(String objectPrefix) {
     Map<String, String> condition = new HashMap<>();
     condition.put("s3:prefix", objectPrefix);
-    
+
     Map<String, Map<String, String>> conditions = new HashMap<>();
     conditions.put("StringEquals", condition);
 
@@ -244,19 +245,17 @@ class BucketAccessPolicy {
   static List<Statement> setWriteOnlyStatement(String bucketName, String objectPrefix) {
     List<Statement> statements = new ArrayList<>();
 
-    /*
     Statement bucketResourceStatement = new Statement();
     bucketResourceStatement.setSid(String.join("-", "minio-writeonly-bucket", objectPrefix));
     bucketResourceStatement.setEffect("Allow");
     bucketResourceStatement.setPrincipal(User.all());
     bucketResourceStatement.setResources(
                   Arrays.asList(String.format("%s%s", Constants.AWS_RESOURCE_PREFIX, bucketName)));
-    bucketResourceStatement.setActions(writeOnlyBucketActions);
+    bucketResourceStatement.setActions(Actions.writeOnlyBucket);
     bucketResourceStatement.setConditions(bucketCondition(objectPrefix));
     if (bucketResourceStatement.actions().size() > 0) {
       statements.add(bucketResourceStatement);
     }
-    */
 
     Statement objectResourceStatement = new Statement();
     objectResourceStatement.setSid(String.join("-", "minio-writeonly-object", objectPrefix));
@@ -301,7 +300,7 @@ class BucketAccessPolicy {
   /**
    * Generates the policy statements for policy, bucketName and objectPrefix.
    */
-  protected static List<Statement> generatePolicyStatements(BucketPolicy policy, String bucketName, 
+  protected static List<Statement> generatePolicyStatements(BucketPolicy policy, String bucketName,
                                               String objectPrefix) {
 
     List<Statement> statements = new ArrayList<>();

@@ -24,12 +24,12 @@ import java.util.*;
 @SuppressWarnings({"WeakerAccess", "unused"})
 class Actions {
   static final List<String> commonBucket = Arrays.asList(
-      "s3:GetBucketLocation", 
-      "s3:ListBucketMultipartUploads"
+      "s3:GetBucketLocation"
   );
 
   static final List<String> readWriteBucket = Arrays.asList(
-      "s3:ListBucket"
+      "s3:ListBucket",
+      "s3:ListBucketMultipartUploads"
   );
 
   static final List<String> readWriteObject = Arrays.asList(
@@ -43,6 +43,7 @@ class Actions {
 
   static final List<String> writeOnlyBucket = Arrays.asList(
       // Add more bucket level write actions here.
+      "s3:ListBucketMultipartUploads"
   );
 
   static final List<String> writeOnlyObject = Arrays.asList(
