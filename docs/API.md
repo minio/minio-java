@@ -1,16 +1,21 @@
-# Java Client API Reference
+# Java Client API Reference [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Minio/minio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Initialize Minio Client object. 
 
-### 1. Minio 
+## Minio 
 
 ```java
+
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
 ```
-### 2. AWS S3
+
+## AWS S3
 
 ```java
+
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
+
 ```
 
 | Bucket operations |  Object operations | Presigned operations  |
@@ -85,7 +90,9 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |  Creates Minio client object with given URL object, access key and secret key. |
 |  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-java.lang.String-java.lang.String-) |  
 
+
 __Parameters__
+
 
 <table>
     <thead>
@@ -160,11 +167,14 @@ Valid endpoints:
     </tbody>
 </table>
 
+
 __Example__
 
-### 1. Minio
+
+### Minio
 
 ```java
+
 // 1. public MinioClient(String endpoint)
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000");
 
@@ -191,11 +201,14 @@ MinioClient minioClient = new MinioClient("https://play.minio.io", 9000, "Q3AM3U
 
 // 9. public MinioClient(URL url, String accessKey, String secretKey)
 MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"), "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
 ```
-2. AWS S3
+
+### AWS S3
 
 ```java
- // 1. public MinioClient(String endpoint)
+ 
+// 1. public MinioClient(String endpoint)
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com");
 
 // 2. public MinioClient(URL url)
@@ -221,7 +234,9 @@ MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID
 
 // 9. public MinioClient(URL url, String accessKey, String secretKey)
 MinioClient s3Client = new MinioClient(HttpUrl.parse("s3.amazonaws.com"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+
 ```
+
 ## 2. Bucket operations
 
 <a name="makeBucket">
@@ -267,7 +282,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
 try {
 	// Create bucket if it doesn't exist.
   boolean found = minioClient.bucketExists("mybucket");
@@ -281,10 +298,12 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="listBuckets">
 #### listBuckets()
+
 `public List<Bucket> listBuckets()`
 
 Lists all buckets.
@@ -317,9 +336,12 @@ Lists all buckets.
                </tbody>
 </table>
 
+
 __Example__
 
+
 ```java
+
 try {
   // List buckets that have read access.
 	List<Bucket> bucketList = minioClient.listBuckets();
@@ -329,21 +351,26 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="bucketExists">
 #### bucketExists(String bucketName)
+
 `public boolean bucketExists(String bucketName)`
 
 Checks if a bucket exists.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#bucketExists-java.lang.String-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
+
 
 
 <table>
@@ -375,7 +402,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
 try {
   // Check whether 'my-bucketname' exists or not.
 	boolean found = minioClient.bucketExists("mybucket");
@@ -387,11 +416,13 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 
 <a name="removeBucket">
 #### removeBucket(String bucketName)
+
 `public void removeBucket(String bucketName)`
 
 Removes a bucket.
@@ -400,11 +431,14 @@ Removes a bucket.
  
 NOTE: -  removeBucket does not delete the objects inside the bucket. The objects need to be deleted using the removeObject API. 
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
+
 
 <table>
     <thead>
@@ -436,7 +470,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
 try {
   // Check if my-bucket exists before removing it.
 	boolean found = minioClient.bucketExists("mybucket");
@@ -450,17 +486,21 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="listObjects">
 #### listObjects(String bucketName, String prefix, boolean recursive)
+
 `public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive)`
 
 Lists all objects in a bucket.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-java.lang.String-boolean-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
@@ -468,13 +508,17 @@ __Parameters__
 | ``prefix``  | *String*  | Prefix string. List objects whose name starts with ``prefix``. |
 | ``recursive``  | *boolean*  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
+
 |Return Type	  | Exceptions	  | 
 |:--- |:--- |
 | ``Iterable<Result<Item>>``:an iterator of Result Items.  | *None*  |
 
+
 __Example__
 
+
 ```java
+
 try {
   // Check whether 'mybucket' exists or not.
   boolean found = minioClient.bucketExists("mybucket");
@@ -491,18 +535,22 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 
 <a name="listIncompleteUploads">
 #### listIncompleteUploads(String bucketName, String prefix, boolean recursive)
+
 `public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive)`
 
 Lists partially uploaded objects in a bucket.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-java.lang.String-java.lang.String-boolean-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
@@ -510,13 +558,17 @@ __Parameters__
 | ``prefix``  | *String*  | Prefix string. List objects whose name starts with ``prefix``. |
 | ``recursive``  | *boolean*  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
+
 |Return Type	  | Exceptions	  | 
 |:--- |:--- |
 | ``Iterable<Result<Upload>>``: an iterator of Upload.  | *None*  |
 
+
 __Example__
 
+
 ```java
+
 try {
 		// Check whether 'mybucket' exist or not.
      boolean found = minioClient.bucketExists("mybucket");
@@ -533,23 +585,30 @@ try {
  } catch (MinioException e) {
    System.out.println("Error occured: " + e);
 }
+
 ```
 
+
 ## 3. Object operations
+
 <a name="getObject">
 #### getObject(String bucketName, String objectName)
+
 `public InputStream getObject(String bucketName, String objectName, long offset)`
 
 Downloads an object as a stream.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-long-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
+
 
 <table>
     <thead>
@@ -577,9 +636,12 @@ __Parameters__
                </tbody>
 </table>
 
+
 __Example__
 
+
 ```java
+
 try {
   
       // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
@@ -601,18 +663,21 @@ try {
   } catch (MinioException e) {
     System.out.println("Error occured: " + e);
 }
-```
 
+```
 
 <a name="getObject">
 #### getObject(String bucketName, String objectName, long offset, Long length)
+
 `public InputStream getObject(String bucketName,  String objectName, long offset, Long length)`
                                           
 Downloads the specified range bytes of an object as a stream.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-long-java.lang.Long-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
@@ -620,6 +685,7 @@ __Parameters__
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``offset``  | *Long*  | ``offset`` of the object from where the stream will start. |
 | ``length``  | *Long*  | ``length`` of the object that will be read in the stream (optional, if not specified we read the rest of the file from the offset). |
+
 
 
 <table>
@@ -651,7 +717,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
  try {
   
       // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
@@ -673,23 +741,28 @@ __Example__
   } catch (MinioException e) {
     System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="getObject">
 #### getObject(String bucketName, String objectName, String fileName)
+
 `public void getObject(String bucketName, String objectName, String fileName)`
                   
 Downloads and saves the object as a file in the local filesystem.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-java.lang.String-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``fileName``  | *String*  | File name. |
+
 
 
 <table>
@@ -718,7 +791,9 @@ __Parameters__
 </table>
 
 __Example__
+
 ```java
+
 try {
   
       // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
@@ -730,17 +805,21 @@ try {
     
   } catch (MinioException e) {
     System.out.println("Error occured: " + e);
+
 ```
 
 <a name="putObject">
 #### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
+
 `public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)`
                      
 Uploads an object from an InputStream.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
@@ -780,9 +859,12 @@ __Parameters__
 
 __Example__
 
+
 The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MiB in multiple parts. This allows failed uploads to resume safely by only uploading the missing parts. Uploaded data is carefully verified using MD5SUM signatures.
 
+
 ```java
+
 try {
   StringBuilder builder = new StringBuilder();
 	for (int i = 0; i < 1000; i++) {
@@ -811,10 +893,12 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="putObject">
 #### putObject(String bucketName, String objectName, String fileName)
+
 `public void putObject(String bucketName, String objectName, String fileName)`
 
 Uploads contents from a file to objectName.                                 
@@ -822,11 +906,13 @@ Uploads contents from a file to objectName.
 
 __Parameters__
 
+
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``fileName``  | *String*  | File name. |
+
 
 
 <table>
@@ -854,28 +940,36 @@ __Parameters__
                </tbody>
 </table>
 
+
 __Example__
+
 
 The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MB in multiple parts. This allows failed uploads to resume safely by only uploading the missing parts. Uploaded data is carefully verified using MD5SUM signatures.
 
+
 ```java
+
 try {
 	minioClient.putObject("mybucket",  "island.jpg", "/mnt/photos/island.jpg")
 	System.out.println("island.jpg is uploaded successfully");
 } catch(MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="statObject">
 #### statObject(String bucketName, String objectName)   
+
 *`ObjectStat statObject(String bucketName, String objectName)`*
 
 Gets metadata of an object.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-java.lang.String-java.lang.String-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
@@ -913,7 +1007,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
 try {
   //Get the metadata of the object.
 	ObjectStat objectStat = minioClient.statObject("mybucket", "myobject");
@@ -921,10 +1017,12 @@ try {
 } catch(MinioException e) {
  System.out.println("Error occured: " + e); 
 }
+
 ```
 
 <a name="removeObject">
 #### removeObject(String bucketName, String objectName)
+
 `public void removeObject(String bucketName, String objectName)`
 
 Removes an object.
@@ -968,7 +1066,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
 try {
       // Remove my-objectname from the bucket my-bucketname.
       minioClient.removeObject("mybucket", "myobject");
@@ -976,15 +1076,18 @@ try {
 } catch (MinioException e) {
       System.out.println("Error: " + e);
 }
+
 ```
 
 <a name="removeIncompleteUpload">
 #### removeIncompleteUpload(String bucketName, String objectName)
+
 `public void removeIncompleteUpload(String bucketName, String objectName)`
                                   
 Removes a partially uploaded object.  
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeIncompleteUpload-java.lang.String-java.lang.String-)
+
 
 __Parameters__
 
@@ -1025,7 +1128,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
 try {
   // Removes partially uploaded objects from buckets.
 	minioClient.removeIncompleteUpload("mybucket", "myobject");
@@ -1033,10 +1138,12 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 ## 4. Presigned operations
 <a name="presignedGetObject">
+
 #### presignedGetObject(String bucketName, String objectName, Integer expires)
 `public String presignedGetObject(String bucketName, String objectName, Integer expires)`
                                 
@@ -1044,13 +1151,16 @@ Generates a presigned URL for HTTP GET operations. Browsers/Mobile clients may p
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-java.lang.Integer-)
 
+
 __Parameters__
+
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``expiry``  | *Integer*  | Expiry in seconds. Default expiry is set to 7 days. |
+
 
 <table>
     <thead>
@@ -1077,19 +1187,24 @@ __Parameters__
 </table>
 
 
+
 __Example__
 
+
 ```java
+
 try {
 	String url = minioClient.presignedGetObject("mybucket", "myobject", 60 * 60 * 24);
 	System.out.println(url);
 } catch(MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="presignedPutObject">
 #### presignedPutObject(String bucketName, String objectName, Integer expires)
+
 `public String presignedPutObject(String bucketName, String objectName, Integer expires)`
                                                               
 Generates a presigned URL for HTTP PUT operations. Browsers/Mobile clients may point to this URL to upload objects directly to a bucket even if it is private. This presigned URL can have an associated expiration time in seconds after which it is no longer operational. The default expiry is set to 7 days.
@@ -1098,11 +1213,13 @@ Generates a presigned URL for HTTP PUT operations. Browsers/Mobile clients may p
 
 __Parameters__
 
+
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | *String*  | Name of the bucket.  |
 | ``objectName``  | *String*  | Object name in the bucket. |
 | ``expiry``  | *Integer*  | Expiry in seconds. Default expiry is set to 7 days. |
+
 
 <table>
     <thead>
@@ -1129,19 +1246,26 @@ __Parameters__
 </table>
 
 
+
 __Example__
 
+
+
 ```java
+
+
 try {
 	String url = minioClient.presignedPutObject("mybucket", "myobject", 60 * 60 * 24);
 	System.out.println(url);
 } catch(MinioException e) {
   System.out.println("Error occured: " + e);
 }
+
 ```
 
 <a name="presignedPostPolicy">
 #### presignedPostPolicy(PostPolicy policy)
+
 `public Map<String,String> presignedPostPolicy(PostPolicy policy)`
 
 Allows setting policy conditions to a presigned URL for POST operations. Policies such as bucket name to receive object uploads, key name prefixes, expiry policy may be set.
@@ -1150,9 +1274,11 @@ Allows setting policy conditions to a presigned URL for POST operations. Policie
 
 __Parameters__
 
+
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``policy``  | *PostPolicy*  | Post policy of an object.  |
+
 
 
 <table>
@@ -1182,7 +1308,9 @@ __Parameters__
 
 __Example__
 
+
 ```java
+
 try {
 	PostPolicy policy = new PostPolicy("mybucket", "myobject", 			
   DateTime.now().plusDays(7));
@@ -1195,16 +1323,12 @@ try {
 	System.out.println(" -F file=@/tmp/userpic.png  https://play.minio.io:9000/mybucket");
 } catch(MinioException e) {
   System.out.println("Error occured: " + e);
+
 ```
 ## 5. Explore Further
+
  
-- [Build your own photo API Service Example](/docs/java-photo-api-service)
+- [Build your own photo API Service Example](https://docs.minio.io/docs/java-photo-api-service)
 - [Complete JavaDoc](http://minio.github.io/minio-java/)
-
-
-
-
-
-
 
 
