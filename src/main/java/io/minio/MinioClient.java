@@ -33,6 +33,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlPullParserException;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.joda.time.DateTime;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +59,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import com.google.common.io.ByteStreams;
 import java.nio.file.StandardCopyOption;
+import org.apache.commons.collections4.CollectionUtils;
 
 /**
  * <p>
@@ -108,6 +110,7 @@ public final class MinioClient {
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String US_EAST_1 = "us-east-1";
   private static final String UPLOAD_ID = "uploadId";
+  private static final Gson gson = new Gson();
 
   private static XmlPullParserFactory xmlPullParserFactory = null;
 
@@ -287,7 +290,9 @@ public final class MinioClient {
    * Creates Minio client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient minioClient = 
+   *                  new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
+   * }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -322,7 +327,9 @@ public final class MinioClient {
    * Creates Minio client object with given endpoint, access key and secret key using secure (HTTPS) connection.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true); }</pre>
+   * <pre>{@code MinioClient minioClient = 
+   *                      new MinioClient("play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true); 
+   * }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -358,7 +365,9 @@ public final class MinioClient {
    * Creates Minio client object using given endpoint, port, access key, secret key and secure option.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false); }</pre>
+   * <pre>{@code MinioClient minioClient = 
+   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false); 
+   * }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
@@ -486,6 +495,22 @@ public final class MinioClient {
     return true;
   }
 
+  /**
+   * Validates if given objectPrefix is valid.
+   */
+  private void checkObjectPrefix(String prefix) throws InvalidObjectPrefixException {
+    // TODO(nl5887): what to do with wildcards in objectPrefix?
+    //
+    if (prefix.length() > 1024) {
+      throw new InvalidObjectPrefixException(prefix, "Object prefix cannot be greater than 1024 characters.");
+    }
+
+    try {
+      prefix.getBytes("UTF-8");
+    } catch (java.io.UnsupportedEncodingException exc) {
+      throw new InvalidObjectPrefixException(prefix, "Object prefix cannot be properly encoded to utf-8.");
+    }
+  }
 
   /**
    * Validates if given bucket name is DNS compatible.
@@ -520,7 +545,8 @@ public final class MinioClient {
    * Integer.MAX_VALUE when converted to milliseconds.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(30)); }</pre>
+   * <pre>{@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10), 
+   *                            TimeUnit.SECONDS.toMillis(30)); }</pre>
    *
    * @param connectTimeout    HTTP connect timeout in milliseconds.
    * @param writeTimeout      HTTP write timeout in milliseconds.
@@ -801,30 +827,34 @@ public final class MinioClient {
       return new HttpResponse(header, response);
     }
 
-    String errorXml = "";
     ErrorResponse errorResponse = null;
-    boolean emptyBody = false;
+    
+    // HEAD returns no body, and fails on parseXml
+    if (!method.equals(Method.HEAD)) {
+      try {
+        String errorXml = "";
 
-    try {
-      // read enitre body stream to string.
-      Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
-      if (scanner.hasNext()) {
-        errorXml = scanner.next();
+        // read entire body stream to string.
+        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        if (scanner.hasNext()) {
+          errorXml = scanner.next();
+        }
+
+        errorResponse = new ErrorResponse(new StringReader(errorXml));
+
+        if (this.traceStream != null) {
+          this.traceStream.println(errorXml);
+        }
+      } finally {
+        response.body().close();
       }
-
-      errorResponse = new ErrorResponse(new StringReader(errorXml));
-    } catch (EOFException e) {
-      emptyBody = true;
-    } finally {
-      response.body().close();
     }
 
     if (this.traceStream != null) {
-      this.traceStream.println(errorXml);
       this.traceStream.println(END_HTTP);
     }
 
-    if (emptyBody || errorResponse == null) {
+    if (errorResponse == null) {
       ErrorCode ec;
       switch (response.code()) {
         case 400:
@@ -1032,7 +1062,7 @@ public final class MinioClient {
            InternalException {
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
-                                    null, data, length);
+                                    "", data, length);
     response.body().close();
     return response;
   }
@@ -2090,6 +2120,140 @@ public final class MinioClient {
     completeMultipart(bucketName, objectName, uploadId, totalParts);
   }
 
+  /**
+   * Get bucket policy at given objectPrefix
+   *
+   * @param bucketName   Bucket name.
+   * @param objectPrefix name of the object prefix
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String policy = minioClient.getBucketPolicy("my-bucketname", "my-objectname");
+   * System.out.println(policy); }</pre>
+   */
+  public BucketPolicy getBucketPolicy(String bucketName, String objectPrefix)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+                    XmlPullParserException, ErrorResponseException, InternalException {
+    checkObjectPrefix(objectPrefix);
+
+    try {
+      BucketAccessPolicy policy = getBucketAccessPolicy(bucketName, objectPrefix);
+      return policy.identifyPolicyType(bucketName, objectPrefix);
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() == ErrorCode.NO_SUCH_BUCKET_POLICY) {
+        return BucketPolicy.None;
+      }
+      throw e;
+    } 
+  }
+
+  /**
+   * Set policy on bucket and object prefix.
+   *
+   * @param bucketName   Bucket name.
+   * @param objectPrefix name of the object prefix
+   * @param bucketPolicy policy can be BucketPolicy.None, BucketPolicy.ReadOnly, 
+   *                           BucketPolicy.ReadWrite, BucketPolicy.WriteOnly
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code setBucketPolicy("my-bucketname", "my-objectname", BucketPolicy.ReadOnly);
+   * }</pre>
+   */
+  public void setBucketPolicy(String bucketName, String objectPrefix, BucketPolicy bucketPolicy)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+                    XmlPullParserException, ErrorResponseException, InternalException, 
+                    NoSuchBucketPolicyException {
+    checkObjectPrefix(objectPrefix);
+
+    BucketAccessPolicy policy = BucketAccessPolicy.none();
+
+    try {
+      policy = getBucketAccessPolicy(bucketName, objectPrefix);
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
+        throw e;
+      }
+    }
+
+    if (bucketPolicy.equals(BucketPolicy.None) && !policy.hasStatements()) {
+      throw new NoSuchBucketPolicyException(bucketName, objectPrefix, bucketPolicy);
+    }
+
+    List<Statement> statements = policy.removeBucketPolicyStatement(bucketName, objectPrefix);
+
+    // add the common bucket statements, if they don't exist
+    if (!policy.hasCommonBucketStatement(bucketName)) {
+      statements.addAll(BucketAccessPolicy.commonBucketStatement(bucketName));
+    }
+
+    List<Statement> generatedStatements = BucketAccessPolicy.generatePolicyStatements(bucketPolicy, 
+                                                    bucketName, objectPrefix);
+    statements.addAll(generatedStatements);
+
+    // prevent request if statements are unchanged
+    if (CollectionUtils.isEqualCollection(policy.statements(), statements)) {
+      return;
+    }
+
+    policy.setStatements(statements);
+
+    // if no statements, remove bucket access policy. Policy with empty statements is invalid.
+    if (!policy.hasStatements()) {
+      delBucketAccessPolicy(bucketName);
+    } else {
+      putBucketAccessPolicy(bucketName, policy);
+    }
+  }
+
+
+  /**
+   * Returns the parsed current bucket access policy.
+   */
+  private BucketAccessPolicy getBucketAccessPolicy(String bucketName, String objectPrefix)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+                    XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("policy", "");
+
+    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
+
+    BucketAccessPolicy policy = gson.fromJson(response.body().charStream(), BucketAccessPolicy.class);  
+    response.body().close();
+
+    return policy;
+  }
+
+  /**
+   * Deletes the bucket access policy.
+   */
+  private void delBucketAccessPolicy(String bucketName)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+                    XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("policy", "");
+
+    HttpResponse response = executeDelete(bucketName, "", queryParamMap);
+    response.body().close();
+  }
+
+  /**
+   * Sets the bucket access policy.
+   */
+  private void putBucketAccessPolicy(String bucketName, BucketAccessPolicy policy)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+                    XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("policy", "");
+
+    String body = gson.toJson(policy);
+
+    HttpResponse response = executePut(bucketName, "", null, queryParamMap, body, body.length());
+    response.body().close();
+  }
 
   /**
    * Returns next part if exists.
