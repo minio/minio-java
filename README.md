@@ -5,25 +5,30 @@ The Minio Java Client SDK provides simple APIs to access any Amazon S3 compatibl
 This quickstart guide will show you how to install the client SDK and execute an example java program. For a complete list of APIs and examples, please take a look at the [Java Client API Reference](http://docs.minio.io/docs/java-client-api-reference) documentation.
 
 This document assumes that you have one of the following Java Environments setup in place.
+
 * [OracleJDK 7.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) or[ OracleJDK 8.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [OpenJDK7.0](http://openjdk.java.net/install/) or [OpenJDK8.0](http://openjdk.java.net/install/)
 
 ## Download from maven
 
 ```xml
+
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
     <version>2.0.1</version>
 </dependency>
+
 ```
 
 ## Download from gradle
 
-```gradle
+```xml
+
 dependencies {
     compile 'io.minio:minio:2.0.1'
 }
+
 ```
 
 ## Download from JAR
@@ -37,9 +42,12 @@ You need three items in order to connect to an object storage server.
 
 ```java
 
+
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
+
 ```
+
 
 | Params     | Description |
 | :------- | :------------ |
@@ -49,8 +57,11 @@ MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ
 
 We will use the Minio server running at [https://play.minio.io:9000](https://play.minio.io:9000) in this example. Feel free to use this service for testing and development. Access credentials shown in this example are open to the public.
 
+
 #### FileUploader.java
+
 ```java
+
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
@@ -84,26 +95,37 @@ public class FileUploader {
   }
 }
 
+
 ```
+
 #### Compile FileUploader
-```bash
+
+```sh
+
 $ javac -cp "minio-2.0.1.jar"  FileUploader.java
+
 ```
 
 #### Run FileUploader
-```bash
+
+```sh
+
 $ java -cp "minio-2.0.1.jar" FileUploader.java
 /tmp/asiaphotos.zip is successfully uploaded as asiaphotos.zip in asiatrip bucket.
 
 $  mc ls play/asiatrip/
 [2016-06-02 18:10:29 PDT]  82KiB asiaphotos.zip
+
 ```
 
 ## API Reference
+
 The full API Reference is available here.
+
 * [Complete API Reference] (https://docs.minio.io/docs/java-client-api-reference)
 
 ### API Reference : Bucket Operations
+
 * [`makeBucket`](https://docs.minio.io/docs/java-client-api-reference#makeBucket)
 * [`listBuckets`](https://docs.minio.io/docs/java-client-api-reference#listBuckets)
 * [`bucketExists`](https://docs.minio.io/docs/java-client-api-reference#bucketExists)
@@ -112,6 +134,7 @@ The full API Reference is available here.
 * [`listIncompleteUploads`](https://docs.minio.io/docs/java-client-api-reference#listIncompleteUploads)
 
 ### API Reference : Object Operations
+
 * [`getObject`](https://docs.minio.io/docs/java-client-api-reference#getObject)
 * [`putObject`](https://docs.minio.io/docs/java-client-api-reference#putObject)
 * [`statObject`](https://docs.minio.io/docs/java-client-api-reference#statObject)
@@ -119,6 +142,7 @@ The full API Reference is available here.
 * [`removeIncompleteUpload`](https://docs.minio.io/docs/java-client-api-reference#removeIncompleteUpload)
 
 ### API Reference : Presigned Operations
+
 * [`presignedGetObject`](https://docs.minio.io/docs/java-client-api-reference#presignedGetObject)
 * [`presignedPutObject`](https://docs.minio.io/docs/java-client-api-reference#presignedPutObject)
 * [`presignedPostPolicy`](https://docs.minio.io/docs/java-client-api-reference#presignedPostPolicy)
@@ -128,25 +152,25 @@ The full API Reference is available here.
 
 #### Full Examples : Bucket Operations
 
-* [ListBuckets.java](./examples/ListBuckets.java)
-* [ListObjects.java](./examples/ListObjects.java)
-* [BucketExists.java](./examples/BucketExists.java)
-* [MakeBucket.java](./examples/MakeBucket.java)
-* [RemoveBucket.java](./examples/RemoveBucket.java)
-* [ListIncompleteUploads.java](./examples/ListIncompleteUploads.java)
+* [ListBuckets.java](https://github.com/minio/minio-java/tree/master/examples/ListBuckets.java)
+* [ListObjects.java](https://github.com/minio/minio-java/tree/master/examples/ListObjects.java)
+* [BucketExists.java](https://github.com/minio/minio-java/tree/master/examples/BucketExists.java)
+* [MakeBucket.java](https://github.com/minio/minio-java/tree/master/examples/MakeBucket.java)
+* [RemoveBucket.java](https://github.com/minio/minio-java/tree/master/examples/RemoveBucket.java)
+* [ListIncompleteUploads.java](https://github.com/minio/minio-java/tree/master/examples/ListIncompleteUploads.java)
 
 #### Full Examples : Object Operations
 
-* [PutObject.java](./examples/PutObject.java)
-* [GetObject.Java](./examples/GetObject.java)
-* [GetPartialObject.java](./examples/GetPartialObject.java)
-* [RemoveObject.java](./examples/RemoveObject.java)
-* [StatObject.java](./examples/StatObject.java)
+* [PutObject.java](https://github.com/minio/minio-java/tree/master/examples/PutObject.java)
+* [GetObject.Java](https://github.com/minio/minio-java/tree/master/examples/GetObject.java)
+* [GetPartialObject.java](https://github.com/minio/minio-java/tree/master/examples/GetPartialObject.java)
+* [RemoveObject.java](https://github.com/minio/minio-java/tree/master/examples/RemoveObject.java)
+* [StatObject.java](https://github.com/minio/minio-java/tree/master/examples/StatObject.java)
 
 #### Full Examples : Presigned Operations
-* [PresignedGetObject.java](./examples/PresignedGetObject.java)
-* [PresignedPutObject.java](./examples/PresignedPutObject.java)
-* [PresignedPostPolicy.java](./examples/PresignedPostPolicy.java)
+* [PresignedGetObject.java](https://github.com/minio/minio-java/tree/master/examples/PresignedGetObject.java)
+* [PresignedPutObject.java](https://github.com/minio/minio-java/tree/master/examples/PresignedPutObject.java)
+* [PresignedPostPolicy.java](https://github.com/minio/minio-java/tree/master/examples/PresignedPostPolicy.java)
 
 
 ## Explore Further
@@ -156,7 +180,7 @@ The full API Reference is available here.
 
 ## Contribute
 
-[Contributors Guide](./CONTRIBUTING.md)
+[Contributors Guide](https://github.com/minio/minio-java/blob/master/CONTRIBUTING.md)
 
 [![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
 [![Build status](https://ci.appveyor.com/api/projects/status/1d05e6nvxcelmrak?svg=true)](https://ci.appveyor.com/project/harshavardhana/minio-java)
