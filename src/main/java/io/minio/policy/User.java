@@ -17,6 +17,7 @@
 package io.minio;
 
 import com.google.gson.annotations.SerializedName;
+import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
@@ -59,6 +60,6 @@ class User {
   }
 
   public String toString() {
-    return String.join(",", this.aws);
+    return StringUtils.join(",", this.aws);
   }
 }

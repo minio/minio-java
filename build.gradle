@@ -37,6 +37,7 @@ ext.jodaTimeVersion = '2.7'
 ext.gsonVersion = '2.7'
 ext.apacheCommonsValidatorVersion = '1.5.0'
 ext.apacheCommonsCollections4Version = '4.0'
+ext.apacheCommonsLang3Version = '3.4'
 
 ext.deployUsername = ''
 if (project.properties.containsKey('ossrhUsername')) {
@@ -74,6 +75,7 @@ dependencies {
   compile group: 'commons-validator', name: 'commons-validator', version: apacheCommonsValidatorVersion
   compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
   compile group: 'org.apache.commons', name: 'commons-collections4', version: apacheCommonsCollections4Version
+  compile group: 'org.apache.commons', name: 'commons-lang3', version: apacheCommonsLang3Version
 
   testCompile group: 'junit', name: 'junit', version: junitVersion
 }

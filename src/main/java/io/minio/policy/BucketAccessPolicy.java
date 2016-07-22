@@ -17,6 +17,7 @@
 package io.minio;
 
 import com.google.gson.annotations.SerializedName;
+import org.apache.commons.lang3.StringUtils;
 import java.util.*;
 
 import io.minio.BucketPolicy;
@@ -200,7 +201,7 @@ class BucketAccessPolicy {
     List<Statement> statements = new ArrayList<>();
 
     Statement bucketResourceStatement = new Statement();
-    bucketResourceStatement.setSid(String.join("-", "minio-bucket"));
+    bucketResourceStatement.setSid(StringUtils.join("-", "minio-bucket"));
     bucketResourceStatement.setEffect("Allow");
     bucketResourceStatement.setPrincipal(User.all());
     bucketResourceStatement.setResources(
@@ -218,7 +219,7 @@ class BucketAccessPolicy {
     List<Statement> statements = new ArrayList<>();
 
     Statement bucketResourceStatement = new Statement();
-    bucketResourceStatement.setSid(String.join("-", "minio-readonly-bucket", objectPrefix));
+    bucketResourceStatement.setSid(StringUtils.join("-", "minio-readonly-bucket", objectPrefix));
     bucketResourceStatement.setEffect("Allow");
     bucketResourceStatement.setPrincipal(User.all());
     bucketResourceStatement.setResources(
@@ -228,7 +229,7 @@ class BucketAccessPolicy {
     statements.add(bucketResourceStatement);
 
     Statement objectResourceStatement = new Statement();
-    objectResourceStatement.setSid(String.join("-", "minio-readonly-object", objectPrefix));
+    objectResourceStatement.setSid(StringUtils.join("-", "minio-readonly-object", objectPrefix));
     objectResourceStatement.setEffect("Allow");
     objectResourceStatement.setPrincipal(User.all());
     objectResourceStatement.setResources(
@@ -246,7 +247,7 @@ class BucketAccessPolicy {
     List<Statement> statements = new ArrayList<>();
 
     Statement bucketResourceStatement = new Statement();
-    bucketResourceStatement.setSid(String.join("-", "minio-writeonly-bucket", objectPrefix));
+    bucketResourceStatement.setSid(StringUtils.join("-", "minio-writeonly-bucket", objectPrefix));
     bucketResourceStatement.setEffect("Allow");
     bucketResourceStatement.setPrincipal(User.all());
     bucketResourceStatement.setResources(
@@ -258,7 +259,7 @@ class BucketAccessPolicy {
     }
 
     Statement objectResourceStatement = new Statement();
-    objectResourceStatement.setSid(String.join("-", "minio-writeonly-object", objectPrefix));
+    objectResourceStatement.setSid(StringUtils.join("-", "minio-writeonly-object", objectPrefix));
     objectResourceStatement.setEffect("Allow");
     objectResourceStatement.setPrincipal(User.all());
     objectResourceStatement.setResources(
@@ -276,7 +277,7 @@ class BucketAccessPolicy {
     List<Statement> statements = new ArrayList<>();
 
     Statement bucketResourceStatement = new Statement();
-    bucketResourceStatement.setSid(String.join("-", "minio-readwrite-bucket", objectPrefix));
+    bucketResourceStatement.setSid(StringUtils.join("-", "minio-readwrite-bucket", objectPrefix));
     bucketResourceStatement.setEffect("Allow");
     bucketResourceStatement.setPrincipal(User.all());
     bucketResourceStatement.setResources(
@@ -286,7 +287,7 @@ class BucketAccessPolicy {
     statements.add(bucketResourceStatement);
 
     Statement objectResourceStatement = new Statement();
-    objectResourceStatement.setSid(String.join("-", "minio-readwrite-object", objectPrefix));
+    objectResourceStatement.setSid(StringUtils.join("-", "minio-readwrite-object", objectPrefix));
     objectResourceStatement.setEffect("Allow");
     objectResourceStatement.setPrincipal(User.all());
     objectResourceStatement.setResources(

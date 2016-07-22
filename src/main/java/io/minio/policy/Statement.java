@@ -18,6 +18,7 @@ package io.minio;
 
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import java.util.*;
 
 /**
@@ -150,18 +151,18 @@ class Statement {
 
   public String toString() {
     StringBuffer buf = new StringBuffer();
-    
+
     for (String operator: this.conditions().keySet()) {
       for (String key: this.conditions().get(operator).keySet()) {
         buf.append(String.format("%s %s %s", operator, key, this.conditions().get(operator).get(key)));
       }
     }
 
-    return "Sid: " + this.sid 
+    return "Sid: " + this.sid
               + "\nEffect: " + this.effect
               + "\nPrincipal: " + this.principal.toString()
-              + "\nActions: " + String.join(", ", this.actions)
-              + "\nResources: " + String.join(", ", this.resources)
+              + "\nActions: " + StringUtils.join(", ", this.actions)
+              + "\nResources: " + StringUtils.join(", ", this.resources)
               + "\nConditions: \n" + buf.toString();
   }
 
@@ -299,7 +300,7 @@ class Statement {
     }
 
     for (String resource: resources()) {
-      if (resourceMatch(resource, 
+      if (resourceMatch(resource,
                 String.format("%s%s/%s*", Constants.AWS_RESOURCE_PREFIX, bucketName, objectPrefix))) {
         hasObjectActions |= this.isEqualActions(objectActions);
       }
