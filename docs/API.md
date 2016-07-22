@@ -29,7 +29,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 
 ## 1. Constructors 
 
-<a name="constructors">
+<a name="constructors"></a>
 
 |  |
 |---|
@@ -239,8 +239,8 @@ MinioClient s3Client = new MinioClient(HttpUrl.parse("s3.amazonaws.com"), "YOUR-
 
 ## 2. Bucket operations
 
-<a name="makeBucket">
-#### makeBucket(String bucketName)
+<a name="makeBucket"></a>
+### makeBucket(String bucketName)
 `public void makeBucket(String bucketName)`
 
 Creates a new bucket.      
@@ -301,8 +301,8 @@ try {
 
 ```
 
-<a name="listBuckets">
-#### listBuckets()
+<a name="listBuckets"></a>
+### listBuckets()
 
 `public List<Bucket> listBuckets()`
 
@@ -354,8 +354,8 @@ try {
 
 ```
 
-<a name="bucketExists">
-#### bucketExists(String bucketName)
+<a name="bucketExists"></a>
+### bucketExists(String bucketName)
 
 `public boolean bucketExists(String bucketName)`
 
@@ -420,8 +420,8 @@ try {
 ```
 
 
-<a name="removeBucket">
-#### removeBucket(String bucketName)
+<a name="removeBucket"></a>
+### removeBucket(String bucketName)
 
 `public void removeBucket(String bucketName)`
 
@@ -489,8 +489,8 @@ try {
 
 ```
 
-<a name="listObjects">
-#### listObjects(String bucketName, String prefix, boolean recursive)
+<a name="listObjects"></a>
+### listObjects(String bucketName, String prefix, boolean recursive)
 
 `public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive)`
 
@@ -539,8 +539,8 @@ try {
 ```
 
 
-<a name="listIncompleteUploads">
-#### listIncompleteUploads(String bucketName, String prefix, boolean recursive)
+<a name="listIncompleteUploads"></a>
+### listIncompleteUploads(String bucketName, String prefix, boolean recursive)
 
 `public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive)`
 
@@ -570,7 +570,7 @@ __Example__
 ```java
 
 try {
-		// Check whether 'mybucket' exist or not.
+     // Check whether 'mybucket' exist or not.
      boolean found = minioClient.bucketExists("mybucket");
      if (found) {
      // List all incomplete multipart upload of objects in 'my-bucketname
@@ -591,8 +591,8 @@ try {
 
 ## 3. Object operations
 
-<a name="getObject">
-#### getObject(String bucketName, String objectName)
+<a name="getObject"></a>
+### getObject(String bucketName, String objectName)
 
 `public InputStream getObject(String bucketName, String objectName, long offset)`
 
@@ -666,8 +666,8 @@ try {
 
 ```
 
-<a name="getObject">
-#### getObject(String bucketName, String objectName, long offset, Long length)
+<a name="getObject"></a>
+### getObject(String bucketName, String objectName, long offset, Long length)
 
 `public InputStream getObject(String bucketName,  String objectName, long offset, Long length)`
                                           
@@ -744,8 +744,8 @@ __Example__
 
 ```
 
-<a name="getObject">
-#### getObject(String bucketName, String objectName, String fileName)
+<a name="getObject"></a>
+### getObject(String bucketName, String objectName, String fileName)
 
 `public void getObject(String bucketName, String objectName, String fileName)`
                   
@@ -808,8 +808,8 @@ try {
 
 ```
 
-<a name="putObject">
-#### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
 
 `public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)`
                      
@@ -896,8 +896,8 @@ try {
 
 ```
 
-<a name="putObject">
-#### putObject(String bucketName, String objectName, String fileName)
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName, String fileName)
 
 `public void putObject(String bucketName, String objectName, String fileName)`
 
@@ -958,8 +958,8 @@ try {
 
 ```
 
-<a name="statObject">
-#### statObject(String bucketName, String objectName)   
+<a name="statObject"></a>
+### statObject(String bucketName, String objectName)   
 
 *`ObjectStat statObject(String bucketName, String objectName)`*
 
@@ -1020,8 +1020,8 @@ try {
 
 ```
 
-<a name="removeObject">
-#### removeObject(String bucketName, String objectName)
+<a name="removeObject"></a>
+### removeObject(String bucketName, String objectName)
 
 `public void removeObject(String bucketName, String objectName)`
 
@@ -1079,8 +1079,8 @@ try {
 
 ```
 
-<a name="removeIncompleteUpload">
-#### removeIncompleteUpload(String bucketName, String objectName)
+<a name="removeIncompleteUpload"></a>
+### removeIncompleteUpload(String bucketName, String objectName)
 
 `public void removeIncompleteUpload(String bucketName, String objectName)`
                                   
@@ -1142,9 +1142,9 @@ try {
 ```
 
 ## 4. Presigned operations
-<a name="presignedGetObject">
+<a name="presignedGetObject"></a>
 
-#### presignedGetObject(String bucketName, String objectName, Integer expires)
+### presignedGetObject(String bucketName, String objectName, Integer expires)
 `public String presignedGetObject(String bucketName, String objectName, Integer expires)`
                                 
 Generates a presigned URL for HTTP GET operations. Browsers/Mobile clients may point to this URL to directly download objects even if the bucket is private. This presigned URL can have an associated expiration time in seconds after which it is no longer operational. The default expiry is set to 7 days.
@@ -1202,8 +1202,8 @@ try {
 
 ```
 
-<a name="presignedPutObject">
-#### presignedPutObject(String bucketName, String objectName, Integer expires)
+<a name="presignedPutObject"></a>
+### presignedPutObject(String bucketName, String objectName, Integer expires)
 
 `public String presignedPutObject(String bucketName, String objectName, Integer expires)`
                                                               
@@ -1263,8 +1263,8 @@ try {
 
 ```
 
-<a name="presignedPostPolicy">
-#### presignedPostPolicy(PostPolicy policy)
+<a name="presignedPostPolicy"></a>
+### presignedPostPolicy(PostPolicy policy)
 
 `public Map<String,String> presignedPostPolicy(PostPolicy policy)`
 
