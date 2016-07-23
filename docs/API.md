@@ -105,10 +105,10 @@ __Parameters__
     <tbody>
         <tr>
             <td>
-           endpoint
+         <code>endpoint<code>
             </td>
             <td>
-            String
+            <i> String </i>
             </td>
             <td>
             Endpoint is an URL, domain name, IPv4 or IPv6 address.<br/>
@@ -129,38 +129,38 @@ Valid endpoints:
         </tr>
         <tr>
          <td>
-           port
+           <code>port</code> 
             </td>
             <td>
-            int
+           <i>int</i>
             </td>
             <td>
             TCP/IP port number. This input is optional. Default value set to 80 for HTTP and 443 for HTTPs.
             </td>
         </tr>
         <tr>
-           <td>accessKey</td>
-           <td>String</td>
+           <td> <code>accessKey</code> </td>
+           <td> <i>String</i> </td>
            <td>Access key to access service in endpoint.</td>
         </tr>
         <tr>
-                <td>secretKey</td>
-                <td>String</td>
+                <td> <code>secretKey</code> </td>
+                <td> <i>String </i> </td>
                <td>Secret key to access service in endpoint.</td>
         </tr>
         <tr>
-                <td>secure</td>
-                <td>boolean</td>
+                <td> <code>secure</code> </td>
+                <td> <i>boolean</i> </td>
                 <td>If true, access endpoint using HTTPS else access it using HTTP.</td>
         </tr>
         <tr>
-                <td>url</td>
-                <td>URL</td>
+                <td> <code>url<code> </td>
+                <td> <i>URL</i> </td>
                <td>Endpoint URL object.</td>
         </tr>
         <tr>
-               <td>url</td>
-                <td>HttpURL</td>
+               <td> <code>url<code> </td>
+                <td> <i>HttpURL</i> </td>
                <td>Endpoint HttpUrl object.</td>
         </tr>
         
@@ -268,12 +268,12 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -321,15 +321,15 @@ Lists all buckets.
     <tbody>
         <tr>
             <td>
-           List Bucket : List of bucket type.
+          <code>List Bucket</code> : List of bucket type.
             </td>
             <td>
             <ul>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -383,16 +383,16 @@ __Parameters__
     <tbody>
         <tr>
             <td>
-           boolean: true if the bucket exists
+          <code> boolean</code>: true if the bucket exists
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -454,12 +454,12 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -620,16 +620,16 @@ __Parameters__
     <tbody>
         <tr>
             <td>
-           InputStream: InputStream containing the object data.
+           <code>InputStream</code>: InputStream containing the object data.
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -698,16 +698,16 @@ __Parameters__
     <tbody>
         <tr>
             <td>
-           InputStream: InputStream containing the object's data.
+          <code>InputStream</code> : InputStream containing the object's data.
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -778,12 +778,12 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -844,12 +844,12 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -928,12 +928,12 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -988,16 +988,16 @@ __Parameters__
     </thead>
     <tbody>
         <tr>
-            <td> ObjectStat: Populated object meta data.
+            <td> <code>ObjectStat</code>: Populated object meta data.
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -1051,12 +1051,12 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -1113,12 +1113,12 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>NoResponseException : upon no response from server.</li>
-            <li>IOException : upon connection error.</li>
-            <li>org.xmlpull.v1.XmlPullParserException : upon parsing response XML.</li>
-            <li>ErrorResponseException : upon unsuccessful execution.</li>
-            <li>InternalException : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>NoResponseException</code> : upon no response from server.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -1171,15 +1171,15 @@ __Parameters__
     </thead>
     <tbody>
         <tr>
-            <td> String: string contains URL to download the object.
+            <td> <code>String</code> : string contains URL to download the object.
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>InvalidKeyException : upon an invalid access key or secret key.</li>
-            <li>IOException : upon connection error.</li>
-            <li>NoSuchAlgorithmException : upon requested algorithm was not found during signature calculation.</li>
-            <li>InvalidExpiresRangeException : upon input expires is out of range.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li>
+            <li> <code>InvalidExpiresRangeException</code> : upon input expires is out of range.</li>
             </ul>
             </td>
             </tr>
@@ -1230,15 +1230,15 @@ __Parameters__
     </thead>
     <tbody>
         <tr>
-            <td> String: string contains URL to download the object.
+            <td> <code>String</code>: string contains URL to download the object.
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>InvalidKeyException : upon an invalid access key or secret key.</li>
-            <li>IOException : upon connection error.</li>
-            <li>NoSuchAlgorithmException : upon requested algorithm was not found during signature calculation.</li>
-            <li>InvalidExpiresRangeException : upon input expires is out of range.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li>
+            <li> <code>InvalidExpiresRangeException</code> : upon input expires is out of range.</li>
             </ul>
             </td>
             </tr>
@@ -1290,14 +1290,14 @@ __Parameters__
     </thead>
     <tbody>
         <tr>
-            <td> Map<String,String>: Map of strings to construct form-data.
+            <td> <code>Map<String,String></code>: Map of strings to construct form-data.
             </td>
             <td>
             <ul>
-            <li>InvalidBucketNameException : upon invalid bucket name.</li>
-            <li>InvalidKeyException : upon an invalid access key or secret key.</li>
-            <li>IOException : upon connection error.</li>
-            <li>NoSuchAlgorithmException : upon requested algorithm was not found during signature calculation.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
+            <li> <code>IOException</code> : upon connection error.</li>
+            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li>
             </ul>
             </td>
             </tr>
