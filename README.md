@@ -132,6 +132,8 @@ The full API Reference is available here.
 * [`removeBucket`](https://docs.minio.io/docs/java-client-api-reference#removeBucket)
 * [`listObjects`](https://docs.minio.io/docs/java-client-api-reference#listObjects)
 * [`listIncompleteUploads`](https://docs.minio.io/docs/java-client-api-reference#listIncompleteUploads)
+* [`getBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#getBucketPolicy)
+* [`setBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#setBucketPolicy)
 
 ### API Reference : Object Operations
 
