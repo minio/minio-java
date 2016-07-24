@@ -26,6 +26,8 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`removeBucket`](#removeBucket)  |  [`removeObject`](#removeObject) |   |
 | [`listObjects`](#listObjects)  | [`removeIncompleteUpload`](#removeIncompleteUpload)  |   | 
 |[`listIncompleteUploads`](#listIncompleteUploads)  |   |  
+| [`getBucketPolicy`](#getBucketPolicy)   |  |
+| [`setBucketPolicy`](#setBucketPolicy)   |   |
 
 ## 1. Constructors 
 
@@ -588,6 +590,115 @@ try {
 
 ```
 
+<a name="getBucketPolicy"></a>
+### getBucketPolicy(String bucketName, String objectPrefix)
+`public BucketPolicy getBucketPolicy(String bucketName, String objectPrefix)`
+
+Get bucket policy at given objectPrefix.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketPolicy-java.lang.String-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | *String*  | Name of the bucket.  |
+| ``objectPrefix``  | *String*  | Policy applies to objects with prefix. |
+
+<table>
+    <thead>
+        <tr>
+            <th>Return Type     </th>
+            <th>Exceptions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td> <code>BucketPolicy</code>: The current bucket policy for given bucket and objectPrefix.
+            </td>
+            <td>
+            <ul>
+            <li><code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li><code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
+            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
+            <li> <code>InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
+            <li><code>IOException : upon connection error.</li>
+             <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
+				<li> <code>NoResponseException</code> : upon no response from server.</li>
+				          <li><code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li><code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li><code>InternalException</code> : upon internal library error.</li>
+            </ul>
+            </td>
+            </tr>
+               </tbody>
+</table>
+
+__Example__
+
+```java
+try {
+    System.out.println("Current policy: " + minioClient.getBucketPolicy("myBucket", "downloads"));
+ } catch (MinioException e) {
+   System.out.println("Error occured: " + e);
+}
+```
+
+<a name="setBucketPolicy"></a>
+### setBucketPolicy(String bucketName, String objectPrefix, BucketPolicy bucketPolicy)
+`public void setBucketPolicy(String bucketName, String objectPrefix, BucketPolicy bucketPolicy)`
+
+Set policy on bucket and object prefix.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketPolicy-java.lang.String-java.lang.String-io.minio.BucketPolicy-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | *String*  | Name of the bucket.  |
+| ``objectPrefix``  | *String*  | Policy applies to objects with prefix. |
+| ``bucketPolicy``  | *BucketPolicy*  | Policy to apply. |
+
+<table>
+    <thead>
+        <tr>
+            <th>Return Type     </th>
+            <th>Exceptions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td> None
+            </td>
+            <td>
+            <ul>
+            <li><code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li><code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
+            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
+            <li> <code>InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
+            <li><code>IOException : upon connection error.</li>
+             <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
+				<li> <code>NoResponseException</code> : upon no response from server.</li>
+				          <li><code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li><code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li><code>InternalException</code> : upon internal library error.</li>
+            <li><code>NoSuchBucketPolicyException</code>: Thrown to indicate that given bucket has no bucket policy set.
+            </ul>
+            </td>
+            </tr>
+               </tbody>
+</table>
+
+__Example__
+
+```java
+try {
+    minioClient.setBucketPolicy("myBucket", "uploads", BucketPolicy.WriteOnly);
+ } catch (MinioException e) {
+   System.out.println("Error occured: " + e);
+}
+```
 
 ## 3. Object operations
 
