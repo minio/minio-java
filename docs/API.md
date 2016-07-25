@@ -677,7 +677,7 @@ __Parameters__
             <li> <code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
             <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
             <li> <code>InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
-            <li> <code>IOException : upon connection error.</li>
+            <li> <code>IOException : upon connection error. </code> </li>
             <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
 	    <li> <code>NoResponseException</code> : upon no response from server.</li>
 	    <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
