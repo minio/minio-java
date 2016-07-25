@@ -132,8 +132,6 @@ The full API Reference is available here.
 * [`removeBucket`](https://docs.minio.io/docs/java-client-api-reference#removeBucket)
 * [`listObjects`](https://docs.minio.io/docs/java-client-api-reference#listObjects)
 * [`listIncompleteUploads`](https://docs.minio.io/docs/java-client-api-reference#listIncompleteUploads)
-* [`getBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#getBucketPolicy)
-* [`setBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#setBucketPolicy)
 
 ### API Reference : Object Operations
 
@@ -149,6 +147,10 @@ The full API Reference is available here.
 * [`presignedPutObject`](https://docs.minio.io/docs/java-client-api-reference#presignedPutObject)
 * [`presignedPostPolicy`](https://docs.minio.io/docs/java-client-api-reference#presignedPostPolicy)
 
+### API Reference : Bucket Policy Operations
+
+* [`getBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#getBucketPolicy)
+* [`setBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#setBucketPolicy)
 
 ## Full Examples
 
@@ -165,8 +167,6 @@ The full API Reference is available here.
 
 * [PutObject.java](https://github.com/minio/minio-java/tree/master/examples/PutObject.java)
 * [GetObject.Java](https://github.com/minio/minio-java/tree/master/examples/GetObject.java)
-* [PutBucketPolicy.java](https://github.com/minio/minio-java/tree/master/examples/PutBucketPolicy.java)
-* [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 * [GetPartialObject.java](https://github.com/minio/minio-java/tree/master/examples/GetPartialObject.java)
 * [RemoveObject.java](https://github.com/minio/minio-java/tree/master/examples/RemoveObject.java)
 * [StatObject.java](https://github.com/minio/minio-java/tree/master/examples/StatObject.java)
@@ -176,6 +176,10 @@ The full API Reference is available here.
 * [PresignedPutObject.java](https://github.com/minio/minio-java/tree/master/examples/PresignedPutObject.java)
 * [PresignedPostPolicy.java](https://github.com/minio/minio-java/tree/master/examples/PresignedPostPolicy.java)
 
+#### Full Examples : Bucket Policy Operations
+
+* [SetBucketPolicy.java](https://github.com/minio/minio-java/tree/master/examples/SetBucketPolicy.java)
+* [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 
 ## Explore Further
 * [Complete Documentation](https://docs.minio.io)
