@@ -618,16 +618,16 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li><code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li><code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
-            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
-            <li> <code>InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
-            <li><code>IOException : upon connection error.</li>
-             <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
-				<li> <code>NoResponseException</code> : upon no response from server.</li>
-				          <li><code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li><code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li><code>InternalException</code> : upon internal library error.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
+            <li>  <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
+            <li>  <code> InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
+            <li> <code> IOException</code> : upon connection error.</li>
+            <li> <code> InvalidKeyException </code> : upon an invalid access key or secret key.</li>
+	    <li> <code> NoResponseException </code> : upon no response from server.</li>
+            <li> <code> org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException </code> : upon unsuccessful execution.</li>
+            <li> <code> InternalException </code> : upon internal library error.</li>
             </ul>
             </td>
             </tr>
@@ -673,17 +673,17 @@ __Parameters__
             </td>
             <td>
             <ul>
-            <li><code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li><code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
+            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
+            <li> <code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
             <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
             <li> <code>InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
-            <li><code>IOException : upon connection error.</li>
-             <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
-				<li> <code>NoResponseException</code> : upon no response from server.</li>
-				          <li><code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li><code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li><code>InternalException</code> : upon internal library error.</li>
-            <li><code>NoSuchBucketPolicyException</code>: Thrown to indicate that given bucket has no bucket policy set.
+            <li> <code>IOException : upon connection error.</li>
+            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
+	    <li> <code>NoResponseException</code> : upon no response from server.</li>
+	    <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
+            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
+            <li> <code>InternalException</code> : upon internal library error.</li>
+            <li> <code>NoSuchBucketPolicyException</code> : Thrown to indicate that given bucket has no bucket policy set.
             </ul>
             </td>
             </tr>
