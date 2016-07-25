@@ -18,16 +18,14 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 
 ```
 
-| Bucket operations |  Object operations | Presigned operations  |
-|:--- |:--- |:--- |
-| [`makeBucket`](#makeBucket)  |[`getObject`](#getObject)   |[`presignedGetObject`](#presignedGetObject)   |
-| [`listBuckets`](#listBuckets)  | [`putObject`](#putObject)  | [`presignedPutObject`](#presignedPutObject)  |
-| [`bucketExists`](#bucketExists)  | [`statObject`](#statObject)  | [`presignedPostPolicy`](#presignedPostPolicy)  |
-| [`removeBucket`](#removeBucket)  |  [`removeObject`](#removeObject) |   |
-| [`listObjects`](#listObjects)  | [`removeIncompleteUpload`](#removeIncompleteUpload)  |   | 
-|[`listIncompleteUploads`](#listIncompleteUploads)  |   |  
-| [`getBucketPolicy`](#getBucketPolicy)   |  |
-| [`setBucketPolicy`](#setBucketPolicy)   |   |
+| Bucket operations |  Object operations | Presigned operations  | Bucket Policy Operations
+|:--- |:--- |:--- |:--- |
+| [`makeBucket`](#makeBucket)  |[`getObject`](#getObject)   |[`presignedGetObject`](#presignedGetObject)   | [`getBucketPolicy`](#getBucketPolicy)   |
+| [`listBuckets`](#listBuckets)  | [`putObject`](#putObject)  | [`presignedPutObject`](#presignedPutObject)  | [`setBucketPolicy`](#setBucketPolicy)   |
+| [`bucketExists`](#bucketExists)  | [`statObject`](#statObject)  | [`presignedPostPolicy`](#presignedPostPolicy)  |  |
+| [`removeBucket`](#removeBucket)  |  [`removeObject`](#removeObject) |   |   |
+| [`listObjects`](#listObjects)  | [`removeIncompleteUpload`](#removeIncompleteUpload)  |   |   |
+| [`listIncompleteUploads`](#listIncompleteUploads)  |   |   |
 
 ## 1. Constructors 
 
