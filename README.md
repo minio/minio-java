@@ -147,6 +147,10 @@ The full API Reference is available here.
 * [`presignedPutObject`](https://docs.minio.io/docs/java-client-api-reference#presignedPutObject)
 * [`presignedPostPolicy`](https://docs.minio.io/docs/java-client-api-reference#presignedPostPolicy)
 
+### API Reference : Bucket Policy Operations
+
+* [`getBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#getBucketPolicy)
+* [`setBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#setBucketPolicy)
 
 ## Full Examples
 
@@ -172,6 +176,10 @@ The full API Reference is available here.
 * [PresignedPutObject.java](https://github.com/minio/minio-java/tree/master/examples/PresignedPutObject.java)
 * [PresignedPostPolicy.java](https://github.com/minio/minio-java/tree/master/examples/PresignedPostPolicy.java)
 
+#### Full Examples : Bucket Policy Operations
+
+* [SetBucketPolicy.java](https://github.com/minio/minio-java/tree/master/examples/SetBucketPolicy.java)
+* [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 
 ## Explore Further
 * [Complete Documentation](https://docs.minio.io)
