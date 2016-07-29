@@ -2222,6 +2222,10 @@ public final class MinioClient {
     BucketAccessPolicy policy = gson.fromJson(response.body().charStream(), BucketAccessPolicy.class);  
     response.body().close();
 
+    if (policy == null) {
+      throw new com.google.gson.JsonParseException("policy document could not be decoded.");
+    }
+
     return policy;
   }
 
