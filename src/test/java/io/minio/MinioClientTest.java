@@ -18,6 +18,7 @@ package io.minio;
 
 
 import com.squareup.okhttp.mockwebserver.MockWebServer;
+import com.google.gson.Gson;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 
 import okio.Buffer;
@@ -27,6 +28,9 @@ import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.Item;
 import io.minio.messages.Owner;
+import io.minio.policy.BucketAccessPolicy;
+import io.minio.policy.BucketPolicy;
+import io.minio.policy.Statement;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -64,6 +68,7 @@ public class MinioClientTest {
   private static final String MON_04_MAY_2015_07_58_51_UTC = "Mon, 04 May 2015 07:58:51 UTC";
   private static final String BUCKET_KEY = "/bucket/key";
   private static final String MD5_HASH_STRING = "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"";
+  private static final Gson gson = new Gson();
 
   @Test()
   public void setUserAgentOnceSet() throws IOException, MinioException {
@@ -642,4 +647,214 @@ public class MinioClientTest {
     ObjectStat objectStatInfo = client.statObject(BUCKET, "key");
     assertEquals(expectedStatInfo, objectStatInfo);
   }
+  
+  @Test
+  public void testSetBucketPolicyReadOnly()
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+    XmlPullParserException, ErrorResponseException, InternalException, 
+    NoSuchBucketPolicyException, MinioException {
+
+	  	// Create Mock web server and mocked responses
+	    MockWebServer server = new MockWebServer();
+	    MockResponse response1 = new MockResponse();
+	    MockResponse response2 = new MockResponse();
+
+	    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response1.setResponseCode(200);
+	    /* Second response is expected to return a blank policy as 
+	     * we are creating a new bucket, so create a blank policy */
+	    BucketAccessPolicy none = BucketAccessPolicy.none();
+	    /* serialize the object into its equivalent Json representation and set it in the 
+	    * response body */
+	    response1.setBody(gson.toJson(none));
+
+	    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response2.setResponseCode(200);
+	    
+	    server.enqueue(response1);
+	    server.enqueue(response2);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+	    
+	    // Set the bucket policy for a bucket
+	    client.setBucketPolicy(BUCKET, "uploads", BucketPolicy.ReadOnly);
+	    
+  }
+  
+  @Test
+  public void testSetBucketPolicyReadWrite()
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+    XmlPullParserException, ErrorResponseException, InternalException, 
+    NoSuchBucketPolicyException, MinioException {
+
+	  	// Create Mock web server and mocked responses
+	    MockWebServer server = new MockWebServer();
+	    MockResponse response1 = new MockResponse();
+	    MockResponse response2 = new MockResponse();
+	    
+	    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response1.setResponseCode(200);
+	    /* Second response is expected to return a blank policy as 
+	     * we are creating a new bucket, so create a blank policy */
+	    BucketAccessPolicy none = BucketAccessPolicy.none();
+	    /* serialize the object into its equivalent Json representation and set it in the 
+	    * response body */
+	    response1.setBody(gson.toJson(none));
+
+	    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response2.setResponseCode(200);
+	    
+	    server.enqueue(response1);
+	    server.enqueue(response2);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    // Set the bucket policy for a bucket
+	    client.setBucketPolicy(BUCKET, "uploads", BucketPolicy.ReadWrite);
+	    
+  }
+  
+  @Test
+  public void testSetBucketPolicyWriteOnly()
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+    XmlPullParserException, ErrorResponseException, InternalException, 
+    NoSuchBucketPolicyException, MinioException {
+
+	  	// Create Mock web server and mocked responses
+	    MockWebServer server = new MockWebServer();
+	    MockResponse response1 = new MockResponse();
+	    MockResponse response2 = new MockResponse();
+
+	    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response1.setResponseCode(200);
+	    /* Second response is expected to return a blank policy as 
+	     * we are creating a new bucket, so create a blank policy */
+	    BucketAccessPolicy none = BucketAccessPolicy.none();
+	    /* serialize the object into its equivalent Json representation and set it in the 
+	    * response body */
+	    response1.setBody(gson.toJson(none));
+
+	    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response2.setResponseCode(200);
+	    
+	    server.enqueue(response1);
+	    server.enqueue(response2);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+	    
+	    // Set the bucket policy for a bucket
+	    client.setBucketPolicy(BUCKET, "uploads", BucketPolicy.WriteOnly);
+	    
+  }
+  
+  @Test
+  public void testGetBucketPolicyReadOnly()
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+    XmlPullParserException, ErrorResponseException, InternalException, 
+    NoSuchBucketPolicyException, MinioException {
+
+	  	// Create Mock web server and mocked responses
+	    MockWebServer server = new MockWebServer();
+	    MockResponse response = new MockResponse();
+
+	    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response.setResponseCode(200);
+	    /* Second response is expected to return a blank policy as 
+	     * we are creating a new bucket, so create a blank policy */
+	    BucketAccessPolicy none = BucketAccessPolicy.none();
+	    // Generate statements
+	    List<Statement> generatedStatements = BucketAccessPolicy.generatePolicyStatements(BucketPolicy.ReadOnly, 
+	    		BUCKET, "uploads");
+	    // Add statements to the BucketAccessPolicy
+	    none.setStatements(generatedStatements);
+	    /* serialize the object into its equivalent Json representation and set it in the 
+	    * response body */
+	    response.setBody(gson.toJson(none));
+	    
+	    server.enqueue(response);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    // Get the bucket policy for the new bucket and check
+	    BucketPolicy responseBucketPolicy = client.getBucketPolicy(BUCKET, "uploads");
+	    assertEquals(BucketPolicy.ReadOnly, responseBucketPolicy);
+  }
+  
+  @Test
+  public void testGetBucketPolicyReadWrite()
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+    XmlPullParserException, ErrorResponseException, InternalException, 
+    NoSuchBucketPolicyException, MinioException {
+
+	  	// Create Mock web server and mocked responses
+	    MockWebServer server = new MockWebServer();
+	    MockResponse response = new MockResponse();
+
+	    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response.setResponseCode(200);
+	    /* Second response is expected to return a blank policy as 
+	     * we are creating a new bucket, so create a blank policy */
+	    BucketAccessPolicy none = BucketAccessPolicy.none();
+	    // Generate statements
+	    List<Statement> generatedStatements = BucketAccessPolicy.generatePolicyStatements(BucketPolicy.ReadWrite, 
+	    		BUCKET, "uploads");
+	    // Add statements to the BucketAccessPolicy
+	    none.setStatements(generatedStatements);
+	    /* serialize the object into its equivalent Json representation and set it in the 
+	    * response body */
+	    response.setBody(gson.toJson(none));
+	    
+	    server.enqueue(response);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    // Get the bucket policy for the new bucket and check
+	    BucketPolicy responseBucketPolicy = client.getBucketPolicy(BUCKET, "uploads");
+	    assertEquals(BucketPolicy.ReadWrite, responseBucketPolicy);
+}
+  
+  @Test
+  public void testGetBucketPolicyWriteOnly()
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException, 
+    InsufficientDataException, IOException, InvalidKeyException, NoResponseException, 
+    XmlPullParserException, ErrorResponseException, InternalException, 
+    NoSuchBucketPolicyException, MinioException {
+
+	  	// Create Mock web server and mocked responses
+	    MockWebServer server = new MockWebServer();
+	    MockResponse response = new MockResponse();
+
+	    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response.setResponseCode(200);
+	    /* Second response is expected to return a blank policy as 
+	     * we are creating a new bucket, so create a blank policy */
+	    BucketAccessPolicy none = BucketAccessPolicy.none();
+	    // Generate statements
+	    List<Statement> generatedStatements = BucketAccessPolicy.generatePolicyStatements(BucketPolicy.WriteOnly, 
+	    		BUCKET, "uploads");
+	    // Add statements to the BucketAccessPolicy
+	    none.setStatements(generatedStatements);
+	    /* serialize the object into its equivalent Json representation and set it in the 
+	    * response body */
+	    response.setBody(gson.toJson(none));
+	    
+	    server.enqueue(response);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    // Get the bucket policy for the new bucket and check
+	    BucketPolicy responseBucketPolicy = client.getBucketPolicy(BUCKET, "uploads");
+	    assertEquals(BucketPolicy.WriteOnly, responseBucketPolicy);
+}
 }
