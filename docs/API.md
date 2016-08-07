@@ -12,6 +12,7 @@ MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ
 
 ## AWS S3
 
+
 ```java
 
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
@@ -26,6 +27,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`removeBucket`](#removeBucket)  |  [`removeObject`](#removeObject) |   |   |
 | [`listObjects`](#listObjects)  | [`removeIncompleteUpload`](#removeIncompleteUpload)  |   |   |
 | [`listIncompleteUploads`](#listIncompleteUploads)  |   |   |
+
 
 ## 1. Constructors 
 
@@ -93,85 +95,26 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 
 __Parameters__
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Param</th>
-            <th>Type</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-         <code>endpoint<code>
-            </td>
-            <td>
-            <i> String </i>
-            </td>
-            <td>
-            Endpoint is an URL, domain name, IPv4 or IPv6 address.<br/>
-Valid endpoints:
-                <ul>
-                    <li>https://s3.amazonaws.com</li>
-                    <li>https://s3.amazonaws.com/</li>
-                    <li>https://play.minio.io:9000</li>
-                    <li>http://play.minio.io:9010/</li>
-                    <li>localhost</li>
-                    <li>localhost.localdomain</li>
-                    <li>play.minio.io</li>
-                    <li>127.0.0.1</li>
-                    <li>192.168.1.60</li>
-                    <li>::1</li>
-                </ul>
-            </td>
-        </tr>
-        <tr>
-         <td>
-           <code>port</code> 
-            </td>
-            <td>
-           <i>int</i>
-            </td>
-            <td>
-            TCP/IP port number. This input is optional. Default value set to 80 for HTTP and 443 for HTTPs.
-            </td>
-        </tr>
-        <tr>
-           <td> <code>accessKey</code> </td>
-           <td> <i>String</i> </td>
-           <td>Access key to access service in endpoint.</td>
-        </tr>
-        <tr>
-                <td> <code>secretKey</code> </td>
-                <td> <i>String </i> </td>
-               <td>Secret key to access service in endpoint.</td>
-        </tr>
-        <tr>
-                <td> <code>secure</code> </td>
-                <td> <i>boolean</i> </td>
-                <td>If true, access endpoint using HTTPS else access it using HTTP.</td>
-        </tr>
-        <tr>
-                <td> <code>url<code> </td>
-                <td> <i>URL</i> </td>
-               <td>Endpoint URL object.</td>
-        </tr>
-        <tr>
-               <td> <code>url<code> </td>
-                <td> <i>HttpURL</i> </td>
-               <td>Endpoint HttpUrl object.</td>
-        </tr>
-        
-    </tbody>
-</table>
+| Param  | Type  | Description  |
+|---|---|---|
+| `endpoint`  |  _string_ | endPoint is an URL, domain name, IPv4 address or IPv6 address.Valid endpoints are listed below: |
+| | |[https://s3.amazonaws.com](https://s3.amazonaws.com) |
+| | |[https://play.minio.io:9000](https://play.minio.io:9000) |
+| | |[localhost](localhost) |
+| | |[play.minio.io](play.minio.io) |
+| `port` | _int_  | TCP/IP port number. This input is optional. Default value set to 80 for HTTP and 443 for HTTPs. |
+| `accessKey`   | _string_   |accessKey is like user-id that uniquely identifies your account. | 
+|`secretKey`  |  _string_   | secretKey is the password to your account.|
+|`secure`    | _boolean_    |If set to true, https is used instead of http. Default is https if not set. |
+|`url`    | _URL_    |Endpoint URL object. |
+|`url`    | _HttpURL_    |Endpoint HttpUrl object. |
 
 
 __Example__
 
 
 ### Minio
+
 
 ```java
 
@@ -204,7 +147,9 @@ MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9
 
 ```
 
+
 ### AWS S3
+
 
 ```java
  
@@ -251,34 +196,19 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
+| ``bucketName``  | _String_ | Name of the bucket.  |
 
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-           None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+| ``None``  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+
 
 __Example__
 
@@ -310,31 +240,14 @@ Lists all buckets.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listBuckets--)
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-          <code>List Bucket</code> : List of bucket type.
-            </td>
-            <td>
-            <ul>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+|Return Type	  | Exceptions	  | 
+|:--- |:--- |
+| ``List Bucket`` : List of bucket type.  | Listed Exceptions: | 
+|        |  ``NoResponseException`` : upon no response from server. |
+|        | ``IOException`` : upon connection error. |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML. |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.|
+|        | ``InternalException`` : upon internal library error.|
 
 
 __Example__
@@ -369,35 +282,19 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
+| ``bucketName``  | _String_  | Name of the bucket.  |
 
 
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  ``boolean``: true if the bucket exists  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-          <code> boolean</code>: true if the bucket exists
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
 
 
 __Example__
@@ -437,35 +334,18 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
+| ``bucketName``  | _String_  | Name of the bucket.  |
 
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-           None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
-
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  None  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 
 __Example__
@@ -504,14 +384,14 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``prefix``  | *String*  | Prefix string. List objects whose name starts with ``prefix``. |
-| ``recursive``  | *boolean*  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``prefix``  | _String_  | Prefix string. List objects whose name starts with ``prefix``. |
+| ``recursive``  | _boolean_  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
 
 |Return Type	  | Exceptions	  | 
 |:--- |:--- |
-| ``Iterable<Result<Item>>``:an iterator of Result Items.  | *None*  |
+| ``Iterable<Result<Item>>``:an iterator of Result Items.  | _None_  |
 
 
 __Example__
@@ -554,21 +434,20 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``prefix``  | *String*  | Prefix string. List objects whose name starts with ``prefix``. |
-| ``recursive``  | *boolean*  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``prefix``  | _String_  | Prefix string. List objects whose name starts with ``prefix``. |
+| ``recursive``  | _boolean_  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
 
 |Return Type	  | Exceptions	  | 
 |:--- |:--- |
-| ``Iterable<Result<Upload>>``: an iterator of Upload.  | *None*  |
+| ``Iterable<Result<Upload>>``: an iterator of Upload.  | _None_  |
 
 
 __Example__
 
 
 ```java
-
 try {
      // Check whether 'mybucket' exist or not.
      boolean found = minioClient.bucketExists("mybucket");
@@ -600,39 +479,27 @@ __Parameters__
 
 |Param   | Type   | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectPrefix``  | *String*  | Policy applies to objects with prefix. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectPrefix``  | _String_  | Policy applies to objects with prefix. |
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type     </th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> <code>BucketPolicy</code>: The current bucket policy for given bucket and objectPrefix.
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
-            <li>  <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
-            <li>  <code> InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
-            <li> <code> IOException</code> : upon connection error.</li>
-            <li> <code> InvalidKeyException </code> : upon an invalid access key or secret key.</li>
-	    <li> <code> NoResponseException </code> : upon no response from server.</li>
-            <li> <code> org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException </code> : upon unsuccessful execution.</li>
-            <li> <code> InternalException </code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  ``BucketPolicy``: The current bucket policy for given bucket and objectPrefix.  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidBucketNameException `` : upon invalid bucket name.       |
+|        | ``InvalidObjectPrefixException`` : upon invalid object prefix.        |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+
 
 __Example__
+
 
 ```java
 try {
@@ -654,43 +521,32 @@ __Parameters__
 
 |Param   | Type   | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectPrefix``  | *String*  | Policy applies to objects with prefix. |
-| ``bucketPolicy``  | *BucketPolicy*  | Policy to apply. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectPrefix``  | _String_  | Policy applies to objects with prefix. |
+| ``bucketPolicy``  | _BucketPolicy_  | Policy to apply. |
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type     </th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>InvalidObjectPrefixException</code> : upon invalid object prefix.</li>
-            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li> 
-            <li> <code>InsufficientDataException</code> : Thrown to indicate that reading given InputStream gets EOFException before reading given length..</li> 
-            <li> <code>IOException : upon connection error. </code> </li>
-            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
-	    <li> <code>NoResponseException</code> : upon no response from server.</li>
-	    <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            <li> <code>NoSuchBucketPolicyException</code> : Thrown to indicate that given bucket has no bucket policy set.
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  None  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidBucketNameException `` : upon invalid bucket name.       |
+|        | ``InvalidObjectPrefixException`` : upon invalid object prefix.        |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+
+
 
 __Example__
 
+
 ```java
+
 try {
     minioClient.setBucketPolicy("myBucket", "uploads", BucketPolicy.WriteOnly);
  } catch (MinioException e) {
@@ -715,35 +571,19 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
+| ``bucketName``  | _String_ | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
 
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-           <code>InputStream</code>: InputStream containing the object data.
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  ``InputStream``: InputStream containing the object data.  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 
 __Example__
@@ -790,38 +630,21 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
-| ``offset``  | *Long*  | ``offset`` of the object from where the stream will start. |
-| ``length``  | *Long*  | ``length`` of the object that will be read in the stream (optional, if not specified we read the rest of the file from the offset). |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``offset``  | _Long_  | ``offset`` of the object from where the stream will start. |
+| ``length``  | _Long_  | ``length`` of the object that will be read in the stream (optional, if not specified we read the rest of the file from the offset). |
 
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-          <code>InputStream</code> : InputStream containing the object's data.
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  ``InputStream`` : InputStream containing the object's data. | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 
 __Example__
@@ -868,36 +691,20 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
-| ``fileName``  | *String*  | File name. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``fileName``  | _String_  | File name. |
 
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  None  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 __Example__
 
@@ -929,41 +736,24 @@ Uploads an object from an InputStream.
 
 __Parameters__
 
-
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
-| ``stream``  | *InputStream*  | stream to upload. |
-| ``size``  | *long*  | Size of the data to read from ``stream`` that will be uploaded. |
-| ``contentType``  | *String*  | Content type of the stream. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``stream``  | _InputStream_  | stream to upload. |
+| ``size``  | _long_  | Size of the data to read from ``stream`` that will be uploaded. |
+| ``contentType``  | _String_ | Content type of the stream. |
 
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  None  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 
 __Example__
@@ -1018,37 +808,20 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
-| ``fileName``  | *String*  | File name. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``fileName``  | _String_  | File name. |
 
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
-
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  None  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 __Example__
 
@@ -1082,36 +855,20 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
 
 
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  ``ObjectStat``: Populated object meta data. | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> <code>ObjectStat</code>: Populated object meta data.
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
 
 
 __Example__
@@ -1143,34 +900,19 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
 
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  None  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
 
 
 __Example__
@@ -1203,36 +945,19 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
 
 
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> None
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>NoResponseException</code> : upon no response from server.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>org.xmlpull.v1.XmlPullParserException</code> : upon parsing response XML.</li>
-            <li> <code>ErrorResponseException</code> : upon unsuccessful execution.</li>
-            <li> <code>InternalException</code> : upon internal library error.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  None  | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 
 __Example__
@@ -1266,35 +991,19 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
-| ``expiry``  | *Integer*  | Expiry in seconds. Default expiry is set to 7 days. |
+| ``bucketName``  | _String_ | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``expiry``  | _Integer_  | Expiry in seconds. Default expiry is set to 7 days. |
 
 
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> <code>String</code> : string contains URL to download the object.
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li>
-            <li> <code>InvalidExpiresRangeException</code> : upon input expires is out of range.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
-
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  ``String`` : string contains URL to download the object. | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
 
 
 __Example__
@@ -1325,35 +1034,18 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``bucketName``  | *String*  | Name of the bucket.  |
-| ``objectName``  | *String*  | Object name in the bucket. |
-| ``expiry``  | *Integer*  | Expiry in seconds. Default expiry is set to 7 days. |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``expiry``  | _Integer_  | Expiry in seconds. Default expiry is set to 7 days. |
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> <code>String</code>: string contains URL to download the object.
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li>
-            <li> <code>InvalidExpiresRangeException</code> : upon input expires is out of range.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
-
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+|  ``String`` : string contains URL to download the object. | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
 
 
 __Example__
@@ -1386,32 +1078,16 @@ __Parameters__
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
-| ``policy``  | *PostPolicy*  | Post policy of an object.  |
+| ``policy``  | _PostPolicy_  | Post policy of an object.  |
 
 
-
-<table>
-    <thead>
-        <tr>
-            <th>Return Type	</th>
-            <th>Exceptions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td> <code>Map<String,String></code>: Map of strings to construct form-data.
-            </td>
-            <td>
-            <ul>
-            <li> <code>InvalidBucketNameException</code> : upon invalid bucket name.</li>
-            <li> <code>InvalidKeyException</code> : upon an invalid access key or secret key.</li>
-            <li> <code>IOException</code> : upon connection error.</li>
-            <li> <code>NoSuchAlgorithmException</code> : upon requested algorithm was not found during signature calculation.</li>
-            </ul>
-            </td>
-            </tr>
-               </tbody>
-</table>
+| Return Type	  | Exceptions	  | 
+|:--- |:--- |
+| ``Map``: Map of strings to construct form-data. | Listed Exceptions: | 
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 
 
 
@@ -1434,10 +1110,10 @@ try {
   System.out.println("Error occured: " + e);
 
 ```
+
 ## 5. Explore Further
 
  
 - [Build your own photo API Service Example](https://docs.minio.io/docs/java-photo-api-service)
 - [Complete JavaDoc](http://minio.github.io/minio-java/)
-
 
