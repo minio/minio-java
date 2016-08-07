@@ -98,10 +98,10 @@ __Parameters__
 | Param  | Type  | Description  |
 |---|---|---|
 | `endpoint`  |  _string_ | endPoint is an URL, domain name, IPv4 address or IPv6 address.Valid endpoints are listed below: |
-| | |[https://s3.amazonaws.com](https://s3.amazonaws.com) |
-| | |[https://play.minio.io:9000](https://play.minio.io:9000) |
-| | |[localhost](localhost) |
-| | |[play.minio.io](play.minio.io) |
+| | |https://s3.amazonaws.com |
+| | |https://play.minio.io:9000 |
+| | |localhost |
+| | |play.minio.io|
 | `port` | _int_  | TCP/IP port number. This input is optional. Default value set to 80 for HTTP and 443 for HTTPs. |
 | `accessKey`   | _string_   |accessKey is like user-id that uniquely identifies your account. | 
 |`secretKey`  |  _string_   | secretKey is the password to your account.|
