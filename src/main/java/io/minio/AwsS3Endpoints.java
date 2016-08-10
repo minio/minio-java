@@ -30,6 +30,10 @@ enum AwsS3Endpoints {
   AwsS3Endpoints() {
     // ap-northeast-1
     endpoints.put("ap-northeast-1", "s3-ap-northeast-1.amazonaws.com");
+    // ap-northeast-2
+    endpoints.put("ap-northeast-2", "s3-ap-northeast-2.amazonaws.com");
+    //ap-south-1
+    endpoints.put("ap-south-1", "s3-ap-south-1.amazonaws.com");
     // ap-southeast-1
     endpoints.put("ap-southeast-1", "s3-ap-southeast-1.amazonaws.com");
     // ap-southeast-2
