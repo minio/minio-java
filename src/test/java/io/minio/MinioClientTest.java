@@ -17,9 +17,9 @@
 package io.minio;
 
 
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockWebServer;
 import com.google.gson.Gson;
-import com.squareup.okhttp.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockResponse;
 
 import okio.Buffer;
 
@@ -35,9 +35,9 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.nio.charset.StandardCharsets;
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.URL;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -515,7 +515,7 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
-  @Test(expected = EOFException.class)
+  @Test(expected = ConnectException.class)
   public void testPutIncompleteSmallPut()
     throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();

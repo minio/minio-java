@@ -27,9 +27,9 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.joda.time.DateTime;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.Headers;
+import okhttp3.Request;
+import okhttp3.HttpUrl;
+import okhttp3.Headers;
 import com.google.common.net.UrlEscapers;
 import com.google.common.escape.Escaper;
 import com.google.common.base.Joiner;
@@ -166,7 +166,7 @@ class Signer {
 
   private void setCanonicalRequest() throws NoSuchAlgorithmException {
     setCanonicalHeaders();
-    this.url = this.request.httpUrl();
+    this.url = this.request.url();
     setCanonicalQueryString();
 
     // CanonicalRequest =
@@ -246,7 +246,7 @@ class Signer {
     this.canonicalHeaders.put("host", this.request.headers().get("Host"));
     this.signedHeaders = "host";
 
-    HttpUrl.Builder urlBuilder = this.request.httpUrl().newBuilder();
+    HttpUrl.Builder urlBuilder = this.request.url().newBuilder();
     // order of queryparam addition is important ie has to be sorted.
     urlBuilder.addQueryParameter("X-Amz-Algorithm", "AWS4-HMAC-SHA256");
     urlBuilder.addQueryParameter("X-Amz-Credential", this.accessKey + "/" + this.scope);
