@@ -16,8 +16,8 @@
 
 package io.minio.errors;
 
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import io.minio.messages.ErrorResponse;
 
@@ -56,7 +56,7 @@ public class ErrorResponseException extends MinioException {
         + errorResponse.getString() + "\n"
         + "request={"
         + "method=" + request.method() + ", "
-        + "url=" + request.httpUrl() + ", "
+        + "url=" + request.url() + ", "
         + "headers=" + request.headers()
         + "}\n"
         + "response={"
