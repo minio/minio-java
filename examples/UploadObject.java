@@ -32,7 +32,7 @@ public class UploadObject {
     // dummy values, please replace them with original values.
     // For Amazon S3 endpoint, region is calculated automatically
     try {
-      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+      MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
       // Upload 'my-filename' as object 'my-objectname' in 'my-bucketname'.
       minioClient.putObject("my-bucketname", "my-objectname", "my-filename");

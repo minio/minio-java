@@ -32,7 +32,7 @@ public class PutObject {
     // dummy values, please replace them with original values.
     // For Amazon S3 endpoint, region is calculated automatically
     try {
-      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+      MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
       // Create some content for the object.
       StringBuilder builder = new StringBuilder();
