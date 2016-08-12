@@ -43,13 +43,11 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringReader;
-import java.io.EOFException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.nio.charset.StandardCharsets;
 import java.nio.channels.Channels;
@@ -553,11 +551,8 @@ public final class MinioClient {
    * @param readTimeout       HTTP read timeout in milliseconds.
    */
   public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
-    httpClient = httpClient.newBuilder().
-    connectTimeout(connectTimeout, TimeUnit.MILLISECONDS).
-    writeTimeout(writeTimeout, TimeUnit.MILLISECONDS).
-    readTimeout(readTimeout, TimeUnit.MILLISECONDS).
-    build();
+    httpClient = httpClient.newBuilder().connectTimeout(connectTimeout, TimeUnit.MILLISECONDS).writeTimeout(
+         writeTimeout, TimeUnit.MILLISECONDS).readTimeout(readTimeout, TimeUnit.MILLISECONDS).build();
   }
 
   /**
