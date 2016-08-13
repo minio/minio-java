@@ -23,7 +23,7 @@ import java.lang.annotation.Annotation;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.squareup.okhttp.Headers;
+import okhttp3.Headers;
 
 
 /**

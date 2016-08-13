@@ -25,13 +25,13 @@ import java.nio.file.*;
 import org.xmlpull.v1.XmlPullParserException;
 import org.joda.time.DateTime;
 
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.MultipartBuilder;
-import com.squareup.okhttp.Response;
+import okhttp3.OkHttpClient;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Headers;
+import okhttp3.MultipartBuilder;
+import okhttp3.Response;
 import com.google.common.io.ByteStreams;
 
 import io.minio.*;
