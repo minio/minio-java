@@ -42,7 +42,7 @@ public class MakeBucket {
         System.out.println("my-bucketname is created successfully");
       }
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

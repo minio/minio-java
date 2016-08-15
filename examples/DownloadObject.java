@@ -42,7 +42,7 @@ public class DownloadObject {
       minioClient.getObject("my-bucketname", "my-objectname", "my-filename");
       System.out.println("my-objectname is successfully downloaded to my-filename");
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

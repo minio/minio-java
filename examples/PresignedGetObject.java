@@ -36,7 +36,7 @@ public class PresignedGetObject {
       String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
       System.out.println(url);
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

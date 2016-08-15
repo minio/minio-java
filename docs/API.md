@@ -226,7 +226,7 @@ try {
      	System.out.println("mybucket is created successfully");
    }
 } catch (MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -262,7 +262,7 @@ try {
   	  System.out.println(bucket.creationDate() + ", " + bucket.name());
 	}
 } catch (MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -311,7 +311,7 @@ try {
   	  System.out.println("mybucket does not exist");
 	}
 } catch (MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -364,7 +364,7 @@ try {
   	 	System.out.println("mybucket does not exist");
 	}
 } catch(MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -413,7 +413,7 @@ try {
          System.out.println("mybucket does not exist");
        }
 } catch (MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -462,7 +462,7 @@ try {
       System.out.println("mybucket does not exist");
       }
  } catch (MinioException e) {
-   System.out.println("Error occured: " + e);
+   System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -505,7 +505,7 @@ __Example__
 try {
     System.out.println("Current policy: " + minioClient.getBucketPolicy("myBucket", "downloads"));
  } catch (MinioException e) {
-   System.out.println("Error occured: " + e);
+   System.out.println("Error occurred: " + e);
 }
 ```
 
@@ -550,7 +550,7 @@ __Example__
 try {
     minioClient.setBucketPolicy("myBucket", "uploads", BucketPolicy.WriteOnly);
  } catch (MinioException e) {
-   System.out.println("Error occured: " + e);
+   System.out.println("Error occurred: " + e);
 }
 ```
 
@@ -610,7 +610,7 @@ try {
    // Close the input stream.
    stream.close();
   } catch (MinioException e) {
-    System.out.println("Error occured: " + e);
+    System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -671,7 +671,7 @@ __Example__
    // Close the input stream.
    stream.close();
   } catch (MinioException e) {
-    System.out.println("Error occured: " + e);
+    System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -720,7 +720,7 @@ try {
      minioClient.getObject("mybucket", "myobject", "photo.jpg");
     
   } catch (MinioException e) {
-    System.out.println("Error occured: " + e);
+    System.out.println("Error occurred: " + e);
 
 ```
 
@@ -790,7 +790,7 @@ try {
 	bais.close();
 	System.out.println("myobject is uploaded successfully");
 } catch(MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -835,7 +835,7 @@ try {
 	minioClient.putObject("mybucket",  "island.jpg", "/mnt/photos/island.jpg")
 	System.out.println("island.jpg is uploaded successfully");
 } catch(MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -881,7 +881,7 @@ try {
 	ObjectStat objectStat = minioClient.statObject("mybucket", "myobject");
 	System.out.println(objectStat);
 } catch(MinioException e) {
- System.out.println("Error occured: " + e); 
+ System.out.println("Error occurred: " + e); 
 }
 
 ```
@@ -970,7 +970,7 @@ try {
 	minioClient.removeIncompleteUpload("mybucket", "myobject");
 	System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname");
 } catch(MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -1015,7 +1015,7 @@ try {
 	String url = minioClient.presignedGetObject("mybucket", "myobject", 60 * 60 * 24);
 	System.out.println(url);
 } catch(MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -1059,7 +1059,7 @@ try {
 	String url = minioClient.presignedPutObject("mybucket", "myobject", 60 * 60 * 24);
 	System.out.println(url);
 } catch(MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -1107,7 +1107,7 @@ try {
 	}
 	System.out.println(" -F file=@/tmp/userpic.png  https://play.minio.io:9000/mybucket");
 } catch(MinioException e) {
-  System.out.println("Error occured: " + e);
+  System.out.println("Error occurred: " + e);
 
 ```
 

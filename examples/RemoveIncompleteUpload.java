@@ -36,7 +36,7 @@ public class RemoveIncompleteUpload {
       minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
       System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname");
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

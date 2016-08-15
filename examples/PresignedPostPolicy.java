@@ -48,7 +48,7 @@ public class PresignedPostPolicy {
       }
       System.out.println(" -F file=@/tmp/userpic.png https://play.minio.io:9000/my-bucketname");
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }
