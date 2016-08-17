@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.policy;
 
 import com.google.gson.annotations.SerializedName;
+import io.minio.Constants;
 import org.apache.commons.lang3.StringUtils;
-import java.util.*;
 
-import io.minio.BucketPolicy;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class to parse Amazon AWS S3 policy documents.
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-class BucketAccessPolicy {
+public class BucketAccessPolicy {
   @SerializedName("Version")
   private String version;
 
@@ -79,7 +83,7 @@ class BucketAccessPolicy {
   /**
    * Returns if statements contains common bucket statement.
    */
-  boolean hasCommonBucketStatement(String bucketName) {
+  public boolean hasCommonBucketStatement(String bucketName) {
     boolean commonActions = false;
 
     for (Statement statement: this.statements()) {
@@ -137,7 +141,7 @@ class BucketAccessPolicy {
   /**
    * Returns bucketPolicy for bucketName and objectPrefix derived from statements.
    */
-  protected BucketPolicy identifyPolicyType(String bucketName, String objectPrefix) {
+  public BucketPolicy identifyPolicyType(String bucketName, String objectPrefix) {
     if (!this.hasStatements()) {
       return BucketPolicy.None;
     }
@@ -156,7 +160,7 @@ class BucketAccessPolicy {
   /**
    * Returns statements without minio defined statements for bucketName and objectPrefix.
    */
-  protected List<Statement> removeBucketPolicyStatement(String bucketName, String objectPrefix) {
+  public List<Statement> removeBucketPolicyStatement(String bucketName, String objectPrefix) {
     List<Statement> returnStatements = new ArrayList<>();
 
     for (Statement statement: this.statements()) {
@@ -197,7 +201,7 @@ class BucketAccessPolicy {
   /**
    * Returns statements for common bucket.
    */
-  static List<Statement> commonBucketStatement(String bucketName) {
+  public static List<Statement> commonBucketStatement(String bucketName) {
     List<Statement> statements = new ArrayList<>();
 
     Statement bucketResourceStatement = new Statement();
@@ -301,7 +305,7 @@ class BucketAccessPolicy {
   /**
    * Generates the policy statements for policy, bucketName and objectPrefix.
    */
-  protected static List<Statement> generatePolicyStatements(BucketPolicy policy, String bucketName,
+  public static List<Statement> generatePolicyStatements(BucketPolicy policy, String bucketName,
                                               String objectPrefix) {
 
     List<Statement> statements = new ArrayList<>();

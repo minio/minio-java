@@ -16,7 +16,7 @@
 
 package io.minio.errors;
 
-import io.minio.BucketPolicy;
+import io.minio.policy.BucketPolicy;
 
 /**
  * Thrown to indicate that given bucket name is not valid.

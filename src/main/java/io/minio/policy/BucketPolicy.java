@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.policy;
 
 public enum BucketPolicy {
   None("none"),
@@ -24,8 +24,8 @@ public enum BucketPolicy {
 
   private final String value;
 
-  private BucketPolicy(final String v) { 
-    value = v; 
+  private BucketPolicy(final String v) {
+    value = v;
   }
 
   @Override
