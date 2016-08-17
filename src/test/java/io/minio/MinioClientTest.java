@@ -28,6 +28,7 @@ import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.Item;
 import io.minio.messages.Owner;
+import io.minio.policy.*;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -66,7 +67,7 @@ public class MinioClientTest {
   private static final String BUCKET_KEY = "/bucket/key";
   private static final String MD5_HASH_STRING = "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"";
   private static final Gson gson = new Gson();
-  
+
   @Test()
   public void setUserAgentOnceSet() throws IOException, MinioException {
     String expectedHost = "example.com";
@@ -644,7 +645,7 @@ public class MinioClientTest {
     ObjectStat objectStatInfo = client.statObject(BUCKET, "key");
     assertEquals(expectedStatInfo, objectStatInfo);
   }
-  
+
   @Test
   public void testSetBucketPolicyReadOnly()
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
@@ -659,10 +660,10 @@ public class MinioClientTest {
 
     response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response1.setResponseCode(200);
-    /* Second response is expected to return a blank policy as 
+    /* Second response is expected to return a blank policy as
      * we are creating a new bucket, so create a blank policy */
     BucketAccessPolicy none = BucketAccessPolicy.none();
-    /* serialize the object into its equivalent Json representation and set it in the 
+    /* serialize the object into its equivalent Json representation and set it in the
      * response body */
     response1.setBody(gson.toJson(none));
 
@@ -693,10 +694,10 @@ public class MinioClientTest {
 
     response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response1.setResponseCode(200);
-    /* Second response is expected to return a blank policy as 
+    /* Second response is expected to return a blank policy as
      * we are creating a new bucket, so create a blank policy */
     BucketAccessPolicy none = BucketAccessPolicy.none();
-    /* serialize the object into its equivalent Json representation and set it in the 
+    /* serialize the object into its equivalent Json representation and set it in the
      * response body */
     response1.setBody(gson.toJson(none));
 
@@ -727,10 +728,10 @@ public class MinioClientTest {
 
     response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response1.setResponseCode(200);
-    /* Second response is expected to return a blank policy as 
+    /* Second response is expected to return a blank policy as
      * we are creating a new bucket, so create a blank policy */
     BucketAccessPolicy none = BucketAccessPolicy.none();
-    /* serialize the object into its equivalent Json representation and set it in the 
+    /* serialize the object into its equivalent Json representation and set it in the
      * response body */
     response1.setBody(gson.toJson(none));
 
@@ -760,15 +761,15 @@ public class MinioClientTest {
 
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
-    /* Second response is expected to return a blank policy as 
+    /* Second response is expected to return a blank policy as
      * we are creating a new bucket, so create a blank policy */
     BucketAccessPolicy none = BucketAccessPolicy.none();
     // Generate statements
-    List<Statement> generatedStatements = BucketAccessPolicy.generatePolicyStatements(BucketPolicy.ReadOnly, 
+    List<Statement> generatedStatements = BucketAccessPolicy.generatePolicyStatements(BucketPolicy.ReadOnly,
                                                                                       BUCKET, "uploads");
     // Add statements to the BucketAccessPolicy
     none.setStatements(generatedStatements);
-    /* serialize the object into its equivalent Json representation and set it in the 
+    /* serialize the object into its equivalent Json representation and set it in the
      * response body */
     response.setBody(gson.toJson(none));
 
@@ -795,7 +796,7 @@ public class MinioClientTest {
 
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
-    /* Second response is expected to return a blank policy as 
+    /* Second response is expected to return a blank policy as
      * we are creating a new bucket, so create a blank policy */
     BucketAccessPolicy none = BucketAccessPolicy.none();
     // Generate statements
@@ -803,7 +804,7 @@ public class MinioClientTest {
                                                                                       BUCKET, "uploads");
     // Add statements to the BucketAccessPolicy
     none.setStatements(generatedStatements);
-    /* serialize the object into its equivalent Json representation and set it in the 
+    /* serialize the object into its equivalent Json representation and set it in the
      * response body */
     response.setBody(gson.toJson(none));
 
@@ -830,7 +831,7 @@ public class MinioClientTest {
 
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
-    /* Second response is expected to return a blank policy as 
+    /* Second response is expected to return a blank policy as
      * we are creating a new bucket, so create a blank policy */
     BucketAccessPolicy none = BucketAccessPolicy.none();
     // Generate statements
@@ -838,7 +839,7 @@ public class MinioClientTest {
                                                                                       BUCKET, "uploads");
     // Add statements to the BucketAccessPolicy
     none.setStatements(generatedStatements);
-    /* serialize the object into its equivalent Json representation and set it in the 
+    /* serialize the object into its equivalent Json representation and set it in the
      * response body */
     response.setBody(gson.toJson(none));
 

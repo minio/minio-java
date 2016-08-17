@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.policy;
 
 import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.*;
 
 /**
  * Helper class to parse Amazon AWS S3 policy declarations.
  */
-class User {
+public class User {
   @SerializedName("AWS")
   private List<String> aws;
 

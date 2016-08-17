@@ -14,17 +14,22 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.policy;
 
 import com.google.gson.annotations.SerializedName;
+import io.minio.Constants;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class to parse Amazon AWS S3 policy statement object.
  */
-class Statement {
+public class Statement {
   @SerializedName("Sid")
   private String sid;
   @SerializedName("Effect")
@@ -149,6 +154,9 @@ class Statement {
     return conditions != null && conditions.size() > 0;
   }
 
+  /**
+   * Overriding the default <code>toString()</code>.
+   */
   public String toString() {
     StringBuffer buf = new StringBuffer();
 

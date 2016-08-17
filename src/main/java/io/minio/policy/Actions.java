@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.policy;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Helper class to parse Amazon AWS S3 policy documents.
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-class Actions {
+public class Actions {
   static final List<String> commonBucket = Arrays.asList(
       "s3:GetBucketLocation"
   );
