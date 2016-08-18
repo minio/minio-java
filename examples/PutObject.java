@@ -62,7 +62,7 @@ public class PutObject {
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

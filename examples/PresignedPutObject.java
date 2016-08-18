@@ -36,7 +36,7 @@ public class PresignedPutObject {
       String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
       System.out.println(url);
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

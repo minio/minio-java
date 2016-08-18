@@ -42,7 +42,7 @@ public class RemoveBucket {
         System.out.println("my-bucketname does not exist");
       }
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

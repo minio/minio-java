@@ -37,7 +37,7 @@ public class StatObject {
       ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
       System.out.println(objectStat);
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

@@ -40,7 +40,7 @@ public class ListBuckets {
         System.out.println(bucket.creationDate() + ", " + bucket.name());
       }
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

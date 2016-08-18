@@ -90,7 +90,7 @@ public class FileUploader {
       minioClient.putObject("asiatrip","asiaphotos.zip", "/tmp/asiaphotos.zip");
       System.out.println("/tmp/asiaphotos.zip is successfully uploaded as asiaphotos.zip in asiatrip bucket.");
     } catch(MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

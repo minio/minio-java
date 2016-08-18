@@ -35,7 +35,7 @@ public class SetBucketPolicy {
 
       minioClient.setBucketPolicy("my-bucketname", "downloads", BucketPolicy.ReadOnly);
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

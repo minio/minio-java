@@ -51,7 +51,7 @@ public class GetObject {
       // Close the input stream.
       stream.close();
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }

@@ -36,7 +36,7 @@ public class GetBucketPolicy {
       BucketPolicy policy = minioClient.getBucketPolicy("my-bucketname", "downloads");
       System.out.println("Current policy: " + policy.toString());
     } catch (MinioException e) {
-      System.out.println("Error occured: " + e);
+      System.out.println("Error occurred: " + e);
     }
   }
 }
