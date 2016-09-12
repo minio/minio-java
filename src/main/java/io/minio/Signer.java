@@ -30,8 +30,6 @@ import org.joda.time.DateTime;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Headers;
-import com.google.common.net.UrlEscapers;
-import com.google.common.escape.Escaper;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
 
@@ -42,7 +40,6 @@ import io.minio.Digest;
  * Amazon AWS S3 signature V4 signer.
  */
 class Signer {
-  public static final Escaper QUERY_ESCAPER = UrlEscapers.urlPathSegmentEscaper();
   //
   // Excerpts from @lsegal - https://github.com/aws/aws-sdk-js/issues/659#issuecomment-120477258
   //
@@ -154,9 +151,9 @@ class Signer {
     for (String queryParam : encodedQuery.split("&")) {
       String[] tokens = queryParam.split("=");
       if (tokens.length > 1) {
-        signedQueryParams.put(QUERY_ESCAPER.escape(tokens[0]), QUERY_ESCAPER.escape(tokens[1]));
+        signedQueryParams.put(tokens[0], tokens[1]);
       } else {
-        signedQueryParams.put(QUERY_ESCAPER.escape(tokens[0]), "");
+        signedQueryParams.put(tokens[0], "");
       }
     }
 
