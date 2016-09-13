@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.google.common.net.UrlEscapers;
+import com.google.common.escape.Escaper;
 import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.squareup.okhttp.HttpUrl;
@@ -126,6 +128,7 @@ import java.util.logging.Logger;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public final class MinioClient {
+  private static final Escaper QUERY_ESCAPER = UrlEscapers.urlPathSegmentEscaper();
   private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // maximum allowed object size is 5TiB
   private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
@@ -591,6 +594,29 @@ public final class MinioClient {
   }
 
   /**
+   * Returns encoded query string for URL.
+   */
+  private static String encodeQueryString(String str) {
+    return QUERY_ESCAPER.escape(str)
+      .replaceAll("\\!", "%21")
+      .replaceAll("\\$", "%24")
+      .replaceAll("\\&", "%26")
+      .replaceAll("\\'", "%27")
+      .replaceAll("\\(", "%28")
+      .replaceAll("\\)", "%29")
+      .replaceAll("\\*", "%2A")
+      .replaceAll("\\+", "%2B")
+      .replaceAll("\\,", "%2C")
+      .replaceAll("\\\\", "%2F")
+      .replaceAll("\\:", "%3A")
+      .replaceAll("\\;", "%3B")
+      .replaceAll("\\=", "%3D")
+      .replaceAll("\\@", "%40")
+      .replaceAll("\\[", "%5B")
+      .replaceAll("\\]", "%5D");
+  }
+
+  /**
    * Creates Request object for given request parameters.
    *
    * @param method         HTTP method.
@@ -658,7 +684,8 @@ public final class MinioClient {
 
     if (queryParamMap != null) {
       for (Map.Entry<String,String> entry : queryParamMap.entrySet()) {
-        urlBuilder.addQueryParameter(entry.getKey(), entry.getValue());
+        urlBuilder.addEncodedQueryParameter(encodeQueryString(entry.getKey()),
+                                            encodeQueryString(entry.getValue()));
       }
     }
 
