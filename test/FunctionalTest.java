@@ -480,7 +480,15 @@ public class FunctionalTest {
         response.body().close();
         os.close();
       } else {
-        println("FAILED");
+        String errorXml = "";
+
+        // read entire body stream to string.
+        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        if (scanner.hasNext()) {
+          errorXml = scanner.next();
+        }
+
+        println("FAILED", response, errorXml);
       }
     } else {
       println("NO RESPONSE");
@@ -518,7 +526,15 @@ public class FunctionalTest {
         response.body().close();
         os.close();
       } else {
-        println("FAILED");
+        String errorXml = "";
+
+        // read entire body stream to string.
+        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        if (scanner.hasNext()) {
+          errorXml = scanner.next();
+        }
+
+        println("FAILED", response, errorXml);
       }
     } else {
       println("NO RESPONSE");
@@ -551,7 +567,15 @@ public class FunctionalTest {
 
     if (response != null) {
       if (!response.isSuccessful()) {
-        println("FAILED");
+        String errorXml = "";
+
+        // read entire body stream to string.
+        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        if (scanner.hasNext()) {
+          errorXml = scanner.next();
+        }
+
+        println("FAILED", response, errorXml);
       }
     } else {
       println("NO RESPONSE");
@@ -578,7 +602,15 @@ public class FunctionalTest {
 
     if (response != null) {
       if (!response.isSuccessful()) {
-        println("FAILED");
+        String errorXml = "";
+
+        // read entire body stream to string.
+        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        if (scanner.hasNext()) {
+          errorXml = scanner.next();
+        }
+
+        println("FAILED", response, errorXml);
       }
     } else {
       println("NO RESPONSE");
@@ -611,7 +643,15 @@ public class FunctionalTest {
 
     if (response != null) {
       if (!response.isSuccessful()) {
-        println("FAILED");
+        String errorXml = "";
+
+        // read entire body stream to string.
+        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        if (scanner.hasNext()) {
+          errorXml = scanner.next();
+        }
+
+        println("FAILED", response, errorXml);
       }
     } else {
       println("NO RESPONSE");
