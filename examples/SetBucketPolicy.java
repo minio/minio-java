@@ -21,7 +21,7 @@ import java.security.InvalidKeyException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
-import io.minio.BucketPolicy;
+import io.minio.policy.BucketPolicy;
 import io.minio.errors.MinioException;
 
 public class SetBucketPolicy {
