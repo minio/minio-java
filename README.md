@@ -110,7 +110,7 @@ $ javac -cp "minio-2.0.2.jar"  FileUploader.java
 
 ```sh
 
-$ java -cp "minio-2.0.2.jar" FileUploader.java
+$ java -cp "minio-2.0.2.jar:." FileUploader
 /tmp/asiaphotos.zip is successfully uploaded as asiaphotos.zip in asiatrip bucket.
 
 $  mc ls play/asiatrip/
