@@ -20,3 +20,6 @@ build/
 lib/
 project/
 target/
+
+# IntelliJ IDEA
+.idea/
