@@ -16,7 +16,7 @@ This document assumes that you have one of the following Java Environments setup
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>2.0.2</version>
+    <version>2.0.3</version>
 </dependency>
 
 ```
@@ -26,14 +26,14 @@ This document assumes that you have one of the following Java Environments setup
 ```xml
 
 dependencies {
-    compile 'io.minio:minio:2.0.2'
+    compile 'io.minio:minio:2.0.3'
 }
 
 ```
 
 ## Download from JAR
 
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/2.0.2/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/2.0.3/) directly from maven.
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
@@ -102,7 +102,7 @@ public class FileUploader {
 
 ```sh
 
-$ javac -cp "minio-2.0.2.jar"  FileUploader.java
+$ javac -cp "minio-2.0.3.jar"  FileUploader.java
 
 ```
 
@@ -110,7 +110,7 @@ $ javac -cp "minio-2.0.2.jar"  FileUploader.java
 
 ```sh
 
-$ java -cp "minio-2.0.2.jar:." FileUploader
+$ java -cp "minio-2.0.3.jar:." FileUploader
 /tmp/asiaphotos.zip is successfully uploaded as asiaphotos.zip in asiatrip bucket.
 
 $  mc ls play/asiatrip/
