@@ -2065,8 +2065,9 @@ public final class MinioClient {
    * @param uploadId     Upload ID of multipart put object.
    * @param partNumber   Part number of multipart put object.
    */
-  private String putObject(String bucketName, String objectName, int length, Object data,
-                           String uploadId, int partNumber)
+  private String putObject(String bucketName, String objectName, int length,
+                           Object data, String uploadId, String contentType,
+                           int partNumber)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
@@ -2076,8 +2077,14 @@ public final class MinioClient {
       queryParamMap.put("partNumber", Integer.toString(partNumber));
       queryParamMap.put(UPLOAD_ID, uploadId);
     }
-
-    HttpResponse response = executePut(bucketName, objectName, null, queryParamMap, data, length);
+    Map<String,String> headerMap = new HashMap<>();
+    if (contentType != null) {
+      headerMap.put("Content-Type", contentType);
+    } else {
+      headerMap.put("Content-Type", "application/octet-stream");
+    }
+    HttpResponse response = executePut(bucketName, objectName, headerMap,
+                                       queryParamMap, data, length);
     return response.header().etag();
   }
 
@@ -2098,8 +2105,8 @@ public final class MinioClient {
            InternalException,
            InvalidArgumentException, InsufficientDataException {
     if (size <= MIN_MULTIPART_SIZE) {
-      // single put object
-      putObject(bucketName, objectName, (int) size, data, null, 0);
+      // Single put object.
+      putObject(bucketName, objectName, (int) size, data, null, contentType, 0);
       return;
     }
 
@@ -2146,7 +2153,7 @@ public final class MinioClient {
         }
       }
 
-      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, partNumber);
+      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, null, partNumber);
       totalParts[partNumber - 1] = new Part(partNumber, etag);
     }
 

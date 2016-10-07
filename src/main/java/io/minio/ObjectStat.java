@@ -64,7 +64,7 @@ public class ObjectStat {
 
     if (length != that.length) {
       return false;
-    }    
+    }
     if (!bucketName.equals(that.bucketName)) {
       return false;
     }
@@ -98,6 +98,13 @@ public class ObjectStat {
 
 
   /**
+   * Returns bucket name.
+   */
+  public String bucketName() {
+    return bucketName;
+  }
+
+  /**
    * Returns object name.
    */
   public String name() {
@@ -120,15 +127,6 @@ public class ObjectStat {
     return length;
   }
 
-
-  /**
-   * Returns bucket name.
-   */
-  public String bucketName() {
-    return bucketName;
-  }
-
-
   /**
    * Returns ETag.
    */
@@ -136,6 +134,12 @@ public class ObjectStat {
     return etag;
   }
 
+  /**
+   * Returns content type of object.
+   */
+  public String contentType() {
+    return contentType;
+  }
 
   /**
    * Returns ObjectStat as string.

@@ -43,6 +43,7 @@ public class FunctionalTest {
   public static final int MB = 1024 * 1024;
   public static final SecureRandom random = new SecureRandom();
   public static final String bucketName = getRandomName();
+  public static final String customContenType = "application/javascript";
   public static String endpoint;
   public static String accessKey;
   public static String secretKey;
@@ -193,9 +194,13 @@ public class FunctionalTest {
     println("Test: putObject(String bucketName, String objectName, String contentType, long size, InputStream body)");
     String fileName = createFile(3 * MB);
     InputStream is = Files.newInputStream(Paths.get(fileName));
-    client.putObject(bucketName, fileName, is, 1024 * 1024, null);
+    client.putObject(bucketName, fileName, is, 1024 * 1024, customContenType);
     is.close();
     Files.delete(Paths.get(fileName));
+    ObjectStat objectStat = client.statObject(bucketName, fileName);
+    if (!customContenType.equals(objectStat.contentType())) {
+      println("FAILED");
+    }
     client.removeObject(bucketName, fileName);
   }
 
