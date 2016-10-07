@@ -54,6 +54,7 @@ public class MinioClientTest {
   private static final String BUCKET = "bucket";
   private static final String CONTENT_LENGTH = "Content-Length";
   private static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
+  private static final String APPLICATION_JAVASCRIPT = "application/javascript";
   private static final String CONTENT_TYPE = "Content-Type";
   private static final String MON_04_MAY_2015_07_58_51_GMT = "Mon, 04 May 2015 07:58:51 GMT";
   private static final String LAST_MODIFIED = "Last-Modified";
@@ -612,6 +613,28 @@ public class MinioClientTest {
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
     client.putObject(BUCKET, "key", data, 11, null);
+  }
+
+  @Test
+  public void testCustomContentTypeWorks()
+    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_JAVASCRIPT);
   }
 
   @Test
