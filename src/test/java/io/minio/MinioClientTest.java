@@ -73,7 +73,7 @@ public class MinioClientTest {
   public void setUserAgentOnceSet() throws IOException, MinioException {
     String expectedHost = "example.com";
     MinioClient client = new MinioClient("http://" + expectedHost + "/");
-    client.setAppInfo("testApp", "2.0.3");
+    client.setAppInfo("testApp", "2.0.4");
   }
 
   @Test(expected = MinioException.class)

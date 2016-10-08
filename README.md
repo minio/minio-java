@@ -16,7 +16,7 @@ This document assumes that you have one of the following Java Environments setup
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>2.0.3</version>
+    <version>2.0.4</version>
 </dependency>
 
 ```
@@ -26,14 +26,14 @@ This document assumes that you have one of the following Java Environments setup
 ```xml
 
 dependencies {
-    compile 'io.minio:minio:2.0.3'
+    compile 'io.minio:minio:2.0.4'
 }
 
 ```
 
 ## Download from JAR
 
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/2.0.3/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/2.0.4/) directly from maven.
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
@@ -87,8 +87,8 @@ public class FileUploader {
       }
 
       // Upload the zip file to the bucket with putObject
-      minioClient.putObject("asiatrip","asiaphotos.zip", "/tmp/asiaphotos.zip");
-      System.out.println("/tmp/asiaphotos.zip is successfully uploaded as asiaphotos.zip in asiatrip bucket.");
+      minioClient.putObject("asiatrip","asiaphotos.zip", "/home/user/Photos/asiaphotos.zip");
+      System.out.println("/home/user/Photos/asiaphotos.zip is successfully uploaded as asiaphotos.zip to `asiatrip` bucket.");
     } catch(MinioException e) {
       System.out.println("Error occurred: " + e);
     }
@@ -102,7 +102,7 @@ public class FileUploader {
 
 ```sh
 
-$ javac -cp "minio-2.0.3.jar"  FileUploader.java
+$ javac -cp "minio-2.0.4-all.jar"  FileUploader.java
 
 ```
 
@@ -110,8 +110,8 @@ $ javac -cp "minio-2.0.3.jar"  FileUploader.java
 
 ```sh
 
-$ java -cp "minio-2.0.3.jar:." FileUploader
-/tmp/asiaphotos.zip is successfully uploaded as asiaphotos.zip in asiatrip bucket.
+$ java -cp "minio-2.0.4-all.jar:." FileUploader
+/home/user/Photos/asiaphotos.zip is successfully uploaded as asiaphotos.zip to `asiatrip` bucket.
 
 $  mc ls play/asiatrip/
 [2016-06-02 18:10:29 PDT]  82KiB asiaphotos.zip
