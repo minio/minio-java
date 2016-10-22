@@ -25,6 +25,9 @@ import io.minio.ObjectStat;
 import io.minio.errors.MinioException;
 
 public class StatObject {
+  /**
+   * main().
+   */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are

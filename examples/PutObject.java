@@ -26,6 +26,9 @@ import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 
 public class PutObject {
+  /**
+   * main().
+   */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are

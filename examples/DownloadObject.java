@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import java.io.InputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
@@ -25,6 +24,9 @@ import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 
 public class DownloadObject {
+  /**
+   * main().
+   */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are

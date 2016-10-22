@@ -1,5 +1,5 @@
 /*
- * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2015 Minio, Inc.
+ * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2015,2016 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,199 +14,246 @@
  * limitations under the License.
  */
 
-plugins {
-  id 'java'
-  id 'com.github.johnrengelman.shadow' version '1.2.2'
-  id 'checkstyle'
-  id 'pmd'
-  id 'maven'
-  id 'signing'
-  id 'findbugs'
-}
+/*************************/
+/* gradleVersion = '3.1' */
+/*************************/
 
-compileJava {
-  options.fork = true
-}
-
-ext.junitVersion = '4.12'
-ext.googleHttpClientVersion = '1.20.0'
-ext.googleGuavaVersion = '18.0'
-ext.okHttpClientVersion = '2.7.2'
-ext.okioVersion = '1.6.0'
-ext.jodaTimeVersion = '2.7'
-ext.gsonVersion = '2.7'
-ext.apacheCommonsCollections4Version = '4.0'
-ext.apacheCommonsLang3Version = '3.4'
-
-ext.deployUsername = ''
-if (project.properties.containsKey('ossrhUsername')) {
-  ext.deployUsername = ossrhUsername
-}
-
-ext.deployPassword = ''
-if (project.properties.containsKey('ossrhPassword')) {
-  ext.deployPassword = ext.ossrhPassword
-}
-
-group = 'io.minio'
-archivesBaseName = 'minio'
-version = '2.0.4'
-
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
-
-task wrapper(type: Wrapper) {
-  gradleVersion = '2.5'
-}
-
-[compileJava, compileTestJava].each() {
-  it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options"]
-  it.options.encoding = "UTF-8"
-}
-
-dependencies {
-  compile group: 'com.google.http-client', name: 'google-http-client-xml', version: googleHttpClientVersion
-  compile group: 'com.google.guava', name: 'guava', version: googleGuavaVersion
-  compile group: 'com.squareup.okhttp', name: 'okhttp', version: okHttpClientVersion
-  compile group: 'com.squareup.okhttp', name: 'mockwebserver', version: okHttpClientVersion
-  compile group: 'com.squareup.okio', name: 'okio', version: okioVersion
-  compile group: 'joda-time', name: 'joda-time', version: jodaTimeVersion
-  compile group: 'com.google.code.gson', name: 'gson', version: gsonVersion
-  compile group: 'org.apache.commons', name: 'commons-collections4', version: apacheCommonsCollections4Version
-  compile group: 'org.apache.commons', name: 'commons-lang3', version: apacheCommonsLang3Version
-
-  testCompile group: 'junit', name: 'junit', version: junitVersion
-}
-
-repositories {
-  mavenCentral()
-  mavenLocal()
-}
-
-checkstyle {
-  configFile = file("$rootDir/checkstyle.xml")
-  toolVersion = "6.5"
-  ignoreFailures = false
-  if (rootProject.hasProperty("checkstyle.ignoreFailures")) {
-    ignoreFailures = rootProject.properties["checkstyle.ignoreFailures"].toBoolean()
-  }
-}
-
-checkstyleMain {
-  source = fileTree(dir: "src/main", include: "**/*.java")
-}
-
-checkstyleTest {
-  source = fileTree(dir: "src/test", include: "**/*.java")
-}
-
-tasks.withType(FindBugs) {
-  reports {
-    xml.enabled = false
-    html.enabled = true
-  }
-}
-
-task sourcesJar(type: Jar) {
-  classifier = 'sources'
-  from sourceSets.main.allJava
-}
-
-task javadocJar (type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
-  from javadoc.destinationDir
-}
-
-task localeTest (type: Test) {
-  description = "Runs tests with locale"
-  System.setProperty('user.language', 'de')
-  System.setProperty('user.country', 'DE')
-  systemProperties = System.properties
-  dependsOn test
-}
-
-check.dependsOn localeTest
-
-javadoc.options {
-  encoding = 'UTF-8'
-  links 'https://docs.oracle.com/javase/8/docs/api/'
-}
-
-// Disable JavaDoc doclint on Java 8. It's annoying.
-if (JavaVersion.current().isJava8Compatible()) {
-  allprojects {
-    tasks.withType(Javadoc) {
-      options.addStringOption('Xdoclint:none', '-quiet')
+buildscript {
+    repositories {
+        jcenter()
     }
-  }
-}
-
-artifacts {
-  archives javadocJar, sourcesJar, shadowJar
-}
-
-signing {
-  if (project.properties.containsKey('signing.keyId')) {
-    sign configurations.archives
-  }
-}
-
-// At a test failure, log the stack trace to the console so that we don't
-// have to open the HTML in a browser.
-test {
-  testLogging {
-    exceptionFormat = 'full'
-    showExceptions true
-    showCauses true
-    showStackTraces true
-  }
-}
-
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-      repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-        authentication(userName: deployUsername, password: deployPassword)
-      }
-      snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-        authentication(userName: deployUsername, password: deployPassword)
-      }
-      pom.project {
-        name 'minio'
-        packaging 'jar'
-        description 'Minio Java Library for Amazon S3 Compatible Cloud Storage'
-        url 'https://github.com/minio/minio-java'
-        scm {
-          connection 'scm:git:git@github.com:minio/minio-java.git'
-          developerConnection 'scm:git:git@github.com:minio/minio-java.git'
-          url 'http://github.com/minio/minio-java'
-        }
-        licenses {
-          license {
-            name 'The Apache License, Version 2.0'
-            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-          }
-        }
-        developers {
-          developer {
-            id 'minio'
-            name 'Minio Inc.'
-            email 'dev@minio.io'
-          }
-        }
-      }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
     }
-  }
 }
 
-jar {
-  manifest {
-    attributes('Implementation-Title': archivesBaseName,
-    'Implementation-Version': version,
-    'Built-By': System.getProperty('user.name'),
-    'Built-JDK': System.getProperty('java.version'),
-    'Source-Compatibility': sourceCompatibility,
-    'Target-Compatibility': targetCompatibility)
-  }
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'checkstyle'
+    apply plugin: 'pmd'
+    apply plugin: 'findbugs'
+
+    group = 'io.minio'
+    version = '2.0.5'
+    if (!project.hasProperty('release')) {
+        version += '-DEV'
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compile "com.google.http-client:google-http-client-xml:1.20.0"
+        compile "com.google.guava:guava:18.0"
+        compile "com.squareup.okhttp:okhttp:2.7.2"
+        compile "com.squareup.okhttp:mockwebserver:2.7.2"
+        compile "com.squareup.okio:okio:1.6.0"
+        compile "joda-time:joda-time:2.7"
+        compile "com.google.code.gson:gson:2.7"
+        compile "org.apache.commons:commons-collections4:4.0"
+        compile "org.apache.commons:commons-lang3:3.4"
+
+        testCompile "junit:junit:4.12"
+    }
+
+    [compileJava, compileTestJava].each() {
+        it.options.fork = true
+        it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options"]
+        it.options.encoding = "UTF-8"
+    }
+
+    checkstyle {
+        toolVersion = "6.5"
+        configFile = file("$rootDir/checkstyle.xml")
+        ignoreFailures = false
+        if (rootProject.hasProperty("checkstyle.ignoreFailures")) {
+            ignoreFailures = rootProject.properties["checkstyle.ignoreFailures"].toBoolean()
+        }
+    }
+
+    checkstyleMain {
+        source = fileTree(dir: "$rootDir/api/src/main", include: "**/*.java")
+	source += fileTree(dir: "$rootDir/functional", include: "**/*.java")
+	source += fileTree(dir: "$rootDir/examples", include: "**/*.java")
+    }
+
+    checkstyleTest {
+        source = fileTree(dir: "$rootDir/api/src/test", include: "**/*.java")
+    }
+
+    tasks.withType(FindBugs) {
+        reports {
+            xml.enabled = false
+            html.enabled = true
+         }
+    }
+
+    test {
+        // Show stacktrace on test failure than opening in web browser.
+        testLogging {
+            exceptionFormat = 'full'
+            showExceptions true
+            showCauses true
+            showStackTraces true
+        }
+    }
+
+    task localeTest(type: Test) {
+        description = "Runs tests with locale de.DE"
+        System.setProperty('user.language', 'de')
+        System.setProperty('user.country', 'DE')
+        systemProperties = System.properties
+        dependsOn test
+    }
+
+    check.dependsOn localeTest
+
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+
+project(':api') {
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'maven'
+    apply plugin: 'signing'
+
+    archivesBaseName = 'minio-java'
+
+    jar {
+        manifest {
+            attributes('Implementation-Title': archivesBaseName,
+            'Implementation-Version': version,
+            'Built-By': System.getProperty('user.name'),
+            'Built-JDK': System.getProperty('java.version'),
+            'Source-Compatibility': sourceCompatibility,
+            'Target-Compatibility': targetCompatibility)
+        }
+    }
+
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allJava
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    javadoc.options {
+        encoding = 'UTF-8'
+        links 'https://docs.oracle.com/javase/8/docs/api/'
+    }
+
+    // Disable JavaDoc doclint on Java 8. It's annoying.
+    if (JavaVersion.current().isJava8Compatible()) {
+        allprojects {
+            tasks.withType(Javadoc) {
+                options.addStringOption('Xdoclint:none', '-quiet')
+            }
+        }
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar, shadowJar
+    }
+
+    signing {
+        if (project.properties.containsKey('signing.keyId')) {
+            sign configurations.archives
+        }
+    }
+
+    ext.deployUsername = ''
+    if (project.properties.containsKey('ossrhUsername')) {
+        ext.deployUsername = ext.ossrhUsername
+    }
+
+    ext.deployPassword = ''
+    if (project.properties.containsKey('ossrhPassword')) {
+        ext.deployPassword = ext.ossrhPassword
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment {
+                    MavenDeployment deployment -> signing.signPom(deployment)
+                }
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: deployUsername, password: deployPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: deployUsername, password: deployPassword)
+                }
+
+                pom.project {
+                    name 'minio'
+                    packaging 'jar'
+                    description 'Minio Java Library for Amazon S3 Compatible Cloud Storage'
+                    url 'https://github.com/minio/minio-java'
+
+                    scm {
+                        connection 'scm:git:git@github.com:minio/minio-java.git'
+                        developerConnection 'scm:git:git@github.com:minio/minio-java.git'
+                        url 'http://github.com/minio/minio-java'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'minio'
+                            name 'Minio Inc.'
+                            email 'dev@minio.io'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+project(':examples') {
+    dependencies {
+        compile project(':api')
+    }
+
+    sourceSets {
+        main {
+	    java {
+	        srcDirs = ["$rootDir/examples"]
+	    }
+	}
+    }
+}
+
+project(':functional') {
+    dependencies {
+        compile project(':api')
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs = ["$rootDir/functional"]
+            }
+        }
+    }
+
+    task runFunctionalTest(type:JavaExec) {
+        main = 'FunctionalTest'
+        classpath = sourceSets.main.runtimeClasspath
+        args = ["https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"]
+    }
+
 }

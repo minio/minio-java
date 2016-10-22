@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import java.lang.StringBuilder;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
@@ -26,6 +24,9 @@ import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 
 public class UploadObject {
+  /**
+   * main().
+   */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
