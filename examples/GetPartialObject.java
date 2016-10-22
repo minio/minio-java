@@ -19,12 +19,17 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 
+import java.nio.charset.StandardCharsets;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 
 public class GetPartialObject {
+  /**
+   * main().
+   */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
@@ -46,7 +51,7 @@ public class GetPartialObject {
       byte[] buf = new byte[16384];
       int bytesRead;
       while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-        System.out.println(new String(buf, 0, bytesRead));
+        System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
       }
 
       // Close the input stream.
