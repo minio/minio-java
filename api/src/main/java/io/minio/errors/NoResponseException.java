@@ -38,4 +38,8 @@ public class NoResponseException extends MinioException {
     this();
     this.request = request;
   }
+
+  public Request request() {
+    return this.request;
+  }
 }
