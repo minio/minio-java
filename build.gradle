@@ -50,9 +50,9 @@ subprojects {
         compile "com.squareup.okhttp:mockwebserver:2.7.2"
         compile "com.squareup.okio:okio:1.6.0"
         compile "joda-time:joda-time:2.7"
-        compile "com.google.code.gson:gson:2.7"
-        compile "org.apache.commons:commons-collections4:4.0"
-        compile "org.apache.commons:commons-lang3:3.4"
+	compile "com.fasterxml.jackson.core:jackson-annotations:2.8.4"
+	compile "com.fasterxml.jackson.core:jackson-core:2.8.4"
+	compile "com.fasterxml.jackson.core:jackson-databind:2.8.4"
 
         testCompile "junit:junit:4.12"
     }

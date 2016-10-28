@@ -1,5 +1,5 @@
 /*
- * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2015 Minio, Inc.
+ * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2016 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,210 +16,104 @@
 
 package io.minio.policy;
 
-import com.google.gson.annotations.SerializedName;
-import io.minio.Constants;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Helper class to parse Amazon AWS S3 policy statement object.
  */
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class Statement {
-  @SerializedName("Sid")
-  private String sid;
-  @SerializedName("Effect")
+  @JsonProperty("Action")
+  private Set<String> actions;
+
+  @JsonProperty("Condition")
+  private ConditionMap conditions;
+
+  @JsonProperty("Effect")
   private String effect;
-  @SerializedName("Principal")
-  private User principal;
-  @SerializedName("Action")
-  private List<String> actions;
-  @SerializedName("Resource")
-  private List<String> resources;
-  @SerializedName("Condition")
-  Map<String, Map<String, String>> conditions;
 
-  public Statement() {
-    super();
+  @JsonProperty("Principal")
+  private Principal principal;
+
+  @JsonProperty("Resource")
+  private Resources resources;
+
+  @JsonProperty("Sid")
+  private String sid;
+
+
+  public Set<String> actions() {
+    return this.actions;
   }
 
-  /**
-   * Returns sid.
-   */
-  public String sid() {
-    return sid;
+
+  public void setActions(Set<String> actions) {
+    this.actions = actions;
   }
 
-  /**
-   * Returns sid.
-   */
-  public void setSid(String sid) {
-    this.sid = sid;
+
+  public ConditionMap conditions() {
+    return this.conditions;
   }
 
-  /**
-   * Returns effect.
-   */
+
+  public void setConditions(ConditionMap conditions) {
+    this.conditions = conditions;
+  }
+
+
   public String effect() {
-    return effect;
+    return this.effect;
   }
 
-  /**
-   * Sets effect.
-   */
+
   public void setEffect(String effect) {
     this.effect = effect;
   }
 
-  /**
-   * Returns principal.
-   */
-  public User principal() {
-    return principal;
+
+  public Principal principal() {
+    return this.principal;
   }
 
-  /**
-   * Sets principal.
-   */
-  public void setPrincipal(User principal) {
+
+  public void setPrincipal(Principal principal) {
     this.principal = principal;
   }
 
-  /**
-   * Returns actions.
-   */
-  public List<String> actions() {
-    if (actions == null) {
-      return new ArrayList<String>();
-    }
-    return actions;
+
+  public Resources resources() {
+    return this.resources;
   }
 
-  /**
-   * Set actions.
-   */
-  public void setActions(List<String> actions) {
-    this.actions = actions;
-  }
 
-  /**
-   * Returns resources.
-   */
-  public List<String> resources() {
-    if (resources == null) {
-      return new ArrayList<String>();
-    }
-    return resources;
-  }
-
-  /**
-   * Sets resources.
-   */
-  public void setResources(List<String> resources) {
+  public void setResources(Resources resources) {
     this.resources = resources;
   }
 
-  /**
-   * Returns if policy has resources.
-   */
-  public boolean hasResources() {
-    return resources != null && resources.size() > 0;
+
+  public String sid() {
+    return this.sid;
   }
 
-  /**
-   * Returns conditions.
-   */
-  public Map<String, Map<String, String>> conditions() {
-    if (conditions == null) {
-      return new HashMap<String, Map<String, String>>();
-    }
-    return conditions;
+
+  public void setSid(String sid) {
+    this.sid = sid;
   }
 
-  /**
-   * Sets conditions.
-   */
-  public void setConditions(Map<String, Map<String, String>> conditions) {
-    this.conditions = conditions;
-  }
 
   /**
-   * Returns if policy has conditions.
+   * Returns whether given statement is valid to process for given bucket name.
    */
-  public boolean hasConditions() {
-    return conditions != null && conditions.size() > 0;
-  }
-
-  /**
-   * Overriding the default <code>toString()</code>.
-   */
-  public String toString() {
-    StringBuffer buf = new StringBuffer();
-
-    for (String operator: this.conditions().keySet()) {
-      for (String key: this.conditions().get(operator).keySet()) {
-        buf.append(String.format("%s %s %s", operator, key, this.conditions().get(operator).get(key)));
-      }
-    }
-
-    return "Sid: " + this.sid
-              + "\nEffect: " + this.effect
-              + "\nPrincipal: " + this.principal.toString()
-              + "\nActions: " + StringUtils.join(", ", this.actions)
-              + "\nResources: " + StringUtils.join(", ", this.resources)
-              + "\nConditions: \n" + buf.toString();
-  }
-
-  /**
-   * Returns if the statement actions are equal to actions.
-   */
-  private boolean isEqualActions(List<String> actions) {
-    return CollectionUtils.isEqualCollection(actions, this.actions());
-  }
-
-  /**
-   * Returns if principal is public identifier.
-   */
-  private boolean hasPrincipalPublic() {
-    return principal().aws().contains("*");
-  }
-
-  /**
-   * Returns if statement has StringEquals condition for s3:prefix with objectPrefix.
-   */
-  private boolean hasConditionForPrefix(String objectPrefix) {
-    for (String operator : this.conditions().keySet()) {
-      if (!operator.equals("StringEquals")) {
-        continue;
-      }
-
-      for (String key : this.conditions().get(operator).keySet()) {
-        String value = this.conditions().get(operator).get(key);
-        if (!key.equals("s3:prefix")) {
-          continue;
-        }
-
-        // TODO(nl5887): return startsWith or exact match?
-        if (value.equals(objectPrefix)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  /**
-   * Returns if resource is a bucket policy for bucket and bucketActions.
-   */
-  protected boolean isBucketPolicy(String bucketName, List<String> bucketActions) {
-    boolean hasBucketActions = false;
-
-    if (!this.hasPrincipalPublic()) {
+  public boolean isValid(String bucketName) {
+    Set<String> intersection = new HashSet<String>(this.actions);
+    intersection.retainAll(Constants.VALID_ACTIONS);
+    if (intersection.isEmpty()) {
       return false;
     }
 
@@ -227,94 +121,183 @@ public class Statement {
       return false;
     }
 
-    for (String resource: resources()) {
-      if (resource.equals(String.format("%s%s", Constants.AWS_RESOURCE_PREFIX, bucketName))) {
-        hasBucketActions |= this.isEqualActions(bucketActions);
-      }
-    }
-
-    return hasBucketActions;
-  }
-
-  /**
-   * Returns if resource is a bucket policy for bucket, objectPrefix and bucketActions.
-   */
-  protected boolean isBucketPolicy(String bucketName, String objectPrefix, List<String> bucketActions) {
-    boolean hasBucketActions = false;
-
-    if (!this.hasPrincipalPublic()) {
+    Set<String> aws = this.principal.aws();
+    if (aws == null || !aws.contains("*")) {
       return false;
     }
 
-    if (!this.effect.equals("Allow")) {
-      return false;
-    }
+    String bucketResource = Constants.AWS_RESOURCE_PREFIX + bucketName;
 
-    for (String resource: resources()) {
-      if (resource.equals(String.format("%s%s", Constants.AWS_RESOURCE_PREFIX, bucketName))) {
-        hasBucketActions |= this.isEqualActions(bucketActions) && this.hasConditionForPrefix(objectPrefix);
-      }
-    }
-
-    return hasBucketActions;
-  }
-
-  /**
-   * Returns if resource matches arn pattern.
-   */
-  static boolean resourceMatch(String pattern, String resource) {
-    if (pattern.equals("")) {
-      return resource.equals(pattern);
-    } else if (pattern.equals("*")) {
+    if (this.resources.contains(bucketResource)) {
       return true;
     }
 
-    String[] parts = pattern.split("\\*");
-    if (parts.length == 1) {
-      return pattern.equals(resource);
-    }
-
-    boolean tGlob = pattern.endsWith("*");
-
-    int end = parts.length - 1;
-    if (!resource.startsWith(parts[0])) {
+    if (this.resources.startsWith(bucketResource + "/").isEmpty()) {
       return false;
     }
 
-    for (int i = 0; i < end; i++) {
-      if (!resource.contains(parts[i])) {
-        return false;
-      }
-
-      int idx = resource.indexOf(parts[i]) + parts[i].length();
-      resource = resource.substring(idx);
-    }
-
-    return tGlob || resource.endsWith(parts[end]);
+    return true;
   }
+
 
   /**
-   * Returns if resource is a object policy for bucket, objectPrefix and objectActions.
+   * Removes object actions for given object resource.
    */
-  protected boolean isObjectPolicy(String bucketName, String objectPrefix, List<String> objectActions) {
-    boolean hasObjectActions = false;
-
-    if (!this.hasPrincipalPublic()) {
-      return false;
+  public void removeObjectActions(String objectResource) {
+    if (this.conditions != null) {
+      return;
     }
 
-    if (!this.effect.equals("Allow")) {
-      return false;
+    if (this.resources.size() > 1) {
+      this.resources.remove(objectResource);
+    } else {
+      this.actions.removeAll(Constants.READ_WRITE_OBJECT_ACTIONS);
+    }
+  }
+
+
+  private void removeReadOnlyBucketActions(String prefix) {
+    if (!this.actions.containsAll(Constants.READ_ONLY_BUCKET_ACTIONS)) {
+      return;
     }
 
-    for (String resource: resources()) {
-      if (resourceMatch(resource,
-                String.format("%s%s/%s*", Constants.AWS_RESOURCE_PREFIX, bucketName, objectPrefix))) {
-        hasObjectActions |= this.isEqualActions(objectActions);
+    this.actions.removeAll(Constants.READ_ONLY_BUCKET_ACTIONS);
+
+    if (this.conditions == null) {
+      return;
+    }
+
+    if (prefix == null || prefix.isEmpty()) {
+      return;
+    }
+    
+    ConditionKeyMap stringEqualsValue = this.conditions.get("StringEquals");
+    if (stringEqualsValue == null) {
+      return;
+    }
+
+    Set<String> values = stringEqualsValue.get("s3:prefix");
+    if (values != null) {
+      values.remove(prefix);
+    }
+
+    if (values == null || values.isEmpty()) {
+      stringEqualsValue.remove("s3:prefix");
+    }
+
+    if (stringEqualsValue.isEmpty()) {
+      this.conditions.remove("StringEquals");
+    }
+
+    if (this.conditions.isEmpty()) {
+      this.conditions = null;
+    }
+  }
+
+
+  private void removeWriteOnlyBucketActions() {
+    if (this.conditions == null) {
+      this.actions.removeAll(Constants.WRITE_ONLY_BUCKET_ACTIONS);
+    }
+  }
+
+
+  /**
+   * Removes bucket actions for given prefix and bucketResource.
+   */
+  public void removeBucketActions(String prefix, String bucketResource,
+                                  boolean readOnlyInUse, boolean writeOnlyInUse) {
+    if (this.resources.size() > 1) {
+      this.resources.remove(bucketResource);
+      return;
+    }
+
+    if (!readOnlyInUse) {
+      removeReadOnlyBucketActions(prefix);
+    }
+
+    if (!writeOnlyInUse) {
+      removeWriteOnlyBucketActions();
+    }
+
+    return;
+  }
+
+
+  /**
+   * Returns bucket policy types for given prefix.
+   */
+  @JsonIgnore
+  public boolean[] getBucketPolicy(String prefix) {
+    boolean commonFound = false;
+    boolean readOnly = false;
+    boolean writeOnly = false;
+
+    Set<String> aws = this.principal.aws();
+    if (!(this.effect.equals("Allow") && aws != null && aws.contains("*"))) {
+      return new boolean[]{commonFound, readOnly, writeOnly};
+    }
+
+    if (this.actions.containsAll(Constants.COMMON_BUCKET_ACTIONS) && this.conditions == null) {
+      commonFound = true;
+    }
+
+    if (this.actions.containsAll(Constants.WRITE_ONLY_BUCKET_ACTIONS) && this.conditions == null) {
+      writeOnly = true;
+    }
+
+    if (this.actions.containsAll(Constants.READ_ONLY_BUCKET_ACTIONS)) {
+      if (prefix != null && !prefix.isEmpty() && this.conditions != null) {
+        ConditionKeyMap stringEqualsValue = this.conditions.get("StringEquals");
+        if (stringEqualsValue != null) {
+          Set<String> s3PrefixValues = stringEqualsValue.get("s3:prefix");
+          if (s3PrefixValues != null && s3PrefixValues.contains(prefix)) {
+            readOnly = true;
+          }
+        } else {
+          ConditionKeyMap stringNotEqualsValue = this.conditions.get("StringNotEquals");
+          if (stringNotEqualsValue != null) {
+            Set<String> s3PrefixValues = stringNotEqualsValue.get("s3:prefix");
+            if (s3PrefixValues != null && !s3PrefixValues.contains(prefix)) {
+              readOnly = true;
+            }
+          }
+        }
+      } else if ((prefix == null || prefix.isEmpty()) && this.conditions == null) {
+        readOnly = true;
+      } else if (prefix != null && !prefix.isEmpty() && this.conditions == null) {
+        readOnly = true;
       }
     }
 
-    return hasObjectActions;
+    return new boolean[]{commonFound, readOnly, writeOnly};
   }
 
+
+  /**
+   * Returns object policy types.
+   */
+  @JsonIgnore
+  public boolean[] getObjectPolicy() {
+    boolean readOnly = false;
+    boolean writeOnly = false;
+
+    Set<String> aws = null;
+    if (this.principal != null) {
+      aws = this.principal.aws();
+    }
+
+    if (this.effect.equals("Allow")
+        && aws != null && aws.contains("*")
+        && this.conditions == null) {
+      if (this.actions.containsAll(Constants.READ_ONLY_OBJECT_ACTIONS)) {
+        readOnly = true;
+      }
+      if (this.actions.containsAll(Constants.WRITE_ONLY_OBJECT_ACTIONS)) {
+        writeOnly = true;
+      }
+    }
+
+    return new boolean[]{readOnly, writeOnly};
+  }
 }

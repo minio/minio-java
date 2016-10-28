@@ -21,7 +21,7 @@ import java.security.InvalidKeyException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
-import io.minio.policy.BucketPolicy;
+import io.minio.policy.PolicyType;
 import io.minio.errors.MinioException;
 
 public class SetBucketPolicy {
@@ -36,7 +36,7 @@ public class SetBucketPolicy {
     try {
       MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-      minioClient.setBucketPolicy("my-bucketname", "downloads", BucketPolicy.ReadOnly);
+      minioClient.setBucketPolicy("my-bucketname", "downloads", PolicyType.READ_ONLY);
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
