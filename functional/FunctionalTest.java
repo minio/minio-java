@@ -737,6 +737,73 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: copyObject(String bucketName, String objectName, String objectSource, CopyConditions copyConditions) 
+   */
+  public static void copyObject_test1() throws Exception {
+    println("Test: copyObject(String bucketName, String objectName, String objectSource, CopyConditions copyConditions)");
+    String bucketName = getRandomName();
+    String secondBucketName = getRandomName();
+    
+    String fileName = createFile(3 * MB);
+    
+    client.makeBucket(bucketName);
+    client.makeBucket(secondBucketName);
+    
+    client.putObject(bucketName, fileName, fileName);
+    
+    CopyConditions copyConditions = new CopyConditions();
+    
+    client.copyObject(secondBucketName, fileName, "/" + bucketName + "/" + fileName, copyConditions);
+    
+    try{
+    	InputStream is = client.getObject(secondBucketName, fileName);
+    	is.close();
+    } catch (Exception e){
+    	println("Error: No exception excepted");
+    } finally {    
+	    client.removeObject(bucketName, fileName);
+	    client.removeObject(secondBucketName, fileName);
+	    client.removeBucket(bucketName);    
+	    client.removeBucket(secondBucketName);
+	  }
+  }
+  /**
+   * Test: copyObject(String bucketName, String objectName, String objectSource, CopyConditions copyConditions) with 
+   * ETag to match
+   */
+  public static void copyObject_test2() throws Exception {
+    println("Test: copyObject(String bucketName, String objectName, String objectSource, CopyConditions copyConditions)");
+    String bucketName = getRandomName();
+    String secondBucketName = getRandomName();
+    
+    String fileName = createFile(3 * MB);
+    
+    client.makeBucket(bucketName);
+    client.makeBucket(secondBucketName);
+    
+    client.putObject(bucketName, fileName, fileName);
+    
+    CopyConditions copyConditions = new CopyConditions();
+    copyConditions.setMatchETag("TestETag");
+    
+    client.copyObject(secondBucketName, fileName, "/" + bucketName + "/" + fileName, copyConditions);
+    
+    try{
+    	InputStream is = client.getObject(secondBucketName, fileName);
+    	is.close();
+    } catch (ErrorResponseException e){
+    	// File should not be copied as ETag set in copyConditions doesn't match object's ETag.
+    	println("Exception occurred as excepted");
+    } catch (Exception e){
+    	println("Exception didn't occur as excepted");
+    } finally {
+	    client.removeObject(bucketName, fileName);
+	    client.removeBucket(bucketName);    
+	    client.removeBucket(secondBucketName);
+	}
+  }
+  
+  /**
    * main().
    */
   public static void main(String[] args) {
@@ -803,7 +870,9 @@ public class FunctionalTest {
       presignedPostPolicy_test();
 
       threadedPutObject();
-
+      copyObject_test1();
+      copyObject_test2();
+      
       teardown();
     } catch (Exception e) {
       e.printStackTrace();

@@ -82,6 +82,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -1384,6 +1385,52 @@ public final class MinioClient {
     }
   }
 
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.copyObject("my-bucketname", "my-objectname", "/my-sourcebucketname/my-objectsourcename", copyConditions); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to be created after copy.
+   * @param objectSource  Object name of the source.
+   * @param copyConditions  CopyConditions object with.
+   *
+   * @throws InsufficientDataException 
+   * @throws NoSuchAlgorithmException 
+   * @throws InvalidKeyException 
+   * @throws InvalidArgumentException 
+   */
+  public void copyObject(String bucketName, String objectName, String objectSource, CopyConditions copyConditions) 
+	throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, 
+		   NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException, 
+		   InvalidArgumentException {
+    
+	if (copyConditions == null) {
+        throw new InvalidArgumentException("Copy conditions should be a non null value");
+    }
+	
+	if (objectSource == null) {
+        throw new InvalidArgumentException(objectSource + " is not a valid object source");
+    }
+	
+	String sourceBucketName = getBucketNameFromPath(objectSource);
+	String sourceObjectName = getObjectNameFromPath(objectSource);
+	
+	ObjectStat objectStat = statObject(sourceBucketName, sourceObjectName);
+    String etag = objectStat.etag();
+    Date lastModified = objectStat.createdTime();
+    long length = objectStat.length();
+    
+    // If the conditions specified are satisfied, get and put the object in new location
+    if(copyConditions.isUnmodifiedSince(lastModified) && copyConditions.isModifiedAfter(lastModified) &&
+    		copyConditions.eTagMatches(etag) && copyConditions.eTagDoesNotMatch(etag)){    	
+    	InputStream objectByteStream = getObject(sourceBucketName, sourceObjectName);    	
+    	putObject(bucketName, objectName, objectByteStream, length, "application/octet-stream");
+    	objectByteStream.close();
+    }
+   
+  }
 
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time.
@@ -2533,7 +2580,22 @@ public final class MinioClient {
     };
   }
 
-
+  /**
+   * Returns a String bucketName splitting
+   * the objectPath passed to this method.
+   */
+  private static String getBucketNameFromPath(String objectPath) {
+	  return objectPath.split("/")[1];
+  }
+  
+  /**
+   * Returns a String objectName by splitting
+   * the objectPath passed to this method.
+   */
+  private static String getObjectNameFromPath(String objectPath) {
+	  return objectPath.split("/")[2];
+  }
+  
   /**
    * Executes List Incomplete uploads S3 call for given bucket name, key marker, upload id marker, prefix,
    * delimiter and maxUploads and returns {@link ListMultipartUploadsResult}.
