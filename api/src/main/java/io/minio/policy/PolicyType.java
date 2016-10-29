@@ -1,5 +1,5 @@
 /*
- * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2015 Minio, Inc.
+ * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2016 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.policy;
 
-public class Constants {
-  public static final String AWS_RESOURCE_PREFIX = "arn:aws:s3:::";
+public enum PolicyType {
+  NONE("none"), READ_ONLY("readonly"), READ_WRITE("readwrite"), WRITE_ONLY("writeonly");
+  private final String value;
+
+
+  private PolicyType(final String value) {
+    this.value = value;
+  }
 }

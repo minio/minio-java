@@ -17,7 +17,6 @@
 package io.minio;
 
 import com.google.common.io.ByteStreams;
-import com.google.gson.Gson;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -34,7 +33,6 @@ import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidObjectPrefixException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.NoResponseException;
-import io.minio.errors.NoSuchBucketPolicyException;
 import io.minio.http.HeaderParser;
 import io.minio.http.Method;
 import io.minio.http.Scheme;
@@ -52,12 +50,10 @@ import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
-import io.minio.policy.BucketAccessPolicy;
+import io.minio.policy.PolicyType;
 import io.minio.policy.BucketPolicy;
-import io.minio.policy.Statement;
 import okio.BufferedSink;
 import okio.Okio;
-import org.apache.commons.collections4.CollectionUtils;
 import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -143,7 +139,6 @@ public final class MinioClient {
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String US_EAST_1 = "us-east-1";
   private static final String UPLOAD_ID = "uploadId";
-  private static final Gson gson = new Gson();
 
   private static XmlPullParserFactory xmlPullParserFactory = null;
 
@@ -244,8 +239,8 @@ public final class MinioClient {
    * Creates Minio client object with given endpoint, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
-   *
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
+   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
@@ -278,7 +273,8 @@ public final class MinioClient {
    * Creates Minio client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"),
+   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param url Endpoint URL object.
    * @param accessKey Access key to access service in endpoint.
@@ -300,7 +296,8 @@ public final class MinioClient {
    * Creates Minio client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"),
+   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param url Endpoint HttpUrl object.
    * @param accessKey Access key to access service in endpoint.
@@ -2207,6 +2204,38 @@ public final class MinioClient {
     completeMultipart(bucketName, objectName, uploadId, totalParts);
   }
 
+
+  /**
+   * Returns the parsed current bucket access policy.
+   */
+  private BucketPolicy getBucketPolicy(String bucketName)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("policy", "");
+
+    BucketPolicy policy = null;
+    HttpResponse response = null;
+
+    try {
+      response = executeGet(bucketName, null, null, queryParamMap);
+      policy = BucketPolicy.parseJson(response.body().charStream(), bucketName);
+      response.body().close();
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
+        throw e;
+      }
+    }
+
+    if (policy == null) {
+      policy = new BucketPolicy(bucketName);
+    }
+
+    return policy;
+  }
+
+
   /**
    * Get bucket policy at given objectPrefix
    *
@@ -2217,134 +2246,63 @@ public final class MinioClient {
    * <pre>{@code String policy = minioClient.getBucketPolicy("my-bucketname", "my-objectname");
    * System.out.println(policy); }</pre>
    */
-  public BucketPolicy getBucketPolicy(String bucketName, String objectPrefix)
+  public PolicyType getBucketPolicy(String bucketName, String objectPrefix)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-                    XmlPullParserException, ErrorResponseException, InternalException {
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException {
     checkObjectPrefix(objectPrefix);
 
-    try {
-      BucketAccessPolicy policy = getBucketAccessPolicy(bucketName, objectPrefix);
-      return policy.identifyPolicyType(bucketName, objectPrefix);
-    } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() == ErrorCode.NO_SUCH_BUCKET_POLICY) {
-        return BucketPolicy.None;
-      }
-      throw e;
-    }
+    BucketPolicy policy = getBucketPolicy(bucketName);
+    return policy.getPolicy(objectPrefix);
   }
+
+
+  /**
+   * Sets the bucket access policy.
+   */
+  private void setBucketPolicy(String bucketName, BucketPolicy policy)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("policy", "");
+
+    String policyJson = policy.getJson();
+
+    HttpResponse response = executePut(bucketName, "", null, queryParamMap, policyJson, policyJson.length());
+    response.body().close();
+  }
+
 
   /**
    * Set policy on bucket and object prefix.
    *
    * @param bucketName   Bucket name.
-   * @param objectPrefix name of the object prefix
-   * @param bucketPolicy policy can be BucketPolicy.None, BucketPolicy.ReadOnly,
-   *                           BucketPolicy.ReadWrite, BucketPolicy.WriteOnly
+   * @param objectPrefix Name of the object prefix.
+   * @param policyType   Enum of {@link PolicyType}.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code setBucketPolicy("my-bucketname", "my-objectname", BucketPolicy.ReadOnly);
-   * }</pre>
+   * <pre>{@code setBucketPolicy("my-bucketname", "my-objectname", BucketPolicy.ReadOnly); }</pre>
    */
-  public void setBucketPolicy(String bucketName, String objectPrefix, BucketPolicy bucketPolicy)
+  public void setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-                    XmlPullParserException, ErrorResponseException, InternalException,
-                    NoSuchBucketPolicyException {
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException {
     checkObjectPrefix(objectPrefix);
 
-    BucketAccessPolicy policy = BucketAccessPolicy.none();
+    BucketPolicy policy = getBucketPolicy(bucketName);
 
-    try {
-      policy = getBucketAccessPolicy(bucketName, objectPrefix);
-    } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
-        throw e;
-      }
-    }
-
-    if (bucketPolicy.equals(BucketPolicy.None) && !policy.hasStatements()) {
-      throw new NoSuchBucketPolicyException(bucketName, objectPrefix, bucketPolicy);
-    }
-
-    List<Statement> statements = policy.removeBucketPolicyStatement(bucketName, objectPrefix);
-
-    // add the common bucket statements, if they don't exist
-    if (!policy.hasCommonBucketStatement(bucketName)) {
-      statements.addAll(BucketAccessPolicy.commonBucketStatement(bucketName));
-    }
-
-    List<Statement> generatedStatements = BucketAccessPolicy.generatePolicyStatements(bucketPolicy,
-                                                    bucketName, objectPrefix);
-    statements.addAll(generatedStatements);
-
-    // prevent request if statements are unchanged
-    if (CollectionUtils.isEqualCollection(policy.statements(), statements)) {
+    if (policyType == PolicyType.NONE && policy.statements() == null) {
+      // As the request is for removing policy and the bucket
+      // has empty policy statements, just return success.
       return;
     }
 
-    policy.setStatements(statements);
+    policy.setPolicy(policyType, objectPrefix);
 
-    // if no statements, remove bucket access policy. Policy with empty statements is invalid.
-    if (!policy.hasStatements()) {
-      delBucketAccessPolicy(bucketName);
-    } else {
-      putBucketAccessPolicy(bucketName, policy);
-    }
+    setBucketPolicy(bucketName, policy);
   }
 
-
-  /**
-   * Returns the parsed current bucket access policy.
-   */
-  private BucketAccessPolicy getBucketAccessPolicy(String bucketName, String objectPrefix)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-                    XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("policy", "");
-
-    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
-
-    BucketAccessPolicy policy = gson.fromJson(response.body().charStream(), BucketAccessPolicy.class);
-    response.body().close();
-
-    if (policy == null) {
-      throw new com.google.gson.JsonParseException("policy document could not be decoded.");
-    }
-
-    return policy;
-  }
-
-  /**
-   * Deletes the bucket access policy.
-   */
-  private void delBucketAccessPolicy(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-                    XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("policy", "");
-
-    HttpResponse response = executeDelete(bucketName, "", queryParamMap);
-    response.body().close();
-  }
-
-  /**
-   * Sets the bucket access policy.
-   */
-  private void putBucketAccessPolicy(String bucketName, BucketAccessPolicy policy)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-                    InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-                    XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("policy", "");
-
-    String body = gson.toJson(policy);
-
-    HttpResponse response = executePut(bucketName, "", null, queryParamMap, body, body.length());
-    response.body().close();
-  }
 
   /**
    * Returns next part if exists.
