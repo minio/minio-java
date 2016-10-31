@@ -823,4 +823,152 @@ public class MinioClientTest {
     PolicyType policyType = client.getBucketPolicy(BUCKET, "uploads");
     assertEquals(PolicyType.READ_WRITE, policyType);
   }
+
+  @Test
+  public void testCopyObjectWithModifiedAfterDate() throws IOException, InvalidEndpointException, InvalidPortException,
+      InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions newCopyConditions = new CopyConditions();
+
+    Calendar cal = Calendar.getInstance();
+    cal.set(Calendar.YEAR, 2015);
+    cal.set(Calendar.MONTH, Calendar.MAY);
+    cal.set(Calendar.DAY_OF_MONTH, 3);
+    Date dateRepresentation = cal.getTime();
+
+    newCopyConditions.setModified(dateRepresentation);
+
+    server.enqueue(response);
+    server.enqueue(response);
+    server.enqueue(response);
+
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+
+  }
+
+  @Test
+  public void testCopyObjectWithUnmodifiedSinceDate()
+      throws IOException, InvalidEndpointException, InvalidPortException, InvalidKeyException,
+      InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, NoResponseException,
+      ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions newCopyConditions = new CopyConditions();
+
+    Calendar cal = Calendar.getInstance();
+    cal.set(Calendar.YEAR, 2015);
+    cal.set(Calendar.MONTH, Calendar.MAY);
+    cal.set(Calendar.DAY_OF_MONTH, 3);
+    Date dateRepresentation = cal.getTime();
+
+    newCopyConditions.setUnmodified(dateRepresentation);
+
+    server.enqueue(response);
+    server.enqueue(response);
+    server.enqueue(response);
+
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+  }
+
+  @Test
+  public void testCopyObjectWithETagMatches() throws IOException, InvalidEndpointException, InvalidPortException,
+      InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions newCopyConditions = new CopyConditions();
+    newCopyConditions.setMatchETag(MD5_HASH_STRING);
+
+    server.enqueue(response);
+    server.enqueue(response);
+    server.enqueue(response);
+
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+  }
+
+  @Test
+  public void testCopyObjectWithETagDoesNotMatch() throws IOException, InvalidEndpointException, InvalidPortException,
+      InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions newCopyConditions = new CopyConditions();
+    newCopyConditions.setMatchETagExcept(MD5_HASH_STRING);
+
+    server.enqueue(response);
+    server.enqueue(response);
+    server.enqueue(response);
+
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+  }
 }

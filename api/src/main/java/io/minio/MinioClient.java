@@ -78,6 +78,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -1381,25 +1382,106 @@ public final class MinioClient {
     }
   }
 
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "/my-sourcebucketname/my-objectsourcename", 
+   * copyConditions); }
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name to be created after copy.
+   * @param objectSource
+   *          Object name of the source.
+   * @param copyConditions
+   *          CopyConditions object with.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public void copyObject(String bucketName, String objectName, String objectSource, CopyConditions copyConditions)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
+    if (copyConditions == null) {
+      throw new InvalidArgumentException("Copy conditions should be a non null value");
+    }
+    if (objectSource == null) {
+      throw new InvalidArgumentException("Invalid object source");
+    }
+    String sourceBucketName = getBucketNameFromPath(objectSource);
+    String sourceObjectName = getObjectNameFromPath(objectSource);
+    ObjectStat objectStat = statObject(sourceBucketName, sourceObjectName);
+    String etag = objectStat.etag();
+    Date lastModified = objectStat.createdTime();
+    long length = objectStat.length();
+
+    // If the conditions specified are satisfied, get and put the object in new location
+    if (copyConditions.isUnmodifiedSince(lastModified) && copyConditions.isModifiedAfter(lastModified)
+        && copyConditions.etagMatches(etag) && copyConditions.etagDoesNotMatch(etag)) {
+      InputStream objectByteStream = getObject(sourceBucketName, sourceObjectName);
+      putObject(bucketName, objectName, objectByteStream, length, "application/octet-stream");
+      objectByteStream.close();
+    }
+  }
+
+  /**
+   * Returns a String bucketName splitting the objectPath passed to this method.
+   */
+  private static String getBucketNameFromPath(String objectPath) {
+    return objectPath.split("/")[1];
+  }
+
+  /**
+   * Returns a String objectName by splitting the objectPath passed to this method.
+   */
+  private static String getObjectNameFromPath(String objectPath) {
+    return objectPath.split("/")[2];
+  }
 
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-   * System.out.println(url); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param expires     Expiration time in seconds of presigned URL.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param expires
+   *          Expiration time in seconds of presigned URL.
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws IOException
+   *           upon signature calculation failure
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException
+   *           upon input expires is out of range
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
