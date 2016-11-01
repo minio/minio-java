@@ -31,6 +31,7 @@ import io.minio.messages.Item;
 import io.minio.messages.Owner;
 import io.minio.policy.*;
 
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -822,5 +823,135 @@ public class MinioClientTest {
     // Get the bucket policy for the new bucket and check
     PolicyType policyType = client.getBucketPolicy(BUCKET, "uploads");
     assertEquals(PolicyType.READ_WRITE, policyType);
+  }
+
+  @Test
+  public void testCopyObjectWithModifiedAfterDate() throws IOException, InvalidEndpointException, InvalidPortException,
+      InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
+
+    server.enqueue(response1);
+
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions copyConditions = new CopyConditions();
+    DateTime dateRepresentation = new DateTime(2015, Calendar.MAY, 3, 10, 10);
+
+    copyConditions.setModified(dateRepresentation);
+
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", copyConditions);
+
+  }
+
+  @Test
+  public void testCopyObjectWithUnmodifiedSinceDate()
+      throws IOException, InvalidEndpointException, InvalidPortException, InvalidKeyException,
+      InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, NoResponseException,
+      ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
+
+    server.enqueue(response1);
+
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions newCopyConditions = new CopyConditions();
+    DateTime dateRepresentation = new DateTime(2015, Calendar.MAY, 3, 10, 10);
+
+    newCopyConditions.setUnmodified(dateRepresentation);
+
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+  }
+
+  @Test
+  public void testCopyObjectWithETagMatches() throws IOException, InvalidEndpointException, InvalidPortException,
+      InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
+
+    server.enqueue(response1);
+
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions newCopyConditions = new CopyConditions();
+    newCopyConditions.setMatchETag(MD5_HASH_STRING);
+
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+  }
+
+  @Test
+  public void testCopyObjectWithETagDoesNotMatch() throws IOException, InvalidEndpointException, InvalidPortException,
+      InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
+
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
+    MockWebServer server = new MockWebServer();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
+
+    server.enqueue(response1);
+
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+
+    CopyConditions newCopyConditions = new CopyConditions();
+    newCopyConditions.setMatchETagExcept(MD5_HASH_STRING);
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+
   }
 }
