@@ -16,6 +16,8 @@
 package io.minio;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.minio.errors.InvalidArgumentException;
 
@@ -24,10 +26,7 @@ import io.minio.errors.InvalidArgumentException;
  */
 public class CopyConditions {
 
-  Date dateUnmodifiedSince;
-  Date dateModifiedAfter;
-  String matchETag;
-  String exceptETag;
+  private Map<String, String> copyConditions = new HashMap<>();
 
   /**
    * Sets object unmodified since condition.
@@ -39,7 +38,7 @@ public class CopyConditions {
     if (date == null) {
       throw new InvalidArgumentException("Date can not be null");
     }
-    dateUnmodifiedSince = (Date) date.clone();
+    copyConditions.put("x-amz-copy-source-if-unmodified-since", date.toString());
   }
 
   /**
@@ -52,7 +51,7 @@ public class CopyConditions {
     if (date == null) {
       throw new InvalidArgumentException("Date can not be null");
     }
-    dateModifiedAfter = (Date) date.clone();
+    copyConditions.put("x-amz-copy-source-if-modified-since", date.toString());
   }
 
   /**
@@ -65,7 +64,7 @@ public class CopyConditions {
     if (etag == null) {
       throw new InvalidArgumentException("ETag can not be null");
     }
-    matchETag = etag;
+    copyConditions.put("x-amz-copy-source-if-match", etag);
   }
 
   /**
@@ -78,54 +77,14 @@ public class CopyConditions {
     if (etag == null) {
       throw new InvalidArgumentException("ETag can not be null");
     }
-    exceptETag = etag;
+    copyConditions.put("x-amz-copy-source-if-none-match", etag);
   }
 
   /**
-   * Returns true if the object is modified after the "modified after condition" or modified condition is not set. Else
-   * returns false.
+   * Get copy conditions HashMap.
+   * 
    */
-  boolean isModifiedAfter(Date lastModifiedDate) {
-    if (dateModifiedAfter != null) {
-      return dateModifiedAfter.before(lastModifiedDate);
-    }
-
-    return true;
-  }
-
-  /**
-   * Returns true if the object is not modified after the unmodified since condition or unmodified condition is not set.
-   * Else returns false.
-   */
-  boolean isUnmodifiedSince(Date lastModifiedDate) {
-    if (dateUnmodifiedSince != null) {
-      return dateUnmodifiedSince.after(lastModifiedDate);
-    }
-
-    return true;
-  }
-
-  /**
-   * Returns true if the object etag matches the etag to match condition, or etag to match condition is not set. Else
-   * returns false.
-   */
-  boolean etagMatches(String eTagToMatch) {
-    if (matchETag != null) {
-      return matchETag.equals(eTagToMatch);
-    }
-
-    return true;
-  }
-
-  /**
-   * Returns true if the object etag doesn't match the etag not to match condition, or etag not to match condition is
-   * not set. Else returns false.
-   */
-  boolean etagDoesNotMatch(String eTagToMatch) {
-    if (exceptETag != null) {
-      return !(exceptETag.equals(eTagToMatch));
-    }
-
-    return true;
+  public Map<String, String> getCopyConditions() {
+    return copyConditions;
   }
 }

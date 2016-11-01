@@ -829,15 +829,17 @@ public class MinioClientTest {
       InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
 
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
     MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
+    server.enqueue(response1);
 
-    server.enqueue(response);
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
@@ -847,7 +849,7 @@ public class MinioClientTest {
 
     client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
 
-    CopyConditions newCopyConditions = new CopyConditions();
+    CopyConditions copyConditions = new CopyConditions();
 
     Calendar cal = Calendar.getInstance();
     cal.set(Calendar.YEAR, 2015);
@@ -855,13 +857,9 @@ public class MinioClientTest {
     cal.set(Calendar.DAY_OF_MONTH, 3);
     Date dateRepresentation = cal.getTime();
 
-    newCopyConditions.setModified(dateRepresentation);
+    copyConditions.setModified(dateRepresentation);
 
-    server.enqueue(response);
-    server.enqueue(response);
-    server.enqueue(response);
-
-    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", copyConditions);
 
   }
 
@@ -871,15 +869,17 @@ public class MinioClientTest {
       InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, NoResponseException,
       ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
 
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
     MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
+    server.enqueue(response1);
 
-    server.enqueue(response);
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
@@ -899,10 +899,6 @@ public class MinioClientTest {
 
     newCopyConditions.setUnmodified(dateRepresentation);
 
-    server.enqueue(response);
-    server.enqueue(response);
-    server.enqueue(response);
-
     client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
   }
 
@@ -911,15 +907,17 @@ public class MinioClientTest {
       InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
 
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
     MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
+    server.enqueue(response1);
 
-    server.enqueue(response);
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
@@ -932,10 +930,6 @@ public class MinioClientTest {
     CopyConditions newCopyConditions = new CopyConditions();
     newCopyConditions.setMatchETag(MD5_HASH_STRING);
 
-    server.enqueue(response);
-    server.enqueue(response);
-    server.enqueue(response);
-
     client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
   }
 
@@ -944,15 +938,17 @@ public class MinioClientTest {
       InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, InvalidArgumentException, XmlPullParserException {
 
+    final String body = "<CopyConditions xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>CopyConditions</Name><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag></CopyConditions>";
+
     MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
+    server.enqueue(response1);
 
-    server.enqueue(response);
+    response2.setBody(new Buffer().writeUtf8(body));
+    server.enqueue(response2);
+
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
@@ -964,11 +960,7 @@ public class MinioClientTest {
 
     CopyConditions newCopyConditions = new CopyConditions();
     newCopyConditions.setMatchETagExcept(MD5_HASH_STRING);
-
-    server.enqueue(response);
-    server.enqueue(response);
-    server.enqueue(response);
-
     client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+
   }
 }

@@ -38,6 +38,7 @@ import io.minio.http.Method;
 import io.minio.http.Scheme;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
+import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
@@ -78,7 +79,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -1409,44 +1409,32 @@ public final class MinioClient {
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
    */
-  public void copyObject(String bucketName, String objectName, String objectSource, CopyConditions copyConditions)
+  public CopyObjectResult copyObject(String bucketName, String objectName, String objectSource,
+      CopyConditions copyConditions)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException {
-    if (copyConditions == null) {
-      throw new InvalidArgumentException("Copy conditions should be a non null value");
-    }
+
+    Map<String, String> headerMap = new HashMap<>();
+
     if (objectSource == null) {
       throw new InvalidArgumentException("Invalid object source");
     }
-    String sourceBucketName = getBucketNameFromPath(objectSource);
-    String sourceObjectName = getObjectNameFromPath(objectSource);
-    ObjectStat objectStat = statObject(sourceBucketName, sourceObjectName);
-    String etag = objectStat.etag();
-    Date lastModified = objectStat.createdTime();
-    long length = objectStat.length();
 
-    // If the conditions specified are satisfied, get and put the object in new location
-    if (copyConditions.isUnmodifiedSince(lastModified) && copyConditions.isModifiedAfter(lastModified)
-        && copyConditions.etagMatches(etag) && copyConditions.etagDoesNotMatch(etag)) {
-      InputStream objectByteStream = getObject(sourceBucketName, sourceObjectName);
-      putObject(bucketName, objectName, objectByteStream, length, "application/octet-stream");
-      objectByteStream.close();
+    // Set the object source
+    headerMap.put("x-amz-copy-source", objectSource);
+
+    // If no conditions available, skip addition else add the conditions to the header
+    if (copyConditions != null) {
+      headerMap.putAll(copyConditions.getCopyConditions());
     }
-  }
 
-  /**
-   * Returns a String bucketName splitting the objectPath passed to this method.
-   */
-  private static String getBucketNameFromPath(String objectPath) {
-    return objectPath.split("/")[1];
-  }
-
-  /**
-   * Returns a String objectName by splitting the objectPath passed to this method.
-   */
-  private static String getObjectNameFromPath(String objectPath) {
-    return objectPath.split("/")[2];
+    HttpResponse response = execute(Method.PUT, US_EAST_1, bucketName, objectName, headerMap, null, null, "", 0);
+    
+    CopyObjectResult result = new CopyObjectResult();
+    result.parseXml(response.body().charStream());
+    response.body().close();
+    return result;
   }
 
   /**
