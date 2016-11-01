@@ -1400,7 +1400,7 @@ public final class MinioClient {
    * @param objectSource
    *          Object name of the source.
    * @param copyConditions
-   *          CopyConditions object with.
+   *          CopyConditions object with collection of supported CopyObject conditions.
    *
    * @throws InvalidBucketNameException
    *           upon an invalid bucket name
