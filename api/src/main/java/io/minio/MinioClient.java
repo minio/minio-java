@@ -38,6 +38,7 @@ import io.minio.http.Method;
 import io.minio.http.Scheme;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
+import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
@@ -1381,25 +1382,94 @@ public final class MinioClient {
     }
   }
 
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "/my-sourcebucketname/my-objectsourcename", 
+   * copyConditions); }
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name to be created after copy.
+   * @param objectSource
+   *          Object name of the source.
+   * @param copyConditions
+   *          CopyConditions object with.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public CopyObjectResult copyObject(String bucketName, String objectName, String objectSource,
+      CopyConditions copyConditions)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
+
+    Map<String, String> headerMap = new HashMap<>();
+
+    if (objectSource == null) {
+      throw new InvalidArgumentException("Invalid object source");
+    }
+
+    // Set the object source
+    headerMap.put("x-amz-copy-source", objectSource);
+
+    // If no conditions available, skip addition else add the conditions to the header
+    if (copyConditions != null) {
+      headerMap.putAll(copyConditions.getCopyConditions());
+    }
+
+    HttpResponse response = execute(Method.PUT, US_EAST_1, bucketName, objectName, headerMap, null, null, "", 0);
+    
+    CopyObjectResult result = new CopyObjectResult();
+    result.parseXml(response.body().charStream());
+    response.body().close();
+    return result;
+  }
 
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-   * System.out.println(url); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param expires     Expiration time in seconds of presigned URL.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param expires
+   *          Expiration time in seconds of presigned URL.
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws IOException
+   *           upon signature calculation failure
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException
+   *           upon input expires is out of range
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
