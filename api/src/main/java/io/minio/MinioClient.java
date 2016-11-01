@@ -1,5 +1,6 @@
 /*
- * Minio Java Library for Amazon S3 Compatible Cloud Storage, (C) 2015 Minio, Inc.
+ * Minio Java Library for Amazon S3 Compatible Cloud Storage,
+ * (C) 2015, 2016, 2017 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +39,7 @@ import io.minio.http.Method;
 import io.minio.http.Scheme;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
+import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
@@ -1076,7 +1078,6 @@ public final class MinioClient {
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
                                     data, length);
-    response.body().close();
     return response;
   }
 
@@ -1397,6 +1398,186 @@ public final class MinioClient {
     }
   }
 
+  /**
+   * Copy a source object into a new destination object with same object name.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname");}
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name where the object to be copied exists.
+   * @param objectName
+   *          Object name source to be copied.
+   * @param destBucketName
+   *          Bucket name where the object will be copied to.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public void copyObject(String bucketName, String objectName, String destBucketName)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
+
+    copyObject(bucketName, objectName, destBucketName, null, null);
+  }
+
+  /**
+   * Copy a source object into a new destination object.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname", "my-destobjname");}
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name where the object to be copied exists.
+   * @param objectName
+   *          Object name source to be copied.
+   * @param destBucketName
+   *          Bucket name where the object will be copied to.
+   * @param destObjectName
+   *          Object name to be created, if not provided uses source object name
+   *          as destination object name.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
+
+    copyObject(bucketName, objectName, destBucketName, destObjectName, null);
+  }
+
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   * optionally can take a key value CopyConditions as well for conditionally attempting
+   * copyObject.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
+   * copyConditions);}
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name where the object to be copied exists.
+   * @param objectName
+   *          Object name source to be copied.
+   * @param destBucketName
+   *          Bucket name where the object will be copied to.
+   * @param copyConditions
+   *          CopyConditions object with collection of supported CopyObject conditions.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public void copyObject(String bucketName, String objectName, String destBucketName,
+                         CopyConditions copyConditions)
+        throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+        NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+        InvalidArgumentException {
+
+    copyObject(bucketName, objectName, destBucketName, null, copyConditions);
+  }
+
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   * optionally can take a key value CopyConditions as well for conditionally attempting
+   * copyObject.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
+   * "my-destobjname", copyConditions);}
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name where the object to be copied exists.
+   * @param objectName
+   *          Object name source to be copied.
+   * @param destBucketName
+   *          Bucket name where the object will be copied to.
+   * @param destObjectName
+   *          Object name to be created, if not provided uses source object name
+   *          as destination object name.
+   * @param copyConditions
+   *          CopyConditions object with collection of supported CopyObject conditions.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name, invalid object name.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public void copyObject(String bucketName, String objectName, String destBucketName,
+                         String destObjectName, CopyConditions copyConditions)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
+
+    if (bucketName == null) {
+      throw new InvalidArgumentException("Source bucket name cannot be empty");
+    }
+    if (objectName == null) {
+      throw new InvalidArgumentException("Source object name cannot be empty");
+    }
+    if (destBucketName == null) {
+      throw new InvalidArgumentException("Destination bucket name cannot be empty");
+    }
+
+    // Escape source object path.
+    String sourceObjectPath = S3Escaper.encode(Paths.get(bucketName, objectName).toString());
+
+    // Destination object name is optional, if empty default to source object name.
+    if (destObjectName == null) {
+      destObjectName = objectName;
+    }
+
+    Map<String, String> headerMap = new HashMap<>();
+
+    // Set the object source
+    headerMap.put("x-amz-copy-source", sourceObjectPath);
+
+    // If no conditions available, skip addition else add the conditions to the header
+    if (copyConditions != null) {
+      headerMap.putAll(copyConditions.getConditions());
+    }
+
+
+    HttpResponse response = executePut(destBucketName, destObjectName, headerMap,
+                                       null, null, "", 0);
+
+    // For now ignore the copyObjectResult, just read and parse it.
+    CopyObjectResult result = new CopyObjectResult();
+    result.parseXml(response.body().charStream());
+    response.body().close();
+  }
 
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time with custom request params.
@@ -1946,7 +2127,8 @@ public final class MinioClient {
       configString = config.toString();
     }
 
-    executePut(bucketName, null, null, null, US_EAST_1, configString, 0);
+    HttpResponse response = executePut(bucketName, null, null, null, US_EAST_1, configString, 0);
+    response.body().close();
   }
 
 
@@ -2164,6 +2346,7 @@ public final class MinioClient {
     }
 
     HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
+    response.body().close();
     return response.header().etag();
   }
 
@@ -2307,7 +2490,8 @@ public final class MinioClient {
 
     String policyJson = policy.getJson();
 
-    executePut(bucketName, null, headerMap, queryParamMap, policyJson, policyJson.length());
+    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, policyJson, policyJson.length());
+    response.body().close();
   }
 
 
