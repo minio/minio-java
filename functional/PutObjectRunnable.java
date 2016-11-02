@@ -31,14 +31,17 @@ class PutObjectRunnable implements Runnable {
   }
 
   public void run() {
+    StringBuffer traceBuffer = new StringBuffer();
+
     try {
-      System.out.println("[" + fileName + "]: threaded put object");
+      traceBuffer.append("[" + fileName + "]: threaded put object\n");
       client.putObject(bucketName, fileName, fileName);
-      System.out.println("[" + fileName + "]: delete file");
+      traceBuffer.append("[" + fileName + "]: delete file\n");
       Files.delete(Paths.get(fileName));
-      System.out.println("[" + fileName + "]: delete object");
+      traceBuffer.append("[" + fileName + "]: delete object\n");
       client.removeObject(bucketName, fileName);
     } catch (Exception e) {
+      System.err.print(traceBuffer.toString());
       e.printStackTrace();
     }
   }
