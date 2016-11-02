@@ -32,10 +32,6 @@ import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Headers;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
-import com.google.common.net.UrlEscapers;
-import com.google.common.escape.Escaper;
-
-import io.minio.Digest;
 
 
 /**
@@ -70,7 +66,6 @@ class Signer {
   //
   //      Is skipped for obvious reasons
   //
-  private static final Escaper QUERY_ESCAPER = UrlEscapers.urlPathSegmentEscaper();
   private static final Set<String> IGNORED_HEADERS = new HashSet<>();
 
   static {
@@ -248,16 +243,16 @@ class Signer {
 
     HttpUrl.Builder urlBuilder = this.request.httpUrl().newBuilder();
     // order of queryparam addition is important ie has to be sorted.
-    urlBuilder.addEncodedQueryParameter(encodeQueryString("X-Amz-Algorithm"),
-                                        encodeQueryString("AWS4-HMAC-SHA256"));
-    urlBuilder.addEncodedQueryParameter(encodeQueryString("X-Amz-Credential"),
-                                        encodeQueryString(this.accessKey + "/" + this.scope));
-    urlBuilder.addEncodedQueryParameter(encodeQueryString("X-Amz-Date"),
-                                        encodeQueryString(this.date.toString(DateFormat.AMZ_DATE_FORMAT)));
-    urlBuilder.addEncodedQueryParameter(encodeQueryString("X-Amz-Expires"),
-                                        encodeQueryString(Integer.toString(expires)));
-    urlBuilder.addEncodedQueryParameter(encodeQueryString("X-Amz-SignedHeaders"),
-                                        encodeQueryString(this.signedHeaders));
+    urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Algorithm"),
+                                        S3Escaper.encode("AWS4-HMAC-SHA256"));
+    urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Credential"),
+                                        S3Escaper.encode(this.accessKey + "/" + this.scope));
+    urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Date"),
+                                        S3Escaper.encode(this.date.toString(DateFormat.AMZ_DATE_FORMAT)));
+    urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Expires"),
+                                        S3Escaper.encode(Integer.toString(expires)));
+    urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-SignedHeaders"),
+                                        S3Escaper.encode(this.signedHeaders));
     this.url = urlBuilder.build();
 
     setCanonicalQueryString();
@@ -289,8 +284,7 @@ class Signer {
     signer.setSignature();
 
     return signer.url.newBuilder()
-        .addEncodedQueryParameter(encodeQueryString("X-Amz-Signature"),
-                                  encodeQueryString(signer.signature))
+        .addEncodedQueryParameter(S3Escaper.encode("X-Amz-Signature"), S3Escaper.encode(signer.signature))
         .build();
   }
 
@@ -328,32 +322,5 @@ class Signer {
     mac.update(data);
 
     return mac.doFinal();
-  }
-
-  /**
-   * Returns encoded query string for URL.
-   */
-  public static String encodeQueryString(String str) {
-    if (str == null) {
-      return "";
-    }
-
-    return QUERY_ESCAPER.escape(str)
-      .replaceAll("\\!", "%21")
-      .replaceAll("\\$", "%24")
-      .replaceAll("\\&", "%26")
-      .replaceAll("\\'", "%27")
-      .replaceAll("\\(", "%28")
-      .replaceAll("\\)", "%29")
-      .replaceAll("\\*", "%2A")
-      .replaceAll("\\+", "%2B")
-      .replaceAll("\\,", "%2C")
-      .replaceAll("\\\\", "%2F")
-      .replaceAll("\\:", "%3A")
-      .replaceAll("\\;", "%3B")
-      .replaceAll("\\=", "%3D")
-      .replaceAll("\\@", "%40")
-      .replaceAll("\\[", "%5B")
-      .replaceAll("\\]", "%5D");
   }
 }
