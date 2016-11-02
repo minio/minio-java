@@ -635,30 +635,27 @@ public final class MinioClient {
 
         if (usePathStyle) {
           urlBuilder.host(host);
-          urlBuilder.addPathSegment(bucketName);
+          urlBuilder.addEncodedPathSegment(S3Escaper.encode(bucketName));
         } else {
           urlBuilder.host(bucketName + "." + host);
         }
       } else {
-        urlBuilder.addPathSegment(bucketName);
+        urlBuilder.addEncodedPathSegment(S3Escaper.encode(bucketName));
       }
     }
 
     if (objectName != null) {
-      for (String pathSegment : objectName.split("/")) {
-        // Limitation:
-        // 1. OkHttp does not allow to add '.' and '..' as path segment.
-        // 2. Its not allowed to add path segment as '/', '//', '/usr' or 'usr/'.
-        urlBuilder.addPathSegment(pathSegment);
-      }
+      // Limitation: OkHttp does not allow to add '.' and '..' as path segment.
+      urlBuilder.addEncodedPathSegment(S3Escaper.encodePath(objectName));
     }
 
     if (queryParamMap != null) {
       for (Map.Entry<String,String> entry : queryParamMap.entrySet()) {
-        urlBuilder.addEncodedQueryParameter(Signer.encodeQueryString(entry.getKey()),
-                                            Signer.encodeQueryString(entry.getValue()));
+        urlBuilder.addEncodedQueryParameter(S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
       }
     }
+
+    HttpUrl url = urlBuilder.build();
 
     RequestBody requestBody = null;
     if (body != null) {
@@ -703,31 +700,6 @@ public final class MinioClient {
         }
       };
     }
-
-    HttpUrl url = urlBuilder.build();
-    // urlBuilder does not encode some characters properly for Amazon S3.
-    // Encode such characters properly here.
-    List<String> pathSegments = url.encodedPathSegments();
-    urlBuilder = url.newBuilder();
-    for (int i = 0; i < pathSegments.size(); i++) {
-      urlBuilder.setEncodedPathSegment(i, pathSegments.get(i)
-                                       .replaceAll("\\!", "%21")
-                                       .replaceAll("\\$", "%24")
-                                       .replaceAll("\\&", "%26")
-                                       .replaceAll("\\'", "%27")
-                                       .replaceAll("\\(", "%28")
-                                       .replaceAll("\\)", "%29")
-                                       .replaceAll("\\*", "%2A")
-                                       .replaceAll("\\+", "%2B")
-                                       .replaceAll("\\,", "%2C")
-                                       .replaceAll("\\:", "%3A")
-                                       .replaceAll("\\;", "%3B")
-                                       .replaceAll("\\=", "%3D")
-                                       .replaceAll("\\@", "%40")
-                                       .replaceAll("\\[", "%5B")
-                                       .replaceAll("\\]", "%5D"));
-    }
-    url = urlBuilder.build();
 
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
