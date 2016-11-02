@@ -1,61 +1,48 @@
 # For maintainers only
+Minio Java SDK uses [gradle](https://gradle.org/) build system.
 
 ## Responsibilities
-
-Please go through this link [Maintainer Responsibility](https://gist.github.com/abperiasamy/f4d9b31d3186bbd26522)
-
-## Current Maintainers
-
-- Balamurugan Arumugam
-- Harshavardhana
+Go through [Maintainer Responsibility Guide](https://gist.github.com/abperiasamy/f4d9b31d3186bbd26522).
 
 ### Setup your minio-java Github Repository
-
-Fork [minio-java upstream](https://github.com/minio/minio-java/fork) source repository to your own personal repository.
+Fork [minio-java](https://github.com/minio/minio-java/fork) source repository to your own personal repository.
 ```bash
 $ git clone https://github.com/$USER_ID/minio-java
 $ cd minio-java
 ```
 
-Minio Java Library uses gradle for its dependency management https://gradle.org/
+### Build and verify
+Run `runFunctionalTest` gradle task to build and verify the SDK.
+```bash
+$ ./gradlew runFunctionalTest
+```
 
 ### Publishing new artifacts
-
 #### Setup your gradle properties
-
 Create a new gradle properties file
 
 ```bash
-$ cat >> ${HOME}/.gradle/gradle.properties << EOF
+$ cat gradle.properties > ${HOME}/.gradle/gradle.properties <<EOF
 signing.keyId=76A57749
 signing.password=**REDACTED**
 signing.secretKeyRingFile=/home/harsha/.gnupg/secring.gpg
 ossrhUsername=minio
 ossrhPassword=**REDACTED**
+release=true
 EOF
 ```
 
 #### Import minio private key
-
 ```bash
 $ gpg --import minio.asc
 ```
 
-#### Modify build.gradle with new version 
-
-```bash
-$ cat build.gradle
-...
-...
-group = 'io.minio'
-archivesBaseName = 'minio'
-version = '0.3.0'
-...
-...
-```
-
 #### Upload archives to maven for publishing
-
 ```bash
 $ ./gradlew uploadArchives
+```
+
+#### Cleanup
+```bash
+$ rm -v ${HOME}/.gradle/gradle.properties
 ```
