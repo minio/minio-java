@@ -39,7 +39,7 @@ You need three items in order to connect to an object storage server.
 | Access Key    | Access key is like user ID that uniquely identifies your account.   |
 | Secret Key     | Secret key is the password to your account.    |
 
-We will use the Minio server running at [https://play.minio.io:9000](https://play.minio.io:9000) in this example. Feel free to use this service for testing and development. Access credentials shown in this example are open to the public.
+For the following example, we will use a freely hosted Minio server running at [https://play.minio.io:9000](https://play.minio.io:9000). Feel free to use this service for testing and development. Access credentials shown in this example are open to the public.
 
 #### FileUploader.java
 ```java
