@@ -27,15 +27,18 @@ import io.minio.messages.Upload;
 
 public class ListIncompleteUploads {
   /**
-   * main().
+   * MinioClient.listIncompleteUploads() example.
    */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
-    // Note: YOUR-ACCESSKEYID, YOUR-SECRETACCESSKEY and my-bucketname are
-    // dummy values, please replace them with original values.
-    // For Amazon S3 endpoint, region is calculated automatically
     try {
-      MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+      /* play.minio.io for test and development. */
+      MinioClient minioClient = new MinioClient("http://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F",
+                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
+      /* Amazon S3: */
+      // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
+      //                                           "YOUR-SECRETACCESSKEY");
 
       // Check whether 'my-bucketname' exist or not.
       boolean found = minioClient.bucketExists("my-bucketname");
