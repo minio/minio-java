@@ -34,7 +34,7 @@ subprojects {
     apply plugin: 'findbugs'
 
     group = 'io.minio'
-    version = '2.0.5'
+    version = '3.0'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
@@ -253,7 +253,23 @@ project(':functional') {
     task runFunctionalTest(type:JavaExec) {
         main = 'FunctionalTest'
         classpath = sourceSets.main.runtimeClasspath
-        args = ["https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"]
+
+        ext.endPoint = 'https://play.minio.io:9000'
+        if (rootProject.hasProperty('endPoint')) {
+            ext.endPoint = rootProject.properties['endPoint']
+        }
+
+        ext.accessKey = 'Q3AM3UQ867SPQQA43P2F'
+        if (project.properties.containsKey('accessKey')) {
+            ext.accessKey = rootProject.properties['accessKey']
+        }
+
+        ext.secretKey = 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+        if (project.properties.containsKey('secretKey')) {
+            ext.secretKey = rootProject.properties['secretKey']
+        }
+
+        args = [ext.endPoint, ext.accessKey, ext.secretKey]
     }
 
 }
