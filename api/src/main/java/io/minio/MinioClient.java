@@ -680,15 +680,7 @@ public final class MinioClient {
 
         @Override
         public long contentLength() {
-          if (body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[]) {
             return length;
-          }
-
-          if (length == 0) {
-            return -1;
-          } else {
-            return length;
-          }
         }
 
         @Override
@@ -1053,6 +1045,13 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     updateRegionCache(bucketName);
+    int len = -1;
+    if (data instanceof String) {
+      len = ((String) data).length();
+    }
+    if (data instanceof CompleteMultipartUpload) {
+      len = ((CompleteMultipartUpload) data).toString().length();
+    }
     return execute(Method.POST, BucketRegionCache.INSTANCE.region(bucketName),
                    bucketName, objectName, headerMap, queryParamMap,
                    data, 0);
