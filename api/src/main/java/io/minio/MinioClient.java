@@ -1355,6 +1355,46 @@ public final class MinioClient {
 
 
   /**
+   * Returns an presigned URL to download the object in the bucket with given expiry time with custom request params.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);
+   * System.out.println(url); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param expires     Expiration time in seconds of presigned URL.
+   * @param reqParams   Override values for set of response headers. Currently supported request parameters are
+   *                    [response-expires, response-content-type, response-cache-control, response-content-disposition]
+   *
+   * @return string contains URL to download the object.
+   *
+   * @throws InvalidBucketNameException   upon an invalid bucket name
+   * @throws InvalidKeyException          upon an invalid access key or secret key
+   * @throws IOException                  upon signature calculation failure
+   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException upon input expires is out of range
+   */
+  public String presignedGetObject(String bucketName, String objectName, Integer expires,
+                                   Map<String, String> reqParams)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidExpiresRangeException {
+    // Validate input.
+    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
+      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
+    }
+
+    updateRegionCache(bucketName);
+    String region = BucketRegionCache.INSTANCE.region(bucketName);
+
+    Request request = createRequest(Method.GET, bucketName, objectName, region,
+                                    null, reqParams, null, null, 0);
+    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
+    return url.toString();
+  }
+
+  /**
    * Returns an presigned URL to download the object in the bucket with given expiry time.
    *
    * </p><b>Example:</b><br>
@@ -1377,18 +1417,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    // Validate input.
-    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
-    }
-
-    updateRegionCache(bucketName);
-    String region = BucketRegionCache.INSTANCE.region(bucketName);
-
-    Request request = createRequest(Method.GET, bucketName, objectName, region,
-                                    null, null, null, null, 0);
-    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
-    return url.toString();
+    return presignedGetObject(bucketName, objectName, expires, null);
   }
 
 
@@ -1413,7 +1442,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
+    return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME, null);
   }
 
 

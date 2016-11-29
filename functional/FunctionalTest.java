@@ -141,7 +141,7 @@ public class FunctionalTest {
   }
 
   /**
-   * Tear down test setup. 
+   * Tear down test setup.
    */
   public static void setup() throws Exception {
     client.makeBucket(bucketName);
@@ -596,6 +596,70 @@ public class FunctionalTest {
   }
 
   /**
+   * public String presignedGetObject(String bucketName, String objectName, Integer expires, Map reqParams).
+   */
+  public static void presignedGetObject_test3() throws Exception {
+    System.out.println("Test: presignedGetObject(String bucketName, String objectName, Integer expires, "
+                       + "Map<String, String> reqParams)");
+    String fileName = createFile(3 * MB);
+    client.putObject(bucketName, fileName, fileName);
+
+    Map<String, String> reqParams = new HashMap<>();
+    reqParams.put("response-content-type", "application/json");
+
+    String urlString = client.presignedGetObject(bucketName, fileName, 3600, reqParams);
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("GET", null)
+        .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
+
+    if (response != null) {
+      if (response.isSuccessful()) {
+        OutputStream os = Files.newOutputStream(Paths.get(fileName + ".downloaded"), StandardOpenOption.CREATE);
+        ByteStreams.copy(response.body().byteStream(), os);
+        if (!response.header("Content-Type").equals("application/json")) {
+          throw new Exception("[FAILED] Test: presignedGetObject(String bucketName, String objectName,"
+                              + " Integer expires, Map<String, String> reqParams)"
+                              + ", Response: " + response);
+        }
+        response.body().close();
+        os.close();
+      } else {
+        String errorXml = "";
+
+        // read entire body stream to string.
+        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        if (scanner.hasNext()) {
+          errorXml = scanner.next();
+        }
+
+        throw new Exception("[FAILED] Test: presignedGetObject(String bucketName, String objectName,"
+                            + " Integer expires, Map<String, String> reqParams)"
+                            + ", Response: " + response
+                            + ", Error: " + errorXml);
+      }
+    } else {
+      throw new Exception("[FAILED] Test: presignedGetObject(String bucketName, String objectName,"
+                          + " Integer expires, Map<String, String> reqParams)"
+                          + ", Error: <No response from server>");
+    }
+
+    if (!Arrays.equals(Files.readAllBytes(Paths.get(fileName)),
+                       Files.readAllBytes(Paths.get(fileName + ".downloaded")))) {
+      throw new Exception("[FAILED] Test: presignedGetObject(String bucketName, String objectName,"
+                          + " Integer expires, Map<String, String> reqParams)"
+                          + ", Error: <Content differs>");
+    }
+
+    Files.delete(Paths.get(fileName));
+    Files.delete(Paths.get(fileName + ".downloaded"));
+    client.removeObject(bucketName, fileName);
+  }
+
+  /**
    * public String presignedPutObject(String bucketName, String objectName).
    */
   public static void presignedPutObject_test1() throws Exception {
@@ -801,6 +865,7 @@ public class FunctionalTest {
 
       presignedGetObject_test1();
       presignedGetObject_test2();
+      presignedGetObject_test3();
 
       presignedPutObject_test1();
       presignedPutObject_test2();
