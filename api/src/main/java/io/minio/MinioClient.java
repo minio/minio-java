@@ -684,8 +684,6 @@ public final class MinioClient {
 
         @Override
         public void writeTo(BufferedSink sink) throws IOException {
-          byte[] data = null;
-
           if (body instanceof InputStream) {
             InputStream stream = (InputStream) body;
             sink.write(Okio.source(stream), length);
@@ -693,6 +691,7 @@ public final class MinioClient {
             RandomAccessFile file = (RandomAccessFile) body;
             sink.write(Okio.source(Channels.newInputStream(file.getChannel())), length);
           } else if (body instanceof byte[]) {
+            byte[] data = (byte[]) body;
             sink.write(data, 0, length);
           } else {
             sink.writeUtf8(body.toString());
