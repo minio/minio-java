@@ -34,7 +34,7 @@ subprojects {
     apply plugin: 'findbugs'
 
     group = 'io.minio'
-    version = '3.0'
+    version = '2.0.5'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
@@ -118,7 +118,7 @@ project(':api') {
     apply plugin: 'maven'
     apply plugin: 'signing'
 
-    archivesBaseName = 'minio-java'
+    archivesBaseName = 'minio'
 
     jar {
         manifest {
