@@ -75,7 +75,7 @@ public class MinioClientTest {
   public void setUserAgentOnceSet() throws IOException, MinioException {
     String expectedHost = "example.com";
     MinioClient client = new MinioClient("http://" + expectedHost + "/");
-    client.setAppInfo("testApp", "2.0.4");
+    client.setAppInfo("testApp", "2.0.5");
   }
 
   @Test(expected = MinioException.class)
@@ -678,20 +678,20 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response1 = new MockResponse();
     MockResponse response2 = new MockResponse();
- 
+
     response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response1.setResponseCode(200);
     response1.setBody("{\"Version\":\"2012-10-17\",\"Statement\":[]}");
-    
+
     response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response2.setResponseCode(200);
- 
+
     server.enqueue(response1);
     server.enqueue(response2);
     server.start();
- 
+
     MinioClient client = new MinioClient(server.url(""));
- 
+
     // Set the bucket policy for a bucket
     client.setBucketPolicy(BUCKET, "uploads", PolicyType.READ_ONLY);
   }
