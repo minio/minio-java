@@ -78,12 +78,12 @@ public class FileUploader {
 ```
 
 #### Compile FileUploader
-```sh
+```
 $ javac -cp "minio-3.0.0-all.jar"  FileUploader.java
 ```
 
 #### Run FileUploader
-```sh
+```
 $ java -cp "minio-3.0.0-all.jar:." FileUploader
 /home/user/Photos/asiaphotos.zip is successfully uploaded as asiaphotos.zip to `asiatrip` bucket.
 
