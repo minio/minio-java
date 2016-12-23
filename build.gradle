@@ -34,7 +34,7 @@ subprojects {
     apply plugin: 'findbugs'
 
     group = 'io.minio'
-    version = '3.0.0'
+    version = '3.0.1'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
