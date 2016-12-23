@@ -1143,6 +1143,39 @@ public final class MinioClient {
 
 
   /**
+   * Gets object's URL in given bucket.  The URL is ONLY useful to retrieve the object's data if the object has
+   * public read permissions.
+   *
+   * <p><b>Example:</b>
+   * <pre>{@code String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
+   * System.out.println(url); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name in the bucket.
+   *
+   * @return string contains URL to download the object.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public String getObjectUrl(String bucketName, String objectName)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
+    updateRegionCache(bucketName);
+    String region = BucketRegionCache.INSTANCE.region(bucketName);
+
+    Request request = createRequest(Method.GET, bucketName, objectName, region, null, null, null, null, 0);
+    HttpUrl url = request.httpUrl();
+    return url.toString();
+  }
+
+
+  /**
    * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
    * after use else the connection will remain open.
    *
