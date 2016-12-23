@@ -646,7 +646,9 @@ public final class MinioClient {
 
     if (objectName != null) {
       // Limitation: OkHttp does not allow to add '.' and '..' as path segment.
-      urlBuilder.addEncodedPathSegment(S3Escaper.encodePath(objectName));
+      for (String pathSegment : objectName.split("/")) {
+        urlBuilder.addEncodedPathSegment(S3Escaper.encode(pathSegment));
+      }
     }
 
     if (queryParamMap != null) {

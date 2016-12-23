@@ -279,6 +279,22 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: getObject(String bucketName, String objectName, String fileName).
+   * where objectName has multiple path segments.
+   */
+  public static void getObject_test5() throws Exception {
+    System.out.println("Test: objectName with multiple path segments: "
+                       + "getObject(String bucketName, String objectName, String fileName)");
+    String fileName = createFile(3 * MB);
+    String objectName = "path/to/" + fileName;
+    client.putObject(bucketName, objectName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.getObject(bucketName, objectName, fileName + ".downloaded");
+    Files.delete(Paths.get(fileName + ".downloaded"));
+    client.removeObject(bucketName, objectName);
+  }
+
+  /**
    * Test: listObjects(final String bucketName).
    */
   public static void listObject_test1() throws Exception {
@@ -849,6 +865,7 @@ public class FunctionalTest {
       getObject_test2();
       getObject_test3();
       getObject_test4();
+      getObject_test5();
 
       listObject_test1();
       listObject_test2();
