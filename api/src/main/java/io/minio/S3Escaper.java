@@ -49,25 +49,4 @@ class S3Escaper {
       .replaceAll("\\[", "%5B")
       .replaceAll("\\]", "%5D");
   }
-
-
-  /**
-   * Returns S3 encoded path.
-   */
-  public static String encodePath(String path) {
-    StringBuffer encodedPath = new StringBuffer();
-
-    // Limitation: Its not allowed to add path segment as '/', '//', '/usr' or 'usr/'.
-    if (path != null) {
-      for (String pathSegment : path.split("/")) {
-        if (encodedPath.length() > 0) {
-          encodedPath.append("/");
-        }
-
-        encodedPath.append(encode(pathSegment));
-      }
-    }
-
-    return encodedPath.toString();
-  }
 }
