@@ -35,11 +35,13 @@ import java.util.*;
 public class PostPolicy {
   private static final String ALGORITHM = "AWS4-HMAC-SHA256";
 
-  private String bucketName;
-  private String objectName;
-  private boolean startsWith;
-  private DateTime expirationDate;
+  private final String bucketName;
+  private final String objectName;
+  private final boolean startsWith;
+  private final DateTime expirationDate;
+  private String region;
   private String contentType;
+  private String contentEncoding;
   private long contentRangeStart;
   private long contentRangeEnd;
 
@@ -88,6 +90,18 @@ public class PostPolicy {
 
 
   /**
+   * Sets content encoding.
+   */
+  public void setContentEncoding(String contentEncoding) throws InvalidArgumentException {
+    if (Strings.isNullOrEmpty(contentEncoding)) {
+      throw new InvalidArgumentException("empty content encoding");
+    }
+
+    this.contentEncoding = contentEncoding;
+  }
+
+
+  /**
    * Sets content length.
    */
   public void setContentLength(long contentLength) throws InvalidArgumentException {
@@ -96,6 +110,17 @@ public class PostPolicy {
     }
 
     this.setContentRange(contentLength, contentLength);
+  }
+
+
+  /**
+   * Sets region.
+   */
+  public void setRegion(String region) throws InvalidArgumentException {
+    if (Strings.isNullOrEmpty(contentType)) {
+      throw new InvalidArgumentException("empty region");
+    }
+    this.region = region;
   }
 
 
@@ -178,6 +203,11 @@ public class PostPolicy {
       formData.put("Content-Type", this.contentType);
     }
 
+    if (this.contentEncoding != null) {
+      conditions.add(new String[]{"eq", "$Content-Encoding", this.contentEncoding});
+      formData.put("Content-Encoding", this.contentEncoding);
+    }
+
     if (this.contentRangeStart > 0 && this.contentRangeEnd > 0) {
       conditions.add(new String[]{"content-length-range", Long.toString(this.contentRangeStart),
                                   Long.toString(this.contentRangeEnd)});
@@ -187,7 +217,7 @@ public class PostPolicy {
     formData.put("x-amz-algorithm", ALGORITHM);
 
     DateTime date = new DateTime();
-    String region = BucketRegionCache.INSTANCE.region(this.bucketName);
+    String region = this.region != null ? this.region : BucketRegionCache.INSTANCE.region(this.bucketName);
     String credential = Signer.credential(accessKey, date, region);
     conditions.add(new String[]{"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
