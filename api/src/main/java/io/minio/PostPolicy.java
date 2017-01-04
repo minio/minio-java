@@ -39,7 +39,6 @@ public class PostPolicy {
   private final String objectName;
   private final boolean startsWith;
   private final DateTime expirationDate;
-  private String region;
   private String contentType;
   private String contentEncoding;
   private long contentRangeStart;
@@ -114,17 +113,6 @@ public class PostPolicy {
 
 
   /**
-   * Sets region.
-   */
-  public void setRegion(String region) throws InvalidArgumentException {
-    if (Strings.isNullOrEmpty(contentType)) {
-      throw new InvalidArgumentException("empty region");
-    }
-    this.region = region;
-  }
-
-
-  /**
    * Sets content range.
    */
   public void setContentRange(long startRange, long endRange) throws InvalidArgumentException {
@@ -178,12 +166,30 @@ public class PostPolicy {
     return sb.toString().getBytes(StandardCharsets.UTF_8);
   }
 
-
   /**
    * Returns form data of this post policy.
    */
   public Map<String,String> formData(String accessKey, String secretKey)
-    throws NoSuchAlgorithmException, InvalidKeyException {
+      throws InvalidKeyException, NoSuchAlgorithmException {
+    return makeFormData(accessKey, secretKey, BucketRegionCache.INSTANCE.region(this.bucketName));
+  }
+
+  /**
+   * Returns form data of this post policy setting the provided region.
+   */
+  public Map<String,String> formData(String accessKey, String secretKey, String region)
+      throws NoSuchAlgorithmException, InvalidKeyException, InvalidArgumentException {
+
+    if (Strings.isNullOrEmpty(region)) {
+      throw new InvalidArgumentException("empty region");
+    }
+
+    return makeFormData(accessKey, secretKey, region);
+  }
+
+  protected Map<String,String> makeFormData(String accessKey, String secretKey, String region)
+      throws NoSuchAlgorithmException, InvalidKeyException {
+
     ArrayList<String[]> conditions = new ArrayList<>();
     Map<String, String> formData = new HashMap<>();
 
@@ -217,7 +223,6 @@ public class PostPolicy {
     formData.put("x-amz-algorithm", ALGORITHM);
 
     DateTime date = new DateTime();
-    String region = this.region != null ? this.region : BucketRegionCache.INSTANCE.region(this.bucketName);
     String credential = Signer.credential(accessKey, date, region);
     conditions.add(new String[]{"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
