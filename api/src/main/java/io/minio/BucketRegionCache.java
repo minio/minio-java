@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 
@@ -25,7 +25,7 @@ import java.util.Map;
  */
 enum BucketRegionCache {
   INSTANCE;
-  private final Map<String, String> regionMap = new HashMap<>();
+  private final Map<String, String> regionMap = new ConcurrentHashMap<>();
 
   /**
    * Returns AWS region for given bucket name.
