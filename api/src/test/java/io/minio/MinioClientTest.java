@@ -183,6 +183,18 @@ public class MinioClientTest {
   }
 
   @Test
+  public void testGetObjectUrl()
+    throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+    MockWebServer server = new MockWebServer();
+    server.start();
+
+    // get request
+    MinioClient client = new MinioClient(server.url(""));
+    String objectUrl = client.getObjectUrl(BUCKET, "key");
+    assertEquals(objectUrl.isEmpty(), false);
+  }
+
+  @Test
   public void testGetObject()
     throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
