@@ -66,6 +66,7 @@ public class MinioClientTest {
   private static final String CONTENT_RANGE = "Content-Range";
   private static final String SUN_29_JUN_2015_22_01_10_GMT = "Sun, 29 Jun 2015 22:01:10 GMT";
   private static final String MON_04_MAY_2015_07_58_51_UTC = "Mon, 04 May 2015 07:58:51 UTC";
+  private static final String MON_03_MAY_2015_07_58_51_UTC = "Sun, 03 May 2015 07:58:51 UTC";
   private static final String BUCKET_KEY = "/bucket/key";
   private static final String MD5_HASH_STRING = "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"";
   private static final ObjectMapper objectMapper =
@@ -834,5 +835,146 @@ public class MinioClientTest {
     // Get the bucket policy for the new bucket and check
     PolicyType policyType = client.getBucketPolicy(BUCKET, "uploads");
     assertEquals(PolicyType.READ_WRITE, policyType);
+  }
+  
+  @Test
+  public void testCopyObjectWithModifiedAfterDate() 
+    throws IOException, InvalidEndpointException, InvalidPortException, 
+    	   InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, 
+    	   InsufficientDataException, NoResponseException, ErrorResponseException, 
+    	   InternalException, InvalidArgumentException, XmlPullParserException {
+	  
+	  	MockWebServer server = new MockWebServer();
+	    MockResponse response = new MockResponse();
+
+	    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+	    response.addHeader("ETag", MD5_HASH_STRING);
+	    response.setResponseCode(200);
+
+	    server.enqueue(response);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    String inputString = HELLO_WORLD;
+	    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+	    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+	    
+	    CopyConditions newCopyConditions = new CopyConditions();
+	    newCopyConditions.setModified(new Date(MON_03_MAY_2015_07_58_51_UTC));
+	    
+	    server.enqueue(response);
+	    server.enqueue(response);
+	    server.enqueue(response);
+
+	    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);
+	    
+  }
+  
+  @Test
+  public void testCopyObjectWithUnmodifiedSinceDate() 
+    throws IOException, InvalidEndpointException, InvalidPortException, 
+    	   InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, 
+    	   InsufficientDataException, NoResponseException, ErrorResponseException, 
+    	   InternalException, InvalidArgumentException, XmlPullParserException {
+	  
+	  	MockWebServer server = new MockWebServer();
+	    MockResponse response = new MockResponse();
+
+	    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+	    response.addHeader("ETag", MD5_HASH_STRING);
+	    response.setResponseCode(200);
+
+	    server.enqueue(response);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    String inputString = HELLO_WORLD;
+	    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+	    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+	    
+	    CopyConditions newCopyConditions = new CopyConditions();
+	    newCopyConditions.setUnmodified(new Date(MON_03_MAY_2015_07_58_51_UTC));
+	    
+	    server.enqueue(response);
+	    server.enqueue(response);
+	    server.enqueue(response);
+
+	    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);    
+  }
+  
+  @Test
+  public void testCopyObjectWithETagMatches() 
+    throws IOException, InvalidEndpointException, InvalidPortException, 
+    	   InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, 
+    	   InsufficientDataException, NoResponseException, ErrorResponseException, 
+    	   InternalException, InvalidArgumentException, XmlPullParserException {
+	  
+	  	MockWebServer server = new MockWebServer();
+	    MockResponse response = new MockResponse();
+
+	    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+	    response.addHeader("ETag", MD5_HASH_STRING);
+	    response.setResponseCode(200);
+
+	    server.enqueue(response);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    String inputString = HELLO_WORLD;
+	    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+	    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+	    
+	    CopyConditions newCopyConditions = new CopyConditions();
+	    newCopyConditions.setMatchETag(MD5_HASH_STRING);
+	    
+	    server.enqueue(response);
+	    server.enqueue(response);
+	    server.enqueue(response);
+
+	    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);    
+  }
+  
+  @Test
+  public void testCopyObjectWithETagDoesNotMatch() 
+    throws IOException, InvalidEndpointException, InvalidPortException, 
+    	   InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, 
+    	   InsufficientDataException, NoResponseException, ErrorResponseException, 
+    	   InternalException, InvalidArgumentException, XmlPullParserException {
+	  
+	  	MockWebServer server = new MockWebServer();
+	    MockResponse response = new MockResponse();
+
+	    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+	    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+	    response.addHeader("ETag", MD5_HASH_STRING);
+	    response.setResponseCode(200);
+
+	    server.enqueue(response);
+	    server.start();
+
+	    MinioClient client = new MinioClient(server.url(""));
+
+	    String inputString = HELLO_WORLD;
+	    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+	    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+	    
+	    CopyConditions newCopyConditions = new CopyConditions();
+	    newCopyConditions.setMatchETagExcept(MD5_HASH_STRING);
+	    
+	    server.enqueue(response);
+	    server.enqueue(response);
+	    server.enqueue(response);
+
+	    client.copyObject(BUCKET, "copiedObject", "/" + BUCKET + "/key", newCopyConditions);    
   }
 }
