@@ -35,11 +35,12 @@ import java.util.*;
 public class PostPolicy {
   private static final String ALGORITHM = "AWS4-HMAC-SHA256";
 
-  private String bucketName;
-  private String objectName;
-  private boolean startsWith;
-  private DateTime expirationDate;
+  private final String bucketName;
+  private final String objectName;
+  private final boolean startsWith;
+  private final DateTime expirationDate;
   private String contentType;
+  private String contentEncoding;
   private long contentRangeStart;
   private long contentRangeEnd;
 
@@ -84,6 +85,18 @@ public class PostPolicy {
     }
 
     this.contentType = contentType;
+  }
+
+
+  /**
+   * Sets content encoding.
+   */
+  public void setContentEncoding(String contentEncoding) throws InvalidArgumentException {
+    if (Strings.isNullOrEmpty(contentEncoding)) {
+      throw new InvalidArgumentException("empty content encoding");
+    }
+
+    this.contentEncoding = contentEncoding;
   }
 
 
@@ -153,12 +166,30 @@ public class PostPolicy {
     return sb.toString().getBytes(StandardCharsets.UTF_8);
   }
 
-
   /**
    * Returns form data of this post policy.
    */
   public Map<String,String> formData(String accessKey, String secretKey)
-    throws NoSuchAlgorithmException, InvalidKeyException {
+      throws InvalidKeyException, NoSuchAlgorithmException {
+    return makeFormData(accessKey, secretKey, BucketRegionCache.INSTANCE.region(this.bucketName));
+  }
+
+  /**
+   * Returns form data of this post policy setting the provided region.
+   */
+  public Map<String,String> formData(String accessKey, String secretKey, String region)
+      throws NoSuchAlgorithmException, InvalidKeyException, InvalidArgumentException {
+
+    if (Strings.isNullOrEmpty(region)) {
+      throw new InvalidArgumentException("empty region");
+    }
+
+    return makeFormData(accessKey, secretKey, region);
+  }
+
+  protected Map<String,String> makeFormData(String accessKey, String secretKey, String region)
+      throws NoSuchAlgorithmException, InvalidKeyException {
+
     ArrayList<String[]> conditions = new ArrayList<>();
     Map<String, String> formData = new HashMap<>();
 
@@ -178,6 +209,11 @@ public class PostPolicy {
       formData.put("Content-Type", this.contentType);
     }
 
+    if (this.contentEncoding != null) {
+      conditions.add(new String[]{"eq", "$Content-Encoding", this.contentEncoding});
+      formData.put("Content-Encoding", this.contentEncoding);
+    }
+
     if (this.contentRangeStart > 0 && this.contentRangeEnd > 0) {
       conditions.add(new String[]{"content-length-range", Long.toString(this.contentRangeStart),
                                   Long.toString(this.contentRangeEnd)});
@@ -187,7 +223,6 @@ public class PostPolicy {
     formData.put("x-amz-algorithm", ALGORITHM);
 
     DateTime date = new DateTime();
-    String region = BucketRegionCache.INSTANCE.region(this.bucketName);
     String credential = Signer.credential(accessKey, date, region);
     conditions.add(new String[]{"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
