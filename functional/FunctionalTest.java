@@ -215,6 +215,23 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: multipart: putObject(String bucketName, String objectName, String fileName, String contentType).
+   */
+  public static void putObject_test5() throws Exception {
+    System.out.println("Test: multipart: putObject(String bucketName, String objectName, String fileName,"
+                       + " String contentType)");
+    String fileName = createFile(13 * MB);
+    client.putObject(bucketName, fileName, fileName, customContenType);
+    Files.delete(Paths.get(fileName));
+    ObjectStat objectStat = client.statObject(bucketName, fileName);
+    if (!customContenType.equals(objectStat.contentType())) {
+      throw new Exception("[FAILED] Test: putObject(String bucketName, String objectName, String fileName,"
+                          + " String contentType)");
+    }
+    client.removeObject(bucketName, fileName);
+  }
+
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
   public static void statObject_test() throws Exception {
@@ -858,6 +875,7 @@ public class FunctionalTest {
       putObject_test2();
       putObject_test3();
       putObject_test4();
+      putObject_test5();
 
       statObject_test();
 
