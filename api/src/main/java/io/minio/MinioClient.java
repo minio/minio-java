@@ -38,6 +38,7 @@ import io.minio.http.Method;
 import io.minio.http.Scheme;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
+import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
@@ -1387,7 +1388,61 @@ public final class MinioClient {
     }
   }
 
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "/my-sourcebucketname/my-objectsourcename", 
+   * copyConditions); }
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name to be created after copy.
+   * @param objectSource
+   *          Object name of the source.
+   * @param copyConditions
+   *          CopyConditions object with collection of supported CopyObject conditions.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public CopyObjectResult copyObject(String bucketName, String objectName, String objectSource,
+      CopyConditions copyConditions)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
 
+    Map<String, String> headerMap = new HashMap<>();
+
+    if (objectSource == null) {
+      throw new InvalidArgumentException("Invalid object source");
+    }
+
+    // Set the object source
+    headerMap.put("x-amz-copy-source", objectSource);
+
+    // If no conditions available, skip addition else add the conditions to the header
+    if (copyConditions != null) {
+      headerMap.putAll(copyConditions.getCopyConditions());
+    }
+
+    HttpResponse response = execute(Method.PUT, US_EAST_1, bucketName, objectName, headerMap, null, null, "", 0);
+    
+    CopyObjectResult result = new CopyObjectResult();
+    result.parseXml(response.body().charStream());
+    response.body().close();
+    return result;
+  }
+  
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time with custom request params.
    *
