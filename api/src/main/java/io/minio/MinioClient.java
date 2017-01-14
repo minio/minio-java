@@ -664,11 +664,16 @@ public final class MinioClient {
       requestBody = new RequestBody() {
         @Override
         public MediaType contentType() {
+          MediaType mediaType = null;
+
           if (contentType != null) {
-            return MediaType.parse(contentType);
-          } else {
-            return MediaType.parse("application/octet-stream");
+            mediaType = MediaType.parse(contentType);
           }
+          if (mediaType == null) {
+            mediaType = MediaType.parse("application/octet-stream");
+          }
+
+          return mediaType;
         }
 
         @Override
@@ -782,10 +787,15 @@ public final class MinioClient {
    */
   private HttpResponse execute(Method method, String region, String bucketName, String objectName,
                                Map<String,String> headerMap, Map<String,String> queryParamMap,
-                               String contentType, Object body, int length)
+                               Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
+    String contentType = null;
+    if (headerMap != null) {
+      contentType = headerMap.get("Content-Type");
+    }
+
     Request request = createRequest(method, bucketName, objectName, region,
                                     headerMap, queryParamMap,
                                     contentType, body, length);
@@ -919,7 +929,7 @@ public final class MinioClient {
       queryParamMap.put("location", null);
 
       HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
-                                      null, queryParamMap, null, null, 0);
+                                      null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
       XmlPullParser xpp = xmlPullParserFactory.newPullParser();
@@ -983,7 +993,7 @@ public final class MinioClient {
     updateRegionCache(bucketName);
     return execute(Method.GET, BucketRegionCache.INSTANCE.region(bucketName),
                    bucketName, objectName, headerMap, queryParamMap,
-                   null, null, 0);
+                   null, 0);
   }
 
 
@@ -1000,7 +1010,7 @@ public final class MinioClient {
     updateRegionCache(bucketName);
     HttpResponse response = execute(Method.HEAD, BucketRegionCache.INSTANCE.region(bucketName),
                                     bucketName, objectName, null,
-                                    null, null, null, 0);
+                                    null, null, 0);
     response.body().close();
     return response;
   }
@@ -1020,7 +1030,7 @@ public final class MinioClient {
     updateRegionCache(bucketName);
     HttpResponse response = execute(Method.DELETE, BucketRegionCache.INSTANCE.region(bucketName),
                                     bucketName, objectName, null,
-                                    queryParamMap, null, null, 0);
+                                    queryParamMap, null, 0);
     response.body().close();
     return response;
   }
@@ -1043,7 +1053,7 @@ public final class MinioClient {
     updateRegionCache(bucketName);
     return execute(Method.POST, BucketRegionCache.INSTANCE.region(bucketName),
                    bucketName, objectName, headerMap, queryParamMap,
-                   null, data, 0);
+                   data, 0);
   }
 
 
@@ -1065,7 +1075,7 @@ public final class MinioClient {
            InternalException {
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
-                                    "", data, length);
+                                    data, length);
     response.body().close();
     return response;
   }
@@ -1926,8 +1936,6 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> headerMap = new HashMap<>();
-
     String configString;
     if (region == null || US_EAST_1.equals(region)) {
       // for 'us-east-1', location constraint is not required.  for more info
@@ -1938,7 +1946,7 @@ public final class MinioClient {
       configString = config.toString();
     }
 
-    executePut(bucketName, null, headerMap, null, US_EAST_1, configString, 0);
+    executePut(bucketName, null, null, null, US_EAST_1, configString, 0);
   }
 
 
@@ -1989,6 +1997,7 @@ public final class MinioClient {
    * @param bucketName  Bucket name.
    * @param objectName  Object name to create in the bucket.
    * @param fileName    File name to upload.
+   * @param contentType File content type of the object, user supplied.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoResponseException         upon no response from server
@@ -1997,7 +2006,7 @@ public final class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    */
-  public void putObject(String bucketName, String objectName, String fileName)
+  public void putObject(String bucketName, String objectName, String fileName, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
@@ -2011,7 +2020,10 @@ public final class MinioClient {
       throw new InvalidArgumentException("'" + fileName + "': not a regular file");
     }
 
-    String contentType = Files.probeContentType(filePath);
+    if (contentType == null) {
+      contentType = Files.probeContentType(filePath);
+    }
+
     long size = Files.size(filePath);
 
     RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
@@ -2020,6 +2032,40 @@ public final class MinioClient {
     } finally {
       file.close();
     }
+  }
+
+  /**
+   * Uploads given file as object in given bucket.
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param fileName    File name to upload.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void putObject(String bucketName, String objectName, String fileName)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException,
+           InvalidArgumentException, InsufficientDataException {
+    putObject(bucketName, objectName, fileName, null);
   }
 
 
@@ -2103,20 +2149,21 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
+    Map<String,String> headerMap = new HashMap<>();
+    if (contentType != null && !contentType.isEmpty()) {
+      headerMap.put("Content-Type", contentType);
+    } else {
+      headerMap.put("Content-Type", "application/octet-stream");
+    }
+
     Map<String,String> queryParamMap = null;
     if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
       queryParamMap = new HashMap<>();
       queryParamMap.put("partNumber", Integer.toString(partNumber));
       queryParamMap.put(UPLOAD_ID, uploadId);
     }
-    Map<String,String> headerMap = new HashMap<>();
-    if (contentType != null) {
-      headerMap.put("Content-Type", contentType);
-    } else {
-      headerMap.put("Content-Type", "application/octet-stream");
-    }
-    HttpResponse response = executePut(bucketName, objectName, headerMap,
-                                       queryParamMap, data, length);
+
+    HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
     return response.header().etag();
   }
 
@@ -2252,13 +2299,15 @@ public final class MinioClient {
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> headerMap = new HashMap<>();
+    headerMap.put("Content-Type", "application/json");
+
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
     String policyJson = policy.getJson();
 
-    HttpResponse response = executePut(bucketName, "", null, queryParamMap, policyJson, policyJson.length());
-    response.body().close();
+    executePut(bucketName, null, headerMap, queryParamMap, policyJson, policyJson.length());
   }
 
 
@@ -2565,7 +2614,7 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     Map<String,String> headerMap = new HashMap<>();
-    if (contentType != null) {
+    if (contentType != null && !contentType.isEmpty()) {
       headerMap.put("Content-Type", contentType);
     } else {
       headerMap.put("Content-Type", "application/octet-stream");
