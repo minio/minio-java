@@ -680,7 +680,15 @@ public final class MinioClient {
 
         @Override
         public long contentLength() {
+          if (body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[]) {
             return length;
+          }
+
+          if (length == 0) {
+            return -1;
+          } else {
+            return length;
+          }
         }
 
         @Override
@@ -788,6 +796,11 @@ public final class MinioClient {
     String contentType = null;
     if (headerMap != null) {
       contentType = headerMap.get("Content-Type");
+    }
+    if (body != null && !(body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[])) {
+      byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
+      body = bytes;
+      length = bytes.length;
     }
 
     Request request = createRequest(method, bucketName, objectName, region,
@@ -1045,13 +1058,6 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     updateRegionCache(bucketName);
-    int len = -1;
-    if (data instanceof String) {
-      len = ((String) data).length();
-    }
-    if (data instanceof CompleteMultipartUpload) {
-      len = ((CompleteMultipartUpload) data).toString().length();
-    }
     return execute(Method.POST, BucketRegionCache.INSTANCE.region(bucketName),
                    bucketName, objectName, headerMap, queryParamMap,
                    data, 0);
@@ -2489,7 +2495,7 @@ public final class MinioClient {
 
     String policyJson = policy.getJson();
 
-    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, policyJson, policyJson.length());
+    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, policyJson, 0);
     response.body().close();
   }
 
