@@ -42,7 +42,7 @@ public class FunctionalTest {
   private static final int MB = 1024 * 1024;
   private static final SecureRandom random = new SecureRandom();
   private static final String bucketName = getRandomName();
-  private static final String customContenType = "application/javascript";
+  private static final String customContentType = "application/javascript";
   private static String endpoint;
   private static String accessKey;
   private static String secretKey;
@@ -203,11 +203,11 @@ public class FunctionalTest {
                        + "InputStream body)");
     String fileName = createFile(3 * MB);
     InputStream is = Files.newInputStream(Paths.get(fileName));
-    client.putObject(bucketName, fileName, is, 1024 * 1024, customContenType);
+    client.putObject(bucketName, fileName, is, 1024 * 1024, customContentType);
     is.close();
     Files.delete(Paths.get(fileName));
     ObjectStat objectStat = client.statObject(bucketName, fileName);
-    if (!customContenType.equals(objectStat.contentType())) {
+    if (!customContentType.equals(objectStat.contentType())) {
       throw new Exception("[FAILED] Test: putObject(String bucketName, String objectName, String contentType, "
                           + "long size, InputStream body)");
     }
@@ -215,20 +215,34 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: multipart: putObject(String bucketName, String objectName, String fileName, String contentType).
+   * Test: With content-type: putObject(String bucketName, String objectName, String fileName, String contentType).
    */
   public static void putObject_test5() throws Exception {
-    System.out.println("Test: multipart: putObject(String bucketName, String objectName, String fileName,"
+    System.out.println("Test: putObject(String bucketName, String objectName, String fileName,"
                        + " String contentType)");
     String fileName = createFile(13 * MB);
-    client.putObject(bucketName, fileName, fileName, customContenType);
+    client.putObject(bucketName, fileName, fileName, customContentType);
     Files.delete(Paths.get(fileName));
     ObjectStat objectStat = client.statObject(bucketName, fileName);
-    if (!customContenType.equals(objectStat.contentType())) {
+    if (!customContentType.equals(objectStat.contentType())) {
       throw new Exception("[FAILED] Test: putObject(String bucketName, String objectName, String fileName,"
                           + " String contentType)");
     }
     client.removeObject(bucketName, fileName);
+  }
+
+  /**
+   * Test: putObject(String bucketName, String objectName, String fileName).
+   * where objectName has multiple path segments.
+   */
+  public static void putObject_test6() throws Exception {
+    System.out.println("Test: objectName with path segments: "
+                       + "putObject(String bucketName, String objectName, String fileName)");
+    String fileName = createFile(3 * MB);
+    String objectName = "path/to/" + fileName;
+    client.putObject(bucketName, objectName, fileName);
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, objectName);
   }
 
   /**
@@ -876,6 +890,7 @@ public class FunctionalTest {
       putObject_test3();
       putObject_test4();
       putObject_test5();
+      putObject_test6();
 
       statObject_test();
 
