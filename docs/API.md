@@ -216,15 +216,15 @@ __Example__
 ```java
 
 try {
-	// Create bucket if it doesn't exist.
+  // Create bucket if it doesn't exist.
   boolean found = minioClient.bucketExists("mybucket");
   if (found) {
-      System.out.println("mybucket already exists");
-   } else {
-     	// Create bucket 'my-bucketname'.
-    	minioClient.makeBucket("mybucket");
-     	System.out.println("mybucket is created successfully");
-   }
+    System.out.println("mybucket already exists");
+  } else {
+    // Create bucket 'my-bucketname'.
+    minioClient.makeBucket("mybucket");
+    System.out.println("mybucket is created successfully");
+  }
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -257,10 +257,10 @@ __Example__
 
 try {
   // List buckets that have read access.
-	List<Bucket> bucketList = minioClient.listBuckets();
-	for (Bucket bucket : bucketList) {
-  	  System.out.println(bucket.creationDate() + ", " + bucket.name());
-	}
+  List<Bucket> bucketList = minioClient.listBuckets();
+  for (Bucket bucket : bucketList) {
+    System.out.println(bucket.creationDate() + ", " + bucket.name());
+  }
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -304,12 +304,12 @@ __Example__
 
 try {
   // Check whether 'my-bucketname' exists or not.
-	boolean found = minioClient.bucketExists("mybucket");
-	if (found) {
-  	  System.out.println("mybucket exists");
-	} else {
-  	  System.out.println("mybucket does not exist");
-	}
+  boolean found = minioClient.bucketExists("mybucket");
+  if (found) {
+    System.out.println("mybucket exists");
+  } else {
+    System.out.println("mybucket does not exist");
+  }
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -355,14 +355,14 @@ __Example__
 
 try {
   // Check if my-bucket exists before removing it.
-	boolean found = minioClient.bucketExists("mybucket");
-	if (found) {
-      // Remove bucket my-bucketname. This operation will succeed only if the bucket is empty.
-  	  minioClient.removeBucket("mybucket");
-    	System.out.println("mybucket is removed successfully");
-	} else {
-  	 	System.out.println("mybucket does not exist");
-	}
+  boolean found = minioClient.bucketExists("mybucket");
+  if (found) {
+    // Remove bucket my-bucketname. This operation will succeed only if the bucket is empty.
+    minioClient.removeBucket("mybucket");
+    System.out.println("mybucket is removed successfully");
+  } else {
+    System.out.println("mybucket does not exist");
+  }
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -403,15 +403,15 @@ try {
   // Check whether 'mybucket' exists or not.
   boolean found = minioClient.bucketExists("mybucket");
   if (found) {
-      // List objects from 'my-bucketname'
-      Iterable<Result<Item>> myObjects = minioClient.listObjects("mybucket");
-      for (Result<Item> result : myObjects) {
-           Item item = result.get();
-           System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-         }
+    // List objects from 'my-bucketname'
+    Iterable<Result<Item>> myObjects = minioClient.listObjects("mybucket");
+    for (Result<Item> result : myObjects) {
+      Item item = result.get();
+      System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+    }
   } else {
-         System.out.println("mybucket does not exist");
-       }
+    System.out.println("mybucket does not exist");
+  }
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -448,21 +448,22 @@ __Example__
 
 
 ```java
+
 try {
-     // Check whether 'mybucket' exist or not.
-     boolean found = minioClient.bucketExists("mybucket");
-     if (found) {
-     // List all incomplete multipart upload of objects in 'my-bucketname
-     Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("mybucket");
-     for (Result<Upload> result : myObjects) {
-          Upload upload = result.get();
-          System.out.println(upload.uploadId() + ", " + upload.objectName());
-      }
-     } else {
-      System.out.println("mybucket does not exist");
-      }
- } catch (MinioException e) {
-   System.out.println("Error occurred: " + e);
+  // Check whether 'mybucket' exist or not.
+  boolean found = minioClient.bucketExists("mybucket");
+  if (found) {
+    // List all incomplete multipart upload of objects in 'my-bucketname
+    Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("mybucket");
+    for (Result<Upload> result : myObjects) {
+      Upload upload = result.get();
+      System.out.println(upload.uploadId() + ", " + upload.objectName());
+    }
+  } else {
+    System.out.println("mybucket does not exist");
+  }
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -503,9 +504,9 @@ __Example__
 
 ```java
 try {
-    System.out.println("Current policy: " + minioClient.getBucketPolicy("myBucket", "downloads"));
- } catch (MinioException e) {
-   System.out.println("Error occurred: " + e);
+  System.out.println("Current policy: " + minioClient.getBucketPolicy("myBucket", "downloads"));
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
 }
 ```
 
@@ -548,10 +549,11 @@ __Example__
 ```java
 
 try {
-    minioClient.setBucketPolicy("myBucket", "uploads", BucketPolicy.WriteOnly);
- } catch (MinioException e) {
-   System.out.println("Error occurred: " + e);
+  minioClient.setBucketPolicy("myBucket", "uploads", BucketPolicy.WriteOnly);
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
 }
+
 ```
 
 ## 3. Object operations
@@ -592,25 +594,26 @@ __Example__
 ```java
 
 try {
+  // Check whether the object exists using statObject().
+  // If the object is not found, statObject() throws an exception,
+  // else it means that the object exists.
+  // Execution is successful.
+  minioClient.statObject("mybucket", "myobject");
 
-      // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
-     // Execution is successful.
-     minioClient.statObject("mybucket", "myobject");
+  // Get input stream to have content of 'my-objectname' from 'my-bucketname'
+  InputStream stream = minioClient.getObject("mybucket", "myobject");
 
-    // Get input stream to have content of 'my-objectname' from 'my-bucketname'
-    InputStream stream = minioClient.getObject("mybucket", "myobject");
+  // Read the input stream and print to the console till EOF.
+  byte[] buf = new byte[16384];
+  int bytesRead;
+  while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+    System.out.println(new String(buf, 0, bytesRead));
+  }
 
-   // Read the input stream and print to the console till EOF.
-   byte[] buf = new byte[16384];
-   int bytesRead;
-   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-        System.out.println(new String(buf, 0, bytesRead));
-   }
-
-   // Close the input stream.
-   stream.close();
-  } catch (MinioException e) {
-    System.out.println("Error occurred: " + e);
+  // Close the input stream.
+  stream.close();
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -652,26 +655,28 @@ __Example__
 
 ```java
 
- try {
+try {
 
-      // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
-     // Execution is successful.
-     minioClient.statObject("mybucket", "myobject");
+  // Check whether the object exists using statObject().
+  // If the object is not found, statObject() throws an exception,
+  // else it means that the object exists.
+  // Execution is successful.
+  minioClient.statObject("mybucket", "myobject");
 
-    // Get input stream to have content of 'my-objectname' from 'my-bucketname'
-    InputStream stream = minioClient.getObject("mybucket", "myobject", 1024L, 4096L);
+  // Get input stream to have content of 'my-objectname' from 'my-bucketname'
+  InputStream stream = minioClient.getObject("mybucket", "myobject", 1024L, 4096L);
 
-   // Read the input stream and print to the console till EOF.
-   byte[] buf = new byte[16384];
-   int bytesRead;
-   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-        System.out.println(new String(buf, 0, bytesRead));
-   }
+  // Read the input stream and print to the console till EOF.
+  byte[] buf = new byte[16384];
+  int bytesRead;
+  while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+    System.out.println(new String(buf, 0, bytesRead));
+  }
 
-   // Close the input stream.
-   stream.close();
-  } catch (MinioException e) {
-    System.out.println("Error occurred: " + e);
+  // Close the input stream.
+  stream.close();
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -711,16 +716,18 @@ __Example__
 ```java
 
 try {
+  // Check whether the object exists using statObject().
+  // If the object is not found, statObject() throws an exception,
+  // else it means that the object exists.
+  // Execution is successful.
+  minioClient.statObject("mybucket", "myobject");
 
-      // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
-     // Execution is successful.
-     minioClient.statObject("mybucket", "myobject");
+  // Gets the object's data and stores it in photo.jpg
+  minioClient.getObject("mybucket", "myobject", "photo.jpg");
 
-    // Gets the object's data and stores it in photo.jpg
-     minioClient.getObject("mybucket", "myobject", "photo.jpg");
-
-  } catch (MinioException e) {
-    System.out.println("Error occurred: " + e);
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
 
 ```
 
@@ -766,7 +773,7 @@ The maximum size of a single object is limited to 5TB. putObject transparently u
 
 try {
   StringBuilder builder = new StringBuilder();
-	for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 1000; i++) {
     builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
     builder.append("(29 letters)\n");
     builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
@@ -782,13 +789,13 @@ try {
     builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
     builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
     builder.append("- --\n");
-	}
-	ByteArrayInputStream bais = new
+  }
+  ByteArrayInputStream bais = new
   ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-	// create object
-	minioClient.putObject("mybucket", "myobject", bais, bais.available(), "application/octet-stream");
-	bais.close();
-	System.out.println("myobject is uploaded successfully");
+  // Create an object
+  minioClient.putObject("mybucket", "myobject", bais, bais.available(), "application/octet-stream");
+  bais.close();
+  System.out.println("myobject is uploaded successfully");
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -832,8 +839,8 @@ The maximum size of a single object is limited to 5TB. putObject transparently u
 ```java
 
 try {
-	minioClient.putObject("mybucket",  "island.jpg", "/mnt/photos/island.jpg")
-	System.out.println("island.jpg is uploaded successfully");
+  minioClient.putObject("mybucket",  "island.jpg", "/mnt/photos/island.jpg")
+  System.out.println("island.jpg is uploaded successfully");
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -878,10 +885,10 @@ __Example__
 
 try {
   // Get the metadata of the object.
-	ObjectStat objectStat = minioClient.statObject("mybucket", "myobject");
-	System.out.println(objectStat);
+  ObjectStat objectStat = minioClient.statObject("mybucket", "myobject");
+  System.out.println(objectStat);
 } catch(MinioException e) {
- System.out.println("Error occurred: " + e);
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -904,6 +911,7 @@ __Parameters__
 | ``objectName``  | _String_  | Object name in the source bucket to be copied. |
 | ``destBucketName``  | _String_  | Destination bucket name. |
 | ``destObjectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``copyConditions`` | _CopyConditions_ | Map of conditions useful for applying restrictions on copy operation.|
 
 
 | Return Type	  | Exceptions	  |
@@ -924,11 +932,11 @@ This API performs a server side copy operation from a given source object to des
 ```java
 
 try {
-        CopyConditions copyConditions = new CopyConditions();
-        copyConditions.setMatchETagNone("TestETag");
+  CopyConditions copyConditions = new CopyConditions();
+  copyConditions.setMatchETagNone("TestETag");
 
-        minioClient.copyObject("mybucket",  "island.jpg", "mydestbucket", "processed.png", copyConditions);
-	System.out.println("island.jpg is uploaded successfully");
+  minioClient.copyObject("mybucket",  "island.jpg", "mydestbucket", "processed.png", copyConditions);
+  System.out.println("island.jpg is uploaded successfully");
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
@@ -1164,4 +1172,3 @@ try {
 
 - [Build your own photo API Service Example](https://docs.minio.io/docs/java-photo-api-service)
 - [Complete JavaDoc](http://minio.github.io/minio-java/)
-
