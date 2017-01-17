@@ -797,6 +797,11 @@ public final class MinioClient {
     if (headerMap != null) {
       contentType = headerMap.get("Content-Type");
     }
+    if (body != null && !(body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[])) {
+      byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
+      body = bytes;
+      length = bytes.length;
+    }
 
     Request request = createRequest(method, bucketName, objectName, region,
                                     headerMap, queryParamMap,
@@ -2490,7 +2495,7 @@ public final class MinioClient {
 
     String policyJson = policy.getJson();
 
-    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, policyJson, policyJson.length());
+    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, policyJson, 0);
     response.body().close();
   }
 
