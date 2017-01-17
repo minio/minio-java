@@ -1,8 +1,8 @@
 # Java Client API Reference [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Minio/minio?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## Initialize Minio Client object. 
+## Initialize Minio Client object.
 
-## Minio 
+## Minio
 
 ```java
 
@@ -15,7 +15,7 @@ MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ
 
 ```java
 
-MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
+MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
 ```
 
@@ -23,13 +23,13 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |:--- |:--- |:--- |:--- |
 | [`makeBucket`](#makeBucket)  |[`getObject`](#getObject)   |[`presignedGetObject`](#presignedGetObject)   | [`getBucketPolicy`](#getBucketPolicy)   |
 | [`listBuckets`](#listBuckets)  | [`putObject`](#putObject)  | [`presignedPutObject`](#presignedPutObject)  | [`setBucketPolicy`](#setBucketPolicy)   |
-| [`bucketExists`](#bucketExists)  | [`statObject`](#statObject)  | [`presignedPostPolicy`](#presignedPostPolicy)  |  |
-| [`removeBucket`](#removeBucket)  |  [`removeObject`](#removeObject) |   |   |
-| [`listObjects`](#listObjects)  | [`removeIncompleteUpload`](#removeIncompleteUpload)  |   |   |
-| [`listIncompleteUploads`](#listIncompleteUploads)  |   |   |
+| [`bucketExists`](#bucketExists)  | [`copyObject`](#copyObject)  | [`presignedPostPolicy`](#presignedPostPolicy)  |  |
+| [`removeBucket`](#removeBucket)  | [`statObject`](#statObject) |   |   |
+| [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |   |
+| [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
 
 
-## 1. Constructors 
+## 1. Constructors
 
 <a name="constructors"></a>
 
@@ -37,60 +37,60 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |---|
 |`public MinioClient(String endpoint) throws NullPointerException, InvalidEndpointException, InvalidPortException`   |
 | Creates Minio client object with given endpoint using anonymous access.  |
-| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-)  |  
+| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-)  |
 
 
 |   |
 |---|
 |`public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException`   |
 | Creates Minio client object with given url using anonymous access.  |
-| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-)  |  
+| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-)  |
 
 
 |  |
 |---|
 | `public MinioClient(com.squareup.okhttp.HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
 |Creates Minio client object with given HttpUrl object using anonymous access.   |
-| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-com.squareup.okhttp.HttpUrl-)  |  
+| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-com.squareup.okhttp.HttpUrl-)  |
 
 |   |
 |---|
 | `public MinioClient(String endpoint, String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
 |  Creates Minio client object with given endpoint, access key and secret key. |
-|   [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-)|  
+|   [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-)|
 
 |   |
 |---|
 | `public MinioClient(String endpoint, int port,  String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
 | Creates Minio client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.  |
-| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-)  |  
+| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-)  |
 
 
 |   |
 |---|
 | `public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
 | Creates Minio client object with given endpoint, access key and secret key using secure (HTTPS) connection.  |
-|  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-boolean-) |  
+|  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-boolean-) |
 
 
 |   |
 |---|
 | `public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
 | Creates Minio client object using given endpoint, port, access key, secret key and secure option.  |
-|  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-boolean-) |  
+|  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-boolean-) |
 
 |   |
 |---|
 | `public MinioClient(com.squareup.okhttp.HttpUrl url, String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
 | Creates Minio client object with given URL object, access key and secret key.  |
-| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-com.squareup.okhttp.HttpUrl-java.lang.String-java.lang.String-)  |  
+| [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-com.squareup.okhttp.HttpUrl-java.lang.String-java.lang.String-)  |
 
 
 |   |
 |---|
 | `public MinioClient(URL url, String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
 |  Creates Minio client object with given URL object, access key and secret key. |
-|  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-java.lang.String-java.lang.String-) |  
+|  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-java.lang.String-java.lang.String-) |
 
 
 __Parameters__
@@ -103,7 +103,7 @@ __Parameters__
 | | |localhost |
 | | |play.minio.io|
 | `port` | _int_  | TCP/IP port number. This input is optional. Default value set to 80 for HTTP and 443 for HTTPs. |
-| `accessKey`   | _string_   |accessKey is like user-id that uniquely identifies your account. | 
+| `accessKey`   | _string_   |accessKey is like user-id that uniquely identifies your account. |
 |`secretKey`  |  _string_   | secretKey is the password to your account.|
 |`secure`    | _boolean_    |If set to true, https is used instead of http. Default is https if not set. |
 |`url`    | _URL_    |Endpoint URL object. |
@@ -124,14 +124,14 @@ MinioClient minioClient = new MinioClient("https://play.minio.io:9000");
 // 2. public MinioClient(URL url)
 MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"));
 
-// 3. public MinioClient(com.squareup.okhttp.HttpUrl url) 
- MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000")); 
+// 3. public MinioClient(com.squareup.okhttp.HttpUrl url)
+ MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000"));
 
 // 4. public MinioClient(String endpoint, String accessKey, String secretKey)
-MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"); 
+MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
 // 5. public MinioClient(String endpoint, int port,  String accessKey, String secretKey)
-MinioClient minioClient = new MinioClient("https://play.minio.io", 9000, "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG"); 
+MinioClient minioClient = new MinioClient("https://play.minio.io", 9000, "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
 // 6. public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
@@ -152,21 +152,21 @@ MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9
 
 
 ```java
- 
+
 // 1. public MinioClient(String endpoint)
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com");
 
 // 2. public MinioClient(URL url)
 MinioClient minioClient = new MinioClient(new URL("https://s3.amazonaws.com"));
 
-// 3. public MinioClient(com.squareup.okhttp.HttpUrl url) 
- MinioClient s3Client = new MinioClient(new HttpUrl.parse("https://s3.amazonaws.com")); 
+// 3. public MinioClient(com.squareup.okhttp.HttpUrl url)
+ MinioClient s3Client = new MinioClient(new HttpUrl.parse("https://s3.amazonaws.com"));
 
 // 4. public MinioClient(String endpoint, String accessKey, String secretKey)
-MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
+MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
 // 5. public MinioClient(String endpoint, int port,  String accessKey, String secretKey)
-MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); 
+MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
 // 6. public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
 MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false);
@@ -188,7 +188,7 @@ MinioClient s3Client = new MinioClient(HttpUrl.parse("s3.amazonaws.com"), "YOUR-
 ### makeBucket(String bucketName)
 `public void makeBucket(String bucketName)`
 
-Creates a new bucket.      
+Creates a new bucket.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#makeBucket-java.lang.String-)
 
@@ -199,9 +199,9 @@ __Parameters__
 | ``bucketName``  | _String_ | Name of the bucket.  |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-| ``None``  | Listed Exceptions: | 
+| ``None``  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -240,9 +240,9 @@ Lists all buckets.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listBuckets--)
 
-|Return Type	  | Exceptions	  | 
+|Return Type	  | Exceptions	  |
 |:--- |:--- |
-| ``List Bucket`` : List of bucket type.  | Listed Exceptions: | 
+| ``List Bucket`` : List of bucket type.  | Listed Exceptions: |
 |        |  ``NoResponseException`` : upon no response from server. |
 |        | ``IOException`` : upon connection error. |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML. |
@@ -285,9 +285,9 @@ __Parameters__
 | ``bucketName``  | _String_  | Name of the bucket.  |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``boolean``: true if the bucket exists  | Listed Exceptions: | 
+|  ``boolean``: true if the bucket exists  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -325,8 +325,8 @@ try {
 Removes a bucket.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeBucket-java.lang.String-)
- 
-NOTE: -  removeBucket does not delete the objects inside the bucket. The objects need to be deleted using the removeObject API. 
+
+NOTE: -  removeBucket does not delete the objects inside the bucket. The objects need to be deleted using the removeObject API.
 
 
 __Parameters__
@@ -337,9 +337,9 @@ __Parameters__
 | ``bucketName``  | _String_  | Name of the bucket.  |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: | 
+|  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -389,7 +389,7 @@ __Parameters__
 | ``recursive``  | _boolean_  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
 
-|Return Type	  | Exceptions	  | 
+|Return Type	  | Exceptions	  |
 |:--- |:--- |
 | ``Iterable<Result<Item>>``:an iterator of Result Items.  | _None_  |
 
@@ -439,7 +439,7 @@ __Parameters__
 | ``recursive``  | _boolean_  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
 
 
-|Return Type	  | Exceptions	  | 
+|Return Type	  | Exceptions	  |
 |:--- |:--- |
 | ``Iterable<Result<Upload>>``: an iterator of Upload.  | _None_  |
 
@@ -483,9 +483,9 @@ __Parameters__
 | ``objectPrefix``  | _String_  | Policy applies to objects with prefix. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``BucketPolicy``: The current bucket policy for given bucket and objectPrefix.  | Listed Exceptions: | 
+|  ``BucketPolicy``: The current bucket policy for given bucket and objectPrefix.  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -526,9 +526,9 @@ __Parameters__
 | ``bucketPolicy``  | _BucketPolicy_  | Policy to apply. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: | 
+|  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -575,9 +575,9 @@ __Parameters__
 | ``objectName``  | _String_  | Object name in the bucket. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``InputStream``: InputStream containing the object data.  | Listed Exceptions: | 
+|  ``InputStream``: InputStream containing the object data.  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -592,21 +592,21 @@ __Example__
 ```java
 
 try {
-  
+
       // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
      // Execution is successful.
      minioClient.statObject("mybucket", "myobject");
- 
+
     // Get input stream to have content of 'my-objectname' from 'my-bucketname'
     InputStream stream = minioClient.getObject("mybucket", "myobject");
-   
+
    // Read the input stream and print to the console till EOF.
    byte[] buf = new byte[16384];
    int bytesRead;
    while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
         System.out.println(new String(buf, 0, bytesRead));
    }
- 
+
    // Close the input stream.
    stream.close();
   } catch (MinioException e) {
@@ -619,7 +619,7 @@ try {
 ### getObject(String bucketName, String objectName, long offset, Long length)
 
 `public InputStream getObject(String bucketName,  String objectName, long offset, Long length)`
-                                          
+
 Downloads the specified range bytes of an object as a stream.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-long-java.lang.Long-)
@@ -636,9 +636,9 @@ __Parameters__
 | ``length``  | _Long_  | ``length`` of the object that will be read in the stream (optional, if not specified we read the rest of the file from the offset). |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``InputStream`` : InputStream containing the object's data. | Listed Exceptions: | 
+|  ``InputStream`` : InputStream containing the object's data. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -653,21 +653,21 @@ __Example__
 ```java
 
  try {
-  
+
       // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
      // Execution is successful.
      minioClient.statObject("mybucket", "myobject");
- 
+
     // Get input stream to have content of 'my-objectname' from 'my-bucketname'
     InputStream stream = minioClient.getObject("mybucket", "myobject", 1024L, 4096L);
-   
+
    // Read the input stream and print to the console till EOF.
    byte[] buf = new byte[16384];
    int bytesRead;
    while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
         System.out.println(new String(buf, 0, bytesRead));
    }
- 
+
    // Close the input stream.
    stream.close();
   } catch (MinioException e) {
@@ -680,7 +680,7 @@ __Example__
 ### getObject(String bucketName, String objectName, String fileName)
 
 `public void getObject(String bucketName, String objectName, String fileName)`
-                  
+
 Downloads and saves the object as a file in the local filesystem.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-java.lang.String-)
@@ -696,9 +696,9 @@ __Parameters__
 | ``fileName``  | _String_  | File name. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: | 
+|  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -711,14 +711,14 @@ __Example__
 ```java
 
 try {
-  
+
       // Check whether the object exists using statObject().  If the object is not found, statObject() throws an exception,  else it means that the object exists.
      // Execution is successful.
      minioClient.statObject("mybucket", "myobject");
-  
-    // Gets the object's data and stores it in photo.jpg 
+
+    // Gets the object's data and stores it in photo.jpg
      minioClient.getObject("mybucket", "myobject", "photo.jpg");
-    
+
   } catch (MinioException e) {
     System.out.println("Error occurred: " + e);
 
@@ -728,7 +728,7 @@ try {
 ### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
 
 `public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)`
-                     
+
 Uploads an object from an InputStream.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-)
@@ -745,9 +745,9 @@ __Parameters__
 | ``contentType``  | _String_ | Content type of the stream. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: | 
+|  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -783,7 +783,7 @@ try {
     builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
     builder.append("- --\n");
 	}
-	ByteArrayInputStream bais = new 				
+	ByteArrayInputStream bais = new
   ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 	// create object
 	minioClient.putObject("mybucket", "myobject", bais, bais.available(), "application/octet-stream");
@@ -800,7 +800,7 @@ try {
 
 `public void putObject(String bucketName, String objectName, String fileName)`
 
-Uploads contents from a file to objectName.                                 
+Uploads contents from a file to objectName.
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.lang.String-)
 
 __Parameters__
@@ -813,9 +813,9 @@ __Parameters__
 | ``fileName``  | _String_  | File name. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: | 
+|  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -841,9 +841,9 @@ try {
 ```
 
 <a name="statObject"></a>
-### statObject(String bucketName, String objectName)   
+### statObject(String bucketName, String objectName)
 
-*`ObjectStat statObject(String bucketName, String objectName)`*
+*`public ObjectStat statObject(String bucketName, String objectName)`*
 
 Gets metadata of an object.
 
@@ -859,9 +859,9 @@ __Parameters__
 | ``objectName``  | _String_  | Object name in the bucket. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``ObjectStat``: Populated object meta data. | Listed Exceptions: | 
+|  ``ObjectStat``: Populated object meta data. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -877,11 +877,60 @@ __Example__
 ```java
 
 try {
-  //Get the metadata of the object.
+  // Get the metadata of the object.
 	ObjectStat objectStat = minioClient.statObject("mybucket", "myobject");
 	System.out.println(objectStat);
 } catch(MinioException e) {
- System.out.println("Error occurred: " + e); 
+ System.out.println("Error occurred: " + e);
+}
+
+```
+
+<a name="copyObject"></a>
+### copyObject(String bucketName, String objectName, String destBucketName, String destObjectName, CopyConditions cpConds)
+
+*`public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName, CopyConditions cpConds)`*
+
+Copies content from objectName to destObjectName.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-java.lang.String-java.lang.String-java.lang.String-java.lang.String-io.minio.CopyConditions-)
+
+__Parameters__
+
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the source bucket.  |
+| ``objectName``  | _String_  | Object name in the source bucket to be copied. |
+| ``destBucketName``  | _String_  | Destination bucket name. |
+| ``destObjectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+
+__Example__
+
+
+This API performs a server side copy operation from a given source object to destination object.
+
+```java
+
+try {
+        CopyConditions copyConditions = new CopyConditions();
+        copyConditions.setMatchETagNone("TestETag");
+
+        minioClient.copyObject("mybucket",  "island.jpg", "mydestbucket", "processed.png", copyConditions);
+	System.out.println("island.jpg is uploaded successfully");
+} catch(MinioException e) {
+  System.out.println("Error occurred: " + e);
 }
 
 ```
@@ -903,9 +952,9 @@ __Parameters__
 | ``bucketName``  | _String_  | Name of the bucket.  |
 | ``objectName``  | _String_  | Object name in the bucket. |
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: | 
+|  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -934,11 +983,10 @@ try {
 ### removeIncompleteUpload(String bucketName, String objectName)
 
 `public void removeIncompleteUpload(String bucketName, String objectName)`
-                                  
-Removes a partially uploaded object.  
+
+Removes a partially uploaded object.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeIncompleteUpload-java.lang.String-java.lang.String-)
-
 
 __Parameters__
 
@@ -949,9 +997,9 @@ __Parameters__
 | ``objectName``  | _String_  | Object name in the bucket. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: | 
+|  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -980,7 +1028,7 @@ try {
 
 ### presignedGetObject(String bucketName, String objectName, Integer expires)
 `public String presignedGetObject(String bucketName, String objectName, Integer expires)`
-                                
+
 Generates a presigned URL for HTTP GET operations. Browsers/Mobile clients may point to this URL to directly download objects even if the bucket is private. This presigned URL can have an associated expiration time in seconds after which it is no longer operational. The default expiry is set to 7 days.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-java.lang.Integer-)
@@ -996,9 +1044,9 @@ __Parameters__
 | ``expiry``  | _Integer_  | Expiry in seconds. Default expiry is set to 7 days. |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``String`` : string contains URL to download the object. | Listed Exceptions: | 
+|  ``String`` : string contains URL to download the object. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
 |        | ``IOException`` : upon connection error.            |
@@ -1024,7 +1072,7 @@ try {
 ### presignedPutObject(String bucketName, String objectName, Integer expires)
 
 `public String presignedPutObject(String bucketName, String objectName, Integer expires)`
-                                                              
+
 Generates a presigned URL for HTTP PUT operations. Browsers/Mobile clients may point to this URL to upload objects directly to a bucket even if it is private. This presigned URL can have an associated expiration time in seconds after which it is no longer operational. The default expiry is set to 7 days.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPutObject-java.lang.String-java.lang.String-java.lang.Integer-)
@@ -1038,9 +1086,9 @@ __Parameters__
 | ``objectName``  | _String_  | Object name in the bucket. |
 | ``expiry``  | _Integer_  | Expiry in seconds. Default expiry is set to 7 days. |
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``String`` : string contains URL to download the object. | Listed Exceptions: | 
+|  ``String`` : string contains URL to download the object. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
 |        | ``IOException`` : upon connection error.            |
@@ -1081,9 +1129,9 @@ __Parameters__
 | ``policy``  | _PostPolicy_  | Post policy of an object.  |
 
 
-| Return Type	  | Exceptions	  | 
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
-| ``Map``: Map of strings to construct form-data. | Listed Exceptions: | 
+| ``Map``: Map of strings to construct form-data. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
 |        | ``IOException`` : upon connection error.            |
@@ -1097,7 +1145,7 @@ __Example__
 ```java
 
 try {
-	PostPolicy policy = new PostPolicy("mybucket", "myobject", 			
+	PostPolicy policy = new PostPolicy("mybucket", "myobject",
   DateTime.now().plusDays(7));
 	policy.setContentType("image/png");
 	Map<String,String> formData = minioClient.presignedPostPolicy(policy);
@@ -1113,7 +1161,7 @@ try {
 
 ## 5. Explore Further
 
- 
+
 - [Build your own photo API Service Example](https://docs.minio.io/docs/java-photo-api-service)
 - [Complete JavaDoc](http://minio.github.io/minio-java/)
 

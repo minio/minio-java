@@ -14,19 +14,19 @@ This document assumes that you have one of the following Java Environments setup
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>3.0.2</version>
+    <version>3.0.3</version>
 </dependency>
 ```
 
 ## Download from gradle
 ```xml
 dependencies {
-    compile 'io.minio:minio:3.0.2'
+    compile 'io.minio:minio:3.0.3'
 }
 ```
 
 ## Download from JAR
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/3.0.2/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/3.0.3/) directly from maven.
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
@@ -79,12 +79,12 @@ public class FileUploader {
 
 #### Compile FileUploader
 ```sh
-javac -cp "minio-3.0.2-all.jar"  FileUploader.java
+javac -cp "minio-3.0.3-all.jar"  FileUploader.java
 ```
 
 #### Run FileUploader
 ```sh
-java -cp "minio-3.0.2-all.jar:." FileUploader
+java -cp "minio-3.0.3-all.jar:." FileUploader
 /home/user/Photos/asiaphotos.zip is successfully uploaded as asiaphotos.zip to `asiatrip` bucket.
 
 mc ls play/asiatrip/
@@ -107,6 +107,7 @@ The full API Reference is available here.
 ### API Reference: Object Operations
 * [`getObject`](https://docs.minio.io/docs/java-client-api-reference#getObject)
 * [`putObject`](https://docs.minio.io/docs/java-client-api-reference#putObject)
+* [`copyObject`](https://docs.minio.io/docs/java-client-api-reference#copyObject)
 * [`statObject`](https://docs.minio.io/docs/java-client-api-reference#statObject)
 * [`removeObject`](https://docs.minio.io/docs/java-client-api-reference#removeObject)
 * [`removeIncompleteUpload`](https://docs.minio.io/docs/java-client-api-reference#removeIncompleteUpload)
