@@ -1574,9 +1574,8 @@ public final class MinioClient {
       headerMap.putAll(copyConditions.getConditions());
     }
 
-
     HttpResponse response = executePut(destBucketName, destObjectName, headerMap,
-                                       null, null, "", 0);
+        null, "", 0);
 
     // For now ignore the copyObjectResult, just read and parse it.
     CopyObjectResult result = new CopyObjectResult();
