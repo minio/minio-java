@@ -1,4 +1,4 @@
-# Minio Java Library for Amazon S3 Compatible Cloud Storage [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
+# Minio Java SDK for Amazon S3 Compatible Cloud Storage [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
 
 The Minio Java Client SDK provides simple APIs to access any Amazon S3 compatible object storage server.
 
