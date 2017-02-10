@@ -484,6 +484,18 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
+  @Test(expected = RegionConflictException.class)
+  public void testMakeBucketRegionConflicts()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+    MockWebServer server = new MockWebServer();
+    server.start();
+
+    MinioClient client = new MinioClient(server.url("").toString(), "foo", "bar", "us-east-1");
+    client.makeBucket(BUCKET, "us-west-2");
+
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
+  }
+
   @Test
   public void testPutSmallObject()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {

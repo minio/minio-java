@@ -269,7 +269,13 @@ project(':functional') {
             ext.secretKey = rootProject.properties['secretKey']
         }
 
-        args = [ext.endPoint, ext.accessKey, ext.secretKey]
+        ext.region = 'us-east-1'
+        if (project.properties.containsKey('region')) {
+            ext.region = rootProject.properties['region']
+        }
+
+
+        args = [ext.endPoint, ext.accessKey, ext.secretKey, ext.region]
     }
 
 }

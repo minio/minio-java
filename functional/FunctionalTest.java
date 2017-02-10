@@ -47,6 +47,7 @@ public class FunctionalTest {
   private static String endpoint;
   private static String accessKey;
   private static String secretKey;
+  private static String region;
   private static MinioClient client = null;
 
   /**
@@ -1075,85 +1076,120 @@ public class FunctionalTest {
   }
 
   /**
+   * runTests: runs as much as possible of test combinations.
+   */
+  public static void runTests() throws Exception {
+    makeBucket_test1();
+    if (!endpoint.toLowerCase().contains("minio")) {
+      makeBucket_test2();
+      makeBucket_test3();
+    }
+
+    listBuckets_test();
+
+    bucketExists_test();
+
+    removeBucket_test();
+
+    setup();
+
+    putObject_test1();
+    putObject_test2();
+    putObject_test3();
+    putObject_test4();
+    putObject_test5();
+    putObject_test6();
+
+    statObject_test();
+    getObject_test1();
+    getObject_test2();
+    getObject_test3();
+    getObject_test4();
+    getObject_test5();
+
+    listObject_test1();
+    listObject_test2();
+    listObject_test3();
+    listObject_test4();
+
+    removeObject_test();
+
+    listIncompleteUploads_test1();
+    listIncompleteUploads_test2();
+    listIncompleteUploads_test3();
+
+    removeIncompleteUploads_test();
+
+    presignedGetObject_test1();
+    presignedGetObject_test2();
+    presignedGetObject_test3();
+
+    presignedPutObject_test1();
+    presignedPutObject_test2();
+
+    presignedPostPolicy_test();
+
+    copyObject_test1();
+    copyObject_test2();
+    copyObject_test3();
+    copyObject_test4();
+    copyObject_test5();
+    copyObject_test6();
+    copyObject_test7();
+
+    threadedPutObject();
+
+    teardown();
+  }
+
+  /**
+   * runFastTests: runs a fast set of tests.
+   */
+  public static void runFastTests() throws Exception {
+    makeBucket_test1();
+    listBuckets_test();
+    bucketExists_test();
+    removeBucket_test();
+    setup();
+    putObject_test1();
+    statObject_test();
+    getObject_test1();
+    listObject_test1();
+    removeObject_test();
+    listIncompleteUploads_test1();
+    removeIncompleteUploads_test();
+    presignedGetObject_test1();
+    presignedPutObject_test1();
+    presignedPostPolicy_test();
+    copyObject_test1();
+    teardown();
+  }
+
+
+  /**
    * main().
    */
   public static void main(String[] args) {
-    if (args.length != 3) {
-      System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY>");
+    if (args.length != 4) {
+      System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
       return;
     }
 
     endpoint = args[0];
     accessKey = args[1];
     secretKey = args[2];
+    region = args[3];
 
     try {
       client = new MinioClient(endpoint, accessKey, secretKey);
-
       // Enable trace for debugging.
       // client.traceOn(System.out);
+      FunctionalTest.runTests();
 
-      makeBucket_test1();
-      if (!endpoint.toLowerCase().contains("minio")) {
-        makeBucket_test2();
-        makeBucket_test3();
-      }
+      // Run fast test with region parameter passed to the constructor
+      client = new MinioClient(endpoint, accessKey, secretKey, region);
+      FunctionalTest.runFastTests();
 
-      listBuckets_test();
-
-      bucketExists_test();
-
-      removeBucket_test();
-
-      setup();
-
-      putObject_test1();
-      putObject_test2();
-      putObject_test3();
-      putObject_test4();
-      putObject_test5();
-      putObject_test6();
-
-      statObject_test();
-      getObject_test1();
-      getObject_test2();
-      getObject_test3();
-      getObject_test4();
-      getObject_test5();
-
-      listObject_test1();
-      listObject_test2();
-      listObject_test3();
-      listObject_test4();
-
-      removeObject_test();
-
-      listIncompleteUploads_test1();
-      listIncompleteUploads_test2();
-      listIncompleteUploads_test3();
-
-      removeIncompleteUploads_test();
-
-      presignedGetObject_test1();
-      presignedGetObject_test2();
-      presignedGetObject_test3();
-
-      presignedPutObject_test1();
-      presignedPutObject_test2();
-
-      presignedPostPolicy_test();
-
-      copyObject_test1();
-      copyObject_test2();
-      copyObject_test3();
-      copyObject_test4();
-      copyObject_test5();
-      copyObject_test6();
-      copyObject_test7();
-
-      threadedPutObject();
-
-      teardown();
     } catch (Exception e) {
       e.printStackTrace();
       return;
