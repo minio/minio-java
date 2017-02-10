@@ -930,8 +930,8 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    if (bucketName != null && S3_AMAZONAWS_COM.equals(this.baseUrl.host()) && this.accessKey != null
-          && this.secretKey != null && !BucketRegionCache.INSTANCE.exists(bucketName)) {
+    if (bucketName != null && this.accessKey != null && this.secretKey != null
+        && !BucketRegionCache.INSTANCE.exists(bucketName)) {
       Map<String,String> queryParamMap = new HashMap<>();
       queryParamMap.put("location", null);
 
