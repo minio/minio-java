@@ -656,16 +656,22 @@ public class MinioClientTest {
   public void testSigningKey()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(CONTENT_LENGTH, "5080");
-    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
-    response.addHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
-    response.setResponseCode(200);
+    MockResponse response1 = new MockResponse();
+    response1.setResponseCode(200);
+    response1.setBody("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        + "<LocationConstraint xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"></LocationConstraint>");
+    server.enqueue(response1);
 
-    server.enqueue(response);
+    MockResponse response2 = new MockResponse();
+    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response2.addHeader(CONTENT_LENGTH, "5080");
+    response2.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
+    response2.addHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
+    response2.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response2.setResponseCode(200);
+    server.enqueue(response2);
+
     server.start();
 
     // build expected request
