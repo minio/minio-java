@@ -45,9 +45,9 @@ enum BucketRegionCache {
 
 
   /**
-   * Adds bucket name and its region to BucketRegionCache.
+   * Sets bucket name and its region to BucketRegionCache.
    */
-  public void add(String bucketName, String region) {
+  public void set(String bucketName, String region) {
     this.regionMap.put(bucketName, region);
   }
 

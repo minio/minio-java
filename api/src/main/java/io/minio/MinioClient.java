@@ -34,6 +34,7 @@ import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidObjectPrefixException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.NoResponseException;
+import io.minio.errors.RegionConflictException;
 import io.minio.http.HeaderParser;
 import io.minio.http.Method;
 import io.minio.http.Scheme;
@@ -160,6 +161,8 @@ public final class MinioClient {
   private String accessKey;
   // Secret key to sign all requests with
   private String secretKey;
+  // Region to sign all requests with
+  private String region;
 
   private String userAgent = DEFAULT_USER_AGENT;
 
@@ -187,10 +190,12 @@ public final class MinioClient {
    *
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, null, null);
@@ -207,10 +212,12 @@ public final class MinioClient {
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(URL url) throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null);
@@ -227,10 +234,12 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(HttpUrl url) throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null);
@@ -260,15 +269,54 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey);
   }
 
+  /**
+   * Creates Minio client object with given endpoint, access key, secret key and region name
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
+   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1"); }</pre>
+   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   * @param accessKey Access key to access service in endpoint.
+   * @param secretKey Secret key to access service in endpoint.
+   * @param region Region name to access service in endpoint.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   */
+  public MinioClient(String endpoint, String accessKey, String secretKey, String region)
+    throws InvalidEndpointException, InvalidPortException {
+    this(endpoint, 0, accessKey, secretKey, region, !(endpoint != null && endpoint.startsWith("http://")));
+  }
 
   /**
    * Creates Minio client object with given URL object, access key and secret key.
@@ -284,9 +332,11 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(URL url, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
@@ -307,10 +357,12 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
       throws InvalidEndpointException, InvalidPortException {
@@ -345,9 +397,11 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
@@ -382,15 +436,16 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, secure);
   }
-
 
   /**
    * Creates Minio client object using given endpoint, port, access key, secret key and secure option.
@@ -421,11 +476,54 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+    throws InvalidEndpointException, InvalidPortException {
+    this(endpoint, port, accessKey, secretKey, null, secure);
+  }
+
+  /**
+   * Creates Minio client object using given endpoint, port, access key, secret key, region and secure option.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient minioClient =
+   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false);
+   * }</pre>
+   *
+   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   *
+   * @param port      Valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
+   * @param accessKey Access key to access service in endpoint.
+   * @param secretKey Secret key to access service in endpoint.
+   * @param region    Region name to access service in endpoint.
+   * @param secure    If true, access endpoint using HTTPS else access it using HTTP.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   */
+  public MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
     throws InvalidEndpointException, InvalidPortException {
     if (endpoint == null) {
       throw new InvalidEndpointException(NULL_STRING, "null endpoint");
@@ -462,6 +560,7 @@ public final class MinioClient {
       this.baseUrl = urlBuilder.build();
       this.accessKey = accessKey;
       this.secretKey = secretKey;
+      this.region = region;
 
       return;
     }
@@ -495,8 +594,8 @@ public final class MinioClient {
     }
     this.accessKey = accessKey;
     this.secretKey = secretKey;
+    this.region = region;
   }
-
 
   /**
    * Returns true if given endpoint is valid else false.
@@ -922,7 +1021,6 @@ public final class MinioClient {
     throw new ErrorResponseException(errorResponse, response);
   }
 
-
   /**
    * Updates Region cache for given bucket.
    */
@@ -936,7 +1034,7 @@ public final class MinioClient {
       queryParamMap.put("location", null);
 
       HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
-                                      null, queryParamMap, null, 0);
+          null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
       XmlPullParser xpp = xmlPullParserFactory.newPullParser();
@@ -968,10 +1066,26 @@ public final class MinioClient {
       }
 
       // Add the new location.
-      BucketRegionCache.INSTANCE.add(bucketName, region);
+      BucketRegionCache.INSTANCE.set(bucketName, region);
     }
   }
 
+  /**
+   * Computes region of a given bucket name. If set, this.region is considered. Otherwise,
+   * resort to the server location API.
+   */
+  private String getRegion(String bucketName) throws InvalidBucketNameException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
+          ErrorResponseException, InternalException {
+    String region;
+    if (this.region == null || "".equals(this.region)) {
+      updateRegionCache(bucketName);
+      region = BucketRegionCache.INSTANCE.region(bucketName);
+    } else {
+      region = this.region;
+    }
+    return region;
+  }
 
   /**
    * Returns text of given XML element.
@@ -997,10 +1111,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionCache(bucketName);
-    return execute(Method.GET, BucketRegionCache.INSTANCE.region(bucketName),
-                   bucketName, objectName, headerMap, queryParamMap,
-                   null, 0);
+    return execute(Method.GET, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, null, 0);
   }
 
 
@@ -1014,9 +1125,8 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionCache(bucketName);
-    HttpResponse response = execute(Method.HEAD, BucketRegionCache.INSTANCE.region(bucketName),
-                                    bucketName, objectName, null,
+
+    HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, null,
                                     null, null, 0);
     response.body().close();
     return response;
@@ -1034,9 +1144,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionCache(bucketName);
-    HttpResponse response = execute(Method.DELETE, BucketRegionCache.INSTANCE.region(bucketName),
-                                    bucketName, objectName, null,
+    HttpResponse response = execute(Method.DELETE, getRegion(bucketName), bucketName, objectName, null,
                                     queryParamMap, null, 0);
     response.body().close();
     return response;
@@ -1057,10 +1165,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionCache(bucketName);
-    return execute(Method.POST, BucketRegionCache.INSTANCE.region(bucketName),
-                   bucketName, objectName, headerMap, queryParamMap,
-                   data, 0);
+    return execute(Method.POST, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, data, 0);
   }
 
 
@@ -1102,10 +1207,7 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionCache(bucketName);
-    return executePut(bucketName, objectName, headerMap, queryParamMap,
-                      BucketRegionCache.INSTANCE.region(bucketName),
-                      data, length);
+    return executePut(bucketName, objectName, headerMap, queryParamMap, getRegion(bucketName), data, length);
   }
 
 
@@ -1182,10 +1284,8 @@ public final class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    updateRegionCache(bucketName);
-    String region = BucketRegionCache.INSTANCE.region(bucketName);
-
-    Request request = createRequest(Method.GET, bucketName, objectName, region, null, null, null, null, 0);
+    Request request = createRequest(Method.GET, bucketName, objectName, getRegion(bucketName),
+        null, null, null, null, 0);
     HttpUrl url = request.httpUrl();
     return url.toString();
   }
@@ -1614,9 +1714,7 @@ public final class MinioClient {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
-    updateRegionCache(bucketName);
-    String region = BucketRegionCache.INSTANCE.region(bucketName);
-
+    String region = getRegion(bucketName);
     Request request = createRequest(Method.GET, bucketName, objectName, region,
                                     null, reqParams, null, null, 0);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
@@ -1702,11 +1800,8 @@ public final class MinioClient {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
-    updateRegionCache(bucketName);
-    String region = BucketRegionCache.INSTANCE.region(bucketName);
-
-    Request request = createRequest(Method.PUT, bucketName, objectName, region,
-                                    null, null, null, "", 0);
+    String region = getRegion(bucketName);
+    Request request = createRequest(Method.PUT, bucketName, objectName, region, null, null, null, "", 0);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
@@ -1761,9 +1856,8 @@ public final class MinioClient {
   public Map<String, String> presignedPostPolicy(PostPolicy policy)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    updateRegionCache(policy.bucketName());
-    return policy.formData(this.accessKey, this.secretKey);
+           InternalException, InvalidArgumentException {
+    return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName()));
   }
 
 
@@ -2093,9 +2187,9 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void makeBucket(String bucketName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
+                IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+                InternalException {
     this.makeBucket(bucketName, null);
   }
 
@@ -2118,9 +2212,17 @@ public final class MinioClient {
    * @throws InternalException           upon internal library error
    */
   public void makeBucket(String bucketName, String region)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
+                IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+                InternalException {
+    // If region param is not provided, set it with the one provided by constructor
+    if (region == null) {
+      region = this.region;
+    }
+    // If constructor already sets a region, check if it is equal to region param if provided
+    if (this.region != null && !this.region.equals(region)) {
+      throw new RegionConflictException("passed region conflicts with the one previously specified");
+    }
     String configString;
     if (region == null || US_EAST_1.equals(region)) {
       // for 'us-east-1', location constraint is not required.  for more info
