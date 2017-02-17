@@ -1080,7 +1080,7 @@ public class FunctionalTest {
    */
   public static void runTests() throws Exception {
     makeBucket_test1();
-    if (!endpoint.toLowerCase().contains("minio")) {
+    if (endpoint.toLowerCase().contains("s3")) {
       makeBucket_test2();
       makeBucket_test3();
     }
