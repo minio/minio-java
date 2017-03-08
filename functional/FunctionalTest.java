@@ -342,7 +342,7 @@ public class FunctionalTest {
     }
 
     i = 0;
-    for (Result r : client.listObjects(bucketName)) {
+    for (Result<?> r : client.listObjects(bucketName)) {
       ignore(i++, r.get());
       if (i == 10) {
         break;
@@ -369,7 +369,7 @@ public class FunctionalTest {
     }
 
     i = 0;
-    for (Result r : client.listObjects(bucketName, "minio")) {
+    for (Result<?> r : client.listObjects(bucketName, "minio")) {
       ignore(i++, r.get());
       if (i == 10) {
         break;
@@ -396,7 +396,7 @@ public class FunctionalTest {
     }
 
     i = 0;
-    for (Result r : client.listObjects(bucketName, "minio", true)) {
+    for (Result<?> r : client.listObjects(bucketName, "minio", true)) {
       ignore(i++, r.get());
       if (i == 10) {
         break;
@@ -416,7 +416,7 @@ public class FunctionalTest {
     System.out.println("Test: empty bucket: listObjects(final String bucketName)");
 
     i = 0;
-    for (Result r : client.listObjects(bucketName, "minio", true)) {
+    for (Result<?> r : client.listObjects(bucketName, "minio", true)) {
       ignore(i++, r.get());
       if (i == 10) {
         break;
@@ -567,10 +567,12 @@ public class FunctionalTest {
         String errorXml = "";
 
         // read entire body stream to string.
-        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        Scanner scanner = new Scanner(response.body().charStream());
+        scanner.useDelimiter("\\A");
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
+        scanner.close();
 
         throw new Exception("[FAILED] Test: presignedGetObject(String bucketName, String objectName)"
                             + ", Response: " + response
@@ -619,10 +621,12 @@ public class FunctionalTest {
         String errorXml = "";
 
         // read entire body stream to string.
-        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        Scanner scanner = new Scanner(response.body().charStream());
+        scanner.useDelimiter("\\A");
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
+        scanner.close();
 
         throw new Exception("[FAILED] Test: presignedGetObject(String bucketName, String objectName, Integer expires)"
                             + ", Response: " + response
@@ -680,10 +684,12 @@ public class FunctionalTest {
         String errorXml = "";
 
         // read entire body stream to string.
-        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        Scanner scanner = new Scanner(response.body().charStream());
+        scanner.useDelimiter("\\A");
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
+        scanner.close();
 
         throw new Exception("[FAILED] Test: presignedGetObject(String bucketName, String objectName,"
                             + " Integer expires, Map<String, String> reqParams)"
@@ -729,10 +735,12 @@ public class FunctionalTest {
         String errorXml = "";
 
         // read entire body stream to string.
-        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        Scanner scanner = new Scanner(response.body().charStream());
+        scanner.useDelimiter("\\A");
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
+        scanner.close();
 
         throw new Exception("[FAILED] Test: presignedPutObject(String bucketName, String objectName)"
                             + ", Response: " + response
@@ -768,10 +776,12 @@ public class FunctionalTest {
         String errorXml = "";
 
         // read entire body stream to string.
-        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        Scanner scanner = new Scanner(response.body().charStream());
+        scanner.useDelimiter("\\A");
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
+        scanner.close();
 
         throw new Exception("[FAILED] Test: presignedPutObject(String bucketName, String objectName, Integer expires)"
                             + ", Response: " + response
@@ -813,10 +823,12 @@ public class FunctionalTest {
         String errorXml = "";
 
         // read entire body stream to string.
-        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+        Scanner scanner = new Scanner(response.body().charStream());
+        scanner.useDelimiter("\\A");
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
+        scanner.close();
 
         throw new Exception("[FAILED] Test: presignedPostPolicy(PostPolicy policy)"
                             + ", Response: " + response
