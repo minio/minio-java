@@ -16,10 +16,10 @@
 
 package io.minio;
 
-import java.nio.charset.StandardCharsets;
 import java.io.BufferedInputStream;
-import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 

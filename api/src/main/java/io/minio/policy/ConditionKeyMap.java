@@ -16,8 +16,8 @@
 
 package io.minio.policy;
 
-import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Set;
 
 class ConditionKeyMap extends Hashtable<String, Set<String>> {

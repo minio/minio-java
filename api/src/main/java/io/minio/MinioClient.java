@@ -2939,7 +2939,7 @@ public final class MinioClient {
     // Fixing issue https://github.com/minio/minio-java/issues/391
     String bodyContent = "";
     try {
-      // read enitre body stream to string.
+      // read entire body stream to string.
       Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
       if (scanner.hasNext()) {
         bodyContent = scanner.next();

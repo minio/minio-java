@@ -17,38 +17,44 @@
 
 package io.minio;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.junit.Assert.assertEquals;
 
-import com.squareup.okhttp.mockwebserver.MockWebServer;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-
-import okio.Buffer;
-
-import io.minio.errors.*;
-import io.minio.messages.Bucket;
-import io.minio.messages.ErrorResponse;
-import io.minio.messages.Item;
-import io.minio.messages.Owner;
-import io.minio.policy.*;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.nio.charset.StandardCharsets;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.TimeZone;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Assert;
+import org.junit.Test;
+import org.xmlpull.v1.XmlPullParserException;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.squareup.okhttp.mockwebserver.MockResponse;
+import com.squareup.okhttp.mockwebserver.MockWebServer;
+
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InvalidArgumentException;
+import io.minio.errors.InvalidExpiresRangeException;
+import io.minio.errors.MinioException;
+import io.minio.errors.RegionConflictException;
+import io.minio.messages.Bucket;
+import io.minio.messages.ErrorResponse;
+import io.minio.messages.Item;
+import io.minio.messages.Owner;
+import io.minio.policy.BucketPolicy;
+import io.minio.policy.PolicyType;
+import okio.Buffer;
 
 @SuppressWarnings("unused")
 public class MinioClientTest {

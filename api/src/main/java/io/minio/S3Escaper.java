@@ -16,8 +16,8 @@
 
 package io.minio;
 
-import com.google.common.net.UrlEscapers;
 import com.google.common.escape.Escaper;
+import com.google.common.net.UrlEscapers;
 
 
 class S3Escaper {

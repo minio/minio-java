@@ -17,21 +17,23 @@
 package io.minio;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.joda.time.DateTime;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.Headers;
+
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.Request;
 
 
 /**

@@ -16,12 +16,13 @@
 
 package io.minio.messages;
 
-import com.google.api.client.xml.XmlNamespaceDictionary;
-import com.google.api.client.util.Key;
+import java.io.IOException;
+import java.io.Reader;
+
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.Reader;
-import java.io.IOException;
+import com.google.api.client.util.Key;
+import com.google.api.client.xml.XmlNamespaceDictionary;
 
 import io.minio.ErrorCode;
 
