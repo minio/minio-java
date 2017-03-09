@@ -17,16 +17,16 @@
 package io.minio;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.NoResponseException;
 import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
+import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.NoResponseException;
 
 
 /**

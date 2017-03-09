@@ -18,8 +18,10 @@
 package io.minio.messages;
 
 import org.joda.time.DateTime;
-import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
+
+import com.google.api.client.util.Key;
+
 import io.minio.DateFormat;
 
 /**

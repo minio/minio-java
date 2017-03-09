@@ -16,17 +16,21 @@
 
 package io.minio;
 
-import io.minio.errors.*;
-
-import com.google.common.io.BaseEncoding;
-import com.google.common.base.Strings;
-import com.google.common.base.Joiner;
-import org.joda.time.DateTime;
-
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.ListIterator;
+import java.util.Map;
+
+import org.joda.time.DateTime;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.io.BaseEncoding;
+
+import io.minio.errors.InvalidArgumentException;
 
 
 /**

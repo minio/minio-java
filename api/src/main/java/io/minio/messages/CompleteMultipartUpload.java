@@ -16,11 +16,12 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
+import java.util.Arrays;
+import java.util.List;
+
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.util.List;
-import java.util.Arrays;
+import com.google.api.client.util.Key;
 
 
 /**

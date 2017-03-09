@@ -23,3 +23,19 @@ target/
 
 # IntelliJ IDEA
 .idea/
+
+.metadata/
+.project
+.settings/
+api/.classpath
+api/.gitignore
+api/.project
+api/.settings/
+examples/.classpath
+examples/.project
+examples/.settings/
+examples/bin/
+functional/.classpath
+functional/.project
+functional/.settings/
+functional/bin/
