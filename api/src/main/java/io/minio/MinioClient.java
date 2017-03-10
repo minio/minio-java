@@ -63,7 +63,6 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.BufferedInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -89,7 +88,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -629,8 +627,7 @@ public final class MinioClient {
    * Validates if given objectPrefix is valid.
    */
   private void checkObjectPrefix(String prefix) throws InvalidObjectPrefixException {
-    // TODO(nl5887): what to do with wildcards in objectPrefix?
-    //
+    // TODO(nl5887): what to do with wild-cards in objectPrefix?
     if (prefix.length() > 1024) {
       throw new InvalidObjectPrefixException(prefix, "Object prefix cannot be greater than 1024 characters.");
     }
@@ -950,23 +947,25 @@ public final class MinioClient {
 
     // HEAD returns no body, and fails on parseXml
     if (!method.equals(Method.HEAD)) {
+      Scanner scanner = new Scanner(response.body().charStream());
       try {
+        scanner.useDelimiter("\\A");
         String errorXml = "";
 
         // read entire body stream to string.
-        Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
 
         errorResponse = new ErrorResponse(new StringReader(errorXml));
-
         if (this.traceStream != null) {
           this.traceStream.println(errorXml);
         }
+
       } finally {
         response.body().close();
       }
+      scanner.close();
     }
 
     if (this.traceStream != null) {
@@ -1041,8 +1040,8 @@ public final class MinioClient {
       String location = null;
 
       xpp.setInput(response.body().charStream());
-      while (xpp.getEventType() != xpp.END_DOCUMENT) {
-        if (xpp.getEventType() ==  xpp.START_TAG && xpp.getName() == "LocationConstraint") {
+      while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
+        if (xpp.getEventType() ==  XmlPullParser.START_TAG && xpp.getName() == "LocationConstraint") {
           xpp.next();
           location = getText(xpp, location);
           break;
@@ -1091,7 +1090,7 @@ public final class MinioClient {
    * Returns text of given XML element.
    */
   private String getText(XmlPullParser xpp, String location) throws XmlPullParserException {
-    if (xpp.getEventType() == xpp.TEXT) {
+    if (xpp.getEventType() == XmlPullParser.TEXT) {
       return xpp.getText();
     }
     return location;
@@ -2938,19 +2937,17 @@ public final class MinioClient {
 
     // Fixing issue https://github.com/minio/minio-java/issues/391
     String bodyContent = "";
+    Scanner scanner = new Scanner(response.body().charStream());
     try {
       // read entire body stream to string.
-      Scanner scanner = new java.util.Scanner(response.body().charStream()).useDelimiter("\\A");
+      scanner.useDelimiter("\\A");
       if (scanner.hasNext()) {
         bodyContent = scanner.next();
       }
-    } catch (EOFException e) {
-      // Getting EOF exception is not an error.
-      // Just log it.
-      LOGGER.log(Level.WARNING, "EOF exception occured: " + e);
-    }  finally {
+    } finally {
       response.body().close();
     }
+    scanner.close();
 
     bodyContent = bodyContent.trim();
     if (!bodyContent.isEmpty()) {
