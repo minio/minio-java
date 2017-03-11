@@ -964,8 +964,8 @@ public final class MinioClient {
 
       } finally {
         response.body().close();
+        scanner.close();
       }
-      scanner.close();
     }
 
     if (this.traceStream != null) {
@@ -2946,8 +2946,8 @@ public final class MinioClient {
       }
     } finally {
       response.body().close();
+      scanner.close();
     }
-    scanner.close();
 
     bodyContent = bodyContent.trim();
     if (!bodyContent.isEmpty()) {
