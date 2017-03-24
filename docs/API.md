@@ -5,18 +5,14 @@
 ## Minio
 
 ```java
-
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
-
 ```
 
 ## AWS S3
 
 
 ```java
-
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
 ```
 
 | Bucket operations |  Object operations | Presigned operations  | Bucket Policy Operations
@@ -117,7 +113,6 @@ __Example__
 
 
 ```java
-
 // 1. public MinioClient(String endpoint)
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000");
 
@@ -144,7 +139,6 @@ MinioClient minioClient = new MinioClient("https://play.minio.io", 9000, "Q3AM3U
 
 // 9. public MinioClient(URL url, String accessKey, String secretKey)
 MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"), "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
-
 ```
 
 
@@ -152,7 +146,6 @@ MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9
 
 
 ```java
-
 // 1. public MinioClient(String endpoint)
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com");
 
@@ -179,7 +172,6 @@ MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80, "YOUR-ACCESSKEYID
 
 // 9. public MinioClient(URL url, String accessKey, String secretKey)
 MinioClient s3Client = new MinioClient(HttpUrl.parse("s3.amazonaws.com"), "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
 ```
 
 ## 2. Bucket operations
@@ -214,7 +206,6 @@ __Example__
 
 
 ```java
-
 try {
   // Create bucket if it doesn't exist.
   boolean found = minioClient.bucketExists("mybucket");
@@ -228,7 +219,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="listBuckets"></a>
@@ -254,7 +244,6 @@ __Example__
 
 
 ```java
-
 try {
   // List buckets that have read access.
   List<Bucket> bucketList = minioClient.listBuckets();
@@ -264,7 +253,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="bucketExists"></a>
@@ -301,7 +289,6 @@ __Example__
 
 
 ```java
-
 try {
   // Check whether 'my-bucketname' exists or not.
   boolean found = minioClient.bucketExists("mybucket");
@@ -313,7 +300,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 
@@ -352,7 +338,6 @@ __Example__
 
 
 ```java
-
 try {
   // Check if my-bucket exists before removing it.
   boolean found = minioClient.bucketExists("mybucket");
@@ -366,7 +351,6 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="listObjects"></a>
@@ -398,7 +382,6 @@ __Example__
 
 
 ```java
-
 try {
   // Check whether 'mybucket' exists or not.
   boolean found = minioClient.bucketExists("mybucket");
@@ -415,7 +398,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 
@@ -448,7 +430,6 @@ __Example__
 
 
 ```java
-
 try {
   // Check whether 'mybucket' exist or not.
   boolean found = minioClient.bucketExists("mybucket");
@@ -465,7 +446,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="getBucketPolicy"></a>
@@ -547,13 +527,11 @@ __Example__
 
 
 ```java
-
 try {
   minioClient.setBucketPolicy("myBucket", "uploads", BucketPolicy.WriteOnly);
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 ## 3. Object operations
@@ -592,7 +570,6 @@ __Example__
 
 
 ```java
-
 try {
   // Check whether the object exists using statObject().
   // If the object is not found, statObject() throws an exception,
@@ -615,7 +592,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="getObject"></a>
@@ -654,7 +630,6 @@ __Example__
 
 
 ```java
-
 try {
 
   // Check whether the object exists using statObject().
@@ -678,7 +653,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="getObject"></a>
@@ -714,7 +688,6 @@ __Parameters__
 __Example__
 
 ```java
-
 try {
   // Check whether the object exists using statObject().
   // If the object is not found, statObject() throws an exception,
@@ -728,7 +701,6 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="putObject"></a>
@@ -770,7 +742,6 @@ The maximum size of a single object is limited to 5TB. putObject transparently u
 
 
 ```java
-
 try {
   StringBuilder builder = new StringBuilder();
   for (int i = 0; i < 1000; i++) {
@@ -799,7 +770,6 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="putObject"></a>
@@ -837,14 +807,12 @@ The maximum size of a single object is limited to 5TB. putObject transparently u
 
 
 ```java
-
 try {
   minioClient.putObject("mybucket",  "island.jpg", "/mnt/photos/island.jpg")
   System.out.println("island.jpg is uploaded successfully");
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="statObject"></a>
@@ -882,7 +850,6 @@ __Example__
 
 
 ```java
-
 try {
   // Get the metadata of the object.
   ObjectStat objectStat = minioClient.statObject("mybucket", "myobject");
@@ -890,7 +857,6 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="copyObject"></a>
@@ -930,7 +896,6 @@ __Example__
 This API performs a server side copy operation from a given source object to destination object.
 
 ```java
-
 try {
   CopyConditions copyConditions = new CopyConditions();
   copyConditions.setMatchETagNone("TestETag");
@@ -940,7 +905,6 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="removeObject"></a>
@@ -976,7 +940,6 @@ __Example__
 
 
 ```java
-
 try {
       // Remove my-objectname from the bucket my-bucketname.
       minioClient.removeObject("mybucket", "myobject");
@@ -984,7 +947,6 @@ try {
 } catch (MinioException e) {
       System.out.println("Error: " + e);
 }
-
 ```
 
 <a name="removeIncompleteUpload"></a>
@@ -1020,7 +982,6 @@ __Example__
 
 
 ```java
-
 try {
   // Removes partially uploaded objects from buckets.
 	minioClient.removeIncompleteUpload("mybucket", "myobject");
@@ -1028,7 +989,6 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 ## 4. Presigned operations
@@ -1066,14 +1026,12 @@ __Example__
 
 
 ```java
-
 try {
 	String url = minioClient.presignedGetObject("mybucket", "myobject", 60 * 60 * 24);
 	System.out.println(url);
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="presignedPutObject"></a>
@@ -1106,18 +1064,13 @@ __Parameters__
 
 __Example__
 
-
-
 ```java
-
-
 try {
 	String url = minioClient.presignedPutObject("mybucket", "myobject", 60 * 60 * 24);
 	System.out.println(url);
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
-
 ```
 
 <a name="presignedPostPolicy"></a>
@@ -1149,9 +1102,7 @@ __Parameters__
 
 __Example__
 
-
 ```java
-
 try {
 	PostPolicy policy = new PostPolicy("mybucket", "myobject",
   DateTime.now().plusDays(7));
@@ -1164,7 +1115,6 @@ try {
 	System.out.println(" -F file=@/tmp/userpic.png  https://play.minio.io:9000/mybucket");
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
-
 ```
 
 ## 5. Explore Further
