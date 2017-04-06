@@ -19,14 +19,21 @@ package io.minio;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -34,6 +41,16 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.TimeZone;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -43,8 +60,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.okhttp.mockwebserver.MockResponse;
 import com.squareup.okhttp.mockwebserver.MockWebServer;
 
+import io.minio.encryption.EncryptionMaterials;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InvalidArgumentException;
+import io.minio.errors.InvalidEncryptionMetadataException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
@@ -66,6 +85,9 @@ public class MinioClientTest {
   private static final String CONTENT_TYPE = "Content-Type";
   private static final String MON_04_MAY_2015_07_58_51_GMT = "Mon, 04 May 2015 07:58:51 GMT";
   private static final String LAST_MODIFIED = "Last-Modified";
+  private static final String ENC_KEY = "x-amz-meta-x-amz-key";
+  private static final String ENC_IV = "x-amz-meta-x-amz-iv";
+  private static final String MAT_DESC = "x-amz-meta-x-amz-matdesc";
   private static final String HELLO_WORLD = "hello world";
   private static final String HELLO = "hello";
   private static final String BYTES = "bytes";
@@ -149,15 +171,13 @@ public class MinioClientTest {
     server.start();
 
     // build expected request
-    Calendar expectedDate = Calendar.getInstance();
-    expectedDate.clear();
-    expectedDate.setTimeZone(TimeZone.getTimeZone("GMT"));
-    expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key",
-                                                 expectedDate.getTime(),
-                                                 5080,
-                                                 "a670520d9d36833b3e28d1e4b73cbe22",
-                                                 APPLICATION_OCTET_STREAM);
+    ResponseHeader responseHeader = new ResponseHeader();
+    responseHeader.setLastModified(MON_04_MAY_2015_07_58_51_GMT);
+    responseHeader.setContentLength("5080");
+    responseHeader.setEtag("a670520d9d36833b3e28d1e4b73cbe22");
+    responseHeader.setContentType(APPLICATION_OCTET_STREAM);
+    
+    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key", responseHeader);
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
@@ -228,6 +248,142 @@ public class MinioClientTest {
     assertEquals(expectedObject, new String(result, StandardCharsets.UTF_8));
   }
 
+  @Test
+  public void testGetObjectEncryptedAES()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, 
+      XmlPullParserException, MinioException, NoSuchPaddingException, 
+      IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response1 = new MockResponse();
+    MockResponse response2 = new MockResponse();
+    final String expectedObject = HELLO_WORLD;
+    
+    // Generate Master key
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(128);
+    SecretKey symMasterKey = symKeyGenerator.generateKey();
+    EncryptionMaterials encMaterials = new EncryptionMaterials(symMasterKey);
+    
+    // Generate object encryption key
+    SecretKey symDataKey = symKeyGenerator.generateKey();
+    byte[] plainDataKey = symDataKey.getEncoded();
+    
+    // Generate an iv to be used for encryption
+	SecureRandom ivSeed = new SecureRandom();
+	byte[] iv = new byte[16];
+	ivSeed.nextBytes(iv);
+	
+	// Create data key encryption cipher
+    Cipher keyEncryptionCipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+	
+	// init cipher with mode and master key
+    keyEncryptionCipher.init(Cipher.ENCRYPT_MODE, symMasterKey);
+    // Encrypt the data key
+	byte[] encryptedDataKey = keyEncryptionCipher.doFinal(plainDataKey);
+	
+	String encDataKey = new String(Base64.encodeBase64(encryptedDataKey));
+	String ivString = new String(Base64.encodeBase64(iv));
+	
+    response1.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
+    response1.addHeader(CONTENT_LENGTH, "5080");
+    response1.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
+    response1.addHeader("ETag", MD5_HASH_STRING);
+    response1.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response1.addHeader(ENC_KEY, encDataKey);
+    response1.addHeader(ENC_IV, ivString);
+    response1.addHeader(MAT_DESC, "");
+    response1.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response1.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response1.setResponseCode(200);
+
+    response2.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
+    response2.addHeader(CONTENT_LENGTH, "5080");
+    response2.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
+    response2.addHeader("ETag", MD5_HASH_STRING);
+    response2.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response2.addHeader(ENC_KEY, encDataKey);
+    response2.addHeader(ENC_IV, ivString);
+    response2.addHeader(MAT_DESC, "");
+    response2.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response2.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response2.setResponseCode(200);
+    response2.setBody(new Buffer().writeUtf8(expectedObject));
+
+    server.enqueue(response1);
+    server.enqueue(response2);
+    server.start();
+    
+    // get request
+    MinioClient client = new MinioClient(server.url(""));
+    InputStream object = client.getObject(BUCKET, "key", encMaterials);
+  }
+  
+  @Test(expected = InvalidEncryptionMetadataException.class)
+  public void testGetObjectEncryptedAESFailsWithoutMetadata()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, 
+      XmlPullParserException, MinioException, NoSuchPaddingException, 
+      IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+    final String expectedObject = HELLO_WORLD;
+
+    response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
+    response.addHeader(CONTENT_LENGTH, "5080");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response.setResponseCode(200);
+    response.setBody(new Buffer().writeUtf8(expectedObject));
+
+    server.enqueue(response);
+    server.start();
+
+    //Generate symmetric 128 bit AES key.
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(128);
+    SecretKey symKey = symKeyGenerator.generateKey();
+    EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
+    
+    // get request
+    MinioClient client = new MinioClient(server.url(""));
+    InputStream object = client.getObject(BUCKET, "key", encMaterials);
+    byte[] result = new byte[20];
+    int read = object.read(result);
+    result = Arrays.copyOf(result, read);
+    assertEquals(expectedObject, new String(result, StandardCharsets.UTF_8));
+  }
+  
+  @Test(expected = InvalidArgumentException.class)
+  public void testGetObjectEncryptedAESFailsWithoutEncMaterials()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, 
+      XmlPullParserException, MinioException, NoSuchPaddingException, 
+      IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+    final String expectedObject = HELLO_WORLD;
+
+    response.addHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
+    response.addHeader(CONTENT_LENGTH, "5080");
+    response.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
+    response.setResponseCode(200);
+    response.setBody(new Buffer().writeUtf8(expectedObject));
+
+    server.enqueue(response);
+    server.start();
+
+    EncryptionMaterials encMaterials = null;
+    
+    // get request
+    MinioClient client = new MinioClient(server.url(""));
+    InputStream object = client.getObject(BUCKET, "key", encMaterials);
+    byte[] result = new byte[20];
+    int read = object.read(result);
+    result = Arrays.copyOf(result, read);
+    assertEquals(expectedObject, new String(result, StandardCharsets.UTF_8));
+  }
+  
   @Test
   public void testPartialObject()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
@@ -524,6 +680,61 @@ public class MinioClientTest {
     client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
   }
 
+  @Test
+  public void testPutObjectEncryptedAES()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, 
+      XmlPullParserException, MinioException, NoSuchPaddingException, 
+      InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+
+    //Generate symmetric 128 bit AES key.
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(128);
+    SecretKey symKey = symKeyGenerator.generateKey();
+    EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
+    
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM, encMaterials);
+  }
+  
+  @Test(expected = InvalidArgumentException.class)
+  public void testPutObjectEncryptedAESFails()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, 
+      XmlPullParserException, MinioException, NoSuchPaddingException, IllegalBlockSizeException, 
+      BadPaddingException, InvalidAlgorithmParameterException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+
+    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_UTC);
+    response.addHeader("ETag", MD5_HASH_STRING);
+    response.setResponseCode(200);
+
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url(""));
+
+    String inputString = HELLO_WORLD;
+    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
+    EncryptionMaterials encMaterials = null;
+    
+    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM, encMaterials);
+  }
+  
   // this case only occurs for minio cloud storage
   @Test(expected = ErrorResponseException.class)
   public void testPutSmallObjectFails()
@@ -692,14 +903,14 @@ public class MinioClientTest {
 
     server.start();
 
-    // build expected request
-    Calendar expectedDate = Calendar.getInstance();
-    expectedDate.clear();
-    expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
-    expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
-    String contentType = APPLICATION_OCTET_STREAM;
-    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key", expectedDate.getTime(), 5080,
-                                                 "a670520d9d36833b3e28d1e4b73cbe22", contentType);
+    // build expected request    
+    ResponseHeader responseHeader = new ResponseHeader();
+    responseHeader.setLastModified(MON_04_MAY_2015_07_58_51_UTC);
+    responseHeader.setContentLength("5080");
+    responseHeader.setEtag("a670520d9d36833b3e28d1e4b73cbe22");
+    responseHeader.setContentType(APPLICATION_OCTET_STREAM);
+
+    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key",responseHeader);
 
     // get request
     MinioClient client = new MinioClient(server.url(""), "foo", "bar");

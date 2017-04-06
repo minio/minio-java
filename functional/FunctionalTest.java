@@ -18,8 +18,11 @@
 import java.security.*;
 import java.math.BigInteger;
 import java.util.*;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
 import java.io.*;
-import java.lang.*;
 
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
@@ -33,8 +36,10 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.Response;
 import com.google.common.io.ByteStreams;
+import org.apache.commons.io.FileUtils;
 
 import io.minio.*;
+import io.minio.encryption.EncryptionMaterials;
 import io.minio.messages.*;
 import io.minio.errors.*;
 
@@ -248,6 +253,35 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: client side encryption: putObject(String bucketName, String objectName, InputStream stream, 
+   * long size, String contentType, EncryptionMaterials encryptionMaterials).
+   */
+  public static void putObject_test7() throws Exception {
+	  
+	System.out.println("Test: client side encryption: putObject(String bucketName, String objectName, InputStream stream, "
+			+ "long size, String contentType, EncryptionMaterials encryptionMaterials).");
+    String fileName = createFile(13 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
+    
+    //Generate symmetric 128 bit AES key.
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(128);
+    SecretKey symKey = symKeyGenerator.generateKey();
+    EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
+    
+    try {
+      client.putObject(bucketName, fileName, is, 20 * 1024 * 1024, null, encMaterials);
+    } catch (InsufficientDataException e) {
+      ignore();
+    }
+    is.close();
+
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
+  
+  }
+  
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
   public static void statObject_test() throws Exception {
@@ -327,6 +361,78 @@ public class FunctionalTest {
     client.removeObject(bucketName, objectName);
   }
 
+  /**
+   * Test: getObject(String bucketName, String objectName, EncryptionMaterials encryptionMaterials).
+   */
+  public static void getObject_test6() throws Exception {
+    System.out.println("Test: getObject(String bucketName, String objectName, EncryptionMaterials encryptionMaterials).");
+    
+    String fileName = createFile(13 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
+    
+    //Generate symmetric 128 bit AES key.
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(128);
+    SecretKey symKey = symKeyGenerator.generateKey();
+    EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
+    
+    try {
+      // Put an encrypted object 
+      client.putObject(bucketName, fileName, is, 20 * 1024 * 1024, null, encMaterials);
+    } catch (InsufficientDataException e) {
+      ignore();
+    }
+    is.close();
+
+    // Get the object without decryption
+    String plainFileName = createFile(0);
+    InputStream ois = client.getObject(bucketName, fileName);
+    OutputStream os = Files.newOutputStream(Paths.get(plainFileName));
+    
+    // Read in the decrypted bytes and write to fileNameOut
+    int numRead = 0;
+    byte[] buf = new byte[8192];
+    while ((numRead = ois.read(buf)) >= 0) {
+        os.write(buf, 0, numRead);
+    }     
+    os.close();
+    ois.close();
+    
+    // Check if two files are not equal
+    File file1 = new File (fileName);
+    File file2 = new File (plainFileName);    
+    
+    if(FileUtils.contentEquals(file1, file2)){
+    	throw new MinioException("Files should not be equal");
+    }
+    
+    // Get the object with decryption
+    String decFileName = createFile(0);
+    ois = client.getObject(bucketName, fileName, encMaterials);
+    os = Files.newOutputStream(Paths.get(decFileName));
+    
+    numRead = 0;
+    buf = new byte[8192];
+    while ((numRead = ois.read(buf)) >= 0) {
+        os.write(buf, 0, numRead);
+    }     
+    os.close();
+    ois.close();
+    
+    // Check if two files are not equal
+    file1 = new File (fileName);
+    file2 = new File (decFileName);    
+    
+    if(!FileUtils.contentEquals(file1, file2)){
+    	throw new MinioException("Files should be equal");
+    }
+    
+    Files.delete(Paths.get(fileName));
+    Files.delete(Paths.get(plainFileName));
+    Files.delete(Paths.get(decFileName));
+    client.removeObject(bucketName, fileName);    
+  }
+  
   /**
    * Test: listObjects(final String bucketName).
    */
@@ -1111,13 +1217,15 @@ public class FunctionalTest {
     putObject_test4();
     putObject_test5();
     putObject_test6();
-
+    putObject_test7();
+    
     statObject_test();
     getObject_test1();
     getObject_test2();
     getObject_test3();
     getObject_test4();
     getObject_test5();
+    getObject_test6();
 
     listObject_test1();
     listObject_test2();
