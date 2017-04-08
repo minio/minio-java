@@ -4,7 +4,8 @@ The Minio Java Client SDK provides simple APIs to access any Amazon S3 compatibl
 
 This quickstart guide will show you how to install the client SDK and execute an example java program. For a complete list of APIs and examples, please take a look at the [Java Client API Reference](http://docs.minio.io/docs/java-client-api-reference) documentation.
 
-This document assumes that you have one of the following Java Environments setup in place.
+## Minimum Requirements
+Java 1.7 or above, with one of the following environments:
 
 * [OracleJDK 7.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) or [OracleJDK 8.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [OpenJDK7.0](http://openjdk.java.net/install/) or [OpenJDK8.0](http://openjdk.java.net/install/)
