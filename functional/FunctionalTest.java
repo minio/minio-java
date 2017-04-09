@@ -1055,11 +1055,13 @@ public class FunctionalTest {
       client.copyObject(bucketName, filename, destBucketName, copyConditions);
     } catch (ErrorResponseException e) {
       // File should not be copied as object was modified after date set in copyConditions.
-      ignore();
+      if (!e.errorResponse().code().equals("PreconditionFailed")) {
+        throw e;
+      }
     }
 
     client.removeObject(bucketName, filename);
-    client.removeObject(destBucketName, filename);
+    // Destination bucket is expected to be empty, otherwise it will trigger an exception.
     client.removeBucket(destBucketName);
   }
 
