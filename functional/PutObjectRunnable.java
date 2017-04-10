@@ -22,24 +22,24 @@ import io.minio.*;
 class PutObjectRunnable implements Runnable {
   MinioClient client;
   String bucketName;
-  String fileName;
+  String filename;
 
-  public PutObjectRunnable(MinioClient client, String bucketName, String fileName) {
+  public PutObjectRunnable(MinioClient client, String bucketName, String filename) {
     this.client = client;
     this.bucketName = bucketName;
-    this.fileName = fileName;
+    this.filename = filename;
   }
 
   public void run() {
     StringBuffer traceBuffer = new StringBuffer();
 
     try {
-      traceBuffer.append("[" + fileName + "]: threaded put object\n");
-      client.putObject(bucketName, fileName, fileName);
-      traceBuffer.append("[" + fileName + "]: delete file\n");
-      Files.delete(Paths.get(fileName));
-      traceBuffer.append("[" + fileName + "]: delete object\n");
-      client.removeObject(bucketName, fileName);
+      traceBuffer.append("[" + filename + "]: threaded put object\n");
+      client.putObject(bucketName, filename, filename);
+      traceBuffer.append("[" + filename + "]: delete file\n");
+      Files.delete(Paths.get(filename));
+      traceBuffer.append("[" + filename + "]: delete object\n");
+      client.removeObject(bucketName, filename);
     } catch (Exception e) {
       System.err.print(traceBuffer.toString());
       e.printStackTrace();
