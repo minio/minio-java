@@ -38,7 +38,7 @@ public class DateFormat {
       DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC().withLocale(Locale.US);
 
   public static final DateTimeFormatter HTTP_HEADER_DATE_FORMAT =
-      DateTimeFormat.forPattern("EEE',' dd MMM yyyy HH':'mm':'ss zzz").withZoneUTC().withLocale(Locale.US);
+      DateTimeFormat.forPattern("EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'").withZoneUTC().withLocale(Locale.US);
 
   private DateFormat() {}
 }
