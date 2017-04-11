@@ -225,6 +225,7 @@ project(':api') {
 
 project(':examples') {
     dependencies {
+        compile "me.tongfei:progressbar:0.5.3"
         compile project(':api')
     }
 
