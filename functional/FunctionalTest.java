@@ -1113,6 +1113,151 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration).
+   */
+  public static void setBucketNotification_test1() throws Exception {
+    // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION' environment variables.
+    String topic = System.getenv("MINIO_JAVA_TEST_TOPIC");
+    String region = System.getenv("MINIO_JAVA_TEST_REGION");
+    if (topic == null || topic.equals("") || region == null || region.equals("")) {
+      // do not run functional test as required environment variables are missing.
+      return;
+    }
+
+    System.out.println("Test: setBucketNotification(String bucketName, "
+                       + "NotificationConfiguration notificationConfiguration)");
+
+    String destBucketName = getRandomName();
+    client.makeBucket(destBucketName, region);
+
+    NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
+
+    // Add a new topic configuration.
+    List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+    TopicConfiguration topicConfiguration = new TopicConfiguration();
+    topicConfiguration.setTopic(topic);
+
+    List<EventType> eventList = new LinkedList<>();
+    eventList.add(EventType.OBJECT_CREATED_PUT);
+    eventList.add(EventType.OBJECT_CREATED_COPY);
+    topicConfiguration.setEvents(eventList);
+
+    Filter filter = new Filter();
+    filter.setPrefixRule("images");
+    filter.setSuffixRule("pg");
+    topicConfiguration.setFilter(filter);
+
+    topicConfigurationList.add(topicConfiguration);
+    notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+
+    client.setBucketNotification(destBucketName, notificationConfiguration);
+
+    client.removeBucket(destBucketName);
+  }
+
+  /**
+   * Test: getBucketNotification(String bucketName).
+   */
+  public static void getBucketNotification_test1() throws Exception {
+    // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION' environment variables.
+    String topic = System.getenv("MINIO_JAVA_TEST_TOPIC");
+    String region = System.getenv("MINIO_JAVA_TEST_REGION");
+    if (topic == null || topic.equals("") || region == null || region.equals("")) {
+      // do not run functional test as required environment variables are missing.
+      return;
+    }
+
+    System.out.println("Test: getBucketNotification(String bucketName)");
+
+    String destBucketName = getRandomName();
+    client.makeBucket(destBucketName, region);
+
+    NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
+
+    // Add a new topic configuration.
+    List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+    TopicConfiguration topicConfiguration = new TopicConfiguration();
+    topicConfiguration.setTopic(topic);
+
+    List<EventType> eventList = new LinkedList<>();
+    eventList.add(EventType.OBJECT_CREATED_PUT);
+    topicConfiguration.setEvents(eventList);
+
+    topicConfigurationList.add(topicConfiguration);
+    notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+
+    client.setBucketNotification(destBucketName, notificationConfiguration);
+    String expectedResult = notificationConfiguration.toString();
+
+    notificationConfiguration = client.getBucketNotification(destBucketName);
+
+    topicConfigurationList = notificationConfiguration.topicConfigurationList();
+    topicConfiguration = topicConfigurationList.get(0);
+    topicConfiguration.setId(null);
+    String result = notificationConfiguration.toString();
+
+    if (!result.equals(expectedResult)) {
+      System.out.println("FAILED. expected: " + expectedResult + ", got: " + result);
+    }
+
+    client.removeBucket(destBucketName);
+  }
+
+
+  /**
+   * Test: removeAllBucketNotification(String bucketName).
+   */
+  public static void removeAllBucketNotification_test1() throws Exception {
+    // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION' environment variables.
+    String topic = System.getenv("MINIO_JAVA_TEST_TOPIC");
+    String region = System.getenv("MINIO_JAVA_TEST_REGION");
+    if (topic == null || topic.equals("") || region == null || region.equals("")) {
+      // do not run functional test as required environment variables are missing.
+      return;
+    }
+
+    System.out.println("Test: removeAllBucketNotification(String bucketName)");
+
+    String destBucketName = getRandomName();
+    client.makeBucket(destBucketName, region);
+
+    NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
+
+    // Add a new topic configuration.
+    List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+    TopicConfiguration topicConfiguration = new TopicConfiguration();
+    topicConfiguration.setTopic(topic);
+
+    List<EventType> eventList = new LinkedList<>();
+    eventList.add(EventType.OBJECT_CREATED_PUT);
+    eventList.add(EventType.OBJECT_CREATED_COPY);
+    topicConfiguration.setEvents(eventList);
+
+    Filter filter = new Filter();
+    filter.setPrefixRule("images");
+    filter.setSuffixRule("pg");
+    topicConfiguration.setFilter(filter);
+
+    topicConfigurationList.add(topicConfiguration);
+    notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+
+    client.setBucketNotification(destBucketName, notificationConfiguration);
+
+    notificationConfiguration = new NotificationConfiguration();
+    String expectedResult = notificationConfiguration.toString();
+
+    client.removeAllBucketNotification(destBucketName);
+
+    notificationConfiguration = client.getBucketNotification(destBucketName);
+    String result = notificationConfiguration.toString();
+    if (!result.equals(expectedResult)) {
+      System.out.println("FAILED. expected: " + expectedResult + ", got: " + result);
+    }
+
+    client.removeBucket(destBucketName);
+  }
+
+  /**
    * runTests: runs as much as possible of test combinations.
    */
   public static void runTests() throws Exception {
@@ -1179,6 +1324,12 @@ public class FunctionalTest {
     threadedPutObject();
 
     teardown();
+
+    // notification tests requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION' environment variables
+    // to be set appropriately.
+    setBucketNotification_test1();
+    getBucketNotification_test1();
+    removeAllBucketNotification_test1();
   }
 
   /**

@@ -57,6 +57,7 @@ import io.minio.messages.ListPartsResult;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
+import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import io.minio.policy.PolicyType;
 import io.minio.policy.BucketPolicy;
@@ -2987,6 +2988,97 @@ public final class MinioClient {
   }
 
 
+  /**
+   * Get bucket notification configuration
+   *
+   * @param bucketName   Bucket name.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code NotificationConfiguration notificationConfig = minioClient.getBucketNotification("my-bucketname");
+   * }</pre>
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   */
+  public NotificationConfiguration getBucketNotification(String bucketName)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("notification", "");
+  
+    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
+    NotificationConfiguration result = new NotificationConfiguration();
+    try {
+      result.parseXml(response.body().charStream());
+    } finally {
+      response.body().close();
+    }
+
+    return result;
+  }
+  
+  
+  /**
+   * Set bucket notification configuration
+   *
+   * @param bucketName   Bucket name.
+   * @param notificationConfiguration   Notification configuration to be set.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
+   * }</pre>
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   */
+  public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("notification", "");
+    HttpResponse response = executePut(bucketName, null, null, queryParamMap, notificationConfiguration.toString(), 0);
+    response.body().close();
+  }
+  
+  
+  /**
+   * Remove all bucket notification.
+   *
+   * @param bucketName   Bucket name.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.removeAllBucketNotification("my-bucketname");
+   * }</pre>
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   */
+  public void removeAllBucketNotification(String bucketName)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException {
+    NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
+    setBucketNotification(bucketName, notificationConfiguration);
+  }
+  
+  
   /**
    * Returns next part if exists.
    */
