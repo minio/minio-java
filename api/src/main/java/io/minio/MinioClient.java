@@ -51,6 +51,7 @@ import io.minio.messages.InitiateMultipartUploadResult;
 import io.minio.messages.Item;
 import io.minio.messages.ListAllMyBucketsResult;
 import io.minio.messages.ListBucketResult;
+import io.minio.messages.ListBucketResultV1;
 import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
 import io.minio.messages.Part;
@@ -2089,14 +2090,217 @@ public final class MinioClient {
    *
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
+   * @see #listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive) {
+    return listObjects(bucketName, prefix, recursive, false);
+  }
+
+
+  /**
+   * Lists object information as {@code Iterable<Result><Item>>} in given bucket, prefix, recursive flag and S3 API
+   * version to use.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname", "my-object-prefix", true,
+   *                                    false);
+   * for (Result<Item> result : myObjects) {
+   *   Item item = result.get();
+   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * } }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
+   * @param recursive when false, emulates a directory structure where each listing returned is either a full object
+   *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
+   *                  '/' will be merged into one entry.
+   * @param useVersion1 If set, Amazon AWS S3 List Object V1 is used, else List Object V2 is used as default.
+   *
+   * @return an iterator of Result Items.
+   *
+   * @see #listObjects(String bucketName)
+   * @see #listObjects(String bucketName, String prefix)
+   * @see #listObjects(String bucketName, String prefix, boolean recursive)
+   */
+  public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive,
+                                            final boolean useVersion1) {
+    if (useVersion1) {
+      return listObjectsV1(bucketName, prefix, recursive);
+    }
+
+    return listObjectsV2(bucketName, prefix, recursive);
+  }
+
+  
+  private Iterable<Result<Item>> listObjectsV2(final String bucketName, final String prefix, final boolean recursive) {
+    return new Iterable<Result<Item>>() {
+      @Override
+      public Iterator<Result<Item>> iterator() {
+        return new Iterator<Result<Item>>() {
+          private ListBucketResult listBucketResult;
+          private Result<Item> error;
+          private Iterator<Item> itemIterator;
+          private Iterator<Prefix> prefixIterator;
+          private boolean completed = false;
+
+          private synchronized void populate() {
+            String delimiter = "/";
+            if (recursive) {
+              delimiter = null;
+            }
+
+            String continuationToken = null;
+            if (this.listBucketResult != null && delimiter != null) {
+              continuationToken = listBucketResult.nextContinuationToken();
+            }
+
+            this.listBucketResult = null;
+            this.itemIterator = null;
+            this.prefixIterator = null;
+
+            try {
+              this.listBucketResult = listObjectsV2(bucketName, continuationToken, prefix, delimiter);
+            } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
+                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                     | InternalException e) {
+              this.error = new Result<>(null, e);
+            } finally {
+              if (this.listBucketResult != null) {
+                this.itemIterator = this.listBucketResult.contents().iterator();
+                this.prefixIterator = this.listBucketResult.commonPrefixes().iterator();
+              } else {
+                this.itemIterator = new LinkedList<Item>().iterator();
+                this.prefixIterator = new LinkedList<Prefix>().iterator();
+              }
+            }
+          }
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) {
+              return false;
+            }
+
+            if (this.error == null && this.itemIterator == null && this.prefixIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.itemIterator.hasNext() && !this.prefixIterator.hasNext()
+                && this.listBucketResult.isTruncated()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              return true;
+            }
+
+            if (this.itemIterator.hasNext()) {
+              return true;
+            }
+
+            if (this.prefixIterator.hasNext()) {
+              return true;
+            }
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<Item> next() {
+            if (this.completed) {
+              throw new NoSuchElementException();
+            }
+
+            if (this.error == null && this.itemIterator == null && this.prefixIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && !this.itemIterator.hasNext() && !this.prefixIterator.hasNext()
+                && this.listBucketResult.isTruncated()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            if (this.itemIterator.hasNext()) {
+              Item item = this.itemIterator.next();
+              return new Result<>(item, null);
+            }
+
+            if (this.prefixIterator.hasNext()) {
+              Prefix prefix = this.prefixIterator.next();
+              Item item;
+              try {
+                item = new Item(prefix.prefix(), true);
+              } catch (XmlPullParserException e) {
+                // special case: ignore the error as we can't propagate the exception in next()
+                item = null;
+              }
+
+              return new Result<>(item, null);
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
+  }
+
+
+  /**
+   * Returns {@link ListBucketResult} of given bucket, marker, prefix and delimiter.
+   *
+   * @param bucketName Bucket name.
+   * @param marker     Marker string.  List objects whose name is greater than `marker`.
+   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
+   * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
+   */
+  private ListBucketResult listObjectsV2(String bucketName, String continuationToken, String prefix, String delimiter)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("list-type", "2");
+
+    if (continuationToken != null) {
+      queryParamMap.put("continuation-token", continuationToken);
+    }
+
+    if (prefix != null) {
+      queryParamMap.put("prefix", prefix);
+    }
+
+    if (delimiter != null) {
+      queryParamMap.put("delimiter", delimiter);
+    }
+
+    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
+
+    ListBucketResult result = new ListBucketResult();
+    result.parseXml(response.body().charStream());
+    response.body().close();
+    return result;
+  }
+
+
+  private Iterable<Result<Item>> listObjectsV1(final String bucketName, final String prefix, final boolean recursive) {
     return new Iterable<Result<Item>>() {
       @Override
       public Iterator<Result<Item>> iterator() {
         return new Iterator<Result<Item>>() {
           private String lastObjectName;
-          private ListBucketResult listBucketResult;
+          private ListBucketResultV1 listBucketResult;
           private Result<Item> error;
           private Iterator<Item> itemIterator;
           private Iterator<Prefix> prefixIterator;
@@ -2122,7 +2326,7 @@ public final class MinioClient {
             this.prefixIterator = null;
 
             try {
-              this.listBucketResult = listObjects(bucketName, marker, prefix, delimiter, null);
+              this.listBucketResult = listObjectsV1(bucketName, marker, prefix, delimiter);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException e) {
@@ -2223,7 +2427,7 @@ public final class MinioClient {
 
 
   /**
-   * Returns {@link ListBucketResult} of given bucket, marker, prefix, delimiter and maxKeys.
+   * Returns {@link ListBucketResultV1} of given bucket, marker, prefix and delimiter.
    *
    * @param bucketName Bucket name.
    * @param marker     Marker string.  List objects whose name is greater than `marker`.
@@ -2231,8 +2435,7 @@ public final class MinioClient {
    * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
    * @param maxKeys    Maximum number of entries to be returned.
    */
-  private ListBucketResult listObjects(String bucketName, String marker, String prefix, String delimiter,
-                                       Integer maxKeys)
+  private ListBucketResultV1 listObjectsV1(String bucketName, String marker, String prefix, String delimiter)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
@@ -2250,13 +2453,9 @@ public final class MinioClient {
       queryParamMap.put("delimiter", delimiter);
     }
 
-    if (maxKeys != null) {
-      queryParamMap.put("max-keys", maxKeys.toString());
-    }
-
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
 
-    ListBucketResult result = new ListBucketResult();
+    ListBucketResultV1 result = new ListBucketResultV1();
     result.parseXml(response.body().charStream());
     response.body().close();
     return result;
