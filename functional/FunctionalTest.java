@@ -426,12 +426,32 @@ public class FunctionalTest {
   /**
    * Test: removeObject(String bucketName, String objectName).
    */
-  public static void removeObject_test() throws Exception {
+  public static void removeObject_test1() throws Exception {
     System.out.println("Test: removeObject(String bucketName, String objectName)");
     String filename = createFile(3 * MB);
     client.putObject(bucketName, filename, filename);
     Files.delete(Paths.get(filename));
     client.removeObject(bucketName, filename);
+  }
+
+  /**
+   * Test: removeObject(final String bucketName, final Iterable&lt;String&gt; objectNames).
+   */
+  public static void removeObject_test2() throws Exception {
+    System.out.println("Test: removeObject(final String bucketName, final Iterable<String> objectNames)");
+
+    String[] filenames = new String[4];
+    for (int i = 0; i < 3; i++) {
+      String filename = createFile(1 * MB);
+      client.putObject(bucketName, filename, filename);
+      Files.delete(Paths.get(filename));
+      filenames[i] = filename;
+    }
+    filenames[3] = "nonexistent-object";
+
+    for (Result<?> r : client.removeObject(bucketName, Arrays.asList(filenames))) {
+      ignore(r.get());
+    }
   }
 
   /**
@@ -1101,7 +1121,8 @@ public class FunctionalTest {
     listObject_test3();
     listObject_test4();
 
-    removeObject_test();
+    removeObject_test1();
+    removeObject_test2();
 
     listIncompleteUploads_test1();
     listIncompleteUploads_test2();
@@ -1146,7 +1167,7 @@ public class FunctionalTest {
     statObject_test();
     getObject_test1();
     listObject_test1();
-    removeObject_test();
+    removeObject_test1();
     listIncompleteUploads_test1();
     removeIncompleteUploads_test();
     presignedGetObject_test1();

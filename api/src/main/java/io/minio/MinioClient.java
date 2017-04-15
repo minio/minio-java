@@ -42,6 +42,10 @@ import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
+import io.minio.messages.DeleteRequest;
+import io.minio.messages.DeleteResult;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
 import io.minio.messages.Item;
@@ -1883,6 +1887,156 @@ public final class MinioClient {
     executeDelete(bucketName, objectName, null);
   }
 
+
+  private List<DeleteError> removeObject(String bucketName, List<DeleteObject> objectList)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("delete", "");
+
+    DeleteRequest request = new DeleteRequest(objectList);
+    HttpResponse response = executePost(bucketName, null, null, queryParamMap, request);
+
+    String bodyContent = "";
+    Scanner scanner = new Scanner(response.body().charStream());
+    try {
+      // read entire body stream to string.
+      scanner.useDelimiter("\\A");
+      if (scanner.hasNext()) {
+        bodyContent = scanner.next();
+      }
+    } finally {
+      response.body().close();
+      scanner.close();
+    }
+
+    List<DeleteError> errorList = null;
+
+    bodyContent = bodyContent.trim();
+    DeleteError error = new DeleteError(new StringReader(bodyContent));
+    if (error.code() != null) {
+      errorList = new LinkedList<DeleteError>();
+      errorList.add(error);
+    } else {
+      DeleteResult result = new DeleteResult(new StringReader(bodyContent));
+      errorList = result.errorList();
+    }
+
+    return errorList;
+  }
+
+
+  /**
+   * Removes multiple objects from a bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.removeObject("my-bucketname", "my-objectname"); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectNames List of Object names in the bucket.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public Iterable<Result<DeleteError>> removeObject(final String bucketName, final Iterable<String> objectNames) {
+    return new Iterable<Result<DeleteError>>() {
+      @Override
+      public Iterator<Result<DeleteError>> iterator() {
+        return new Iterator<Result<DeleteError>>() {
+          private Result<DeleteError> error;
+          private Iterator<DeleteError> errorIterator;
+          private boolean completed = false;
+
+          private synchronized void populate() {
+            List<DeleteError> errorList = null;
+            try {
+              List<DeleteObject> objectList = new LinkedList<DeleteObject>();
+              int i = 0;
+              for (String objectName: objectNames) {
+                objectList.add(new DeleteObject(objectName));
+                i++;
+                // Maximum 1000 objects are allowed in a request
+                if (i == 1000) {
+                  break;
+                }
+              }
+
+              if (i == 0) {
+                return;
+              }
+
+              errorList = removeObject(bucketName, objectList);
+            } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
+                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                     | InternalException e) {
+              this.error = new Result<>(null, e);
+            } finally {
+              if (errorList != null) {
+                this.errorIterator = errorList.iterator();
+              } else {
+                this.errorIterator = new LinkedList<DeleteError>().iterator();
+              }
+            }
+          }
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) {
+              return false;
+            }
+
+            if (this.error == null && this.errorIterator == null) {
+              populate();
+            }
+
+            if (this.error != null) {
+              return true;
+            }
+
+            if (this.errorIterator.hasNext()) {
+              return true;
+            }
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<DeleteError> next() {
+            if (this.completed) {
+              throw new NoSuchElementException();
+            }
+
+            if (this.error == null && this.errorIterator == null) {
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            if (this.errorIterator.hasNext()) {
+              return new Result<>(this.errorIterator.next(), null);
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
+  }
 
   /**
    * Lists object information in given bucket.
