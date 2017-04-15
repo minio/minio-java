@@ -949,6 +949,48 @@ try {
 }
 ```
 
+<a name="removeObject"></a>
+### removeObject(String bucketName, Iterable<String> objectNames)
+
+`public Iterable<Result<DeleteError>> removeObject(String bucketName, Iterable<String> objectNames)`
+
+Removes multiple objects.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-java.lang.String-java.lang.String-)
+
+__Parameters__
+
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectNames`` | _Iterable<String>_  | Iterable object contains object names for removal. |
+
+|Return Type	  | Exceptions	  |
+|:--- |:--- |
+| ``Iterable<Result<DeleteError>>``:an iterator of Result DeleteError.  | _None_  |
+
+
+
+__Example__
+
+
+```java
+List<String> objectNames = new LinkedList<String>();
+objectNames.add("my-objectname1");
+objectNames.add("my-objectname2");
+objectNames.add("my-objectname3");
+try {
+      // Remove object all objects in objectNames list from the bucket my-bucketname.
+      for (Result<DeleteError> errorResult: minioClient.removeObject("my-bucketname", objectNames)) {
+        DeleteError error = errorResult.get();
+        System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
+      }
+} catch (MinioException e) {
+      System.out.println("Error: " + e);
+}
+```
+
 <a name="removeIncompleteUpload"></a>
 ### removeIncompleteUpload(String bucketName, String objectName)
 

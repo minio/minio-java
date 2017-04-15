@@ -1899,9 +1899,9 @@ public final class MinioClient {
     HttpResponse response = executePost(bucketName, null, null, queryParamMap, request);
 
     String bodyContent = "";
+    // Use scanner to read entire body stream to string.
     Scanner scanner = new Scanner(response.body().charStream());
     try {
-      // read entire body stream to string.
       scanner.useDelimiter("\\A");
       if (scanner.hasNext()) {
         bodyContent = scanner.next();
@@ -1914,11 +1914,14 @@ public final class MinioClient {
     List<DeleteError> errorList = null;
 
     bodyContent = bodyContent.trim();
+    // Check if body content is <Error> message.
     DeleteError error = new DeleteError(new StringReader(bodyContent));
     if (error.code() != null) {
+      // As it is <Error> message, add to error list.
       errorList = new LinkedList<DeleteError>();
       errorList.add(error);
     } else {
+      // As it is not <Error> message, parse it as <DeleteResult> message.
       DeleteResult result = new DeleteResult(new StringReader(bodyContent));
       errorList = result.errorList();
     }
@@ -1931,17 +1934,18 @@ public final class MinioClient {
    * Removes multiple objects from a bucket.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.removeObject("my-bucketname", "my-objectname"); }</pre>
+   * <pre>{@code // Create object list for removal.
+   * List<String> objectNames = new LinkedList<String>();
+   * objectNames.add("my-objectname1");
+   * objectNames.add("my-objectname2");
+   * objectNames.add("my-objectname3");
+   * for (Result<DeleteError> errorResult: minioClient.removeObject("my-bucketname", objectNames)) {
+   *     DeleteError error = errorResult.get();
+   *     System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
+   * } }</pre>
    *
    * @param bucketName Bucket name.
    * @param objectNames List of Object names in the bucket.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
    */
   public Iterable<Result<DeleteError>> removeObject(final String bucketName, final Iterable<String> objectNames) {
     return new Iterable<Result<DeleteError>>() {
