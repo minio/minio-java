@@ -137,6 +137,7 @@ The full API Reference is available here.
 * [GetObject.Java](https://github.com/minio/minio-java/tree/master/examples/GetObject.java)
 * [GetPartialObject.java](https://github.com/minio/minio-java/tree/master/examples/GetPartialObject.java)
 * [RemoveObject.java](https://github.com/minio/minio-java/tree/master/examples/RemoveObject.java)
+* [RemoveObjects.java](https://github.com/minio/minio-java/tree/master/examples/RemoveObjects.java)
 * [StatObject.java](https://github.com/minio/minio-java/tree/master/examples/StatObject.java)
 
 #### Full Examples: Presigned Operations
