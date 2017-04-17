@@ -354,9 +354,9 @@ try {
 ```
 
 <a name="listObjects"></a>
-### listObjects(String bucketName, String prefix, boolean recursive)
+### listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
 
-`public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive)`
+`public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)`
 
 Lists all objects in a bucket.
 
@@ -371,6 +371,7 @@ __Parameters__
 | ``bucketName``  | _String_  | Name of the bucket.  |
 | ``prefix``  | _String_  | Prefix string. List objects whose name starts with ``prefix``. |
 | ``recursive``  | _boolean_  | when false, emulates a directory structure where each listing returned is either a full object or part of the object's key up to the first '/'. All objects with the same prefix up to the first '/' will be merged into one entry. |
+| ``useVersion1``  | _boolean_  | when true, version 1 of REST API is used. |
 
 
 |Return Type	  | Exceptions	  |

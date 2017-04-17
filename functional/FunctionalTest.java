@@ -424,6 +424,34 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: listObjects(bucketName, final String prefix, final boolean recursive, final boolean useVersion1).
+   */
+  public static void listObject_test5() throws Exception {
+    int i;
+    System.out.println("Test: listObjects(final String bucketName, final String prefix, final boolean recursive,"
+                       + " final boolean useVersion1)");
+    String[] filenames = new String[3];
+    for (i = 0; i < 3; i++) {
+      String filename = createFile(1 * MB);
+      client.putObject(bucketName, filename, filename);
+      Files.delete(Paths.get(filename));
+      filenames[i] = filename;
+    }
+
+    i = 0;
+    for (Result<?> r : client.listObjects(bucketName, "minio", true, true)) {
+      ignore(i++, r.get());
+      if (i == 10) {
+        break;
+      }
+    }
+
+    for (i = 0; i < 3; i++) {
+      client.removeObject(bucketName, filenames[i]);
+    }
+  }
+
+  /**
    * Test: removeObject(String bucketName, String objectName).
    */
   public static void removeObject_test1() throws Exception {
@@ -1120,6 +1148,7 @@ public class FunctionalTest {
     listObject_test2();
     listObject_test3();
     listObject_test4();
+    listObject_test5();
 
     removeObject_test1();
     removeObject_test2();
