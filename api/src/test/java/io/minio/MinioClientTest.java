@@ -46,6 +46,7 @@ import com.squareup.okhttp.mockwebserver.MockWebServer;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidExpiresRangeException;
+import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
 import io.minio.messages.Bucket;
@@ -94,6 +95,30 @@ public class MinioClientTest {
   public void newClientWithNullUrlFails() throws NullPointerException, MinioException {
     URL url = null;
     new MinioClient(url);
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
+  }
+
+  @Test(expected = InvalidEndpointException.class)
+  public void testIsValidEndpoint1() throws MinioException {
+    new MinioClient("minio-.example.com");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
+  }
+
+  @Test(expected = InvalidEndpointException.class)
+  public void testIsValidEndpoint2() throws MinioException {
+    new MinioClient("-minio.example.com");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
+  }
+
+  @Test(expected = InvalidEndpointException.class)
+  public void testIsValidEndpoint3() throws MinioException {
+    new MinioClient("minio..example.com");
+    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
+  }
+
+  @Test(expected = InvalidEndpointException.class)
+  public void testIsValidEndpoint4() throws MinioException {
+    new MinioClient("minio._.com");
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
