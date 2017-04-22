@@ -34,7 +34,7 @@ subprojects {
     apply plugin: 'findbugs'
 
     group = 'io.minio'
-    version = '3.0.4'
+    version = '3.0.5'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
@@ -49,9 +49,11 @@ subprojects {
         compile "com.squareup.okhttp:okhttp:2.7.2"
         compile "com.squareup.okio:okio:1.6.0"
         compile "joda-time:joda-time:2.7"
-	compile "com.fasterxml.jackson.core:jackson-annotations:2.8.4"
-	compile "com.fasterxml.jackson.core:jackson-core:2.8.4"
-	compile "com.fasterxml.jackson.core:jackson-databind:2.8.4"
+        compile "com.fasterxml.jackson.core:jackson-annotations:2.8.4"
+        compile "com.fasterxml.jackson.core:jackson-core:2.8.4"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.8.4"
+        compile 'com.google.code.findbugs:annotations:3.0.1'
+        compile 'com.google.code.findbugs:jsr305:3.0.1'
 
         testCompile "com.squareup.okhttp:mockwebserver:2.7.2"
         testCompile "junit:junit:4.12"
@@ -225,6 +227,7 @@ project(':api') {
 
 project(':examples') {
     dependencies {
+        compile "me.tongfei:progressbar:0.5.3"
         compile project(':api')
     }
 

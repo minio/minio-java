@@ -25,22 +25,18 @@ import com.google.api.client.util.Key;
 
 
 /**
- * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult Version 2 information.
+ * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult Version 1 information.
  */
 @SuppressWarnings({"SameParameterValue", "unused"})
-public class ListBucketResult extends XmlEntity {
+public class ListBucketResultV1 extends XmlEntity {
   @Key("Name")
   private String name;
   @Key("Prefix")
   private String prefix;
-  @Key("ContinuationToken")
-  private String continuationToken;
-  @Key("NextContinuationToken")
-  private String nextContinuationToken;
-  @Key("StartAfter")
-  private String startAfter;
-  @Key("KeyCount")
-  private String keyCount;
+  @Key("Marker")
+  private String marker;
+  @Key("NextMarker")
+  private String nextMarker;
   @Key("MaxKeys")
   private int maxKeys;
   @Key("Delimiter")
@@ -53,9 +49,17 @@ public class ListBucketResult extends XmlEntity {
   private List<Prefix> commonPrefixes;
 
 
-  public ListBucketResult() throws XmlPullParserException {
+  public ListBucketResultV1() throws XmlPullParserException {
     super();
     super.name = "ListBucketResult";
+  }
+
+
+  /**
+   * Returns next marker.
+   */
+  public String nextMarker() {
+    return nextMarker;
   }
 
 
@@ -76,34 +80,10 @@ public class ListBucketResult extends XmlEntity {
 
 
   /**
-   * Returns continuation token.
+   * Returns marker.
    */
-  public String continuationToken() {
-    return continuationToken;
-  }
-
-
-  /**
-   * Returns next continuation token.
-   */
-  public String nextContinuationToken() {
-    return nextContinuationToken;
-  }
-
-
-  /**
-   * Returns start after.
-   */
-  public String startAfter() {
-    return startAfter;
-  }
-
-
-  /**
-   * Returns key count.
-   */
-  public String keyCount() {
-    return keyCount;
+  public String marker() {
+    return marker;
   }
 
 

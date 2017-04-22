@@ -33,21 +33,21 @@ import io.minio.ErrorCode;
 @SuppressWarnings("unused")
 public class ErrorResponse extends XmlEntity {
   @Key("Code")
-  private String code;
+  protected String code;
   @Key("Message")
-  private String message;
+  protected String message;
   @Key("BucketName")
-  private String bucketName;
+  protected String bucketName;
   @Key("Key")
-  private String objectName;
+  protected String objectName;
   @Key("Resource")
-  private String resource;
+  protected String resource;
   @Key("RequestId")
-  private String requestId;
+  protected String requestId;
   @Key("HostId")
-  private String hostId;
+  protected String hostId;
 
-  private ErrorCode errorCode;
+  protected ErrorCode errorCode;
 
 
   public ErrorResponse() throws XmlPullParserException {

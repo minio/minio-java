@@ -24,15 +24,11 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
-
-import io.minio.encryption.EncryptionMaterials;
-import io.minio.encryption.SymmetricKey;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEncryptionMetadataException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidObjectPrefixException;
@@ -46,37 +42,27 @@ import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
-import io.minio.messages.DeleteError;
-import io.minio.messages.DeleteObject;
-import io.minio.messages.DeleteRequest;
-import io.minio.messages.DeleteResult;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
 import io.minio.messages.Item;
 import io.minio.messages.ListAllMyBucketsResult;
 import io.minio.messages.ListBucketResult;
-import io.minio.messages.ListBucketResultV1;
 import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
-import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import io.minio.policy.PolicyType;
 import io.minio.policy.BucketPolicy;
 import okio.BufferedSink;
 import okio.Okio;
-
-import org.apache.commons.codec.binary.Base64;
 import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -92,10 +78,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -105,14 +89,6 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.CipherInputStream;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * <p>
@@ -189,6 +165,7 @@ public final class MinioClient {
   private String userAgent = DEFAULT_USER_AGENT;
 
   private OkHttpClient httpClient = new OkHttpClient();
+
 
   /**
    * Creates Minio client object with given endpoint using anonymous access.
@@ -638,7 +615,7 @@ public final class MinioClient {
         return false;
       }
 
-      if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
+      if (!(label.matches("^[a-zA-Z0-9][a-zA-Z0-9-]*") && endpoint.matches(".*[a-zA-Z0-9]$"))) {
         return false;
       }
     }
@@ -1277,16 +1254,8 @@ public final class MinioClient {
            InternalException {
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
-
-    // Return object stat with key data if header has key and iv
-    if ((header.xamzMetaKey() != null) && (header.xamzMetaIv() != null)) {
-      objectStat = new ObjectStat(bucketName, objectName, header);
-    } else {
-      objectStat = new ObjectStat(bucketName, objectName, header.lastModified(), header.contentLength(), header.etag(),
-          header.contentType());
-    }
-
-    return objectStat;
+    return new ObjectStat(bucketName, objectName, header.lastModified(), header.contentLength(),
+                          header.etag(), header.contentType());
   }
 
 
@@ -1320,108 +1289,6 @@ public final class MinioClient {
     return url.toString();
   }
 
-  /**
-   * Gets entire encrypted object's data as {@link InputStream} in given bucket, then returns CipherInputStream.
-   * CipherInputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in
-   * from the underlying InputStream but have been additionally processed by the Cipher. The Cipher is initialized for
-   * decryption, the CipherInputStream will attempt to read in data and decrypt them, before returning the decrypted
-   * data.
-   * 
-   * The CipherInputStream must be closed after use else the connection will remain open.
-   *
-   * <p>
-   * <b>Example:</b>
-   * 
-   * <pre>
-   * {
-   *   &#64;code
-   *   // Generate encryption materials
-   *   KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-   *   symKeyGenerator.init(128);
-   *   SecretKey symKey = symKeyGenerator.generateKey();
-   *   EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
-   * 
-   *   // Get object
-   *   InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", encMaterials);
-   *   byte[] buf = new byte[16384];
-   *   int bytesRead;
-   *   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *     System.out.println(new String(buf, 0, bytesRead));
-   *   }
-   *   stream.close();
-   * }
-   * </pre>
-   *
-   * @param bucketName
-   *          Bucket name.
-   * @param objectName
-   *          Object name in the bucket.
-   * @param encryptionMaterials
-   *          Encryption metadata details and operations.
-   *
-   * @return {@link InputStream} containing the object data.
-   *
-   * @throws InvalidBucketNameException
-   *           upon invalid bucket name is given
-   * @throws NoResponseException
-   *           upon no response from server
-   * @throws IOException
-   *           upon connection error
-   * @throws XmlPullParserException
-   *           upon parsing response xml
-   * @throws ErrorResponseException
-   *           upon unsuccessful execution
-   * @throws InternalException
-   *           upon internal library error
-   * @throws InvalidEncryptionMetadataException
-   *           upon encryption key/iv error
-   * @throws BadPaddingException
-   *           upon wrong padding
-   * @throws IllegalBlockSizeException
-   *           upon incorrect block size
-   * @throws NoSuchPaddingException
-   *           upon incorrect padding
-   * @throws InvalidAlgorithmParameterException
-   *           upon incorrect algorithm
-   */
-  public CipherInputStream getObject(String bucketName, String objectName, EncryptionMaterials encryptionMaterials)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
-      InvalidArgumentException, InvalidEncryptionMetadataException, NoSuchPaddingException, IllegalBlockSizeException,
-      BadPaddingException, InvalidAlgorithmParameterException {
-
-    if (encryptionMaterials == null) {
-      throw new InvalidArgumentException("empty encryption properties not allowed");
-    }
-
-    // get encrypted object metadata and verify
-    ObjectStat stat = statObject(bucketName, objectName);
-
-    // check if encryption metadata is not present
-    if ((stat.contentKey() == null) || (stat.encryptionIV() == null)) {
-      throw new InvalidEncryptionMetadataException("encryption key or iv not present");
-    }
-
-    // Fetch encrypted object if metadata present
-    InputStream stream = getObject(bucketName, objectName);
-
-    // Get the encrypted key from response metadata
-    byte[] encryptedDataKey = Base64.decodeBase64(stat.contentKey().getBytes());
-
-    // Get the iv from the response metadata
-    byte[] iv = Base64.decodeBase64(stat.encryptionIV().getBytes());
-
-    // Decrypt the encrypted data key using master key
-    byte[] plainDataKey = encryptionMaterials.decryptContentKeys(encryptedDataKey);
-
-    // Create secret key from byte array
-    SecretKey dataEncryptionKey = new SecretKeySpec(plainDataKey, 0, plainDataKey.length, "AES");
-
-    CipherInputStream decryptedStream = encryptionMaterials.decryptInputStream(stream, dataEncryptionKey, iv);
-
-    return decryptedStream;
-
-  }
 
   /**
    * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
@@ -2017,160 +1884,6 @@ public final class MinioClient {
   }
 
 
-  private List<DeleteError> removeObject(String bucketName, List<DeleteObject> objectList)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("delete", "");
-
-    DeleteRequest request = new DeleteRequest(objectList);
-    HttpResponse response = executePost(bucketName, null, null, queryParamMap, request);
-
-    String bodyContent = "";
-    // Use scanner to read entire body stream to string.
-    Scanner scanner = new Scanner(response.body().charStream());
-    try {
-      scanner.useDelimiter("\\A");
-      if (scanner.hasNext()) {
-        bodyContent = scanner.next();
-      }
-    } finally {
-      response.body().close();
-      scanner.close();
-    }
-
-    List<DeleteError> errorList = null;
-
-    bodyContent = bodyContent.trim();
-    // Check if body content is <Error> message.
-    DeleteError error = new DeleteError(new StringReader(bodyContent));
-    if (error.code() != null) {
-      // As it is <Error> message, add to error list.
-      errorList = new LinkedList<DeleteError>();
-      errorList.add(error);
-    } else {
-      // As it is not <Error> message, parse it as <DeleteResult> message.
-      DeleteResult result = new DeleteResult(new StringReader(bodyContent));
-      errorList = result.errorList();
-    }
-
-    return errorList;
-  }
-
-
-  /**
-   * Removes multiple objects from a bucket.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code // Create object list for removal.
-   * List<String> objectNames = new LinkedList<String>();
-   * objectNames.add("my-objectname1");
-   * objectNames.add("my-objectname2");
-   * objectNames.add("my-objectname3");
-   * for (Result<DeleteError> errorResult: minioClient.removeObject("my-bucketname", objectNames)) {
-   *     DeleteError error = errorResult.get();
-   *     System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
-   * } }</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectNames List of Object names in the bucket.
-   */
-  public Iterable<Result<DeleteError>> removeObject(final String bucketName, final Iterable<String> objectNames) {
-    return new Iterable<Result<DeleteError>>() {
-      @Override
-      public Iterator<Result<DeleteError>> iterator() {
-        return new Iterator<Result<DeleteError>>() {
-          private Result<DeleteError> error;
-          private Iterator<DeleteError> errorIterator;
-          private boolean completed = false;
-
-          private synchronized void populate() {
-            List<DeleteError> errorList = null;
-            try {
-              List<DeleteObject> objectList = new LinkedList<DeleteObject>();
-              int i = 0;
-              for (String objectName: objectNames) {
-                objectList.add(new DeleteObject(objectName));
-                i++;
-                // Maximum 1000 objects are allowed in a request
-                if (i == 1000) {
-                  break;
-                }
-              }
-
-              if (i == 0) {
-                return;
-              }
-
-              errorList = removeObject(bucketName, objectList);
-            } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
-              this.error = new Result<>(null, e);
-            } finally {
-              if (errorList != null) {
-                this.errorIterator = errorList.iterator();
-              } else {
-                this.errorIterator = new LinkedList<DeleteError>().iterator();
-              }
-            }
-          }
-
-          @Override
-          public boolean hasNext() {
-            if (this.completed) {
-              return false;
-            }
-
-            if (this.error == null && this.errorIterator == null) {
-              populate();
-            }
-
-            if (this.error != null) {
-              return true;
-            }
-
-            if (this.errorIterator.hasNext()) {
-              return true;
-            }
-
-            this.completed = true;
-            return false;
-          }
-
-          @Override
-          public Result<DeleteError> next() {
-            if (this.completed) {
-              throw new NoSuchElementException();
-            }
-
-            if (this.error == null && this.errorIterator == null) {
-              populate();
-            }
-
-            if (this.error != null) {
-              this.completed = true;
-              return this.error;
-            }
-
-            if (this.errorIterator.hasNext()) {
-              return new Result<>(this.errorIterator.next(), null);
-            }
-
-            this.completed = true;
-            throw new NoSuchElementException();
-          }
-
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException();
-          }
-        };
-      }
-    };
-  }
-
   /**
    * Lists object information in given bucket.
    *
@@ -2218,217 +1931,14 @@ public final class MinioClient {
    *
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
-   * @see #listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive) {
-    return listObjects(bucketName, prefix, recursive, false);
-  }
-
-
-  /**
-   * Lists object information as {@code Iterable<Result><Item>>} in given bucket, prefix, recursive flag and S3 API
-   * version to use.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname", "my-object-prefix", true,
-   *                                    false);
-   * for (Result<Item> result : myObjects) {
-   *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * } }</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is either a full object
-   *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
-   *                  '/' will be merged into one entry.
-   * @param useVersion1 If set, Amazon AWS S3 List Object V1 is used, else List Object V2 is used as default.
-   *
-   * @return an iterator of Result Items.
-   *
-   * @see #listObjects(String bucketName)
-   * @see #listObjects(String bucketName, String prefix)
-   * @see #listObjects(String bucketName, String prefix, boolean recursive)
-   */
-  public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive,
-                                            final boolean useVersion1) {
-    if (useVersion1) {
-      return listObjectsV1(bucketName, prefix, recursive);
-    }
-
-    return listObjectsV2(bucketName, prefix, recursive);
-  }
-
-
-  private Iterable<Result<Item>> listObjectsV2(final String bucketName, final String prefix, final boolean recursive) {
-    return new Iterable<Result<Item>>() {
-      @Override
-      public Iterator<Result<Item>> iterator() {
-        return new Iterator<Result<Item>>() {
-          private ListBucketResult listBucketResult;
-          private Result<Item> error;
-          private Iterator<Item> itemIterator;
-          private Iterator<Prefix> prefixIterator;
-          private boolean completed = false;
-
-          private synchronized void populate() {
-            String delimiter = "/";
-            if (recursive) {
-              delimiter = null;
-            }
-
-            String continuationToken = null;
-            if (this.listBucketResult != null && delimiter != null) {
-              continuationToken = listBucketResult.nextContinuationToken();
-            }
-
-            this.listBucketResult = null;
-            this.itemIterator = null;
-            this.prefixIterator = null;
-
-            try {
-              this.listBucketResult = listObjectsV2(bucketName, continuationToken, prefix, delimiter);
-            } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
-              this.error = new Result<>(null, e);
-            } finally {
-              if (this.listBucketResult != null) {
-                this.itemIterator = this.listBucketResult.contents().iterator();
-                this.prefixIterator = this.listBucketResult.commonPrefixes().iterator();
-              } else {
-                this.itemIterator = new LinkedList<Item>().iterator();
-                this.prefixIterator = new LinkedList<Prefix>().iterator();
-              }
-            }
-          }
-
-          @Override
-          public boolean hasNext() {
-            if (this.completed) {
-              return false;
-            }
-
-            if (this.error == null && this.itemIterator == null && this.prefixIterator == null) {
-              populate();
-            }
-
-            if (this.error == null && !this.itemIterator.hasNext() && !this.prefixIterator.hasNext()
-                && this.listBucketResult.isTruncated()) {
-              populate();
-            }
-
-            if (this.error != null) {
-              return true;
-            }
-
-            if (this.itemIterator.hasNext()) {
-              return true;
-            }
-
-            if (this.prefixIterator.hasNext()) {
-              return true;
-            }
-
-            this.completed = true;
-            return false;
-          }
-
-          @Override
-          public Result<Item> next() {
-            if (this.completed) {
-              throw new NoSuchElementException();
-            }
-
-            if (this.error == null && this.itemIterator == null && this.prefixIterator == null) {
-              populate();
-            }
-
-            if (this.error == null && !this.itemIterator.hasNext() && !this.prefixIterator.hasNext()
-                && this.listBucketResult.isTruncated()) {
-              populate();
-            }
-
-            if (this.error != null) {
-              this.completed = true;
-              return this.error;
-            }
-
-            if (this.itemIterator.hasNext()) {
-              Item item = this.itemIterator.next();
-              return new Result<>(item, null);
-            }
-
-            if (this.prefixIterator.hasNext()) {
-              Prefix prefix = this.prefixIterator.next();
-              Item item;
-              try {
-                item = new Item(prefix.prefix(), true);
-              } catch (XmlPullParserException e) {
-                // special case: ignore the error as we can't propagate the exception in next()
-                item = null;
-              }
-
-              return new Result<>(item, null);
-            }
-
-            this.completed = true;
-            throw new NoSuchElementException();
-          }
-
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException();
-          }
-        };
-      }
-    };
-  }
-
-
-  /**
-   * Returns {@link ListBucketResult} of given bucket, marker, prefix and delimiter.
-   *
-   * @param bucketName Bucket name.
-   * @param marker     Marker string.  List objects whose name is greater than `marker`.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
-   * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
-   */
-  private ListBucketResult listObjectsV2(String bucketName, String continuationToken, String prefix, String delimiter)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("list-type", "2");
-
-    if (continuationToken != null) {
-      queryParamMap.put("continuation-token", continuationToken);
-    }
-
-    if (prefix != null) {
-      queryParamMap.put("prefix", prefix);
-    }
-
-    if (delimiter != null) {
-      queryParamMap.put("delimiter", delimiter);
-    }
-
-    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
-
-    ListBucketResult result = new ListBucketResult();
-    result.parseXml(response.body().charStream());
-    response.body().close();
-    return result;
-  }
-
-
-  private Iterable<Result<Item>> listObjectsV1(final String bucketName, final String prefix, final boolean recursive) {
     return new Iterable<Result<Item>>() {
       @Override
       public Iterator<Result<Item>> iterator() {
         return new Iterator<Result<Item>>() {
           private String lastObjectName;
-          private ListBucketResultV1 listBucketResult;
+          private ListBucketResult listBucketResult;
           private Result<Item> error;
           private Iterator<Item> itemIterator;
           private Iterator<Prefix> prefixIterator;
@@ -2454,7 +1964,7 @@ public final class MinioClient {
             this.prefixIterator = null;
 
             try {
-              this.listBucketResult = listObjectsV1(bucketName, marker, prefix, delimiter);
+              this.listBucketResult = listObjects(bucketName, marker, prefix, delimiter, null);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException e) {
@@ -2555,7 +2065,7 @@ public final class MinioClient {
 
 
   /**
-   * Returns {@link ListBucketResultV1} of given bucket, marker, prefix and delimiter.
+   * Returns {@link ListBucketResult} of given bucket, marker, prefix, delimiter and maxKeys.
    *
    * @param bucketName Bucket name.
    * @param marker     Marker string.  List objects whose name is greater than `marker`.
@@ -2563,7 +2073,8 @@ public final class MinioClient {
    * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
    * @param maxKeys    Maximum number of entries to be returned.
    */
-  private ListBucketResultV1 listObjectsV1(String bucketName, String marker, String prefix, String delimiter)
+  private ListBucketResult listObjects(String bucketName, String marker, String prefix, String delimiter,
+                                       Integer maxKeys)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
@@ -2581,9 +2092,13 @@ public final class MinioClient {
       queryParamMap.put("delimiter", delimiter);
     }
 
+    if (maxKeys != null) {
+      queryParamMap.put("max-keys", maxKeys.toString());
+    }
+
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
 
-    ListBucketResultV1 result = new ListBucketResultV1();
+    ListBucketResult result = new ListBucketResult();
     result.parseXml(response.body().charStream());
     response.body().close();
     return result;
@@ -2800,7 +2315,7 @@ public final class MinioClient {
 
     RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
     try {
-      putObject(bucketName, objectName, contentType, size, file, null);
+      putObject(bucketName, objectName, contentType, size, file);
     } finally {
       file.close();
     }
@@ -2904,329 +2419,61 @@ public final class MinioClient {
     putObject(bucketName, objectName, contentType, size, new BufferedInputStream(stream));
   }
 
-  /**
-   * Uploads data from given stream as object to given bucket.
-   * <p>
-   * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * </p>
-   * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
-   * again. The client will examine all parts of any current upload session and attempt to reuse the session
-   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
-   * resume uploading where the session left off.
-   * </p>
-   * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
-   * </p>
-   * <p>
-   * Object is encrypted using a randomly generated data encryption key. The data encryption key is then encrypted using
-   * a master key known only to the client. The encrypted data encryption key is uploaded as the object header along
-   * with the IV used and the encrypted object to the remote server.
-   * </p>
-   * </p>
-   * <b>Example:</b><br>
-   * 
-   * <pre>
-   * {
-   *   &#64;code
-   *   StringBuilder builder = new StringBuilder();
-   *   for (int i = 0; i < 1000; i++) {
-   *     builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
-   *     builder.append("(29 letters)\n");
-   *     builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
-   *     builder.append("(31 letters)\n");
-   *     builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
-   *     builder.append("NASAs Space Shuttle. (32 letters)\n");
-   *     builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
-   *     builder.append("(39 letters)\n");
-   *     builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
-   *     builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
-   *     builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
-   *     builder.append("computers after System 7.\n");
-   *     builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
-   *     builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
-   *     builder.append("---\n");
-   *   }
-   *   ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-   * 
-   *   // Generate symmetric 128 bit AES key.
-   *   KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-   *   symKeyGenerator.init(128);
-   *   SecretKey symKey = symKeyGenerator.generateKey();
-   *   EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
-   * 
-   *   // create object
-   *   minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream",
-   *       encryptionMaterials);
-   *   bais.close();
-   *   System.out.println("my-bucketname is uploaded successfully");
-   * }
-   * </pre>
-   *
-   * @param bucketName
-   *          Bucket name.
-   * @param objectName
-   *          Object name to create in the bucket.
-   * @param stream
-   *          stream to upload.
-   * @param size
-   *          Size of all the data that will be uploaded.
-   * @param contentType
-   *          Content type of the stream.
-   * @param encryptionMaterials
-   *          Encryption metadata details and operations.
-   *
-   * @throws InvalidBucketNameException
-   *           upon invalid bucket name is given
-   * @throws NoResponseException
-   *           upon no response from server
-   * @throws IOException
-   *           upon connection error
-   * @throws XmlPullParserException
-   *           upon parsing response xml
-   * @throws ErrorResponseException
-   *           upon unsuccessful execution
-   * @throws InternalException
-   *           upon internal library error
-   * @throws InvalidAlgorithmParameterException
-   *           upon wrong encryption algorithm used
-   * @throws BadPaddingException
-   *           upon incorrect padding in a block
-   * @throws IllegalBlockSizeException
-   *           upon incorrect block
-   * @throws NoSuchPaddingException
-   *           upon wrong padding type specified
-   *
-   * @see #putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
-   *      EncryptionMaterials encryptionMaterials)
-   */
-  public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
-      EncryptionMaterials encryptionMaterials) throws InvalidBucketNameException, NoSuchAlgorithmException,
-      InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
-      ErrorResponseException, InternalException, InvalidArgumentException, NoSuchPaddingException,
-      IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
-
-    if (encryptionMaterials == null) {
-      throw new InvalidArgumentException("empty encryption properties not allowed");
-    }
-
-    // Generate symmetric 256 bit AES key for data encryption
-    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-    symKeyGenerator.init(256);
-    SecretKey dataEncryptionKey = symKeyGenerator.generateKey();
-
-    // Generate an iv to be used for data encryption
-    SecureRandom ivSeed = new SecureRandom();
-    byte[] iv = new byte[16];
-    ivSeed.nextBytes(iv);
-
-    // Get CipherStream after encryption of input stream
-    CipherInputStream cipherInputStream = encryptionMaterials.encryptInputStream(stream, dataEncryptionKey, iv);
-
-    // encrypt the plain data key using master key
-    byte[] plainDataKey = dataEncryptionKey.getEncoded();
-    byte[] encryptedDataKey = encryptionMaterials.encryptContentKeys(plainDataKey);
-
-    // Prepare data to be put to the object header
-    String encDataKey = new String(Base64.encodeBase64(encryptedDataKey));
-    String ivString = new String(Base64.encodeBase64(iv));
-
-    // Set the headermap with encryption related metadata
-    Map<String, String> headerMap = new HashMap<>();
-    headerMap.put("x-amz-meta-x-amz-key", encDataKey);
-    headerMap.put("x-amz-meta-x-amz-iv", ivString);
-    // matdesc is unused
-    headerMap.put("x-amz-meta-x-amz-matdesc", "");
-
-    // Create byte array stream to hold encrypted stream
-    ByteArrayOutputStream encryptedStream = new ByteArrayOutputStream();
-
-    // Read bytes from cipher stream
-    int numRead = 0;
-    byte[] readBytes = new byte[8192];
-    while ((numRead = cipherInputStream.read(readBytes)) != -1) {
-      // write to byte array stream
-      encryptedStream.write(readBytes, 0, numRead);
-    }
-
-    // Prepare input for put
-    ByteArrayInputStream isToUpload = new ByteArrayInputStream(encryptedStream.toByteArray());
-
-    try {
-      // After padding the size changes, so isToUpload.available() instead of size passed from outside
-      putObject(bucketName, objectName, contentType, isToUpload.available(), new BufferedInputStream(isToUpload),
-          headerMap);
-    } finally {
-      // Close used streams
-      cipherInputStream.close();
-      encryptedStream.close();
-      isToUpload.close();
-    }
-  }
-
-  /**
-   * Uploads data from given stream as object to given bucket. Also sets metadata as sent in the headerMap argument.
-   * <p>
-   * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * </p>
-   * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
-   * again. The client will examine all parts of any current upload session and attempt to reuse the session
-   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
-   * resume uploading where the session left off.
-   * </p>
-   * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
-   * </p>
-   *
-   * </p>
-   * <b>Example:</b><br>
-   * 
-   * <pre>
-   * {
-   *   &#64;code
-   *   StringBuilder builder = new StringBuilder();
-   *   for (int i = 0; i < 1000; i++) {
-   *     builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
-   *     builder.append("(29 letters)\n");
-   *     builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
-   *     builder.append("(31 letters)\n");
-   *     builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
-   *     builder.append("NASAs Space Shuttle. (32 letters)\n");
-   *     builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
-   *     builder.append("(39 letters)\n");
-   *     builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
-   *     builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
-   *     builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
-   *     builder.append("computers after System 7.\n");
-   *     builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
-   *     builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
-   *     builder.append("---\n");
-   *   }
-   *   ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-   *   // create object
-   *   Map<String, String> headerMap = new HashMap<>();
-   *   // put metadata in headermap
-   *   headerMap.put("Content-Type", "application/octet-stream");
-   *   minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), headerMap);
-   *   bais.close();
-   *   System.out.println("my-bucketname is uploaded successfully");
-   * }
-   * </pre>
-   *
-   * @param bucketName
-   *          Bucket name.
-   * @param objectName
-   *          Object name to create in the bucket.
-   * @param stream
-   *          stream to upload.
-   * @param size
-   *          Size of all the data that will be uploaded.
-   * @param headerMap
-   *          Map with metadata stored as key value pairs.
-   *
-   * @throws InvalidBucketNameException
-   *           upon invalid bucket name is given
-   * @throws NoResponseException
-   *           upon no response from server
-   * @throws IOException
-   *           upon connection error
-   * @throws XmlPullParserException
-   *           upon parsing response xml
-   * @throws ErrorResponseException
-   *           upon unsuccessful execution
-   * @throws InternalException
-   *           upon internal library error
-   *
-   * @see #putObject(String bucketName, String objectName, String fileName)
-   */
-  public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
-      Map<String, String> headerMap) throws InvalidBucketNameException, NoSuchAlgorithmException,
-      InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
-      ErrorResponseException, InternalException, InvalidArgumentException, InsufficientDataException {
-    try {
-      putObject(bucketName, objectName, contentType, size, new BufferedInputStream(stream), headerMap);
-    } finally {
-      stream.close();
-    }
-  }
 
   /**
    * Executes put object and returns ETag of the object.
    *
-   * @param bucketName
-   *          Bucket name.
-   * @param objectName
-   *          Object name in the bucket.
-   * @param length
-   *          Length of object data.
-   * @param data
-   *          Object data.
-   * @param uploadId
-   *          Upload ID of multipart put object.
-   * @param partNumber
-   *          Part number of multipart put object.
-   * @param headerMap
-   *          Map with metadata to be updated with the object.
+   * @param bucketName   Bucket name.
+   * @param objectName   Object name in the bucket.
+   * @param length       Length of object data.
+   * @param data         Object data.
+   * @param uploadId     Upload ID of multipart put object.
+   * @param partNumber   Part number of multipart put object.
    */
-  private String putObject(String bucketName, String objectName, int length, Object data, String uploadId,
-      String contentType, int partNumber, Map<String, String> headerMap)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
-
-    HttpResponse response = null;
-
-    // if headermap is null, create new
-    if (headerMap == null) {
-      headerMap = new HashMap<>();
-    }
-    // Set the headermap with content type
+  private String putObject(String bucketName, String objectName, int length,
+                           Object data, String uploadId, String contentType,
+                           int partNumber)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
+    Map<String,String> headerMap = new HashMap<>();
     if (contentType != null && !contentType.isEmpty()) {
       headerMap.put("Content-Type", contentType);
     } else {
       headerMap.put("Content-Type", "application/octet-stream");
     }
 
-    Map<String, String> queryParamMap = null;
+    Map<String,String> queryParamMap = null;
     if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
       queryParamMap = new HashMap<>();
       queryParamMap.put("partNumber", Integer.toString(partNumber));
       queryParamMap.put(UPLOAD_ID, uploadId);
     }
 
-    if (uploadId == null) {
-      // send header only if it is a single put
-      response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
-    } else {
-      // for multipart put, only initMultipart should have the header
-      response = executePut(bucketName, objectName, null, queryParamMap, data, length);
-    }
+    HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
     response.body().close();
     return response.header().etag();
   }
 
+
   /**
    * Executes put object. If size of object data is <= 5MiB, single put object is used else multipart put object is
-   * used. This method also resumes if previous multipart put is found.
+   * used.  This method also resumes if previous multipart put is found.
    *
-   * @param bucketName
-   *          Bucket name.
-   * @param objectName
-   *          Object name in the bucket.
-   * @param contentType
-   *          Content type of object data.
-   * @param size
-   *          Size of object data.
-   * @param data
-   *          Object data.
+   * @param bucketName   Bucket name.
+   * @param objectName   Object name in the bucket.
+   * @param contentType  Content type of object data.
+   * @param size         Size of object data.
+   * @param data         Object data.
    */
-  private void putObject(String bucketName, String objectName, String contentType, long size, Object data,
-      Map<String, String> headerMap) throws InvalidBucketNameException, NoSuchAlgorithmException,
-      InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
-      ErrorResponseException, InternalException, InvalidArgumentException, InsufficientDataException {
+  private void putObject(String bucketName, String objectName, String contentType, long size, Object data)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException,
+           InvalidArgumentException, InsufficientDataException {
     if (size <= MIN_MULTIPART_SIZE) {
       // Single put object.
-      putObject(bucketName, objectName, (int) size, data, null, contentType, 0, headerMap);
+      putObject(bucketName, objectName, (int) size, data, null, contentType, 0);
       return;
     }
 
@@ -3251,7 +2498,7 @@ public final class MinioClient {
     } else {
       // initiate new multipart upload ie no previous multipart found or no previous valid parts for
       // multipart found
-      uploadId = initMultipartUpload(bucketName, objectName, contentType, headerMap);
+      uploadId = initMultipartUpload(bucketName, objectName, contentType);
     }
 
     int expectedReadSize = partSize;
@@ -3273,12 +2520,13 @@ public final class MinioClient {
         }
       }
 
-      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, null, partNumber, headerMap);
+      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, null, partNumber);
       totalParts[partNumber - 1] = new Part(partNumber, etag);
     }
 
     completeMultipart(bucketName, objectName, uploadId, totalParts);
   }
+
 
   /**
    * Returns the parsed current bucket access policy.
@@ -3379,97 +2627,6 @@ public final class MinioClient {
     policy.setPolicy(policyType, objectPrefix);
 
     setBucketPolicy(bucketName, policy);
-  }
-
-
-  /**
-   * Get bucket notification configuration
-   *
-   * @param bucketName   Bucket name.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code NotificationConfiguration notificationConfig = minioClient.getBucketNotification("my-bucketname");
-   * }</pre>
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   *
-   */
-  public NotificationConfiguration getBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("notification", "");
-
-    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
-    NotificationConfiguration result = new NotificationConfiguration();
-    try {
-      result.parseXml(response.body().charStream());
-    } finally {
-      response.body().close();
-    }
-
-    return result;
-  }
-
-
-  /**
-   * Set bucket notification configuration
-   *
-   * @param bucketName   Bucket name.
-   * @param notificationConfiguration   Notification configuration to be set.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
-   * }</pre>
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   *
-   */
-  public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("notification", "");
-    HttpResponse response = executePut(bucketName, null, null, queryParamMap, notificationConfiguration.toString(), 0);
-    response.body().close();
-  }
-
-
-  /**
-   * Remove all bucket notification.
-   *
-   * @param bucketName   Bucket name.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.removeAllBucketNotification("my-bucketname");
-   * }</pre>
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   *
-   */
-  public void removeAllBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
-    setBucketNotification(bucketName, notificationConfiguration);
   }
 
 
@@ -3741,21 +2898,18 @@ public final class MinioClient {
   /**
    * Initializes new multipart upload for given bucket name, object name and content type.
    */
-  private String initMultipartUpload(String bucketName, String objectName, String contentType,
-      Map<String, String> headerMap)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
-    // if headermap is null, create new
-    if (headerMap == null) {
-      headerMap = new HashMap<>();
-    }
+  private String initMultipartUpload(String bucketName, String objectName, String contentType)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
+    Map<String,String> headerMap = new HashMap<>();
     if (contentType != null && !contentType.isEmpty()) {
       headerMap.put("Content-Type", contentType);
     } else {
       headerMap.put("Content-Type", "application/octet-stream");
     }
 
-    Map<String, String> queryParamMap = new HashMap<>();
+    Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploads", "");
 
     HttpResponse response = executePost(bucketName, objectName, headerMap, queryParamMap, "");
@@ -3765,6 +2919,7 @@ public final class MinioClient {
     response.body().close();
     return result.uploadId();
   }
+
 
   /**
    * Executes complete multipart upload of given bucket name, object name, upload ID and parts.

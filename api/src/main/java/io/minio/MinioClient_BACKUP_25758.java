@@ -116,8 +116,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  * <p>
- * This class implements a simple cloud storage client. This client consists
- * of a useful subset of S3 compatible functionality.
+ * This class implements a simple cloud storage client. This client consists of a useful subset of S3 compatible
+ * functionality.
  * </p>
  * <h2>Service</h2>
  * <ul>
@@ -126,9 +126,9 @@ import javax.crypto.spec.SecretKeySpec;
  * </ul>
  * <h2>Bucket</h2>
  * <ul>
- * <li> Creating an object, including automatic upload resuming for large objects.</li>
- * <li> Listing objects in a bucket</li>
- * <li> Listing active multipart uploads</li>
+ * <li>Creating an object, including automatic upload resuming for large objects.</li>
+ * <li>Listing objects in a bucket</li>
+ * <li>Listing active multipart uploads</li>
  * </ul>
  * <h2>Object</h2>
  * <ul>
@@ -139,13 +139,13 @@ import javax.crypto.spec.SecretKeySpec;
  * <li>Deleting an object</li>
  * </ul>
  * <p>
- * Optionally, users can also provide access/secret keys. If keys are provided, all requests by the
- * client will be signed using AWS Signature Version 4.
+ * Optionally, users can also provide access/secret keys. If keys are provided, all requests by the client will be
+ * signed using AWS Signature Version 4.
  * </p>
  * For examples on using this library, please see
  * <a href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples"></a>.
  */
-@SuppressWarnings({"SameParameterValue", "WeakerAccess"})
+@SuppressWarnings({ "SameParameterValue", "WeakerAccess" })
 public final class MinioClient {
   private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // maximum allowed object size is 5TiB
@@ -193,10 +193,20 @@ public final class MinioClient {
   /**
    * Creates Minio client object with given endpoint using anonymous access.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient("https://play.minio.io:9000");
+   * }
+   * </pre>
    *
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   * @param endpoint
+   *          Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
+   * 
+   *          <pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
@@ -207,7 +217,8 @@ public final class MinioClient {
    *              * play.minio.io
    *              * 127.0.0.1
    *              * 192.168.1.60
-   *              * ::1</pre>
+   *              * ::1
+   *          </pre>
    *
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -222,14 +233,21 @@ public final class MinioClient {
     this(endpoint, 0, null, null);
   }
 
-
   /**
    * Creates Minio client object with given URL object using anonymous access.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000")); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"));
+   * }
+   * </pre>
    *
-   * @param url Endpoint URL object.
+   * @param url
+   *          Endpoint URL object.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -247,10 +265,18 @@ public final class MinioClient {
   /**
    * Creates Minio client object with given HttpUrl object using anonymous access.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000")); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000"));
+   * }
+   * </pre>
    *
-   * @param url Endpoint HttpUrl object.
+   * @param url
+   *          Endpoint HttpUrl object.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -269,10 +295,21 @@ public final class MinioClient {
   /**
    * Creates Minio client object with given endpoint, access key and secret key.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID",
+   *       "YOUR-SECRETACCESSKEY");
+   * }
+   * </pre>
+   * 
+   * @param endpoint
+   *          Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
+   * 
+   *          <pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
@@ -283,9 +320,13 @@ public final class MinioClient {
    *              * play.minio.io
    *              * 127.0.0.1
    *              * 192.168.1.60
-   *              * ::1</pre>
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   *              * ::1
+   *          </pre>
+   * 
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -298,17 +339,28 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
-    throws InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey);
   }
 
   /**
    * Creates Minio client object with given endpoint, access key, secret key and region name
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1"); }</pre>
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "YOUR-ACCESSKEYID",
+   *       "YOUR-SECRETACCESSKEY", "us-east-1");
+   * }
+   * </pre>
+   * 
+   * @param endpoint
+   *          Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
+   * 
+   *          <pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
@@ -319,10 +371,15 @@ public final class MinioClient {
    *              * play.minio.io
    *              * 127.0.0.1
    *              * 192.168.1.60
-   *              * ::1</pre>
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param region Region name to access service in endpoint.
+   *              * ::1
+   *          </pre>
+   * 
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
+   * @param region
+   *          Region name to access service in endpoint.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -335,20 +392,30 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey, String region)
-    throws InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, region, !(endpoint != null && endpoint.startsWith("http://")));
   }
 
   /**
    * Creates Minio client object with given URL object, access key and secret key.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"),
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"), "YOUR-ACCESSKEYID",
+   *       "YOUR-SECRETACCESSKEY");
+   * }
+   * </pre>
    *
-   * @param url Endpoint URL object.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   * @param url
+   *          Endpoint URL object.
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -360,20 +427,30 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(URL url, String accessKey, String secretKey)
-    throws InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, accessKey, secretKey);
   }
 
   /**
    * Creates Minio client object with given URL object, access key and secret key.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"),
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"), "YOUR-ACCESSKEYID",
+   *       "YOUR-SECRETACCESSKEY");
+   * }
+   * </pre>
    *
-   * @param url Endpoint HttpUrl object.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   * @param url
+   *          Endpoint HttpUrl object.
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -393,12 +470,20 @@ public final class MinioClient {
   /**
    * Creates Minio client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient =
-   *                  new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-   * }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+   * }
+   * </pre>
    *
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   * @param endpoint
+   *          Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
+   * 
+   *          <pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
@@ -409,11 +494,15 @@ public final class MinioClient {
    *              * play.minio.io
    *              * 127.0.0.1
    *              * 192.168.1.60
-   *              * ::1</pre>
+   *              * ::1
+   *          </pre>
    *
-   * @param port      Valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   * @param port
+   *          Valid port. It should be in between 1 and 65535. Unused if endpoint is an URL.
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -425,19 +514,28 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
-    throws InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     this(endpoint, port, accessKey, secretKey, !(endpoint != null && endpoint.startsWith("http://")));
   }
 
   /**
    * Creates Minio client object with given endpoint, access key and secret key using secure (HTTPS) connection.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient =
-   *                      new MinioClient("play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true);
-   * }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient("play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY",
+   *       true);
+   * }
+   * </pre>
    *
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   * @param endpoint
+   *          Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
+   * 
+   *          <pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
@@ -448,11 +546,15 @@ public final class MinioClient {
    *              * play.minio.io
    *              * 127.0.0.1
    *              * 192.168.1.60
-   *              * ::1</pre>
+   *              * ::1
+   *          </pre>
    *
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param secure If true, access endpoint using HTTPS else access it using HTTP.
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
+   * @param secure
+   *          If true, access endpoint using HTTPS else access it using HTTP.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -464,19 +566,28 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-    throws InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, secure);
   }
 
   /**
    * Creates Minio client object using given endpoint, port, access key, secret key and secure option.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false);
-   * }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY",
+   *       false);
+   * }
+   * </pre>
    *
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   * @param endpoint
+   *          Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
+   * 
+   *          <pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
@@ -487,12 +598,17 @@ public final class MinioClient {
    *              * play.minio.io
    *              * 127.0.0.1
    *              * 192.168.1.60
-   *              * ::1</pre>
+   *              * ::1
+   *          </pre>
    *
-   * @param port      Valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param secure    If true, access endpoint using HTTPS else access it using HTTP.
+   * @param port
+   *          Valid port. It should be in between 1 and 65535. Unused if endpoint is an URL.
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
+   * @param secure
+   *          If true, access endpoint using HTTPS else access it using HTTP.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -504,19 +620,28 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
-    throws InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     this(endpoint, port, accessKey, secretKey, null, secure);
   }
 
   /**
    * Creates Minio client object using given endpoint, port, access key, secret key, region and secure option.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false);
-   * }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   MinioClient minioClient = new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY",
+   *       "us-east-1", false);
+   * }
+   * </pre>
    *
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   * @param endpoint
+   *          Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
+   * 
+   *          <pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
@@ -527,13 +652,19 @@ public final class MinioClient {
    *              * play.minio.io
    *              * 127.0.0.1
    *              * 192.168.1.60
-   *              * ::1</pre>
+   *              * ::1
+   *          </pre>
    *
-   * @param port      Valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param region    Region name to access service in endpoint.
-   * @param secure    If true, access endpoint using HTTPS else access it using HTTP.
+   * @param port
+   *          Valid port. It should be in between 1 and 65535. Unused if endpoint is an URL.
+   * @param accessKey
+   *          Access key to access service in endpoint.
+   * @param secretKey
+   *          Secret key to access service in endpoint.
+   * @param region
+   *          Region name to access service in endpoint.
+   * @param secure
+   *          If true, access endpoint using HTTPS else access it using HTTP.
    *
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -545,7 +676,7 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
-    throws InvalidEndpointException, InvalidPortException {
+      throws InvalidEndpointException, InvalidPortException {
     if (endpoint == null) {
       throw new InvalidEndpointException(NULL_STRING, "null endpoint");
     }
@@ -602,16 +733,9 @@ public final class MinioClient {
     }
 
     if (port == 0) {
-      this.baseUrl = new HttpUrl.Builder()
-          .scheme(scheme.toString())
-          .host(endpoint)
-          .build();
+      this.baseUrl = new HttpUrl.Builder().scheme(scheme.toString()).host(endpoint).build();
     } else {
-      this.baseUrl = new HttpUrl.Builder()
-          .scheme(scheme.toString())
-          .host(endpoint)
-          .port(port)
-          .build();
+      this.baseUrl = new HttpUrl.Builder().scheme(scheme.toString()).host(endpoint).port(port).build();
     }
     this.accessKey = accessKey;
     this.secretKey = secretKey;
@@ -689,18 +813,24 @@ public final class MinioClient {
     }
   }
 
-
   /**
-   * Sets HTTP connect, write and read timeouts.  A value of 0 means no timeout, otherwise values must be between 1 and
+   * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values must be between 1 and
    * Integer.MAX_VALUE when converted to milliseconds.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10),
-   *                            TimeUnit.SECONDS.toMillis(30)); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10),
+   *                            TimeUnit.SECONDS.toMillis(30)); }
+   * </pre>
    *
-   * @param connectTimeout    HTTP connect timeout in milliseconds.
-   * @param writeTimeout      HTTP write timeout in milliseconds.
-   * @param readTimeout       HTTP read timeout in milliseconds.
+   * @param connectTimeout
+   *          HTTP connect timeout in milliseconds.
+   * @param writeTimeout
+   *          HTTP write timeout in milliseconds.
+   * @param readTimeout
+   *          HTTP read timeout in milliseconds.
    */
   public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
     httpClient.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
@@ -711,21 +841,29 @@ public final class MinioClient {
   /**
    * Creates Request object for given request parameters.
    *
-   * @param method         HTTP method.
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
-   * @param region         Amazon S3 region of the bucket.
-   * @param headerMap      Map of HTTP headers for the request.
-   * @param queryParamMap  Map of HTTP query parameters of the request.
-   * @param contentType    Content type of the request body.
-   * @param body           HTTP request body.
-   * @param length         Length of HTTP request body.
+   * @param method
+   *          HTTP method.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param region
+   *          Amazon S3 region of the bucket.
+   * @param headerMap
+   *          Map of HTTP headers for the request.
+   * @param queryParamMap
+   *          Map of HTTP query parameters of the request.
+   * @param contentType
+   *          Content type of the request body.
+   * @param body
+   *          HTTP request body.
+   * @param length
+   *          Length of HTTP request body.
    */
-  private Request createRequest(Method method, String bucketName, String objectName,
-                                String region, Map<String,String> headerMap,
-                                Map<String,String> queryParamMap, final String contentType,
-                                final Object body, final int length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException {
+  private Request createRequest(Method method, String bucketName, String objectName, String region,
+      Map<String, String> headerMap, Map<String, String> queryParamMap, final String contentType, final Object body,
+      final int length)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException {
     if (bucketName == null && objectName != null) {
       throw new InvalidBucketNameException(NULL_STRING, "null bucket name for object '" + objectName + "'");
     }
@@ -773,7 +911,7 @@ public final class MinioClient {
     }
 
     if (queryParamMap != null) {
-      for (Map.Entry<String,String> entry : queryParamMap.entrySet()) {
+      for (Map.Entry<String, String> entry : queryParamMap.entrySet()) {
         urlBuilder.addEncodedQueryParameter(S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
       }
     }
@@ -832,7 +970,7 @@ public final class MinioClient {
     requestBuilder.url(url);
     requestBuilder.method(method.toString(), requestBody);
     if (headerMap != null) {
-      for (Map.Entry<String,String> entry : headerMap.entrySet()) {
+      for (Map.Entry<String, String> entry : headerMap.entrySet()) {
         requestBuilder.header(entry.getKey(), entry.getValue());
       }
     }
@@ -892,26 +1030,32 @@ public final class MinioClient {
     return requestBuilder.build();
   }
 
-
   /**
    * Executes given request parameters.
    *
-   * @param method         HTTP method.
-   * @param region         Amazon S3 region of the bucket.
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
-   * @param headerMap      Map of HTTP headers for the request.
-   * @param queryParamMap  Map of HTTP query parameters of the request.
-   * @param contentType    Content type of the request body.
-   * @param body           HTTP request body.
-   * @param length         Length of HTTP request body.
+   * @param method
+   *          HTTP method.
+   * @param region
+   *          Amazon S3 region of the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param headerMap
+   *          Map of HTTP headers for the request.
+   * @param queryParamMap
+   *          Map of HTTP query parameters of the request.
+   * @param contentType
+   *          Content type of the request body.
+   * @param body
+   *          HTTP request body.
+   * @param length
+   *          Length of HTTP request body.
    */
   private HttpResponse execute(Method method, String region, String bucketName, String objectName,
-                               Map<String,String> headerMap, Map<String,String> queryParamMap,
-                               Object body, int length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      Map<String, String> headerMap, Map<String, String> queryParamMap, Object body, int length)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     String contentType = null;
     if (headerMap != null) {
       contentType = headerMap.get("Content-Type");
@@ -922,9 +1066,8 @@ public final class MinioClient {
       length = bytes.length;
     }
 
-    Request request = createRequest(method, bucketName, objectName, region,
-                                    headerMap, queryParamMap,
-                                    contentType, body, length);
+    Request request = createRequest(method, bucketName, objectName, region, headerMap, queryParamMap, contentType, body,
+        length);
 
     if (this.accessKey != null && this.secretKey != null) {
       request = Signer.signV4(request, region, accessKey, secretKey);
@@ -998,39 +1141,39 @@ public final class MinioClient {
     if (errorResponse == null) {
       ErrorCode ec;
       switch (response.code()) {
-        case 400:
-          ec = ErrorCode.INVALID_URI;
-          break;
-        case 404:
-          if (objectName != null) {
-            ec = ErrorCode.NO_SUCH_KEY;
-          } else if (bucketName != null) {
-            ec = ErrorCode.NO_SUCH_BUCKET;
-          } else {
-            ec = ErrorCode.RESOURCE_NOT_FOUND;
-          }
-          break;
-        case 501:
-        case 405:
-          ec = ErrorCode.METHOD_NOT_ALLOWED;
-          break;
-        case 409:
-          if (bucketName != null) {
-            ec = ErrorCode.NO_SUCH_BUCKET;
-          } else {
-            ec = ErrorCode.RESOURCE_CONFLICT;
-          }
-          break;
-        case 403:
-          ec = ErrorCode.ACCESS_DENIED;
-          break;
-        default:
-          throw new InternalException("unhandled HTTP code " + response.code() + ".  Please report this issue at "
-                                      + "https://github.com/minio/minio-java/issues");
+      case 400:
+        ec = ErrorCode.INVALID_URI;
+        break;
+      case 404:
+        if (objectName != null) {
+          ec = ErrorCode.NO_SUCH_KEY;
+        } else if (bucketName != null) {
+          ec = ErrorCode.NO_SUCH_BUCKET;
+        } else {
+          ec = ErrorCode.RESOURCE_NOT_FOUND;
+        }
+        break;
+      case 501:
+      case 405:
+        ec = ErrorCode.METHOD_NOT_ALLOWED;
+        break;
+      case 409:
+        if (bucketName != null) {
+          ec = ErrorCode.NO_SUCH_BUCKET;
+        } else {
+          ec = ErrorCode.RESOURCE_CONFLICT;
+        }
+        break;
+      case 403:
+        ec = ErrorCode.ACCESS_DENIED;
+        break;
+      default:
+        throw new InternalException("unhandled HTTP code " + response.code() + ".  Please report this issue at "
+            + "https://github.com/minio/minio-java/issues");
       }
 
       errorResponse = new ErrorResponse(ec, bucketName, objectName, request.httpUrl().encodedPath(),
-                                        header.xamzRequestId(), header.xamzId2());
+          header.xamzRequestId(), header.xamzId2());
     }
 
     // invalidate region cache if needed
@@ -1047,16 +1190,14 @@ public final class MinioClient {
    * Updates Region cache for given bucket.
    */
   private void updateRegionCache(String bucketName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     if (bucketName != null && this.accessKey != null && this.secretKey != null
         && !BucketRegionCache.INSTANCE.exists(bucketName)) {
-      Map<String,String> queryParamMap = new HashMap<>();
+      Map<String, String> queryParamMap = new HashMap<>();
       queryParamMap.put("location", null);
 
-      HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
-          null, queryParamMap, null, 0);
+      HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null, null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
       XmlPullParser xpp = xmlPullParserFactory.newPullParser();
@@ -1064,7 +1205,7 @@ public final class MinioClient {
 
       xpp.setInput(response.body().charStream());
       while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
-        if (xpp.getEventType() ==  XmlPullParser.START_TAG && xpp.getName() == "LocationConstraint") {
+        if (xpp.getEventType() == XmlPullParser.START_TAG && xpp.getName() == "LocationConstraint") {
           xpp.next();
           location = getText(xpp, location);
           break;
@@ -1093,12 +1234,12 @@ public final class MinioClient {
   }
 
   /**
-   * Computes region of a given bucket name. If set, this.region is considered. Otherwise,
-   * resort to the server location API.
+   * Computes region of a given bucket name. If set, this.region is considered. Otherwise, resort to the server location
+   * API.
    */
-  private String getRegion(String bucketName) throws InvalidBucketNameException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
-          ErrorResponseException, InternalException {
+  private String getRegion(String bucketName)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     String region;
     if (this.region == null || "".equals(this.region)) {
       updateRegionCache(bucketName);
@@ -1119,126 +1260,139 @@ public final class MinioClient {
     return location;
   }
 
-
   /**
    * Executes GET method for given request parameters.
    *
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
-   * @param headerMap      Map of HTTP headers for the request.
-   * @param queryParamMap  Map of HTTP query parameters of the request.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param headerMap
+   *          Map of HTTP headers for the request.
+   * @param queryParamMap
+   *          Map of HTTP query parameters of the request.
    */
-  private HttpResponse executeGet(String bucketName, String objectName, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+  private HttpResponse executeGet(String bucketName, String objectName, Map<String, String> headerMap,
+      Map<String, String> queryParamMap)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     return execute(Method.GET, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, null, 0);
   }
-
 
   /**
    * Executes HEAD method for given request parameters.
    *
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    */
   private HttpResponse executeHead(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
 
-    HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, null,
-                                    null, null, 0);
+    HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, null, null, null, 0);
     response.body().close();
     return response;
   }
-
 
   /**
    * Executes DELETE method for given request parameters.
    *
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
-   * @param queryParamMap  Map of HTTP query parameters of the request.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param queryParamMap
+   *          Map of HTTP query parameters of the request.
    */
-  private HttpResponse executeDelete(String bucketName, String objectName, Map<String,String> queryParamMap)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    HttpResponse response = execute(Method.DELETE, getRegion(bucketName), bucketName, objectName, null,
-                                    queryParamMap, null, 0);
+  private HttpResponse executeDelete(String bucketName, String objectName, Map<String, String> queryParamMap)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    HttpResponse response = execute(Method.DELETE, getRegion(bucketName), bucketName, objectName, null, queryParamMap,
+        null, 0);
     response.body().close();
     return response;
   }
 
-
   /**
    * Executes POST method for given request parameters.
    *
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
-   * @param headerMap      Map of HTTP headers for the request.
-   * @param queryParamMap  Map of HTTP query parameters of the request.
-   * @param data           HTTP request body data.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param headerMap
+   *          Map of HTTP headers for the request.
+   * @param queryParamMap
+   *          Map of HTTP query parameters of the request.
+   * @param data
+   *          HTTP request body data.
    */
-  private HttpResponse executePost(String bucketName, String objectName, Map<String,String> headerMap,
-                                   Map<String,String> queryParamMap, Object data)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+  private HttpResponse executePost(String bucketName, String objectName, Map<String, String> headerMap,
+      Map<String, String> queryParamMap, Object data)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     return execute(Method.POST, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, data, 0);
   }
 
-
   /**
    * Executes PUT method for given request parameters.
    *
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
-   * @param headerMap      Map of HTTP headers for the request.
-   * @param queryParamMap  Map of HTTP query parameters of the request.
-   * @param region         Amazon S3 region of the bucket.
-   * @param data           HTTP request body data.
-   * @param length         Length of HTTP request body data.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param headerMap
+   *          Map of HTTP headers for the request.
+   * @param queryParamMap
+   *          Map of HTTP query parameters of the request.
+   * @param region
+   *          Amazon S3 region of the bucket.
+   * @param data
+   *          HTTP request body data.
+   * @param length
+   *          Length of HTTP request body data.
    */
-  private HttpResponse executePut(String bucketName, String objectName, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap, String region, Object data, int length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
-                                    headerMap, queryParamMap,
-                                    data, length);
+  private HttpResponse executePut(String bucketName, String objectName, Map<String, String> headerMap,
+      Map<String, String> queryParamMap, String region, Object data, int length)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    HttpResponse response = execute(Method.PUT, region, bucketName, objectName, headerMap, queryParamMap, data, length);
     return response;
   }
 
-
   /**
    * Executes PUT method for given request parameters.
    *
-   * @param bucketName     Bucket name.
-   * @param objectName     Object name in the bucket.
-   * @param headerMap      Map of HTTP headers for the request.
-   * @param queryParamMap  Map of HTTP query parameters of the request.
-   * @param data           HTTP request body data.
-   * @param length         Length of HTTP request body data.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param headerMap
+   *          Map of HTTP headers for the request.
+   * @param queryParamMap
+   *          Map of HTTP query parameters of the request.
+   * @param data
+   *          HTTP request body data.
+   * @param length
+   *          Length of HTTP request body data.
    */
-  private HttpResponse executePut(String bucketName, String objectName, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap, Object data, int length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+  private HttpResponse executePut(String bucketName, String objectName, Map<String, String> headerMap,
+      Map<String, String> queryParamMap, Object data, int length)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     return executePut(bucketName, objectName, headerMap, queryParamMap, getRegion(bucketName), data, length);
   }
 
-
   /**
-   * Sets application's name/version to user agent. For more information about user agent
-   * refer <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">#rfc2616</a>.
+   * Sets application's name/version to user agent. For more information about user agent refer
+   * <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">#rfc2616</a>.
    *
-   * @param name     Your application name.
-   * @param version  Your application version.
+   * @param name
+   *          Your application name.
+   * @param version
+   *          Your application version.
    */
   @SuppressWarnings("unused")
   public void setAppInfo(String name, String version) {
@@ -1250,31 +1404,45 @@ public final class MinioClient {
     this.userAgent = DEFAULT_USER_AGENT + " " + name.trim() + "/" + version.trim();
   }
 
-
   /**
    * Returns meta data information of given object in given bucket.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
-   * System.out.println(objectStat); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
+   *   System.out.println(objectStat);
+   * }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    *
    * @return Populated object metadata.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    * @see ObjectStat
    */
   public ObjectStat statObject(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    ObjectStat objectStat = null;
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
 
@@ -1289,33 +1457,46 @@ public final class MinioClient {
     return objectStat;
   }
 
-
   /**
-   * Gets object's URL in given bucket.  The URL is ONLY useful to retrieve the object's data if the object has
-   * public read permissions.
+   * Gets object's URL in given bucket. The URL is ONLY useful to retrieve the object's data if the object has public
+   * read permissions.
    *
-   * <p><b>Example:</b>
-   * <pre>{@code String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
-   * System.out.println(url); }</pre>
+   * <p>
+   * <b>Example:</b>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public String getObjectUrl(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Request request = createRequest(Method.GET, bucketName, objectName, getRegion(bucketName),
-        null, null, null, null, 0);
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Request request = createRequest(Method.GET, bucketName, objectName, getRegion(bucketName), null, null, null, null,
+        0);
     HttpUrl url = request.httpUrl();
     return url.toString();
   }
@@ -1424,106 +1605,147 @@ public final class MinioClient {
   }
 
   /**
-   * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
-   * after use else the connection will remain open.
+   * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed after use else the
+   * connection will remain open.
    *
-   * <p><b>Example:</b>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
+   * <p>
+   * <b>Example:</b>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");
+   *   byte[] buf = new byte[16384];
+   *   int bytesRead;
+   *   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *     System.out.println(new String(buf, 0, bytesRead));
+   *   }
+   *   stream.close();
    * }
-   * stream.close(); }</pre>
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    *
    * @return {@link InputStream} containing the object data.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
-  public InputStream getObject(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
+  public InputStream getObject(String bucketName, String objectName) throws InvalidBucketNameException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException, InvalidArgumentException {
     return getObject(bucketName, objectName, 0, null);
   }
-
 
   /**
    * Gets object's data starting from given offset as {@link InputStream} in the given bucket. The InputStream must be
    * closed after use else the connection will remain open.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
+   *   byte[] buf = new byte[16384];
+   *   int bytesRead;
+   *   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *     System.out.println(new String(buf, 0, bytesRead));
+   *   }
+   *   stream.close();
    * }
-   * stream.close(); }</pre>
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offset      Offset to read at.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param offset
+   *          Offset to read at.
    *
    * @return {@link InputStream} containing the object's data.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
-  public InputStream getObject(String bucketName, String objectName, long offset)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
+  public InputStream getObject(String bucketName, String objectName, long offset) throws InvalidBucketNameException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException, InvalidArgumentException {
     return getObject(bucketName, objectName, offset, null);
   }
-
 
   /**
    * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The InputStream must be
    * closed after use else the connection will remain open.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
+   *   byte[] buf = new byte[16384];
+   *   int bytesRead;
+   *   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *     System.out.println(new String(buf, 0, bytesRead));
+   *   }
+   *   stream.close();
    * }
-   * stream.close(); }</pre>
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offset      Offset to read at.
-   * @param length      Length to read.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param offset
+   *          Offset to read at.
+   * @param length
+   *          Length to read.
    *
    * @return {@link InputStream} containing the object's data.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public InputStream getObject(String bucketName, String objectName, long offset, Long length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidArgumentException {
     if (offset < 0) {
       throw new InvalidArgumentException("offset should be zero or greater");
     }
@@ -1532,7 +1754,7 @@ public final class MinioClient {
       throw new InvalidArgumentException("length should be greater than zero");
     }
 
-    Map<String,String> headerMap = new HashMap<>();
+    Map<String, String> headerMap = new HashMap<>();
     if (length != null) {
       headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
     } else {
@@ -1543,28 +1765,39 @@ public final class MinioClient {
     return response.body().byteStream();
   }
 
-
   /**
    * Gets object's data in the given bucket and stores it to given file name.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg"); }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param fileName    file name.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param fileName
+   *          file name.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
-  public void getObject(String bucketName, String objectName, String fileName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException {
+  public void getObject(String bucketName, String objectName, String fileName) throws InvalidBucketNameException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException, InvalidArgumentException {
     Path filePath = Paths.get(fileName);
     boolean fileExists = Files.exists(filePath);
 
@@ -1600,8 +1833,8 @@ public final class MinioClient {
         // already downloaded. nothing to do
         return;
       } else if (fileSize > length) {
-        throw new InvalidArgumentException("'" + fileName + "': object size " + length + " is smaller than file size "
-                                           + fileSize);
+        throw new InvalidArgumentException(
+            "'" + fileName + "': object size " + length + " is smaller than file size " + fileSize);
       } else if (!tempFileExists) {
         // before resuming the download, copy filename to tempfilename
         Files.copy(filePath, tempFilePath);
@@ -1621,7 +1854,7 @@ public final class MinioClient {
 
       if (bytesWritten != length - tempFileSize) {
         throw new IOException(tempFileName + ": unexpected data written.  expected = " + (length - tempFileSize)
-                                + ", written = " + bytesWritten);
+            + ", written = " + bytesWritten);
       }
 
       Files.move(tempFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -1659,10 +1892,9 @@ public final class MinioClient {
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
    */
-  public void copyObject(String bucketName, String objectName, String destBucketName)
-      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-      InvalidArgumentException {
+  public void copyObject(String bucketName, String objectName, String destBucketName) throws InvalidKeyException,
+      InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, NoResponseException,
+      ErrorResponseException, InternalException, IOException, XmlPullParserException, InvalidArgumentException {
 
     copyObject(bucketName, objectName, destBucketName, null, null);
   }
@@ -1684,8 +1916,7 @@ public final class MinioClient {
    * @param destBucketName
    *          Bucket name where the object will be copied to.
    * @param destObjectName
-   *          Object name to be created, if not provided uses source object name
-   *          as destination object name.
+   *          Object name to be created, if not provided uses source object name as destination object name.
    *
    * @throws InvalidBucketNameException
    *           upon an invalid bucket name
@@ -1703,9 +1934,8 @@ public final class MinioClient {
   }
 
   /**
-   * Copy a source object into a new object with the provided name in the provided bucket.
-   * optionally can take a key value CopyConditions as well for conditionally attempting
-   * copyObject.
+   * Copy a source object into a new object with the provided name in the provided bucket. optionally can take a key
+   * value CopyConditions as well for conditionally attempting copyObject.
    *
    * </p>
    * <b>Example:</b><br>
@@ -1731,19 +1961,17 @@ public final class MinioClient {
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
    */
-  public void copyObject(String bucketName, String objectName, String destBucketName,
-                         CopyConditions copyConditions)
-        throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-        NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-        InvalidArgumentException {
+  public void copyObject(String bucketName, String objectName, String destBucketName, CopyConditions copyConditions)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
 
     copyObject(bucketName, objectName, destBucketName, null, copyConditions);
   }
 
   /**
-   * Copy a source object into a new object with the provided name in the provided bucket.
-   * optionally can take a key value CopyConditions as well for conditionally attempting
-   * copyObject.
+   * Copy a source object into a new object with the provided name in the provided bucket. optionally can take a key
+   * value CopyConditions as well for conditionally attempting copyObject.
    *
    * </p>
    * <b>Example:</b><br>
@@ -1760,8 +1988,7 @@ public final class MinioClient {
    * @param destBucketName
    *          Bucket name where the object will be copied to.
    * @param destObjectName
-   *          Object name to be created, if not provided uses source object name
-   *          as destination object name.
+   *          Object name to be created, if not provided uses source object name as destination object name.
    * @param copyConditions
    *          CopyConditions object with collection of supported CopyObject conditions.
    *
@@ -1772,11 +1999,10 @@ public final class MinioClient {
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
    */
-  public void copyObject(String bucketName, String objectName, String destBucketName,
-                         String destObjectName, CopyConditions copyConditions)
-      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-      InvalidArgumentException {
+  public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName,
+      CopyConditions copyConditions) throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException,
+      InsufficientDataException, NoResponseException, ErrorResponseException, InternalException, IOException,
+      XmlPullParserException, InvalidArgumentException {
 
     if (bucketName == null) {
       throw new InvalidArgumentException("Source bucket name cannot be empty");
@@ -1806,8 +2032,7 @@ public final class MinioClient {
       headerMap.putAll(copyConditions.getConditions());
     }
 
-    HttpResponse response = executePut(destBucketName, destObjectName, headerMap,
-        null, "", 0);
+    HttpResponse response = executePut(destBucketName, destObjectName, headerMap, null, "", 0);
 
     // For now ignore the copyObjectResult, just read and parse it.
     CopyObjectResult result = new CopyObjectResult();
@@ -1818,37 +2043,51 @@ public final class MinioClient {
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time with custom request params.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);
-   * System.out.println(url); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param expires     Expiration time in seconds of presigned URL.
-   * @param reqParams   Override values for set of response headers. Currently supported request parameters are
-   *                    [response-expires, response-content-type, response-cache-control, response-content-disposition]
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param expires
+   *          Expiration time in seconds of presigned URL.
+   * @param reqParams
+   *          Override values for set of response headers. Currently supported request parameters are [response-expires,
+   *          response-content-type, response-cache-control, response-content-disposition]
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws IOException
+   *           upon signature calculation failure
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException
+   *           upon input expires is out of range
    */
-  public String presignedGetObject(String bucketName, String objectName, Integer expires,
-                                   Map<String, String> reqParams)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+  public String presignedGetObject(String bucketName, String objectName, Integer expires, Map<String, String> reqParams)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidExpiresRangeException {
     // Validate input.
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
 
     String region = getRegion(bucketName);
-    Request request = createRequest(Method.GET, bucketName, objectName, region,
-                                    null, reqParams, null, null, 0);
+    Request request = createRequest(Method.GET, bucketName, objectName, region, null, reqParams, null, null, 0);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
@@ -1856,78 +2095,117 @@ public final class MinioClient {
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-   * System.out.println(url); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param expires     Expiration time in seconds of presigned URL.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param expires
+   *          Expiration time in seconds of presigned URL.
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws IOException
+   *           upon signature calculation failure
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException
+   *           upon input expires is out of range
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidExpiresRangeException {
     return presignedGetObject(bucketName, objectName, expires, null);
   }
 
-
   /**
-   * Returns an presigned URL to download the object in the bucket with default expiry time.
-   * Default expiry time is 7 days in seconds.
+   * Returns an presigned URL to download the object in the bucket with default expiry time. Default expiry time is 7
+   * days in seconds.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");
-   * System.out.println(url); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    *
    * @return string contains URL to download the object
    *
-   * @throws IOException     upon connection error
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws IOException
+   *           upon connection error
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException
+   *           upon input expires is out of range
    */
-  public String presignedGetObject(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+  public String presignedGetObject(String bucketName, String objectName) throws InvalidBucketNameException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException, InvalidExpiresRangeException {
     return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME, null);
   }
-
 
   /**
    * Returns a presigned URL to upload an object in the bucket with given expiry time.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-   * System.out.println(url); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name
-   * @param objectName  Object name in the bucket
-   * @param expires     Expiration time in seconds to presigned URL.
+   * @param bucketName
+   *          Bucket name
+   * @param objectName
+   *          Object name in the bucket
+   * @param expires
+   *          Expiration time in seconds to presigned URL.
    *
    * @return string contains URL to upload the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws IOException
+   *           upon signature calculation failure
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException
+   *           upon input expires is out of range
    */
   public String presignedPutObject(String bucketName, String objectName, Integer expires)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidExpiresRangeException {
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
     }
@@ -1938,90 +2216,113 @@ public final class MinioClient {
     return url.toString();
   }
 
-
   /**
-   * Returns a presigned URL to upload an object in the bucket with default expiry time.
-   * Default expiry time is 7 days in seconds.
+   * Returns a presigned URL to upload an object in the bucket with default expiry time. Default expiry time is 7 days
+   * in seconds.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");
-   * System.out.println(url); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");
+   *   System.out.println(url);
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    *
    * @return string contains URL to upload the object.
    *
-   * @throws IOException     upon connection error
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
-   * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws IOException
+   *           upon connection error
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException
+   *           upon input expires is out of range
    */
-  public String presignedPutObject(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+  public String presignedPutObject(String bucketName, String objectName) throws InvalidBucketNameException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException, InvalidExpiresRangeException {
     return presignedPutObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
   }
-
 
   /**
    * Returns string map for given {@link PostPolicy} to upload object with various post policy conditions.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code // Create new PostPolicy object for 'my-bucketname', 'my-objectname' and 7 days expire time from now.
-   * PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
-   * // 'my-objectname' should be 'image/png' content type
-   * policy.setContentType("image/png");
-   * Map<String,String> formData = minioClient.presignedPostPolicy(policy);
-   * // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
-   * System.out.print("curl -X POST ");
-   * for (Map.Entry<String,String> entry : formData.entrySet()) {
-   *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code // Create new PostPolicy object for 'my-bucketname', 'my-objectname' and 7 days expire time from now.
+   *   PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
+   *   // 'my-objectname' should be 'image/png' content type
+   *   policy.setContentType("image/png");
+   *   Map<String, String> formData = minioClient.presignedPostPolicy(policy);
+   *   // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
+   *   System.out.print("curl -X POST ");
+   *   for (Map.Entry<String, String> entry : formData.entrySet()) {
+   *     System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+   *   }
+   *   System.out.println(" -F file=@/tmp/userpic.png https://play.minio.io:9000/my-bucketname");
    * }
-   * System.out.println(" -F file=@/tmp/userpic.png https://play.minio.io:9000/my-bucketname"); }</pre>
+   * </pre>
    *
-   * @param policy Post policy of an object.
+   * @param policy
+   *          Post policy of an object.
    * @return Map of strings to construct form-data.
    *
    * @see PostPolicy
    */
-  public Map<String, String> presignedPostPolicy(PostPolicy policy)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException {
+  public Map<String, String> presignedPostPolicy(PostPolicy policy) throws InvalidBucketNameException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException, InvalidArgumentException {
     return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName()));
   }
-
 
   /**
    * Removes an object from a bucket.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.removeObject("my-bucketname", "my-objectname"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.removeObject("my-bucketname", "my-objectname"); }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public void removeObject(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     executeDelete(bucketName, objectName, null);
   }
 
-
   private List<DeleteError> removeObject(String bucketName, List<DeleteObject> objectList)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("delete", "");
 
     DeleteRequest request = new DeleteRequest(objectList);
@@ -2058,23 +2359,30 @@ public final class MinioClient {
     return errorList;
   }
 
-
   /**
    * Removes multiple objects from a bucket.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code // Create object list for removal.
-   * List<String> objectNames = new LinkedList<String>();
-   * objectNames.add("my-objectname1");
-   * objectNames.add("my-objectname2");
-   * objectNames.add("my-objectname3");
-   * for (Result<DeleteError> errorResult: minioClient.removeObject("my-bucketname", objectNames)) {
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code // Create object list for removal.
+   *   List<String> objectNames = new LinkedList<String>();
+   *   objectNames.add("my-objectname1");
+   *   objectNames.add("my-objectname2");
+   *   objectNames.add("my-objectname3");
+   *   for (Result<DeleteError> errorResult : minioClient.removeObject("my-bucketname", objectNames)) {
    *     DeleteError error = errorResult.get();
    *     System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
-   * } }</pre>
+   *   }
+   * }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectNames List of Object names in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectNames
+   *          List of Object names in the bucket.
    */
   public Iterable<Result<DeleteError>> removeObject(final String bucketName, final Iterable<String> objectNames) {
     return new Iterable<Result<DeleteError>>() {
@@ -2090,7 +2398,7 @@ public final class MinioClient {
             try {
               List<DeleteObject> objectList = new LinkedList<DeleteObject>();
               int i = 0;
-              for (String objectName: objectNames) {
+              for (String objectName : objectNames) {
                 objectList.add(new DeleteObject(objectName));
                 i++;
                 // Maximum 1000 objects are allowed in a request
@@ -2105,8 +2413,8 @@ public final class MinioClient {
 
               errorList = removeObject(bucketName, objectList);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                | InternalException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (errorList != null) {
@@ -2174,7 +2482,8 @@ public final class MinioClient {
   /**
    * Lists object information in given bucket.
    *
-   * @param bucketName Bucket name.
+   * @param bucketName
+   *          Bucket name.
    *
    * @return an iterator of Result Items.
    */
@@ -2182,37 +2491,47 @@ public final class MinioClient {
     return listObjects(bucketName, null);
   }
 
-
   /**
    * Lists object information in given bucket and prefix.
    *
-   * @param bucketName Bucket name.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
+   * @param bucketName
+   *          Bucket name.
+   * @param prefix
+   *          Prefix string. List objects whose name starts with `prefix`.
    *
    * @return an iterator of Result Items.
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix)
-    throws XmlPullParserException {
+      throws XmlPullParserException {
     // list all objects recursively
     return listObjects(bucketName, prefix, true);
   }
 
-
   /**
    * Lists object information as {@code Iterable<Result><Item>>} in given bucket, prefix and recursive flag.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname");
-   * for (Result<Item> result : myObjects) {
-   *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * } }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname");
+   *   for (Result<Item> result : myObjects) {
+   *     Item item = result.get();
+   *     System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   *   }
+   * }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is either a full object
-   *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
-   *                  '/' will be merged into one entry.
+   * @param bucketName
+   *          Bucket name.
+   * @param prefix
+   *          Prefix string. List objects whose name starts with `prefix`.
+   * @param recursive
+   *          when false, emulates a directory structure where each listing returned is either a full object or part of
+   *          the object's key up to the first '/'. All objects wit the same prefix up to the first '/' will be merged
+   *          into one entry.
    *
    * @return an iterator of Result Items.
    *
@@ -2224,25 +2543,34 @@ public final class MinioClient {
     return listObjects(bucketName, prefix, recursive, false);
   }
 
-
   /**
    * Lists object information as {@code Iterable<Result><Item>>} in given bucket, prefix, recursive flag and S3 API
    * version to use.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname", "my-object-prefix", true,
-   *                                    false);
-   * for (Result<Item> result : myObjects) {
-   *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * } }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname", "my-object-prefix", true, false);
+   *   for (Result<Item> result : myObjects) {
+   *     Item item = result.get();
+   *     System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   *   }
+   * }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is either a full object
-   *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
-   *                  '/' will be merged into one entry.
-   * @param useVersion1 If set, Amazon AWS S3 List Object V1 is used, else List Object V2 is used as default.
+   * @param bucketName
+   *          Bucket name.
+   * @param prefix
+   *          Prefix string. List objects whose name starts with `prefix`.
+   * @param recursive
+   *          when false, emulates a directory structure where each listing returned is either a full object or part of
+   *          the object's key up to the first '/'. All objects wit the same prefix up to the first '/' will be merged
+   *          into one entry.
+   * @param useVersion1
+   *          If set, Amazon AWS S3 List Object V1 is used, else List Object V2 is used as default.
    *
    * @return an iterator of Result Items.
    *
@@ -2251,14 +2579,13 @@ public final class MinioClient {
    * @see #listObjects(String bucketName, String prefix, boolean recursive)
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive,
-                                            final boolean useVersion1) {
+      final boolean useVersion1) {
     if (useVersion1) {
       return listObjectsV1(bucketName, prefix, recursive);
     }
 
     return listObjectsV2(bucketName, prefix, recursive);
   }
-
 
   private Iterable<Result<Item>> listObjectsV2(final String bucketName, final String prefix, final boolean recursive) {
     return new Iterable<Result<Item>>() {
@@ -2289,8 +2616,8 @@ public final class MinioClient {
             try {
               this.listBucketResult = listObjectsV2(bucketName, continuationToken, prefix, delimiter);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                | InternalException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listBucketResult != null) {
@@ -2385,20 +2712,22 @@ public final class MinioClient {
     };
   }
 
-
   /**
    * Returns {@link ListBucketResult} of given bucket, marker, prefix and delimiter.
    *
-   * @param bucketName Bucket name.
-   * @param marker     Marker string.  List objects whose name is greater than `marker`.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
-   * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
+   * @param bucketName
+   *          Bucket name.
+   * @param marker
+   *          Marker string. List objects whose name is greater than `marker`.
+   * @param prefix
+   *          Prefix string. List objects whose name starts with `prefix`.
+   * @param delimiter
+   *          delimiter string. Group objects whose name contains `delimiter`.
    */
   private ListBucketResult listObjectsV2(String bucketName, String continuationToken, String prefix, String delimiter)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("list-type", "2");
 
     if (continuationToken != null) {
@@ -2420,7 +2749,6 @@ public final class MinioClient {
     response.body().close();
     return result;
   }
-
 
   private Iterable<Result<Item>> listObjectsV1(final String bucketName, final String prefix, final boolean recursive) {
     return new Iterable<Result<Item>>() {
@@ -2456,8 +2784,8 @@ public final class MinioClient {
             try {
               this.listBucketResult = listObjectsV1(bucketName, marker, prefix, delimiter);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                | InternalException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listBucketResult != null) {
@@ -2553,22 +2881,24 @@ public final class MinioClient {
     };
   }
 
-
   /**
    * Returns {@link ListBucketResultV1} of given bucket, marker, prefix and delimiter.
    *
-   * @param bucketName Bucket name.
-   * @param marker     Marker string.  List objects whose name is greater than `marker`.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
-   * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
-   * @param maxKeys    Maximum number of entries to be returned.
+   * @param bucketName
+   *          Bucket name.
+   * @param marker
+   *          Marker string. List objects whose name is greater than `marker`.
+   * @param prefix
+   *          Prefix string. List objects whose name starts with `prefix`.
+   * @param delimiter
+   *          delimiter string. Group objects whose name contains `delimiter`.
+   * @param maxKeys
+   *          Maximum number of entries to be returned.
    */
   private ListBucketResultV1 listObjectsV1(String bucketName, String marker, String prefix, String delimiter)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     if (marker != null) {
       queryParamMap.put("marker", marker);
     }
@@ -2589,28 +2919,38 @@ public final class MinioClient {
     return result;
   }
 
-
   /**
    * Returns all bucket information owned by the current user.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code List<Bucket> bucketList = minioClient.listBuckets();
-   * for (Bucket bucket : bucketList) {
-   *   System.out.println(bucket.creationDate() + ", " + bucket.name());
-   * } }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   List<Bucket> bucketList = minioClient.listBuckets();
+   *   for (Bucket bucket : bucketList) {
+   *     System.out.println(bucket.creationDate() + ", " + bucket.name());
+   *   }
+   * }
+   * </pre>
    *
    * @return List of bucket type.
    *
-   * @throws NoResponseException     upon no response from server
-   * @throws IOException             upon connection error
-   * @throws XmlPullParserException  upon parsing response xml
-   * @throws ErrorResponseException  upon unsuccessful execution
-   * @throws InternalException       upon internal library error
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public List<Bucket> listBuckets()
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     HttpResponse response = executeGet(null, null, null, null);
     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
     result.parseXml(response.body().charStream());
@@ -2618,33 +2958,45 @@ public final class MinioClient {
     return result.buckets();
   }
 
-
   /**
    * Checks if given bucket exist and is having read access.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code boolean found = minioClient.bucketExists("my-bucketname");
-   * if (found) {
-   *   System.out.println("my-bucketname exists");
-   * } else {
-   *   System.out.println("my-bucketname does not exist");
-   * } }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   boolean found = minioClient.bucketExists("my-bucketname");
+   *   if (found) {
+   *     System.out.println("my-bucketname exists");
+   *   } else {
+   *     System.out.println("my-bucketname does not exist");
+   *   }
+   * }
+   * </pre>
    *
-   * @param bucketName Bucket name.
+   * @param bucketName
+   *          Bucket name.
    *
    * @return True if the bucket exists and the user has at least read access.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public boolean bucketExists(String bucketName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     try {
       executeHead(bucketName, null);
       return true;
@@ -2657,48 +3009,63 @@ public final class MinioClient {
     return false;
   }
 
-
   /**
    * Creates a bucket with default region.
    *
-   * @param bucketName Bucket name.
+   * @param bucketName
+   *          Bucket name.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
-  public void makeBucket(String bucketName)
-    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
-                IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-                InternalException {
+  public void makeBucket(String bucketName) throws InvalidBucketNameException, RegionConflictException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException {
     this.makeBucket(bucketName, null);
   }
-
 
   /**
    * Creates a bucket with given region.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.makeBucket("my-bucketname");
-   * System.out.println("my-bucketname is created successfully"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.makeBucket("my-bucketname");
+   * System.out.println("my-bucketname is created successfully"); }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param region     region in which the bucket will be created.
+   * @param bucketName
+   *          Bucket name.
+   * @param region
+   *          region in which the bucket will be created.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
-  public void makeBucket(String bucketName, String region)
-    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
-                IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-                InternalException {
+  public void makeBucket(String bucketName, String region) throws InvalidBucketNameException, RegionConflictException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException {
     // If region param is not provided, set it with the one provided by constructor
     if (region == null) {
       region = this.region;
@@ -2709,7 +3076,7 @@ public final class MinioClient {
     }
     String configString;
     if (region == null || US_EAST_1.equals(region)) {
-      // for 'us-east-1', location constraint is not required.  for more info
+      // for 'us-east-1', location constraint is not required. for more info
       // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
       configString = "";
     } else {
@@ -2721,35 +3088,42 @@ public final class MinioClient {
     response.body().close();
   }
 
-
   /**
    * Removes a bucket.
    * <p>
-   * NOTE: -
-   * All objects (including all object versions and delete markers) in the bucket
-   * must be deleted prior, this API will not recursively delete objects
+   * NOTE: - All objects (including all object versions and delete markers) in the bucket must be deleted prior, this
+   * API will not recursively delete objects
    * </p>
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.removeBucket("my-bucketname");
-   * System.out.println("my-bucketname is removed successfully"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.removeBucket("my-bucketname");
+   * System.out.println("my-bucketname is removed successfully"); }
+   * </pre>
    *
-   * @param bucketName Bucket name.
+   * @param bucketName
+   *          Bucket name.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public void removeBucket(String bucketName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     executeDelete(bucketName, null, null);
   }
-
 
   /**
    * Uploads given file as object in given bucket.
@@ -2757,32 +3131,41 @@ public final class MinioClient {
    * If the object is larger than 5MB, the client will automatically use a multipart session.
    * </p>
    * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
+   * again. The client will examine all parts of any current upload session and attempt to reuse the session
+   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
+   * resume uploading where the session left off.
    * </p>
    * <p>
    * If the multipart session fails, the user is responsible for resuming or removing the session.
    * </p>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name to create in the bucket.
-   * @param fileName    File name to upload.
-   * @param contentType File content type of the object, user supplied.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name to create in the bucket.
+   * @param fileName
+   *          File name to upload.
+   * @param contentType
+   *          File content type of the object, user supplied.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public void putObject(String bucketName, String objectName, String fileName, String contentType)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException, InsufficientDataException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidArgumentException, InsufficientDataException {
     if (fileName == null || "".equals(fileName)) {
       throw new InvalidArgumentException("empty file name is not allowed");
     }
@@ -2812,34 +3195,41 @@ public final class MinioClient {
    * If the object is larger than 5MB, the client will automatically use a multipart session.
    * </p>
    * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
+   * again. The client will examine all parts of any current upload session and attempt to reuse the session
+   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
+   * resume uploading where the session left off.
    * </p>
    * <p>
    * If the multipart session fails, the user is responsible for resuming or removing the session.
    * </p>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name to create in the bucket.
-   * @param fileName    File name to upload.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name to create in the bucket.
+   * @param fileName
+   *          File name to upload.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public void putObject(String bucketName, String objectName, String fileName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException, InsufficientDataException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidArgumentException, InsufficientDataException {
     putObject(bucketName, objectName, fileName, null);
   }
-
 
   /**
    * Uploads data from given stream as object to given bucket.
@@ -2847,61 +3237,82 @@ public final class MinioClient {
    * If the object is larger than 5MB, the client will automatically use a multipart session.
    * </p>
    * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
+   * again. The client will examine all parts of any current upload session and attempt to reuse the session
+   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
+   * resume uploading where the session left off.
    * </p>
    * <p>
    * If the multipart session fails, the user is responsible for resuming or removing the session.
    * </p>
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code StringBuilder builder = new StringBuilder();
-   * for (int i = 0; i < 1000; i++) {
-   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
-   *   builder.append("(29 letters)\n");
-   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
-   *   builder.append("(31 letters)\n");
-   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
-   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
-   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
-   *   builder.append("(39 letters)\n");
-   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
-   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
-   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
-   *   builder.append("computers after System 7.\n");
-   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
-   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
-   *   builder.append("---\n");
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   StringBuilder builder = new StringBuilder();
+   *   for (int i = 0; i < 1000; i++) {
+   *     builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *     builder.append("(29 letters)\n");
+   *     builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *     builder.append("(31 letters)\n");
+   *     builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *     builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *     builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *     builder.append("(39 letters)\n");
+   *     builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *     builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *     builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *     builder.append("computers after System 7.\n");
+   *     builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *     builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *     builder.append("---\n");
+   *   }
+   *   ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   *   // create object
+   *   minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
+   *   bais.close();
+   *   System.out.println("my-bucketname is uploaded successfully");
    * }
-   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-   * // create object
-   * minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
-   * bais.close();
-   * System.out.println("my-bucketname is uploaded successfully"); }</pre>
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name to create in the bucket.
-   * @param stream      stream to upload.
-   * @param size        Size of all the data that will be uploaded.
-   * @param contentType Content type of the stream.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name to create in the bucket.
+   * @param stream
+   *          stream to upload.
+   * @param size
+   *          Size of all the data that will be uploaded.
+   * @param contentType
+   *          Content type of the stream.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException, InsufficientDataException {
-    putObject(bucketName, objectName, contentType, size, new BufferedInputStream(stream));
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidArgumentException, InsufficientDataException {
+    try {
+      putObject(bucketName, objectName, contentType, size, new BufferedInputStream(stream), null);
+    } finally {
+      stream.close();
+    }
   }
 
   /**
@@ -3283,11 +3694,10 @@ public final class MinioClient {
   /**
    * Returns the parsed current bucket access policy.
    */
-  private BucketPolicy getBucketPolicy(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+  private BucketPolicy getBucketPolicy(String bucketName) throws InvalidBucketNameException,
+      InvalidObjectPrefixException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
     BucketPolicy policy = null;
@@ -3310,39 +3720,41 @@ public final class MinioClient {
     return policy;
   }
 
-
   /**
    * Get bucket policy at given objectPrefix
    *
-   * @param bucketName   Bucket name.
-   * @param objectPrefix name of the object prefix
+   * @param bucketName
+   *          Bucket name.
+   * @param objectPrefix
+   *          name of the object prefix
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String policy = minioClient.getBucketPolicy("my-bucketname", "my-objectname");
-   * System.out.println(policy); }</pre>
+   *          </p>
+   *          <b>Example:</b><br>
+   * 
+   *          <pre>
+   * {@code String policy = minioClient.getBucketPolicy("my-bucketname", "my-objectname");
+   * System.out.println(policy); }
+   *          </pre>
    */
-  public PolicyType getBucketPolicy(String bucketName, String objectPrefix)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+  public PolicyType getBucketPolicy(String bucketName, String objectPrefix) throws InvalidBucketNameException,
+      InvalidObjectPrefixException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     checkObjectPrefix(objectPrefix);
 
     BucketPolicy policy = getBucketPolicy(bucketName);
     return policy.getPolicy(objectPrefix);
   }
 
-
   /**
    * Sets the bucket access policy.
    */
-  private void setBucketPolicy(String bucketName, BucketPolicy policy)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> headerMap = new HashMap<>();
+  private void setBucketPolicy(String bucketName, BucketPolicy policy) throws InvalidBucketNameException,
+      InvalidObjectPrefixException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> headerMap = new HashMap<>();
     headerMap.put("Content-Type", "application/json");
 
-    Map<String,String> queryParamMap = new HashMap<>();
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
     String policyJson = policy.getJson();
@@ -3351,21 +3763,27 @@ public final class MinioClient {
     response.body().close();
   }
 
-
   /**
    * Set policy on bucket and object prefix.
    *
-   * @param bucketName   Bucket name.
-   * @param objectPrefix Name of the object prefix.
-   * @param policyType   Enum of {@link PolicyType}.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectPrefix
+   *          Name of the object prefix.
+   * @param policyType
+   *          Enum of {@link PolicyType}.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code setBucketPolicy("my-bucketname", "my-objectname", BucketPolicy.ReadOnly); }</pre>
+   *          </p>
+   *          <b>Example:</b><br>
+   * 
+   *          <pre>
+   * {@code setBucketPolicy("my-bucketname", "my-objectname", BucketPolicy.ReadOnly); }
+   *          </pre>
    */
   public void setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+      throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+      InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
+      ErrorResponseException, InternalException {
     checkObjectPrefix(objectPrefix);
 
     BucketPolicy policy = getBucketPolicy(bucketName);
@@ -3381,29 +3799,38 @@ public final class MinioClient {
     setBucketPolicy(bucketName, policy);
   }
 
-
   /**
    * Get bucket notification configuration
    *
-   * @param bucketName   Bucket name.
+   * @param bucketName
+   *          Bucket name.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code NotificationConfiguration notificationConfig = minioClient.getBucketNotification("my-bucketname");
-   * }</pre>
+   *          </p>
+   *          <b>Example:</b><br>
+   * 
+   *          <pre>
+   * {@code NotificationConfiguration notificationConfig = minioClient.getBucketNotification("my-bucketname");
+   * }
+   *          </pre>
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    *
    */
-  public NotificationConfiguration getBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+  public NotificationConfiguration getBucketNotification(String bucketName) throws InvalidBucketNameException,
+      InvalidObjectPrefixException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
 
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
@@ -3417,69 +3844,87 @@ public final class MinioClient {
     return result;
   }
 
-
   /**
    * Set bucket notification configuration
    *
-   * @param bucketName   Bucket name.
-   * @param notificationConfiguration   Notification configuration to be set.
+   * @param bucketName
+   *          Bucket name.
+   * @param notificationConfiguration
+   *          Notification configuration to be set.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
-   * }</pre>
+   *          </p>
+   *          <b>Example:</b><br>
+   * 
+   *          <pre>
+   * {@code minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
+   * }
+   *          </pre>
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    *
    */
   public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+      throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+      InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
+      ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
     HttpResponse response = executePut(bucketName, null, null, queryParamMap, notificationConfiguration.toString(), 0);
     response.body().close();
   }
 
-
   /**
    * Remove all bucket notification.
    *
-   * @param bucketName   Bucket name.
+   * @param bucketName
+   *          Bucket name.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.removeAllBucketNotification("my-bucketname");
-   * }</pre>
+   *          </p>
+   *          <b>Example:</b><br>
+   * 
+   *          <pre>
+   * {@code minioClient.removeAllBucketNotification("my-bucketname");
+   * }
+   *          </pre>
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    *
    */
-  public void removeAllBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+  public void removeAllBucketNotification(String bucketName) throws InvalidBucketNameException,
+      InvalidObjectPrefixException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
     setBucketNotification(bucketName, notificationConfiguration);
   }
-
 
   /**
    * Returns next part if exists.
    */
   private Part getPart(Iterator<Result<Part>> existingParts)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     Part part;
     part = null;
     if (existingParts.hasNext()) {
@@ -3488,19 +3933,17 @@ public final class MinioClient {
     return part;
   }
 
-
   /**
    * Returns latest upload ID of incomplete multipart upload of given bucket name and object name.
    */
   private String getLatestIncompleteUploadId(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     Upload latestUpload = null;
     for (Result<Upload> result : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = result.get();
       if (upload.objectName().equals(objectName)
-            && (latestUpload == null || latestUpload.initiated().compareTo(upload.initiated()) < 0)) {
+          && (latestUpload == null || latestUpload.initiated().compareTo(upload.initiated()) < 0)) {
         latestUpload = upload;
       }
     }
@@ -3512,11 +3955,11 @@ public final class MinioClient {
     }
   }
 
-
   /**
    * Lists incomplete uploads of objects in given bucket.
    *
-   * @param bucketName Bucket name.
+   * @param bucketName
+   *          Bucket name.
    *
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
@@ -3525,37 +3968,47 @@ public final class MinioClient {
     return listIncompleteUploads(bucketName, null, true, true);
   }
 
-
   /**
    * Lists incomplete uploads of objects in given bucket and prefix.
    *
-   * @param bucketName Bucket name.
-   * @param prefix filters the list of uploads to include only those that start with prefix.
+   * @param bucketName
+   *          Bucket name.
+   * @param prefix
+   *          filters the list of uploads to include only those that start with prefix.
    *
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
    */
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
-    throws XmlPullParserException {
+      throws XmlPullParserException {
     return listIncompleteUploads(bucketName, prefix, true, true);
   }
-
 
   /**
    * Lists incomplete uploads of objects in given bucket, prefix and recursive flag.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname");
-   * for (Result<Upload> result : myObjects) {
-   *   Upload upload = result.get();
-   *   System.out.println(upload.uploadId() + ", " + upload.objectName());
-   * } }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {
+   *   &#64;code
+   *   Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname");
+   *   for (Result<Upload> result : myObjects) {
+   *     Upload upload = result.get();
+   *     System.out.println(upload.uploadId() + ", " + upload.objectName());
+   *   }
+   * }
+   * </pre>
    *
-   * @param bucketName  Bucket name.
-   * @param prefix      Prefix string.  List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is either a full object
-   *                  or part of the object's key up to the first '/'. All uploads with the same prefix up to the first
-   *                  '/' will be merged into one entry.
+   * @param bucketName
+   *          Bucket name.
+   * @param prefix
+   *          Prefix string. List objects whose name starts with `prefix`.
+   * @param recursive
+   *          when false, emulates a directory structure where each listing returned is either a full object or part of
+   *          the object's key up to the first '/'. All uploads with the same prefix up to the first '/' will be merged
+   *          into one entry.
    *
    * @return an iterator of Upload.
    *
@@ -3566,13 +4019,12 @@ public final class MinioClient {
     return listIncompleteUploads(bucketName, prefix, recursive, true);
   }
 
-
   /**
-   * Returns {@code Iterable<Result<Upload>>} of given bucket name, prefix and recursive flag.
-   * All parts size are aggregated when aggregatePartSize is true.
+   * Returns {@code Iterable<Result<Upload>>} of given bucket name, prefix and recursive flag. All parts size are
+   * aggregated when aggregatePartSize is true.
    */
   private Iterable<Result<Upload>> listIncompleteUploads(final String bucketName, final String prefix,
-                                                         final boolean recursive, final boolean aggregatePartSize) {
+      final boolean recursive, final boolean aggregatePartSize) {
     return new Iterable<Result<Upload>>() {
       @Override
       public Iterator<Result<Upload>> iterator() {
@@ -3595,10 +4047,10 @@ public final class MinioClient {
 
             try {
               this.listMultipartUploadsResult = listIncompleteUploads(bucketName, nextKeyMarker, nextUploadIdMarker,
-                                                                      prefix, delimiter, 1000);
+                  prefix, delimiter, 1000);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                | InternalException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listMultipartUploadsResult != null) {
@@ -3610,9 +4062,9 @@ public final class MinioClient {
           }
 
           private synchronized long getAggregatedPartSize(String objectName, String uploadId)
-            throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-                   InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-                   InternalException {
+              throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+              InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+              InternalException {
             long aggregatedPartSize = 0;
 
             for (Result<Part> result : listObjectParts(bucketName, objectName, uploadId)) {
@@ -3632,8 +4084,7 @@ public final class MinioClient {
               populate();
             }
 
-            if (this.error == null && !this.uploadIterator.hasNext()
-                  && this.listMultipartUploadsResult.isTruncated()) {
+            if (this.error == null && !this.uploadIterator.hasNext() && this.listMultipartUploadsResult.isTruncated()) {
               this.nextKeyMarker = this.listMultipartUploadsResult.nextKeyMarker();
               this.nextUploadIdMarker = this.listMultipartUploadsResult.nextUploadIdMarker();
               populate();
@@ -3661,8 +4112,7 @@ public final class MinioClient {
               populate();
             }
 
-            if (this.error == null && !this.uploadIterator.hasNext()
-                  && this.listMultipartUploadsResult.isTruncated()) {
+            if (this.error == null && !this.uploadIterator.hasNext() && this.listMultipartUploadsResult.isTruncated()) {
               this.nextKeyMarker = this.listMultipartUploadsResult.nextKeyMarker();
               this.nextUploadIdMarker = this.listMultipartUploadsResult.nextUploadIdMarker();
               populate();
@@ -3682,8 +4132,8 @@ public final class MinioClient {
                 try {
                   aggregatedPartSize = getAggregatedPartSize(upload.objectName(), upload.uploadId());
                 } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                         | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                         | InternalException e) {
+                    | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                    | InternalException e) {
                   // special case: ignore the error as we can't propagate the exception in next()
                   aggregatedPartSize = -1;
                 }
@@ -3707,21 +4157,19 @@ public final class MinioClient {
     };
   }
 
-
   /**
-   * Executes List Incomplete uploads S3 call for given bucket name, key marker, upload id marker, prefix,
-   * delimiter and maxUploads and returns {@link ListMultipartUploadsResult}.
+   * Executes List Incomplete uploads S3 call for given bucket name, key marker, upload id marker, prefix, delimiter and
+   * maxUploads and returns {@link ListMultipartUploadsResult}.
    */
   private ListMultipartUploadsResult listIncompleteUploads(String bucketName, String keyMarker, String uploadIdMarker,
-                                                           String prefix, String delimiter, int maxUploads)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      String prefix, String delimiter, int maxUploads)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     if (maxUploads < 0 || maxUploads > 1000) {
       maxUploads = 1000;
     }
 
-    Map<String,String> queryParamMap = new HashMap<>();
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploads", "");
     queryParamMap.put("max-uploads", Integer.toString(maxUploads));
     queryParamMap.put("prefix", prefix);
@@ -3736,7 +4184,6 @@ public final class MinioClient {
     response.body().close();
     return result;
   }
-
 
   /**
    * Initializes new multipart upload for given bucket name, object name and content type.
@@ -3770,10 +4217,9 @@ public final class MinioClient {
    * Executes complete multipart upload of given bucket name, object name, upload ID and parts.
    */
   private void completeMultipart(String bucketName, String objectName, String uploadId, Part[] parts)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
 
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
@@ -3803,13 +4249,12 @@ public final class MinioClient {
     }
   }
 
-
   /**
-   * Executes List object parts of multipart upload for given bucket name, object name and upload ID and
-   * returns {@code Iterable<Result<Part>>}.
+   * Executes List object parts of multipart upload for given bucket name, object name and upload ID and returns
+   * {@code Iterable<Result<Part>>}.
    */
   private Iterable<Result<Part>> listObjectParts(final String bucketName, final String objectName,
-                                                 final String uploadId) {
+      final String uploadId) {
     return new Iterable<Result<Part>>() {
       @Override
       public Iterator<Result<Part>> iterator() {
@@ -3827,8 +4272,8 @@ public final class MinioClient {
             try {
               this.listPartsResult = listObjectParts(bucketName, objectName, uploadId, nextPartNumberMarker);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+                | InternalException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listPartsResult != null) {
@@ -3903,16 +4348,14 @@ public final class MinioClient {
     };
   }
 
-
   /**
-   * Executes list object parts for given bucket name, object name, upload ID and part number marker and
-   * returns {@link ListPartsResult}.
+   * Executes list object parts for given bucket name, object name, upload ID and part number marker and returns
+   * {@link ListPartsResult}.
    */
   private ListPartsResult listObjectParts(String bucketName, String objectName, String uploadId, int partNumberMarker)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
     if (partNumberMarker > 0) {
       queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
@@ -3926,41 +4369,49 @@ public final class MinioClient {
     return result;
   }
 
-
   /**
    * Aborts multipart upload of given bucket name, object name and upload ID.
    */
   private void abortMultipartUpload(String bucketName, String objectName, String uploadId)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
     executeDelete(bucketName, objectName, queryParamMap);
   }
 
-
   /**
    * Removes incomplete multipart upload of given object.
    *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
-   * System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname"); }</pre>
+   * </p>
+   * <b>Example:</b><br>
+   * 
+   * <pre>
+   * {@code minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
+   * System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname"); }
+   * </pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
    *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
    */
   public void removeIncompleteUpload(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException {
     for (Result<Upload> r : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = r.get();
       if (objectName.equals(upload.objectName())) {
@@ -3970,15 +4421,15 @@ public final class MinioClient {
     }
   }
 
-
   /**
    * Skips data of up to given length in given input stream.
    *
-   * @param inputStream  Input stream which is intance of {@link RandomAccessFile} or {@link BufferedInputStream}.
-   * @param n            Length of bytes to skip.
+   * @param inputStream
+   *          Input stream which is intance of {@link RandomAccessFile} or {@link BufferedInputStream}.
+   * @param n
+   *          Length of bytes to skip.
    */
-  private void skipStream(Object inputStream, long n)
-    throws IOException, InsufficientDataException {
+  private void skipStream(Object inputStream, long n) throws IOException, InsufficientDataException {
     RandomAccessFile file = null;
     BufferedInputStream stream = null;
     if (inputStream instanceof RandomAccessFile) {
@@ -4007,13 +4458,11 @@ public final class MinioClient {
     throw new InsufficientDataException("Insufficient data.  bytes skipped " + totalBytesSkipped + " expected " + n);
   }
 
-
   /**
-   * Calculates multipart size of given size and returns three element array contains part size, part count
-   * and last part size.
+   * Calculates multipart size of given size and returns three element array contains part size, part count and last
+   * part size.
    */
-  private static int[] calculateMultipartSize(long size)
-    throws InvalidArgumentException {
+  private static int[] calculateMultipartSize(long size) throws InvalidArgumentException {
     if (size > MAX_OBJECT_SIZE) {
       throw new InvalidArgumentException("size " + size + " is greater than allowed size 5TiB");
     }
@@ -4031,11 +4480,11 @@ public final class MinioClient {
     return new int[] { (int) partSize, (int) partCount, (int) lastPartSize };
   }
 
-
   /**
    * Enables HTTP call tracing and written to traceStream.
    *
-   * @param traceStream {@link OutputStream} for writing HTTP call tracing.
+   * @param traceStream
+   *          {@link OutputStream} for writing HTTP call tracing.
    *
    * @see #traceOff
    */
@@ -4046,7 +4495,6 @@ public final class MinioClient {
       this.traceStream = new PrintWriter(new OutputStreamWriter(traceStream, StandardCharsets.UTF_8), true);
     }
   }
-
 
   /**
    * Disables HTTP call tracing previously enabled.
