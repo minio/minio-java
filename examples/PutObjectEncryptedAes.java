@@ -1,3 +1,4 @@
+
 /*
  * Minio Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015 Minio, Inc.
  *
@@ -15,59 +16,41 @@
  */
 
 import java.lang.StringBuilder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.imageio.ImageIO;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.common.io.ByteStreams;
-
 import io.minio.MinioClient;
 import io.minio.encryption.EncryptionMaterials;
 import io.minio.errors.MinioException;
 
-public class PutObjectEncrypted {
+public class PutObjectEncryptedAes {
   /**
    * MinioClient.putObject() with encryption example.
    */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.minio.io for test and development. */
       MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F",
-                                          "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+          "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       /* Amazon S3: */
-      // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-      //                                           "YOUR-SECRETACCESSKEY");
-      
+      // MinioClient minioClient = new
+      // MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
+      // "YOUR-SECRETACCESSKEY");
+
       // Create some content for the object.
       StringBuilder builder = new StringBuilder();
       for (int i = 0; i < 1000; i++) {
@@ -90,21 +73,24 @@ public class PutObjectEncrypted {
 
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-    
-      //Generate symmetric 128 bit AES key.
+
+      // Generate symmetric 256 bit AES key.
       KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-      symKeyGenerator.init(128);
+      symKeyGenerator.init(256);
       SecretKey symKey = symKeyGenerator.generateKey();
       EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
-      
-      // put object 'my-objectname' in 'my-bucketname' with encryption Materials.      
-      minioClient.putObject("testbucket", "my-objectname-plain", bais, bais.available(), "application/octet-stream", encMaterials);
-     
+
+      // put object 'my-objectname' in 'my-bucketname' with encryption
+      // Materials.
+      minioClient.putObject("testbucket", "my-objectname-plain", bais, bais.available(), "application/octet-stream",
+          encMaterials);
+
       // Close the input stream.
       bais.close();
-      
+
       System.out.println("my-objectname is encrypted and uploaded successfully");
-    } catch (MinioException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidAlgorithmParameterException e) {
+    } catch (MinioException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException
+        | InvalidAlgorithmParameterException e) {
       System.out.println("Error occurred: " + e);
     }
   }

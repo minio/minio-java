@@ -1,3 +1,4 @@
+
 /*
  * Minio Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015 Minio, Inc.
  *
@@ -35,33 +36,33 @@ import io.minio.MinioClient;
 import io.minio.encryption.EncryptionMaterials;
 import io.minio.errors.MinioException;
 
-public class GetObjectEncrypted {
+public class GetObjectEncryptedAes {
   /**
    * MinioClient.getObject() example.
    */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException, 
-    NoSuchPaddingException, InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException, NoSuchPaddingException,
+      InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
     try {
       /* play.minio.io for test and development. */
-        MinioClient minioClient = new MinioClient("http://localhost:9001", "YLH2I0HHUGPF22H2ZH2T",
-                "mizuV0YjE68kMY3pigoPV14sjlK7PC+4e2QafY9c");
+      MinioClient minioClient = new MinioClient("http://localhost:9001", "YLH2I0HHUGPF22H2ZH2T",
+          "mizuV0YjE68kMY3pigoPV14sjlK7PC+4e2QafY9c");
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-      //                                           "YOUR-SECRETACCESSKEY");
+      // "YOUR-SECRETACCESSKEY");
 
-      // Check whether the object exists using statObject().  If the object is not found,
-      // statObject() throws an exception.  It means that the object exists when statObject()
+      // Check whether the object exists using statObject(). If the object is not found,
+      // statObject() throws an exception. It means that the object exists when statObject()
       // execution is successful.
       minioClient.statObject("testbucket", "my-objectname");
 
-      //Generate symmetric 128 bit AES key.
+      // Generate symmetric 256 bit AES key.
       KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-      symKeyGenerator.init(128);
+      symKeyGenerator.init(256);
       SecretKey symKey = symKeyGenerator.generateKey();
       EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
-      
+
       // Get input stream to have content of 'my-objectname' from 'my-bucketname'
       InputStream stream = minioClient.getObject("testbucket", "my-objectname", encMaterials);
 

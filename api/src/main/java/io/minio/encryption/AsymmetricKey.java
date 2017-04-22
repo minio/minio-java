@@ -19,42 +19,40 @@ package io.minio.encryption;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.IvParameterSpec;
 
-public class SymmetricKey implements MasterKey {
+public class AsymmetricKey implements MasterKey {
 
-  private static SecretKey symMasterKey = null;
-  private final static String cipherModeString = "AES/ECB/PKCS5Padding";
+  private static KeyPair aSymMasterKeyPair = null;
+  private final static String cipherModeString = "RSA";
   private static Cipher decryptionCipher = null;
   private static Cipher encryptionCipher = null;
 
   /*
-   * Set Symmetric master key for AES algorithm.
+   * Set Asymmetric key pair for RSA algorithm.
    */
-  SymmetricKey(SecretKey symmetricMasterKey)
+  AsymmetricKey(KeyPair aSymmetricMasterKeyPair)
       throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
     // create master key from given byte array
-    symMasterKey = symmetricMasterKey;
+    aSymMasterKeyPair = aSymmetricMasterKeyPair;
 
     // Create encryption cipher
     encryptionCipher = Cipher.getInstance(cipherModeString);
 
-    // init cipher with mode and master key
-    encryptionCipher.init(Cipher.ENCRYPT_MODE, symMasterKey);
+    // init encryption cipher with mode and public key
+    encryptionCipher.init(Cipher.ENCRYPT_MODE, aSymMasterKeyPair.getPublic());
 
     // Get a cipher
     decryptionCipher = Cipher.getInstance(cipherModeString);
 
-    // init cipher with mode and master key
-    decryptionCipher.init(Cipher.DECRYPT_MODE, symMasterKey);
+    // init decryption cipher with mode and private key
+    decryptionCipher.init(Cipher.DECRYPT_MODE, aSymMasterKeyPair.getPrivate());
   }
 
   /*

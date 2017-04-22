@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -42,91 +43,67 @@ import io.minio.ObjectStat;
 
 public class EncryptionMaterials {
 
-	private final static String cipherModeString = "AES/CBC/PKCS5Padding";
-	private final byte AESBlockSize = 16;
-	private Map<String, String> headerMap = new HashMap<>();
-	
-	public EncryptionMaterials(SecretKey symmetricMasterKey) throws 
-	InvalidKeyException, NoSuchAlgorithmException, 
-	NoSuchPaddingException, InvalidAlgorithmParameterException{
-		
-		// Setup symmetric keys and related ciphers
-		SymmetricKey.setupSymmetricKeys(symmetricMasterKey);
-		
-	}
-	
-	public CipherInputStream decryptInputStream(InputStream encryptedInputStream, ObjectStat metadata) throws 
-	InvalidKeyException, NoSuchAlgorithmException, 
-	NoSuchPaddingException, IllegalBlockSizeException, 
-	BadPaddingException, InvalidAlgorithmParameterException {
-		// Get the encrypted key from response metadata
-		byte[] encryptedDataKey = Base64.decodeBase64(metadata.key().getBytes());
-		
-		// Get the iv from the response metadata
-		byte[] iv = Base64.decodeBase64(metadata.iv().getBytes());
-		
-		// Decrypt the encrypted data key using master key
-		byte[] plainDataKey = SymmetricKey.decryptDataKeys(encryptedDataKey);
-		
-		// Create secret key from byte array
-		SecretKey dataEncryptionKey = new SecretKeySpec(plainDataKey, 0, plainDataKey.length, "AES");
-		
-		// Get the cipher
-		Cipher inputStrDecryptionCipher = Cipher.getInstance(cipherModeString);
-		
-		// init cipher with mode and data encryption key
-		inputStrDecryptionCipher.init(Cipher.DECRYPT_MODE, dataEncryptionKey, new IvParameterSpec(iv));
+  private final static String cipherModeString = "AES/CBC/PKCS5Padding";
+  private MasterKey masterKey = null;
 
-		// create cipherinputstream with encrypted stream and new initialized cipher
-		CipherInputStream cipherInputStream = new CipherInputStream(encryptedInputStream, inputStrDecryptionCipher);
-		
-		return cipherInputStream;		
-	}
-	
-	public CipherInputStream encryptInputStream(InputStream plainInputStream) throws 
-	InvalidKeyException, NoSuchAlgorithmException, 
-	NoSuchPaddingException, IllegalBlockSizeException, 
-	BadPaddingException, InvalidAlgorithmParameterException, IOException{
-		
-		// Generate symmetric 128 bit AES key.
-	    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-	    symKeyGenerator.init(128);
-	    SecretKey dataEncryptionKey = symKeyGenerator.generateKey();
-	    
-	    // Generate an iv to be used for encryption
- 		SecureRandom ivSeed = new SecureRandom();
- 		byte[] iv = new byte[AESBlockSize];
- 		ivSeed.nextBytes(iv);
- 		
-	    // Get the cipher
- 		Cipher inputStrEncryptionCipher = Cipher.getInstance(cipherModeString);
- 		
- 		// init cipher with mode and data encryption key
- 		inputStrEncryptionCipher.init(Cipher.ENCRYPT_MODE, dataEncryptionKey, new IvParameterSpec(iv));
- 		
- 		// create cipherinputstream with plain stream and new initialized cipher
- 		CipherInputStream cipherInputStream = new CipherInputStream(plainInputStream, inputStrEncryptionCipher);
- 		
- 		// Encrypt the data encryption key and iv and set headers
- 		byte[] plainDataKey = dataEncryptionKey.getEncoded();
-		
-		// encrypt the plain data key using master key
-		byte[] encryptedDataKey = SymmetricKey.encryptDataKeys(plainDataKey);  
+  public EncryptionMaterials(SecretKey symmetricMasterKey)
+      throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException {
 
-	    // Prepare data to be put to the object header
-		String encDataKey = new String(Base64.encodeBase64(encryptedDataKey));
-		String ivString = new String(Base64.encodeBase64(iv));
-		
-		// Set the headermap with encryption related metadata
-		headerMap.put("x-amz-meta-x-amz-key", encDataKey);
-	    headerMap.put("x-amz-meta-x-amz-iv", ivString);
-	    // matdesc is unused
-	    headerMap.put("x-amz-meta-x-amz-matdesc", "");
-	    
-		return cipherInputStream;
-	}
-	
-	public Map<String, String> getHeaderMap(){
-		return headerMap;
-	}
+    // Setup symmetric keys and related ciphers
+    masterKey = new SymmetricKey(symmetricMasterKey);
+
+  }
+
+  public EncryptionMaterials(KeyPair aSymmetricKeyPair)
+      throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidAlgorithmParameterException {
+
+    // Setup asymmetric keys and related ciphers
+    masterKey = new AsymmetricKey(aSymmetricKeyPair);
+
+  }
+
+  public CipherInputStream decryptInputStream(InputStream encryptedInputStream, SecretKey contentKey, byte[] iv)
+      throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
+      BadPaddingException, InvalidAlgorithmParameterException {
+
+    // Get the cipher
+    Cipher inputStrDecryptionCipher = Cipher.getInstance(cipherModeString);
+
+    // init cipher with mode and data encryption key
+    inputStrDecryptionCipher.init(Cipher.DECRYPT_MODE, contentKey, new IvParameterSpec(iv));
+
+    // create cipherinputstream with encrypted stream and new initialized cipher
+    CipherInputStream cipherInputStream = new CipherInputStream(encryptedInputStream, inputStrDecryptionCipher);
+
+    return cipherInputStream;
+  }
+
+  public CipherInputStream encryptInputStream(InputStream plainInputStream, SecretKey contentKey, byte[] iv)
+      throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
+      BadPaddingException, InvalidAlgorithmParameterException, IOException {
+
+    // Get the cipher
+    Cipher inputStrEncryptionCipher = Cipher.getInstance(cipherModeString);
+
+    // init cipher with mode and data encryption key
+    inputStrEncryptionCipher.init(Cipher.ENCRYPT_MODE, contentKey, new IvParameterSpec(iv));
+
+    // create cipherinputstream with plain stream and new initialized cipher
+    CipherInputStream cipherInputStream = new CipherInputStream(plainInputStream, inputStrEncryptionCipher);
+
+    return cipherInputStream;
+  }
+
+  public byte[] encryptContentKeys(byte[] plainTextKeys) throws IllegalBlockSizeException, BadPaddingException {
+    // Encrypt the encrypted data key using master key
+    byte[] encryptedDataKey = masterKey.encrypt(plainTextKeys);
+    return encryptedDataKey;
+  }
+
+  public byte[] decryptContentKeys(byte[] encryptedDataKey) throws IllegalBlockSizeException, BadPaddingException,
+      InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException {
+    // Decrypt the encrypted data key using master key
+    byte[] plainDataKey = masterKey.decrypt(encryptedDataKey);
+    return plainDataKey;
+  }
 }

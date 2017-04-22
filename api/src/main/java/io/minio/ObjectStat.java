@@ -29,9 +29,12 @@ public class ObjectStat {
   private final long length;
   private final String etag;
   private final String contentType;
-  private final String key;
-  private final String iv;
-  private final String matDesc;
+  // Encryption Key available in the object header
+  private String contentKey = null;
+  //Encryption IV available in the object header
+  private String encryptionIV = null;
+  //Encryption material description available in the object header 
+  private String matDesc = null;
 
   /**
    * Creates ObjectStat with given bucket name, object name, and available response header information.
@@ -50,12 +53,27 @@ public class ObjectStat {
     }
     
     // set encryption related values
-    this.key = header.xamzMetaKey();
-    this.iv = header.xamzMetaIv();
+    this.contentKey = header.xamzMetaKey();
+    this.encryptionIV = header.xamzMetaIv();
     this.matDesc = header.xamzMetaMatdesc();
   }
 
-
+  /**
+   * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and content type.
+   */
+  public ObjectStat(String bucketName, String name, Date createdTime, long length, String etag, String contentType) {
+    this.bucketName = bucketName;
+    this.name = name;
+    this.contentType = contentType;
+    this.createdTime = (Date) createdTime.clone();
+    this.length = length;
+    if (etag != null) {
+      this.etag = etag.replaceAll("\"", "");
+    } else {
+      this.etag = "";
+    }
+  }
+  
   /**
    * Checks whether given object is same as this ObjectStat.
    */
@@ -176,15 +194,15 @@ public class ObjectStat {
   /**
    * Returns encryption key.
    */
-  public String key() {
-    return key;
+  public String contentKey() {
+    return contentKey;
   }
   
   /**
    * Returns encryption IV.
    */
-  public String iv() {
-    return iv;
+  public String encryptionIV() {
+    return encryptionIV;
   }
   
   /**
