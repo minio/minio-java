@@ -621,7 +621,7 @@ public final class MinioClient {
         return false;
       }
 
-      if (!(label.matches("^[a-zA-Z0-9][a-zA-Z0-9-]*") && endpoint.matches(".*[a-zA-Z0-9]$"))) {
+      if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
         return false;
       }
     }
@@ -2132,7 +2132,7 @@ public final class MinioClient {
     return listObjectsV2(bucketName, prefix, recursive);
   }
 
-  
+
   private Iterable<Result<Item>> listObjectsV2(final String bucketName, final String prefix, final boolean recursive) {
     return new Iterable<Result<Item>>() {
       @Override
@@ -3011,7 +3011,7 @@ public final class MinioClient {
            XmlPullParserException, ErrorResponseException, InternalException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
-  
+
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
     NotificationConfiguration result = new NotificationConfiguration();
     try {
@@ -3022,8 +3022,8 @@ public final class MinioClient {
 
     return result;
   }
-  
-  
+
+
   /**
    * Set bucket notification configuration
    *
@@ -3051,8 +3051,8 @@ public final class MinioClient {
     HttpResponse response = executePut(bucketName, null, null, queryParamMap, notificationConfiguration.toString(), 0);
     response.body().close();
   }
-  
-  
+
+
   /**
    * Remove all bucket notification.
    *
@@ -3077,8 +3077,8 @@ public final class MinioClient {
     NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
     setBucketNotification(bucketName, notificationConfiguration);
   }
-  
-  
+
+
   /**
    * Returns next part if exists.
    */
