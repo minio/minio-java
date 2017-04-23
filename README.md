@@ -134,7 +134,9 @@ The full API Reference is available here.
 
 #### Full Examples: Object Operations
 * [PutObject.java](https://github.com/minio/minio-java/tree/master/examples/PutObject.java)
+* [PutObjectEncrypted.java](https://github.com/minio/minio-java/tree/master/examples/PutObjectEncrypted.java)
 * [GetObject.Java](https://github.com/minio/minio-java/tree/master/examples/GetObject.java)
+* [GetObjectEncrypted.Java](https://github.com/minio/minio-java/tree/master/examples/GetObjectEncrypted.java)
 * [GetPartialObject.java](https://github.com/minio/minio-java/tree/master/examples/GetPartialObject.java)
 * [RemoveObject.java](https://github.com/minio/minio-java/tree/master/examples/RemoveObject.java)
 * [RemoveObjects.java](https://github.com/minio/minio-java/tree/master/examples/RemoveObjects.java)
