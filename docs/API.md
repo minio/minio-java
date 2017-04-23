@@ -451,7 +451,7 @@ try {
 
 <a name="getBucketPolicy"></a>
 ### getBucketPolicy(String bucketName, String objectPrefix)
-`public BucketPolicy getBucketPolicy(String bucketName, String objectPrefix)`
+`public PolicyType getBucketPolicy(String bucketName, String objectPrefix)`
 
 Get bucket policy at given objectPrefix.
 
@@ -467,7 +467,7 @@ __Parameters__
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``BucketPolicy``: The current bucket policy for given bucket and objectPrefix.  | Listed Exceptions: |
+|  ``PolicyType``: The current bucket policy type for a given bucket and objectPrefix.  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -492,8 +492,8 @@ try {
 ```
 
 <a name="setBucketPolicy"></a>
-### setBucketPolicy(String bucketName, String objectPrefix, BucketPolicy bucketPolicy)
-`public void setBucketPolicy(String bucketName, String objectPrefix, BucketPolicy bucketPolicy)`
+### setBucketPolicy(String bucketName, String objectPrefix, PolicyType policy)
+`public void setBucketPolicy(String bucketName, String objectPrefix, PolicyType policy)`
 
 Set policy on bucket and object prefix.
 
@@ -505,7 +505,7 @@ __Parameters__
 |:--- |:--- |:--- |
 | ``bucketName``  | _String_  | Name of the bucket.  |
 | ``objectPrefix``  | _String_  | Policy applies to objects with prefix. |
-| ``bucketPolicy``  | _BucketPolicy_  | Policy to apply. |
+| ``policy``  | _PolicyType_  | Policy to apply, available types are [PolicyType.NONE, PolicyType.READ_ONLY, PolicyType.READ_WRITE, PolicyType.WRITE_ONLY]. |
 
 
 | Return Type	  | Exceptions	  |
@@ -529,7 +529,7 @@ __Example__
 
 ```java
 try {
-  minioClient.setBucketPolicy("myBucket", "uploads", BucketPolicy.WriteOnly);
+  minioClient.setBucketPolicy("myBucket", "uploads", PolicyType.READ_ONLY);
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
