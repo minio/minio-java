@@ -2966,7 +2966,7 @@ public final class MinioClient {
    * @param policyType   Enum of {@link PolicyType}.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code setBucketPolicy("my-bucketname", "my-objectname", BucketPolicy.ReadOnly); }</pre>
+   * <pre>{@code setBucketPolicy("my-bucketname", "my-objectname", PolicyType.READ_ONLY); }</pre>
    */
   public void setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
