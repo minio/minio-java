@@ -921,7 +921,9 @@ public final class MinioClient {
         encodedPath += "?" + encodedQuery;
       }
       this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
-      String headers = request.headers().toString().replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*");
+      String headers = request.headers().toString()
+          .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+          .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
       this.traceStream.println(headers);
     }
 
