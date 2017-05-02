@@ -15,14 +15,14 @@ Java 1.7 or above, with one of the following environments:
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>3.0.3</version>
+    <version>3.0.4</version>
 </dependency>
 ```
 
 ## Download from gradle
 ```xml
 dependencies {
-    compile 'io.minio:minio:3.0.3'
+    compile 'io.minio:minio:3.0.4'
 }
 ```
 
