@@ -15,19 +15,19 @@ Java 1.7 or above, with one of the following environments:
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>3.0.3</version>
+    <version>3.0.4</version>
 </dependency>
 ```
 
 ## Download from gradle
 ```xml
 dependencies {
-    compile 'io.minio:minio:3.0.3'
+    compile 'io.minio:minio:3.0.4'
 }
 ```
 
 ## Download from JAR
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/3.0.3/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/3.0.4/) directly from maven.
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
