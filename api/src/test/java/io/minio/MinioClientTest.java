@@ -20,7 +20,6 @@ package io.minio;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -45,6 +44,7 @@ import com.squareup.okhttp.mockwebserver.MockWebServer;
 
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InvalidArgumentException;
+import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.MinioException;
@@ -574,7 +574,7 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
-  @Test(expected = EOFException.class)
+  @Test(expected = InsufficientDataException.class)
   public void testPutIncompleteSmallPut()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
