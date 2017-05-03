@@ -57,7 +57,9 @@ public class ErrorResponseException extends MinioException {
         + "request={"
         + "method=" + request.method() + ", "
         + "url=" + request.httpUrl() + ", "
-        + "headers=" + request.headers()
+        + "headers=" + request.headers().toString()
+                .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+                .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*")
         + "}\n"
         + "response={"
         + "code=" + response.code() + ", "
