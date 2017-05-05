@@ -19,12 +19,6 @@ package io.minio;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -64,6 +58,13 @@ import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import io.minio.policy.PolicyType;
 import io.minio.policy.BucketPolicy;
+
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
 
@@ -92,8 +93,11 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
+import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -103,6 +107,12 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -703,10 +713,53 @@ public final class MinioClient {
    * @param readTimeout       HTTP read timeout in milliseconds.
    */
   public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
-    httpClient.setConnectTimeout(connectTimeout, TimeUnit.MILLISECONDS);
-    httpClient.setWriteTimeout(writeTimeout, TimeUnit.MILLISECONDS);
-    httpClient.setReadTimeout(readTimeout, TimeUnit.MILLISECONDS);
+    this.httpClient = this.httpClient.newBuilder()
+      .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
+      .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
+      .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
+      .build();
   }
+
+
+  /**
+   * Ignores check on server certificate for HTTPS connection.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.ignoreCertCheck(); }</pre>
+   *
+   */
+  public void ignoreCertCheck() throws NoSuchAlgorithmException, KeyManagementException {
+    final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+          return new X509Certificate[]{};
+        }
+      }
+    };
+                                                             
+    final SSLContext sslContext = SSLContext.getInstance("SSL");
+    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+    final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+    this.httpClient = this.httpClient.newBuilder()
+      .sslSocketFactory(sslSocketFactory, (X509TrustManager)trustAllCerts[0])
+      .hostnameVerifier(new HostnameVerifier() {
+          @Override
+          public boolean verify(String hostname, SSLSession session) {
+            return true;
+          }
+        })
+      .build();
+  }
+  
 
   /**
    * Creates Request object for given request parameters.
@@ -938,8 +991,8 @@ public final class MinioClient {
 
     if (this.traceStream != null) {
       this.traceStream.println("---------START-HTTP---------");
-      String encodedPath = request.httpUrl().encodedPath();
-      String encodedQuery = request.httpUrl().encodedQuery();
+      String encodedPath = request.url().encodedPath();
+      String encodedQuery = request.url().encodedQuery();
       if (encodedQuery != null) {
         encodedPath += "?" + encodedQuery;
       }
@@ -1037,7 +1090,7 @@ public final class MinioClient {
                                       + "https://github.com/minio/minio-java/issues");
       }
 
-      errorResponse = new ErrorResponse(ec, bucketName, objectName, request.httpUrl().encodedPath(),
+      errorResponse = new ErrorResponse(ec, bucketName, objectName, request.url().encodedPath(),
                                         header.xamzRequestId(), header.xamzId2());
     }
 
@@ -1317,7 +1370,7 @@ public final class MinioClient {
            InternalException {
     Request request = createRequest(Method.GET, bucketName, objectName, getRegion(bucketName),
         null, null, null, null, 0);
-    HttpUrl url = request.httpUrl();
+    HttpUrl url = request.url();
     return url.toString();
   }
 

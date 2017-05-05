@@ -29,12 +29,12 @@ import java.nio.file.*;
 
 import org.joda.time.DateTime;
 
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.MultipartBuilder;
-import com.squareup.okhttp.Response;
+import okhttp3.OkHttpClient;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.MultipartBody;
+import okhttp3.Response;
 import com.google.common.io.ByteStreams;
 
 import io.minio.*;
@@ -1097,8 +1097,8 @@ public class FunctionalTest {
     policy.setContentRange(1 * MB, 4 * MB);
     Map<String, String> formData = client.presignedPostPolicy(policy);
 
-    MultipartBuilder multipartBuilder = new MultipartBuilder();
-    multipartBuilder.type(MultipartBuilder.FORM);
+    MultipartBody.Builder multipartBuilder = new MultipartBody.Builder();
+    multipartBuilder.setType(MultipartBody.FORM);
     for (Map.Entry<String, String> entry : formData.entrySet()) {
       multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
     }

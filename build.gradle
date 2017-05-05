@@ -46,8 +46,8 @@ subprojects {
     dependencies {
         compile "com.google.http-client:google-http-client-xml:1.20.0"
         compile "com.google.guava:guava:18.0"
-        compile "com.squareup.okhttp:okhttp:2.7.5"
-        compile "com.squareup.okio:okio:1.6.0"
+        compile "com.squareup.okhttp3:okhttp:3.7.0"
+        compile "com.squareup.okio:okio:1.12.0"
         compile "joda-time:joda-time:2.7"
         compile "com.fasterxml.jackson.core:jackson-annotations:2.9.0.pr3"
         compile "com.fasterxml.jackson.core:jackson-core:2.9.0.pr3"
@@ -55,7 +55,7 @@ subprojects {
         compile 'com.google.code.findbugs:annotations:3.0.1'
         compile 'com.google.code.findbugs:jsr305:3.0.1'
 
-        testCompile "com.squareup.okhttp:mockwebserver:2.7.2"
+        testCompile "com.squareup.okhttp3:mockwebserver:3.7.0"
         testCompile "junit:junit:4.12"
     }
 
@@ -242,7 +242,7 @@ project(':examples') {
 
 project(':functional') {
     dependencies {
-    	compile project(':api')
+        compile project(':api')
     }
 
     sourceSets {

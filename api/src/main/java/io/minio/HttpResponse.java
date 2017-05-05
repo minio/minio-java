@@ -16,8 +16,8 @@
 
 package io.minio;
 
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 
 /**
