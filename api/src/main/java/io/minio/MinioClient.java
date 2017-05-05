@@ -81,6 +81,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
@@ -172,6 +173,8 @@ public final class MinioClient {
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String US_EAST_1 = "us-east-1";
   private static final String UPLOAD_ID = "uploadId";
+  // value 21 is default followup count in Firefox, Chrome and OkHttp
+  private static final int TEMP_REDIRECT_TRY_COUNT = 21;
 
   private static XmlPullParserFactory xmlPullParserFactory = null;
 
@@ -981,32 +984,56 @@ public final class MinioClient {
       request = Signer.signV4(request, region, accessKey, secretKey);
     }
 
-    if (this.traceStream != null) {
-      this.traceStream.println("---------START-HTTP---------");
-      String encodedPath = request.url().encodedPath();
-      String encodedQuery = request.url().encodedQuery();
-      if (encodedQuery != null) {
-        encodedPath += "?" + encodedQuery;
-      }
-      this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
-      String headers = request.headers().toString()
-          .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-          .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
-      this.traceStream.println(headers);
-    }
+    Response response = null;
 
-    Response response = this.httpClient.newCall(request).execute();
-    if (response == null) {
+    // Loop to retry with new location of 307.
+    for (int i = 0; i < TEMP_REDIRECT_TRY_COUNT; i++) {
       if (this.traceStream != null) {
-        this.traceStream.println("<NO RESPONSE>");
-        this.traceStream.println(END_HTTP);
+        this.traceStream.println("---------START-HTTP---------");
+        String encodedPath = request.url().encodedPath();
+        String encodedQuery = request.url().encodedQuery();
+        if (encodedQuery != null) {
+          encodedPath += "?" + encodedQuery;
+        }
+        this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
+        String headers = request.headers().toString()
+            .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+            .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
+        this.traceStream.println(headers);
       }
-      throw new NoResponseException();
+
+      response = this.httpClient.newCall(request).execute();
+      if (response == null) {
+        if (this.traceStream != null) {
+          this.traceStream.println("<NO RESPONSE>");
+          this.traceStream.println(END_HTTP);
+        }
+        throw new NoResponseException();
+      }
+
+      if (this.traceStream != null) {
+        this.traceStream.println(response.protocol().toString().toUpperCase() + " " + response.code());
+        this.traceStream.println(response.headers());
+      }
+
+      if (response.code() != 307) {
+        break;
+      }
+
+      // Handle 307 (temporary redirect) specially.
+      String location = response.headers().get("Location");
+      if (location == null || location.isEmpty()) {
+        throw new InternalException("unexpected empty value in location header");
+      }
+
+      request = request.newBuilder()
+        .url(location)
+        .build();
     }
 
-    if (this.traceStream != null) {
-      this.traceStream.println(response.protocol().toString().toUpperCase() + " " + response.code());
-      this.traceStream.println(response.headers());
+    // As we have tried maximum rediect, throw an error
+    if (response.code() == 307) {
+      throw new ProtocolException("Too many follow-up requests:" + TEMP_REDIRECT_TRY_COUNT);
     }
 
     ResponseHeader header = new ResponseHeader();
