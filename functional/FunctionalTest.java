@@ -247,6 +247,25 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: putObject(String bucketName, String objectName, String contentType, InputStream body).
+   */
+  public static void putObject_test7() throws Exception {
+    System.out.println("Test: putObject(String bucketName, String objectName, InputStream body, "
+                       + "String contentType)");
+    String filename = createFile(3 * MB);
+    InputStream is = Files.newInputStream(Paths.get(filename));
+    client.putObject(bucketName, filename, is, customContentType);
+    is.close();
+    Files.delete(Paths.get(filename));
+    ObjectStat objectStat = client.statObject(bucketName, filename);
+    if (!customContentType.equals(objectStat.contentType())) {
+      throw new Exception("[FAILED] Test: putObject(String bucketName, String objectName, String contentType, "
+                          + "long size, InputStream body)");
+    }
+    client.removeObject(bucketName, filename);
+  }
+
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
   public static void statObject_test() throws Exception {
@@ -1281,6 +1300,7 @@ public class FunctionalTest {
     putObject_test4();
     putObject_test5();
     putObject_test6();
+    putObject_test7();
 
     statObject_test();
     getObject_test1();
