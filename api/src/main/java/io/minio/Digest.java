@@ -102,26 +102,8 @@ class Digest {
    */
   public static String md5Hash(Object inputStream, int len)
     throws NoSuchAlgorithmException, IOException, InsufficientDataException {
-    RandomAccessFile file = null;
-    BufferedInputStream stream = null;
-    if (inputStream instanceof RandomAccessFile) {
-      file = (RandomAccessFile) inputStream;
-    } else if (inputStream instanceof BufferedInputStream) {
-      stream = (BufferedInputStream) inputStream;
-    } else {
-      throw new IllegalArgumentException("unsupported input stream object");
-    }
-
-    long pos = 0;
     MessageDigest md5Digest = MessageDigest.getInstance("MD5");
-    pos = readBytes(len, file, stream, pos, null, md5Digest);
-
-    if (file != null) {
-      file.seek(pos);
-    } else {
-      stream.reset();
-    }
-
+    updateDigests(inputStream, len, null, md5Digest);
     return BaseEncoding.base64().encode(md5Digest.digest());
   }
 
@@ -157,6 +139,19 @@ class Digest {
    */
   public static String[] sha256md5Hashes(Object inputStream, int len)
     throws NoSuchAlgorithmException, IOException, InsufficientDataException {
+    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
+    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+    updateDigests(inputStream, len, sha256Digest, md5Digest);
+    return new String[] { BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
+                        BaseEncoding.base64().encode(md5Digest.digest()) };
+  }
+
+
+  /**
+   * Updated MessageDigest with bytes read from file and stream.
+   */
+  private static int updateDigests(Object inputStream, int len, MessageDigest sha256Digest, MessageDigest md5Digest)
+    throws IOException, InsufficientDataException {
     RandomAccessFile file = null;
     BufferedInputStream stream = null;
     if (inputStream instanceof RandomAccessFile) {
@@ -167,47 +162,22 @@ class Digest {
       throw new IllegalArgumentException("unsupported input stream object");
     }
 
-    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
-    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+    // hold current position of file/stream to reset back to this position.
     long pos = 0;
-    pos = readBytes(len, file, stream, pos, sha256Digest, md5Digest);
-
-    if (file != null) {
-      file.seek(pos);
-    } else {
-      stream.reset();
-    }
-
-    return new String[] { BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
-                        BaseEncoding.base64().encode(md5Digest.digest()) };
-  }
-
-
-  /**
-   * Updated MessageDigest with bytes read from file and stream.
-   */
-  private static long readBytes(int len,
-                                RandomAccessFile file,
-                                BufferedInputStream stream,
-                                long pos,
-                                MessageDigest sha256Digest,
-                                MessageDigest md5Digest) throws IOException, InsufficientDataException {
-    // 16KiB buffer for optimization
-    byte[] buf = new byte[16384];
-    int bytesToRead = buf.length;
-    int bytesRead;
-    int totalBytesRead = 0;
-    int length = len;
-
     if (file != null) {
       pos = file.getFilePointer();
     } else {
       stream.mark(len);
     }
 
-    do {
-      if ((length - totalBytesRead) < bytesToRead) {
-        bytesToRead = length - totalBytesRead;
+    // 16KiB buffer for optimization
+    byte[] buf = new byte[16384];
+    int bytesToRead = buf.length;
+    int bytesRead = 0;
+    int totalBytesRead = 0;
+    while (totalBytesRead < len) {
+      if ((len - totalBytesRead) < bytesToRead) {
+        bytesToRead = len - totalBytesRead;
       }
 
       if (file != null) {
@@ -217,21 +187,31 @@ class Digest {
       }
 
       if (bytesRead < 0) {
+        // reached EOF 
         throw new InsufficientDataException("Insufficient data.  bytes read " + totalBytesRead + " expected "
-                + length);
-      } else if (bytesRead == 0) {
-        continue;
+                                            + len);
       }
 
-      if (sha256Digest != null) {
-        sha256Digest.update(buf, 0, bytesRead);
-      }
-      if (md5Digest != null) {
-        md5Digest.update(buf, 0, bytesRead);
-      }
+      if (bytesRead > 0) {
+        if (sha256Digest != null) {
+          sha256Digest.update(buf, 0, bytesRead);
+        }
 
-      totalBytesRead += bytesRead;
-    } while (totalBytesRead < length);
-    return pos;
+        if (md5Digest != null) {
+          md5Digest.update(buf, 0, bytesRead);
+        }
+
+        totalBytesRead += bytesRead;
+      }
+    }
+
+    // reset back to saved position.
+    if (file != null) {
+      file.seek(pos);
+    } else {
+      stream.reset();
+    }
+
+    return totalBytesRead;
   }
 }

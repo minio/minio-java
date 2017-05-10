@@ -40,7 +40,7 @@ import io.minio.errors.*;
 
 public class FunctionalTest {
   private static final int MB = 1024 * 1024;
-  private static final SecureRandom random = new SecureRandom();
+  private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String bucketName = getRandomName();
   private static final String customContentType = "application/javascript";
   private static String endpoint;
@@ -244,6 +244,44 @@ public class FunctionalTest {
     client.putObject(bucketName, objectName, filename);
     Files.delete(Paths.get(filename));
     client.removeObject(bucketName, objectName);
+  }
+
+  /**
+   * Test: putObject(String bucketName, String objectName, InputStream body, String contentType).
+   */
+  public static void putObject_test7() throws Exception {
+    System.out.println("Test: putObject(String bucketName, String objectName, InputStream body, "
+                       + "String contentType)");
+    String filename = createFile(3 * MB);
+    InputStream is = Files.newInputStream(Paths.get(filename));
+    client.putObject(bucketName, filename, is, customContentType);
+    is.close();
+    Files.delete(Paths.get(filename));
+    ObjectStat objectStat = client.statObject(bucketName, filename);
+    if (!customContentType.equals(objectStat.contentType())) {
+      throw new Exception("[FAILED] Test: putObject(String bucketName, String objectName, String contentType, "
+                          + "long size, InputStream body)");
+    }
+    client.removeObject(bucketName, filename);
+  }
+
+  /**
+   * Test: multipart: putObject(String bucketName, String objectName, InputStream body, String contentType).
+   */
+  public static void putObject_test8() throws Exception {
+    System.out.println("Test: multipart: putObject(String bucketName, String objectName, InputStream body, "
+                       + "String contentType)");
+    String filename = createFile(537 * MB);
+    InputStream is = Files.newInputStream(Paths.get(filename));
+    client.putObject(bucketName, filename, is, customContentType);
+    is.close();
+    Files.delete(Paths.get(filename));
+    ObjectStat objectStat = client.statObject(bucketName, filename);
+    if (!customContentType.equals(objectStat.contentType())) {
+      throw new Exception("[FAILED] Test: putObject(String bucketName, String objectName, String contentType, "
+                          + "long size, InputStream body)");
+    }
+    client.removeObject(bucketName, filename);
   }
 
   /**
@@ -1281,6 +1319,8 @@ public class FunctionalTest {
     putObject_test4();
     putObject_test5();
     putObject_test6();
+    putObject_test7();
+    putObject_test8();
 
     statObject_test();
     getObject_test1();

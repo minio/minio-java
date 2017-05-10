@@ -2781,6 +2781,69 @@ public final class MinioClient {
 
 
   /**
+   * Uploads data from given stream as object to given bucket where the stream size is unknown.
+   * <p>
+   * If the stream has more than 525MiB data, the client uses a multipart session automatically.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code StringBuilder builder = new StringBuilder();
+   * for (int i = 0; i < 1000; i++) {
+   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *   builder.append("(29 letters)\n");
+   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *   builder.append("(31 letters)\n");
+   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *   builder.append("(39 letters)\n");
+   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *   builder.append("computers after System 7.\n");
+   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *   builder.append("---\n");
+   * }
+   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   * // create object
+   * minioClient.putObject("my-bucketname", "my-objectname", bais, "application/octet-stream");
+   * bais.close();
+   * System.out.println("my-bucketname is uploaded successfully"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param stream      stream to upload.
+   * @param contentType Content type of the stream.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName)
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, String contentType)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException,
+           InvalidArgumentException, InsufficientDataException {
+    putObject(bucketName, objectName, contentType, null, new BufferedInputStream(stream));
+  }
+
+
+  /**
    * Executes put object and returns ETag of the object.
    *
    * @param bucketName   Bucket name.
@@ -2826,19 +2889,24 @@ public final class MinioClient {
    * @param size         Size of object data.
    * @param data         Object data.
    */
-  private void putObject(String bucketName, String objectName, String contentType, long size, Object data)
+  private void putObject(String bucketName, String objectName, String contentType, Long size, Object data)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
+    boolean unknownSize = false;
+    if (size == null) {
+      unknownSize = true;
+      size = MAX_OBJECT_SIZE;
+    }
+
     if (size <= MIN_MULTIPART_SIZE) {
       // Single put object.
-      putObject(bucketName, objectName, (int) size, data, null, contentType, 0);
+      putObject(bucketName, objectName, size.intValue(), data, null, contentType, 0);
       return;
     }
 
     /* Multipart upload */
-
     int[] rv = calculateMultipartSize(size);
     int partSize = rv[0];
     int partCount = rv[1];
@@ -2849,7 +2917,9 @@ public final class MinioClient {
     String uploadId = getLatestIncompleteUploadId(bucketName, objectName);
     Iterator<Result<Part>> existingParts = null;
     Part part = null;
+    boolean isResumeMultipart = false;
     if (uploadId != null) {
+      isResumeMultipart = true;
       // resume previous multipart upload
       existingParts = listObjectParts(bucketName, objectName, uploadId).iterator();
       if (existingParts.hasNext()) {
@@ -2865,6 +2935,28 @@ public final class MinioClient {
     for (int partNumber = 1; partNumber <= partCount; partNumber++) {
       if (partNumber == partCount) {
         expectedReadSize = lastPartSize;
+      }
+
+      // For unknown sized stream, check available size.
+      int availableSize = 0;
+      if (unknownSize) {
+        // Check whether data is available one byte more than expectedReadSize.
+        availableSize = getAvailableSize(data, expectedReadSize + 1);
+        // If availableSize is less or equal to expectedReadSize, then we reached last part.
+        if (availableSize <= expectedReadSize) {
+          // If it is first part, do single put object.
+          if (partNumber == 1) {
+            putObject(bucketName, objectName, availableSize, data, null, contentType, 0);
+            // if its not resuming previous multipart, remove newly created multipart upload.
+            if (!isResumeMultipart) {
+              abortMultipartUpload(bucketName, objectName, uploadId);
+            }
+            return;
+          }
+
+          expectedReadSize = availableSize;
+          partCount = partNumber;
+        }
       }
 
       if (part != null && partNumber == part.partNumber() && expectedReadSize == part.partSize()) {
@@ -3635,6 +3727,65 @@ public final class MinioClient {
     }
 
     return new int[] { (int) partSize, (int) partCount, (int) lastPartSize };
+  }
+
+
+  /**
+   * Return available size of given input stream up to given expected read size.  If less data is available than
+   * expected read size, it returns how much data available to read.
+   */
+  private int getAvailableSize(Object inputStream, int expectedReadSize) throws IOException, InternalException {
+    RandomAccessFile file = null;
+    BufferedInputStream stream = null;
+    if (inputStream instanceof RandomAccessFile) {
+      file = (RandomAccessFile) inputStream;
+    } else if (inputStream instanceof BufferedInputStream) {
+      stream = (BufferedInputStream) inputStream;
+    } else {
+      throw new InternalException("Unknown input stream. This should not happen.  "
+                                  + "Please report to https://github.com/minio/minio-java/issues/");
+    }
+
+    // hold current position of file/stream to reset back to this position.
+    long pos = 0;
+    if (file != null) {
+      pos = file.getFilePointer();
+    } else {
+      stream.mark(expectedReadSize);
+    }
+
+    // 16KiB buffer for optimization
+    byte[] buf = new byte[16384];
+    int bytesToRead = buf.length;
+    int bytesRead = 0;
+    int totalBytesRead = 0;
+    while (totalBytesRead < expectedReadSize) {
+      if ((expectedReadSize - totalBytesRead) < bytesToRead) {
+        bytesToRead = expectedReadSize - totalBytesRead;
+      }
+
+      if (file != null) {
+        bytesRead = file.read(buf, 0, bytesToRead);
+      } else {
+        bytesRead = stream.read(buf, 0, bytesToRead);
+      }
+
+      if (bytesRead < 0) {
+        // reached EOF
+        break;
+      }
+
+      totalBytesRead += bytesRead;
+    }
+
+    // reset back to saved position.
+    if (file != null) {
+      file.seek(pos);
+    } else {
+      stream.reset();
+    }
+
+    return totalBytesRead;
   }
 
 
