@@ -2917,7 +2917,9 @@ public final class MinioClient {
     String uploadId = getLatestIncompleteUploadId(bucketName, objectName);
     Iterator<Result<Part>> existingParts = null;
     Part part = null;
+    boolean isResumeMultipart = false;
     if (uploadId != null) {
+      isResumeMultipart = true;
       // resume previous multipart upload
       existingParts = listObjectParts(bucketName, objectName, uploadId).iterator();
       if (existingParts.hasNext()) {
@@ -2938,17 +2940,20 @@ public final class MinioClient {
       // For unknown sized stream, check available size.
       int availableSize = 0;
       if (unknownSize) {
-        availableSize = getAvailableSize(data, expectedReadSize);
-        if (availableSize != expectedReadSize) {
-          // the stream has less data
+        // Check whether data is available one byte more than expectedReadSize.
+        availableSize = getAvailableSize(data, expectedReadSize + 1);
+        // If availableSize is less or equal to expectedReadSize, then we reached last part.
+        if (availableSize <= expectedReadSize) {
+          // If it is first part, do single put object.
           if (partNumber == 1) {
-            // We do single put object here.
             putObject(bucketName, objectName, availableSize, data, null, contentType, 0);
-            abortMultipartUpload(bucketName, objectName, uploadId);
+            // if its not resuming previous multipart, remove newly created multipart upload.
+            if (!isResumeMultipart) {
+              abortMultipartUpload(bucketName, objectName, uploadId);
+            }
             return;
           }
 
-          // We have reached last part.
           expectedReadSize = availableSize;
           partCount = partNumber;
         }
@@ -3725,6 +3730,10 @@ public final class MinioClient {
   }
 
 
+  /**
+   * Return available size of given input stream up to given expected read size.  If less data is available than
+   * expected read size, it returns how much data available to read.
+   */
   private int getAvailableSize(Object inputStream, int expectedReadSize) throws IOException, InternalException {
     RandomAccessFile file = null;
     BufferedInputStream stream = null;
@@ -3733,9 +3742,11 @@ public final class MinioClient {
     } else if (inputStream instanceof BufferedInputStream) {
       stream = (BufferedInputStream) inputStream;
     } else {
-      throw new InternalException("Unknown input stream. This should not happen.  Please report");
+      throw new InternalException("Unknown input stream. This should not happen.  "
+                                  + "Please report to https://github.com/minio/minio-java/issues/");
     }
 
+    // hold current position of file/stream to reset back to this position.
     long pos = 0;
     if (file != null) {
       pos = file.getFilePointer();
@@ -3767,6 +3778,7 @@ public final class MinioClient {
       totalBytesRead += bytesRead;
     }
 
+    // reset back to saved position.
     if (file != null) {
       file.seek(pos);
     } else {

@@ -162,7 +162,7 @@ class Digest {
       throw new IllegalArgumentException("unsupported input stream object");
     }
 
-    // hold current position of file/stream.
+    // hold current position of file/stream to reset back to this position.
     long pos = 0;
     if (file != null) {
       pos = file.getFilePointer();
@@ -205,6 +205,7 @@ class Digest {
       }
     }
 
+    // reset back to saved position.
     if (file != null) {
       file.seek(pos);
     } else {
