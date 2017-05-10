@@ -1664,7 +1664,7 @@ public final class MinioClient {
     }
 
     // Escape source object path.
-    String sourceObjectPath = S3Escaper.encode(Paths.get(bucketName, objectName).toString());
+    String sourceObjectPath = S3Escaper.encodePath(bucketName + "/" + objectName);
 
     // Destination object name is optional, if empty default to source object name.
     if (destObjectName == null) {

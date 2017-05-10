@@ -277,7 +277,7 @@ project(':functional') {
             ext.region = rootProject.properties['region']
         }
 
-
+        maxHeapSize = "4096m"
         args = [ext.endPoint, ext.accessKey, ext.secretKey, ext.region]
     }
 

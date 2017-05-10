@@ -60,12 +60,22 @@ public class FunctionalTest {
    */
   public static String createFile(int size) throws IOException {
     String filename = getRandomName();
-    byte[] data = new byte[size];
-    random.nextBytes(data);
 
-    OutputStream out = new BufferedOutputStream(Files.newOutputStream(Paths.get(filename), CREATE, APPEND));
-    out.write(data, 0, data.length);
-    out.close();
+    OutputStream os = Files.newOutputStream(Paths.get(filename), CREATE, APPEND);
+    int totalBytesWritten = 0;
+    int bytesToWrite = 0;
+    byte[] buf = new byte[1 * MB];
+    while (totalBytesWritten < size) {
+      random.nextBytes(buf);
+      bytesToWrite = size - totalBytesWritten;
+      if (bytesToWrite > buf.length) {
+        bytesToWrite = buf.length;
+      }
+
+      os.write(buf, 0, bytesToWrite);
+      totalBytesWritten += bytesToWrite;
+    }
+    os.close();
 
     return filename;
   }
@@ -1405,7 +1415,7 @@ public class FunctionalTest {
   public static void main(String[] args) {
     if (args.length != 4) {
       System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
-      return;
+      System.exit(-1);
     }
 
     endpoint = args[0];
@@ -1425,6 +1435,7 @@ public class FunctionalTest {
 
     } catch (Exception e) {
       e.printStackTrace();
+      System.exit(-1);
     }
   }
 }
