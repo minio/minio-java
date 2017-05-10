@@ -704,6 +704,76 @@ try {
 }
 ```
 
+<a name="getObject"></a>
+### getObject(String bucketName, String objectName, EncryptionMaterials encryptionMaterials)
+
+`public CipherInputStream getObject(String bucketName, String objectName, EncryptionMaterials encryptionMaterials)`
+
+Gets entire encrypted object's data, then returns CipherInputStream. CipherInputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in from the underlying InputStream but have been additionally processed by the Cipher. The EncryptionMaterials object used for getObject should be the
+same as the one used for corresponding putObject operation.
+
+CipherInputStream should be closed after use, else connection remains open.
+
+[View Javadoc]
+
+__Parameters__
+
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``encryptionMaterials``  | _EncryptionMaterials_  | An object of type EncryptionMaterials initialized with AES 128 bit [SecretKey](https://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html). |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidEncryptionMetadataException`` : upon encryption key/iv error  |
+|        | ``BadPaddingException`` : upon wrong padding   |
+|        | ``IllegalBlockSizeException`` : upon incorrect block size |
+|        | ``NoSuchPaddingException`` : upon incorrect padding |
+|        | ``InvalidAlgorithmParameterException`` : upon incorrect algorithm |
+
+__Example__
+
+```java
+try {
+  // Check whether the object exists using statObject().
+  // If the object is not found, statObject() throws an exception,
+  // else it means that the object exists.
+  // Execution is successful.
+  minioClient.statObject("mybucket", "myobject");
+
+  //Generate symmetric 128 bit AES key.
+  KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+  symKeyGenerator.init(128);
+  SecretKey symKey = symKeyGenerator.generateKey();
+  EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
+
+  // Gets the object's data and stores it in photo.jpg
+  InputStream stream = minioClient.getObject("testbucket", "my-objectname", encMaterials);
+
+  // Read the input stream and print to the console till EOF.
+  byte[] buf = new byte[16384];
+  int bytesRead;
+  while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+    System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+  }
+
+  // Close the input stream.
+  stream.close();
+
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
 <a name="putObject"></a>
 ### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
 
@@ -811,6 +881,85 @@ The maximum size of a single object is limited to 5TB. putObject transparently u
 try {
   minioClient.putObject("mybucket",  "island.jpg", "/mnt/photos/island.jpg")
   System.out.println("island.jpg is uploaded successfully");
+} catch(MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType, EncryptionMaterials encryptionMaterials)
+
+`public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
+		  EncryptionMaterials encryptionMaterials)`
+
+Encrypts and then uploads an object from an InputStream.
+
+__Parameters__
+
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``stream``  | _InputStream_  | stream to upload. |
+| ``size``  | _long_  | Size of the data to read from ``stream`` that will be uploaded. |
+| ``contentType``  | _String_ | Content type of the stream. |
+| ``encryptionMaterials``  | _EncryptionMaterials_ | An object of type EncryptionMaterials initialized with AES 128 bit [SecretKey](https://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html). |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+| 		 | ``InvalidAlgorithmParameterException`` : upon wrong encryption algorithm used. |
+|		 | ``BadPaddingException`` : upon incorrect padding in a block. |
+|		 | ``IllegalBlockSizeException`` : upon incorrect block. |
+|		 | ``NoSuchPaddingException`` : upon wrong padding type specified. |
+
+__Example__
+
+
+The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MB in multiple parts. This allows failed uploads to resume safely by only uploading the missing parts. Uploaded data is carefully verified using MD5SUM signatures.
+
+Object is encrypted using a randomly generated data encryption key. The data encryption key is then encrypted using a master
+key known only to the client (wrapped in encryptionMaterials object). The encrypted data encryption key is uploaded as the
+object header along with the IV used and the encrypted object to the remote server.
+
+```java
+try {
+  StringBuilder builder = new StringBuilder();
+  for (int i = 0; i < 1000; i++) {
+    builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+    builder.append("(29 letters)\n");
+    builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+    builder.append("(31 letters)\n");
+    builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+    builder.append("NASAs Space Shuttle. (32 letters)\n");
+    builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+    builder.append("(39 letters)\n");
+    builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+    builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+    builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+    builder.append("computers after System 7.\n");
+    builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+    builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+    builder.append("- --\n");
+  }
+  ByteArrayInputStream bais = new
+  ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+  //Generate symmetric 128 bit AES key.
+  KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+  symKeyGenerator.init(128);
+  SecretKey symKey = symKeyGenerator.generateKey();
+  EncryptionMaterials encMaterials = new EncryptionMaterials(symKey);
+  // Create an object
+  minioClient.putObject("mybucket", "myobject", bais, bais.available(), "application/octet-stream");
+  bais.close();
+  System.out.println("myobject is uploaded successfully");
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
