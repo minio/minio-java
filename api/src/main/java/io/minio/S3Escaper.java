@@ -49,4 +49,28 @@ class S3Escaper {
       .replaceAll("\\[", "%5B")
       .replaceAll("\\]", "%5D");
   }
+
+  /**
+   * Returns S3 encoded string of given path where multiple '/' are trimmed.
+   */
+  public static String encodePath(String path) {
+    StringBuffer encodedPathBuf = new StringBuffer();
+    for (String pathSegment : path.split("/")) {
+      if (!pathSegment.isEmpty()) {
+        if (encodedPathBuf.length() > 0) {
+          encodedPathBuf.append("/");
+        }
+        encodedPathBuf.append(S3Escaper.encode(pathSegment));
+      }
+    }
+
+    if (path.startsWith("/")) {
+      encodedPathBuf.insert(0, "/");
+    }
+    if (path.endsWith("/")) {
+      encodedPathBuf.append("/");
+    }
+
+    return encodedPathBuf.toString();
+  }
 }
