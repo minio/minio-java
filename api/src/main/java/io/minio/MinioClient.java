@@ -17,6 +17,7 @@
 
 package io.minio;
 
+import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
@@ -24,11 +25,13 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidEncryptionMetadataException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidObjectPrefixException;
@@ -63,6 +66,7 @@ import io.minio.policy.PolicyType;
 import io.minio.policy.BucketPolicy;
 import okio.BufferedSink;
 import okio.Okio;
+
 import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -84,8 +88,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -95,6 +103,15 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * <p>
@@ -1268,8 +1285,9 @@ public final class MinioClient {
            InternalException {
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
-    return new ObjectStat(bucketName, objectName, header.lastModified(), header.contentLength(),
-                          header.etag(), header.contentType());
+    ObjectStat objectStat = new ObjectStat(bucketName, objectName, header);
+
+    return objectStat;
   }
 
 
@@ -1516,6 +1534,206 @@ public final class MinioClient {
     }
   }
 
+  /**
+   * Gets entire encrypted object's data as {@link InputStream} in given bucket, then returns CipherInputStream.
+   * CipherInputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in
+   * from the underlying InputStream but have been additionally processed by the Cipher. The Cipher is initialized for
+   * decryption, the CipherInputStream will attempt to read in data and decrypt them, before returning the decrypted
+   * data.
+   * <p>
+   * The CipherInputStream must be closed after use else the connection will remain open.
+   * </p>
+   * <b>Example:</b>
+   *
+   * <pre>
+   * {
+   *
+   *   // Get object with symmetric master key used in putObject
+   *   InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", key);
+   *   byte[] buf = new byte[16384];
+   *   int bytesRead;
+   *   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *     System.out.println(new String(buf, 0, bytesRead));
+   *   }
+   *   stream.close();
+   * }
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param key
+   *          Symmetric key used for corresponding putOject operation.
+   *
+   * @return {@link InputStream} containing the object data.
+   *
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
+   * @throws InvalidEncryptionMetadataException
+   *           upon encryption key/iv error
+   * @throws BadPaddingException
+   *           upon wrong padding
+   * @throws IllegalBlockSizeException
+   *           upon incorrect block size
+   * @throws NoSuchPaddingException
+   *           upon incorrect padding
+   * @throws InvalidAlgorithmParameterException
+   *           upon incorrect algorithm
+   *
+   * @see #getObject(String bucketName, String objectName)
+   * @see #getObject(String bucketName, String objectName, long offset)
+   * @see #getObject(String bucketName, String objectName, long offset, Long length)
+   * @see #getObject(String bucketName, String objectName, String filename)
+   * @see #getObject(String bucketName, String objectName, KeyPair key)
+   *
+   */
+  public InputStream getObject(String bucketName, String objectName, SecretKey key)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+      InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException, InternalException,
+      InvalidArgumentException, NoSuchPaddingException, IllegalBlockSizeException,
+      BadPaddingException, InvalidAlgorithmParameterException, InvalidEncryptionMetadataException {
+
+    if (key == null) {
+      throw new InvalidArgumentException("empty decryption key not allowed");
+    }
+    return getObject(bucketName, objectName, key, "AES/ECB/PKCS5Padding");
+  }
+
+  /**
+   * Gets entire encrypted object's data as {@link InputStream} in given bucket, then returns CipherInputStream.
+   * CipherInputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in
+   * from the underlying InputStream but have been additionally processed by the Cipher. The Cipher is initialized for
+   * decryption, the CipherInputStream will attempt to read in data and decrypt them, before returning the decrypted
+   * data.
+   * <p>
+   * The CipherInputStream must be closed after use else the connection will remain open.
+   * </p>
+   * <b>Example:</b>
+   *
+   * <pre>
+   * {
+   *
+   *   // Get object with symmetric master key used in putObject
+   *   InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", keypair);
+   *   byte[] buf = new byte[16384];
+   *   int bytesRead;
+   *   while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *     System.out.println(new String(buf, 0, bytesRead));
+   *   }
+   *   stream.close();
+   * }
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param key
+   *          Asymmetric keypair used for corresponding putOject operation.
+   *
+   * @return {@link InputStream} containing the object data.
+   *
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
+   * @throws InvalidEncryptionMetadataException
+   *           upon encryption key/iv error
+   * @throws BadPaddingException
+   *           upon wrong padding
+   * @throws IllegalBlockSizeException
+   *           upon incorrect block size
+   * @throws NoSuchPaddingException
+   *           upon incorrect padding
+   * @throws InvalidAlgorithmParameterException
+   *           upon incorrect algorithm
+   *
+   * @see #getObject(String bucketName, String objectName)
+   * @see #getObject(String bucketName, String objectName, long offset)
+   * @see #getObject(String bucketName, String objectName, long offset, Long length)
+   * @see #getObject(String bucketName, String objectName, String filename)
+   * @see #getObject(String bucketName, String objectName, SecretKey key)
+   *
+   */
+  public InputStream getObject(String bucketName, String objectName, KeyPair key) throws InvalidBucketNameException,
+      NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+      XmlPullParserException, ErrorResponseException, InternalException, InvalidArgumentException,
+      NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
+      InvalidEncryptionMetadataException {
+    if (key == null) {
+      throw new InvalidArgumentException("empty decryption key pair not allowed");
+    }
+    return getObject(bucketName, objectName, key, "RSA");
+  }
+
+  /*
+   * Common method to decrypt masterkey, decrypt data and download it from the server as InpurStream.
+   */
+  private InputStream getObject(String bucketName, String objectName, Object key, String keyDecryptionCipherMode)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidEncryptionMetadataException, InvalidArgumentException, NoSuchPaddingException, IllegalBlockSizeException,
+      BadPaddingException, InvalidAlgorithmParameterException {
+
+    // get encrypted object metadata and verify
+    ObjectStat stat = statObject(bucketName, objectName);
+    Key masterKey = null;
+    String dataDecryptionCipherMode = "AES/CBC/PKCS5Padding";
+
+    // get the master key type and typecast
+    if (key instanceof KeyPair) {
+      masterKey = ((KeyPair) key).getPrivate();
+    } else if (key instanceof SecretKey) {
+      masterKey = (SecretKey) key;
+    } else {
+      throw new InternalException(
+          "Unknown key object. This should not happen. Please report this issue at https://github.com/minio/minio-java/issues");
+    }
+
+    // check if encryption metadata is not present
+    if ((stat.contentKey() == null) && (stat.encryptionIv() == null)) {
+      throw new InvalidEncryptionMetadataException("encryption key or iv not present in object metadata");
+    }
+
+    // Fetch encrypted object if metadata present
+    InputStream stream = getObject(bucketName, objectName);
+
+    // Get the encrypted key from response metadata
+    byte[] encryptedDataKey = BaseEncoding.base64().decode(stat.contentKey());
+
+    // Get the iv from the response metadata
+    byte[] iv = BaseEncoding.base64().decode(stat.encryptionIv());
+
+    // Decrypt the encrypted data key using master key
+    byte[] plainDataKey = Crypto.decrypt(encryptedDataKey, masterKey, keyDecryptionCipherMode);
+
+    // Create secret key from byte array
+    SecretKey dataEncryptionKey = new SecretKeySpec(plainDataKey, 0, plainDataKey.length, "AES");
+
+    CipherInputStream decryptedStream = Crypto.decrypt(stream, dataEncryptionKey, dataDecryptionCipherMode,
+        iv);
+
+    return decryptedStream;
+  }
   /**
    * Copy a source object into a new destination object with same object name.
    *
@@ -2680,8 +2898,13 @@ public final class MinioClient {
     long size = Files.size(filePath);
 
     RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
+
+    // Set the contentType
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("Content-Type", contentType);
+
     try {
-      putObject(bucketName, objectName, contentType, size, file);
+      putObject(bucketName, objectName, size, file, headerMap);
     } finally {
       file.close();
     }
@@ -2782,7 +3005,12 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
-    putObject(bucketName, objectName, contentType, size, new BufferedInputStream(stream));
+
+    // Set the contentType
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("Content-Type", contentType);
+
+    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap);
   }
 
 
@@ -2845,32 +3073,325 @@ public final class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
-    putObject(bucketName, objectName, contentType, null, new BufferedInputStream(stream));
+
+    // Set the contentType
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("Content-Type", contentType);
+
+    putObject(bucketName, objectName, null, new BufferedInputStream(stream), headerMap);
   }
 
+  /**
+   * Takes data from given stream, encrypts it using a random content key and upload it as object to given bucket. Also
+   * uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
+   * master key.
+   * 
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
+   * 
+   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
+   * again. The client will examine all parts of any current upload session and attempt to reuse the session
+   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
+   * resume uploading where the session left off.
+   * 
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   *  { &#64;code StringBuilder builder = new StringBuilder(); for (int i = 0; i < 1000; i++) {
+   * builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   * builder.append("(29 letters)\n");
+   * builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   * builder.append("(31 letters)\n");
+   * builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   * builder.append("NASAs Space Shuttle. (32 letters)\n");
+   * builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   * builder.append("(39 letters)\n");
+   * builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   * builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   * builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   * builder.append("computers after System 7.\n");
+   * builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   * builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n"); builder.append("---\n"); }
+   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   *
+   * // Generate symmetric 256 bit AES key. KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+   * symKeyGenerator.init(256); SecretKey symKey = symKeyGenerator.generateKey();
+   *
+   * // create object minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(),
+   * "application/octet-stream", symKey); bais.close(); System.out.println("my-bucketname is uploaded successfully"); }
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name.
+   * 
+   * @param objectName
+   *          Object name to create in the bucket.
+   * 
+   * @param stream
+   *          stream to upload.
+   * 
+   * @param size
+   *          Size of all the data that will be uploaded.
+   * 
+   * @param contentType
+   *          Content type of the stream.
+   * 
+   * @param key
+   *          Master key for encryption.
+   *
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * 
+   * @throws NoResponseException
+   *           upon no response from server
+   * 
+   * @throws IOException
+   *           upon connection error
+   * 
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * 
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * 
+   * @throws InternalException
+   *           upon internal library error
+   * 
+   * @throws InvalidAlgorithmParameterException
+   *           upon wrong encryption algorithm used
+   * 
+   * @throws BadPaddingException
+   *           upon incorrect padding in a block
+   * 
+   * @throws IllegalBlockSizeException
+   *           upon incorrect block
+   * 
+   * @throws NoSuchPaddingException
+   *           upon wrong padding type specified
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName, String contentType)
+   * 
+   * @see #putObject(String bucketName, String objectName, String fileName)
+   * 
+   * @see #putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
+   * 
+   * @see #putObject(String bucketName, String objectName, InputStream stream, long size, String contentType, KeyPair
+   *      keypair)
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
+      SecretKey key) throws InvalidBucketNameException, NoSuchAlgorithmException,
+      InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
+      ErrorResponseException, InternalException, InvalidArgumentException, NoSuchPaddingException,
+      IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
+
+    if (key == null) {
+      throw new InvalidArgumentException("empty key not allowed");
+    }
+    putObject(bucketName, objectName, stream, size, contentType, key, "AES/ECB/PKCS5Padding");
+  }
+
+  /**
+   * Takes data from given stream, encrypts it using a random content key and upload it as object to given bucket. Also
+   * uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
+   * master key.
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
+   * again. The client will examine all parts of any current upload session and attempt to reuse the session
+   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
+   * resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {
+   *   &#64;code
+   *   StringBuilder builder = new StringBuilder();
+   *   for (int i = 0; i < 1000; i++) {
+   *     builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *     builder.append("(29 letters)\n");
+   *     builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *     builder.append("(31 letters)\n");
+   *     builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *     builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *     builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *     builder.append("(39 letters)\n");
+   *     builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *     builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *     builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *     builder.append("computers after System 7.\n");
+   *     builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *     builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *     builder.append("---\n");
+   *   }
+   *   ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   *
+   *   KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
+   *   keyGenerator.initialize(1024, new SecureRandom());
+   *   KeyPair keypair = keyGenerator.generateKeyPair();
+   *
+   *   // create object
+   *   minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream",
+   *       keypair);
+   *   bais.close();
+   *   System.out.println("my-bucketname is uploaded successfully");
+   * }
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name to create in the bucket.
+   * @param stream
+   *          stream to upload.
+   * @param size
+   *          Size of all the data that will be uploaded.
+   * @param contentType
+   *          Content type of the stream.
+   * @param keypair
+   *          Master keypair for asymmetric encryption.
+   *
+   * @throws InvalidBucketNameException
+   *           upon invalid bucket name is given
+   * @throws NoResponseException
+   *           upon no response from server
+   * @throws IOException
+   *           upon connection error
+   * @throws XmlPullParserException
+   *           upon parsing response xml
+   * @throws ErrorResponseException
+   *           upon unsuccessful execution
+   * @throws InternalException
+   *           upon internal library error
+   * @throws InvalidAlgorithmParameterException
+   *           upon wrong encryption algorithm used
+   * @throws BadPaddingException
+   *           upon incorrect padding in a block
+   * @throws IllegalBlockSizeException
+   *           upon incorrect block
+   * @throws NoSuchPaddingException
+   *           upon wrong padding type specified
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName, String contentType)
+   * @see #putObject(String bucketName, String objectName, String fileName)
+   * @see #putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
+   * @see #putObject(String bucketName, String objectName, InputStream stream, long size, String contentType, SecretKey
+   *      key)
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
+      KeyPair keypair) throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+      InternalException, InvalidArgumentException, NoSuchPaddingException, IllegalBlockSizeException,
+      BadPaddingException, InvalidAlgorithmParameterException {
+
+    if (keypair == null) {
+      throw new InvalidArgumentException("empty key pair not allowed");
+    }
+
+    putObject(bucketName, objectName, stream, size, contentType, keypair, "RSA");
+  }
+
+  /*
+   * Common method to encrypt data, encrypt keys and upload it to the server.
+   */
+  private void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
+      Object key, String keyEncryptionCipherMode) throws NoSuchAlgorithmException, InvalidKeyException,
+      NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException,
+      IOException, InvalidArgumentException, InvalidBucketNameException, InsufficientDataException, NoResponseException,
+      ErrorResponseException, InternalException, XmlPullParserException {
+
+    String dataEncryptionCipherMode = "AES/CBC/PKCS5Padding";
+    Key masterKey = null;
+
+    // get the master key type and typecast
+    if (key instanceof KeyPair) {
+      masterKey = ((KeyPair) key).getPublic();
+    } else if (key instanceof SecretKey) {
+      masterKey = (SecretKey) key;
+    } else {
+      throw new InternalException(
+          "Unknown key object. This should not happen. Please report this issue at https://github.com/minio/minio-java/issues");
+    }
+
+    // Generate key with max supported size.
+    int maxSupportedKeySize = Cipher.getMaxAllowedKeyLength("AES");
+
+    // if JCE unlimited strength is installed, getMaxAllowedKeyLength returns Integer.MAX_VALUE, reassign it to
+    // 256 before proceeding
+    if (maxSupportedKeySize == Integer.MAX_VALUE) {
+      maxSupportedKeySize = 256;
+    }
+
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(maxSupportedKeySize);
+    SecretKey dataEncryptionKey = symKeyGenerator.generateKey();
+    
+    // Generate an iv to be used for data encryption
+    byte[] iv = new byte[16];
+    SecureRandom ivSeed = new SecureRandom();
+    ivSeed.nextBytes(iv);
+
+    // Get CipherStream after encryption of input stream
+    CipherInputStream cipherInputStream = Crypto.encrypt(stream, dataEncryptionKey, dataEncryptionCipherMode,
+        iv);
+
+    // encrypt the plain data key using master key
+    byte[] dataKey = dataEncryptionKey.getEncoded();
+    byte[] encryptedDataKey = Crypto.encrypt(dataKey, masterKey, keyEncryptionCipherMode);
+
+    // Prepare data to be put to the object header
+    String encDataKey = BaseEncoding.base64().encode(encryptedDataKey);
+    String ivString = BaseEncoding.base64().encode(iv);
+
+    // Set the headermap with encryption related metadata
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("x-amz-meta-x-amz-key", encDataKey);
+    headerMap.put("x-amz-meta-x-amz-iv", ivString);
+    // matdesc is unused
+    headerMap.put("x-amz-meta-x-amz-matdesc", "{}");
+    // Set content type
+    headerMap.put("Content-Type", contentType);
+
+    try {
+      // After padding the size changes, so null size passed
+      putObject(bucketName, objectName, null, new BufferedInputStream(cipherInputStream),
+          headerMap);
+    } finally {
+      // Close used streams
+      cipherInputStream.close();
+    }
+  }
 
   /**
    * Executes put object and returns ETag of the object.
    *
-   * @param bucketName   Bucket name.
-   * @param objectName   Object name in the bucket.
-   * @param length       Length of object data.
-   * @param data         Object data.
-   * @param uploadId     Upload ID of multipart put object.
-   * @param partNumber   Part number of multipart put object.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param length
+   *          Length of object data.
+   * @param data
+   *          Object data.
+   * @param uploadId
+   *          Upload ID of multipart put object.
+   * @param partNumber
+   *          Part number of multipart put object.
    */
   private String putObject(String bucketName, String objectName, int length,
-                           Object data, String uploadId, String contentType,
-                           int partNumber)
+      Object data, String uploadId, int partNumber, Map<String, String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> headerMap = new HashMap<>();
-    if (contentType != null && !contentType.isEmpty()) {
-      headerMap.put("Content-Type", contentType);
-    } else {
-      headerMap.put("Content-Type", "application/octet-stream");
-    }
+
+    HttpResponse response = null;
 
     Map<String,String> queryParamMap = null;
     if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
@@ -2879,7 +3400,8 @@ public final class MinioClient {
       queryParamMap.put(UPLOAD_ID, uploadId);
     }
 
-    HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
+    response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
+
     response.body().close();
     return response.header().etag();
   }
@@ -2887,20 +3409,30 @@ public final class MinioClient {
 
   /**
    * Executes put object. If size of object data is <= 5MiB, single put object is used else multipart put object is
-   * used.  This method also resumes if previous multipart put is found.
+   * used. This method also resumes if previous multipart put is found.
    *
-   * @param bucketName   Bucket name.
-   * @param objectName   Object name in the bucket.
-   * @param contentType  Content type of object data.
-   * @param size         Size of object data.
-   * @param data         Object data.
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param size
+   *          Size of object data.
+   * @param data
+   *          Object data.
    */
-  private void putObject(String bucketName, String objectName, String contentType, Long size, Object data)
+  private void putObject(String bucketName, String objectName, Long size, Object data,
+      Map<String, String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
     boolean unknownSize = false;
+
+    // Add content type if not already set
+    if (headerMap.get("Content-Type") == null) {
+      headerMap.put("Content-Type", "application/octet-stream");
+    }
+
     if (size == null) {
       unknownSize = true;
       size = MAX_OBJECT_SIZE;
@@ -2908,7 +3440,7 @@ public final class MinioClient {
 
     if (size <= MIN_MULTIPART_SIZE) {
       // Single put object.
-      putObject(bucketName, objectName, size.intValue(), data, null, contentType, 0);
+      putObject(bucketName, objectName, size.intValue(), data, null, 0, headerMap);
       return;
     }
 
@@ -2934,7 +3466,7 @@ public final class MinioClient {
     } else {
       // initiate new multipart upload ie no previous multipart found or no previous valid parts for
       // multipart found
-      uploadId = initMultipartUpload(bucketName, objectName, contentType);
+      uploadId = initMultipartUpload(bucketName, objectName, headerMap);
     }
 
     int expectedReadSize = partSize;
@@ -2952,7 +3484,7 @@ public final class MinioClient {
         if (availableSize <= expectedReadSize) {
           // If it is first part, do single put object.
           if (partNumber == 1) {
-            putObject(bucketName, objectName, availableSize, data, null, contentType, 0);
+            putObject(bucketName, objectName, availableSize, data, null, 0, headerMap);
             // if its not resuming previous multipart, remove newly created multipart upload.
             if (!isResumeMultipart) {
               abortMultipartUpload(bucketName, objectName, uploadId);
@@ -2978,7 +3510,7 @@ public final class MinioClient {
         }
       }
 
-      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, null, partNumber);
+      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, partNumber, null);
       totalParts[partNumber - 1] = new Part(partNumber, etag);
     }
 
@@ -3447,14 +3979,12 @@ public final class MinioClient {
   /**
    * Initializes new multipart upload for given bucket name, object name and content type.
    */
-  private String initMultipartUpload(String bucketName, String objectName, String contentType)
+  private String initMultipartUpload(String bucketName, String objectName, Map<String, String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    Map<String,String> headerMap = new HashMap<>();
-    if (contentType != null && !contentType.isEmpty()) {
-      headerMap.put("Content-Type", contentType);
-    } else {
+    // set content type if not set already
+    if (headerMap.get("Content-Type") == null) {
       headerMap.put("Content-Type", "application/octet-stream");
     }
 

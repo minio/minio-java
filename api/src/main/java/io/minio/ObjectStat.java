@@ -29,7 +29,34 @@ public class ObjectStat {
   private final long length;
   private final String etag;
   private final String contentType;
+  // Encryption Key available in the object header
+  private String contentKey;
+  // Encryption IV available in the object header
+  private String encryptionIv;
+  // Encryption material description available in the object header
+  private String matDesc;
 
+  /**
+   * Creates ObjectStat with given bucket name, object name, and available response header information.
+   */
+  public ObjectStat(String bucketName, String name, ResponseHeader header) {
+    this.bucketName = bucketName;
+    this.name = name;
+    this.contentType = header.contentType();
+    this.createdTime = (Date) header.lastModified().clone();
+    this.length = header.contentLength();
+
+    if (header.etag() != null) {
+      this.etag = header.etag().replaceAll("\"", "");
+    } else {
+      this.etag = "";
+    }
+
+    // set encryption related values
+    this.contentKey = header.xamzMetaKey();
+    this.encryptionIv = header.xamzMetaIv();
+    this.matDesc = header.xamzMetaMatdesc();
+  }
 
   /**
    * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and content type.
@@ -163,5 +190,26 @@ public class ObjectStat {
         + etag
         + '\''
         + '}';
+  }
+
+  /**
+   * Returns encryption key.
+   */
+  public String contentKey() {
+    return contentKey;
+  }
+
+  /**
+   * Returns encryption IV.
+   */
+  public String encryptionIv() {
+    return encryptionIv;
+  }
+
+  /**
+   * Returns encryption material description.
+   */
+  public String matDesc() {
+    return matDesc;
   }
 }

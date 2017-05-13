@@ -18,6 +18,10 @@
 import java.security.*;
 import java.math.BigInteger;
 import java.util.*;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
 import java.io.*;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -257,7 +261,8 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream body, String contentType).
+   * Test: client side encryption: putObject(String bucketName, String objectName, InputStream stream, long * size,
+   * String contentType, SecretKey key).
    */
   public static void putObject_test7() throws Exception {
     System.out.println("Test: putObject(String bucketName, String objectName, InputStream body, "
@@ -292,6 +297,63 @@ public class FunctionalTest {
                           + "long size, InputStream body)");
     }
     client.removeObject(bucketName, filename);
+  }
+
+  /**
+   * Test: client side encryption: putObject(String bucketName, String objectName, InputStream stream, long size, String
+   * contentType, SecretKey key).
+   */
+  public static void putObject_test9() throws Exception {
+
+    System.out.println(
+        "Test: encryption (AES): putObject(String bucketName, String objectName, InputStream stream,long size, "
+            + "String contentType, SecretKey key).");
+    String fileName = createFile(13 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
+
+    // Generate key with 128 bit key.
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(128);
+    SecretKey symKey = symKeyGenerator.generateKey();
+
+    try {
+      client.putObject(bucketName, fileName, is, 13 * 1024 * 1024, null, symKey);
+    } catch (InsufficientDataException e) {
+      throw new MinioException("Insufficient data received");
+    }
+    is.close();
+
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
+
+  }
+
+  /**
+   * Test: client side encryption: putObject(String bucketName, String objectName, InputStream stream, long size, String
+   * contentType, KeyPair keypair).
+   */
+  public static void putObject_test10() throws Exception {
+
+    System.out.println(
+        "Test: encryption (RSA): putObject(String bucketName, String objectName, InputStream stream, "
+            + "long size, String contentType, KeyPair keypair).");
+    String fileName = createFile(13 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
+
+    // Generate RSA key pair
+    KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
+    keyGenerator.initialize(1024, new SecureRandom());
+    KeyPair keypair = keyGenerator.generateKeyPair();
+
+    try {
+      client.putObject(bucketName, fileName, is, 13 * 1024 * 1024, null, keypair);
+    } catch (InsufficientDataException e) {
+      throw new MinioException("Insufficient data received");
+    }
+    is.close();
+
+    Files.delete(Paths.get(fileName));
+    client.removeObject(bucketName, fileName);
   }
 
   /**
@@ -372,6 +434,140 @@ public class FunctionalTest {
     client.getObject(bucketName, objectName, filename + ".downloaded");
     Files.delete(Paths.get(filename + ".downloaded"));
     client.removeObject(bucketName, objectName);
+  }
+
+  /**
+   * Test client side encryption (AES): getObject(String bucketName, String objectName, SecretKey key).
+   */
+  public static void getObject_test6() throws Exception {
+    System.out.println(
+        "Test: encryption (AES): getObject(String bucketName, String objectName, "
+            + "SecretKey key).");
+
+    String fileName = createFile(13 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
+
+    // Generate key with 128 bit keys.
+    KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+    symKeyGenerator.init(128);
+    SecretKey symKey = symKeyGenerator.generateKey();
+
+    try {
+      // Put an encrypted object
+      client.putObject(bucketName, fileName, is, 13 * 1024 * 1024, null, symKey);
+    } catch (InsufficientDataException e) {
+      throw new MinioException("Insufficient data received");
+    }
+    is.close();
+
+    // Get the object without decryption
+    InputStream ois = client.getObject(bucketName, fileName);
+    String plainFileName = getRandomName();
+    OutputStream os = Files.newOutputStream(Paths.get(plainFileName));
+
+    // Read in the decrypted bytes and write to fileNameOut
+    int numRead = 0;
+    byte[] buf = new byte[8192];
+    while ((numRead = ois.read(buf)) >= 0) {
+      os.write(buf, 0, numRead);
+    }
+    os.close();
+    ois.close();
+
+    if (Arrays.equals(Files.readAllBytes(Paths.get(plainFileName)), Files.readAllBytes(Paths.get(fileName)))) {
+      throw new MinioException("Files should not be equal");
+    }
+
+    // Get the object with decryption
+    ois = client.getObject(bucketName, fileName, symKey);
+    String decFileName = getRandomName();
+    os = Files.newOutputStream(Paths.get(decFileName));
+
+    numRead = 0;
+    buf = new byte[8192];
+    while ((numRead = ois.read(buf)) >= 0) {
+      os.write(buf, 0, numRead);
+    }
+    os.close();
+    ois.close();
+
+    // Check if two files are not equal
+    if (!Arrays.equals(Files.readAllBytes(Paths.get(decFileName)), Files.readAllBytes(Paths.get(fileName)))) {
+      throw new MinioException("Files should be equal");
+    }
+
+    Files.delete(Paths.get(fileName));
+    Files.delete(Paths.get(plainFileName));
+    Files.delete(Paths.get(decFileName));
+    client.removeObject(bucketName, fileName);
+  }
+
+  /**
+   * Test: client side encryption (RSA): getObject(String bucketName, String objectName, KeyPair keyPair).
+   */
+  public static void getObject_test7() throws Exception {
+    System.out.println(
+        "Test: encryption (RSA): getObject(String bucketName, String objectName, "
+            + "KeyPair keyPair).");
+
+    String fileName = createFile(13 * MB);
+    InputStream is = Files.newInputStream(Paths.get(fileName));
+
+    // Generate RSA key pair
+    KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
+    keyGenerator.initialize(1024, new SecureRandom());
+    KeyPair keypair = keyGenerator.generateKeyPair();
+
+    try {
+      // Put an encrypted object
+      client.putObject(bucketName, fileName, is, 13 * 1024 * 1024, null, keypair);
+    } catch (InsufficientDataException e) {
+      throw new MinioException("Insufficient data received");
+    }
+    is.close();
+
+    // Get the object without decryption
+    String plainFileName = getRandomName();
+    InputStream ois = client.getObject(bucketName, fileName);
+    OutputStream os = Files.newOutputStream(Paths.get(plainFileName));
+
+    // Read in the decrypted bytes and write to fileNameOut
+    int numRead = 0;
+    byte[] buf = new byte[8192];
+    while ((numRead = ois.read(buf)) >= 0) {
+      os.write(buf, 0, numRead);
+    }
+    os.close();
+    ois.close();
+
+    // Check if two files are not equal
+    if (Arrays.equals(Files.readAllBytes(Paths.get(plainFileName)), Files.readAllBytes(Paths.get(fileName)))) {
+      throw new MinioException("Files should not be equal");
+    }
+
+
+    // Get the object with decryption
+    String decFileName = createFile(0);
+    ois = client.getObject(bucketName, fileName, keypair);
+    os = Files.newOutputStream(Paths.get(decFileName));
+
+    numRead = 0;
+    buf = new byte[8192];
+    while ((numRead = ois.read(buf)) >= 0) {
+      os.write(buf, 0, numRead);
+    }
+    os.close();
+    ois.close();
+
+    // Check if two files are equal
+    if (!Arrays.equals(Files.readAllBytes(Paths.get(decFileName)), Files.readAllBytes(Paths.get(fileName)))) {
+      throw new MinioException("Files should be equal");
+    }
+
+    Files.delete(Paths.get(fileName));
+    Files.delete(Paths.get(plainFileName));
+    Files.delete(Paths.get(decFileName));
+    client.removeObject(bucketName, fileName);
   }
 
   /**
@@ -1049,7 +1245,7 @@ public class FunctionalTest {
     String filename = createFile(3 * MB);
     client.putObject(bucketName, filename, filename);
     Files.delete(Paths.get(filename));
-    
+
     String destBucketName = getRandomName();
     client.makeBucket(destBucketName);
 
@@ -1331,6 +1527,8 @@ public class FunctionalTest {
     putObject_test6();
     putObject_test7();
     putObject_test8();
+    putObject_test9();
+    putObject_test10();
 
     statObject_test();
     getObject_test1();
@@ -1338,6 +1536,8 @@ public class FunctionalTest {
     getObject_test3();
     getObject_test4();
     getObject_test5();
+    getObject_test6();
+    getObject_test7();
 
     listObject_test1();
     listObject_test2();

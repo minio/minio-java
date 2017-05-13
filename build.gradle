@@ -242,7 +242,7 @@ project(':examples') {
 
 project(':functional') {
     dependencies {
-        compile project(':api')
+    	compile project(':api')
     }
 
     sourceSets {
