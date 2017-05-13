@@ -67,6 +67,19 @@ class Digest {
 
 
   /**
+   * Returns SHA-256 of given input stream and it's length.
+   *
+   * @param inputStream  Input stream whose type is either {@link RandomAccessFile} or {@link BufferedInputStream}.
+   * @param len          Length of Input stream.
+   */
+  public static String sha256Hash(Object inputStream, int len)
+    throws NoSuchAlgorithmException, IOException, InsufficientDataException {
+    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
+    updateDigests(inputStream, len, sha256Digest, null);
+    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase();
+  }
+
+  /**
    * Returns MD5 hash of given string.
    */
   public static String md5Hash(String string) throws NoSuchAlgorithmException {
@@ -108,46 +121,6 @@ class Digest {
   }
 
   /**
-   * Returns SHA-256 and MD5 hashes for given string.
-   */
-  public static String[] sha256md5Hashes(String string) throws NoSuchAlgorithmException {
-    return sha256md5Hashes(string.getBytes(StandardCharsets.UTF_8));
-  }
-
-
-  /**
-   * Returns SHA-256 and MD5 hashes for given byte array.
-   */
-  public static String[] sha256md5Hashes(byte[] data) throws NoSuchAlgorithmException {
-    return sha256md5Hashes(data, data.length);
-  }
-
-
-  /**
-   * Returns SHA-256 and MD5 hashes for given byte array and it's length.
-   */
-  public static String[] sha256md5Hashes(byte[] data, int length) throws NoSuchAlgorithmException {
-    return new String[] { sha256Hash(data, length), md5Hash(data, length) };
-  }
-
-
-  /**
-   * Returns SHA-256 and MD5 hashes of given input stream and it's length.
-   *
-   * @param inputStream  Input stream whose type is either {@link RandomAccessFile} or {@link BufferedInputStream}.
-   * @param len          Length of Input stream.
-   */
-  public static String[] sha256md5Hashes(Object inputStream, int len)
-    throws NoSuchAlgorithmException, IOException, InsufficientDataException {
-    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
-    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
-    updateDigests(inputStream, len, sha256Digest, md5Digest);
-    return new String[] { BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
-                        BaseEncoding.base64().encode(md5Digest.digest()) };
-  }
-
-
-  /**
    * Updated MessageDigest with bytes read from file and stream.
    */
   private static int updateDigests(Object inputStream, int len, MessageDigest sha256Digest, MessageDigest md5Digest)
@@ -158,8 +131,6 @@ class Digest {
       file = (RandomAccessFile) inputStream;
     } else if (inputStream instanceof BufferedInputStream) {
       stream = (BufferedInputStream) inputStream;
-    } else {
-      throw new IllegalArgumentException("unsupported input stream object");
     }
 
     // hold current position of file/stream to reset back to this position.

@@ -823,7 +823,7 @@ public final class MinioClient {
     String sha256Hash = null;
     String md5Hash = null;
     if (this.accessKey != null && this.secretKey != null) {
-      // No need to compute sha256 if endpoint scheme is HTTPS. Issue #415.
+      // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
       if (url.isHttps()) {
         sha256Hash = "UNSIGNED-PAYLOAD";
         if (body instanceof BufferedInputStream) {
@@ -835,24 +835,30 @@ public final class MinioClient {
           md5Hash = Digest.md5Hash(data, length);
         }
       } else {
+        // Fix issue #567: Compute SHA256 hash only.
         if (body == null) {
           sha256Hash = Digest.sha256Hash(new byte[0]);
+        } else if (body instanceof BufferedInputStream) {
+          sha256Hash = Digest.sha256Hash((BufferedInputStream) body, length);
+        } else if (body instanceof RandomAccessFile) {
+          sha256Hash = Digest.sha256Hash((RandomAccessFile) body, length);
+        } else if (body instanceof byte[]) {
+          sha256Hash = Digest.sha256Hash((byte[]) body, length);
         } else {
-          if (body instanceof BufferedInputStream) {
-            String[] hashes = Digest.sha256md5Hashes((BufferedInputStream) body, length);
-            sha256Hash = hashes[0];
-            md5Hash = hashes[1];
-          } else if (body instanceof RandomAccessFile) {
-            String[] hashes = Digest.sha256md5Hashes((RandomAccessFile) body, length);
-            sha256Hash = hashes[0];
-            md5Hash = hashes[1];
-          } else if (body instanceof byte[]) {
-            byte[] data = (byte[]) body;
-            sha256Hash = Digest.sha256Hash(data, length);
-            md5Hash = Digest.md5Hash(data, length);
-          } else {
-            sha256Hash = Digest.sha256Hash(body.toString());
-          }
+          sha256Hash = Digest.sha256Hash(body.toString());
+        }
+      }
+    } else {
+      // Fix issue #567: Compute MD5 hash only of anonymous access.
+      if (body != null) {
+        if (body instanceof BufferedInputStream) {
+          md5Hash = Digest.md5Hash((BufferedInputStream) body, length);
+        } else if (body instanceof RandomAccessFile) {
+          md5Hash = Digest.md5Hash((RandomAccessFile) body, length);
+        } else if (body instanceof byte[]) {
+          md5Hash = Digest.md5Hash((byte[]) body, length);
+        } else {
+          md5Hash = Digest.md5Hash(body.toString());
         }
       }
     }
