@@ -23,6 +23,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
 import java.io.*;
+import java.security.KeyManagementException;
 
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
@@ -30,6 +31,8 @@ import java.nio.file.*;
 import org.joda.time.DateTime;
 
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.TlsVersion;
+import com.squareup.okhttp.ConnectionSpec;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
@@ -37,10 +40,12 @@ import com.squareup.okhttp.MultipartBuilder;
 import com.squareup.okhttp.Response;
 import com.google.common.io.ByteStreams;
 
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLContext;
+
 import io.minio.*;
 import io.minio.messages.*;
 import io.minio.errors.*;
-
 
 public class FunctionalTest {
   private static final int MB = 1024 * 1024;
@@ -845,7 +850,24 @@ public class FunctionalTest {
         .url(HttpUrl.parse(urlString))
         .method("GET", null)
         .build();
+
     OkHttpClient transport = new OkHttpClient();
+    SSLContext context = SSLContext.getInstance("TLSv1.2");
+
+    try {
+      context.init(null, null, null);
+    } catch (KeyManagementException e) {
+      throw new InternalException("SSL Context initialization failed.");
+    }
+
+    SSLSocketFactory socketFac = context.getSocketFactory();
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .build();
+
+    transport.setConnectionSpecs(Collections.singletonList(spec));
+    transport.setSslSocketFactory(socketFac);
+
     Response response = transport.newCall(request).execute();
 
     if (response != null) {
@@ -899,7 +921,24 @@ public class FunctionalTest {
         .url(HttpUrl.parse(urlString))
         .method("GET", null)
         .build();
+
     OkHttpClient transport = new OkHttpClient();
+    SSLContext context = SSLContext.getInstance("TLSv1.2");
+
+    try {
+      context.init(null, null, null);
+    } catch (KeyManagementException e) {
+      throw new InternalException("SSL Context initialization failed.");
+    }
+
+    SSLSocketFactory socketFac = context.getSocketFactory();
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .build();
+
+    transport.setConnectionSpecs(Collections.singletonList(spec));
+    transport.setSslSocketFactory(socketFac);
+
     Response response = transport.newCall(request).execute();
 
     if (response != null) {
@@ -957,7 +996,24 @@ public class FunctionalTest {
         .url(HttpUrl.parse(urlString))
         .method("GET", null)
         .build();
+
     OkHttpClient transport = new OkHttpClient();
+    SSLContext context = SSLContext.getInstance("TLSv1.2");
+
+    try {
+      context.init(null, null, null);
+    } catch (KeyManagementException e) {
+      throw new InternalException("SSL Context initialization failed.");
+    }
+
+    SSLSocketFactory socketFac = context.getSocketFactory();
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .build();
+
+    transport.setConnectionSpecs(Collections.singletonList(spec));
+    transport.setSslSocketFactory(socketFac);
+
     Response response = transport.newCall(request).execute();
 
     if (response != null) {
@@ -1018,7 +1074,24 @@ public class FunctionalTest {
         .url(HttpUrl.parse(urlString))
         .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(filename))))
         .build();
+
     OkHttpClient transport = new OkHttpClient();
+    SSLContext context = SSLContext.getInstance("TLSv1.2");
+
+    try {
+      context.init(null, null, null);
+    } catch (KeyManagementException e) {
+      throw new InternalException("SSL Context initialization failed.");
+    }
+
+    SSLSocketFactory socketFac = context.getSocketFactory();
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .build();
+
+    transport.setConnectionSpecs(Collections.singletonList(spec));
+    transport.setSslSocketFactory(socketFac);
+
     Response response = transport.newCall(request).execute();
 
     if (response != null) {
@@ -1059,7 +1132,24 @@ public class FunctionalTest {
         .url(HttpUrl.parse(urlString))
         .method("PUT", RequestBody.create(null, Files.readAllBytes(Paths.get(filename))))
         .build();
+
     OkHttpClient transport = new OkHttpClient();
+    SSLContext context = SSLContext.getInstance("TLSv1.2");
+
+    try {
+      context.init(null, null, null);
+    } catch (KeyManagementException e) {
+      throw new InternalException("SSL Context initialization failed.");
+    }
+
+    SSLSocketFactory socketFac = context.getSocketFactory();
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .build();
+
+    transport.setConnectionSpecs(Collections.singletonList(spec));
+    transport.setSslSocketFactory(socketFac);
+
     Response response = transport.newCall(request).execute();
 
     if (response != null) {
@@ -1106,7 +1196,24 @@ public class FunctionalTest {
 
     Request.Builder requestBuilder = new Request.Builder();
     Request request = requestBuilder.url(endpoint + "/" + bucketName).post(multipartBuilder.build()).build();
+
     OkHttpClient transport = new OkHttpClient();
+    SSLContext context = SSLContext.getInstance("TLSv1.2");
+
+    try {
+      context.init(null, null, null);
+    } catch (KeyManagementException e) {
+      throw new InternalException("SSL Context initialization failed.");
+    }
+
+    SSLSocketFactory socketFac = context.getSocketFactory();
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .build();
+
+    transport.setConnectionSpecs(Collections.singletonList(spec));
+    transport.setSslSocketFactory(socketFac);
+
     Response response = transport.newCall(request).execute();
 
     if (response != null) {

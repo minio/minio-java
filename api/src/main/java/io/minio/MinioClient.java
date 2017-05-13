@@ -21,11 +21,14 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.TlsVersion;
+import com.squareup.okhttp.ConnectionSpec;
 
+import io.minio.errors.InternalException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -89,14 +92,18 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidAlgorithmParameterException;
+
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.KeyManagementException;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -112,6 +119,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.SSLContext;
 
 /**
  * <p>
@@ -188,7 +197,6 @@ public final class MinioClient {
   private String userAgent = DEFAULT_USER_AGENT;
 
   private OkHttpClient httpClient = new OkHttpClient();
-
 
   /**
    * Creates Minio client object with given endpoint using anonymous access.
@@ -949,6 +957,23 @@ public final class MinioClient {
           .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
       this.traceStream.println(headers);
     }
+
+    SSLContext context = SSLContext.getInstance("TLSv1.2");
+
+    try {
+      context.init(null, null, null);
+    } catch (KeyManagementException e) {
+      throw new InternalException("SSL Context initialization failed.");
+    }
+
+    SSLSocketFactory socketFac = context.getSocketFactory();
+
+    ConnectionSpec spec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+        .tlsVersions(TlsVersion.TLS_1_2)
+        .build();
+
+    this.httpClient.setConnectionSpecs(Collections.singletonList(spec));
+    this.httpClient.setSslSocketFactory(socketFac);
 
     Response response = this.httpClient.newCall(request).execute();
     if (response == null) {
@@ -3085,15 +3110,15 @@ public final class MinioClient {
    * Takes data from given stream, encrypts it using a random content key and upload it as object to given bucket. Also
    * uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
    * master key.
-   * 
+   *
    * <p>
    * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * 
+   *
    * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
    * again. The client will examine all parts of any current upload session and attempt to reuse the session
    * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
    * resume uploading where the session left off.
-   * 
+   *
    * </p>
    * <b>Example:</b><br>
    *
@@ -3124,58 +3149,58 @@ public final class MinioClient {
    *
    * @param bucketName
    *          Bucket name.
-   * 
+   *
    * @param objectName
    *          Object name to create in the bucket.
-   * 
+   *
    * @param stream
    *          stream to upload.
-   * 
+   *
    * @param size
    *          Size of all the data that will be uploaded.
-   * 
+   *
    * @param contentType
    *          Content type of the stream.
-   * 
+   *
    * @param key
    *          Master key for encryption.
    *
    * @throws InvalidBucketNameException
    *           upon invalid bucket name is given
-   * 
+   *
    * @throws NoResponseException
    *           upon no response from server
-   * 
+   *
    * @throws IOException
    *           upon connection error
-   * 
+   *
    * @throws XmlPullParserException
    *           upon parsing response xml
-   * 
+   *
    * @throws ErrorResponseException
    *           upon unsuccessful execution
-   * 
+   *
    * @throws InternalException
    *           upon internal library error
-   * 
+   *
    * @throws InvalidAlgorithmParameterException
    *           upon wrong encryption algorithm used
-   * 
+   *
    * @throws BadPaddingException
    *           upon incorrect padding in a block
-   * 
+   *
    * @throws IllegalBlockSizeException
    *           upon incorrect block
-   * 
+   *
    * @throws NoSuchPaddingException
    *           upon wrong padding type specified
    *
    * @see #putObject(String bucketName, String objectName, String fileName, String contentType)
-   * 
+   *
    * @see #putObject(String bucketName, String objectName, String fileName)
-   * 
+   *
    * @see #putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
-   * 
+   *
    * @see #putObject(String bucketName, String objectName, InputStream stream, long size, String contentType, KeyPair
    *      keypair)
    */
@@ -3332,7 +3357,7 @@ public final class MinioClient {
     KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
     symKeyGenerator.init(maxSupportedKeySize);
     SecretKey dataEncryptionKey = symKeyGenerator.generateKey();
-    
+
     // Generate an iv to be used for data encryption
     byte[] iv = new byte[16];
     SecureRandom ivSeed = new SecureRandom();
