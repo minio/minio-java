@@ -51,8 +51,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.BaseEncoding;
-import com.squareup.okhttp.mockwebserver.MockResponse;
-import com.squareup.okhttp.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 import io.minio.errors.InvalidEncryptionMetadataException;
 import io.minio.errors.ErrorResponseException;

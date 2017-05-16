@@ -16,7 +16,7 @@
 
 package io.minio.errors;
 
-import com.squareup.okhttp.Request;
+import okhttp3.Request;
 
 
 /**

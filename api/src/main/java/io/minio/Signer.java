@@ -31,9 +31,9 @@ import org.joda.time.DateTime;
 
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.Request;
+import okhttp3.Headers;
+import okhttp3.HttpUrl;
+import okhttp3.Request;
 
 
 /**
@@ -163,7 +163,7 @@ class Signer {
 
   private void setCanonicalRequest() throws NoSuchAlgorithmException {
     setCanonicalHeaders();
-    this.url = this.request.httpUrl();
+    this.url = this.request.url();
     setCanonicalQueryString();
 
     // CanonicalRequest =
@@ -243,7 +243,7 @@ class Signer {
     this.canonicalHeaders.put("host", this.request.headers().get("Host"));
     this.signedHeaders = "host";
 
-    HttpUrl.Builder urlBuilder = this.request.httpUrl().newBuilder();
+    HttpUrl.Builder urlBuilder = this.request.url().newBuilder();
     // order of queryparam addition is important ie has to be sorted.
     urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Algorithm"),
                                         S3Escaper.encode("AWS4-HMAC-SHA256"));
