@@ -1588,13 +1588,11 @@ public final class MinioClient {
   }
 
   /**
-   * Gets entire encrypted object's data as {@link InputStream} in given bucket, then returns CipherInputStream.
-   * CipherInputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in
-   * from the underlying InputStream but have been additionally processed by the Cipher. The Cipher is initialized for
-   * decryption, the CipherInputStream will attempt to read in data and decrypt them, before returning the decrypted
-   * data.
+   * Returns {@link InputStream} containing decrypted data of given object. Secret key passed to this method should be
+   * the same as the one used for putObject() operation.
+   * 
    * <p>
-   * The CipherInputStream must be closed after use else the connection will remain open.
+   * The returned InputStream must be closed after use else the connection will remain open.
    * </p>
    * <b>Example:</b>
    *
@@ -1664,19 +1662,17 @@ public final class MinioClient {
   }
 
   /**
-   * Gets entire encrypted object's data as {@link InputStream} in given bucket, then returns CipherInputStream.
-   * CipherInputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in
-   * from the underlying InputStream but have been additionally processed by the Cipher. The Cipher is initialized for
-   * decryption, the CipherInputStream will attempt to read in data and decrypt them, before returning the decrypted
-   * data.
+   * Returns {@link InputStream} containing decrypted data of given object. Keypair passed to this method should be the
+   * same as the one used for putObject() operation.
+   * 
    * <p>
-   * The CipherInputStream must be closed after use else the connection will remain open.
+   * The returned InputStream must be closed after use else the connection will remain open.
    * </p>
+   * 
    * <b>Example:</b>
    *
    * <pre>
    * {
-   *
    *   // Get object with symmetric master key used in putObject
    *   InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", keypair);
    *   byte[] buf = new byte[16384];
@@ -3135,18 +3131,11 @@ public final class MinioClient {
   }
 
   /**
-   * Takes data from given stream, encrypts it using a random content key and upload it as object to given bucket. Also
-   * uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
-   * master key.
+   * Uploads encrypted data from given stream as object to given bucket where data is encrypted on the fly using passed
+   * secret key.
    * 
    * <p>
    * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * 
-   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
-   * again. The client will examine all parts of any current upload session and attempt to reuse the session
-   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
-   * resume uploading where the session left off.
-   * 
    * </p>
    * <b>Example:</b><br>
    *
@@ -3245,21 +3234,11 @@ public final class MinioClient {
   }
 
   /**
-   * Takes data from given stream, encrypts it using a random content key and upload it as object to given bucket. Also
-   * uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
-   * master key.
+   * Uploads encrypted data from given stream as object to given bucket where data is encrypted on the fly using passed
+   * keypair.
+   * 
    * <p>
    * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * </p>
-   * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object
-   * again. The client will examine all parts of any current upload session and attempt to reuse the session
-   * automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will
-   * resume uploading where the session left off.
-   * </p>
-   * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
-   * </p>
    * </p>
    * <b>Example:</b><br>
    *

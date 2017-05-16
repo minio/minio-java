@@ -709,9 +709,13 @@ try {
 
 `public CipherInputStream getObject(String bucketName, String objectName, SecretKey key)`
 
-Gets entire encrypted object's data, then returns InputStream. InputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in from the underlying InputStream but have been additionally processed by the Cipher. The EncryptionMaterials object used for getObject should be the same as the one used for corresponding putObject operation.
+Gets entire encrypted object's data as InputStream in given bucket, then decrypts the content key
+associated with the encrypted object using the master key passed. Then creates a CipherInputStream composed of an
+InputStream and a Cipher. The Cipher is initialized for decryption using the content key, so the CipherInputStream
+will attempt to read in data and decrypt them, before returning the decrypted data. So that read() methods return
+processed, plain object.
 
-CipherInputStream should be closed after use, else connection remains open.
+The CipherInputStream must be closed after use else the connection will remain open.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-javax.crypto.SecretKey-)
 
@@ -722,7 +726,7 @@ __Parameters__
 |:--- |:--- |:--- |
 | ``bucketName``  | _String_  | Name of the bucket.  |
 | ``objectName``  | _String_  | Object name in the bucket. |
-| ``key``  | _SecretKey_  | An object of type [SecretKey](https://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html) or RSA [KeyPair](https://docs.oracle.com/javase/7/docs/api/java/security/KeyPair.html). |
+| ``key``  | _SecretKey_  | An object of type [SecretKey](https://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html). |
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
@@ -775,16 +779,19 @@ try {
 <a name="getObject"></a>
 ### getObject(String bucketName, String objectName, KeyPair key)
 
-`public CipherInputStream getObject(String bucketName, String objectName, KeyPair key)`
+`public InputStream getObject(String bucketName, String objectName, KeyPair key)`
 
-Gets entire encrypted object's data, then returns InputStream. InputStream is composed of an InputStream and a Cipher so that read() methods return data that are read in from the underlying InputStream but have been additionally processed by the Cipher.
+Gets entire encrypted object's data as InputStream in given bucket, then decrypts the content key
+associated with the encrypted object using the master key pair passed. Then creates a CipherInputStream composed of an
+InputStream and a Cipher. The Cipher is initialized for decryption using the content key, so the CipherInputStream
+will attempt to read in data and decrypt them, before returning the decrypted data. So that read() methods return
+processed, plain object.
 
-CipherInputStream should be closed after use, else connection remains open.
+The CipherInputStream must be closed after use else the connection will remain open.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-java.security.KeyPair-)
 
 __Parameters__
-
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
@@ -956,7 +963,11 @@ try {
 `public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
 		  SecretKey key)`
 
-Encrypts and then uploads an object from an InputStream.
+Takes data from given stream, encrypts it using a random content key and uploads it as object to given bucket. Also
+uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
+master key passed to this function.
+
+If the object is larger than 5MB, the client will automatically use a multipart session.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-javax.crypto.SecretKey-)
 
@@ -1029,14 +1040,18 @@ try {
 ```
 
 <a name="putObject"></a>
-### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType, SecretKey key)
+### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType, KeyPair key)
 
 `public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,
 		  KeyPair key)`
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-java.security.KeyPair-)
+Takes data from given stream, encrypts it using a random content key and uploads it as object to given bucket. Also
+uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
+master key pair passed to this function.
 
-Encrypts and then uploads an object from an InputStream.
+If the object is larger than 5MB, the client will automatically use a multipart session.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-java.security.KeyPair-)
 
 __Parameters__
 
@@ -1049,8 +1064,6 @@ __Parameters__
 | ``size``  | _long_  | Size of the data to read from ``stream`` that will be uploaded. |
 | ``contentType``  | _String_ | Content type of the stream. |
 | ``key``  | _KeyPair_ | An object of type initialized RSA [KeyPair](https://docs.oracle.com/javase/7/docs/api/java/security/KeyPair.html).  |
-
-putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-java.security.KeyPair-
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
