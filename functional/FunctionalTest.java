@@ -668,9 +668,43 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: listObjects(bucketName, final String prefix, final boolean recursive, final boolean useVersion1).
+   * Test: recursive: listObjects(bucketName, final String prefix, final boolean recursive).
    */
   public static void listObject_test5() throws Exception {
+    int i;
+    int objCount = 1050;
+
+    System.out.println("Test: recursive: listObjects(final String bucketName, final String prefix" 
+           + ", final boolean recursive)");
+    String[] objectNames = new String[objCount];
+
+    String baseFilename = createFile(1);
+    for (i = 0; i < objCount; i++) {
+      objectNames[i] = baseFilename + "-" + i;
+      client.putObject(bucketName, objectNames[i], baseFilename);
+    }
+    Files.delete(Paths.get(baseFilename));
+
+    i = 0;
+    for (Result<?> r : client.listObjects(bucketName, "minio", true)) {
+      ignore(i++, r.get());
+    }
+
+    // Check the number of uploaded objects
+    if (i != objCount) {
+      throw new Exception("[FAILED] Test: recursive: listObject_test5(), number of items, expected: " 
+           + objCount + ", found: " + i);
+    }
+
+    for (i = 0; i < objCount; i++) {
+      client.removeObject(bucketName, objectNames[i]);
+    }
+  }
+
+  /**
+   * Test: listObjects(bucketName, final String prefix, final boolean recursive, final boolean useVersion1).
+   */
+  public static void listObject_test6() throws Exception {
     int i;
     System.out.println("Test: listObjects(final String bucketName, final String prefix, final boolean recursive,"
                        + " final boolean useVersion1)");
@@ -1544,6 +1578,7 @@ public class FunctionalTest {
     listObject_test3();
     listObject_test4();
     listObject_test5();
+    listObject_test6();
 
     removeObject_test1();
     removeObject_test2();

@@ -2426,7 +2426,7 @@ public final class MinioClient {
             }
 
             String continuationToken = null;
-            if (this.listBucketResult != null && delimiter != null) {
+            if (this.listBucketResult != null) {
               continuationToken = listBucketResult.nextContinuationToken();
             }
 
