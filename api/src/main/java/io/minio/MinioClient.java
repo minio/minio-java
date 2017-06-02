@@ -778,7 +778,8 @@ public final class MinioClient {
                                 String region, Map<String,String> headerMap,
                                 Map<String,String> queryParamMap, final String contentType,
                                 final Object body, final int length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException {
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InternalException {
     if (bucketName == null && objectName != null) {
       throw new InvalidBucketNameException(NULL_STRING, "null bucket name for object '" + objectName + "'");
     }
@@ -896,40 +897,31 @@ public final class MinioClient {
       // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
       if (url.isHttps()) {
         sha256Hash = "UNSIGNED-PAYLOAD";
-        if (body instanceof BufferedInputStream) {
-          md5Hash = Digest.md5Hash((BufferedInputStream) body, length);
-        } else if (body instanceof RandomAccessFile) {
-          md5Hash = Digest.md5Hash((RandomAccessFile) body, length);
-        } else if (body instanceof byte[]) {
-          byte[] data = (byte[]) body;
-          md5Hash = Digest.md5Hash(data, length);
+        if (body != null) {
+          md5Hash = Digest.md5Hash(body, length);
         }
       } else {
-        // Fix issue #567: Compute SHA256 hash only.
-        if (body == null) {
-          sha256Hash = Digest.sha256Hash(new byte[0]);
-        } else if (body instanceof BufferedInputStream) {
-          sha256Hash = Digest.sha256Hash((BufferedInputStream) body, length);
-        } else if (body instanceof RandomAccessFile) {
-          sha256Hash = Digest.sha256Hash((RandomAccessFile) body, length);
-        } else if (body instanceof byte[]) {
-          sha256Hash = Digest.sha256Hash((byte[]) body, length);
+        Object data = body;
+        int len = length;
+        if (data == null) {
+          data = new byte[0];
+          len = 0;
+        }
+
+        if (method == Method.POST && queryParamMap != null && queryParamMap.containsKey("delete")) {
+          // Fix issue #579: Treat 'Delete Multiple Objects' specially which requires MD5 hash.
+          String[] hashes = Digest.sha256Md5Hashes(data, len);
+          sha256Hash = hashes[0];
+          md5Hash = hashes[1];
         } else {
-          sha256Hash = Digest.sha256Hash(body.toString());
+          // Fix issue #567: Compute SHA256 hash only.
+          sha256Hash = Digest.sha256Hash(data, len);
         }
       }
     } else {
       // Fix issue #567: Compute MD5 hash only of anonymous access.
       if (body != null) {
-        if (body instanceof BufferedInputStream) {
-          md5Hash = Digest.md5Hash((BufferedInputStream) body, length);
-        } else if (body instanceof RandomAccessFile) {
-          md5Hash = Digest.md5Hash((RandomAccessFile) body, length);
-        } else if (body instanceof byte[]) {
-          md5Hash = Digest.md5Hash((byte[]) body, length);
-        } else {
-          md5Hash = Digest.md5Hash(body.toString());
-        }
+        md5Hash = Digest.md5Hash(body, length);
       }
     }
 
@@ -2081,7 +2073,7 @@ public final class MinioClient {
     }
 
     String region = getRegion(bucketName);
-    Request request = createRequest(Method.PUT, bucketName, objectName, region, null, null, null, "", 0);
+    Request request = createRequest(Method.PUT, bucketName, objectName, region, null, null, null, new byte[0], 0);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
