@@ -30,6 +30,9 @@ import io.minio.errors.InvalidArgumentException;
  * before copying an object.
  */
 public class CopyConditions {
+  // Metadata directive "REPLACE" used to replace metadata on
+  // destination object in copyObject().
+  private static final String METADATA_DIRECTIVE_REPLACE = "REPLACE";
 
   private Map<String, String> copyConditions = new HashMap<>();
 
@@ -86,6 +89,15 @@ public class CopyConditions {
       throw new InvalidArgumentException("ETag cannot be empty");
     }
     copyConditions.put("x-amz-copy-source-if-none-match", etag);
+  }
+
+  /**
+   * Set replace metadata directive which specifies that
+   * destination object after copyObject() sets new
+   * metadata provided in the request.
+   */
+  public void setReplaceMetadataDirective() {
+    copyConditions.put("x-amz-metadata-directive", METADATA_DIRECTIVE_REPLACE);
   }
 
   /**

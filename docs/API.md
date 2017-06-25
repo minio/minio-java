@@ -1162,16 +1162,15 @@ try {
 ```
 
 <a name="copyObject"></a>
-### copyObject(String bucketName, String objectName, String destBucketName, String destObjectName, CopyConditions cpConds)
+### copyObject(String bucketName, String objectName, String destBucketName, String destObjectName, CopyConditions cpConds, Map<String, String> metadata)
 
-*`public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName, CopyConditions cpConds)`*
+*`public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName, CopyConditions cpConds, Map<String, String> metadata)`*
 
 Copies content from objectName to destObjectName.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-java.lang.String-java.lang.String-java.lang.String-java.lang.String-io.minio.CopyConditions-)
 
 __Parameters__
-
 
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
@@ -1180,6 +1179,7 @@ __Parameters__
 | ``destBucketName``  | _String_  | Destination bucket name. |
 | ``destObjectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
 | ``copyConditions`` | _CopyConditions_ | Map of conditions useful for applying restrictions on copy operation.|
+| ``metadata``  | _Map_ | Map of object metadata for destination object.|
 
 
 | Return Type	  | Exceptions	  |

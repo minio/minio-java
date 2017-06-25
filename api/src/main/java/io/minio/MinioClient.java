@@ -1807,7 +1807,7 @@ public final class MinioClient {
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException {
 
-    copyObject(bucketName, objectName, destBucketName, null, null);
+    copyObject(bucketName, objectName, destBucketName, null, null, null);
   }
 
   /**
@@ -1842,7 +1842,7 @@ public final class MinioClient {
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException {
 
-    copyObject(bucketName, objectName, destBucketName, destObjectName, null);
+    copyObject(bucketName, objectName, destBucketName, destObjectName, null, null);
   }
 
   /**
@@ -1880,7 +1880,7 @@ public final class MinioClient {
         NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
         InvalidArgumentException {
 
-    copyObject(bucketName, objectName, destBucketName, null, copyConditions);
+    copyObject(bucketName, objectName, destBucketName, null, copyConditions, null);
   }
 
   /**
@@ -1921,6 +1921,51 @@ public final class MinioClient {
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException {
 
+    copyObject(bucketName, objectName, destBucketName, destObjectName, copyConditions, null);
+  }
+
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   * optionally can take a key value CopyConditions as well for conditionally attempting
+   * copyObject.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
+   * "my-destobjname", copyConditions, metadata);}
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name where the object to be copied exists.
+   * @param objectName
+   *          Object name source to be copied.
+   * @param destBucketName
+   *          Bucket name where the object will be copied to.
+   * @param destObjectName
+   *          Object name to be created, if not provided uses source object name
+   *          as destination object name.
+   * @param copyConditions
+   *          CopyConditions object with collection of supported CopyObject conditions.
+   * @param metadata
+   *          Additional metadata to set on the destination object when
+   *          setMetadataDirective is set to 'REPLACE'.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name, invalid object name.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public void copyObject(String bucketName, String objectName, String destBucketName,
+                         String destObjectName, CopyConditions copyConditions,
+                         Map<String,String> metadata)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
+
     if (bucketName == null) {
       throw new InvalidArgumentException("Source bucket name cannot be empty");
     }
@@ -1947,6 +1992,11 @@ public final class MinioClient {
     // If no conditions available, skip addition else add the conditions to the header
     if (copyConditions != null) {
       headerMap.putAll(copyConditions.getConditions());
+    }
+
+    // Set metadata on the destination of object.
+    if (metadata != null) {
+      headerMap.putAll(metadata);
     }
 
     HttpResponse response = executePut(destBucketName, destObjectName, headerMap,
