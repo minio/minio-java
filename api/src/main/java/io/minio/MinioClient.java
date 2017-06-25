@@ -1051,6 +1051,9 @@ public final class MinioClient {
     if (errorResponse == null) {
       ErrorCode ec;
       switch (response.code()) {
+        case 307:
+          ec = ErrorCode.REDIRECT;
+          break;
         case 400:
           ec = ErrorCode.INVALID_URI;
           break;
