@@ -674,7 +674,7 @@ public class FunctionalTest {
     int i;
     int objCount = 1050;
 
-    System.out.println("Test: recursive: listObjects(final String bucketName, final String prefix" 
+    System.out.println("Test: recursive: listObjects(final String bucketName, final String prefix"
            + ", final boolean recursive)");
     String[] objectNames = new String[objCount];
 
@@ -692,7 +692,7 @@ public class FunctionalTest {
 
     // Check the number of uploaded objects
     if (i != objCount) {
-      throw new Exception("[FAILED] Test: recursive: listObject_test5(), number of items, expected: " 
+      throw new Exception("[FAILED] Test: recursive: listObject_test5(), number of items, expected: "
            + objCount + ", found: " + i);
     }
 
@@ -1391,6 +1391,44 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: copyObject(String bucketName, String objectName, String destBucketName,
+   * CopyConditions copyConditions, Map metadata) replace
+   * object metadata.
+   */
+  public static void copyObject_test8() throws Exception {
+    System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
+                       + "CopyConditions copyConditions, Map<String, String> metadata)"
+                       + " replace object metadata");
+    String filename = createFile(3 * MB);
+    client.putObject(bucketName, filename, filename, "application/octet-stream");
+    Files.delete(Paths.get(filename));
+
+    CopyConditions copyConditions = new CopyConditions();
+    copyConditions.setReplaceMetadataDirective();
+
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put("Content-Type", customContentType);
+
+    try {
+      client.copyObject(bucketName, filename, bucketName, filename,
+                        copyConditions, metadata);
+    } catch (ErrorResponseException e) {
+      // File should not be copied as object was modified after date set in copyConditions.
+      if (!e.errorResponse().code().equals("PreconditionFailed")) {
+        throw e;
+      }
+    }
+
+    ObjectStat objectStat = client.statObject(bucketName, filename);
+    if (!customContentType.equals(objectStat.contentType())) {
+      throw new Exception("[FAILED] Test: copyObject(String bucketName, String objectName, String destBucketName, "
+                          + "CopyConditions copyConditions, Map<String, String> metadata)");
+    }
+
+    client.removeObject(bucketName, filename);
+  }
+
+  /**
    * Test: setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration).
    */
   public static void setBucketNotification_test1() throws Exception {
@@ -1605,6 +1643,7 @@ public class FunctionalTest {
     copyObject_test5();
     copyObject_test6();
     copyObject_test7();
+    copyObject_test8();
 
     threadedPutObject();
 
