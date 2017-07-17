@@ -5,6 +5,7 @@ jdk:
 - oraclejdk7
 - openjdk7
 script:
+- ./gradlew check
 - if java -version 2>&1 | grep -q 'java version "1.8.'; then ./gradlew runFunctionalTest; else true; fi
 notifications:
   slack:
