@@ -227,6 +227,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, null, null);
@@ -249,6 +251,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(URL url) throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null);
@@ -271,6 +275,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(HttpUrl url) throws InvalidEndpointException, InvalidPortException {
     this(url.toString(), 0, null, null);
@@ -306,6 +312,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
@@ -343,6 +351,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey, String region)
     throws InvalidEndpointException, InvalidPortException {
@@ -368,6 +378,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(URL url, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
@@ -394,6 +406,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
       throws InvalidEndpointException, InvalidPortException {
@@ -433,6 +447,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
     throws InvalidEndpointException, InvalidPortException {
@@ -472,6 +488,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
     throws InvalidEndpointException, InvalidPortException {
@@ -512,6 +530,8 @@ public final class MinioClient {
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
     throws InvalidEndpointException, InvalidPortException {
@@ -552,9 +572,55 @@ public final class MinioClient {
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+    throws InvalidEndpointException, InvalidPortException {
+    this(endpoint, port, accessKey, secretKey, region, secure, null);
+  }
+
+
+  /**
+   * Creates Minio client object using given endpoint, port, access key, secret key, region and secure option.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient minioClient =
+   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false,
+   *          customHttpClient);
+   * }</pre>
+   *
+   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   *
+   * @param port       Valid port.  It should be in between 1 and 65535.  Unused if endpoint is an URL.
+   * @param accessKey  Access key to access service in endpoint.
+   * @param secretKey  Secret key to access service in endpoint.
+   * @param region     Region name to access service in endpoint.
+   * @param secure     If true, access endpoint using HTTPS else access it using HTTP.
+   * @param httpClient Customized HTTP client object.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   */
+  public MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+                     OkHttpClient httpClient)
     throws InvalidEndpointException, InvalidPortException {
     if (endpoint == null) {
       throw new InvalidEndpointException(NULL_STRING, "null endpoint");
@@ -626,6 +692,10 @@ public final class MinioClient {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.region = region;
+
+    if (httpClient != null) {
+      this.httpClient = httpClient;
+    }
   }
 
   /**
