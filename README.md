@@ -95,7 +95,7 @@ mc ls play/asiatrip/
 ## API Reference
 The full API Reference is available here.
 
-* [Complete API Reference] (https://docs.minio.io/docs/java-client-api-reference)
+* [Complete API Reference](https://docs.minio.io/docs/java-client-api-reference)
 
 ### API Reference: Bucket Operations
 * [`makeBucket`](https://docs.minio.io/docs/java-client-api-reference#makeBucket)
