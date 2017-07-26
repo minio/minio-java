@@ -83,6 +83,7 @@ class Signer {
   private String region;
   private String accessKey;
   private String secretKey;
+  private String prevSignature;
 
   private String scope;
   private Map<String,String> canonicalHeaders;
@@ -106,16 +107,18 @@ class Signer {
    * @param region         Amazon AWS region for the request.
    * @param accessKey      Access Key string.
    * @param secretKey      Secret Key string.
+   * @param prevSignaure   Previous signature of chunk upload.
    *
    */
   public Signer(Request request, String contentSha256, DateTime date, String region, String accessKey,
-                String secretKey) {
+                String secretKey, String prevSignature) {
     this.request = request;
     this.contentSha256 = contentSha256;
     this.date = date;
     this.region = region;
     this.accessKey = accessKey;
     this.secretKey = secretKey;
+    this.prevSignature = prevSignature;
   }
 
 
@@ -192,6 +195,16 @@ class Signer {
   }
 
 
+  private void setChunkStringToSign() throws NoSuchAlgorithmException {
+    this.stringToSign = "AWS4-HMAC-SHA256-PAYLOAD" + "\n"
+      + this.date.toString(DateFormat.AMZ_DATE_FORMAT) + "\n"
+      + this.scope + "\n"
+      + this.prevSignature + "\n"
+      + Digest.sha256Hash("") + "\n"
+      + this.contentSha256;
+  }
+
+
   private void setSigningKey() throws NoSuchAlgorithmException, InvalidKeyException {
     String aws4SecretKey = "AWS4" + this.secretKey;
 
@@ -219,6 +232,41 @@ class Signer {
 
 
   /**
+   * Returns chunk signature calculated using given arguments.
+   */
+  public static String getChunkSignature(String chunkSha256, DateTime date, String region, String secretKey,
+                                         String prevSignature)
+    throws NoSuchAlgorithmException, InvalidKeyException {
+    Signer signer = new Signer(null, chunkSha256, date, region, null, secretKey, prevSignature);
+    signer.setScope();
+    signer.setChunkStringToSign();
+    signer.setSigningKey();
+    signer.setSignature();
+
+    return signer.signature;
+  }
+
+
+  /**
+   * Returns seed signature for given request.
+   */
+  public static String getChunkSeedSignature(Request request, String region, String secretKey)
+    throws NoSuchAlgorithmException, InvalidKeyException {
+    String contentSha256 = request.header("x-amz-content-sha256");
+    DateTime date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(request.header("x-amz-date"));
+
+    Signer signer = new Signer(request, contentSha256, date, region, null, secretKey, null);
+    signer.setScope();
+    signer.setCanonicalRequest();
+    signer.setStringToSign();
+    signer.setSigningKey();
+    signer.setSignature();
+    
+    return signer.signature;
+  }
+
+
+  /**
    * Returns signed request object for given request, region, access key and secret key.
    */
   public static Request signV4(Request request, String region, String accessKey, String secretKey)
@@ -226,7 +274,7 @@ class Signer {
     String contentSha256 = request.header("x-amz-content-sha256");
     DateTime date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(request.header("x-amz-date"));
 
-    Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey);
+    Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
     signer.setScope();
     signer.setCanonicalRequest();
     signer.setStringToSign();
@@ -278,7 +326,7 @@ class Signer {
     String contentSha256 = "UNSIGNED-PAYLOAD";
     DateTime date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(request.header("x-amz-date"));
 
-    Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey);
+    Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
     signer.setScope();
     signer.setPresignCanonicalRequest(expires);
     signer.setStringToSign();
@@ -304,7 +352,7 @@ class Signer {
    */
   public static String postPresignV4(String stringToSign, String secretKey, DateTime date, String region)
     throws NoSuchAlgorithmException, InvalidKeyException {
-    Signer signer = new Signer(null, null, date, region, null, secretKey);
+    Signer signer = new Signer(null, null, date, region, null, secretKey, null);
     signer.stringToSign = stringToSign;
     signer.setSigningKey();
     signer.setSignature();
