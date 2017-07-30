@@ -926,7 +926,8 @@ public class MinioClientTest {
     for (int i = 1; i < 256; i++) {
       ascii[i - 1] = (byte) i;
     }
-    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11, null);
+    String contentType = null;
+    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11, contentType);
   }
 
   @Test
@@ -948,7 +949,8 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, null);
+    String contentType = null;
+    client.putObject(BUCKET, "key", data, 11, contentType);
   }
 
   @Test

@@ -46,6 +46,7 @@ public class FunctionalTest {
   private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String bucketName = getRandomName();
   private static final String customContentType = "application/javascript";
+  private static final String nullContentType = null;
   private static boolean mintEnv = false;
   private static Path dataFile1Mb;
   private static Path dataFile65Mb;
@@ -288,14 +289,14 @@ public class FunctionalTest {
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(13 * MB);
     try {
-      client.putObject(bucketName, objectName, is, 20 * MB, null);
+      client.putObject(bucketName, objectName, is, 20 * MB, nullContentType);
     } catch (InsufficientDataException e) {
       ignore();
     }
     is.close();
 
     is = new ContentInputStream(13 * MB);
-    client.putObject(bucketName, objectName, is, 13 * MB, null);
+    client.putObject(bucketName, objectName, is, 13 * MB, nullContentType);
     is.close();
     client.removeObject(bucketName, objectName);
   }
@@ -395,6 +396,29 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                 Map&lt;String, String&gt; headerMap).
+   */
+  public static void putObject_test11() throws Exception {
+    System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, Map<String, String> headerMap).");
+
+    String objectName = getRandomName();
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("Content-Type", customContentType);
+    InputStream is = new ContentInputStream(13 * MB);
+    client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
+    is.close();
+
+    ObjectStat objectStat = client.statObject(bucketName, objectName);
+    if (!customContentType.equals(objectStat.contentType())) {
+      throw new Exception("[FAILED] Test: putObject(String bucketName, String objectName, InputStream stream, "
+                          + "long size, Map<String, String> headerMap)");
+    }
+    client.removeObject(bucketName, objectName);
+  }
+
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
   public static void statObject_test() throws Exception {
@@ -402,7 +426,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(1);
-    client.putObject(bucketName, objectName, is, 1, null);
+    client.putObject(bucketName, objectName, is, 1, nullContentType);
     is.close();
 
     client.statObject(bucketName, objectName);
@@ -417,7 +441,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     is = client.getObject(bucketName, objectName);
@@ -433,7 +457,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     is = client.getObject(bucketName, objectName, 1000L);
@@ -449,7 +473,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     is = client.getObject(bucketName, objectName, 1000L, 1024 * 1024L);
@@ -465,7 +489,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     client.getObject(bucketName, objectName, objectName + ".downloaded");
@@ -484,7 +508,7 @@ public class FunctionalTest {
     String baseObjectName = getRandomName();
     String objectName = "path/to/" + baseObjectName;
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     client.getObject(bucketName, objectName, baseObjectName + ".downloaded");
@@ -561,7 +585,7 @@ public class FunctionalTest {
     for (i = 0; i < 3; i++) {
       objectNames[i] = getRandomName();
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectNames[i], is, 1, null);
+      client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
       is.close();
     }
 
@@ -589,7 +613,7 @@ public class FunctionalTest {
     for (i = 0; i < 3; i++) {
       objectNames[i] = getRandomName();
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectNames[i], is, 1, null);
+      client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
       is.close();
     }
 
@@ -617,7 +641,7 @@ public class FunctionalTest {
     for (i = 0; i < 3; i++) {
       objectNames[i] = getRandomName();
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectNames[i], is, 1, null);
+      client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
       is.close();
     }
 
@@ -662,7 +686,7 @@ public class FunctionalTest {
     for (i = 0; i < objCount; i++) {
       objectNames[i] = getRandomName();
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectNames[i], is, 1, null);
+      client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
       is.close();
     }
 
@@ -694,7 +718,7 @@ public class FunctionalTest {
     for (i = 0; i < 3; i++) {
       objectNames[i] = getRandomName();
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectNames[i], is, 1, null);
+      client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
       is.close();
     }
 
@@ -719,7 +743,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(1);
-    client.putObject(bucketName, objectName, is, 1, null);
+    client.putObject(bucketName, objectName, is, 1, nullContentType);
     is.close();
 
     client.removeObject(bucketName, objectName);
@@ -735,7 +759,7 @@ public class FunctionalTest {
     for (int i = 0; i < 3; i++) {
       objectNames[i] = getRandomName();
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectNames[i], is, 1, null);
+      client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
       is.close();
     }
     objectNames[3] = "nonexistent-object";
@@ -754,7 +778,7 @@ public class FunctionalTest {
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(6 * MB);
     try {
-      client.putObject(bucketName, objectName, is, 9 * MB, null);
+      client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
     } catch (InsufficientDataException e) {
       ignore();
     }
@@ -779,7 +803,7 @@ public class FunctionalTest {
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(6 * MB);
     try {
-      client.putObject(bucketName, objectName, is, 9 * MB, null);
+      client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
     } catch (InsufficientDataException e) {
       ignore();
     }
@@ -806,7 +830,7 @@ public class FunctionalTest {
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(6 * MB);
     try {
-      client.putObject(bucketName, objectName, is, 9 * MB, null);
+      client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
     } catch (InsufficientDataException e) {
       ignore();
     }
@@ -832,7 +856,7 @@ public class FunctionalTest {
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(6 * MB);
     try {
-      client.putObject(bucketName, objectName, is, 9 * MB, null);
+      client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
     } catch (InsufficientDataException e) {
       ignore();
     }
@@ -857,7 +881,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     is = new ContentInputStream(3 * MB);
@@ -912,7 +936,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     is = new ContentInputStream(3 * MB);
@@ -968,7 +992,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     is = new ContentInputStream(3 * MB);
@@ -1196,7 +1220,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     String destBucketName = getRandomName();
@@ -1219,7 +1243,7 @@ public class FunctionalTest {
                        + "CopyConditions copyConditions) with Matching ETag (Negative Case)");
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     String destBucketName = getRandomName();
@@ -1248,7 +1272,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     String destBucketName = getRandomName();
@@ -1279,7 +1303,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     String destBucketName = getRandomName();
@@ -1309,7 +1333,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     String destBucketName = getRandomName();
@@ -1341,7 +1365,7 @@ public class FunctionalTest {
 
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     String destBucketName = getRandomName();
@@ -1372,7 +1396,7 @@ public class FunctionalTest {
                        + " condition (Negative Case)");
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
-    client.putObject(bucketName, objectName, is, 3 * MB, null);
+    client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
     is.close();
 
     String destBucketName = getRandomName();
@@ -1606,6 +1630,7 @@ public class FunctionalTest {
     putObject_test8();
     putObject_test9();
     putObject_test10();
+    putObject_test11();
 
     statObject_test();
 
