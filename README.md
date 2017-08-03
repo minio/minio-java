@@ -7,8 +7,8 @@ This quickstart guide will show you how to install the client SDK and execute an
 ## Minimum Requirements
 Java 1.7 or above, with one of the following environments:
 
-* [OracleJDK 7.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html) or [OracleJDK 8.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-* [OpenJDK7.0](http://openjdk.java.net/install/) or [OpenJDK8.0](http://openjdk.java.net/install/)
+* [OracleJDK 8.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+* [OpenJDK8.0](http://openjdk.java.net/install/)
 
 ## Download from maven
 ```xml
