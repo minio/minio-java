@@ -387,6 +387,10 @@ public class BucketPolicy {
     boolean objReadOnly = false;
     boolean objWriteOnly = false;
 
+    if (statements == null) {
+      return PolicyType.NONE;
+    }
+
     for (Statement s : statements) {
       Set<String> matchedObjResources = new HashSet<String>();
       if (s.resources().contains(objectResource)) {
