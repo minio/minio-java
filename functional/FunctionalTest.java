@@ -26,6 +26,7 @@ import java.io.*;
 
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
 
 import org.joda.time.DateTime;
 
@@ -39,6 +40,7 @@ import okhttp3.Response;
 import io.minio.*;
 import io.minio.messages.*;
 import io.minio.errors.*;
+import io.minio.policy.*;
 
 
 public class FunctionalTest {
@@ -1394,6 +1396,7 @@ public class FunctionalTest {
     System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
                        + "CopyConditions copyConditions) with modified after"
                        + " condition (Negative Case)");
+
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
     client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
@@ -1430,6 +1433,7 @@ public class FunctionalTest {
     System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
                        + "CopyConditions copyConditions, Map<String, String> metadata)"
                        + " replace object metadata");
+
     String objectName = getRandomName();
     InputStream is = new ContentInputStream(3 * MB);
     client.putObject(bucketName, objectName, is, 3 * MB, "application/octet-stream");
@@ -1455,6 +1459,273 @@ public class FunctionalTest {
     client.removeObject(bucketName, objectName);
     client.removeObject(destBucketName, objectName);
     client.removeBucket(destBucketName);
+  }
+
+  /**
+   * Test: getBucketPolicy(String bucketName, String objectPrefix).
+   */
+  public static void getBucketPolicy_test1() throws Exception {
+    System.out.println("Test: getBucketPolicy(String bucketName, String objectPrefix)");
+
+    String objectPrefix = "get-bucket-policy-none";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.NONE);
+    PolicyType type = client.getBucketPolicy(bucketName, objectPrefix);
+    if (type != PolicyType.NONE) {
+      throw new Exception("[FAILED] Expected: " + PolicyType.NONE + ", Got: " + type);
+    }
+
+    objectPrefix = "get-bucket-policy-read-only";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.READ_ONLY);
+    type = client.getBucketPolicy(bucketName, objectPrefix);
+    if (type != PolicyType.READ_ONLY) {
+      throw new Exception("[FAILED] Expected: " + PolicyType.READ_ONLY + ", Got: " + type);
+    }
+
+    objectPrefix = "get-bucket-policy-write-only";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.WRITE_ONLY);
+    type = client.getBucketPolicy(bucketName, objectPrefix);
+    if (type != PolicyType.WRITE_ONLY) {
+      throw new Exception("[FAILED] Expected: " + PolicyType.WRITE_ONLY + ", Got: " + type);
+    }
+
+    objectPrefix = "get-bucket-policy-read-write";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.READ_WRITE);
+    type = client.getBucketPolicy(bucketName, objectPrefix);
+    if (type != PolicyType.READ_WRITE) {
+      throw new Exception("[FAILED] Expected: " + PolicyType.READ_WRITE + ", Got: " + type);
+    }
+  }
+
+  /**
+   * Test: None type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
+   */
+  public static void setBucketPolicy_test1() throws Exception {
+    System.out.println("Test: None type: setBucketPolicy(String bucketName, String objectPrefix, "
+                       + "PolicyType policyType)");
+
+    String objectPrefix = "set-bucket-policy-none";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.NONE);
+
+    String objectName = objectPrefix + "/" + getRandomName();
+    InputStream is = new ContentInputStream(16);
+    client.putObject(bucketName, objectName, is, 16, "application/octet-stream");
+    is.close();
+
+    String urlString = client.getObjectUrl(bucketName, objectName);
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("GET", null)
+        .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new Exception("[FAILED] empty response");
+    }
+
+    if (response.isSuccessful()) {
+      throw new Exception("[FAILED] Anonmymous has access for None policy type.  Response: " + response);
+    }
+
+    client.removeObject(bucketName, objectName);
+  }
+
+  /**
+   * Test: Read-only type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
+   */
+  public static void setBucketPolicy_test2() throws Exception {
+    System.out.println("Test: Read-only type: setBucketPolicy(String bucketName, String objectPrefix,"
+                       + " PolicyType policyType)");
+
+    String objectPrefix = "set-bucket-policy-read-only";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.READ_ONLY);
+
+    String objectName = objectPrefix + "/" + getRandomName();
+    byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
+    InputStream is = new ByteArrayInputStream(data);
+    client.putObject(bucketName, objectName, is, data.length, "application/octet-stream");
+    is.close();
+
+    String urlString = client.getObjectUrl(bucketName, objectName);
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("GET", null)
+        .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new Exception("[FAILED] empty response");
+    }
+
+    if (!response.isSuccessful()) {
+      String errorXml = "";
+
+      // read entire body stream to string.
+      Scanner scanner = new Scanner(response.body().charStream());
+      scanner.useDelimiter("\\A");
+      if (scanner.hasNext()) {
+        errorXml = scanner.next();
+      }
+      scanner.close();
+      response.body().close();
+
+      throw new Exception("[FAILED] Anonmymous has access for Read-only policy type.  Response: " + response
+                          + ", Body = " + errorXml);
+    }
+
+    byte[] readBytes = readAllBytes(response.body().byteStream());
+    response.body().close();
+    if (!Arrays.equals(data, readBytes)) {
+      throw new Exception("Test: Read-only type: setBucketPolicy(String bucketName, String objectPrefix,"
+                          + " PolicyType policyType), Error: <Content differs>");
+    }
+
+    client.removeObject(bucketName, objectName);
+  }
+
+  /**
+   * Test: Write-only type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
+   */
+  public static void setBucketPolicy_test3() throws Exception {
+    System.out.println("Test: Write-only type: setBucketPolicy(String bucketName, String objectPrefix,"
+                       + " PolicyType policyType)");
+
+    String objectPrefix = "set-bucket-policy-write-only";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.WRITE_ONLY);
+
+    String objectName = objectPrefix + "/" + getRandomName();
+    byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
+
+    String urlString = client.getObjectUrl(bucketName, objectName);
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("PUT", RequestBody.create(null, data))
+        .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new Exception("[FAILED] empty response");
+    }
+
+    if (!response.isSuccessful()) {
+      String errorXml = "";
+
+      // read entire body stream to string.
+      Scanner scanner = new Scanner(response.body().charStream());
+      scanner.useDelimiter("\\A");
+      if (scanner.hasNext()) {
+        errorXml = scanner.next();
+      }
+      scanner.close();
+      response.body().close();
+
+      throw new Exception("[FAILED] Anonmymous has access for Write-type policy type.  Response: " + response
+                          + ", Body = " + errorXml);
+    }
+
+    InputStream is = client.getObject(bucketName, objectName);
+    byte[] readBytes = readAllBytes(is);
+    is.close();
+
+    if (!Arrays.equals(data, readBytes)) {
+      throw new Exception("Test: Write-only type: setBucketPolicy(String bucketName, String objectPrefix,"
+                          + " PolicyType policyType), Error: <Content differs>");
+    }
+
+    client.removeObject(bucketName, objectName);
+  }
+
+  /**
+   * Test: Read-write type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
+   */
+  public static void setBucketPolicy_test4() throws Exception {
+    System.out.println("Test: Read-write type: setBucketPolicy(String bucketName, String objectPrefix,"
+                       + " PolicyType policyType)");
+
+    String objectPrefix = "set-bucket-policy-read-write";
+    client.setBucketPolicy(bucketName, objectPrefix, PolicyType.READ_WRITE);
+
+    String objectName = objectPrefix + "/" + getRandomName();
+    byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
+
+    String urlString = client.getObjectUrl(bucketName, objectName);
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("PUT", RequestBody.create(null, data))
+        .build();
+    OkHttpClient transport = new OkHttpClient();
+    Response response = transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new Exception("[FAILED] empty response");
+    }
+
+    if (!response.isSuccessful()) {
+      String errorXml = "";
+
+      // read entire body stream to string.
+      Scanner scanner = new Scanner(response.body().charStream());
+      scanner.useDelimiter("\\A");
+      if (scanner.hasNext()) {
+        errorXml = scanner.next();
+      }
+      scanner.close();
+      response.body().close();
+
+      throw new Exception("[FAILED] Anonmymous has access for Read-write policy type.  Response: " + response
+                          + ", Body = " + errorXml);
+    }
+
+    InputStream is = client.getObject(bucketName, objectName);
+    byte[] readBytes = readAllBytes(is);
+    is.close();
+
+    if (!Arrays.equals(data, readBytes)) {
+      throw new Exception("Test: Read-write type: setBucketPolicy(String bucketName, String objectPrefix,"
+                          + " PolicyType policyType), Error: <Content differs>");
+    }
+
+    requestBuilder = new Request.Builder();
+    request = requestBuilder
+        .url(HttpUrl.parse(urlString))
+        .method("GET", null)
+        .build();
+    response = transport.newCall(request).execute();
+
+    if (response == null) {
+      throw new Exception("[FAILED] empty response");
+    }
+
+    if (!response.isSuccessful()) {
+      String errorXml = "";
+
+      // read entire body stream to string.
+      Scanner scanner = new Scanner(response.body().charStream());
+      scanner.useDelimiter("\\A");
+      if (scanner.hasNext()) {
+        errorXml = scanner.next();
+      }
+      scanner.close();
+      response.body().close();
+
+      throw new Exception("[FAILED] Anonmymous has access for Read-write policy type.  Response: " + response
+                          + ", Body = " + errorXml);
+    }
+
+    readBytes = readAllBytes(response.body().byteStream());
+    response.body().close();
+    if (!Arrays.equals(data, readBytes)) {
+      throw new Exception("Test: Read-write type: setBucketPolicy(String bucketName, String objectPrefix,"
+                          + " PolicyType policyType), Error: <Content differs>");
+    }
+
+    client.removeObject(bucketName, objectName);
   }
 
   /**
@@ -1676,6 +1947,13 @@ public class FunctionalTest {
     copyObject_test7();
     copyObject_test8();
 
+    getBucketPolicy_test1();
+
+    setBucketPolicy_test1();
+    setBucketPolicy_test2();
+    setBucketPolicy_test3();
+    setBucketPolicy_test4();
+
     threadedPutObject();
 
     teardown();
@@ -1709,6 +1987,8 @@ public class FunctionalTest {
     presignedPutObject_test1();
     presignedPostPolicy_test();
     copyObject_test1();
+    getBucketPolicy_test1();
+    setBucketPolicy_test4();
 
     teardown();
   }
