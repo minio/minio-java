@@ -155,7 +155,7 @@ import javax.crypto.spec.SecretKeySpec;
  * <a href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples"></a>.
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
-public final class MinioClient {
+public class MinioClient {
   private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // maximum allowed object size is 5TiB
   private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
