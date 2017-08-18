@@ -847,9 +847,9 @@ public class MinioClient {
   private Request createRequest(Method method, String bucketName, String objectName,
                                 String region, Map<String,String> headerMap,
                                 Map<String,String> queryParamMap, final String contentType,
-                                final Object body, final int length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InternalException {
+                                Object body, int length)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException,
+           IOException, InternalException {
     if (bucketName == null && objectName != null) {
       throw new InvalidBucketNameException(NULL_STRING, "null bucket name for object '" + objectName + "'");
     }
@@ -904,57 +904,8 @@ public class MinioClient {
 
     HttpUrl url = urlBuilder.build();
 
-    RequestBody requestBody = null;
-    if (body != null) {
-      requestBody = new RequestBody() {
-        @Override
-        public MediaType contentType() {
-          MediaType mediaType = null;
-
-          if (contentType != null) {
-            mediaType = MediaType.parse(contentType);
-          }
-          if (mediaType == null) {
-            mediaType = MediaType.parse("application/octet-stream");
-          }
-
-          return mediaType;
-        }
-
-        @Override
-        public long contentLength() {
-          if (body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[]) {
-            return length;
-          }
-
-          if (length == 0) {
-            return -1;
-          } else {
-            return length;
-          }
-        }
-
-        @Override
-        public void writeTo(BufferedSink sink) throws IOException {
-          if (body instanceof InputStream) {
-            InputStream stream = (InputStream) body;
-            sink.write(Okio.source(stream), length);
-          } else if (body instanceof RandomAccessFile) {
-            RandomAccessFile file = (RandomAccessFile) body;
-            sink.write(Okio.source(Channels.newInputStream(file.getChannel())), length);
-          } else if (body instanceof byte[]) {
-            byte[] data = (byte[]) body;
-            sink.write(data, 0, length);
-          } else {
-            sink.writeUtf8(body.toString());
-          }
-        }
-      };
-    }
-
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
-    requestBuilder.method(method.toString(), requestBody);
     if (headerMap != null) {
       for (Map.Entry<String,String> entry : headerMap.entrySet()) {
         requestBuilder.header(entry.getKey(), entry.getValue());
@@ -963,9 +914,16 @@ public class MinioClient {
 
     String sha256Hash = null;
     String md5Hash = null;
+    boolean chunkedUpload = false;
     if (this.accessKey != null && this.secretKey != null) {
-      // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
-      if (url.isHttps()) {
+      // Handle putobject specially to use chunked upload.
+      if (method == Method.PUT && objectName != null && body != null && body instanceof InputStream && length > 0) {
+        sha256Hash = "STREAMING-AWS4-HMAC-SHA256-PAYLOAD";
+        requestBuilder.header("Content-Encoding", "aws-chunked");
+        requestBuilder.header("x-amz-decoded-content-length", Integer.toString(length));
+        chunkedUpload = true;
+      } else if (url.isHttps()) {
+        // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
         sha256Hash = "UNSIGNED-PAYLOAD";
         if (body != null) {
           md5Hash = Digest.md5Hash(body, length);
@@ -989,7 +947,7 @@ public class MinioClient {
         }
       }
     } else {
-      // Fix issue #567: Compute MD5 hash only of anonymous access.
+      // Fix issue #567: Compute MD5 hash only for anonymous access.
       if (body != null) {
         md5Hash = Digest.md5Hash(body, length);
       }
@@ -1010,6 +968,71 @@ public class MinioClient {
     DateTime date = new DateTime();
     requestBuilder.header("x-amz-date", date.toString(DateFormat.AMZ_DATE_FORMAT));
 
+    if (chunkedUpload) {
+      // Add empty request body for calculating seed signature.
+      // The actual request body is properly set below.
+      requestBuilder.method(method.toString(), RequestBody.create(null, ""));
+      Request request = requestBuilder.build();
+      String seedSignature = Signer.getChunkSeedSignature(request, region, secretKey);
+      requestBuilder = request.newBuilder();
+
+      ChunkedInputStream cis = new ChunkedInputStream((InputStream) body, length, date, region, this.secretKey,
+                                                      seedSignature);
+      body = cis;
+      length = cis.length();
+    }
+
+    RequestBody requestBody = null;
+    if (body != null) {
+      final Object data = body;
+      final int len = length;
+      requestBody = new RequestBody() {
+        @Override
+        public MediaType contentType() {
+          MediaType mediaType = null;
+
+          if (contentType != null) {
+            mediaType = MediaType.parse(contentType);
+          }
+          if (mediaType == null) {
+            mediaType = MediaType.parse("application/octet-stream");
+          }
+
+          return mediaType;
+        }
+
+        @Override
+        public long contentLength() {
+          if (data instanceof InputStream || data instanceof RandomAccessFile || data instanceof byte[]) {
+            return len;
+          }
+
+          if (len == 0) {
+            return -1;
+          } else {
+            return len;
+          }
+        }
+
+        @Override
+        public void writeTo(BufferedSink sink) throws IOException {
+          if (data instanceof InputStream) {
+            InputStream stream = (InputStream) data;
+            sink.write(Okio.source(stream), len);
+          } else if (data instanceof RandomAccessFile) {
+            RandomAccessFile file = (RandomAccessFile) data;
+            sink.write(Okio.source(Channels.newInputStream(file.getChannel())), len);
+          } else if (data instanceof byte[]) {
+            byte[] bytes = (byte[]) data;
+            sink.write(bytes, 0, len);
+          } else {
+            sink.writeUtf8(data.toString());
+          }
+        }
+      };
+    }
+
+    requestBuilder.method(method.toString(), requestBody);
     return requestBuilder.build();
   }
 

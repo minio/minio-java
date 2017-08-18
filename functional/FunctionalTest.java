@@ -292,7 +292,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(13 * MB);
     try {
       client.putObject(bucketName, objectName, is, 20 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -781,7 +781,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -806,7 +806,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -833,7 +833,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -859,7 +859,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();

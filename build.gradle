@@ -278,6 +278,7 @@ project(':functional') {
         }
 
         maxHeapSize = "4096m"
+        jvmArgs "-Xms256m"
         args = [ext.endPoint, ext.accessKey, ext.secretKey, ext.region]
     }
 
