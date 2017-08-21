@@ -89,9 +89,9 @@ public class MintLogEntry {
       PrintWriter printWriter = new PrintWriter(result);
       e.printStackTrace(printWriter);
       error = result.toString().replaceAll("\n", " ").replaceAll("\t", "");
-     }
+    }
     if (duration > 0) {
-      this.duration = String.valueOf(duration/1000.0) + " s";
+      this.duration = String.valueOf(duration / 1000.0) + " s";
     }
     this.status = status;
     this.message = message;        

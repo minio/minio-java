@@ -151,7 +151,7 @@ public class FunctionalTest {
       client.makeBucket(name);
       client.removeBucket(name);
     } catch (Exception e) {
-        exception = e;
+      exception = e;
     }
 
     logEntry.addResult(exception == null ? pass : failed,
@@ -159,8 +159,8 @@ public class FunctionalTest {
                         null,
                         exception);
 
-    System.out.println( logEntry.getLogEntry(true) );
-    if( exception != null ) {
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+    if ( exception != null ) {
       throw exception;
     }
     
@@ -190,7 +190,7 @@ public class FunctionalTest {
                         exception);
     System.out.println( logEntry.getLogEntry(mintEnv) );
 
-    if( exception != null ) {
+    if ( exception != null ) {
       throw exception;
     }
     
@@ -221,7 +221,7 @@ public class FunctionalTest {
                         exception);
     System.out.println( logEntry.getLogEntry(mintEnv) );
 
-    if( exception != null ) {
+    if ( exception != null ) {
       throw exception;
     }
     
@@ -249,7 +249,7 @@ public class FunctionalTest {
                         exception);
     System.out.println( logEntry.getLogEntry(mintEnv) );
 
-    if( exception != null ) {
+    if ( exception != null ) {
       throw exception;
     }
   }
@@ -283,11 +283,11 @@ public class FunctionalTest {
                         exception);
     System.out.println( logEntry.getLogEntry(mintEnv) );
 
-    if( exception != null ) {
+    if ( exception != null ) {
       throw exception;
     }
 
-    if(success == false) {
+    if (success == false) {
       throw new Exception("[FAILED] Test: bucketExists(String bucketName)");
     }
   }
@@ -314,7 +314,7 @@ public class FunctionalTest {
                         exception);
     System.out.println( logEntry.getLogEntry(mintEnv) );
 
-    if( exception != null ) {
+    if ( exception != null ) {
       throw exception;
     }
   }
@@ -357,7 +357,7 @@ public class FunctionalTest {
                         exception);
     System.out.println( logEntry.getLogEntry(mintEnv) );
 
-    if( exception != null ) {
+    if ( exception != null ) {
       throw exception;
     }
   }
@@ -386,7 +386,7 @@ public class FunctionalTest {
                         exception);
     System.out.println( logEntry.getLogEntry(mintEnv) );
 
-    if( exception != null ) {
+    if ( exception != null ) {
       throw exception;
     }
   }
