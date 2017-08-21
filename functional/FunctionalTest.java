@@ -42,8 +42,10 @@ import io.minio.messages.*;
 import io.minio.errors.*;
 import io.minio.policy.*;
 
-
 public class FunctionalTest {
+  private static final String pass = "Pass";
+  private static final String failed = "Fail";
+  private static final String na = "NA";
   private static final int MB = 1024 * 1024;
   private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String bucketName = getRandomName();
@@ -140,43 +142,115 @@ public class FunctionalTest {
    * Test: makeBucket(String bucketName).
    */
   public static void makeBucket_test1() throws Exception {
-    System.out.println("Test: makeBucket(String bucketName)");
-    String name = getRandomName();
-    client.makeBucket(name);
-    client.removeBucket(name);
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
+    MintLogEntry logEntry = new MintLogEntry("makeBucket(String bucketName)", null, null);
+
+    try {
+      String name = getRandomName();
+      client.makeBucket(name);
+      client.removeBucket(name);
+    } catch (Exception e) {
+        exception = e;
+    }
+
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+
+    System.out.println( logEntry.getLogEntry(true) );
+    if( exception != null ) {
+      throw exception;
+    }
+    
   }
 
   /**
    * Test: makeBucket(String bucketName, String region).
    */
-  public static void makeBucket_test2() throws Exception {
-    System.out.println("Test: makeBucket(String bucketName, String region)");
+  public static void makeBucketwithRegion_test() throws Exception {
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
+    MintLogEntry logEntry = new MintLogEntry("makeBucket(String bucketName, String region)", 
+                                              "region: eu-west-1", 
+                                              null);
 
-    String name = getRandomName();
-    client.makeBucket(name, "eu-west-1");
-    client.removeBucket(name);
+    try {
+      String name = getRandomName();
+      client.makeBucket(name, "eu-west-1");
+      client.removeBucket(name);
+    } catch (Exception e) {
+      exception = e;
+    }
+
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+
+    if( exception != null ) {
+      throw exception;
+    }
+    
   }
 
   /**
    * Test: makeBucket(String bucketName, String region) where bucketName has
    * periods in its name.
    */
-  public static void makeBucket_test3() throws Exception {
-    System.out.println("Test: makeBucket(String bucketName, String region)");
-
+  public static void makeBucketWithPeriod_test() throws Exception {
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
     String name = getRandomName() + ".withperiod";
-    client.makeBucket(name, "eu-central-1");
-    client.removeBucket(name);
+    MintLogEntry logEntry = new MintLogEntry("makeBucketWithPeriod_test", 
+                                              "name: " + name + ", region: eu-central-1", 
+                                              null);
+
+    try {
+      client.makeBucket(name, "eu-central-1");
+      client.removeBucket(name);
+    } catch (Exception e) {
+      exception = e;
+    }
+
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+
+    if( exception != null ) {
+      throw exception;
+    }
+    
   }
 
   /**
    * Test: listBuckets().
    */
   public static void listBuckets_test() throws Exception {
-    System.out.println("Test: listBuckets()");
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
+    MintLogEntry logEntry = new MintLogEntry("listBuckets", null, "");
+    try {
 
-    for (Bucket bucket : client.listBuckets()) {
-      ignore(bucket);
+      for (Bucket bucket : client.listBuckets()) {
+        ignore(bucket);
+      }
+    } catch (Exception e) {
+      exception = e;
+    }
+
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+
+    if( exception != null ) {
+      throw exception;
     }
   }
 
@@ -184,25 +258,65 @@ public class FunctionalTest {
    * Test: bucketExists(String bucketName).
    */
   public static void bucketExists_test() throws Exception {
-    System.out.println("Test: bucketExists(String bucketName)");
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
+    MintLogEntry logEntry = new MintLogEntry("bucketExists", null, "");
+    boolean success = true;
 
-    String name = getRandomName();
-    client.makeBucket(name);
-    if (!client.bucketExists(name)) {
+    try {
+
+      String name = getRandomName();
+      client.makeBucket(name);
+      if (client.bucketExists(name)) {
+        client.removeBucket(name);        
+      } else {
+        success = false;
+      }
+      
+    } catch (Exception e) {
+      exception = e;
+    }
+
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+
+    if( exception != null ) {
+      throw exception;
+    }
+
+    if(success == false) {
       throw new Exception("[FAILED] Test: bucketExists(String bucketName)");
     }
-    client.removeBucket(name);
   }
 
   /**
    * Test: removeBucket(String bucketName).
    */
   public static void removeBucket_test() throws Exception {
-    System.out.println("Test: removeBucket(String bucketName)");
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
+    MintLogEntry logEntry = new MintLogEntry("removeBucket", null, "");
 
-    String name = getRandomName();
-    client.makeBucket(name);
-    client.removeBucket(name);
+    try {
+      String name = getRandomName();
+      client.makeBucket(name);
+      client.removeBucket(name);
+    } catch (Exception e) {
+      exception = e;
+    }
+
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+
+    if( exception != null ) {
+      throw exception;
+    }
   }
 
   /**
@@ -223,24 +337,58 @@ public class FunctionalTest {
    * Test: putObject(String bucketName, String objectName, String filename).
    */
   public static void putObject_test1() throws Exception {
-    System.out.println("Test: putObject(String bucketName, String objectName, String filename)");
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
+    MintLogEntry logEntry = new MintLogEntry("putObject(String bucketName, String objectName, String filename)", 
+                                              "filename: 1MB",
+                                              "");
+    try {
+      String filename = createFile1Mb();
+      client.putObject(bucketName, filename, filename);
+      Files.delete(Paths.get(filename));
+      client.removeObject(bucketName, filename);
+    } catch (Exception e) {
+      exception = e;
+    }
 
-    String filename = createFile1Mb();
-    client.putObject(bucketName, filename, filename);
-    Files.delete(Paths.get(filename));
-    client.removeObject(bucketName, filename);
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+
+    if( exception != null ) {
+      throw exception;
+    }
   }
 
   /**
    * Test: multipart: putObject(String bucketName, String objectName, String filename).
    */
   public static void putObject_test2() throws Exception {
-    System.out.println("Test: multipart: putObject(String bucketName, String objectName, String filename)");
+    long startTime = System.currentTimeMillis();
+    Exception exception = null;
+    MintLogEntry logEntry = new MintLogEntry("putObject(String bucketName, String objectName, String filename)", 
+                                              "filename: 65MB",
+                                              "");
+    try {
+      String filename = createFile65Mb();
+      client.putObject(bucketName, filename, filename);
+      Files.delete(Paths.get(filename));
+      client.removeObject(bucketName, filename);
+    } catch (Exception e) {
+      exception = e;
+    }
 
-    String filename = createFile65Mb();
-    client.putObject(bucketName, filename, filename);
-    Files.delete(Paths.get(filename));
-    client.removeObject(bucketName, filename);
+    logEntry.addResult(exception == null ? pass : failed,
+                        System.currentTimeMillis() - startTime,
+                        null,
+                        exception);
+    System.out.println( logEntry.getLogEntry(mintEnv) );
+
+    if( exception != null ) {
+      throw exception;
+    }
   }
 
   /**
@@ -1878,9 +2026,10 @@ public class FunctionalTest {
    */
   public static void runTests() throws Exception {
     makeBucket_test1();
+
     if (endpoint.toLowerCase().contains("s3")) {
-      makeBucket_test2();
-      makeBucket_test3();
+      makeBucketwithRegion_test();
+      makeBucketWithPeriod_test();
     }
 
     listBuckets_test();
