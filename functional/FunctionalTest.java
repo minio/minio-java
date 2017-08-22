@@ -42,6 +42,7 @@ import io.minio.messages.*;
 import io.minio.errors.*;
 import io.minio.policy.*;
 
+
 public class FunctionalTest {
   private static final String pass = "Pass";
   private static final String failed = "Fail";
@@ -542,7 +543,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(13 * MB);
     try {
       client.putObject(bucketName, objectName, is, 20 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -1031,7 +1032,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -1056,7 +1057,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -1083,7 +1084,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -1109,7 +1110,7 @@ public class FunctionalTest {
     InputStream is = new ContentInputStream(6 * MB);
     try {
       client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-    } catch (InsufficientDataException e) {
+    } catch (EOFException e) {
       ignore();
     }
     is.close();
@@ -2128,7 +2129,6 @@ public class FunctionalTest {
    */
   public static void runTests() throws Exception {
     makeBucket_test1();
-
     if (endpoint.toLowerCase().contains("s3")) {
       makeBucketwithRegion_test();
       makeBucketWithPeriod_test();
