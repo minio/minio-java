@@ -192,7 +192,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } 
   }
@@ -226,7 +226,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }    
   }
@@ -262,7 +262,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }    
   }
@@ -298,7 +298,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
@@ -340,7 +340,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));      
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));      
       throw e;
     }
   }
@@ -375,7 +375,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
@@ -425,7 +425,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
@@ -461,7 +461,7 @@ public class FunctionalTest {
               FAILED,
               null,
               null,
-              e.toString() + " " + Arrays.toString(e.getStackTrace()));
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
