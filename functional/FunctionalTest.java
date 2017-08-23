@@ -44,9 +44,9 @@ import io.minio.policy.*;
 
 
 public class FunctionalTest {
-  private static final String pass = "Pass";
-  private static final String failed = "Fail";
-  private static final String na = "NA";
+  private static final String PASS = "PASS";
+  private static final String FAILED = "FAIL";
+  private static final String NA = "NA";
   private static final int MB = 1024 * 1024;
   private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String bucketName = getRandomName();
@@ -140,22 +140,25 @@ public class FunctionalTest {
   }
 
   /**
-   * Return JSON as a String.
+   * Prints a JSON String.
    */
-  public static String mintLog(String function,
+  public static void mintLog(String function,
                                 String args,
                                 long duration,
                                 String status,
                                 String alert,
                                 String message,
-                                Exception e) {
-    return new MintLogger(function,
+                                String error) {
+
+    if (mintEnv) {
+      System.out.println( new MintLogger(function,
                           args,
                           duration,
                           status,
                           alert,
                           message,
-                          e).log();
+                          error));
+    }
   }
 
   /**
@@ -173,28 +176,23 @@ public class FunctionalTest {
       String name = getRandomName();
       client.makeBucket(name);
       client.removeBucket(name);
- 
-      if (mintEnv) {
-        System.out.println( mintLog("makeBucket(String bucketName)", 
-                                      null, 
-                                      System.currentTimeMillis() - startTime,
-                                      pass,
-                                      null,
-                                      null,
-                                      null));
 
-      }
+      mintLog("makeBucket(String bucketName)", 
+              null, 
+              System.currentTimeMillis() - startTime,
+              PASS,
+              null,
+              null,
+              null);
+
     } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("makeBucket(String bucketName)", 
-                                      null, 
-                                      System.currentTimeMillis() - startTime,
-                                      failed,
-                                      null,
-                                      null,
-                                      e));
-
-      }
+      mintLog("makeBucket(String bucketName)", 
+              null, 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));
       throw e;
     } 
   }
@@ -214,25 +212,21 @@ public class FunctionalTest {
       client.makeBucket(name, "eu-west-1");
       client.removeBucket(name);
 
-      if (mintEnv) {
-        System.out.println( mintLog("makeBucket(String bucketName, String region)", 
-                                      "region: eu-west-1", 
-                                      System.currentTimeMillis() - startTime,
-                                      pass,
-                                      null,
-                                      null,
-                                      null));
-      }
+      mintLog("makeBucket(String bucketName, String region)", 
+              "region: eu-west-1", 
+              System.currentTimeMillis() - startTime,
+              PASS,
+              null,
+              null,
+              null);
     } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("makeBucket(String bucketName, String region)", 
-                                      "region: eu-west-1", 
-                                      System.currentTimeMillis() - startTime,
-                                      failed,
-                                      null,
-                                      null,
-                                      e));
-      }
+      mintLog("makeBucket(String bucketName, String region)", 
+              "region: eu-west-1", 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));
       throw e;
     }    
   }
@@ -254,25 +248,21 @@ public class FunctionalTest {
       client.makeBucket(name, "eu-central-1");
       client.removeBucket(name);
 
-      if (mintEnv) {
-        System.out.println( mintLog("makeBucket(String bucketName, String region)", 
-                                    "name: " + name + ", region: eu-central-1", 
-                                    System.currentTimeMillis() - startTime,
-                                    pass,
-                                    null,
-                                    null,
-                                    null));
-      }
+      mintLog("makeBucket(String bucketName, String region)", 
+                          "name: " + name + ", region: eu-central-1", 
+                          System.currentTimeMillis() - startTime,
+                          PASS,
+                          null,
+                          null,
+                          null);
     } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("makeBucket(String bucketName, String region)", 
-                                    "name: " + name + ", region: eu-central-1", 
-                                    System.currentTimeMillis() - startTime,
-                                    failed,
-                                    null,
-                                    null,
-                                    e));
-      }
+      mintLog("makeBucket(String bucketName, String region)", 
+              "name: " + name + ", region: eu-central-1", 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));
       throw e;
     }    
   }
@@ -293,25 +283,22 @@ public class FunctionalTest {
       for (Bucket bucket : client.listBuckets()) {
         ignore(bucket);
       }
-      if (mintEnv) {
-        System.out.println( mintLog("listBuckets()", 
-                                    null, 
-                                    System.currentTimeMillis() - startTime,
-                                    pass,
-                                    null,
-                                    null,
-                                    null));
-      }
+
+      mintLog("listBuckets()", 
+              null, 
+              System.currentTimeMillis() - startTime,
+              PASS,
+              null,
+              null,
+              null);
     } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("listBuckets()", 
-                                    null, 
-                                    System.currentTimeMillis() - startTime,
-                                    failed,
-                                    null,
-                                    null,
-                                    e));
-      }
+      mintLog("listBuckets()",
+              null, 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
@@ -338,25 +325,22 @@ public class FunctionalTest {
       } else {
         success = false;
       }
-      if (mintEnv) {
-        System.out.println( mintLog("bucketExists(String bucketName)", 
-                                    null, 
-                                    System.currentTimeMillis() - startTime,
-                                    success ? pass : failed,
-                                    null,
-                                    null,
-                                    null));
-      }
-    } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("bucketExists(String bucketName)", 
-                                    null, 
-                                    System.currentTimeMillis() - startTime,
-                                    failed,
-                                    null,
-                                    null,
-                                    e));
-      }
+
+      mintLog("bucketExists(String bucketName)", 
+              null, 
+              System.currentTimeMillis() - startTime,
+              success ? PASS : FAILED,
+              null,
+              null,
+              null);
+    } catch (Exception e) {      
+      mintLog("bucketExists(String bucketName)", 
+              null, 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));      
       throw e;
     }
   }
@@ -377,25 +361,21 @@ public class FunctionalTest {
       client.makeBucket(name);
       client.removeBucket(name);
 
-      if (mintEnv) {
-        System.out.println( mintLog("removeBucket(String bucketName)", 
-                                    null, 
-                                    System.currentTimeMillis() - startTime,
-                                    pass,
-                                    null,
-                                    null,
-                                    null));
-      }
+      mintLog("removeBucket(String bucketName)", 
+              null, 
+              System.currentTimeMillis() - startTime,
+              PASS,
+              null,
+              null,
+              null);
     } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("removeBucket(String bucketName)", 
-                                    null, 
-                                    System.currentTimeMillis() - startTime,
-                                    failed,
-                                    null,
-                                    null,
-                                    e));
-      }
+      mintLog("removeBucket(String bucketName)", 
+              null, 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
@@ -431,25 +411,21 @@ public class FunctionalTest {
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
 
-      if (mintEnv) {
-        System.out.println( mintLog("putObject(String bucketName, String objectName, String filename)", 
-                                    "filename: 1MB", 
-                                    System.currentTimeMillis() - startTime,
-                                    pass,
-                                    null,
-                                    null,
-                                    null));
-      }
+      mintLog("putObject(String bucketName, String objectName, String filename)", 
+              "filename: 1MB", 
+              System.currentTimeMillis() - startTime,
+              PASS,
+              null,
+              null,
+              null);
     } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("putObject(String bucketName, String objectName, String filename)", 
-                                    "filename: 1MB", 
-                                    System.currentTimeMillis() - startTime,
-                                    failed,
-                                    null,
-                                    null,
-                                    e));
-      }
+      mintLog("putObject(String bucketName, String objectName, String filename)", 
+              "filename: 1MB", 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
@@ -471,25 +447,21 @@ public class FunctionalTest {
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
 
-      if (mintEnv) {
-        System.out.println( mintLog("putObject(String bucketName, String objectName, String filename)", 
-                                    "filename: 65MB", 
-                                    System.currentTimeMillis() - startTime,
-                                    pass,
-                                    null,
-                                    null,
-                                    null));
-      }
+      mintLog("putObject(String bucketName, String objectName, String filename)", 
+                                  "filename: 65MB", 
+                                  System.currentTimeMillis() - startTime,
+                                  PASS,
+                                  null,
+                                  null,
+                                  null);
     } catch (Exception e) {
-      if (mintEnv) {
-        System.out.println( mintLog("putObject(String bucketName, String objectName, String filename)", 
-                                    "filename: 65MB", 
-                                    System.currentTimeMillis() - startTime,
-                                    failed,
-                                    null,
-                                    null,
-                                    e));
-      }
+      mintLog("putObject(String bucketName, String objectName, String filename)", 
+              "filename: 65MB", 
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              null,
+              e.toString() + " " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }

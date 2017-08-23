@@ -15,16 +15,11 @@
  * limitations under the License.
  */
 
-import java.io.Writer;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
@@ -40,10 +35,7 @@ public class MintLogger {
   private String args;
 
   @JsonProperty("duration")
-  private String duration;
-
-  @JsonIgnore
-  private long durationInms;
+  private long duration;
 
   @JsonProperty("status")
   private String status;
@@ -57,9 +49,6 @@ public class MintLogger {
   @JsonProperty("error")
   private String error;
 
-  @JsonIgnore
-  private Exception exception;
-
   /**
     * Constructor.
     **/
@@ -69,38 +58,25 @@ public class MintLogger {
                     String status,
                     String alert,
                     String message,
-                    Exception e) {
+                    String error) {
     this.name = "minio-java";
     this.function = function;
-    this.duration = null;
-    this.durationInms = duration;
+    this.duration = duration;
     this.args = args;
     this.status = status;
     this.alert = alert;
     this.message = message;
-    this.error = null;
-    this.exception = e;
+    this.error = error;
   }
 
   /**
     * Return JSON Log Entry.
     **/
   @JsonIgnore
-  public String log() { //throws JsonProcessingException {
-
-    if (exception != null) {
-      Writer result = new StringWriter();
-      PrintWriter printWriter = new PrintWriter(result);
-      exception.printStackTrace(printWriter);
-      error = result.toString().replaceAll("\n", " ").replaceAll("\t", "");
-    }
-    if (durationInms > 0) {
-      this.duration = String.valueOf(durationInms / 1000.0) + " s";
-    }
+  public String toString() {
 
     try {
-      return new ObjectMapper().enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT)
-        .setSerializationInclusion(Include.NON_NULL).writeValueAsString(this);
+      return new ObjectMapper().setSerializationInclusion(Include.NON_NULL).writeValueAsString(this);
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
@@ -167,7 +143,7 @@ public class MintLogger {
     * Return duration.
     **/
   @JsonIgnore
-  public String duration() {
+  public long duration() {
     return duration;
   }
 }
