@@ -2102,6 +2102,51 @@ public class MinioClient {
   }
 
   /**
+   * Returns a presigned URL string with given HTTP method, expiry time and custom request params for a specific object
+   * in the bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname", "my-objectname",
+   * 60 * 60 * 24, reqParams);
+   * System.out.println(url); }</pre>
+   *
+   * @param method      HTTP {@link Method}.
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param expires     Expiration time in seconds of presigned URL.
+   * @param reqParams   Override values for set of response headers. Currently supported request parameters are
+   *                    [response-expires, response-content-type, response-cache-control, response-content-disposition]
+   *
+   * @return string contains URL to download the object.
+   *
+   * @throws InvalidBucketNameException   upon an invalid bucket name
+   * @throws InvalidKeyException          upon an invalid access key or secret key
+   * @throws IOException                  upon signature calculation failure
+   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
+   * @throws InvalidExpiresRangeException upon input expires is out of range
+   */
+  public String getPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires,
+                                      Map<String, String> reqParams)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidExpiresRangeException {
+    // Validate input.
+    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
+      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
+    }
+
+    byte[] body = null;
+    if (method == Method.PUT || method == Method.POST) {
+      body = new byte[0];
+    }
+
+    String region = getRegion(bucketName);
+    Request request = createRequest(method, bucketName, objectName, region, null, reqParams, null, body, 0);
+    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
+    return url.toString();
+  }
+
+  /**
    * Returns an presigned URL to download the object in the bucket with given expiry time with custom request params.
    *
    * </p><b>Example:</b><br>
@@ -2127,16 +2172,7 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    // Validate input.
-    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
-    }
-
-    String region = getRegion(bucketName);
-    Request request = createRequest(Method.GET, bucketName, objectName, region,
-                                    null, reqParams, null, null, 0);
-    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
-    return url.toString();
+    return getPresignedObjectUrl(Method.GET, bucketName, objectName, expires, reqParams);
   }
 
   /**
@@ -2214,14 +2250,7 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidExpiresRangeException {
-    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
-    }
-
-    String region = getRegion(bucketName);
-    Request request = createRequest(Method.PUT, bucketName, objectName, region, null, null, null, new byte[0], 0);
-    HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
-    return url.toString();
+    return getPresignedObjectUrl(Method.PUT, bucketName, objectName, expires, null);
   }
 
 
