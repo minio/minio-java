@@ -24,8 +24,11 @@ buildscript {
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.11.0'
     }
 }
+
+apply plugin: 'io.codearte.nexus-staging'
 
 subprojects {
     apply plugin: 'java'
@@ -122,6 +125,11 @@ project(':api') {
 
     archivesBaseName = 'minio'
 
+    nexusStaging {
+        packageGroup = group
+        stagingProfileId = '9b746c9f8abc1'
+    }
+
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
@@ -167,16 +175,6 @@ project(':api') {
         }
     }
 
-    ext.deployUsername = ''
-    if (project.properties.containsKey('ossrhUsername')) {
-        ext.deployUsername = ext.ossrhUsername
-    }
-
-    ext.deployPassword = ''
-    if (project.properties.containsKey('ossrhPassword')) {
-        ext.deployPassword = ext.ossrhPassword
-    }
-
     uploadArchives {
         repositories {
             mavenDeployer {
@@ -184,12 +182,15 @@ project(':api') {
                     MavenDeployment deployment -> signing.signPom(deployment)
                 }
 
+                ext.nexusUsername = project.properties['nexusUsername']
+                ext.nexusPassword = project.properties['nexusPassword']
+
                 repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: deployUsername, password: deployPassword)
+                    authentication(userName: ext.nexusUsername, password: ext.nexusPassword)
                 }
 
                 snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: deployUsername, password: deployPassword)
+                    authentication(userName: ext.nexusUsername, password: ext.nexusPassword)
                 }
 
                 pom.project {
@@ -197,6 +198,7 @@ project(':api') {
                     packaging 'jar'
                     description 'Minio Java SDK for Amazon S3 Compatible Cloud Storage'
                     url 'https://github.com/minio/minio-java'
+                    inceptionYear '2015'
 
                     scm {
                         connection 'scm:git:git@github.com:minio/minio-java.git'
