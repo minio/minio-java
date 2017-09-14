@@ -2370,26 +2370,21 @@ public class MinioClient {
           private Result<DeleteError> error;
           private Iterator<DeleteError> errorIterator;
           private boolean completed = false;
+          private Iterator<String> objectNameIter = objectNames.iterator();
 
           private synchronized void populate() {
             List<DeleteError> errorList = null;
             try {
               List<DeleteObject> objectList = new LinkedList<DeleteObject>();
               int i = 0;
-              for (String objectName: objectNames) {
-                objectList.add(new DeleteObject(objectName));
+              while (objectNameIter.hasNext() && i < 1000) {
+                objectList.add(new DeleteObject(objectNameIter.next()));
                 i++;
-                // Maximum 1000 objects are allowed in a request
-                if (i == 1000) {
-                  break;
-                }
               }
 
-              if (i == 0) {
-                return;
+              if (i > 0) {
+                errorList = removeObject(bucketName, objectList);
               }
-
-              errorList = removeObject(bucketName, objectList);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException e) {
@@ -2413,6 +2408,10 @@ public class MinioClient {
               populate();
             }
 
+            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
+              populate();
+            }
+
             if (this.error != null) {
               return true;
             }
@@ -2432,6 +2431,10 @@ public class MinioClient {
             }
 
             if (this.error == null && this.errorIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
               populate();
             }
 

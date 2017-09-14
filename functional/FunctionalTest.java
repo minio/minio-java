@@ -970,9 +970,10 @@ public class FunctionalTest {
         }
       }
 
-      for (i = 0; i < 3; i++) {
-        client.removeObject(bucketName, objectNames[i]);
+      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+        ignore(r.get());
       }
+
       mintSuccessLog("listObjects(final String bucketName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog("listObjects(final String bucketName)", null, startTime, null,
@@ -1008,9 +1009,10 @@ public class FunctionalTest {
         }
       }
 
-      for (i = 0; i < 3; i++) {
-        client.removeObject(bucketName, objectNames[i]);
+      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+        ignore(r.get());
       }
+
       mintSuccessLog("listObjects(final String bucketName, final String prefix)", "prefix :minio", startTime);
     } catch (Exception e) {
       mintFailedLog("listObjects(final String bucketName, final String prefix)", "prefix :minio", startTime, null,
@@ -1046,9 +1048,10 @@ public class FunctionalTest {
         }
       }
 
-      for (i = 0; i < 3; i++) {
-        client.removeObject(bucketName, objectNames[i]);
+      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+        ignore(r.get());
       }
+
       mintSuccessLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
                     "prefix :minio, recursive: true", startTime);
     } catch (Exception e) {
@@ -1118,8 +1121,8 @@ public class FunctionalTest {
         throw new Exception("item count differs, expected: " + objCount + ", got: " + i);
       }
 
-      for (i = 0; i < objCount; i++) {
-        client.removeObject(bucketName, objectNames[i]);
+      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+        ignore(r.get());
       }
 
       mintSuccessLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
@@ -1160,9 +1163,10 @@ public class FunctionalTest {
         }
       }
 
-      for (i = 0; i < 3; i++) {
-        client.removeObject(bucketName, objectNames[i]);
+      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+        ignore(r.get());
       }
+
       mintSuccessLog("listObjects(final String bucketName, final String prefix, "
                       + "final boolean recursive, final boolean useVersion1)",
                       "prefix :minio, recursive: true, useVersion1: true", startTime);
@@ -2334,7 +2338,7 @@ public class FunctionalTest {
     removeBucket_test();
 
     setup();
-    
+
     putObject_test1();
     putObject_test2();
     putObject_test3();
