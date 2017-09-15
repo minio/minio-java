@@ -28,6 +28,14 @@ buildscript {
     }
 }
 
+/*
+ * Root project definitions
+ */
+group = 'io.minio'
+version = '3.0.7'
+if (!project.hasProperty('release')) {
+    version += '-DEV'
+}
 apply plugin: 'io.codearte.nexus-staging'
 
 subprojects {
@@ -35,12 +43,6 @@ subprojects {
     apply plugin: 'checkstyle'
     apply plugin: 'pmd'
     apply plugin: 'findbugs'
-
-    group = 'io.minio'
-    version = '3.0.7'
-    if (!project.hasProperty('release')) {
-        version += '-DEV'
-    }
 
     repositories {
         mavenCentral()
@@ -126,14 +128,14 @@ project(':api') {
     archivesBaseName = 'minio'
 
     nexusStaging {
-        packageGroup = group
+        packageGroup = rootProject.group
         stagingProfileId = '9b746c9f8abc1'
     }
 
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
-            'Implementation-Version': version,
+            'Implementation-Version': rootProject.version,
             'Built-By': System.getProperty('user.name'),
             'Built-JDK': System.getProperty('java.version'),
             'Source-Compatibility': sourceCompatibility,
