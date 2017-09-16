@@ -31,12 +31,15 @@ buildscript {
 /*
  * Root project definitions
  */
-group = 'io.minio'
-version = '3.0.7'
-if (!project.hasProperty('release')) {
-    version += '-DEV'
-}
 apply plugin: 'io.codearte.nexus-staging'
+
+allprojects {
+    group = 'io.minio'
+    version = '3.0.7'
+    if (!project.hasProperty('release')) {
+        version += '-DEV'
+    }
+}
 
 subprojects {
     apply plugin: 'java'
@@ -128,14 +131,14 @@ project(':api') {
     archivesBaseName = 'minio'
 
     nexusStaging {
-        packageGroup = rootProject.group
+        packageGroup = group
         stagingProfileId = '9b746c9f8abc1'
     }
 
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
-            'Implementation-Version': rootProject.version,
+            'Implementation-Version': version,
             'Built-By': System.getProperty('user.name'),
             'Built-JDK': System.getProperty('java.version'),
             'Source-Compatibility': sourceCompatibility,
