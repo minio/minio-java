@@ -46,7 +46,7 @@ import io.minio.policy.*;
 public class FunctionalTest {
   private static final String PASS = "PASS";
   private static final String FAILED = "FAIL";
-  private static final String NA = "NA";
+  private static final String IGNORED = "NA";
   private static final int MB = 1024 * 1024;
   private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String bucketName = getRandomName();
@@ -156,6 +156,16 @@ public class FunctionalTest {
     if (mintEnv) {
       System.out.println(new MintLogger(function, args, System.currentTimeMillis() - startTime,
                                         FAILED, null, message, error));
+    }
+  }
+
+  /**
+   * Prints a ignore log entry in JSON format.
+   */
+  public static void mintIgnoredLog(String function, String args, long startTime) {
+    if (mintEnv) {
+      System.out.println(new MintLogger(function, args, System.currentTimeMillis() - startTime,
+                                        IGNORED, null, null, null));
     }
   }
 
@@ -1996,9 +2006,20 @@ public class FunctionalTest {
       }
       mintSuccessLog("getBucketPolicy(String bucketName, String objectPrefix)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("getBucketPolicy(String bucketName, String objectPrefix)", null, startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("getBucketPolicy(String bucketName, String objectPrefix)", null, startTime);
+      } else {
+        mintFailedLog("getBucketPolicy(String bucketName, String objectPrefix)", null, startTime,
+                      null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -2070,9 +2091,21 @@ public class FunctionalTest {
       mintSuccessLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)",
                      null, startTime);
     } catch (Exception e) {
-      mintFailedLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)", null, startTime,
-                    null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)",
+                       null, startTime);
+      } else {
+        mintFailedLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)", null,
+                      startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -2115,11 +2148,24 @@ public class FunctionalTest {
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)", 
-                     null, startTime);
+      mintSuccessLog("setBucketPolicy(String bucketName, String objectPrefix, "
+                     + "PolicyType policyType)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)", null, startTime,
-                    null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("setBucketPolicy(String bucketName, String objectPrefix, "
+                       + "PolicyType policyType)", null, startTime);
+      } else {
+        mintFailedLog("setBucketPolicy(String bucketName, String objectPrefix, "
+                      + "PolicyType policyType)", null, startTime, null,
+                      e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      }
       throw e;
     }
   }
