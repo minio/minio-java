@@ -17,6 +17,8 @@
 package io.minio;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Object stat information.
@@ -30,16 +32,17 @@ public class ObjectStat {
   private final String etag;
   private final String contentType;
   // Encryption Key available in the object header
-  private String contentKey;
+  private final String contentKey;
   // Encryption IV available in the object header
-  private String encryptionIv;
+  private final String encryptionIv;
   // Encryption material description available in the object header
-  private String matDesc;
+  private final String matDesc;
+  private final Map<String,List<String>> httpHeaders;
 
   /**
    * Creates ObjectStat with given bucket name, object name, and available response header information.
    */
-  public ObjectStat(String bucketName, String name, ResponseHeader header) {
+  public ObjectStat(String bucketName, String name, ResponseHeader header, Map<String,List<String>> httpHeaders) {
     this.bucketName = bucketName;
     this.name = name;
     this.contentType = header.contentType();
@@ -56,7 +59,10 @@ public class ObjectStat {
     this.contentKey = header.xamzMetaKey();
     this.encryptionIv = header.xamzMetaIv();
     this.matDesc = header.xamzMetaMatdesc();
+
+    this.httpHeaders = httpHeaders;
   }
+
 
   /**
    * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and content type.
@@ -72,6 +78,10 @@ public class ObjectStat {
     } else {
       this.etag = "";
     }
+    this.contentKey = null;
+    this.encryptionIv = null;
+    this.matDesc = null;
+    this.httpHeaders = null;
   }
 
 
@@ -211,5 +221,12 @@ public class ObjectStat {
    */
   public String matDesc() {
     return matDesc;
+  }
+
+  /**
+   * Gets HTTP headers.
+   */
+  public Map<String,List<String>> httpHeaders() {
+    return httpHeaders;
   }
 }

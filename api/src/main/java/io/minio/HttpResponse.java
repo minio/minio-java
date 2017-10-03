@@ -16,6 +16,9 @@
 
 package io.minio;
 
+import java.util.List;
+import java.util.Map;
+
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -54,5 +57,12 @@ class HttpResponse {
    */
   public Response response() {
     return this.response;
+  }
+
+  /**
+   * Gets HTTP headers.
+   */
+  public Map<String,List<String>> httpHeaders() {
+    return this.response.headers().toMultimap();
   }
 }
