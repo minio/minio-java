@@ -2064,6 +2064,8 @@ public class FunctionalTest {
     try {
       String objectPrefix = "set-bucket-policy-none";
       client.setBucketPolicy(bucketName, objectPrefix, PolicyType.NONE);
+      // Wait for 3 seconds for server to set the policy into effect.
+      Thread.sleep(3000);
 
       String objectName = objectPrefix + "/" + getRandomName();
       InputStream is = new ContentInputStream(16);
@@ -2121,6 +2123,8 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       client.setBucketPolicy(bucketName, objectPrefix, policyType);
+      // Wait for 3 seconds for server to set the policy into effect.
+      Thread.sleep(3000);
 
       String objectName = objectPrefix + "/" + getRandomName();
       String urlString = client.getObjectUrl(bucketName, objectName);
