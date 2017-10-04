@@ -310,8 +310,29 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
+      Date expectedTime = new Date();
+      String bucketName = getRandomName();
+      boolean found = false;
+      client.makeBucket(bucketName);
       for (Bucket bucket : client.listBuckets()) {
-        ignore(bucket);
+        if (bucket.name().equals(bucketName)) {
+          if (found) {
+            throw new Exception("[FAILED] duplicate entry " +  bucketName + " found in list buckets");
+          }
+
+          found = true;
+          Date time = bucket.creationDate();
+          long diff = time.getTime() - expectedTime.getTime();
+          // excuse 15 minutes
+          if (diff > (15 * 60 * 1000)) {
+            throw new Exception("[FAILED] bucket creation time too apart. expected: " + expectedTime
+                                + ", got: " + time);
+          }
+        }
+      }
+      client.removeBucket(bucketName);
+      if (!found) {
+        throw new Exception("[FAILED] created bucket not found in list buckets");
       }
       mintSuccessLog("listBuckets()", null, startTime);
     } catch (Exception e) {
