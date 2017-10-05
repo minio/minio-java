@@ -1434,7 +1434,8 @@ public class MinioClient {
            InternalException {
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
-    ObjectStat objectStat = new ObjectStat(bucketName, objectName, header);
+    Map<String,List<String>> httpHeaders = response.httpHeaders();
+    ObjectStat objectStat = new ObjectStat(bucketName, objectName, header, httpHeaders);
 
     return objectStat;
   }
