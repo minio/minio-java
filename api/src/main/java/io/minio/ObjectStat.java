@@ -42,6 +42,14 @@ public class ObjectStat {
   /**
    * Creates ObjectStat with given bucket name, object name, and available response header information.
    */
+  public ObjectStat(String bucketName, String name, ResponseHeader header) {
+    this(bucketName, name, header, null);
+  }
+
+
+  /**
+   * Creates ObjectStat with given bucket name, object name, available response header and HTTP Headers from response.
+   */
   public ObjectStat(String bucketName, String name, ResponseHeader header, Map<String,List<String>> httpHeaders) {
     this.bucketName = bucketName;
     this.name = name;
