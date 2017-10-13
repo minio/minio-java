@@ -49,9 +49,9 @@ public class FunctionalTest {
   private static final String IGNORED = "NA";
   private static final int MB = 1024 * 1024;
   private static final Random random = new Random(new SecureRandom().nextLong());
-  private static final String bucketName = getRandomName();
   private static final String customContentType = "application/javascript";
   private static final String nullContentType = null;
+  private static String bucketName = getRandomName();
   private static boolean mintEnv = false;
   private static Path dataFile1Mb;
   private static Path dataFile65Mb;
@@ -2503,9 +2503,9 @@ public class FunctionalTest {
   }
 
   /**
-   * runFastTests: runs a fast set of tests.
+   * runQuickTests: runs tests those completely quicker.
    */
-  public static void runFastTests() throws Exception {
+  public static void runQuickTests() throws Exception {
     makeBucket_test1();
     listBuckets_test();
     bucketExists_test();
@@ -2550,6 +2550,11 @@ public class FunctionalTest {
       dataFile65Mb = Paths.get(dataDir, "datafile-65-MB");
     }
 
+    String mintMode = null;
+    if (mintEnv) {
+      mintMode = System.getenv("MINT_MODE");
+    }
+
     endpoint = args[0];
     accessKey = args[1];
     secretKey = args[2];
@@ -2559,12 +2564,23 @@ public class FunctionalTest {
       client = new MinioClient(endpoint, accessKey, secretKey);
       // Enable trace for debugging.
       // client.traceOn(System.out);
-      FunctionalTest.runTests();
 
-      // Run fast test with region parameter passed to the constructor
-      client = new MinioClient(endpoint, accessKey, secretKey, region);
-      FunctionalTest.runFastTests();
+      // For mint environment, run tests based on mint mode
+      if (mintEnv) {
+        if (mintMode != null && mintMode.equals("full")) {
+          FunctionalTest.runTests();
+        } else {
+          FunctionalTest.runQuickTests();
+        }
+      } else {
+        FunctionalTest.runTests();
 
+        // Get new bucket name to avoid minio azure gateway failure.
+        bucketName = getRandomName();
+        // Quick tests with passed region.
+        client = new MinioClient(endpoint, accessKey, secretKey, region);
+        FunctionalTest.runQuickTests();
+      }
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(-1);
