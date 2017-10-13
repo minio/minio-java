@@ -738,15 +738,30 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
+      Map<String, String> headerMap = new HashMap<>();
+      headerMap.put("Content-Type", customContentType);
+      headerMap.put("x-amz-meta-my-custom-data", "foo");
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectName, is, 1, customContentType);
+      client.putObject(bucketName, objectName, is, 1, headerMap);
       is.close();
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
 
       if (!(objectName.equals(objectStat.name()) && (objectStat.length() == 1)
             && bucketName.equals(objectStat.bucketName()) && objectStat.contentType().equals(customContentType))) {
-        throw new Exception("object stat differs");
+        throw new Exception("[FAILED] object stat differs");
+      }
+
+      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
+      if (!httpHeaders.containsKey("x-amz-meta-my-custom-data")) {
+        throw new Exception("[FAILED] metadata not found in object stat");
+      }
+      List<String> values = httpHeaders.get("x-amz-meta-my-custom-data");
+      if (values.size() != 1) {
+        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
+      }
+      if (!values.get(0).equals("foo")) {
+        throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
       }
 
       client.removeObject(bucketName, objectName);

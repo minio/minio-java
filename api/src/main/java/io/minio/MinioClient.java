@@ -157,6 +157,8 @@ import javax.crypto.spec.SecretKeySpec;
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class MinioClient {
   private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
+  // default network I/O timeout is 15 minutes
+  private static final long DEFAULT_CONNECTION_TIMEOUT = 15 * 60;
   // maximum allowed object size is 5TiB
   private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
   private static final int MAX_MULTIPART_COUNT = 10000;
@@ -630,6 +632,16 @@ public class MinioClient {
       throw new InvalidPortException(port, "port must be in range of 1 to 65535");
     }
 
+    if (httpClient != null) {
+      this.httpClient = httpClient;
+    } else {
+      this.httpClient = this.httpClient.newBuilder()
+        .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
+        .build();
+    }
+
     HttpUrl url = HttpUrl.parse(endpoint);
     if (url != null) {
       if (!"/".equals(url.encodedPath())) {
@@ -692,10 +704,6 @@ public class MinioClient {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.region = region;
-
-    if (httpClient != null) {
-      this.httpClient = httpClient;
-    }
   }
 
   /**
@@ -1426,7 +1434,8 @@ public class MinioClient {
            InternalException {
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
-    ObjectStat objectStat = new ObjectStat(bucketName, objectName, header);
+    Map<String,List<String>> httpHeaders = response.httpHeaders();
+    ObjectStat objectStat = new ObjectStat(bucketName, objectName, header, httpHeaders);
 
     return objectStat;
   }
