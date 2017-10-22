@@ -2205,8 +2205,8 @@ public class FunctionalTest {
         mintFailedLog("setBucketPolicy(String bucketName, String objectPrefix, "
                       + "PolicyType policyType)", null, startTime, null,
                       e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
       }
-      throw e;
     }
   }
 
