@@ -199,7 +199,7 @@ public class MinioClient {
 
   private String userAgent = DEFAULT_USER_AGENT;
 
-  private OkHttpClient httpClient = new OkHttpClient();
+  private OkHttpClient httpClient;
 
 
   /**
@@ -635,6 +635,7 @@ public class MinioClient {
     if (httpClient != null) {
       this.httpClient = httpClient;
     } else {
+      this.httpClient = new OkHttpClient();
       this.httpClient = this.httpClient.newBuilder()
         .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
         .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
