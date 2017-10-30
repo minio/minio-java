@@ -1583,10 +1583,12 @@ public class MinioClient {
     }
 
     Map<String,String> headerMap = new HashMap<>();
-    if (length != null) {
-      headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
-    } else {
-      headerMap.put("Range", "bytes=" + offset + "-");
+    if (offset > 0) {
+      if (length != null) {
+        headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
+      } else {
+        headerMap.put("Range", "bytes=" + offset + "-");
+      }
     }
 
     HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
