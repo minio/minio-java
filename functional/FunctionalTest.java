@@ -28,8 +28,6 @@ import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.ImmutableMap;
 import org.joda.time.DateTime;
 
 import okhttp3.OkHttpClient;
@@ -2090,6 +2088,95 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: single policy type: getBucketPolicy(String bucketName).
+   */
+  public static void getBucketPolicy_test5() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getBucketPolicy(String bucketName) (Single-Policy Case)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String bucketName = getRandomName();
+      client.makeBucket(bucketName);
+
+      client.setBucketPolicy(bucketName, "list-policies-read-only", PolicyType.READ_ONLY);
+
+      Map<String, PolicyType> actualPolicies = client.getBucketPolicy(bucketName);
+      Map<String, PolicyType> expectedPolicies = new Hashtable<String, PolicyType>();
+      expectedPolicies.put(bucketName + "/list-policies-read-only*", PolicyType.READ_ONLY);
+
+      if (!actualPolicies.equals(expectedPolicies)) {
+        throw new Exception("[FAILED] policy list differs. expected: " + expectedPolicies + ", got: " + actualPolicies);
+      }
+
+      client.removeBucket(bucketName);
+      mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
+      } else {
+        mintFailedLog("getBucketPolicy(String bucketName)", null, startTime, null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Test: multiple policy types: getBucketPolicy(String bucketName).
+   */
+  public static void getBucketPolicy_test6() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getBucketPolicy(String bucketName) (Multi-Policy Case)");
+    }
+
+    long startTime = System.currentTimeMillis();
+
+    try {
+      String bucketName = getRandomName();
+      client.makeBucket(bucketName);
+
+      client.setBucketPolicy(bucketName, "list-policies-write-only", PolicyType.WRITE_ONLY);
+      client.setBucketPolicy(bucketName, "list-policies-read-write", PolicyType.READ_WRITE);
+
+      Map<String, PolicyType> actualPolicies = client.getBucketPolicy(bucketName);
+      Map<String, PolicyType> expectedPolicies = new Hashtable<String, PolicyType>();
+      expectedPolicies.put(bucketName + "/list-policies-write-only*", PolicyType.WRITE_ONLY);
+      expectedPolicies.put(bucketName + "/list-policies-read-write*", PolicyType.READ_WRITE);
+
+      if (!actualPolicies.equals(expectedPolicies)) {
+        throw new Exception("[FAILED] policy list differs. expected: " + expectedPolicies + ", got: " + actualPolicies);
+      }
+
+      client.removeBucket(bucketName);
+      mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
+      } else {
+        mintFailedLog("getBucketPolicy(String bucketName)", null, startTime, null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /**
    * Test: NONE type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
    */
   public static void setBucketPolicy_test1() throws Exception {
@@ -2231,75 +2318,6 @@ public class FunctionalTest {
    */
   public static void setBucketPolicy_test4() throws Exception {
     testSetBucketPolicy("set-bucket-policy-read-write", PolicyType.READ_WRITE);
-  }
-
-  /**
-   * Test listing all bucket policies.
-   */
-  public static void testGetBucketPolicies(final Map<String, PolicyType> policyMap) throws Exception {
-    final long startTime = System.currentTimeMillis();
-
-    final String bucketName = getRandomName();
-    client.makeBucket(bucketName);
-    try {
-      for (final Map.Entry<String, PolicyType> policyTypeEntry : policyMap.entrySet()) {
-        client.setBucketPolicy(bucketName, policyTypeEntry.getKey(), policyTypeEntry.getValue());
-      }
-
-      final Map<String, PolicyType> actualPolicies = client.getBucketPolicy(bucketName);
-
-      final Map<String, PolicyType> expectedPolicies = Maps.newHashMap();
-      policyMap.forEach((objectPrefix, policy) ->
-          expectedPolicies.put(String.format("%s/%s*", bucketName, objectPrefix), policy));
-
-      if (!actualPolicies.equals(expectedPolicies)) {
-        throw new Exception("[FAILED] policy list differs");
-      }
-
-      mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
-    } catch (final Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        final ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
-      } else {
-        mintFailedLog("getBucketPolicy(String bucketName)", null, startTime, null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      }
-      throw e;
-    } finally {
-      client.removeBucket(bucketName);
-    }
-  }
-
-  /**
-   * Test: single policy type: getBucketPolicy(String bucketName).
-   */
-  public static void getBucketPolicy_test5() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getBucketPolicy(String bucketName) (Single-Policy Case)");
-    }
-    final Map<String, PolicyType> policyTypeMap = ImmutableMap.of("list-policies-read-only", PolicyType.READ_ONLY);
-    testGetBucketPolicies(policyTypeMap);
-  }
-
-  /**
-   * Test: multiple policy types: getBucketPolicy(String bucketName).
-   */
-  public static void getBucketPolicy_test6() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getBucketPolicy(String bucketName) (Multi-Policy Case)");
-    }
-    final Map<String, PolicyType> policyTypeMap = ImmutableMap.of(
-        "list-policies-write-only", PolicyType.WRITE_ONLY,
-        "list-policies-read-write", PolicyType.READ_WRITE
-    );
-    testGetBucketPolicies(policyTypeMap);
   }
 
   /**
@@ -2556,14 +2574,13 @@ public class FunctionalTest {
     getBucketPolicy_test2();
     getBucketPolicy_test3();
     getBucketPolicy_test4();
+    getBucketPolicy_test5();
+    getBucketPolicy_test6();
 
     setBucketPolicy_test1();
     setBucketPolicy_test2();
     setBucketPolicy_test3();
     setBucketPolicy_test4();
-
-    getBucketPolicy_test5();
-    getBucketPolicy_test6();
 
     threadedPutObject();
 
