@@ -104,7 +104,7 @@ public class FunctionalTest {
 
     return createFile(1 * MB);
   }
-    
+
   /**
    * Create 65 MB temporary file.
    */
@@ -117,7 +117,7 @@ public class FunctionalTest {
 
     return createFile(65 * MB);
   }
-    
+
   /**
    * Generate random name.
    */
@@ -565,7 +565,7 @@ public class FunctionalTest {
       is.close();
       client.removeObject(bucketName, objectName);
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, long size,"
-                      + " String contentType)", 
+                      + " String contentType)",
                       "size: 1 MB, contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog("putObject(String bucketName, String objectName, InputStream body, long size,"
@@ -598,7 +598,7 @@ public class FunctionalTest {
       }
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, String contentType)", 
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, String contentType)",
                     "contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog("putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
@@ -614,14 +614,14 @@ public class FunctionalTest {
   public static void putObject_test7() throws Exception {
     testPutObjectUnknownStreamSize(3 * MB);
   }
- 
+
   /**
    * Test: multipart: putObject(String bucketName, String objectName, InputStream body, String contentType).
    */
   public static void putObject_test8() throws Exception {
     testPutObjectUnknownStreamSize(537 * MB);
   }
- 
+
   /**
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                 String contentType, SecretKey key).
@@ -679,7 +679,7 @@ public class FunctionalTest {
 
       client.removeObject(bucketName, objectName);
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-                      + "long size, String contentType, KeyPair keyPair)", 
+                      + "long size, String contentType, KeyPair keyPair)",
                       "size: 13 MB", startTime);
     } catch (Exception e) {
       mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
@@ -717,7 +717,7 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
 
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-                       + "long size, Map<String, String> headerMap)", 
+                       + "long size, Map<String, String> headerMap)",
                       "size: 13 MB", startTime);
     } catch (Exception e) {
       mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
@@ -990,6 +990,32 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: getObject(String bucketName, String objectName) zero size object.
+   */
+  public static void getObject_test8() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getObject(String bucketName, String objectName) zero size object");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      InputStream is = new ContentInputStream(0);
+      client.putObject(bucketName, objectName, is, 0, nullContentType);
+      is.close();
+
+      is = client.getObject(bucketName, objectName);
+      is.close();
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("getObject(String bucketName, String objectName)", null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
    * Test: listObjects(final String bucketName).
    */
   public static void listObject_test1() throws Exception {
@@ -1161,7 +1187,7 @@ public class FunctionalTest {
       for (Result<?> r : client.listObjects(bucketName, "minio", true)) {
         ignore(i++, r.get());
       }
-      
+
       // Check the number of uploaded objects
       if (i != objCount) {
         throw new Exception("item count differs, expected: " + objCount + ", got: " + i);
@@ -1962,7 +1988,7 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
       // Destination bucket is expected to be empty, otherwise it will trigger an exception.
       client.removeBucket(destBucketName);
-      mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName, " 
+      mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName, "
                      + "CopyConditions copyConditions)",
                      "CopyCondition: invalidUnmodifiedCondition", startTime);
     } catch (Exception e) {
@@ -2338,7 +2364,7 @@ public class FunctionalTest {
     }
 
     long startTime = System.currentTimeMillis();
-    try {      
+    try {
       String destBucketName = getRandomName();
       client.makeBucket(destBucketName, region);
 
@@ -2426,7 +2452,7 @@ public class FunctionalTest {
       client.removeBucket(destBucketName);
       mintSuccessLog("getBucketNotification(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("getBucketNotification(String bucketName)", null, startTime, null, 
+      mintFailedLog("getBucketNotification(String bucketName)", null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
@@ -2535,6 +2561,7 @@ public class FunctionalTest {
     getObject_test5();
     getObject_test6();
     getObject_test7();
+    getObject_test8();
 
     listObject_test1();
     listObject_test2();
