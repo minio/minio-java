@@ -3806,7 +3806,7 @@ public class MinioClient {
   /**
    * Returns the parsed current bucket access policy.
    */
-  private BucketPolicy getBucketPolicy(String bucketName)
+  private BucketPolicy doGetBucketPolicy(String bucketName)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException {
@@ -3850,10 +3850,49 @@ public class MinioClient {
            XmlPullParserException, ErrorResponseException, InternalException {
     checkObjectPrefix(objectPrefix);
 
-    BucketPolicy policy = getBucketPolicy(bucketName);
+    BucketPolicy policy = this.doGetBucketPolicy(bucketName);
     return policy.getPolicy(objectPrefix);
   }
 
+  /**
+   * Get all policies in the given bucket.
+   *
+   * @param bucketName the name of the bucket for which policies are to be listed.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   *
+   * final Map<String, PolicyType> policies = minioClient.getBucketPolicy("my-bucketname");
+   * for (final Map.Entry<String, PolicyType> policyEntry : policies.entrySet()) {
+   *    final String objectPrefix = policyEntry.getKey();
+   *    final PolicyType policyType = policyEntry.getValue();
+   *    System.out.println(
+   *        String.format("Access permission %s found for object prefix %s", policyType.getValue(), objectPrefix)
+   *    );
+   * }}
+   * </pre>
+   *
+   * @return a map of object prefixes (keys) to their policy types (values) for a given bucket.
+   * @throws InvalidBucketNameException   upon an invalid bucket name
+   * @throws IOException                  upon connection error
+   * @throws InvalidKeyException          upon an invalid access key or secret key
+   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException    upon insufficient data
+   * @throws NoResponseException          upon no response from server
+   * @throws XmlPullParserException       upon parsing response xml
+   * @throws InternalException            upon internal library error
+   * @throws ErrorResponseException       upon unsuccessful execution
+   */
+  public Map<String, PolicyType> getBucketPolicy(String bucketName)
+      throws InvalidBucketNameException, IOException, InvalidKeyException, NoSuchAlgorithmException,
+      InsufficientDataException, NoResponseException, XmlPullParserException,
+      InternalException, ErrorResponseException, InvalidObjectPrefixException {
+    // Input validation.
+    checkBucketName(bucketName);
+
+    BucketPolicy bucketPolicy = this.doGetBucketPolicy(bucketName);
+    return bucketPolicy.getPolicies();
+  }
 
   /**
    * Sets the bucket access policy.
@@ -3891,7 +3930,7 @@ public class MinioClient {
            XmlPullParserException, ErrorResponseException, InternalException {
     checkObjectPrefix(objectPrefix);
 
-    BucketPolicy policy = getBucketPolicy(bucketName);
+    BucketPolicy policy = this.doGetBucketPolicy(bucketName);
 
     if (policyType == PolicyType.NONE && policy.statements() == null) {
       // As the request is for removing policy and the bucket
