@@ -1630,7 +1630,7 @@ public class FunctionalTest {
       is.close();
 
       Request.Builder requestBuilder = new Request.Builder();
-      String urlString = client.getObjectUrl(bucketName, objectName);
+      String urlString = client.getObjectUrl(bucketName, "");
       Request request = requestBuilder.url(urlString).post(multipartBuilder.build()).build();
       OkHttpClient transport = new OkHttpClient();
       Response response = transport.newCall(request).execute();
