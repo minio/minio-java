@@ -967,7 +967,7 @@ Takes data from given stream, encrypts it using a random content key and uploads
 uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
 master key passed to this function.
 
-If the object is larger than 525MB, the client will automatically perform multi part upload.
+If the object is larger than 5MB, the client will automatically perform multi part upload.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-javax.crypto.SecretKey-)
 
@@ -1049,7 +1049,7 @@ Takes data from given stream, encrypts it using a random content key and uploads
 uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
 master key pair passed to this function.
 
-If the object is larger than 525MB, the client will automatically perform multi part upload.
+If the object is larger than 5MB, the client will automatically perform multi part upload.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-java.security.KeyPair-)
 
