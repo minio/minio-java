@@ -32,60 +32,60 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |  |
 |---|
 |`public MinioClient(String endpoint) throws NullPointerException, InvalidEndpointException, InvalidPortException`   |
-| Creates Minio client object with given endpoint using anonymous access.  |
+| 使用给定的endpoint以及匿名方式创建一个Minio client对象。|
 | [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-)  |
 
 
 |   |
 |---|
 |`public MinioClient(URL url) throws NullPointerException, InvalidEndpointException, InvalidPortException`   |
-| Creates Minio client object with given url using anonymous access.  |
+| 使用给定的url以及匿名方式创建一个Minio client对象。 |
 | [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-)  |
 
 
 |  |
 |---|
 | `public MinioClient(com.squareup.okhttp.HttpUrl url) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
-|Creates Minio client object with given HttpUrl object using anonymous access.   |
+|使用给定的HttpUrl以及匿名方式创建一个Minio client对象。 |
 | [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-com.squareup.okhttp.HttpUrl-)  |
 
 |   |
 |---|
 | `public MinioClient(String endpoint, String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
-|  Creates Minio client object with given endpoint, access key and secret key. |
+|  使用给定的endpoint、access key和secret key创建一个Minio client对象。 |
 |   [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-)|
 
 |   |
 |---|
 | `public MinioClient(String endpoint, int port,  String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.  |
+|  使用给定的endpoint、port、access key和secret key创建一个Minio client对象。 |
 | [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-)  |
 
 
 |   |
 |---|
 | `public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object with given endpoint, access key and secret key using secure (HTTPS) connection.  |
+| 使用给定的endpoint、access key、secret key和一个secure选项（是否使用https）创建一个Minio client对象。 |
 |  [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-boolean-) |
 
 
 |   |
 |---|
 | `public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object using given endpoint, port, access key, secret key and secure option.  |
+| 使用给定的endpoint、port、access key、secret key和一个secure选项（是否使用https）创建一个Minio client对象。  |
 |  [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-boolean-) |
 
 |   |
 |---|
 | `public MinioClient(com.squareup.okhttp.HttpUrl url, String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object with given URL object, access key and secret key.  |
+| 使用给定的HttpUrl对象、access key、secret key创建一个Minio client对象。 |
 | [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-com.squareup.okhttp.HttpUrl-java.lang.String-java.lang.String-)  |
 
 
 |   |
 |---|
 | `public MinioClient(URL url, String accessKey, String secretKey) throws NullPointerException, InvalidEndpointException, InvalidPortException`  |
-|  Creates Minio client object with given URL object, access key and secret key. |
+|  使用给定的URL对象、access key、secret key创建一个Minio client对象。 |
 |  [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-java.lang.String-java.lang.String-) |
 
 
