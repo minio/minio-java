@@ -1,11 +1,11 @@
-# 适用于Amazon S3兼容云存储的Minio Java SDK [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
+# 适用于与Amazon S3兼容的云存储的Minio Java SDK [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
 
-Minio Java Client SDK提供简单的API来访问任何Amazon S3兼容的对象存储服务。
+Minio Java Client SDK提供简单的API来访问任何与Amazon S3兼容的对象存储服务。
 
 本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](http://docs.minio.io/docs/java-client-api-reference)文档。
 
 ## 最低需求
-Java 1.7或更高版本:
+Java 1.8或更高版本:
 
 * [OracleJDK 8.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [OpenJDK8.0](http://openjdk.java.net/install/)
@@ -15,24 +15,24 @@ Java 1.7或更高版本:
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>3.0.9</version>
+    <version>3.0.10</version>
 </dependency>
 ```
 
 ## 使用gradle
-```xml
+```
 dependencies {
-    compile 'io.minio:minio:3.0.9'
+    compile 'io.minio:minio:3.0.10'
 }
 ```
 
 ## 直接下载JAR
-你可以到maven仓库直接下载最新版的[JAR](http://repo1.maven.org/maven2/io/minio/minio/3.0.9/)。
+你可以到maven仓库直接下载最新版的[JAR](http://repo1.maven.org/maven2/io/minio/minio/3.0.10/)。
 
 ## 快速入门示例－文件上传
 本示例程序连接到一个对象存储服务，创建一个存储桶并上传一个文件到该桶中。
 
-你需要有存储服务的三个属性才能连接到该服务。
+你需要有存储服务的三个参数才能连接到该服务。
 
 | 参数     | 说明 |
 | :------- | :------------ |
@@ -41,7 +41,7 @@ dependencies {
 | Secret Key     | Secret key是你账户的密码。    |
 
 
-下面的例子，我们将使用一个运行在[https://play.minio.io:9000](https://play.minio.io:9000)的免费托管的Minio服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
+在下面的例子的中，我们将使用一个运行在[https://play.minio.io:9000](https://play.minio.io:9000)的免费托管的Minio服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
 
 #### FileUploader.java
 

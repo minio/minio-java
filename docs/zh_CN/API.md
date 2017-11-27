@@ -868,7 +868,7 @@ __参数__
 __示例__
 
 
-单个对象的最大大小限制在5TB。putObject在对象大于5MiB时，自动使用multiple parts方式上传。这就当上传失败时，客户端只需要上传未成功的部分即可（类似断点上传）。上传的对象使用MD5SUM签名进行完整性验证。
+单个对象的最大大小限制在5TB。putObject在对象大于5MiB时，自动使用multiple parts方式上传。这样，当上传失败时，客户端只需要上传未成功的部分即可（类似断点上传）。上传的对象使用MD5SUM签名进行完整性验证。
 
 ```java
 try {
@@ -930,9 +930,6 @@ __参数__
 |        | ``InternalException`` : 内部错误。        |
 
 __示例__
-
-
-单个对象的最大大小限制在5TB。putObject在对象大于5MiB时，自动使用multiple parts方式上传。这就当上传失败时，客户端只需要上传未成功的部分即可（类似断点上传）。上传的对象使用MD5SUM签名进行完整性验证。
 
 
 ```java
@@ -1196,7 +1193,7 @@ try {
 
 `public void removeObject(String bucketName, String objectName)`
 
-删除一个object。
+删除一个对象。
 
 [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-java.lang.String-java.lang.String-)
 
@@ -1238,7 +1235,7 @@ try {
 
 `public Iterable<Result<DeleteError>> removeObject(String bucketName, Iterable<String> objectNames)`
 
-删除多个object。
+删除多个对象。
 
 [查看 Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-java.lang.String-java.lang.String-)
 
@@ -1309,11 +1306,11 @@ __示例__
 
 ```java
 try {
-  // 从存储桶中删除名为myobject的未完整上传的对象。
+    // 从存储桶中删除名为myobject的未完整上传的对象。
 	minioClient.removeIncompleteUpload("mybucket", "myobject");
 	System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname");
 } catch(MinioException e) {
-  System.out.println("Error occurred: " + e);
+	System.out.println("Error occurred: " + e);
 }
 ```
 
