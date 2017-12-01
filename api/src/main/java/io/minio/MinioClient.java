@@ -903,6 +903,10 @@ public class MinioClient {
       for (String pathSegment : objectName.split("/")) {
         urlBuilder.addEncodedPathSegment(S3Escaper.encode(pathSegment));
       }
+      if (objectName.endsWith("/")) {
+        // Fix issue #648: preserve trailing '/' to work with proxies like nginx.
+        urlBuilder.addPathSegment("");
+      }
     }
 
     if (queryParamMap != null) {
@@ -912,7 +916,7 @@ public class MinioClient {
     }
 
     HttpUrl url = urlBuilder.build();
-
+    
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
     if (headerMap != null) {
@@ -1209,11 +1213,11 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     if (bucketName != null && this.accessKey != null && this.secretKey != null
-        && !BucketRegionCache.INSTANCE.exists(bucketName)) {
+          && !BucketRegionCache.INSTANCE.exists(bucketName)) {
       Map<String,String> queryParamMap = new HashMap<>();
       queryParamMap.put("location", null);
 
-      HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
+      HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, "/",
           null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
