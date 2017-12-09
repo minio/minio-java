@@ -1578,6 +1578,14 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
+    }
+  
+    if ((objectName == null) || (objectName.isEmpty())) {
+      throw new InvalidArgumentException("object name cannot be empty");
+    }
+      
     if (offset < 0) {
       throw new InvalidArgumentException("offset should be zero or greater");
     }
@@ -2343,7 +2351,15 @@ public class MinioClient {
   public void removeObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidArgumentException {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
+    }
+    
+    if ((objectName == null) || (objectName.isEmpty())) {
+      throw new InvalidArgumentException("object name cannot be empty");
+    }
+    
     executeDelete(bucketName, objectName, null);
   }
 
