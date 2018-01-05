@@ -728,6 +728,142 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                 Map&lt;String, String&gt; headerMap) with Storage Class REDUCED_REDUNDANCY.
+   */
+  public static void putObject_test12() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+                        + "long size, Map<String, String> headerMap). with Storage Class REDUCED_REDUNDANCY set");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String storageClass = "REDUCED_REDUNDANCY";
+      String objectName = getRandomName();
+      Map<String, String> headerMap = new HashMap<>();
+      headerMap.put("Content-Type", customContentType);
+      headerMap.put("X-Amz-Storage-Class", storageClass);
+      InputStream is = new ContentInputStream(13 * MB);
+      client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
+      is.close();
+
+      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      if (!customContentType.equals(objectStat.contentType())) {
+        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
+                            + objectStat.contentType());
+      }
+      Map<String, List<String>> returnHeader = objectStat.httpHeaders();
+      List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
+      
+      if ((returnStorageClass != null) && (!storageClass.equals(returnStorageClass.get(0)))) {
+        throw new Exception("Metadata mismatch");
+      } else if (returnStorageClass == null) {
+        // This is a success case as Gateways may not return the storage class - based on the 
+        // gateway type
+      }
+      
+      client.removeObject(bucketName, objectName);
+
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, Map<String, String> headerMap)",
+                      "size: 13 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, Map<String, String> headerMap)",
+                    "size: 13 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+  
+  /**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                  Map&lt;String, String&gt; headerMap) with Storage Class STANDARD.
+   */
+  public static void putObject_test13() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+                        + "long size, Map<String, String> headerMap). with Storage Class STANDARD set");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String storageClass = "STANDARD";
+      String objectName = getRandomName();
+      Map<String, String> headerMap = new HashMap<>();
+      headerMap.put("Content-Type", customContentType);
+      headerMap.put("X-Amz-Storage-Class", storageClass);
+      InputStream is = new ContentInputStream(13 * MB);
+      client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
+      is.close();
+
+      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      if (!customContentType.equals(objectStat.contentType())) {
+        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
+                            + objectStat.contentType());
+      }
+      Map<String, List<String>> returnHeader = objectStat.httpHeaders();
+      List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
+      
+      // Standard storage class shouldn't be present in metadata response
+      if (returnStorageClass != null) {
+        throw new Exception("Did not expect: " + storageClass + " in response metadata");
+      }
+      
+      client.removeObject(bucketName, objectName);
+
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, Map<String, String> headerMap)",
+                      "size: 13 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, Map<String, String> headerMap)",
+                    "size: 13 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+  
+  /**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                 Map&lt;String, String&gt; headerMap). with invalid Storage Class set
+   */
+  public static void putObject_test14() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+          + "long size, Map<String, String> headerMap). with invalid Storage Class set");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String storageClass = "INVALID";
+      String objectName = getRandomName();
+      Map<String, String> headerMap = new HashMap<>();
+      headerMap.put("Content-Type", customContentType);
+      headerMap.put("X-Amz-Storage-Class", storageClass);
+      InputStream is = new ContentInputStream(13 * MB);
+  
+      try {
+        client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
+      } catch (ErrorResponseException e) {
+        if (!e.errorResponse().code().equals("InvalidStorageClass")) {
+          throw e;
+        }
+      }
+
+      is.close();
+  
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
+                   + "long size, Map<String, String> headerMap)",
+                  "size: 13 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
+                   + "long size, Map<String, String> headerMap)",
+                "size: 13 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+  
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
   public static void statObject_test() throws Exception {
@@ -2551,6 +2687,9 @@ public class FunctionalTest {
     putObject_test9();
     putObject_test10();
     putObject_test11();
+    putObject_test12();
+    putObject_test13();
+    putObject_test14();
 
     statObject_test();
 
