@@ -208,9 +208,12 @@ public class FunctionalTest {
    */
   public static void writeObject(String urlString, byte[] dataBytes) throws Exception {
     Request.Builder requestBuilder = new Request.Builder();
+    // Set header 'x-amz-acl' to 'bucket-owner-full-control', so objects created
+    // anonymously, can be downloaded by bucket owner in AWS S3.
     Request request = requestBuilder
         .url(HttpUrl.parse(urlString))
         .method("PUT", RequestBody.create(null, dataBytes))
+        .addHeader("x-amz-acl", "bucket-owner-full-control")
         .build();
     OkHttpClient transport = new OkHttpClient();
     Response response = transport.newCall(request).execute();
@@ -2410,8 +2413,8 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       client.setBucketPolicy(bucketName, objectPrefix, policyType);
-      // Wait for 5 seconds for server to set the policy into effect.
-      Thread.sleep(5000);
+      // Wait for 15 seconds for server to set the policy into effect.
+      Thread.sleep(15000);
 
       String objectName = objectPrefix + "/" + getRandomName();
       String urlString = client.getObjectUrl(bucketName, objectName);
