@@ -18,15 +18,8 @@
 import java.lang.StringBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+
 import java.security.NoSuchAlgorithmException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -73,28 +66,15 @@ public class PutObjectEncrypted {
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
-      // Generate symmetric 256 bit AES key.
-      KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-      symKeyGenerator.init(256);
-      SecretKey symKey = symKeyGenerator.generateKey();
-
-      // Or Generate RSA key pair
-      // KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
-      // keyGenerator.initialize(1024, new SecureRandom());
-      // KeyPair keypair = keyGenerator.generateKeyPair();
-      // EncryptionMaterials encMaterials = new EncryptionMaterials(keypair);
-
       // put object 'my-objectname' in 'my-bucketname' with encryption
       // Materials.
-      minioClient.putObject("testbucket", "my-objectname-plain", bais, bais.available(), "application/octet-stream",
-          symKey);
+      minioClient.putObject("testbucket", "my-objectname-plain", bais, bais.available(), "application/octet-stream");
 
       // Close the input stream.
       bais.close();
 
       System.out.println("my-objectname is encrypted and uploaded successfully");
-    } catch (MinioException | NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException
-        | InvalidAlgorithmParameterException e) {
+    } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
   }

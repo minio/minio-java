@@ -211,27 +211,6 @@ public class ObjectStat {
   }
 
   /**
-   * Returns encryption key.
-   */
-  public String contentKey() {
-    return contentKey;
-  }
-
-  /**
-   * Returns encryption IV.
-   */
-  public String encryptionIv() {
-    return encryptionIv;
-  }
-
-  /**
-   * Returns encryption material description.
-   */
-  public String matDesc() {
-    return matDesc;
-  }
-
-  /**
    * Gets HTTP headers.
    */
   public Map<String,List<String>> httpHeaders() {
