@@ -23,6 +23,7 @@ import java.security.InvalidKeyException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
+import io.minio.PutOptions;
 import io.minio.errors.MinioException;
 
 public class PutObject {
@@ -64,7 +65,9 @@ public class PutObject {
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
       // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
+      PutOptions options = new PutOptions();
+      options.setContentType("application/octet-stream");
+      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), options);
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
     } catch (MinioException e) {

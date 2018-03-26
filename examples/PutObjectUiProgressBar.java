@@ -32,6 +32,7 @@ import javax.swing.SwingWorker;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
+import io.minio.PutOptions;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -95,7 +96,8 @@ public class PutObjectUiProgressBar extends JFrame {
           bis);
 
       pmis.getProgressMonitor().setMillisToPopup(10);
-      minioClient.putObject("bank", "my-objectname", pmis, bis.available(), "application/octet-stream");
+      PutOptions options = new PutOptions().setContentType("application/octet-stream");
+      minioClient.putObject("bank", "my-objectname", pmis, bis.available(), options);
       pmis.close();
       System.out.println("my-objectname is uploaded successfully");
     } catch (FileNotFoundException e) {

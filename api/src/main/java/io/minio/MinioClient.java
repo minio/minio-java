@@ -1491,18 +1491,19 @@ public class MinioClient {
   public InputStream getObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
-    return getObject(bucketName, objectName, 0, null);
+           InternalException {
+    return getObject(bucketName, objectName, new GetOptions());
   }
 
-
   /**
-   * Gets object's data starting from given offset as {@link InputStream} in the given bucket. The InputStream must be
-   * closed after use else the connection will remain open.
+   * Gets object's data of given as {@link InputStream} in the given bucket. The InputStream must be
+   * closed after use else the connection will remain open. The options argument can be used to parameterize
+   * the request: for example using HTTP ranges or encryption. 
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
+   * <pre>{@code 
+   * GetOptions options = new GetOptions().setRange(1024L, 4096L);
+   * InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", options);
    * byte[] buf = new byte[16384];
    * int bytesRead;
    * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
@@ -1512,7 +1513,7 @@ public class MinioClient {
    *
    * @param bucketName  Bucket name.
    * @param objectName  Object name in the bucket.
-   * @param offset      Offset to read at.
+   * @param options     The GET request options.
    *
    * @return {@link InputStream} containing the object's data.
    *
@@ -1523,76 +1524,16 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    */
-  public InputStream getObject(String bucketName, String objectName, long offset)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
-    return getObject(bucketName, objectName, offset, null);
-  }
-
-
-  /**
-   * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The InputStream must be
-   * closed after use else the connection will remain open.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offset      Offset to read at.
-   * @param length      Length to read.
-   *
-   * @return {@link InputStream} containing the object's data.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   */
-  public InputStream getObject(String bucketName, String objectName, long offset, Long length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new InvalidArgumentException("bucket name cannot be empty");
+  public InputStream getObject(String bucketName, String objectName, GetOptions options) 
+  throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+         InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+         InternalException {
+    if (options == null) {
+      options = new GetOptions();
     }
-  
-    if ((objectName == null) || (objectName.isEmpty())) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
-      
-    if (offset < 0) {
-      throw new InvalidArgumentException("offset should be zero or greater");
-    }
-
-    if (length != null && length <= 0) {
-      throw new InvalidArgumentException("length should be greater than zero");
-    }
-
-    Map<String,String> headerMap = new HashMap<>();
-    if (offset > 0) {
-      if (length != null) {
-        headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
-      } else {
-        headerMap.put("Range", "bytes=" + offset + "-");
-      }
-    }
-
-    HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
+    HttpResponse response = executeGet(bucketName, objectName, options.headers, null);
     return response.body().byteStream();
   }
-
 
   /**
    * Gets object's data in the given bucket and stores it to given file name.
@@ -1663,7 +1604,7 @@ public class MinioClient {
     InputStream is = null;
     OutputStream os = null;
     try {
-      is = getObject(bucketName, objectName, tempFileSize);
+      is = getObject(bucketName, objectName, new GetOptions().setRange(tempFileSize));
       os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       long bytesWritten = ByteStreams.copy(is, os);
       is.close();
@@ -2909,7 +2850,7 @@ public class MinioClient {
    * @param bucketName  Bucket name.
    * @param objectName  Object name to create in the bucket.
    * @param fileName    File name to upload.
-   * @param contentType File content type of the object, user supplied.
+   * @param options     The PUT request options.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoResponseException         upon no response from server
@@ -2918,7 +2859,7 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    */
-  public void putObject(String bucketName, String objectName, String fileName, String contentType)
+  public void putObject(String bucketName, String objectName, String fileName, PutOptions options)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
@@ -2932,20 +2873,18 @@ public class MinioClient {
       throw new InvalidArgumentException("'" + fileName + "': not a regular file");
     }
 
-    if (contentType == null) {
-      contentType = Files.probeContentType(filePath);
+    if (options == null) {
+      options = new PutOptions();
+    }
+    if (!options.valueOf("Content-Type").isPresent()) {
+      options = new PutOptions(options);
+      options.setContentType(Files.probeContentType(filePath));
     }
 
     long size = Files.size(filePath);
-
     RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
-
-    // Set the contentType
-    Map<String, String> headerMap = new HashMap<>();
-    headerMap.put("Content-Type", contentType);
-
     try {
-      putObject(bucketName, objectName, size, file, headerMap);
+      putObject(bucketName, objectName, size, file, options);
     } finally {
       file.close();
     }
@@ -2984,7 +2923,6 @@ public class MinioClient {
            InvalidArgumentException, InsufficientDataException {
     putObject(bucketName, objectName, fileName, null);
   }
-
 
   /**
    * Uploads data from given stream as object to given bucket.
@@ -3030,7 +2968,7 @@ public class MinioClient {
    * @param objectName  Object name to create in the bucket.
    * @param stream      stream to upload.
    * @param size        Size of all the data that will be uploaded.
-   * @param contentType Content type of the stream.
+   * @param options     The PUT request options.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoResponseException         upon no response from server
@@ -3041,90 +2979,13 @@ public class MinioClient {
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
-  public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
+  public void putObject(String bucketName, String objectName, InputStream stream, long size, PutOptions options)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
-
-    // Set the contentType
-    Map<String, String> headerMap = new HashMap<>();
-    headerMap.put("Content-Type", contentType);
-
-    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap);
+    putObject(bucketName, objectName, size, new BufferedInputStream(stream), options);
   }
-
-
-  /**
-   * Uploads data from given stream as object to given bucket with specified meta data.
-   * <p>
-   * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * </p>
-   * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
-   * </p>
-   * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
-   * </p>
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code StringBuilder builder = new StringBuilder();
-   * for (int i = 0; i < 1000; i++) {
-   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
-   *   builder.append("(29 letters)\n");
-   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
-   *   builder.append("(31 letters)\n");
-   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
-   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
-   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
-   *   builder.append("(39 letters)\n");
-   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
-   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
-   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
-   *   builder.append("computers after System 7.\n");
-   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
-   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
-   *   builder.append("---\n");
-   * }
-   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-   * // create object
-   * Map<String, String> headerMap = new HashMap<>();
-   * headerMap.put("Content-Type", "application/octet-stream");
-   * minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), headerMap);
-   * bais.close();
-   * System.out.println("my-objectname is uploaded successfully"); }</pre>
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name to create in the bucket.
-   * @param stream      stream to upload.
-   * @param size        Size of all the data that will be uploaded.
-   * @param headerMap   Custom/additional meta data of the object.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
-   * @throws IOException                 upon connection error
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   *
-   * @see #putObject(String bucketName, String objectName, String fileName)
-   */
-  public void putObject(String bucketName, String objectName, InputStream stream, long size,
-                        Map<String, String> headerMap)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException, InsufficientDataException {
-    if (headerMap == null) {
-      headerMap = new HashMap<>();
-    }
-
-    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap);
-  }
-
 
   /**
    * Uploads data from given stream as object to given bucket where the stream size is unknown.
@@ -3169,7 +3030,7 @@ public class MinioClient {
    * @param bucketName  Bucket name.
    * @param objectName  Object name to create in the bucket.
    * @param stream      stream to upload.
-   * @param contentType Content type of the stream.
+   * @param options     The PUT request options.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoResponseException         upon no response from server
@@ -3180,17 +3041,13 @@ public class MinioClient {
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
-  public void putObject(String bucketName, String objectName, InputStream stream, String contentType)
+  public void putObject(String bucketName, String objectName, InputStream stream, PutOptions options)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
 
-    // Set the contentType
-    Map<String, String> headerMap = new HashMap<>();
-    headerMap.put("Content-Type", contentType);
-
-    putObject(bucketName, objectName, null, new BufferedInputStream(stream), headerMap);
+    putObject(bucketName, objectName, null, new BufferedInputStream(stream), options);
   }
 
   /**
@@ -3244,17 +3101,20 @@ public class MinioClient {
    * @param data
    *          Object data.
    */
-  private void putObject(String bucketName, String objectName, Long size, Object data,
-      Map<String, String> headerMap)
+  private void putObject(String bucketName, String objectName, Long size, Object data, PutOptions options)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
     boolean unknownSize = false;
-
+    
+    if (options == null) {
+      options = new PutOptions();
+    }
     // Add content type if not already set
-    if (headerMap.get("Content-Type") == null) {
-      headerMap.put("Content-Type", "application/octet-stream");
+    if (!options.valueOf("Content-Type").isPresent()) {
+      options = new PutOptions(options);
+      options.setContentType("application/octet-stream");
     }
 
     if (size == null) {
@@ -3264,7 +3124,7 @@ public class MinioClient {
 
     if (size <= MIN_MULTIPART_SIZE) {
       // Single put object.
-      putObject(bucketName, objectName, size.intValue(), data, null, 0, headerMap);
+      putObject(bucketName, objectName, size.intValue(), data, null, 0, options.headers);
       return;
     }
 
@@ -3290,7 +3150,7 @@ public class MinioClient {
     } else {
       // initiate new multipart upload ie no previous multipart found or no previous valid parts for
       // multipart found
-      uploadId = initMultipartUpload(bucketName, objectName, headerMap);
+      uploadId = initMultipartUpload(bucketName, objectName, options.headers);
     }
 
     int expectedReadSize = partSize;
@@ -3308,7 +3168,7 @@ public class MinioClient {
         if (availableSize <= expectedReadSize) {
           // If it is first part, do single put object.
           if (partNumber == 1) {
-            putObject(bucketName, objectName, availableSize, data, null, 0, headerMap);
+            putObject(bucketName, objectName, availableSize, data, null, 0, options.headers);
             // if its not resuming previous multipart, remove newly created multipart upload.
             if (!isResumeMultipart) {
               abortMultipartUpload(bucketName, objectName, uploadId);

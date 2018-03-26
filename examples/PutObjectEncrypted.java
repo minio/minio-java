@@ -20,11 +20,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.KeyGenerator;
+
 import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
+import io.minio.PutOptions;
+import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 
 public class PutObjectEncrypted {
@@ -66,9 +71,15 @@ public class PutObjectEncrypted {
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
-      // put object 'my-objectname' in 'my-bucketname' with encryption
-      // Materials.
-      minioClient.putObject("testbucket", "my-objectname-plain", bais, bais.available(), "application/octet-stream");
+      // Here we use Server-Side-Encryption with customer provided keys (SSE-C).
+      // Generate a new 256 bit AES key - This key must be remembered by the client.
+      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(256);
+      ServerSideEncryption encryption = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+      PutOptions options = new PutOptions();
+      options.setContentType("application/octet-stream").setEncryption(encryption);
+      minioClient.putObject("testbucket", "my-objectname-plain", bais, bais.available(), options);
 
       // Close the input stream.
       bais.close();

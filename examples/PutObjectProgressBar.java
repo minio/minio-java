@@ -25,6 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
+import io.minio.PutOptions;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -59,7 +60,10 @@ public class PutObjectProgressBar {
     InputStream pis = new BufferedInputStream(new ProgressStream("Uploading... ",
                                                                  ProgressBarStyle.ASCII,
                                                                  new FileInputStream(file)));
-    minioClient.putObject(bucketName, objectName, pis, pis.available(), "application/octet-stream");
+                                                                 
+    PutOptions options = new PutOptions();
+    options.setContentType("application/octet-stream");                                                             
+    minioClient.putObject(bucketName, objectName, pis, pis.available(), options);
     pis.close();
     System.out.println("my-objectname is uploaded successfully");
   }

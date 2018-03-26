@@ -19,12 +19,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
-import java.util.Map;
-import java.util.HashMap;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
+import io.minio.PutOptions;
 import io.minio.errors.MinioException;
 
 public class PutObjectWithMetadata {
@@ -65,20 +64,13 @@ public class PutObjectWithMetadata {
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
-      // Create metadata map
-      Map<String, String> headerMap = new HashMap<>();
- 
-      // Add custom metadata
-      headerMap.put("X-Amz-Meta-CustomMeta", "TEST");
-      
-      // Add custom content type
-      headerMap.put("Content-Type", "application/octet-stream");
-      
-      // Add storage class
-      headerMap.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
+      PutOptions options = new PutOptions();
+      options = options.setContentType("application/octet-stream")
+              .setMetadata("X-Amz-Meta-CustomMeta", "TEST")
+              .setMetadata("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
 
       // Create object 'my-objectname' in 'my-bucketname' with custom metadata in headerMap
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), headerMap); 
+      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), options); 
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
     } catch (MinioException e) {

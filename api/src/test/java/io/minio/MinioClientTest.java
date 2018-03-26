@@ -278,7 +278,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    InputStream object = client.getObject(BUCKET, "key", 0L, 5L);
+    InputStream object = client.getObject(BUCKET, "key", new GetOptions().setRange(0L, 5L));
     byte[] result = new byte[20];
     int read = object.read(result);
     result = Arrays.copyOf(result, read);
@@ -305,7 +305,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    client.getObject(BUCKET, "key", -1L, 5L);
+    client.getObject(BUCKET, "key", new GetOptions().setRange(-1L, 5L));
     Assert.fail("Should of thrown an exception");
   }
 
@@ -330,7 +330,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    client.getObject(BUCKET, "key", 0L, 0L);
+    client.getObject(BUCKET, "key", new GetOptions().setRange(0L, 0L));
     Assert.fail("Should of thrown an exception");
   }
 
@@ -357,7 +357,7 @@ public class MinioClientTest {
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
-    InputStream object = client.getObject(BUCKET, "key", 6);
+    InputStream object = client.getObject(BUCKET, "key", new GetOptions().setRange(6));
     byte[] result = new byte[5];
     int read = object.read(result);
     result = Arrays.copyOf(result, read);
@@ -550,7 +550,7 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    client.putObject(BUCKET, "key", data, 11, new PutOptions().setContentType(APPLICATION_OCTET_STREAM));
   }
 
   // this case only occurs for minio cloud storage
@@ -575,7 +575,7 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    client.putObject(BUCKET, "key", data, 11, new PutOptions().setContentType(APPLICATION_OCTET_STREAM));
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
@@ -600,7 +600,7 @@ public class MinioClientTest {
     String inputString = "hello worl";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    client.putObject(BUCKET, "key", data, 11, new PutOptions().setContentType(APPLICATION_OCTET_STREAM));
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
@@ -625,7 +625,7 @@ public class MinioClientTest {
     String inputString = "how long is a piece of string? too long!";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    client.putObject(BUCKET, "key", data, 11, new PutOptions().setContentType(APPLICATION_OCTET_STREAM));
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
@@ -652,8 +652,7 @@ public class MinioClientTest {
     for (int i = 1; i < 256; i++) {
       ascii[i - 1] = (byte) i;
     }
-    String contentType = null;
-    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11, contentType);
+    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11, new PutOptions());
   }
 
   @Test
@@ -675,8 +674,8 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    String contentType = null;
-    client.putObject(BUCKET, "key", data, 11, contentType);
+    PutOptions options = null;
+    client.putObject(BUCKET, "key", data, 11, options);
   }
 
   @Test
@@ -698,7 +697,7 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_JAVASCRIPT);
+    client.putObject(BUCKET, "key", data, 11, new PutOptions().setContentType(APPLICATION_JAVASCRIPT));
   }
 
   @Test
