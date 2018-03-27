@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
 
+import io.minio.errors.InvalidArgumentException;
+
 abstract class Options {
 
   protected final Map<String,String> headers = new HashMap<>();
@@ -30,6 +32,14 @@ abstract class Options {
     if (options != null) {
       this.headers.putAll(options.headers);
     }
+  }
+
+  protected Options setEncryption(ServerSideEncryption encryption) throws InvalidArgumentException {
+    if (encryption == null) {
+      throw new InvalidArgumentException("encryption cannot be null");
+    }
+    encryption.marshal(this.headers);
+    return this;
   }
 
   protected void setHeader(String key, String value) {

@@ -43,11 +43,9 @@ public class GetOptions extends Options {
    * @return the modified GetOptions instance.
    * @throws InvalidArgumentException if the encryption parameter is null.
    */
+  @Override
   public GetOptions setEncryption(ServerSideEncryption encryption) throws InvalidArgumentException {
-    if (encryption == null) {
-      throw new InvalidArgumentException("encryption cannot be null");
-    }
-    encryption.marshal(this.headers);
+    super.setEncryption(encryption);
     return this;
   }
 

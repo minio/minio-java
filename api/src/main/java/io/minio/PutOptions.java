@@ -46,11 +46,9 @@ public class PutOptions extends Options {
    * @return the modified PutOptions instance.
    * @throws InvalidArgumentException if the encryption parameter is null.
    */
+  @Override
   public PutOptions setEncryption(ServerSideEncryption encryption) throws InvalidArgumentException {
-    if (encryption == null) {
-      throw new InvalidArgumentException("encryption cannot be null");
-    }
-    encryption.marshal(this.headers);
+    super.setEncryption(encryption);
     return this;
   }
 

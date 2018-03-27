@@ -1722,8 +1722,7 @@ public class MinioClient {
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
    */
-  public void copyObject(String bucketName, String objectName, String destBucketName,
-                         CopyConditions copyConditions)
+  public void copyObject(String bucketName, String objectName, String destBucketName, CopyConditions copyConditions)
         throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
         NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
         InvalidArgumentException {
@@ -1782,7 +1781,7 @@ public class MinioClient {
    *
    * <pre>
    * {@code minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
-   * "my-destobjname", copyConditions, metadata);}
+   * "my-destobjname", copyConditions, options);}
    * </pre>
    *
    * @param bucketName
@@ -1796,9 +1795,9 @@ public class MinioClient {
    *          as destination object name.
    * @param copyConditions
    *          CopyConditions object with collection of supported CopyObject conditions.
-   * @param metadata
-   *          Additional metadata to set on the destination object when
-   *          setMetadataDirective is set to 'REPLACE'.
+   * @param options
+   *          Additional CopyOptions.
+   * 
    *
    * @throws InvalidBucketNameException
    *           upon an invalid bucket name, invalid object name.
@@ -1808,8 +1807,7 @@ public class MinioClient {
    *           upon an invalid access key or secret key
    */
   public void copyObject(String bucketName, String objectName, String destBucketName,
-                         String destObjectName, CopyConditions copyConditions,
-                         Map<String,String> metadata)
+                         String destObjectName, CopyConditions copyConditions, CopyOptions options)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException {
@@ -1822,6 +1820,9 @@ public class MinioClient {
     }
     if (destBucketName == null) {
       throw new InvalidArgumentException("Destination bucket name cannot be empty");
+    }
+    if (options == null) {
+      options = new CopyOptions();
     }
 
     // Escape source object path.
@@ -1842,10 +1843,8 @@ public class MinioClient {
       headerMap.putAll(copyConditions.getConditions());
     }
 
-    // Set metadata on the destination of object.
-    if (metadata != null) {
-      headerMap.putAll(metadata);
-    }
+    // Set option headers.
+    headerMap.putAll(options.headers);
 
     HttpResponse response = executePut(destBucketName, destObjectName, headerMap,
         null, "", 0);

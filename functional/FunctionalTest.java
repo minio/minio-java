@@ -1980,10 +1980,10 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      Map<String, String> metadata = new HashMap<>();
-      metadata.put("Content-Type", customContentType);
+      CopyOptions options = new CopyOptions();
+      options.setContentType(customContentType);
 
-      client.copyObject(bucketName, objectName, destBucketName, objectName, copyConditions, metadata);
+      client.copyObject(bucketName, objectName, destBucketName, objectName, copyConditions, options);
 
       ObjectStat objectStat = client.statObject(destBucketName, objectName);
       if (!customContentType.equals(objectStat.contentType())) {
