@@ -16,12 +16,18 @@
 
 package io.minio;
 
+import java.util.Map;
+import java.util.OptionalLong;
+
 import io.minio.errors.InvalidArgumentException;
 
 /**
  * GET object options for parameterizing a GET request.
  */
 public class GetOptions extends Options {
+
+  OptionalLong offset = OptionalLong.empty();
+  OptionalLong length = OptionalLong.empty();
 
   /**
    * GetOptions default constructor.
@@ -34,18 +40,37 @@ public class GetOptions extends Options {
    */
   public GetOptions(GetOptions options) {
     super(options);
+    this.offset = options.offset;
+    this.length = options.length;
   }
 
-  /**
-   * Set the GET headers for server-side-encryption.
-   * 
-   * @param encryption The server-side-encryption method (SSE-C, SSE-S3 or SSE-KMS).
-   * @return the modified GetOptions instance.
-   * @throws InvalidArgumentException if the encryption parameter is null.
-   */
   @Override
-  public GetOptions setEncryption(ServerSideEncryption encryption) throws InvalidArgumentException {
+  public Map<String, String> getHeaders() {
+    Map<String, String> headers = super.getHeaders();
+    if (this.offset.isPresent() && this.length.isPresent()) {
+      headers.put("Range", "bytes=" + this.offset.getAsLong() + "-" 
+          + (this.offset.getAsLong() + this.length.getAsLong() - 1));
+    } else if (this.offset.isPresent()) {
+      headers.put("Range", "bytes=" + this.offset.getAsLong() + "-");
+    }
+    return headers;
+  }
+
+  @Override
+  public GetOptions setEncryption(ServerSideEncryption encryption) {
     super.setEncryption(encryption);
+    return this;
+  }
+
+  @Override
+  public GetOptions setMetadata(String key, String value) {
+    super.setMetadata(key, value);
+    return this;
+  }
+  
+  @Override
+  public GetOptions setMetadata(Map<String, String> metadata) {
+    super.setMetadata(metadata);
     return this;
   }
 
@@ -60,7 +85,9 @@ public class GetOptions extends Options {
     if (offset < 0) {
       throw new InvalidArgumentException("offset must not be negative");
     }
-    setHeader("Range", "bytes=" + offset + "-");
+    this.offset = OptionalLong.of(offset);
+    this.length = OptionalLong.empty();
+    
     return this;
   }
 
@@ -84,7 +111,8 @@ public class GetOptions extends Options {
     if (length < offset) {
       throw new InvalidArgumentException("length should be greater than offset");
     }
-    setHeader("Range", "bytes=" + offset + "-" + (offset + length - 1));
+    this.offset = OptionalLong.of(offset);
+    this.length = OptionalLong.of(length);
     return this;
   }
 }

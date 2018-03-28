@@ -17,14 +17,13 @@
 package io.minio;
 
 import java.util.Map;
-import java.util.Map.Entry;
-
-import io.minio.errors.InvalidArgumentException;
 
 /**
  * PUT object options for parameterizing a PUT request.
  */
 public class PutOptions extends Options {
+
+  String contentType;
 
   /**
    * PutOptions default constructor.
@@ -37,57 +36,42 @@ public class PutOptions extends Options {
    */
   public PutOptions(PutOptions options) {
     super(options);
+    this.contentType = options.contentType;
   }
 
-  /**
-   * Set the PUT headers for server-side-encryption.
-   * 
-   * @param encryption The server-side-encryption method (SSE-C, SSE-S3 or SSE-KMS).
-   * @return the modified PutOptions instance.
-   * @throws InvalidArgumentException if the encryption parameter is null.
-   */
   @Override
-  public PutOptions setEncryption(ServerSideEncryption encryption) throws InvalidArgumentException {
+  public Map<String, String> getHeaders() {
+    Map<String, String> headers = super.getHeaders();
+    if (contentType != null) {
+      headers.put("Content-Type", this.contentType);
+    }
+    return headers;
+  }
+
+  @Override
+  public PutOptions setEncryption(ServerSideEncryption encryption)  {
     super.setEncryption(encryption);
     return this;
   }
 
-  /**
-   * Set the content type of uploaded object.
-   * @param contentType The content type.
-   * @return the modified PutOptions instance.
-   */
+  public String getContentType() {
+    return this.contentType;
+  }
+
   public PutOptions setContentType(String contentType) {
-    setHeader("Content-Type", contentType);
+    this.contentType = contentType;
     return this;
   }
 
-  /**
-   * Set the metadata key-value pair. If the key does not start
-   * with "X-Amz-" the prefix "X-Amz-Meta-" is added to the key. 
-   * @param key   The metadata key.
-   * @param value The metadata value.
-   * @return the modified PutOptions instance.
-   */
+  @Override
   public PutOptions setMetadata(String key, String value) {
-    String normKey = key.toLowerCase();
-    if (!normKey.startsWith("x-amz-meta-") && !normKey.startsWith("x-amz-")) {
-      key = "X-Amz-Meta-" + key;
-    }
-    setHeader(key, value);
+    super.setMetadata(key, value);
     return this;
   }
 
-  /**
-   * Set the metadata key-value pairs. If the one key does not start
-   * with "X-Amz-" the prefix "X-Amz-Meta-" is added to that key. 
-   * @param metadata The metadata key-value map.
-   * @return the modified PutOptions instance.
-   */
+  @Override
   public PutOptions setMetadata(Map<String, String> metadata) {
-    for (Entry<String,String> entry : metadata.entrySet()) {
-      setMetadata(entry.getKey(), entry.getValue());
-    }
+    super.setMetadata(metadata);
     return this;
   }
 }

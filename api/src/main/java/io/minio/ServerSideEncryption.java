@@ -16,10 +16,13 @@
 
 package io.minio;
 
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 
 import javax.crypto.SecretKey;
 import javax.security.auth.DestroyFailedException;
@@ -27,11 +30,15 @@ import javax.security.auth.Destroyable;
 
 import  com.google.common.io.BaseEncoding;
 
+import io.minio.errors.InvalidArgumentException;
+
 
 /**
  * ServerSideEncryption represents a form of server-side encryption.
  */
 public abstract class ServerSideEncryption implements Destroyable {
+
+  protected boolean destroyed = false;
 
   /**
    * Returns the type of server-side encryption.
@@ -44,6 +51,12 @@ public abstract class ServerSideEncryption implements Destroyable {
    * @param headers The metadata key-value map.
    */
   public abstract void marshal(Map<String, String> headers);
+
+
+  @Override
+  public boolean isDestroyed() {
+    return this.destroyed;
+  }
 
   /**
    * The types of server-side encryption.
@@ -118,6 +131,44 @@ public abstract class ServerSideEncryption implements Destroyable {
     return new ServerSideEncryptionS3(); 
   }
 
+  /**
+   * Create a new server-side-encryption object for encryption using a KMS (a.k.a. SSE-KMS).
+   * 
+   * @param keyId   specifies the customer-master-key (CMK) and must not be null.
+   * @param context is the encryption context. If the context is null no context is used.
+   *
+   * @return an instance of ServerSideEncryption implementing SSE-KMS.  
+   */
+  public static ServerSideEncryption withManagedKeys(String keyId, Map<String,String> context) 
+    throws InvalidArgumentException, UnsupportedEncodingException {
+    if (keyId == null) {
+      throw new InvalidArgumentException("The key-ID cannot be null");
+    }
+    if (context == null) {
+      return new ServerSideEncryptionKms(keyId, Optional.empty());
+    }
+
+    StringBuilder builder = new StringBuilder();
+    int i = 0;
+    builder.append('{');
+    for (Entry<String,String> entry : context.entrySet()) {
+      builder.append('"');
+      builder.append(entry.getKey());
+      builder.append('"');
+      builder.append(':');
+      builder.append('"');
+      builder.append(entry.getValue());
+      builder.append('"');
+      if (i < context.entrySet().size() - 1) {
+        builder.append(',');
+        i++;
+      }
+    }
+    builder.append('}');
+    String contextString = BaseEncoding.base64().encode(builder.toString().getBytes("UTF-8"));
+    return new ServerSideEncryptionKms(keyId, Optional.of(contextString)); 
+  }
+
   static class ServerSideEncryptionWithCustomerKey extends ServerSideEncryption {
 
     protected final SecretKey secretKey;
@@ -151,13 +202,9 @@ public abstract class ServerSideEncryption implements Destroyable {
     }
     
     @Override
-    public final void destroy() throws DestroyFailedException { 
+    public final void destroy() throws DestroyFailedException {
       secretKey.destroy(); 
-    }
-  
-    @Override
-    public final boolean isDestroyed() {
-      return secretKey.isDestroyed(); 
+      this.destroyed = true;
     }
   }
 
@@ -197,6 +244,40 @@ public abstract class ServerSideEncryption implements Destroyable {
     }
 
     @Override
-    public final void destroy() throws DestroyFailedException {}
+    public final void destroy() throws DestroyFailedException {
+      this.destroyed = true;
+    }
+  }
+
+  static final class ServerSideEncryptionKms extends ServerSideEncryption {
+
+    final String keyId;
+    final Optional<String> context;
+
+    public ServerSideEncryptionKms(String keyId, Optional<String> context) {
+      this.keyId = keyId;
+      this.context = context;
+    }
+
+    @Override
+    public final Type getType() { 
+      return Type.SSE_KMS; 
+    }
+
+    @Override
+    public final void marshal(Map<String, String> headers) {
+      if (this.isDestroyed()) {
+        throw new IllegalStateException("object is already destroyed");
+      }
+      headers.put("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id", keyId);
+      if (context.isPresent()) {
+        headers.put("X-Amz-Server-Side-Encryption-Context", context.get()); 
+      }
+    }
+
+    @Override
+    public final void destroy() throws DestroyFailedException {
+      this.destroyed = true;
+    }
   }
 }

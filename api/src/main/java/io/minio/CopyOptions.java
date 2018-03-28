@@ -17,11 +17,15 @@
 package io.minio;
 
 import java.util.Map;
-import java.util.Map.Entry;
+
+import javax.security.auth.DestroyFailedException;
 
 import io.minio.errors.InvalidArgumentException;
 
 public class CopyOptions extends Options {
+
+  String contentType;
+  ServerSideEncryption sourceEncryption;
 
   /**
    * CopyOptions default constructor.
@@ -34,20 +38,66 @@ public class CopyOptions extends Options {
    */
   public CopyOptions(CopyOptions options) {
     super(options);
+    this.sourceEncryption = options.sourceEncryption;
   }
 
-  /**
-   * Set the COPY headers for server-side-encryption. If the encryption is
-   * SSE-C only the source object is decrypt but the desitantion object is not
-   * encrypted. 
-   * 
-   * @param encryption The server-side-encryption method (SSE-C, SSE-S3 or SSE-KMS).
-   * @return the modified PutOptions instance.
-   * @throws InvalidArgumentException if the encryption parameter is null.
-   */
   @Override
-  public CopyOptions setEncryption(ServerSideEncryption encryption) throws InvalidArgumentException {
+  public void destroy() throws DestroyFailedException {
+    if (encryption != null) {
+      this.encryption.destroy();
+    }
+    if (sourceEncryption != null) {
+      this.sourceEncryption.destroy();
+    }
+  }
+
+  @Override
+  public boolean isDestroyed() {
+    if (this.encryption == null) {
+      return false;
+    }
+    if (this.sourceEncryption == null) {
+      return super.isDestroyed();
+    }
+    return super.isDestroyed() && this.sourceEncryption.isDestroyed();
+  }
+
+  @Override
+  public Map<String, String> getHeaders() {
+    Map<String, String> headers = super.getHeaders();
+    if (this.sourceEncryption != null) {
+      this.sourceEncryption.marshal(headers);
+    }
+    if (contentType != null) {
+      headers.put("Content-Type", this.contentType);
+    }
+    return headers;
+  }
+  
+  @Override
+  public CopyOptions setEncryption(ServerSideEncryption encryption) {
     super.setEncryption(encryption);
+    return this;
+  }
+
+  public String getContentType() {
+    return this.contentType;
+  }
+
+  public CopyOptions setContentType(String contentType) {
+    this.contentType = contentType;
+    return this;
+  }
+
+  @Override
+  public CopyOptions setMetadata(String key, String value) {
+    super.setMetadata(key, value);
+    return this;
+  }
+
+  @Override
+  public CopyOptions setMetadata(Map<String, String> metadata) {
+    super.setMetadata(metadata);
     return this;
   }
 
@@ -59,62 +109,15 @@ public class CopyOptions extends Options {
    * @param srcDecryption The server-side-encryption method - only SSE-C copy
    * @param dstEncryption The server-side-encryption method (SSE-C, SSE-S3 or SSE-KMS).
    * @return the modified PutOptions instance.
-   * @throws InvalidArgumentException if the encryption srcDecryption / dstEncryption is null or 
-   *                                  the srcDecryption is no SSE-C copy.
+   * @throws InvalidArgumentException if the rcDecryption is no SSE-C copy.
    */
-  public CopyOptions setEncryption(ServerSideEncryption srcDecryption, ServerSideEncryption dstEncryption)
+  public CopyOptions setCopyEncryption(ServerSideEncryption srcDecryption, ServerSideEncryption dstEncryption)
     throws InvalidArgumentException {
-    if (srcDecryption == null) {
-      throw new InvalidArgumentException("source decryption cannot be null");
-    }
-    if (dstEncryption == null) {
-      throw new InvalidArgumentException("destination encryption cannot be null");
-    }
-    if (!ServerSideEncryption.Type.SSE_C.equals(srcDecryption.getType())) {
+    if (srcDecryption != null && !ServerSideEncryption.Type.SSE_C.equals(srcDecryption.getType())) {
       throw new InvalidArgumentException("source decryption must be SSE-C");
     }
-
-    srcDecryption.marshal(this.headers);
-    dstEncryption.marshal(this.headers);
-    return this;
-  }
-
-  /**
-   * Set the content type of uploaded object.
-   * @param contentType The content type.
-   * @return the modified CopyOptions instance.
-   */
-  public CopyOptions setContentType(String contentType) {
-    setHeader("Content-Type", contentType);
-    return this;
-  }
-
-  /**
-   * Set the metadata key-value pair. If the key does not start
-   * with "X-Amz-" the prefix "X-Amz-Meta-" is added to the key. 
-   * @param key   The metadata key.
-   * @param value The metadata value.
-   * @return the modified CopyOptions instance.
-   */
-  public CopyOptions setMetadata(String key, String value) {
-    String normKey = key.toLowerCase();
-    if (!normKey.startsWith("x-amz-meta-") && !normKey.startsWith("x-amz-")) {
-      key = "X-Amz-Meta-" + key;
-    }
-    setHeader(key, value);
-    return this;
-  }
-
-  /**
-   * Set the metadata key-value pairs. If the one key does not start
-   * with "X-Amz-" the prefix "X-Amz-Meta-" is added to that key. 
-   * @param metadata The metadata key-value map.
-   * @return the modified CopyOptions instance.
-   */
-  public CopyOptions setMetadata(Map<String, String> metadata) {
-    for (Entry<String,String> entry : metadata.entrySet()) {
-      setMetadata(entry.getKey(), entry.getValue());
-    }
+    this.sourceEncryption = srcDecryption;
+    this.encryption = dstEncryption;
     return this;
   }
 }

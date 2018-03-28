@@ -56,6 +56,7 @@ import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import io.minio.policy.PolicyType;
 import io.minio.policy.BucketPolicy;
+import io.minio.ServerSideEncryption.Type;
 
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -1531,7 +1532,7 @@ public class MinioClient {
     if (options == null) {
       options = new GetOptions();
     }
-    HttpResponse response = executeGet(bucketName, objectName, options.headers, null);
+    HttpResponse response = executeGet(bucketName, objectName, options.getHeaders(), null);
     return response.body().byteStream();
   }
 
@@ -1844,7 +1845,7 @@ public class MinioClient {
     }
 
     // Set option headers.
-    headerMap.putAll(options.headers);
+    headerMap.putAll(options.getHeaders());
 
     HttpResponse response = executePut(destBucketName, destObjectName, headerMap,
         null, "", 0);
@@ -2875,7 +2876,7 @@ public class MinioClient {
     if (options == null) {
       options = new PutOptions();
     }
-    if (!options.valueOf("Content-Type").isPresent()) {
+    if (options.getContentType() == null) {
       options = new PutOptions(options);
       options.setContentType(Files.probeContentType(filePath));
     }
@@ -3111,7 +3112,7 @@ public class MinioClient {
       options = new PutOptions();
     }
     // Add content type if not already set
-    if (!options.valueOf("Content-Type").isPresent()) {
+    if (options.getContentType() == null) {
       options = new PutOptions(options);
       options.setContentType("application/octet-stream");
     }
@@ -3123,7 +3124,7 @@ public class MinioClient {
 
     if (size <= MIN_MULTIPART_SIZE) {
       // Single put object.
-      putObject(bucketName, objectName, size.intValue(), data, null, 0, options.headers);
+      putObject(bucketName, objectName, size.intValue(), data, null, 0, options.getHeaders());
       return;
     }
 
@@ -3149,7 +3150,11 @@ public class MinioClient {
     } else {
       // initiate new multipart upload ie no previous multipart found or no previous valid parts for
       // multipart found
-      uploadId = initMultipartUpload(bucketName, objectName, options.headers);
+      uploadId = initMultipartUpload(bucketName, objectName, options.getHeaders());
+    }
+    ServerSideEncryption encrypion = options.getEncryption();
+    if (encrypion != null && !encrypion.getType().equals(Type.SSE_C)) {
+      options = new PutOptions(options).setEncryption(null); // copy options but without SSE-S3 or SSE-KMS encryption
     }
 
     int expectedReadSize = partSize;
@@ -3167,7 +3172,7 @@ public class MinioClient {
         if (availableSize <= expectedReadSize) {
           // If it is first part, do single put object.
           if (partNumber == 1) {
-            putObject(bucketName, objectName, availableSize, data, null, 0, options.headers);
+            putObject(bucketName, objectName, availableSize, data, null, 0, options.getHeaders());
             // if its not resuming previous multipart, remove newly created multipart upload.
             if (!isResumeMultipart) {
               abortMultipartUpload(bucketName, objectName, uploadId);

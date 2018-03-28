@@ -17,40 +17,73 @@
 package io.minio;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.HashMap;
-import java.util.Optional;
 
-import io.minio.errors.InvalidArgumentException;
+import javax.security.auth.Destroyable;
+import javax.security.auth.DestroyFailedException;
 
-abstract class Options {
+abstract class Options implements Destroyable {
 
-  protected final Map<String,String> headers = new HashMap<>();
+  protected final Map<String,String> metadata = new HashMap<>();
+  
+  protected ServerSideEncryption encryption;
 
   public Options() {}
 
   public Options(Options options) {
     if (options != null) {
-      this.headers.putAll(options.headers);
+      this.metadata.putAll(options.metadata);
+      this.encryption = options.encryption;
     }
   }
 
-  protected Options setEncryption(ServerSideEncryption encryption) throws InvalidArgumentException {
-    if (encryption == null) {
-      throw new InvalidArgumentException("encryption cannot be null");
+  @Override
+  public void destroy() throws DestroyFailedException {
+    if (encryption != null) {
+      this.encryption.destroy();
     }
-    encryption.marshal(this.headers);
+  }
+
+  @Override
+  public boolean isDestroyed() {
+    if (encryption == null) {
+      return false;
+    }
+    return this.encryption.isDestroyed();
+  }
+
+  public Map<String, String> getHeaders() {
+    Map<String, String> headers = new HashMap<>();
+    if (this.encryption != null) {
+      this.encryption.marshal(headers);
+    }
+    headers.putAll(this.metadata);
+    return headers;
+  }
+
+  public Options setEncryption(ServerSideEncryption encryption) {
+    this.encryption = encryption;
     return this;
   }
 
-  protected void setHeader(String key, String value) {
-    headers.put(key, value);
+  public ServerSideEncryption getEncryption() {
+    return this.encryption;
   }
 
-  public Optional<String> valueOf(String key) {
-    String value = headers.get(key);
-    if (value == null) {
-      return Optional.empty();
+  public Options setMetadata(String key, String value) {
+    String normKey = key.toLowerCase();
+    if (!normKey.startsWith("x-amz-meta-")) {
+      key = "X-Amz-Meta-" + key;
     }
-    return Optional.of(value);
-  } 
+    metadata.put(key, value);
+    return this;
+  }
+
+  public Options setMetadata(Map<String, String> metadata) {
+    for (Entry<String,String> entry : metadata.entrySet()) {
+      setMetadata(entry.getKey(), entry.getValue());
+    }
+    return this;
+  }
 }
