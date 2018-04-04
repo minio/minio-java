@@ -1226,7 +1226,7 @@ public class MinioClient {
 
       xpp.setInput(response.body().charStream());
       while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
-        if (xpp.getEventType() ==  XmlPullParser.START_TAG && xpp.getName() == "LocationConstraint") {
+        if (xpp.getEventType() ==  XmlPullParser.START_TAG && "LocationConstraint".equals(xpp.getName())) {
           xpp.next();
           location = getText(xpp, location);
           break;
