@@ -19,9 +19,6 @@ import java.security.*;
 import java.math.BigInteger;
 import java.util.*;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
 import java.io.*;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -460,7 +457,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String filename = createFile1Mb();
-      client.putObject(bucketName, filename, filename, customContentType);
+      client.putObject(bucketName, filename, filename, new PutOptions().setContentType(customContentType));
       Files.delete(Paths.get(filename));
       ObjectStat objectStat = client.statObject(bucketName, filename);
       if (!customContentType.equals(objectStat.contentType())) {
@@ -491,7 +488,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 1 * MB, customContentType);
+      client.putObject(bucketName, objectName, is, 1 * MB, new PutOptions().setContentType(customContentType));
       is.close();
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (!customContentType.equals(objectStat.contentType())) {
@@ -527,7 +524,7 @@ public class FunctionalTest {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(13 * MB);
       try {
-        client.putObject(bucketName, objectName, is, size, nullContentType);
+        client.putObject(bucketName, objectName, is, size, new PutOptions().setContentType(nullContentType));
       } catch (EOFException e) {
         ignore();
       }
@@ -535,7 +532,7 @@ public class FunctionalTest {
 
       size = 13 * MB;
       is = new ContentInputStream(size);
-      client.putObject(bucketName, objectName, is, size, nullContentType);
+      client.putObject(bucketName, objectName, is, size, new PutOptions().setContentType(nullContentType));
       is.close();
       client.removeObject(bucketName, objectName);
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, long size,"
@@ -564,7 +561,7 @@ public class FunctionalTest {
     try {
       String objectName = "/path/to/" + getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 1 * MB, customContentType);
+      client.putObject(bucketName, objectName, is, 1 * MB, new PutOptions().setContentType(customContentType));
       is.close();
       client.removeObject(bucketName, objectName);
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, long size,"
@@ -592,7 +589,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(size);
-      client.putObject(bucketName, objectName, is, customContentType);
+      client.putObject(bucketName, objectName, is, new PutOptions().setContentType(customContentType));
       is.close();
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (!customContentType.equals(objectStat.contentType())) {
@@ -627,111 +624,6 @@ public class FunctionalTest {
 
   /**
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   *                 String contentType, SecretKey key).
-   */
-  public static void putObject_test9() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-                        + "long size, String contentType, SecretKey key)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-      keyGenerator.init(128);
-      SecretKey secretKey = keyGenerator.generateKey();
-
-      InputStream is = new ContentInputStream(13 * MB);
-      client.putObject(bucketName, objectName, is, 13 * MB, null, secretKey);
-      is.close();
-
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-                      + "long size, String contentType, SecretKey key)",
-                      "size: 13 MB", startTime);
-    } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
-                    + "long size, String contentType, SecretKey key)",
-                    "size: 13 MB", startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   *                 String contentType, KeyPair keyPair).
-   */
-  public static void putObject_test10() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-                        + "long size, String contentType, KeyPair keyPair).");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
-      keyGenerator.initialize(1024, new SecureRandom());
-      KeyPair keyPair = keyGenerator.generateKeyPair();
-
-      InputStream is = new ContentInputStream(13 * MB);
-      client.putObject(bucketName, objectName, is, 13 * MB, null, keyPair);
-      is.close();
-
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-                      + "long size, String contentType, KeyPair keyPair)",
-                      "size: 13 MB", startTime);
-    } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
-                    + "long size, String contentType, KeyPair keyPair)",
-                    "size: 13 MB", startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   *                 Map&lt;String, String&gt; headerMap).
-   */
-  public static void putObject_test11() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-                        + "long size, Map<String, String> headerMap).");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      InputStream is = new ContentInputStream(13 * MB);
-      client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
-      is.close();
-
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if (!customContentType.equals(objectStat.contentType())) {
-        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
-                            + objectStat.contentType());
-      }
-      client.removeObject(bucketName, objectName);
-
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-                       + "long size, Map<String, String> headerMap)",
-                      "size: 13 MB", startTime);
-    } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
-                       + "long size, Map<String, String> headerMap)",
-                    "size: 13 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                 Map&lt;String, String&gt; headerMap) with Storage Class REDUCED_REDUNDANCY.
    */
   public static void putObject_test12() throws Exception {
@@ -744,11 +636,11 @@ public class FunctionalTest {
     try {
       String storageClass = "REDUCED_REDUNDANCY";
       String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      headerMap.put("X-Amz-Storage-Class", storageClass);
+      PutOptions options = new PutOptions(); 
+      options.setContentType(customContentType);
+      options.setMetadata("X-Amz-Storage-Class", storageClass);
       InputStream is = new ContentInputStream(13 * MB);
-      client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
+      client.putObject(bucketName, objectName, is, 13 * MB, options);
       is.close();
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -793,11 +685,11 @@ public class FunctionalTest {
     try {
       String storageClass = "STANDARD";
       String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      headerMap.put("X-Amz-Storage-Class", storageClass);
+      PutOptions options = new PutOptions(); 
+      options.setContentType(customContentType);
+      options.setMetadata("X-Amz-Storage-Class", storageClass);
       InputStream is = new ContentInputStream(13 * MB);
-      client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
+      client.putObject(bucketName, objectName, is, 13 * MB, options);
       is.close();
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -840,13 +732,13 @@ public class FunctionalTest {
     try {
       String storageClass = "INVALID";
       String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      headerMap.put("X-Amz-Storage-Class", storageClass);
+      PutOptions options = new PutOptions(); 
+      options.setContentType(customContentType);
+      options.setMetadata("X-Amz-Storage-Class", storageClass);
       InputStream is = new ContentInputStream(13 * MB);
   
       try {
-        client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
+        client.putObject(bucketName, objectName, is, 13 * MB, options);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("InvalidStorageClass")) {
           throw e;
@@ -877,11 +769,11 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      headerMap.put("x-amz-meta-my-custom-data", "foo");
+      PutOptions options = new PutOptions(); 
+      options.setContentType(customContentType);
+      options.setMetadata("my-custom-data", "foo");
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectName, is, 1, headerMap);
+      client.putObject(bucketName, objectName, is, 1, options);
       is.close();
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -924,7 +816,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       is = client.getObject(bucketName, objectName);
@@ -950,10 +842,10 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
-      is = client.getObject(bucketName, objectName, 1000L);
+      is = client.getObject(bucketName, objectName, new GetOptions().setRange(1000L));
       is.close();
       client.removeObject(bucketName, objectName);
       mintSuccessLog("getObject(String bucketName, String objectName, long offset)", "offset: 1000", startTime);
@@ -976,10 +868,10 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
-      is = client.getObject(bucketName, objectName, 1000L, 1024 * 1024L);
+      is = client.getObject(bucketName, objectName, new GetOptions().setRange(1000L, 1024 * 1024L));
       is.close();
       client.removeObject(bucketName, objectName);
       mintSuccessLog("getObject(String bucketName, String objectName, long offset, Long length)",
@@ -1004,7 +896,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       client.getObject(bucketName, objectName, objectName + ".downloaded");
@@ -1035,7 +927,7 @@ public class FunctionalTest {
     String objectName = "path/to/" + baseObjectName;
     try {
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       client.getObject(bucketName, objectName, baseObjectName + ".downloaded");
@@ -1053,82 +945,6 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: getObject(String bucketName, String objectName, SecretKey key).
-   */
-  public static void getObject_test6() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, SecretKey key).");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-      keyGenerator.init(128);
-      SecretKey secretKey = keyGenerator.generateKey();
-      InputStream is = new ContentInputStream(13 * MB);
-      client.putObject(bucketName, objectName, is, 13 * MB, null, secretKey);
-      is.close();
-
-      is = new ContentInputStream(13 * MB);
-      byte[] inBytes = readAllBytes(is);
-      is.close();
-
-      is = client.getObject(bucketName, objectName, secretKey);
-      byte[] outBytes = readAllBytes(is);
-      is.close();
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("getObject(String bucketName, String objectName, SecretKey key)", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, SecretKey key)", null, startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: getObject(String bucketName, String objectName, KeyPair keyPair).
-   */
-  public static void getObject_test7() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, KeyPair keyPair).");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
-      keyGenerator.initialize(1024, new SecureRandom());
-      KeyPair keyPair = keyGenerator.generateKeyPair();
-      InputStream is = new ContentInputStream(13 * MB);
-      client.putObject(bucketName, objectName, is, 13 * MB, null, keyPair);
-      is.close();
-
-      is = new ContentInputStream(13 * MB);
-      byte[] inBytes = readAllBytes(is);
-      is.close();
-
-      is = client.getObject(bucketName, objectName, keyPair);
-      byte[] outBytes = readAllBytes(is);
-      is.close();
-
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-      client.removeObject(bucketName, objectName);
-
-      mintSuccessLog("getObject(String bucketName, String objectName, KeyPair keyPair)", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, KeyPair keyPair)", null, startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
    * Test: getObject(String bucketName, String objectName) zero size object.
    */
   public static void getObject_test8() throws Exception {
@@ -1140,7 +956,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(0);
-      client.putObject(bucketName, objectName, is, 0, nullContentType);
+      client.putObject(bucketName, objectName, is, 0, new PutOptions().setContentType(nullContentType));
       is.close();
 
       is = client.getObject(bucketName, objectName);
@@ -1169,7 +985,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         InputStream is = new ContentInputStream(1);
-        client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
+        client.putObject(bucketName, objectNames[i], is, 1, new PutOptions().setContentType(nullContentType));
         is.close();
       }
 
@@ -1208,7 +1024,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         InputStream is = new ContentInputStream(1);
-        client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
+        client.putObject(bucketName, objectNames[i], is, 1, new PutOptions().setContentType(nullContentType));
         is.close();
       }
 
@@ -1247,7 +1063,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         InputStream is = new ContentInputStream(1);
-        client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
+        client.putObject(bucketName, objectNames[i], is, 1, new PutOptions().setContentType(nullContentType));
         is.close();
       }
 
@@ -1318,7 +1134,7 @@ public class FunctionalTest {
       for (i = 0; i < objCount; i++) {
         objectNames[i] = getRandomName();
         InputStream is = new ContentInputStream(1);
-        client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
+        client.putObject(bucketName, objectNames[i], is, 1, new PutOptions().setContentType(nullContentType));
         is.close();
       }
 
@@ -1362,7 +1178,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         InputStream is = new ContentInputStream(1);
-        client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
+        client.putObject(bucketName, objectNames[i], is, 1, new PutOptions().setContentType(nullContentType));
         is.close();
       }
 
@@ -1402,7 +1218,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(1);
-      client.putObject(bucketName, objectName, is, 1, nullContentType);
+      client.putObject(bucketName, objectName, is, 1, new PutOptions().setContentType(nullContentType));
       is.close();
 
       client.removeObject(bucketName, objectName);
@@ -1428,7 +1244,7 @@ public class FunctionalTest {
       for (int i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         InputStream is = new ContentInputStream(1);
-        client.putObject(bucketName, objectNames[i], is, 1, nullContentType);
+        client.putObject(bucketName, objectNames[i], is, 1, new PutOptions().setContentType(nullContentType));
         is.close();
       }
       objectNames[3] = "nonexistent-object";
@@ -1457,7 +1273,7 @@ public class FunctionalTest {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(6 * MB);
       try {
-        client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
+        client.putObject(bucketName, objectName, is, 9 * MB, new PutOptions().setContentType(nullContentType));
       } catch (EOFException e) {
         ignore();
       }
@@ -1493,7 +1309,7 @@ public class FunctionalTest {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(6 * MB);
       try {
-        client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
+        client.putObject(bucketName, objectName, is, 9 * MB, new PutOptions().setContentType(nullContentType));
       } catch (EOFException e) {
         ignore();
       }
@@ -1530,7 +1346,7 @@ public class FunctionalTest {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(6 * MB);
       try {
-        client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
+        client.putObject(bucketName, objectName, is, 9 * MB, new PutOptions().setContentType(nullContentType));
       } catch (EOFException e) {
         ignore();
       }
@@ -1568,7 +1384,7 @@ public class FunctionalTest {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(6 * MB);
       try {
-        client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
+        client.putObject(bucketName, objectName, is, 9 * MB, new PutOptions().setContentType(nullContentType));
       } catch (EOFException e) {
         ignore();
       }
@@ -1603,7 +1419,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       is = new ContentInputStream(3 * MB);
@@ -1638,7 +1454,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       is = new ContentInputStream(3 * MB);
@@ -1672,7 +1488,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       is = new ContentInputStream(3 * MB);
@@ -1846,7 +1662,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       String destBucketName = getRandomName();
@@ -1880,7 +1696,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       String destBucketName = getRandomName();
@@ -1925,7 +1741,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       String destBucketName = getRandomName();
@@ -1968,7 +1784,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       String destBucketName = getRandomName();
@@ -2011,7 +1827,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       String destBucketName = getRandomName();
@@ -2058,7 +1874,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       String destBucketName = getRandomName();
@@ -2104,7 +1920,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, nullContentType);
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType(nullContentType));
       is.close();
 
       String destBucketName = getRandomName();
@@ -2155,7 +1971,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       InputStream is = new ContentInputStream(3 * MB);
-      client.putObject(bucketName, objectName, is, 3 * MB, "application/octet-stream");
+      client.putObject(bucketName, objectName, is, 3 * MB, new PutOptions().setContentType("application/octet-stream"));
       is.close();
 
       String destBucketName = getRandomName();
@@ -2164,10 +1980,10 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      Map<String, String> metadata = new HashMap<>();
-      metadata.put("Content-Type", customContentType);
+      CopyOptions options = new CopyOptions();
+      options.setContentType(customContentType);
 
-      client.copyObject(bucketName, objectName, destBucketName, objectName, copyConditions, metadata);
+      client.copyObject(bucketName, objectName, destBucketName, objectName, copyConditions, options);
 
       ObjectStat objectStat = client.statObject(destBucketName, objectName);
       if (!customContentType.equals(objectStat.contentType())) {
@@ -2359,7 +2175,7 @@ public class FunctionalTest {
 
       String objectName = objectPrefix + "/" + getRandomName();
       InputStream is = new ContentInputStream(16);
-      client.putObject(bucketName, objectName, is, 16, "application/octet-stream");
+      client.putObject(bucketName, objectName, is, 16, new PutOptions().setContentType("application/octet-stream"));
       is.close();
 
       String urlString = client.getObjectUrl(bucketName, objectName);
@@ -2421,7 +2237,8 @@ public class FunctionalTest {
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
 
       if (policyType == PolicyType.READ_ONLY) {
-        client.putObject(bucketName, objectName, new ByteArrayInputStream(data), data.length, customContentType);
+        PutOptions options = new PutOptions().setContentType(customContentType);
+        client.putObject(bucketName, objectName, new ByteArrayInputStream(data), data.length, options);
       }
 
       if ((policyType == PolicyType.READ_WRITE) || (policyType == PolicyType.WRITE_ONLY)) {
@@ -2687,9 +2504,6 @@ public class FunctionalTest {
     putObject_test6();
     putObject_test7();
     putObject_test8();
-    putObject_test9();
-    putObject_test10();
-    putObject_test11();
     putObject_test12();
     putObject_test13();
     putObject_test14();
@@ -2701,8 +2515,6 @@ public class FunctionalTest {
     getObject_test3();
     getObject_test4();
     getObject_test5();
-    getObject_test6();
-    getObject_test7();
     getObject_test8();
 
     listObject_test1();

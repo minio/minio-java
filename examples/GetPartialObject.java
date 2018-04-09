@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import io.minio.GetOptions;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 
@@ -48,7 +49,9 @@ public class GetPartialObject {
 
       // Get input stream to have content of 'my-objectname' from 'my-bucketname' starts from
       // byte position 1024 and length 4096.
-      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
+      GetOptions options = new GetOptions();
+      options.setRange(1024L, 4096L);
+      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", options);
 
       // Read the input stream and print to the console till EOF.
       byte[] buf = new byte[16384];

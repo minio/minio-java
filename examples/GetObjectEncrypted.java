@@ -17,21 +17,19 @@
 
 import java.io.InputStream;
 import java.io.IOException;
+
 import java.security.NoSuchAlgorithmException;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+
+import javax.crypto.spec.SecretKeySpec;
+
 import java.nio.charset.StandardCharsets;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import io.minio.GetOptions;
 import io.minio.MinioClient;
+import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 
 public class GetObjectEncrypted {
@@ -39,8 +37,7 @@ public class GetObjectEncrypted {
    * MinioClient.getObject() example.
    */
   public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException, NoSuchPaddingException,
-      InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.minio.io for test and development. */
       MinioClient minioClient = new MinioClient("http://localhost:9001", "YLH2I0HHUGPF22H2ZH2T",
@@ -50,18 +47,14 @@ public class GetObjectEncrypted {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       // "YOUR-SECRETACCESSKEY");
 
-      // Generate symmetric 256 bit AES key.
-      KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-      symKeyGenerator.init(256);
-      SecretKey symKey = symKeyGenerator.generateKey();
-
-      // Or Generate RSA key pair
-      // KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
-      // keyGenerator.initialize(1024, new SecureRandom());
-      // KeyPair keypair = keyGenerator.generateKeyPair();
+      
+      // Specify a 256 bit AES key. 
+      GetOptions options = new GetOptions();
+      byte[] encodedKey = "My custom 32 byte secret AES key".getBytes("UTF-8"); // Use your own key here
+      options.setEncryption(ServerSideEncryption.withCustomerKey(new SecretKeySpec(encodedKey, "AES")));
 
       // Get input stream to have content of 'my-objectname' from 'my-bucketname'
-      InputStream stream = minioClient.getObject("testbucket", "my-objectname", symKey);
+      InputStream stream = minioClient.getObject("testbucket", "my-objectname", options);
 
       // Read the input stream and print to the console till EOF.
       byte[] buf = new byte[16384];
