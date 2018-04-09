@@ -66,8 +66,6 @@ import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.Item;
 import io.minio.messages.Owner;
-import io.minio.policy.BucketPolicy;
-import io.minio.policy.PolicyType;
 import okio.Buffer;
 
 @SuppressWarnings("unused")
@@ -1014,82 +1012,7 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testSetBucketPolicyReadOnly()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    // Create Mock web server and mocked responses
-    MockWebServer server = new MockWebServer();
-    MockResponse response1 = new MockResponse();
-    MockResponse response2 = new MockResponse();
-
-    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response1.setResponseCode(200);
-    response1.setBody("{\"Version\":\"2012-10-17\",\"Statement\":[]}");
-
-    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response2.setResponseCode(200);
-
-    server.enqueue(response1);
-    server.enqueue(response2);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    // Set the bucket policy for a bucket
-    client.setBucketPolicy(BUCKET, "uploads", PolicyType.READ_ONLY);
-  }
-
-  @Test
-  public void testSetBucketPolicyWriteOnly()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    // Create Mock web server and mocked responses
-    MockWebServer server = new MockWebServer();
-    MockResponse response1 = new MockResponse();
-    MockResponse response2 = new MockResponse();
-
-    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response1.setResponseCode(200);
-    response1.setBody("{\"Version\":\"2012-10-17\",\"Statement\":[]}");
-
-    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response2.setResponseCode(200);
-
-    server.enqueue(response1);
-    server.enqueue(response2);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    // Set the bucket policy for a bucket
-    client.setBucketPolicy(BUCKET, "uploads", PolicyType.WRITE_ONLY);
-  }
-
-  @Test
-  public void testSetBucketPolicyReadWrite()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    // Create Mock web server and mocked responses
-    MockWebServer server = new MockWebServer();
-    MockResponse response1 = new MockResponse();
-    MockResponse response2 = new MockResponse();
-
-    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response1.setResponseCode(200);
-    response1.setBody("{\"Version\":\"2012-10-17\",\"Statement\":[]}");
-
-    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response2.setResponseCode(200);
-
-    server.enqueue(response1);
-    server.enqueue(response2);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    // Set the bucket policy for a bucket
-    client.setBucketPolicy(BUCKET, "uploads", PolicyType.READ_WRITE);
-  }
-
-  @Test
-  public void testGetBucketPolicyReadOnly()
+  public void testSetBucketPolicy()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     // Create Mock web server and mocked responses
     MockWebServer server = new MockWebServer();
@@ -1098,37 +1021,27 @@ public class MinioClientTest {
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
 
-    BucketPolicy policy = new BucketPolicy(BUCKET);
-    policy.setPolicy(PolicyType.READ_ONLY, "uploads");
-    String jsonString = policy.getJson();
-
-    response.setBody(jsonString);
-
     server.enqueue(response);
     server.start();
 
     MinioClient client = new MinioClient(server.url(""));
 
-    // Get the bucket policy for the new bucket and check
-    PolicyType policyType = client.getBucketPolicy(BUCKET, "uploads");
-    assertEquals(PolicyType.READ_ONLY, policyType);
+    // Set the bucket policy for a bucket
+    client.setBucketPolicy(BUCKET, "{\"Version\":\"2012-10-17\",\"Statement\":[]}");
   }
 
   @Test
-  public void testGetBucketPolicyWriteOnly()
+  public void testGetBucketPolicy()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     // Create Mock web server and mocked responses
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
+    String expectedPolicyString = "{\"Version\":\"2012-10-17\",\"Statement\":[]}";
+
     response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
-
-    BucketPolicy policy = new BucketPolicy(BUCKET);
-    policy.setPolicy(PolicyType.WRITE_ONLY, "uploads");
-    String jsonString = policy.getJson();
-
-    response.setBody(jsonString);
+    response.setBody(expectedPolicyString);
 
     server.enqueue(response);
     server.start();
@@ -1136,33 +1049,7 @@ public class MinioClientTest {
     MinioClient client = new MinioClient(server.url(""));
 
     // Get the bucket policy for the new bucket and check
-    PolicyType policyType = client.getBucketPolicy(BUCKET, "uploads");
-    assertEquals(PolicyType.WRITE_ONLY, policyType);
-  }
-
-  @Test
-  public void testGetBucketPolicyReadWrite()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    // Create Mock web server and mocked responses
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.setResponseCode(200);
-
-    BucketPolicy policy = new BucketPolicy(BUCKET);
-    policy.setPolicy(PolicyType.READ_WRITE, "uploads");
-    String jsonString = policy.getJson();
-
-    response.setBody(jsonString);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    // Get the bucket policy for the new bucket and check
-    PolicyType policyType = client.getBucketPolicy(BUCKET, "uploads");
-    assertEquals(PolicyType.READ_WRITE, policyType);
+    String policyString = client.getBucketPolicy(BUCKET);
+    assertEquals(expectedPolicyString, policyString);
   }
 }
