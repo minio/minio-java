@@ -20,6 +20,7 @@ package io.minio;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -60,13 +61,11 @@ import io.minio.policy.PolicyType;
 import io.minio.policy.BucketPolicy;
 
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okio.BufferedSink;
-import okio.Okio;
+import okhttp3.ResponseBody;
 
 import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
@@ -82,7 +81,6 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.StringReader;
 import java.net.URL;
-import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -997,52 +995,7 @@ public class MinioClient {
 
     RequestBody requestBody = null;
     if (body != null) {
-      final Object data = body;
-      final int len = length;
-      requestBody = new RequestBody() {
-        @Override
-        public MediaType contentType() {
-          MediaType mediaType = null;
-
-          if (contentType != null) {
-            mediaType = MediaType.parse(contentType);
-          }
-          if (mediaType == null) {
-            mediaType = MediaType.parse("application/octet-stream");
-          }
-
-          return mediaType;
-        }
-
-        @Override
-        public long contentLength() {
-          if (data instanceof InputStream || data instanceof RandomAccessFile || data instanceof byte[]) {
-            return len;
-          }
-
-          if (len == 0) {
-            return -1;
-          } else {
-            return len;
-          }
-        }
-
-        @Override
-        public void writeTo(BufferedSink sink) throws IOException {
-          if (data instanceof InputStream) {
-            InputStream stream = (InputStream) data;
-            sink.write(Okio.source(stream), len);
-          } else if (data instanceof RandomAccessFile) {
-            RandomAccessFile file = (RandomAccessFile) data;
-            sink.write(Okio.source(Channels.newInputStream(file.getChannel())), len);
-          } else if (data instanceof byte[]) {
-            byte[] bytes = (byte[]) data;
-            sink.write(bytes, 0, len);
-          } else {
-            sink.writeUtf8(data.toString());
-          }
-        }
-      };
+      requestBody = new MinioRequestBody(contentType, body, length);
     }
 
     requestBuilder.method(method.toString(), requestBody);
