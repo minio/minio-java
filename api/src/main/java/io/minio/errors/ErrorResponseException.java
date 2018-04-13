@@ -54,7 +54,7 @@ public class ErrorResponseException extends MinioException {
   @Override
   public String toString() {
     Request request = response.request();
-    return "error occured\n"
+    return "error occurred\n"
         + errorResponse.getString() + "\n"
         + "request={"
         + "method=" + request.method() + ", "

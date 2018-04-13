@@ -1014,7 +1014,6 @@ public class MinioClient {
    * @param objectName     Object name in the bucket.
    * @param headerMap      Map of HTTP headers for the request.
    * @param queryParamMap  Map of HTTP query parameters of the request.
-   * @param contentType    Content type of the request body.
    * @param body           HTTP request body.
    * @param length         Length of HTTP request body.
    */
@@ -2694,10 +2693,10 @@ public class MinioClient {
   /**
    * Returns {@link ListBucketResult} of given bucket, marker, prefix and delimiter.
    *
-   * @param bucketName Bucket name.
-   * @param marker     Marker string.  List objects whose name is greater than `marker`.
-   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
-   * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
+   * @param bucketName        Bucket name.
+   * @param continuationToken Marker string.  List objects whose name is greater than `marker`.
+   * @param prefix            Prefix string.  List objects whose name starts with `prefix`.
+   * @param delimiter         Delimiter string.  Group objects whose name contains `delimiter`.
    */
   private ListBucketResult listObjectsV2(String bucketName, String continuationToken, String prefix, String delimiter)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -2866,7 +2865,6 @@ public class MinioClient {
    * @param marker     Marker string.  List objects whose name is greater than `marker`.
    * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
    * @param delimiter  delimiter string.  Group objects whose name contains `delimiter`.
-   * @param maxKeys    Maximum number of entries to be returned.
    */
   private ListBucketResultV1 listObjectsV1(String bucketName, String marker, String prefix, String delimiter)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,

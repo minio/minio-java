@@ -108,7 +108,7 @@ class Signer {
    * @param region         Amazon AWS region for the request.
    * @param accessKey      Access Key string.
    * @param secretKey      Secret Key string.
-   * @param prevSignaure   Previous signature of chunk upload.
+   * @param prevSignature  Previous signature of chunk upload.
    *
    */
   public Signer(Request request, String contentSha256, DateTime date, String region, String accessKey,
