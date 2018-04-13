@@ -86,9 +86,7 @@ public class PutObjectUiProgressBar extends JFrame {
     // "YOUR-SECRETACCESSKEY");
 
     File file = new File(fileName);
-    BufferedInputStream bis;
-    try {
-      bis = new BufferedInputStream(new FileInputStream(file));
+    try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file))) {
       ProgressMonitorInputStream pmis = new ProgressMonitorInputStream(
           this,
           "Uploading... " + file.getAbsolutePath(),
@@ -96,7 +94,6 @@ public class PutObjectUiProgressBar extends JFrame {
 
       pmis.getProgressMonitor().setMillisToPopup(10);
       minioClient.putObject("bank", "my-objectname", pmis, bis.available(), "application/octet-stream");
-      pmis.close();
       System.out.println("my-objectname is uploaded successfully");
     } catch (FileNotFoundException e) {
       // TODO Auto-generated catch block
