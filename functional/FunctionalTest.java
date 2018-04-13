@@ -2663,7 +2663,7 @@ public class FunctionalTest {
    */
   public static void runTests() throws Exception {
     makeBucket_test1();
-    if (endpoint.toLowerCase().contains("s3")) {
+    if (endpoint.toLowerCase(Locale.US).contains("s3")) {
       makeBucketwithRegion_test();
       makeBucketWithPeriod_test();
     }
