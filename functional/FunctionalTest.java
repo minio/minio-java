@@ -759,14 +759,14 @@ public class FunctionalTest {
       }
       Map<String, List<String>> returnHeader = objectStat.httpHeaders();
       List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
-      
+
       if ((returnStorageClass != null) && (!storageClass.equals(returnStorageClass.get(0)))) {
         throw new Exception("Metadata mismatch");
       } else if (returnStorageClass == null) {
         // This is a success case as Gateways may not return the storage class - based on the 
         // gateway type
       }
-      
+
       client.removeObject(bucketName, objectName);
 
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
@@ -779,7 +779,7 @@ public class FunctionalTest {
       throw e;
     }
   }
-  
+
   /**
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                  Map&lt;String, String&gt; headerMap) with Storage Class STANDARD.
@@ -808,12 +808,12 @@ public class FunctionalTest {
       }
       Map<String, List<String>> returnHeader = objectStat.httpHeaders();
       List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
-      
+
       // Standard storage class shouldn't be present in metadata response
       if (returnStorageClass != null) {
         throw new Exception("Did not expect: " + storageClass + " in response metadata");
       }
-      
+
       client.removeObject(bucketName, objectName);
 
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
@@ -826,7 +826,7 @@ public class FunctionalTest {
       throw e;
     }
   }
-  
+
   /**
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                 Map&lt;String, String&gt; headerMap). with invalid Storage Class set
@@ -863,7 +863,7 @@ public class FunctionalTest {
       throw e;
     }
   }
-  
+
   /**
    * Test: statObject(String bucketName, String objectName).
    */
