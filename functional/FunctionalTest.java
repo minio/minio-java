@@ -734,6 +734,7 @@ public class FunctionalTest {
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                 Map&lt;String, String&gt; headerMap) with Storage Class REDUCED_REDUNDANCY.
    */
+  @SuppressFBWarnings("UCF")
   public static void putObject_test12() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
