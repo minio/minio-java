@@ -49,7 +49,7 @@ class Resources extends HashSet<String> {
 
   private boolean matched(String pattern, String resource) {
     if (pattern.isEmpty()) {
-      return (resource == pattern);
+      return resource.isEmpty();
     }
 
     if (pattern.equals("*")) {
