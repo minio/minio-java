@@ -28,6 +28,8 @@ import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import org.joda.time.DateTime;
 
 import okhttp3.OkHttpClient;
@@ -42,7 +44,7 @@ import io.minio.messages.*;
 import io.minio.errors.*;
 import io.minio.policy.*;
 
-
+@SuppressFBWarnings(value = "REC", justification = "Allow catching super class Exception since it's tests")
 public class FunctionalTest {
   private static final String PASS = "PASS";
   private static final String FAILED = "FAIL";
