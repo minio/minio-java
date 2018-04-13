@@ -21,6 +21,8 @@ import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * <b>Regular Expression</b> validation (using JDK 1.4+ regex support).
  * <p>
@@ -161,6 +163,7 @@ public class RegexValidator implements Serializable {
    * @param value The value to validate.
    * @return String array of the <i>groups</i> matched if valid or <code>null</code> if invalid
    */
+  @SuppressFBWarnings(value = "PZLA", justification = "Null is checked, not empty array. API is clear as well.")
   public String[] match(String value) {
     if (value == null) {
       return null;

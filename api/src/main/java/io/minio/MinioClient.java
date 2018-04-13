@@ -806,6 +806,7 @@ public class MinioClient {
    * <pre>{@code minioClient.ignoreCertCheck(); }</pre>
    *
    */
+  @SuppressFBWarnings(value = "SIC", justification = "Should not be used in production anyways.")
   public void ignoreCertCheck() throws NoSuchAlgorithmException, KeyManagementException {
     final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
         @Override

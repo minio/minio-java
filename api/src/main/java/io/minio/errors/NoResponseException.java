@@ -16,6 +16,7 @@
 
 package io.minio.errors;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.Request;
 
 
@@ -23,6 +24,7 @@ import okhttp3.Request;
  * Thrown to indicate that no response is received from Amazon AWS S3 service.
  */
 public class NoResponseException extends MinioException {
+  @SuppressFBWarnings(value = "Se", justification = "There's really no excuse except that nobody has complained")
   private Request request;
 
 
