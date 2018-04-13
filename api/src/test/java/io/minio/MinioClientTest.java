@@ -51,6 +51,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.BaseEncoding;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -107,6 +109,7 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
+  @SuppressFBWarnings("NP")
   @Test(expected = NullPointerException.class)
   public void newClientWithNullUrlFails() throws NullPointerException, MinioException {
     URL url = null;
@@ -138,6 +141,7 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
+  @SuppressFBWarnings("NP")
   @Test(expected = MinioException.class)
   public void newClientWithNullStringFails() throws InvalidArgumentException, MinioException {
     String url = null;
@@ -369,6 +373,7 @@ public class MinioClientTest {
     assertEquals(expectedObject, new String(result, StandardCharsets.UTF_8));
   }
 
+  @SuppressFBWarnings("NP")
   @Test(expected = InvalidArgumentException.class)
   public void testGetObjectEncryptedAesFailsWithoutEncMaterials()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
@@ -501,6 +506,7 @@ public class MinioClientTest {
     assertEquals(expectedObject, new String(result, StandardCharsets.UTF_8));
   }
 
+  @SuppressFBWarnings("NP")
   @Test(expected = InvalidArgumentException.class)
   public void testGetObjectEncryptedRsaFailsWithoutEncMaterials()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
@@ -903,6 +909,7 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
+  @SuppressFBWarnings("NP")
   @Test
   public void testSpecialCharsNameWorks()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
@@ -930,6 +937,7 @@ public class MinioClientTest {
     client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11, contentType);
   }
 
+  @SuppressFBWarnings("NP")
   @Test
   public void testNullContentTypeWorks()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
