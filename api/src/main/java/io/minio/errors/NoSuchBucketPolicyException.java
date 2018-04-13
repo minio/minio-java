@@ -23,10 +23,10 @@ import io.minio.policy.BucketPolicy;
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class NoSuchBucketPolicyException extends MinioException {
+  private static final long serialVersionUID = -3392257033352506375L;
+
   private final String bucketName;
   private final String objectPrefix;
-  private final BucketPolicy bucketPolicy;
-
 
   /**
    * Constructs a new NoSuchBucketPolicyException with bucket name caused the error and error message.
@@ -35,7 +35,6 @@ public class NoSuchBucketPolicyException extends MinioException {
     super();
     this.bucketName = bucketName;
     this.objectPrefix = objectPrefix;
-    this.bucketPolicy = bucketPolicy;
   }
 
 
