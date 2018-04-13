@@ -1178,18 +1178,17 @@ public class MinioClient {
       XmlPullParser xpp = xmlPullParserFactory.newPullParser();
       String location = null;
 
-      xpp.setInput(response.body().charStream());
-      while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
-        if (xpp.getEventType() ==  XmlPullParser.START_TAG && "LocationConstraint".equals(xpp.getName())) {
+      try (ResponseBody body = response.body()) {
+        xpp.setInput(body.charStream());
+        while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
+          if (xpp.getEventType() == XmlPullParser.START_TAG && "LocationConstraint".equals(xpp.getName())) {
+            xpp.next();
+            location = getText(xpp);
+            break;
+          }
           xpp.next();
-          location = getText(xpp, location);
-          break;
         }
-        xpp.next();
       }
-
-      // close response body.
-      response.body().close();
 
       String region;
       if (location == null) {
@@ -1228,11 +1227,11 @@ public class MinioClient {
   /**
    * Returns text of given XML element.
    */
-  private String getText(XmlPullParser xpp, String location) throws XmlPullParserException {
+  private String getText(XmlPullParser xpp) throws XmlPullParserException {
     if (xpp.getEventType() == XmlPullParser.TEXT) {
       return xpp.getText();
     }
-    return location;
+    return null;
   }
 
 
