@@ -20,6 +20,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 class Resources extends HashSet<String> {
+  private static final long serialVersionUID = -8641705989641179883L;
+
   public Resources() {
     super();
   }

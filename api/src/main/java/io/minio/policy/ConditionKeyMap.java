@@ -21,6 +21,8 @@ import java.util.Hashtable;
 import java.util.Set;
 
 class ConditionKeyMap extends Hashtable<String, Set<String>> {
+  private static final long serialVersionUID = -7097601792675705676L;
+
   public ConditionKeyMap() {
     super();
   }

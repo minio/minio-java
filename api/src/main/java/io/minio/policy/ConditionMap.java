@@ -19,6 +19,8 @@ package io.minio.policy;
 import java.util.Hashtable;
 
 class ConditionMap extends Hashtable<String, ConditionKeyMap> {
+  private static final long serialVersionUID = -2324667732749468390L;
+
   public ConditionMap() {
     super();
   }
