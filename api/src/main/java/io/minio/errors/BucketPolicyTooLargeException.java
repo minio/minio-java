@@ -16,31 +16,25 @@
 
 package io.minio.errors;
 
-import io.minio.policy.BucketPolicy;
-
 /**
  * Thrown to indicate that given bucket name is not valid.
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class NoSuchBucketPolicyException extends MinioException {
+public class BucketPolicyTooLargeException extends MinioException {
   private final String bucketName;
-  private final String objectPrefix;
-  private final BucketPolicy bucketPolicy;
 
 
   /**
-   * Constructs a new NoSuchBucketPolicyException with bucket name caused the error and error message.
+   * Constructs a new BucketPolicyTooLargeException with bucket name caused the error and error message.
    */
-  public NoSuchBucketPolicyException(String bucketName, String objectPrefix, BucketPolicy bucketPolicy) {
+  public BucketPolicyTooLargeException(String bucketName) {
     super();
     this.bucketName = bucketName;
-    this.objectPrefix = objectPrefix;
-    this.bucketPolicy = bucketPolicy;
   }
 
 
   @Override
   public String toString() {
-    return String.format("No policy exists on %s/%s", this.bucketName, this.objectPrefix) + ": " + super.toString();
+    return String.format("Bucket policy is too large for bucket %s", this.bucketName);
   }
 }
