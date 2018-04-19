@@ -2075,7 +2075,7 @@ public class MinioClient {
     // For now ignore the copyObjectResult, just read and parse it.
     CopyObjectResult result = new CopyObjectResult();
     try (ResponseBody body = response.body()) {
-	result.parseXml(body.charStream());
+      result.parseXml(body.charStream());
     }
   }
 

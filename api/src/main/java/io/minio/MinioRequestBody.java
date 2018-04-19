@@ -27,7 +27,7 @@ import okio.BufferedSink;
 import okio.Okio;
 
 /**
- * RequestBody with that wraps a single data object
+ * RequestBody that wraps a single data object.
  */
 class MinioRequestBody extends RequestBody {
   private final String contentType;
