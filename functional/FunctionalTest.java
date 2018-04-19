@@ -42,7 +42,6 @@ import okhttp3.Response;
 import io.minio.*;
 import io.minio.messages.*;
 import io.minio.errors.*;
-import io.minio.policy.*;
 
 @SuppressFBWarnings(value = "REC", justification = "Allow catching super class Exception since it's tests")
 public class FunctionalTest {
@@ -2188,21 +2187,24 @@ public class FunctionalTest {
   }
 
   /**
-   * Test get bucket policy for given policy type.
+   * Test: getBucketPolicy(String bucketName).
    */
-  public static void testGetBucketPolicy(String objectPrefix, PolicyType policyType) throws Exception {
+  public static void getBucketPolicy_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: " + policyType + ": getBucketPolicy(String bucketName, String objectPrefix)");
+      System.out.println("Test: getBucketPolicy(String bucketName)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      client.setBucketPolicy(bucketName, objectPrefix, policyType);
-      PolicyType type = client.getBucketPolicy(bucketName, objectPrefix);
-      if (type != policyType) {
-        throw new Exception("[FAILED] Expected: " + policyType + ", Got: " + type);
+      String policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
+          + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::" + bucketName
+          + "/myobject*\"],\"Sid\":\"\"}]}";
+      client.setBucketPolicy(bucketName, policy);
+      String policyGot = client.getBucketPolicy(bucketName);
+      if (!policy.equals(policyGot)) {
+        throw new Exception("[FAILED] Expected: " + policy + ", Got: " + policyGot);
       }
-      mintSuccessLog("getBucketPolicy(String bucketName, String objectPrefix)", null, startTime);
+      mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -2212,9 +2214,9 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("getBucketPolicy(String bucketName, String objectPrefix)", null, startTime);
+        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
       } else {
-        mintFailedLog("getBucketPolicy(String bucketName, String objectPrefix)", null, startTime,
+        mintFailedLog("getBucketPolicy(String bucketName)", null, startTime,
                       null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
@@ -2222,225 +2224,19 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: NONE type: getBucketPolicy(String bucketName, String objectPrefix).
-   */
-  public static void getBucketPolicy_test1() throws Exception {
-    testGetBucketPolicy("get-bucket-policy-none", PolicyType.NONE);
-  }
-
-  /**
-   * Test: READ_ONLY type: getBucketPolicy(String bucketName, String objectPrefix).
-   */
-  public static void getBucketPolicy_test2() throws Exception {
-    testGetBucketPolicy("get-bucket-policy-read-only", PolicyType.READ_ONLY);
-  }
-
-  /**
-   * Test: WRITE_ONLY type: getBucketPolicy(String bucketName, String objectPrefix).
-   */
-  public static void getBucketPolicy_test3() throws Exception {
-    testGetBucketPolicy("get-bucket-policy-write-only", PolicyType.WRITE_ONLY);
-  }
-
-  /**
-   * Test: READ_WRITE type: getBucketPolicy(String bucketName, String objectPrefix).
-   */
-  public static void getBucketPolicy_test4() throws Exception {
-    testGetBucketPolicy("get-bucket-policy-read-write", PolicyType.READ_WRITE);
-  }
-
-  /**
-   * Test: single policy type: getBucketPolicy(String bucketName).
-   */
-  public static void getBucketPolicy_test5() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getBucketPolicy(String bucketName) (Single-Policy Case)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String bucketName = getRandomName();
-      client.makeBucket(bucketName);
-
-      client.setBucketPolicy(bucketName, "list-policies-read-only", PolicyType.READ_ONLY);
-
-      Map<String, PolicyType> actualPolicies = client.getBucketPolicy(bucketName);
-      Map<String, PolicyType> expectedPolicies = new Hashtable<String, PolicyType>();
-      expectedPolicies.put(bucketName + "/list-policies-read-only*", PolicyType.READ_ONLY);
-
-      if (!actualPolicies.equals(expectedPolicies)) {
-        throw new Exception("[FAILED] policy list differs. expected: " + expectedPolicies + ", got: " + actualPolicies);
-      }
-
-      client.removeBucket(bucketName);
-      mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
-    } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
-      } else {
-        mintFailedLog("getBucketPolicy(String bucketName)", null, startTime, null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    }
-  }
-
-  /**
-   * Test: multiple policy types: getBucketPolicy(String bucketName).
-   */
-  public static void getBucketPolicy_test6() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getBucketPolicy(String bucketName) (Multi-Policy Case)");
-    }
-
-    long startTime = System.currentTimeMillis();
-
-    try {
-      String bucketName = getRandomName();
-      client.makeBucket(bucketName);
-
-      client.setBucketPolicy(bucketName, "list-policies-write-only", PolicyType.WRITE_ONLY);
-      client.setBucketPolicy(bucketName, "list-policies-read-write", PolicyType.READ_WRITE);
-
-      Map<String, PolicyType> actualPolicies = client.getBucketPolicy(bucketName);
-      Map<String, PolicyType> expectedPolicies = new Hashtable<String, PolicyType>();
-      expectedPolicies.put(bucketName + "/list-policies-write-only*", PolicyType.WRITE_ONLY);
-      expectedPolicies.put(bucketName + "/list-policies-read-write*", PolicyType.READ_WRITE);
-
-      if (!actualPolicies.equals(expectedPolicies)) {
-        throw new Exception("[FAILED] policy list differs. expected: " + expectedPolicies + ", got: " + actualPolicies);
-      }
-
-      client.removeBucket(bucketName);
-      mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
-    } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
-      } else {
-        mintFailedLog("getBucketPolicy(String bucketName)", null, startTime, null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    }
-  }
-
-  /**
-   * Test: NONE type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
+   * Test: setBucketPolicy(String bucketName, String policy).
    */
   public static void setBucketPolicy_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: NONE: setBucketPolicy(String bucketName, String objectPrefix, "
-                         + "PolicyType policyType)");
+      System.out.println("Test: setBucketPolicy(String bucketName, String policy)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      String objectPrefix = "set-bucket-policy-none";
-      client.setBucketPolicy(bucketName, objectPrefix, PolicyType.NONE);
-      // Wait for 5 seconds for server to set the policy into effect.
-      Thread.sleep(5000);
-
-      String objectName = objectPrefix + "/" + getRandomName();
-      try (final InputStream is = new ContentInputStream(16)) {
-        client.putObject(bucketName, objectName, is, 16, "application/octet-stream");
-      }
-
-      String urlString = client.getObjectUrl(bucketName, objectName);
-      Request.Builder requestBuilder = new Request.Builder();
-      Request request = requestBuilder
-          .url(HttpUrl.parse(urlString))
-          .method("GET", null)
-          .build();
-      OkHttpClient transport = new OkHttpClient();
-      Response response = transport.newCall(request).execute();
-
-      if (response == null) {
-        throw new Exception("[FAILED] empty response");
-      }
-
-      if (response.isSuccessful()) {
-        throw new Exception("[FAILED] Anonmymous has access for None policy type.  Response: " + response);
-      }
-
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)",
-                     null, startTime);
-    } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)",
-                       null, startTime);
-      } else {
-        mintFailedLog("setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)", null,
-                      startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    }
-  }
-
-  /**
-   * Test set bucket policy.
-   */
-  public static void testSetBucketPolicy(String objectPrefix, PolicyType policyType) throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: " + policyType + ": setBucketPolicy(String bucketName, "
-                         + " String objectPrefix, PolicyType policyType)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      client.setBucketPolicy(bucketName, objectPrefix, policyType);
-      // Wait for 15 seconds for server to set the policy into effect.
-      Thread.sleep(15000);
-
-      String objectName = objectPrefix + "/" + getRandomName();
-      String urlString = client.getObjectUrl(bucketName, objectName);
-      byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
-
-      if (policyType == PolicyType.READ_ONLY) {
-        client.putObject(bucketName, objectName, new ByteArrayInputStream(data), data.length, customContentType);
-      }
-
-      if ((policyType == PolicyType.READ_WRITE) || (policyType == PolicyType.WRITE_ONLY)) {
-        writeObject(urlString, data);
-
-        InputStream is = client.getObject(bucketName, objectName);
-        byte[] readBytes = readAllBytes(is);
-        is.close();
-
-        if (!Arrays.equals(data, readBytes)) {
-          throw new Exception("content differs");
-        }
-      }
-
-      if ((policyType == PolicyType.READ_WRITE) || (policyType == PolicyType.READ_ONLY)) {
-        readObject(urlString);
-      }
-
-      client.removeObject(bucketName, objectName);
-
-      mintSuccessLog("setBucketPolicy(String bucketName, String objectPrefix, "
-                     + "PolicyType policyType)", null, startTime);
+      String policy = "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Effect\":\"Allow\",\"Principal\":"
+          + "\"*\",\"Resource\":\"arn:aws:s3:::" + bucketName + "/myobject*\"}],\"Version\": \"2012-10-17\"}";
+      client.setBucketPolicy(bucketName, policy);
+      mintSuccessLog("setBucketPolicy(String bucketName, String policy)", null, startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -2459,27 +2255,6 @@ public class FunctionalTest {
         throw e;
       }
     }
-  }
-
-  /**
-   * Test: READ_ONLY type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
-   */
-  public static void setBucketPolicy_test2() throws Exception {
-    testSetBucketPolicy("set-bucket-policy-read-only", PolicyType.READ_ONLY);
-  }
-
-  /**
-   * Test: WRITE_ONLY type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
-   */
-  public static void setBucketPolicy_test3() throws Exception {
-    testSetBucketPolicy("set-bucket-policy-write-only", PolicyType.WRITE_ONLY);
-  }
-
-  /**
-   * Test: READ_WRITE type: setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType).
-   */
-  public static void setBucketPolicy_test4() throws Exception {
-    testSetBucketPolicy("set-bucket-policy-read-write", PolicyType.READ_WRITE);
   }
 
   /**
@@ -2737,16 +2512,7 @@ public class FunctionalTest {
     copyObject_test8();
 
     getBucketPolicy_test1();
-    getBucketPolicy_test2();
-    getBucketPolicy_test3();
-    getBucketPolicy_test4();
-    getBucketPolicy_test5();
-    getBucketPolicy_test6();
-
     setBucketPolicy_test1();
-    setBucketPolicy_test2();
-    setBucketPolicy_test3();
-    setBucketPolicy_test4();
 
     threadedPutObject();
 
@@ -2782,10 +2548,7 @@ public class FunctionalTest {
     presignedPostPolicy_test();
     copyObject_test1();
     getBucketPolicy_test1();
-    getBucketPolicy_test2();
-    getBucketPolicy_test3();
-    getBucketPolicy_test4();
-    setBucketPolicy_test4();
+    setBucketPolicy_test1();
 
     teardown();
   }

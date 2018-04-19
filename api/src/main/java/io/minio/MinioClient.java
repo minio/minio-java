@@ -21,6 +21,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -57,8 +58,6 @@ import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
-import io.minio.policy.PolicyType;
-import io.minio.policy.BucketPolicy;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -163,6 +162,8 @@ public class MinioClient {
   private static final int MAX_MULTIPART_COUNT = 10000;
   // minimum allowed multipart size is 5MiB
   private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
+  // maximum allowed bucket policy size is 12KiB
+  private static final int MAX_BUCKET_POLICY_SIZE = 12 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
@@ -3777,75 +3778,17 @@ public class MinioClient {
 
 
   /**
-   * Returns the parsed current bucket access policy.
-   */
-  private BucketPolicy doGetBucketPolicy(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    Map<String,String> queryParamMap = new HashMap<>();
-    queryParamMap.put("policy", "");
-
-    BucketPolicy policy = null;
-    HttpResponse response = null;
-
-    try {
-      response = executeGet(bucketName, null, null, queryParamMap);
-      policy = BucketPolicy.parseJson(response.body().charStream(), bucketName);
-      response.body().close();
-    } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
-        throw e;
-      }
-    }
-
-    if (policy == null) {
-      policy = new BucketPolicy(bucketName);
-    }
-
-    return policy;
-  }
-
-
-  /**
-   * Get bucket policy at given objectPrefix
-   *
-   * @param bucketName   Bucket name.
-   * @param objectPrefix name of the object prefix
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code String policy = minioClient.getBucketPolicy("my-bucketname", "my-objectname");
-   * System.out.println(policy); }</pre>
-   */
-  public PolicyType getBucketPolicy(String bucketName, String objectPrefix)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    checkObjectPrefix(objectPrefix);
-
-    BucketPolicy policy = this.doGetBucketPolicy(bucketName);
-    return policy.getPolicy(objectPrefix);
-  }
-
-  /**
-   * Get all policies in the given bucket.
+   * Get JSON string of bucket policy of the given bucket.
    *
    * @param bucketName the name of the bucket for which policies are to be listed.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code
    *
-   * final Map<String, PolicyType> policies = minioClient.getBucketPolicy("my-bucketname");
-   * for (final Map.Entry<String, PolicyType> policyEntry : policies.entrySet()) {
-   *    final String objectPrefix = policyEntry.getKey();
-   *    final PolicyType policyType = policyEntry.getValue();
-   *    System.out.println(
-   *        String.format("Access permission %s found for object prefix %s", policyType.getValue(), objectPrefix)
-   *    );
-   * }}
-   * </pre>
+   * String policyString = minioClient.getBucketPolicy("my-bucketname");
+   * }</pre>
    *
-   * @return a map of object prefixes (keys) to their policy types (values) for a given bucket.
+   * @return bucket policy JSON string.
    * @throws InvalidBucketNameException   upon an invalid bucket name
    * @throws IOException                  upon connection error
    * @throws InvalidKeyException          upon an invalid access key or secret key
@@ -3856,21 +3799,83 @@ public class MinioClient {
    * @throws InternalException            upon internal library error
    * @throws ErrorResponseException       upon unsuccessful execution
    */
-  public Map<String, PolicyType> getBucketPolicy(String bucketName)
-      throws InvalidBucketNameException, IOException, InvalidKeyException, NoSuchAlgorithmException,
-      InsufficientDataException, NoResponseException, XmlPullParserException,
-      InternalException, ErrorResponseException, InvalidObjectPrefixException {
-    // Input validation.
-    checkBucketName(bucketName);
+  public String getBucketPolicy(String bucketName)
+    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+           XmlPullParserException, ErrorResponseException, InternalException, BucketPolicyTooLargeException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("policy", "");
 
-    BucketPolicy bucketPolicy = this.doGetBucketPolicy(bucketName);
-    return bucketPolicy.getPolicies();
+    HttpResponse response = null;
+    byte[] buf = new byte[MAX_BUCKET_POLICY_SIZE];
+    int bytesRead = 0;
+
+    try {
+      response = executeGet(bucketName, null, null, queryParamMap);
+      bytesRead = response.body().byteStream().read(buf, 0, MAX_BUCKET_POLICY_SIZE);
+      if (bytesRead < 0) {
+        // reached EOF
+        throw new IOException("reached EOF when reading bucket policy");
+      }
+
+      // Read one byte extra to ensure only MAX_BUCKET_POLICY_SIZE data is sent by the server.
+      if (bytesRead == MAX_BUCKET_POLICY_SIZE) {
+        int byteRead = 0;
+        while (byteRead == 0) {
+          byteRead = response.body().byteStream().read();
+          if (byteRead < 0) {
+            // reached EOF which is fine.
+            break;
+          } else if (byteRead > 0) {
+            throw new BucketPolicyTooLargeException(bucketName);
+          }
+        }
+      }
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
+        throw e;
+      }
+    } finally {
+      if (response != null && response.body() != null) {
+        response.body().close();
+      }
+    }
+
+    return new String(buf, 0, bytesRead, StandardCharsets.UTF_8);
   }
 
+
   /**
-   * Sets the bucket access policy.
+   * Set JSON string of policy on given bucket.
+   *
+   * @param bucketName   Bucket name.
+   * @param policy       Bucket policy JSON string.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code StringBuilder builder = new StringBuilder();
+   * builder.append("{\n");
+   * builder.append("    \"Statement\": [\n");
+   * builder.append("        {\n");
+   * builder.append("            \"Action\": [\n");
+   * builder.append("                \"s3:GetBucketLocation\",\n");
+   * builder.append("                \"s3:ListBucket\"\n");
+   * builder.append("            ],\n");
+   * builder.append("            \"Effect\": \"Allow\",\n");
+   * builder.append("            \"Principal\": \"*\",\n");
+   * builder.append("            \"Resource\": \"arn:aws:s3:::my-bucketname\"\n");
+   * builder.append("        },\n");
+   * builder.append("        {\n");
+   * builder.append("            \"Action\": \"s3:GetObject\",\n");
+   * builder.append("            \"Effect\": \"Allow\",\n");
+   * builder.append("            \"Principal\": \"*\",\n");
+   * builder.append("            \"Resource\": \"arn:aws:s3:::my-bucketname/myobject*\"\n");
+   * builder.append("        }\n");
+   * builder.append("    ],\n");
+   * builder.append("    \"Version\": \"2012-10-17\"\n");
+   * builder.append("}\n");
+   * setBucketPolicy("my-bucketname", builder.toString()); }</pre>
    */
-  private void setBucketPolicy(String bucketName, BucketPolicy policy)
+  public void setBucketPolicy(String bucketName, String policy)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException {
@@ -3880,40 +3885,8 @@ public class MinioClient {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
-    String policyJson = policy.getJson();
-
-    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, policyJson, 0);
+    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, policy, 0);
     response.body().close();
-  }
-
-
-  /**
-   * Set policy on bucket and object prefix.
-   *
-   * @param bucketName   Bucket name.
-   * @param objectPrefix Name of the object prefix.
-   * @param policyType   Enum of {@link PolicyType}.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code setBucketPolicy("my-bucketname", "my-objectname", PolicyType.READ_ONLY); }</pre>
-   */
-  public void setBucketPolicy(String bucketName, String objectPrefix, PolicyType policyType)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
-           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
-    checkObjectPrefix(objectPrefix);
-
-    BucketPolicy policy = this.doGetBucketPolicy(bucketName);
-
-    if (policyType == PolicyType.NONE && policy.statements() == null) {
-      // As the request is for removing policy and the bucket
-      // has empty policy statements, just return success.
-      return;
-    }
-
-    policy.setPolicy(policyType, objectPrefix);
-
-    setBucketPolicy(bucketName, policy);
   }
 
 
