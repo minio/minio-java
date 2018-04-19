@@ -735,21 +735,6 @@ public class MinioClient {
     return true;
   }
 
-  /**
-   * Validates if given objectPrefix is valid.
-   */
-  private void checkObjectPrefix(String prefix) throws InvalidObjectPrefixException {
-    // TODO(nl5887): what to do with wild-cards in objectPrefix?
-    if (prefix.length() > 1024) {
-      throw new InvalidObjectPrefixException(prefix, "Object prefix cannot be greater than 1024 characters.");
-    }
-
-    try {
-      prefix.getBytes("UTF-8");
-    } catch (java.io.UnsupportedEncodingException exc) {
-      throw new InvalidObjectPrefixException(prefix, "Object prefix cannot be properly encoded to utf-8.");
-    }
-  }
 
   /**
    * Validates if given bucket name is DNS compatible.
