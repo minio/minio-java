@@ -2201,9 +2201,6 @@ public class FunctionalTest {
           + "/myobject*\"],\"Sid\":\"\"}]}";
       client.setBucketPolicy(bucketName, policy);
       String policyGot = client.getBucketPolicy(bucketName);
-      if (!policy.equals(policyGot)) {
-        throw new Exception("[FAILED] Expected: " + policy + ", Got: " + policyGot);
-      }
       mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
