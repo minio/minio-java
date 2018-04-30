@@ -3,4 +3,3 @@ io.minio.errors
 io.minio.http
 io.minio.messages
 io.minio.org.apache.commons.validator.routines
-io.minio.policy
