@@ -450,10 +450,10 @@ try {
 ```
 
 <a name="getBucketPolicy"></a>
-### getBucketPolicy(String bucketName, String objectPrefix)
-`public PolicyType getBucketPolicy(String bucketName, String objectPrefix)`
+### getBucketPolicy(String bucketName)
+`public PolicyType getBucketPolicy(String bucketName)`
 
-Get bucket policy at given objectPrefix.
+Get bucket policy for a bucket.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketPolicy-java.lang.String-java.lang.String-)
 
@@ -462,12 +462,11 @@ __Parameters__
 |Param   | Type   | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | _String_  | Name of the bucket.  |
-| ``objectPrefix``  | _String_  | Policy applies to objects with prefix. |
 
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``PolicyType``: The current bucket policy type for a given bucket and objectPrefix.  | Listed Exceptions: |
+|  _String_: Bucket policy JSON string. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
@@ -485,17 +484,17 @@ __Example__
 
 ```java
 try {
-  System.out.println("Current policy: " + minioClient.getBucketPolicy("myBucket", "downloads"));
+  System.out.println("Current policy: " + minioClient.getBucketPolicy("myBucket"));
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
 ```
 
 <a name="setBucketPolicy"></a>
-### setBucketPolicy(String bucketName, String objectPrefix, PolicyType policy)
-`public void setBucketPolicy(String bucketName, String objectPrefix, PolicyType policy)`
+### setBucketPolicy(String bucketName, String policy)
+`public void setBucketPolicy(String bucketName, String policy)`
 
-Set policy on bucket and object prefix.
+Set a policy on bucket.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketPolicy-java.lang.String-java.lang.String-io.minio.BucketPolicy-)
 
@@ -504,9 +503,7 @@ __Parameters__
 |Param   | Type   | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | _String_  | Name of the bucket.  |
-| ``objectPrefix``  | _String_  | Policy applies to objects with prefix. |
-| ``policy``  | _PolicyType_  | Policy to apply, available types are [PolicyType.NONE, PolicyType.READ_ONLY, PolicyType.READ_WRITE, PolicyType.WRITE_ONLY]. |
-
+| ``policy`` | _String_ | Policy JSON for the bucket. |
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
@@ -529,7 +526,28 @@ __Example__
 
 ```java
 try {
-  minioClient.setBucketPolicy("myBucket", "uploads", PolicyType.READ_ONLY);
+  StringBuilder builder = new StringBuilder();
+  builder.append("{\n");
+  builder.append("    \"Statement\": [\n");
+  builder.append("        {\n");
+  builder.append("            \"Action\": [\n");
+  builder.append("                \"s3:GetBucketLocation\",\n");
+  builder.append("                \"s3:ListBucket\"\n");
+  builder.append("            ],\n");
+  builder.append("            \"Effect\": \"Allow\",\n");
+  builder.append("            \"Principal\": \"*\",\n");
+  builder.append("            \"Resource\": \"arn:aws:s3:::my-bucketname\"\n");
+  builder.append("        },\n");
+  builder.append("        {\n");
+  builder.append("            \"Action\": \"s3:GetObject\",\n");
+  builder.append("            \"Effect\": \"Allow\",\n");
+  builder.append("            \"Principal\": \"*\",\n");
+  builder.append("            \"Resource\": \"arn:aws:s3:::my-bucketname/myobject*\"\n");
+  builder.append("        }\n");
+  builder.append("    ],\n");
+  builder.append("    \"Version\": \"2012-10-17\"\n");
+  builder.append("}\n");
+  minioClient.setBucketPolicy("my-bucketname", builder.toString());
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
