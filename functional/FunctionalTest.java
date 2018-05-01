@@ -2189,6 +2189,52 @@ public class FunctionalTest {
     }
   }
 
+   /**
+   * Test: copyObject(String bucketName, String objectName, String destBucketName,
+   * CopyConditions copyConditions, Map metadata) remove
+   * object metadata.
+   */
+  public static void copyObject_test9() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
+                        + "CopyConditions copyConditions, Map<String, String> metadata)"
+                        + " remove object metadata");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      InputStream is = new ContentInputStream(1);
+
+      Map<String, String> headerMap = new HashMap<>();
+      headerMap.put("X-Amz-Meta-Test", "testValue");
+      client.putObject(bucketName, objectName, is, 1, headerMap);
+      is.close();
+
+      // Attempt to remove the user-defined metadata from the object
+      CopyConditions copyConditions = new CopyConditions();
+      copyConditions.setReplaceMetadataDirective();
+
+      client.copyObject(bucketName, objectName, bucketName,
+          objectName, copyConditions, new HashMap<String,String>());
+      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
+        throw new Exception("expected user-defined metadata to have been removed");
+      }
+
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName, "
+                     + "CopyConditions copyConditions, Map<String, String> metadata)",
+                     null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("copyObject(String bucketName, String objectName, String destBucketName, "
+                    + "CopyConditions copyConditions, Map<String, String> metadata)",
+                    null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
   /**
    * Test: getBucketPolicy(String bucketName).
    */
@@ -2510,6 +2556,7 @@ public class FunctionalTest {
     copyObject_test6();
     copyObject_test7();
     copyObject_test8();
+    copyObject_test9();
 
     getBucketPolicy_test1();
     setBucketPolicy_test1();
