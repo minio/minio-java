@@ -36,7 +36,7 @@ public class NotificationConfiguration extends XmlEntity {
   private List<TopicConfiguration> topicConfigurationList = new LinkedList<>();
 
   /**
-   * Constucts a new notification configuration with default namespace.
+   * Constructs a new notification configuration with default namespace.
    */
   public NotificationConfiguration() throws XmlPullParserException {
     super();
