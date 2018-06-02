@@ -1050,15 +1050,19 @@ public class MinioClient {
     return requestBuilder.build();
   }
   
+  
   /**
-   * Checks whether port should be omitted in Host header
+   * Checks whether port should be omitted in Host header.
    * 
+   * <p>
    * HTTP Spec (rfc2616) defines that port should be omitted in Host header
    * when port and service matches (i.e HTTP -> 80, HTTPS -> 443)
+   * 
    * @param url Url object
    */
   private boolean shouldOmitPortInHostHeader(HttpUrl url) {
-	  return (url.scheme().equals("http") && url.port() == 80) || (url.scheme().equals("https") && url.port() == 443);
+    return (url.scheme().equals("http") && url.port() == 80) 
+      || (url.scheme().equals("https") && url.port() == 443);
   }
 
 
