@@ -983,7 +983,7 @@ public class MinioClient {
 
     RequestBody requestBody = null;
     if (body != null) {
-      requestBody = new MinioRequestBody(contentType, body, length);
+      requestBody = new HttpRequestBody(contentType, body, length);
     }
 
     requestBuilder.method(method.toString(), requestBody);

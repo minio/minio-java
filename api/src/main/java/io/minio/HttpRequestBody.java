@@ -29,12 +29,12 @@ import okio.Okio;
 /**
  * RequestBody that wraps a single data object.
  */
-class MinioRequestBody extends RequestBody {
+class HttpRequestBody extends RequestBody {
   private final String contentType;
   private final Object data;
   private final int len;
 
-  MinioRequestBody(final String contentType, final Object data, final int len) {
+  HttpRequestBody(final String contentType, final Object data, final int len) {
     this.contentType = contentType;
     this.data = data;
     this.len = len;
