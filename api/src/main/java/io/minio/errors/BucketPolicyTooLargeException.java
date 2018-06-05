@@ -21,7 +21,6 @@ package io.minio.errors;
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class BucketPolicyTooLargeException extends MinioException {
-  private static final long serialVersionUID = 6435208839560441168L;
 
   private final String bucketName;
 
