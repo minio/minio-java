@@ -2200,7 +2200,7 @@ public class FunctionalTest {
           + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::" + bucketName
           + "/myobject*\"],\"Sid\":\"\"}]}";
       client.setBucketPolicy(bucketName, policy);
-      String policyGot = client.getBucketPolicy(bucketName);
+      client.getBucketPolicy(bucketName);
       mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
