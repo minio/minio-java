@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,7 +64,7 @@ public class HeaderParser {
       if (setter.isEmpty()) {
         // assume setter name as 'setFieldName'
         String name = field.getName();
-        setter = "set" + name.substring(0, 1).toUpperCase() + name.substring(1);
+        setter = "set" + name.substring(0, 1).toUpperCase(Locale.US) + name.substring(1);
       }
 
       try {

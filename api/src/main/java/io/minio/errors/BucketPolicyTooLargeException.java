@@ -21,8 +21,8 @@ package io.minio.errors;
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class BucketPolicyTooLargeException extends MinioException {
-  private final String bucketName;
 
+  private final String bucketName;
 
   /**
    * Constructs a new BucketPolicyTooLargeException with bucket name caused the error and error message.

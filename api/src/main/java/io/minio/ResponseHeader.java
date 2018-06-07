@@ -20,12 +20,14 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.http.Header;
 
 
 /**
  * HTTP response header class.
  */
+@SuppressFBWarnings(value = "UwF", justification = "Everything in this class is initialized with reflections.")
 public class ResponseHeader {
   @Header("Content-Length")
   private long contentLength;

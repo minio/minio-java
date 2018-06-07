@@ -92,6 +92,11 @@ subprojects {
         source = fileTree(dir: "$rootDir/api/src/test", include: "**/*.java")
     }
 
+    findbugs {
+        effort = "max"
+        reportLevel = "low"
+    }
+
     tasks.withType(FindBugs) {
         reports {
             xml.enabled = false

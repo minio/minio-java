@@ -16,6 +16,7 @@
 
 package io.minio.errors;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -28,6 +29,7 @@ import io.minio.messages.ErrorResponse;
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ErrorResponseException extends MinioException {
   private final ErrorResponse errorResponse;
+  @SuppressFBWarnings(value = "Se", justification = "There's really no excuse except that nobody has complained")
   private final Response response;
 
 
@@ -52,7 +54,7 @@ public class ErrorResponseException extends MinioException {
   @Override
   public String toString() {
     Request request = response.request();
-    return "error occured\n"
+    return "error occurred\n"
         + errorResponse.getString() + "\n"
         + "request={"
         + "method=" + request.method() + ", "

@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -107,7 +108,7 @@ class Signer {
    * @param region         Amazon AWS region for the request.
    * @param accessKey      Access Key string.
    * @param secretKey      Secret Key string.
-   * @param prevSignaure   Previous signature of chunk upload.
+   * @param prevSignature  Previous signature of chunk upload.
    *
    */
   public Signer(Request request, String contentSha256, DateTime date, String region, String accessKey,
@@ -132,7 +133,7 @@ class Signer {
 
     Headers headers = this.request.headers();
     for (String name : headers.names()) {
-      String signedHeader = name.toLowerCase();
+      String signedHeader = name.toLowerCase(Locale.US);
       if (!IGNORED_HEADERS.contains(signedHeader)) {
         this.canonicalHeaders.put(signedHeader, headers.get(name));
       }
@@ -221,7 +222,7 @@ class Signer {
 
   private void setSignature() throws NoSuchAlgorithmException, InvalidKeyException {
     byte[] digest = sumHmac(this.signingKey, this.stringToSign.getBytes(StandardCharsets.UTF_8));
-    this.signature = BaseEncoding.base16().encode(digest).toLowerCase();
+    this.signature = BaseEncoding.base16().encode(digest).toLowerCase(Locale.US);
   }
 
 

@@ -22,6 +22,7 @@ import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 
 import com.google.common.io.BaseEncoding;
 
@@ -46,7 +47,7 @@ class Digest {
     byte[] data = string.getBytes(StandardCharsets.UTF_8);
     MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
     sha256Digest.update((byte[]) data, 0, data.length);
-    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase();
+    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
   }
 
 
@@ -69,7 +70,7 @@ class Digest {
                                   + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
-    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase();
+    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
   }
 
 
@@ -94,7 +95,7 @@ class Digest {
                                   + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
-    return new String[]{BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(),
+    return new String[]{BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US),
                         BaseEncoding.base64().encode(md5Digest.digest())};
   }
 

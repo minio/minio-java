@@ -16,9 +16,12 @@
 
 import java.nio.file.*;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import io.minio.*;
 
 
+@SuppressFBWarnings(value = "REC", justification = "Allow catching super class Exception since it's tests")
 class PutObjectRunnable implements Runnable {
   MinioClient client;
   String bucketName;
