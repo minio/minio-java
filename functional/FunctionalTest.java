@@ -1,6 +1,6 @@
 /*
  * Minio Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015, 2016, 2017 Minio, Inc.
+ * (C) 2015, 2016, 2017, 2018 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -492,7 +492,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(3 * MB)) {
+      try (final InputStream is = new ContentInputStream(1 * MB)) {
         client.putObject(bucketName, objectName, is, 1 * MB, customContentType);
       }
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -763,7 +763,7 @@ public class FunctionalTest {
       if ((returnStorageClass != null) && (!storageClass.equals(returnStorageClass.get(0)))) {
         throw new Exception("Metadata mismatch");
       } else if (returnStorageClass == null) {
-        // This is a success case as Gateways may not return the storage class - based on the 
+        // This is a success case as Gateways may not return the storage class - based on the
         // gateway type
       }
 
@@ -2200,14 +2200,15 @@ public class FunctionalTest {
     }
 
     long startTime = System.currentTimeMillis();
-    InputStream is = new ContentInputStream(1);
     try {
       String objectName = getRandomName();
-
       Map<String, String> headerMap = new HashMap<>();
       headerMap.put("X-Amz-Meta-Test", "testValue");
-      client.putObject(bucketName, objectName, is, 1, headerMap);
-      
+
+      try (final InputStream is = new ContentInputStream(1)) {
+        client.putObject(bucketName, objectName, is, 1, headerMap);
+      }
+
       // Attempt to remove the user-defined metadata from the object
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
@@ -2216,20 +2217,18 @@ public class FunctionalTest {
           objectName, copyConditions, new HashMap<String,String>());
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
-        throw new Exception("expected user-defined metadata to have been removed");
+        throw new Exception("expected user-defined metadata has been removed");
       }
 
       client.removeObject(bucketName, objectName);
       mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName, "
                      + "CopyConditions copyConditions, Map<String, String> metadata)",
                      null, startTime);
-      is.close();
     } catch (Exception e) {
       mintFailedLog("copyObject(String bucketName, String objectName, String destBucketName, "
                     + "CopyConditions copyConditions, Map<String, String> metadata)",
                     null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      is.close();
       throw e;
     }
   }
