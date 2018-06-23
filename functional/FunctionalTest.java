@@ -51,6 +51,7 @@ public class FunctionalTest {
   private static final int MB = 1024 * 1024;
   private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String customContentType = "application/javascript";
+  private static final String defaultType = "application/octet-stream";
   private static final String nullContentType = null;
   private static String bucketName = getRandomName();
   private static boolean mintEnv = false;
@@ -464,7 +465,7 @@ public class FunctionalTest {
       client.putObject(bucketName, filename, filename, customContentType);
       Files.delete(Paths.get(filename));
       ObjectStat objectStat = client.statObject(bucketName, filename);
-      if (!customContentType.equals(objectStat.contentType())) {
+      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
         throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
                             + objectStat.contentType());
       }
@@ -495,7 +496,7 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, 1 * MB, customContentType);
       }
       ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if (!customContentType.equals(objectStat.contentType())) {
+      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
         throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
                             + objectStat.contentType());
       }
@@ -594,7 +595,7 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, customContentType);
       }
       ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if (!customContentType.equals(objectStat.contentType())) {
+      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
         throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
                             + objectStat.contentType());
       }
@@ -712,7 +713,7 @@ public class FunctionalTest {
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if (!customContentType.equals(objectStat.contentType())) {
+      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
         throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
                             + objectStat.contentType());
       }
@@ -752,7 +753,7 @@ public class FunctionalTest {
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if (!customContentType.equals(objectStat.contentType())) {
+      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
         throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
                             + objectStat.contentType());
       }
@@ -801,7 +802,7 @@ public class FunctionalTest {
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if (!customContentType.equals(objectStat.contentType())) {
+      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
         throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
                             + objectStat.contentType());
       }
@@ -2199,15 +2200,14 @@ public class FunctionalTest {
     }
 
     long startTime = System.currentTimeMillis();
+    InputStream is = new ContentInputStream(1);
     try {
       String objectName = getRandomName();
-      InputStream is = new ContentInputStream(1);
 
       Map<String, String> headerMap = new HashMap<>();
       headerMap.put("X-Amz-Meta-Test", "testValue");
       client.putObject(bucketName, objectName, is, 1, headerMap);
-      is.close();
-
+      
       // Attempt to remove the user-defined metadata from the object
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
@@ -2223,11 +2223,13 @@ public class FunctionalTest {
       mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName, "
                      + "CopyConditions copyConditions, Map<String, String> metadata)",
                      null, startTime);
+      is.close();
     } catch (Exception e) {
       mintFailedLog("copyObject(String bucketName, String objectName, String destBucketName, "
                     + "CopyConditions copyConditions, Map<String, String> metadata)",
                     null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      is.close();
       throw e;
     }
   }
