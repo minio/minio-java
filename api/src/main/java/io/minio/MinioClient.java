@@ -170,7 +170,6 @@ public class MinioClient {
       + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
   private static final String NULL_STRING = "(null)";
   private static final String S3_AMAZONAWS_COM = "s3.amazonaws.com";
-  private static final String AMAZONAWS_COM = ".amazonaws.com";
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String US_EAST_1 = "us-east-1";
   private static final String UPLOAD_ID = "uploadId";
@@ -649,12 +648,6 @@ public class MinioClient {
         throw new InvalidEndpointException(endpoint, "no path allowed in endpoint");
       }
 
-      // treat Amazon S3 host as special case
-      String amzHost = url.host();
-      if (amzHost.endsWith(AMAZONAWS_COM) && !amzHost.equals(S3_AMAZONAWS_COM)) {
-        throw new InvalidEndpointException(endpoint, "for Amazon S3, host should be 's3.amazonaws.com' in endpoint");
-      }
-
       HttpUrl.Builder urlBuilder = url.newBuilder();
       Scheme scheme = Scheme.HTTP;
       if (secure) {
@@ -678,11 +671,6 @@ public class MinioClient {
     // endpoint may be a valid hostname, IPv4 or IPv6 address
     if (!this.isValidEndpoint(endpoint)) {
       throw new InvalidEndpointException(endpoint, "invalid host");
-    }
-
-    // treat Amazon S3 host as special case
-    if (endpoint.endsWith(AMAZONAWS_COM) && !endpoint.equals(S3_AMAZONAWS_COM)) {
-      throw new InvalidEndpointException(endpoint, "for amazon S3, host should be 's3.amazonaws.com'");
     }
 
     Scheme scheme = Scheme.HTTP;
