@@ -51,7 +51,6 @@ public class FunctionalTest {
   private static final int MB = 1024 * 1024;
   private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String customContentType = "application/javascript";
-  private static final String defaultType = "application/octet-stream";
   private static final String nullContentType = null;
   private static String bucketName = getRandomName();
   private static boolean mintEnv = false;
@@ -464,11 +463,6 @@ public class FunctionalTest {
       String filename = createFile1Mb();
       client.putObject(bucketName, filename, filename, customContentType);
       Files.delete(Paths.get(filename));
-      ObjectStat objectStat = client.statObject(bucketName, filename);
-      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
-        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
-                            + objectStat.contentType());
-      }
       client.removeObject(bucketName, filename);
       mintSuccessLog("putObject(String bucketName, String objectName, String filename, String contentType)",
                      "contentType: " + customContentType, startTime);
@@ -495,13 +489,8 @@ public class FunctionalTest {
       try (final InputStream is = new ContentInputStream(1 * MB)) {
         client.putObject(bucketName, objectName, is, 1 * MB, customContentType);
       }
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
-        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
-                            + objectStat.contentType());
-      }
-      client.removeObject(bucketName, objectName);
 
+      client.removeObject(bucketName, objectName);
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, long size,"
                      + " String contentType)",
                      "size: 1 MB, objectName: " + customContentType, startTime);
@@ -594,11 +583,7 @@ public class FunctionalTest {
       try (final InputStream is = new ContentInputStream(size)) {
         client.putObject(bucketName, objectName, is, customContentType);
       }
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
-        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
-                            + objectStat.contentType());
-      }
+
       client.removeObject(bucketName, objectName);
 
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, String contentType)",
@@ -712,11 +697,6 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, 13 * MB, headerMap);
       }
 
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
-        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
-                            + objectStat.contentType());
-      }
       client.removeObject(bucketName, objectName);
 
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
@@ -753,10 +733,6 @@ public class FunctionalTest {
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
-        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
-                            + objectStat.contentType());
-      }
       Map<String, List<String>> returnHeader = objectStat.httpHeaders();
       List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
 
@@ -802,10 +778,7 @@ public class FunctionalTest {
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
-      if ((!customContentType.equals(objectStat.contentType())) && (!defaultType.equals(objectStat.contentType()))) {
-        throw new Exception("content type mismatch, expected: " + customContentType + ", got: "
-                            + objectStat.contentType());
-      }
+
       Map<String, List<String>> returnHeader = objectStat.httpHeaders();
       List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
 
