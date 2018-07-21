@@ -234,45 +234,4 @@ public class ResponseHeader {
     return this.xamzRequestId;
   }
 
-  /**
-   * Sets encryption key.
-   */
-  public void setXamzMetaKey(String xamzMetaKey) {
-    this.xamzMetaKey = xamzMetaKey;
-  }
-
-  /**
-   * Returns encryption key.
-   */
-  public String xamzMetaKey() {
-    return this.xamzMetaKey;
-  }
-
-  /**
-   * Sets encryption initialization vector (IV).
-   */
-  public void setXamzMetaIv(String xamzMetaIv) {
-    this.xamzMetaIv = xamzMetaIv;
-  }
-
-  /**
-   * Returns encryption initialization vector (IV).
-   */
-  public String xamzMetaIv() {
-    return this.xamzMetaIv;
-  }
-
-  /**
-   * Sets encryption material description in JSON (UTF8) format.
-   */
-  public void setXamzMetaMatdesc(String xamzMetaMatdesc) {
-    this.xamzMetaMatdesc = xamzMetaMatdesc;
-  }
-
-  /**
-   * Returns encryption material description in JSON (UTF8) format.
-   */
-  public String xamzMetaMatdesc() {
-    return this.xamzMetaMatdesc;
-  }
 }

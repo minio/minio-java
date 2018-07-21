@@ -19,9 +19,6 @@ import java.security.*;
 import java.math.BigInteger;
 import java.util.*;
 
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
 import java.io.*;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -612,77 +609,9 @@ public class FunctionalTest {
 
   /**
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   *                 String contentType, SecretKey key).
-   */
-  public static void putObject_test9() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-                        + "long size, String contentType, SecretKey key)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-      keyGenerator.init(128);
-      SecretKey secretKey = keyGenerator.generateKey();
-
-      try (final InputStream is = new ContentInputStream(13 * MB)) {
-        client.putObject(bucketName, objectName, is, 13 * MB, null, secretKey);
-      }
-
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-                      + "long size, String contentType, SecretKey key)",
-                      "size: 13 MB", startTime);
-    } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
-                    + "long size, String contentType, SecretKey key)",
-                    "size: 13 MB", startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   *                 String contentType, KeyPair keyPair).
-   */
-  public static void putObject_test10() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-                        + "long size, String contentType, KeyPair keyPair).");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
-      keyGenerator.initialize(1024, new SecureRandom());
-      KeyPair keyPair = keyGenerator.generateKeyPair();
-
-      try (final InputStream is = new ContentInputStream(13 * MB)) {
-        client.putObject(bucketName, objectName, is, 13 * MB, null, keyPair);
-      }
-
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-                      + "long size, String contentType, KeyPair keyPair)",
-                      "size: 13 MB", startTime);
-    } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
-                    + "long size, String contentType, KeyPair keyPair)",
-                    "size: 13 MB", startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                 Map&lt;String, String&gt; headerMap).
    */
-  public static void putObject_test11() throws Exception {
+  public static void putObject_test9() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
                         + "long size, Map<String, String> headerMap).");
@@ -715,7 +644,7 @@ public class FunctionalTest {
    *                 Map&lt;String, String&gt; headerMap) with Storage Class REDUCED_REDUNDANCY.
    */
   @SuppressFBWarnings("UCF")
-  public static void putObject_test12() throws Exception {
+  public static void putObject_test10() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
                         + "long size, Map<String, String> headerMap). with Storage Class REDUCED_REDUNDANCY set");
@@ -738,9 +667,6 @@ public class FunctionalTest {
 
       if ((returnStorageClass != null) && (!storageClass.equals(returnStorageClass.get(0)))) {
         throw new Exception("Metadata mismatch");
-      } else if (returnStorageClass == null) {
-        // This is a success case as Gateways may not return the storage class - based on the
-        // gateway type
       }
 
       client.removeObject(bucketName, objectName);
@@ -760,7 +686,7 @@ public class FunctionalTest {
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                  Map&lt;String, String&gt; headerMap) with Storage Class STANDARD.
    */
-  public static void putObject_test13() throws Exception {
+  public static void putObject_test11() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
                         + "long size, Map<String, String> headerMap). with Storage Class STANDARD set");
@@ -804,7 +730,7 @@ public class FunctionalTest {
    * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
    *                 Map&lt;String, String&gt; headerMap). with invalid Storage Class set
    */
-  public static void putObject_test14() throws Exception {
+  public static void putObject_test12() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
           + "long size, Map<String, String> headerMap). with invalid Storage Class set");
@@ -1024,89 +950,9 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: getObject(String bucketName, String objectName, SecretKey key).
-   */
-  public static void getObject_test6() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, SecretKey key).");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
-      keyGenerator.init(128);
-      SecretKey secretKey = keyGenerator.generateKey();
-      try (final InputStream is = new ContentInputStream(13 * MB)) {
-        client.putObject(bucketName, objectName, is, 13 * MB, null, secretKey);
-      }
-
-      byte[] inBytes;
-      try (final InputStream is = new ContentInputStream(13 * MB)) {
-        inBytes = readAllBytes(is);
-      }
-
-      byte[] outBytes;
-      try (final InputStream is = client.getObject(bucketName, objectName, secretKey)) {
-        outBytes = readAllBytes(is);
-      }
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("getObject(String bucketName, String objectName, SecretKey key)", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, SecretKey key)", null, startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: getObject(String bucketName, String objectName, KeyPair keyPair).
-   */
-  public static void getObject_test7() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, KeyPair keyPair).");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
-      keyGenerator.initialize(1024, new SecureRandom());
-      KeyPair keyPair = keyGenerator.generateKeyPair();
-      try (final InputStream is = new ContentInputStream(13 * MB)) {
-        client.putObject(bucketName, objectName, is, 13 * MB, null, keyPair);
-      }
-
-      byte[] inBytes;
-      try (final InputStream is = new ContentInputStream(13 * MB)) {
-        inBytes = readAllBytes(is);
-      }
-
-      byte[] outBytes;
-      try (final InputStream is = client.getObject(bucketName, objectName, keyPair)) {
-        outBytes = readAllBytes(is);
-      }
-
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-      client.removeObject(bucketName, objectName);
-
-      mintSuccessLog("getObject(String bucketName, String objectName, KeyPair keyPair)", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, KeyPair keyPair)", null, startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
    * Test: getObject(String bucketName, String objectName) zero size object.
    */
-  public static void getObject_test8() throws Exception {
+  public static void getObject_test6() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: getObject(String bucketName, String objectName) zero size object");
     }
@@ -2480,8 +2326,6 @@ public class FunctionalTest {
     putObject_test10();
     putObject_test11();
     putObject_test12();
-    putObject_test13();
-    putObject_test14();
 
     statObject_test();
 
@@ -2491,8 +2335,6 @@ public class FunctionalTest {
     getObject_test4();
     getObject_test5();
     getObject_test6();
-    getObject_test7();
-    getObject_test8();
 
     listObject_test1();
     listObject_test2();
