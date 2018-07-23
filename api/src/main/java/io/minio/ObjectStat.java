@@ -31,12 +31,6 @@ public class ObjectStat {
   private final long length;
   private final String etag;
   private final String contentType;
-  // Encryption Key available in the object header
-  private final String contentKey;
-  // Encryption IV available in the object header
-  private final String encryptionIv;
-  // Encryption material description available in the object header
-  private final String matDesc;
   private final Map<String,List<String>> httpHeaders;
 
   /**
@@ -63,11 +57,6 @@ public class ObjectStat {
       this.etag = "";
     }
 
-    // set encryption related values
-    this.contentKey = header.xamzMetaKey();
-    this.encryptionIv = header.xamzMetaIv();
-    this.matDesc = header.xamzMetaMatdesc();
-
     this.httpHeaders = httpHeaders;
   }
 
@@ -86,9 +75,6 @@ public class ObjectStat {
     } else {
       this.etag = "";
     }
-    this.contentKey = null;
-    this.encryptionIv = null;
-    this.matDesc = null;
     this.httpHeaders = null;
   }
 
@@ -208,27 +194,6 @@ public class ObjectStat {
         + etag
         + '\''
         + '}';
-  }
-
-  /**
-   * Returns encryption key.
-   */
-  public String contentKey() {
-    return contentKey;
-  }
-
-  /**
-   * Returns encryption IV.
-   */
-  public String encryptionIv() {
-    return encryptionIv;
-  }
-
-  /**
-   * Returns encryption material description.
-   */
-  public String matDesc() {
-    return matDesc;
   }
 
   /**
