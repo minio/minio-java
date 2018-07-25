@@ -1,24 +1,28 @@
 import java.lang.StringBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 
 import javax.crypto.KeyGenerator;
+import java.nio.charset.StandardCharsets;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
-import io.minio.CopyOptions;
+import io.minio.PutOptions;
+import io.minio.GetOptions;
+
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 
-public class CopyObjectEncrypted {
+public class PutGetObjectEncrypted {
   /**
-   * MinioClient.copyObject() example.
+   * MinioClient.putObject() and MinioClient.getObject() example.
    */
-  public static void main(String[] args) 
+  public static void main(String[] args)
     throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.minio.io for test and development. */
@@ -27,11 +31,11 @@ public class CopyObjectEncrypted {
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-      // 
+      //                                           "YOUR-SECRETACCESSKEY");
 
       // Create some content for the object.
       StringBuilder builder = new StringBuilder();
-      for (int i = 0; i < 1000; i++) {
+      for (int i = 0; i < 10; i++) {
         builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
         builder.append("(29 letters)\n");
         builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
@@ -49,26 +53,38 @@ public class CopyObjectEncrypted {
         builder.append("---\n");
       }
 
+      
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
         
       // Generate a new 256 bit AES key - This key must be remembered by the client.
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
       keyGen.init(256);
+      
       // To test SSE-C
       ServerSideEncryption encryption = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
-      // To test SSE-S3
-      // ServerSideEncryption encryption = ServerSideEncryption.atRest();
-        
-      CopyOptions options = new CopyOptions();
+      PutOptions options = new PutOptions();
       options.setContentType("application/octet-stream").setEncryption(encryption);
-      minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
-                             "my-objectname-copy", null, options.getHeaders());
-
+      minioClient.putObject("bucket-name", "my-objectname-plain", bais, bais.available(), options);
+        
       bais.close();
 
       System.out.println("my-objectname is encrypted and uploaded successfully.");
+        
+      GetOptions getoptions = new GetOptions();
+      getoptions.setEncryption(encryption);
+      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", getoptions);
+ 
+      // Read the input stream and print to the console till EOF.
+      byte[] buf = new byte[16384];
+      int bytesRead;
+      while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+        System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+      }
+ 
+      // Close the input stream.
+      stream.close();
 
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

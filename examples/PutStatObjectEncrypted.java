@@ -10,13 +10,16 @@ import javax.crypto.KeyGenerator;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
-import io.minio.CopyOptions;
+import io.minio.PutOptions;
+import io.minio.GetOptions;
+import io.minio.ObjectStat;
+
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 
-public class CopyObjectEncrypted {
+public class PutStatObjectEncrypted {
   /**
-   * MinioClient.copyObject() example.
+   * MinioClient.putObject() and MinioClient.statObject() example.
    */
   public static void main(String[] args) 
     throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
@@ -27,11 +30,12 @@ public class CopyObjectEncrypted {
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-      // 
+      //  
+
 
       // Create some content for the object.
       StringBuilder builder = new StringBuilder();
-      for (int i = 0; i < 1000; i++) {
+      for (int i = 0; i < 10; i++) {
         builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
         builder.append("(29 letters)\n");
         builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
@@ -57,19 +61,21 @@ public class CopyObjectEncrypted {
       keyGen.init(256);
       // To test SSE-C
       ServerSideEncryption encryption = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-
-      // To test SSE-S3
-      // ServerSideEncryption encryption = ServerSideEncryption.atRest();
         
-      CopyOptions options = new CopyOptions();
+      PutOptions options = new PutOptions();
       options.setContentType("application/octet-stream").setEncryption(encryption);
-      minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
-                             "my-objectname-copy", null, options.getHeaders());
-
+      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), options);
+      
       bais.close();
 
-      System.out.println("my-objectname is encrypted and uploaded successfully.");
+      System.out.println("my-objectname is encrypted and uploaded successfully");
+        
+      GetOptions getoptions = new GetOptions();
+      getoptions.setEncryption(encryption);
 
+      // Get the metadata of the object.
+      ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", getoptions);
+      
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
