@@ -4,13 +4,9 @@ import java.io.IOException;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
-
-import javax.crypto.KeyGenerator;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
-import io.minio.PutOptions;
-
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 
@@ -53,19 +49,14 @@ public class PutObjectEncryptedS3 {
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
         
-      // Generate a new 256 bit AES key - This key must be remembered by the client.
-      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-      keyGen.init(256);
       // To test SSE-S3
-      ServerSideEncryption encryption = ServerSideEncryption.atRest();
+      ServerSideEncryption sse = ServerSideEncryption.atRest();
       
-      PutOptions options = new PutOptions();
-      options.setContentType("application/octet-stream").setEncryption(encryption);
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), options);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), sse);
         
       bais.close();
     
-      System.out.println("Encrypted putObject done successfully");
+      System.out.println("my-objectname is encrypted and uploaded successfully.");
         
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

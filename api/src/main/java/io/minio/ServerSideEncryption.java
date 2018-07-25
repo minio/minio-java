@@ -161,7 +161,6 @@ public abstract class ServerSideEncryption implements Destroyable {
       builder.append('"');
       if (i < context.entrySet().size() - 1) {
         builder.append(',');
-        //i  ;
       }
     }
     builder.append('}');
@@ -223,7 +222,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         final byte[] key = secretKey.getEncoded();
         md5.update(key);
         final String md5Sum = BaseEncoding.base64().encode(md5.digest());
-        headers.put("X-Amz-Copy-Source​-Server-Side-Encryption-Customer-Algorithm", "AES256");
+        headers.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Algorithm", "AES256");
         headers.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key",  BaseEncoding.base64().encode(key));
         headers.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key-Md5", md5Sum);
       } finally {
@@ -270,6 +269,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         throw new IllegalStateException("object is already destroyed");
       }
       headers.put("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id", keyId);
+      headers.put("X-Amz-Server-Side-Encryption", "aws:kms");
       if (context.isPresent()) {
         headers.put("X-Amz-Server-Side-Encryption-Context", context.get()); 
       }

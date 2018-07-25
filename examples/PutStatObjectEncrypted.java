@@ -8,10 +8,7 @@ import java.security.InvalidKeyException;
 import javax.crypto.KeyGenerator;
 
 import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
-import io.minio.PutOptions;
-import io.minio.GetOptions;
 import io.minio.ObjectStat;
 
 import io.minio.ServerSideEncryption;
@@ -19,7 +16,7 @@ import io.minio.errors.MinioException;
 
 public class PutStatObjectEncrypted {
   /**
-   * MinioClient.putObject() and MinioClient.statObject() example.
+   * MinioClient.putObject() and MinioClient.statObject() example for SSE_C.
    */
   public static void main(String[] args) 
     throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
@@ -60,21 +57,19 @@ public class PutStatObjectEncrypted {
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
       keyGen.init(256);
       // To test SSE-C
-      ServerSideEncryption encryption = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+      ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
         
-      PutOptions options = new PutOptions();
-      options.setContentType("application/octet-stream").setEncryption(encryption);
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), options);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), sse);
       
       bais.close();
 
       System.out.println("my-objectname is encrypted and uploaded successfully");
-        
-      GetOptions getoptions = new GetOptions();
-      getoptions.setEncryption(encryption);
 
       // Get the metadata of the object.
-      ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", getoptions);
+      ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", sse);
+        
+      System.out.println("my-objectname metadata: ");
+      System.out.println(objectStat);
       
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

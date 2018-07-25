@@ -18,13 +18,14 @@
 import java.security.*;
 import java.math.BigInteger;
 import java.util.*;
-
 import java.io.*;
 
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
 import java.nio.charset.StandardCharsets;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.spec.SecretKeySpec;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import org.joda.time.DateTime;
@@ -764,9 +765,116 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                 ServerSideEncryption sse). To test SSE_C
+   */
+  public static void putObject_test13() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+                        + "long size, ServerSideEncryption sse) using SSE_C. ");
+    }
+    long startTime = System.currentTimeMillis();
+    // Generate a new 256 bit AES key - This key must be remembered by the client.
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+    
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(1 * MB)) {
+        client.putObject(bucketName, objectName, is, 1 * MB, sse);
+      }
+
+      client.removeObject(bucketName, objectName);
+      
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_C.",
+                      "size: 1 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_C.",
+                    "size: 1 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+/**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                 ServerSideEncryption sse). To test SSE_S3
+   */
+  public static void putObject_test14() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+                        + "long size, ServerSideEncryption sse) using SSE_S3.");
+    }
+    long startTime = System.currentTimeMillis();
+    
+    ServerSideEncryption sse = ServerSideEncryption.atRest();
+
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(1 * MB)) {
+        client.putObject(bucketName, objectName, is, 1 * MB, sse);
+      }
+
+      client.removeObject(bucketName, objectName);
+      
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_S3.",
+                      "size: 1 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_S3.",
+                    "size: 1 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+/**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                 ServerSideEncryption sse). To test SSE_KMS
+   */
+  public static void putObject_test15() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+                        + "long size, ServerSideEncryption sse) using SSE_KMS.");
+    }
+    long startTime = System.currentTimeMillis();
+    
+    Map<String,String> myContext = new HashMap<>();
+    myContext.put("key1","value1");
+
+    String keyId = "";
+    keyId = System.getenv("MINT_KEY_ID");
+    if (keyId.equals("")) {
+      mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime); 
+    }
+    ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
+
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(1 * MB)) {
+        client.putObject(bucketName, objectName, is, 1 * MB, sse);
+      }
+
+      client.removeObject(bucketName, objectName);
+      
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_KMS.",
+                      "size: 1 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_KMS.",
+                    "size: 1 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
-  public static void statObject_test() throws Exception {
+  public static void statObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: statObject(String bucketName, String objectName)");
     }
@@ -810,6 +918,58 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: statObject(String bucketName, String objectName, ServerSideEncryption sse).
+   * To test statObject using SSE_C.
+   */
+  public static void statObject_test2() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: statObject(String bucketName, String objectName, ServerSideEncryption sse)"
+          + " using SSE_C.");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      // Generate a new 256 bit AES key - This key must be remembered by the client.
+      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(256);
+      ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+      try (final InputStream is = new ContentInputStream(1)) {
+        client.putObject(bucketName, objectName, is, 1, sse);
+      }
+        
+      ObjectStat objectStat = client.statObject(bucketName, objectName, sse);
+      
+      if (!(objectName.equals(objectStat.name()) && (objectStat.length() == 1)
+            && bucketName.equals(objectStat.bucketName()))) {
+        throw new Exception("[FAILED] object stat differs");
+      }
+
+      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
+      if (!httpHeaders.containsKey("X-Amz-Server-Side-Encryption-Customer-Algorithm")) {
+        throw new Exception("[FAILED] metadata not found in object stat");
+      }
+      List<String> values = httpHeaders.get("X-Amz-Server-Side-Encryption-Customer-Algorithm");
+      if (values.size() != 1) {
+        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
+      }
+      if (!values.get(0).equals("AES256")) {
+        throw new Exception("[FAILED] wrong metadata value. expected: AES256, got: " + values.get(0));
+      }
+
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("statObject(String bucketName, String objectName, ServerSideEncryption sse)"
+          + " using SSE_C.",null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("statObject(String bucketName, String objectName, ServerSideEncryption sse)"
+          + " using SSE_C.",null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  } 
+
+  /**
    * Test: getObject(String bucketName, String objectName).
    */
   public static void getObject_test1() throws Exception {
@@ -826,6 +986,7 @@ public class FunctionalTest {
 
       client.getObject(bucketName, objectName)
           .close();
+      
       client.removeObject(bucketName, objectName);
       mintSuccessLog("getObject(String bucketName, String objectName)",null, startTime);
     } catch (Exception e) {
@@ -970,6 +1131,57 @@ public class FunctionalTest {
       mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog("getObject(String bucketName, String objectName)", null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse). 
+   * To test getObject when object is put using SSE_C.
+   */
+  public static void getObject_test7() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getObject(String bucketName, String objectName, ServerSideEncryption sse) using SSE_C");
+    }
+
+    long startTime = System.currentTimeMillis();
+    // Generate a new 256 bit AES key - This key must be remembered by the client.
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+    try {
+      String objectName = getRandomName();
+      String putString;
+      int bytes_read_put;
+      try (final InputStream is = new ContentInputStream(3 * MB)) {
+        
+        client.putObject(bucketName, objectName, is, 3 * MB, sse);
+        byte [] putbyteArray = new byte[is.available()];
+        bytes_read_put = is.read(putbyteArray);
+        putString = new String(putbyteArray, StandardCharsets.UTF_8);
+      }
+
+      InputStream stream = client.getObject(bucketName, objectName, sse);
+      byte [] getbyteArray = new byte[stream.available()];
+      int bytes_read_get = stream.read(getbyteArray);
+      String getString = new String(getbyteArray, StandardCharsets.UTF_8);
+      stream.close();
+
+      //client.getObject(bucketName, objectName, sse)
+      //  .close();
+
+      // Compare if contents received are same as the initial uploaded object.
+      if ((!putString.equals(getString)) || (bytes_read_put != bytes_read_get) ) {
+        throw new Exception("Contents received from getObject doesn't match initial contents.");
+      }
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("getObject(String bucketName, String objectName, ServerSideEncryption sse)"
+          + " using SSE_C.",null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("getObject(String bucketName, String objectName, ServerSideEncryption sse)"
+          + " using SSE_C.",null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
@@ -2053,6 +2265,167 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
+   * CopyConditions copyConditions, ServerSideEncryption sseTarget) 
+   * To test using SSE_C.
+   */
+  public static void copyObject_test10() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                        + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                        + " using SSE_C. ");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+
+      // Generate a new 256 bit AES key - This key must be remembered by the client.
+      byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8); 
+      SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+      
+      ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
+      ServerSideEncryption sseSource = ServerSideEncryption.copyWithCustomerKey(secretKeySpec);
+        
+      byte[] keyTarget = "98765432100123456789012345678901".getBytes(StandardCharsets.UTF_8); 
+      SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
+
+      ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
+
+      try (final InputStream is = new ContentInputStream(1)) {
+        client.putObject(bucketName, objectName, is, 1, ssePut);
+      }
+
+      // Attempt to remove the user-defined metadata from the object
+      CopyConditions copyConditions = new CopyConditions();
+      copyConditions.setReplaceMetadataDirective();
+        
+   
+      client.copyObject(bucketName, objectName, sseSource, bucketName,
+          objectName, copyConditions, sseTarget);
+      ObjectStat objectStat = client.statObject(bucketName, objectName, sseTarget);
+
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                     + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                     + " using SSE_C.",
+                     null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                    + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                    + " using SSE_C.",
+                    null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
+   * CopyConditions copyConditions, ServerSideEncryption sseTarget) 
+   * To test using SSE_S3.
+   */
+  public static void copyObject_test11() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                        + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                        + " using SSE_S3. ");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      
+      ServerSideEncryption sse = ServerSideEncryption.atRest();
+
+      try (final InputStream is = new ContentInputStream(1)) {
+        client.putObject(bucketName, objectName, is, 1, sse);
+      }
+
+      // Attempt to remove the user-defined metadata from the object
+      CopyConditions copyConditions = new CopyConditions();
+      copyConditions.setReplaceMetadataDirective();
+        
+   
+      client.copyObject(bucketName, objectName, null, bucketName,
+          objectName, copyConditions, sse);
+      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
+        throw new Exception("expected user-defined metadata has been removed");
+      }
+
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                     + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                     + " using SSE_S3.",
+                     null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                    + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                    + " using SSE_S3.",
+                    null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+/**
+   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
+   * CopyConditions copyConditions, ServerSideEncryption sseTarget) 
+   * To test using SSE_KMS.
+   */
+  public static void copyObject_test12() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                        + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                        + " using SSE_KMS. ");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      
+      Map<String,String> myContext = new HashMap<>();
+      myContext.put("key1","value1");
+
+      String keyId = "";
+      keyId = System.getenv("MINT_KEY_ID");
+      if (keyId.equals("")) {
+        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime); 
+      }
+      ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
+
+      try (final InputStream is = new ContentInputStream(1)) {
+        client.putObject(bucketName, objectName, is, 1, sse);
+      }
+
+      // Attempt to remove the user-defined metadata from the object
+      CopyConditions copyConditions = new CopyConditions();
+      copyConditions.setReplaceMetadataDirective();
+        
+      client.copyObject(bucketName, objectName, null, bucketName,
+          objectName, copyConditions, sse);
+      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
+        throw new Exception("expected user-defined metadata has been removed");
+      }
+
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                     + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                     + " using SSE_KMS.",
+                     null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+                    + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+                    + " using SSE_KMS.",
+                    null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
    * Test: getBucketPolicy(String bucketName).
    */
   public static void getBucketPolicy_test1() throws Exception {
@@ -2326,8 +2699,8 @@ public class FunctionalTest {
     putObject_test10();
     putObject_test11();
     putObject_test12();
-
-    statObject_test();
+    
+    statObject_test1();
 
     getObject_test1();
     getObject_test2();
@@ -2371,6 +2744,25 @@ public class FunctionalTest {
     copyObject_test8();
     copyObject_test9();
 
+    // SSE_C tests will only work over TLS connection
+    Locale locale = Locale.ENGLISH;
+    boolean tlsEnabled = endpoint.toLowerCase(locale).contains("https://");
+    if (tlsEnabled) {
+      statObject_test2();
+      getObject_test7();
+      putObject_test13();
+      copyObject_test10();
+    }
+
+    // SSE_S3 and SSE_KMS only work with endpoint="s3.amazonaws.com"
+    String requestUrl = endpoint;
+    if (requestUrl.equals("s3.amazonaws.com")) {
+      putObject_test14();
+      putObject_test15();
+      copyObject_test11();
+      copyObject_test12();
+    }
+    
     getBucketPolicy_test1();
     setBucketPolicy_test1();
 
@@ -2397,7 +2789,7 @@ public class FunctionalTest {
     setup();
 
     putObject_test1();
-    statObject_test();
+    statObject_test1();
     getObject_test1();
     listObject_test1();
     removeObject_test1();

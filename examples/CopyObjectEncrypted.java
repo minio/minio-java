@@ -4,22 +4,19 @@ import java.io.IOException;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
-
-import javax.crypto.KeyGenerator;
-
+import javax.crypto.spec.SecretKeySpec;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
-import io.minio.CopyOptions;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 
 public class CopyObjectEncrypted {
   /**
-   * MinioClient.copyObject() example.
+   * MinioClient.copyObject() example using SSE_C.
    */
   public static void main(String[] args) 
-    throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.minio.io for test and development. */
       MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F",
@@ -27,7 +24,7 @@ public class CopyObjectEncrypted {
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-      // 
+      //                                           "YOUR-SECRETACCESSKEY");
 
       // Create some content for the object.
       StringBuilder builder = new StringBuilder();
@@ -48,30 +45,34 @@ public class CopyObjectEncrypted {
         builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
         builder.append("---\n");
       }
-
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
         
       // Generate a new 256 bit AES key - This key must be remembered by the client.
-      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-      keyGen.init(256);
-      // To test SSE-C
-      ServerSideEncryption encryption = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-
-      // To test SSE-S3
-      // ServerSideEncryption encryption = ServerSideEncryption.atRest();
+      byte[] key = "01234567890123456789012345678901".getBytes("UTF-8"); 
+      SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         
-      CopyOptions options = new CopyOptions();
-      options.setContentType("application/octet-stream").setEncryption(encryption);
-      minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
-                             "my-objectname-copy", null, options.getHeaders());
+      ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
+      ServerSideEncryption sseSource = ServerSideEncryption.copyWithCustomerKey(secretKeySpec);
+        
+      byte[] keyTarget = "98765432100123456789012345678901".getBytes("UTF-8"); 
+      SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
+
+      ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
+        
+      // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
+      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), ssePut);
+      System.out.println("my-objectname is uploaded successfully");
+        
+      minioClient.copyObject("my-bucketname", "my-objectname", sseSource, "my-destbucketname",
+                             "my-objectname-copy", null, sseTarget);
 
       bais.close();
 
-      System.out.println("my-objectname is encrypted and uploaded successfully.");
-
+      System.out.println("my-objectname-copy copied to my-destbucketname successfully.");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
+    System.out.println("finished");
   }
 }
