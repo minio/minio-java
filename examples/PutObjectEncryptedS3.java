@@ -1,28 +1,24 @@
 import java.lang.StringBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 
 import javax.crypto.KeyGenerator;
-import java.nio.charset.StandardCharsets;
-
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
 import io.minio.PutOptions;
-import io.minio.GetOptions;
 
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 
-public class PutGetObjectEncrypted {
+public class PutObjectEncryptedS3 {
   /**
-   * MinioClient.putObject() and MinioClient.getObject() example.
-   */
-  public static void main(String[] args)
+  * MinioClient.putObject() example.
+  */
+  public static void main(String[] args) 
     throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.minio.io for test and development. */
@@ -33,6 +29,7 @@ public class PutGetObjectEncrypted {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
+        
       // Create some content for the object.
       StringBuilder builder = new StringBuilder();
       for (int i = 0; i < 10; i++) {
@@ -53,39 +50,23 @@ public class PutGetObjectEncrypted {
         builder.append("---\n");
       }
 
-      
       // Create a InputStream for object upload.
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
         
       // Generate a new 256 bit AES key - This key must be remembered by the client.
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
       keyGen.init(256);
+      // To test SSE-S3
+      ServerSideEncryption encryption = ServerSideEncryption.atRest();
       
-      // To test SSE-C
-      ServerSideEncryption encryption = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-
       PutOptions options = new PutOptions();
       options.setContentType("application/octet-stream").setEncryption(encryption);
       minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), options);
         
       bais.close();
-
-      System.out.println("my-objectname is encrypted and uploaded successfully.");
+    
+      System.out.println("Encrypted putObject done successfully");
         
-      GetOptions getoptions = new GetOptions();
-      getoptions.setEncryption(encryption);
-      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", getoptions);
- 
-      // Read the input stream and print to the console till EOF.
-      byte[] buf = new byte[16384];
-      int bytesRead;
-      while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-        System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
-      }
- 
-      // Close the input stream.
-      stream.close();
-
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
