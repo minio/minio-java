@@ -825,7 +825,6 @@ public class MinioClient {
     }
 
     HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
-
     if (bucketName != null) {
       checkBucketName(bucketName);
 
@@ -1238,13 +1237,29 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, null,
                                     null, null, 0);
     response.body().close();
     return response;
   }
 
+  /**
+   * Executes HEAD method for given request parameters.
+   *
+   * @param bucketName     Bucket name.
+   * @param objectName     Object name in the bucket.
+   * @param headerMap      Map of header parameters of the request.
+   */
+  private HttpResponse executeHead(String bucketName, String objectName, Map<String,String> headerMap)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException { 
+
+    HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, headerMap,
+                                    null, null, 0);
+    response.body().close();
+    return response;
+  }
 
   /**
    * Executes DELETE method for given request parameters.
@@ -1374,6 +1389,45 @@ public class MinioClient {
     return objectStat;
   }
 
+  /**
+   * Returns meta data information of given object in given bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", sse);
+   * System.out.println(objectStat); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name in the bucket.
+   * @param sse        Encryption metadata
+   *
+   * @return Populated object metadata.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @see ObjectStat
+   */
+  public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException {
+    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3) 
+        || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
+      throw new InvalidArgumentException("StatObject doesn't support encryption type " + sse.getType());
+    } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
+    }
+    Map<String, String> headers = new HashMap<>();
+    sse.marshal(headers);
+    HttpResponse response = executeHead(bucketName, objectName, headers);
+    ResponseHeader header = response.header();
+    Map<String,List<String>> httpHeaders = response.httpHeaders();
+    ObjectStat objectStat = new ObjectStat(bucketName, objectName, header, httpHeaders);
+    return objectStat;
+  }
 
   /**
    * Gets object's URL in given bucket.  The URL is ONLY useful to retrieve the object's data if the object has
@@ -1437,6 +1491,48 @@ public class MinioClient {
            InternalException,
            InvalidArgumentException {
     return getObject(bucketName, objectName, 0, null);
+  }
+
+  /**
+   * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
+   * after use else the connection will remain open.
+   *
+   * <p><b>Example:</b>
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name in the bucket.
+   * @param sse        Encryption metadata.
+   *
+   * @return {@link InputStream} containing the object data.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException {
+    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3) 
+        || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
+      throw new InvalidArgumentException("GetObject doesn't support encryption type " + sse.getType());
+    } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_C provided keys must be made over a secure connection.");
+    }
+    Map<String, String> headers = new HashMap<>();
+    sse.marshal(headers);
+    HttpResponse response = executeGet(bucketName, objectName, headers, null);
+    return response.body().byteStream();
   }
 
 
@@ -1772,6 +1868,67 @@ public class MinioClient {
       InvalidArgumentException {
 
     copyObject(bucketName, objectName, destBucketName, destObjectName, copyConditions, null);
+  }
+
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   * optionally can take a key value CopyConditions as well for conditionally attempting
+   * copyObject.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", sseSource, "my-destbucketname",
+   * "my-destobjname", copyConditions, sseTarget);}
+   * </pre>
+   *
+   * @param bucketName
+   *          Bucket name where the object to be copied exists.
+   * @param objectName
+   *          Object name source to be copied.
+   * @param destBucketName
+   *          Bucket name where the object will be copied to.
+   * @param destObjectName
+   *          Object name to be created, if not provided uses source object name
+   *          as destination object name.
+   * @param copyConditions
+   *          CopyConditions object with collection of supported CopyObject conditions.
+   * @param sseSource
+   *          Source Encryption metadata.
+   * @param sseTarget
+   *          Target Encryption metadata.
+   *
+   * @throws InvalidBucketNameException
+   *           upon an invalid bucket name, invalid object name.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   */
+  public void copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
+                         String destObjectName, CopyConditions copyConditions, ServerSideEncryption sseTarget)
+      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+      NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+      InvalidArgumentException {
+
+    if ((sseTarget.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
+    } else if ((sseTarget.getType() == (ServerSideEncryption.Type.SSE_KMS)) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_KMS operations must be performed over a secure connection.");
+    }
+    Map<String, String> headerTarget = new HashMap<>();
+    Map<String, String> headers = new HashMap<>();
+    sseTarget.marshal(headerTarget);
+    if (sseTarget.getType() == ServerSideEncryption.Type.SSE_C) {
+      Map<String, String> headerSource = new HashMap<>();
+      sseSource.marshal(headerSource);
+      headers.putAll(headerSource);
+      headers.putAll(headerTarget);
+    } else {
+      headers.putAll(headerTarget);
+    }
+    copyObject(bucketName, objectName, destBucketName, destObjectName, copyConditions, headers);
   }
 
   /**
@@ -3066,6 +3223,77 @@ public class MinioClient {
     }
 
     putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap);
+  }
+
+  /**
+   * Uploads data from given stream as object to given bucket where the stream size is unknown.
+   * <p>
+   * If the stream has more than 525MiB data, the client uses a multipart session automatically.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code StringBuilder builder = new StringBuilder();
+   * for (int i = 0; i < 1000; i++) {
+   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *   builder.append("(29 letters)\n");
+   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *   builder.append("(31 letters)\n");
+   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *   builder.append("(39 letters)\n");
+   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *   builder.append("computers after System 7.\n");
+   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *   builder.append("---\n");
+   * }
+   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   * // create object
+   * minioClient.putObject("my-bucketname", "my-objectname", bais, "application/octet-stream");
+   * bais.close();
+   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param stream      stream to upload.
+   * @param sse         encryption metadata.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName)
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, long size,
+                        ServerSideEncryption sse)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException,
+           InvalidArgumentException, InsufficientDataException {
+    if ((sse.getType() == (ServerSideEncryption.Type.SSE_C)) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
+    } else if ((sse.getType() == (ServerSideEncryption.Type.SSE_KMS)) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_KMS operations must be performed over a secure connection.");
+    }
+
+    Map<String, String> headers = new HashMap<>();
+    sse.marshal(headers);
+    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headers);
   }
 
 

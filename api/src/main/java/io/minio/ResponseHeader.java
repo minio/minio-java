@@ -51,13 +51,7 @@ public class ResponseHeader {
   private String xamzId2;
   @Header("x-amz-request-id")
   private String xamzRequestId;
-  @Header("x-amz-meta-x-amz-key")
-  private String xamzMetaKey;
-  @Header("x-amz-meta-x-amz-iv")
-  private String xamzMetaIv;
-  @Header("x-amz-meta-x-amz-matdesc")
-  private String xamzMetaMatdesc;
-
+  
 
   /**
    * Sets content length.
@@ -233,5 +227,4 @@ public class ResponseHeader {
   public String xamzRequestId() {
     return this.xamzRequestId;
   }
-
 }
