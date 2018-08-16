@@ -151,6 +151,14 @@ The full API Reference is available here.
 * [SetBucketPolicy.java](https://github.com/minio/minio-java/tree/master/examples/SetBucketPolicy.java)
 * [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 
+#### Full Examples: Server Side Encryption
+* [CopyObjectEncrypted.java](https://github.com/minio/minio-java/tree/master/examples/CopyObjectEncrypted.java)
+* [CopyObjectEncryptedKms.java](https://github.com/minio/minio-java/tree/master/examples/CopyObjectEncryptedKms.java)
+* [CopyObjectEncryptedS3.java](https://github.com/minio/minio-java/tree/master/examples/CopyObjectEncryptedS3.java)
+* [PutGetObjectEncrypted.java](https://github.com/minio/minio-java/tree/master/examples/PutGetObjectEncrypted.java)
+* [PutObjectEncryptedKms.java](https://github.com/minio/minio-java/tree/master/examples/PutObjectEncryptedKms.java)
+* [PutObjectEncryptedS3.java](https://github.com/minio/minio-java/tree/master/examples/PutObjectEncryptedS3.java)
+
 ## Explore Further
 * [Complete Documentation](https://docs.minio.io)
 * [Minio Java Client SDK API Reference](https://docs.minio.io/docs/java-client-api-reference)
