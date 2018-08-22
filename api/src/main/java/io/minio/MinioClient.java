@@ -1398,7 +1398,7 @@ public class MinioClient {
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
-   * @param sse        Encryption metadata
+   * @param sse        Encryption metadata only required for SSE-C.
    *
    * @return Populated object metadata.
    *
@@ -1416,7 +1416,7 @@ public class MinioClient {
            InternalException, InvalidArgumentException {
     if ((sse.getType() == ServerSideEncryption.Type.SSE_S3) 
         || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
-      throw new InvalidArgumentException("StatObject doesn't support encryption type " + sse.getType());
+      throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
     } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
       throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
     }
@@ -1508,7 +1508,7 @@ public class MinioClient {
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
-   * @param sse        Encryption metadata.
+   * @param sse        Encryption metadata only required for SSE-C.
    *
    * @return {@link InputStream} containing the object data.
    *
@@ -1525,7 +1525,7 @@ public class MinioClient {
            InternalException, InvalidArgumentException {
     if ((sse.getType() == ServerSideEncryption.Type.SSE_S3) 
         || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
-      throw new InvalidArgumentException("GetObject doesn't support encryption type " + sse.getType());
+      throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
     } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
       throw new InvalidArgumentException("SSE_C provided keys must be made over a secure connection.");
     }
