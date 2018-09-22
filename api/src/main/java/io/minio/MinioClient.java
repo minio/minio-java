@@ -3045,7 +3045,7 @@ public class MinioClient {
     headerMap.put("Content-Type", contentType);
 
     try {
-      putObject(bucketName, objectName, size, file, headerMap);
+      putObject(bucketName, objectName, size, file, headerMap, null);
     } finally {
       file.close();
     }
@@ -3151,7 +3151,7 @@ public class MinioClient {
     Map<String, String> headerMap = new HashMap<>();
     headerMap.put("Content-Type", contentType);
 
-    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap);
+    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap, null);
   }
 
 
@@ -3222,7 +3222,7 @@ public class MinioClient {
       headerMap = new HashMap<>();
     }
 
-    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap);
+    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap, null);
   }
 
   /**
@@ -3290,10 +3290,8 @@ public class MinioClient {
     } else if ((sse.getType() == (ServerSideEncryption.Type.SSE_KMS)) && (!this.baseUrl.isHttps())) {
       throw new InvalidArgumentException("SSE_KMS operations must be performed over a secure connection.");
     }
-
-    Map<String, String> headers = new HashMap<>();
-    sse.marshal(headers);
-    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headers);
+    Map<String, String> headerMap = new HashMap<>();
+    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap, sse);
   }
 
 
@@ -3361,7 +3359,7 @@ public class MinioClient {
     Map<String, String> headerMap = new HashMap<>();
     headerMap.put("Content-Type", contentType);
 
-    putObject(bucketName, objectName, null, new BufferedInputStream(stream), headerMap);
+    putObject(bucketName, objectName, null, new BufferedInputStream(stream), headerMap, null);
   }
 
   /**
@@ -3416,7 +3414,7 @@ public class MinioClient {
    *          Object data.
    */
   private void putObject(String bucketName, String objectName, Long size, Object data,
-      Map<String, String> headerMap)
+      Map<String, String> headerMap, ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
@@ -3435,6 +3433,9 @@ public class MinioClient {
 
     if (size <= MIN_MULTIPART_SIZE) {
       // Single put object.
+      if (sse != null) {
+        sse.marshal(headerMap);
+      }
       putObject(bucketName, objectName, size.intValue(), data, null, 0, headerMap);
       return;
     }
@@ -3461,6 +3462,9 @@ public class MinioClient {
     } else {
       // initiate new multipart upload ie no previous multipart found or no previous valid parts for
       // multipart found
+      if (sse != null) {
+        sse.marshal(headerMap);
+      }
       uploadId = initMultipartUpload(bucketName, objectName, headerMap);
     }
 
@@ -3505,7 +3509,13 @@ public class MinioClient {
         }
       }
 
-      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, partNumber, null);
+      // In multi-part uploads, Set encryption headers in the case of SSE-C.
+      Map<String, String> encryptionHeaders = new HashMap<>();
+      if (sse != null && sse.getType() == ServerSideEncryption.Type.SSE_C) {
+        sse.marshal(encryptionHeaders);
+      }
+      
+      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, partNumber, encryptionHeaders);
       totalParts[partNumber - 1] = new Part(partNumber, etag);
     }
 
