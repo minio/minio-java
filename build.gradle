@@ -33,6 +33,7 @@ buildscript {
  */
 apply plugin: 'io.codearte.nexus-staging'
 
+
 allprojects {
     group = 'io.minio'
     version = '5.0.2'
