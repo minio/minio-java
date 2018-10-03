@@ -1620,7 +1620,7 @@ public class MinioClient {
     }
 
     Map<String,String> headerMap = new HashMap<>();
-    if (offset > 0) {
+    if (offset >= 0) {
       if (length != null) {
         headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
       } else {
