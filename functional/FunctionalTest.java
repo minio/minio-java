@@ -753,6 +753,8 @@ public class FunctionalTest {
         }
       }
 
+      client.removeObject(bucketName, objectName);
+
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
                    + "long size, Map<String, String> headerMap)",
                   "size: 13 MB", startTime);
@@ -1183,6 +1185,65 @@ public class FunctionalTest {
       mintFailedLog("getObject(String bucketName, String objectName, ServerSideEncryption sse)"
           + " using SSE_C.",null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0.
+   */
+  public static void getObject_test8() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0"
+      );
+    }
+
+    final long startTime = System.currentTimeMillis();
+    final int fullLength = 1024;
+    final int partialLength = 256;
+    final long offset = 0L;
+    final String objectName = getRandomName();
+    try {
+      try (final InputStream is = new ContentInputStream(fullLength)) {
+        client.putObject(bucketName, objectName, is, fullLength, nullContentType);
+      }
+
+      try (
+          final InputStream partialObjectStream = client.getObject(
+              bucketName,
+              objectName,
+              offset,
+              Long.valueOf(partialLength)
+          )
+      ) {
+        byte[] result = new byte[fullLength];
+        final int read = partialObjectStream.read(result);
+        result = Arrays.copyOf(result, read);
+        if (result.length != partialLength) {
+          throw new Exception(
+              String.format(
+                  "Expecting only the first %d bytes from partial getObject request; received %d bytes instead.",
+                  partialLength,
+                  read
+              )
+          );
+        }
+      }
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
+          String.format("offset: %d, length: %d bytes", offset, partialLength),
+          startTime
+      );
+    } catch (final Exception e) {
+      mintFailedLog(
+          "getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
+          String.format("offset: %d, length: %d bytes", offset, partialLength),
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace())
+      );
       throw e;
     }
   }
@@ -2708,6 +2769,7 @@ public class FunctionalTest {
     getObject_test4();
     getObject_test5();
     getObject_test6();
+    getObject_test8();
 
     listObject_test1();
     listObject_test2();
