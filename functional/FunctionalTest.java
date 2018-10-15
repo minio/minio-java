@@ -874,6 +874,42 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   *                 ServerSideEncryption sse). To test SSE_C (multi-part upload).
+   */
+  public static void putObject_test16() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
+                        + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload). ");
+    }
+    long startTime = System.currentTimeMillis();
+    // Generate a new 256 bit AES key - This key must be remembered by the client.
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+    
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(6 * MB)) {
+        client.putObject(bucketName, objectName, is, 6 * MB, sse);
+      }
+
+      client.removeObject(bucketName, objectName);
+      
+      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).",
+                      "size: 6 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, InputStream stream, "
+                       + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).",
+                    "size: 6 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
   public static void statObject_test1() throws Exception {
@@ -2813,6 +2849,7 @@ public class FunctionalTest {
       statObject_test2();
       getObject_test7();
       putObject_test13();
+      putObject_test16();
       copyObject_test10();
     }
 
