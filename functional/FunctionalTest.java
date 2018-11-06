@@ -19,6 +19,7 @@ import java.security.*;
 import java.math.BigInteger;
 import java.util.*;
 import java.io.*;
+import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardOpenOption.*;
 import java.nio.file.*;
@@ -177,7 +178,11 @@ public class FunctionalTest {
         .url(HttpUrl.parse(urlString))
         .method("GET", null)
         .build();
-    OkHttpClient transport = new OkHttpClient();
+    OkHttpClient transport = new OkHttpClient().newBuilder()
+                              .connectTimeout(20, TimeUnit.SECONDS)
+                              .writeTimeout(20, TimeUnit.SECONDS)
+                              .readTimeout(20, TimeUnit.SECONDS)
+                              .build();
     Response response = transport.newCall(request).execute();
 
     if (response == null) {
@@ -214,7 +219,11 @@ public class FunctionalTest {
         .method("PUT", RequestBody.create(null, dataBytes))
         .addHeader("x-amz-acl", "bucket-owner-full-control")
         .build();
-    OkHttpClient transport = new OkHttpClient();
+    OkHttpClient transport = new OkHttpClient().newBuilder()
+                              .connectTimeout(20, TimeUnit.SECONDS)
+                              .writeTimeout(20, TimeUnit.SECONDS)
+                              .readTimeout(20, TimeUnit.SECONDS)
+                              .build();
     Response response = transport.newCall(request).execute();
 
     if (response == null) {
@@ -1896,7 +1905,11 @@ public class FunctionalTest {
       Request.Builder requestBuilder = new Request.Builder();
       String urlString = client.getObjectUrl(bucketName, "");
       Request request = requestBuilder.url(urlString).post(multipartBuilder.build()).build();
-      OkHttpClient transport = new OkHttpClient();
+      OkHttpClient transport = new OkHttpClient().newBuilder()
+                              .connectTimeout(20, TimeUnit.SECONDS)
+                              .writeTimeout(20, TimeUnit.SECONDS)
+                              .readTimeout(20, TimeUnit.SECONDS)
+                              .build();
       Response response = transport.newCall(request).execute();
       if (response == null) {
         throw new Exception("no response from server");
