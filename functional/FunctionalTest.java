@@ -41,6 +41,7 @@ import okhttp3.Response;
 import io.minio.*;
 import io.minio.messages.*;
 import io.minio.errors.*;
+import io.minio.notification.*;
 
 @SuppressFBWarnings(value = "REC", justification = "Allow catching super class Exception since it's tests")
 public class FunctionalTest {
@@ -2780,6 +2781,74 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: listenBucketNotification(String bucketName).
+   */
+  public static void listenBucketNotification_test1() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: listenBucketNotification(String bucketName)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String bucketName = getRandomName();
+      client.makeBucket(bucketName, region);
+
+      class TestBucketListener implements BucketEventListener {
+        int eventsReceived = 0;
+        NotificationEvent firstEvent = null;
+
+        @Override
+        public void updateEvent(NotificationInfo info) {
+          if (info.records != null && info.records.length > 0) {
+            firstEvent = info.records[0];
+          }
+          this.eventsReceived++;
+        }
+      }
+
+      TestBucketListener bl = new TestBucketListener();
+
+      new Thread(new Runnable() {
+        public void run() {
+          String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+          try {
+            client.listenBucketNotification(bucketName, "prefix", "suffix", events, bl);
+          } catch (Exception e) {
+            System.out.println(e);
+          }
+        }}).start();
+
+      String file1kb = createFile(1024);
+
+      // Upload an object until we detect an event, this is done
+      // in a loop because bucket listening is called in a thread
+      // and may or may not be executed at this point.
+      while (bl.eventsReceived < 1) {
+        client.putObject(bucketName, "prefix-random-suffix", file1kb);
+        Thread.sleep(300);
+      }
+
+      if (!bl.firstEvent.s3.bucket.name.equals(bucketName)) {
+        throw new Exception("[FAILED] Bucket name expected: " + bucketName + ", Got: " + bl.firstEvent.s3.bucket.name);
+      }
+
+      if (!bl.firstEvent.s3.object.key.equals("prefix-random-suffix")) {
+        throw new Exception("[FAILED] Bucket name expected: " + file1kb + ", Got: " + bl.firstEvent.s3.object.key);
+      }
+
+      Files.delete(Paths.get(file1kb));
+      client.removeObject(bucketName, "prefix-random-suffix");
+      client.removeBucket(bucketName);
+      mintSuccessLog("listenBucketNotification(String bucketName)", null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("listenBucketNotification(String bucketName)", null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+
+  /**
    * runTests: runs as much as possible of test combinations.
    */
   public static void runTests() throws Exception {
@@ -2878,6 +2947,8 @@ public class FunctionalTest {
     getBucketPolicy_test1();
     setBucketPolicy_test1();
 
+    listenBucketNotification_test1();
+
     threadedPutObject();
 
     teardown();
@@ -2913,6 +2984,7 @@ public class FunctionalTest {
     copyObject_test1();
     getBucketPolicy_test1();
     setBucketPolicy_test1();
+    listenBucketNotification_test1();
 
     teardown();
   }
@@ -2965,6 +3037,7 @@ public class FunctionalTest {
         client = new MinioClient(endpoint, accessKey, secretKey, region);
         FunctionalTest.runQuickTests();
       }
+
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(-1);

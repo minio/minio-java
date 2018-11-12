@@ -23,6 +23,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`removeBucket`](#removeBucket)  | [`statObject`](#statObject) |   |   |
 | [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |   |
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
+| [`listenBucketNotification`](#listenBucketNotification) |  |   |   |
 
 
 ## 1. Constructors
@@ -552,6 +553,50 @@ try {
   System.out.println("Error occurred: " + e);
 }
 ```
+
+<a name="listenBucketNotification"></a>
+### listenBucketNotification(String bucketName, String prefix, String suffix, String[] events, BucketEventListener listener)
+`public void listenBucketNotification(String bucketName, String prefix, String suffix, String[] events, BucketEventListener listener)`
+
+Listen to events related to objects under the specified bucket.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String[].io.minio.BucketEventListener-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``prefix`` | _String_ | Only listen for objects with the given prefix. |
+| ``suffix`` | _String_ | Only listen for objects with the given suffix. |
+| ``events`` | _String[]_ | Only listen for the specified events, such as s3:ObjectCreated:*, s3:ObjectAccessed:*, s3:ObjectRemoved:*, ..  |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``RuntimeException`` : runtime exception. |
+
+
+__Example__
+
+
+```java
+  try {
+    class TestBucketListener implements BucketEventListener {
+      @Override
+      public void updateEvent(NotificationInfo info) {
+        System.out.println(info.records[0].s3.bucket.name + "/"
+           + info.records[0].s3.object.key + " has been created");
+      }
+    }
+
+    minioClient.listenBucketNotification("testbucket", "", "",
+        new String[]{"s3:ObjectCreated:*", "s3:ObjectAccessed:*"}, new TestBucketListener());
+  } catch (Exception e) {
+    System.out.println("Error occurred: " + e);
+  }
+
+  ```
 
 ## 3. Object operations
 
