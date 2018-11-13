@@ -25,12 +25,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.joda.time.DateTime;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.common.io.BaseEncoding;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -142,15 +145,16 @@ class Signer {
     this.signedHeaders = Joiner.on(";").join(this.canonicalHeaders.keySet());
   }
 
-
   private void setCanonicalQueryString() {
-    Map<String,String> signedQueryParams = new TreeMap<>();
-
     String encodedQuery = this.url.encodedQuery();
     if (encodedQuery == null) {
       this.canonicalQueryString = "";
       return;
     }
+
+    // Building a multimap which only order keys, ordering values is not performed
+    // until Minio server supports it.
+    Multimap<String, String> signedQueryParams = MultimapBuilder.treeKeys().arrayListValues().build();
 
     for (String queryParam : encodedQuery.split("&")) {
       String[] tokens = queryParam.split("=");
@@ -161,9 +165,8 @@ class Signer {
       }
     }
 
-    this.canonicalQueryString = Joiner.on("&").withKeyValueSeparator("=").join(signedQueryParams);
+    this.canonicalQueryString = Joiner.on("&").withKeyValueSeparator("=").join(signedQueryParams.entries());
   }
-
 
   private void setCanonicalRequest() throws NoSuchAlgorithmException {
     setCanonicalHeaders();
