@@ -815,8 +815,8 @@ public class MinioClient {
    * @param length         Length of HTTP request body.
    */
   private Request createRequest(Method method, String bucketName, String objectName,
-                                String region, Map<String,String> headerMap,
-                                Map<String,String> queryParamMap, final String contentType,
+                                String region, Map<String,String[]> headerMap,
+                                Map<String,String[]> queryParamMap, final String contentType,
                                 Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException,
            IOException, InternalException {
@@ -870,8 +870,10 @@ public class MinioClient {
     }
 
     if (queryParamMap != null) {
-      for (Map.Entry<String,String> entry : queryParamMap.entrySet()) {
-        urlBuilder.addEncodedQueryParameter(S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
+      for (Map.Entry<String,String[]> entry : queryParamMap.entrySet()) {
+        for (String v: entry.getValue()) {
+          urlBuilder.addEncodedQueryParameter(S3Escaper.encode(entry.getKey()), S3Escaper.encode(v));
+        }
       }
     }
 
@@ -880,8 +882,10 @@ public class MinioClient {
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
     if (headerMap != null) {
-      for (Map.Entry<String,String> entry : headerMap.entrySet()) {
-        requestBuilder.header(entry.getKey(), entry.getValue());
+      for (Map.Entry<String,String[]> entry : headerMap.entrySet()) {
+        for (String v: entry.getValue()) {
+          requestBuilder.header(entry.getKey(), v);
+        }
       }
     }
 
@@ -993,14 +997,40 @@ public class MinioClient {
    * @param length         Length of HTTP request body.
    */
   private HttpResponse execute(Method method, String region, String bucketName, String objectName,
-                               Map<String,String> headerMap, Map<String,String> queryParamMap,
+                               Map<String,String> simpleHeaderMap, Map<String,String> simpleQueryParamMap,
+                               Object body, int length)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
+
+    Map<String, String[]> queryParamMap = null;
+    if (simpleQueryParamMap != null) {
+      queryParamMap = new HashMap<>();
+      for (Map.Entry<String, String> m: simpleQueryParamMap.entrySet()) {
+        queryParamMap.put(m.getKey(), new String[]{m.getValue()});
+      }
+    }
+
+    Map<String, String[]> headerMap = null;
+    if (simpleHeaderMap != null) {
+      headerMap = new HashMap<>();
+      for (Map.Entry<String, String> h: simpleHeaderMap.entrySet()) {
+        headerMap.put(h.getKey(), new String[]{h.getValue()});
+      }
+    }
+
+    return executeReq(method, region, bucketName, objectName, headerMap, queryParamMap, body, length);
+  }
+
+  private HttpResponse executeReq(Method method, String region, String bucketName, String objectName,
+                               Map<String,String[]> headerMap, Map<String,String[]> queryParamMap,
                                Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     String contentType = null;
-    if (headerMap != null) {
-      contentType = headerMap.get("Content-Type");
+    if (headerMap != null && headerMap.get("Content-Type") != null) {
+      contentType = String.join(" ", headerMap.get("Content-Type"));
     }
     if (body != null && !(body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[])) {
       byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
@@ -2053,8 +2083,16 @@ public class MinioClient {
       body = new byte[0];
     }
 
+    Map<String, String[]> queryParamMap = null;
+    if (reqParams != null) {
+      queryParamMap = new HashMap<>();
+      for (Map.Entry<String, String> m: reqParams.entrySet()) {
+        queryParamMap.put(m.getKey(), new String[]{m.getValue()});
+      }
+    }
+
     String region = getRegion(bucketName);
-    Request request = createRequest(method, bucketName, objectName, region, null, reqParams, null, body, 0);
+    Request request = createRequest(method, bucketName, objectName, region, null, queryParamMap, null, body, 0);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
