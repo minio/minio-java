@@ -94,6 +94,14 @@ public class QueueConfiguration extends XmlEntity {
   }
 
 
+
+  /**
+   * Sets filter.
+   */
+  public void setFilter(Filter filter) {
+    this.filter = filter;
+  }
+
   /**
    * Returns filter.
    */
@@ -102,10 +110,4 @@ public class QueueConfiguration extends XmlEntity {
   }
 
 
-  /**
-   * Sets filter.
-   */
-  public void filter(Filter filter) {
-    this.filter = filter;
-  }
 }

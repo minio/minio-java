@@ -62,7 +62,7 @@ public class SetBucketNotification {
       Filter filter = new Filter();
       filter.setPrefixRule("images");
       filter.setSuffixRule("pg");
-      queueConfiguration.filter(filter);
+      queueConfiguration.setFilter(filter);
 
       queueConfigurationList.add(queueConfiguration);
       notificationConfiguration.setQueueConfigurationList(queueConfigurationList);

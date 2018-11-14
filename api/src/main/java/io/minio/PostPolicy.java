@@ -170,15 +170,6 @@ public class PostPolicy {
     return sb.toString().getBytes(StandardCharsets.UTF_8);
   }
 
-  /**
-   * Returns form data of this post policy.
-   * @deprecated Use {@link #formData(String accessKey, String secretKey, String region)} instead.
-   */
-  @Deprecated
-  public Map<String,String> formData(String accessKey, String secretKey)
-    throws InvalidKeyException, NoSuchAlgorithmException {
-    return makeFormData(accessKey, secretKey, BucketRegionCache.INSTANCE.region(this.bucketName));
-  }
 
   /**
    * Returns form data of this post policy setting the provided region.

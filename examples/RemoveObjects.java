@@ -48,7 +48,7 @@ public class RemoveObjects {
       objectNames.add("my-objectname3");
 
       // Remove object all objects 'objectNames' list from 'my-bucketname'.
-      for (Result<DeleteError> errorResult: minioClient.removeObject("my-bucketname", objectNames)) {
+      for (Result<DeleteError> errorResult: minioClient.removeObjects("my-bucketname", objectNames)) {
         DeleteError error = errorResult.get();
         System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
       }
