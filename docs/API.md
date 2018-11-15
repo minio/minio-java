@@ -1058,6 +1058,96 @@ try {
 ```
 
 <a name="putObject"></a>
+### putObject(String bucketName, String objectName, InputStream stream, long size, Map<String, String> headerMap, SecretKey key)
+
+`public void putObject(String bucketName, String objectName, InputStream stream, long size, Map<String, String> headerMap,
+		  SecretKey key)`
+
+Takes data from given stream, encrypts it using a random content key and uploads it as object to given bucket. Also
+uploads the encrypted content key and iv as header of the encrypted object. The content key is encrypted using the
+master key passed to this function.
+
+Any custom or additional meta data can also be provided through `headerMap`.
+
+If the object is larger than 5MB, the client will automatically perform multi part upload.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.lang.String-javax.crypto.SecretKey-)
+
+__Parameters__
+
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``stream``  | _InputStream_  | stream to upload. |
+| ``size``  | _long_  | Size of the data to read from ``stream`` that will be uploaded. |
+| ``headerMap``  | Map<String, String> | Custom/additional meta data of the object. |
+| ``key``  | _SecretKey_ | An object of type initialized with AES [SecretKey](https://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html).  |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+| 		 | ``InvalidAlgorithmParameterException`` : upon wrong encryption algorithm used. |
+|		 | ``BadPaddingException`` : upon incorrect padding in a block. |
+|		 | ``IllegalBlockSizeException`` : upon incorrect block. |
+|		 | ``NoSuchPaddingException`` : upon wrong padding type specified. |
+
+__Example__
+
+Object is encrypted using a randomly generated data encryption key. The data encryption key is then encrypted using a master key known only to the client (wrapped in encryptionMaterials object). The encrypted data encryption key is uploaded as the object header along with the IV used and the encrypted object to the remote server.
+
+```java
+try {
+  StringBuilder builder = new StringBuilder();
+  for (int i = 0; i < 1000; i++) {
+    builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+    builder.append("(29 letters)\n");
+    builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+    builder.append("(31 letters)\n");
+    builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+    builder.append("NASAs Space Shuttle. (32 letters)\n");
+    builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+    builder.append("(39 letters)\n");
+    builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+    builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+    builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+    builder.append("computers after System 7.\n");
+    builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+    builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+    builder.append("- --\n");
+  }
+  ByteArrayInputStream bais = new
+  ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+  
+  // create object
+  Map<String, String> headerMap = new HashMap<>();
+  headerMap.put("Content-Type", "application/octet-stream");
+  headerMap.put("X-Amz-Meta-Key", "meta-data");
+  
+  //Generate symmetric 256 bit AES key.
+  KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+  symKeyGenerator.init(256);
+  SecretKey symKey = symKeyGenerator.generateKey();
+  
+  // Create an object
+  minioClient.putObject("mybucket", "myobject", bais, bais.available(), headerMap, symKey);
+  bais.close();
+  System.out.println("myobject is uploaded successfully");
+} catch(MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+
+<a name="putObject"></a>
 ### putObject(String bucketName, String objectName, InputStream stream, long size, String contentType, KeyPair key)
 
 `public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType,

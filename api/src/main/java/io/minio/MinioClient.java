@@ -3294,6 +3294,91 @@ public class MinioClient {
 
 
   /**
+   * Uploads data from given stream as object to given bucket with specified meta data 
+   * and encrypt the stream with a sse key.
+
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session. 
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code StringBuilder builder = new StringBuilder();
+   * for (int i = 0; i < 1000; i++) {
+   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *   builder.append("(29 letters)\n");
+   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *   builder.append("(31 letters)\n");
+   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *   builder.append("(39 letters)\n");
+   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *   builder.append("computers after System 7.\n");
+   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *   builder.append("---\n");
+   * }
+   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+
+   * // create object
+   * Map<String, String> headerMap = new HashMap<>();
+   * headerMap.put("Content-Type", "application/octet-stream");
+   * headerMap.put("X-Amz-Meta-Key", "meta-data");
+
+   * //Generate symmetric 256 bit AES key.
+   * KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+   * symKeyGenerator.init(256);
+   * SecretKey symKey = symKeyGenerator.generateKey();
+
+   * minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), headerMap, symKey);
+   * bais.close();
+   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param stream      stream to upload.
+   * @param headerMap   Custom/additional meta data of the object.
+   * @param sse         encryption metadata.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName)
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, long size,
+                        Map<String, String> headerMap, ServerSideEncryption sse)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException,
+           InvalidArgumentException, InsufficientDataException {
+    if ((sse.getType() == (ServerSideEncryption.Type.SSE_C)) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
+    } else if ((sse.getType() == (ServerSideEncryption.Type.SSE_KMS)) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE_KMS operations must be performed over a secure connection.");
+    }
+    if (headerMap == null) {
+      headerMap = new HashMap<>();
+    }
+    putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap, sse);
+  }
+
+  
+  /**
    * Uploads data from given stream as object to given bucket where the stream size is unknown.
    * <p>
    * If the stream has more than 525MiB data, the client uses a multipart session automatically.
