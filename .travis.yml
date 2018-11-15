@@ -7,6 +7,11 @@ jdk:
 - openjdk8
 - openjdk9
 - openjdk10
+# Gradle dependenices resolution gets some TLS errors when trying to download
+# packages from some locations, Modifiying java truststore workaround is
+# inspired from this link: https://github.com/travis-ci/travis-ci/issues/9368#issuecomment-395470644
+before_install:
+- rm "${JAVA_HOME}/lib/security/cacerts" && ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts" || test true
 script:
 - ./gradlew check
 - ./gradlew runFunctionalTest
