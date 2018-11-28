@@ -212,7 +212,6 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -237,7 +236,6 @@ public class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -300,7 +298,6 @@ public class MinioClient {
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -340,7 +337,6 @@ public class MinioClient {
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -351,48 +347,6 @@ public class MinioClient {
   public MinioClient(String endpoint, String accessKey, String secretKey, String region)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, region, !(endpoint != null && endpoint.startsWith("http://")));
-  }
-
-
-  /**
-   * Creates Minio client object with given endpoint, access key, secret key and region name
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1"); }</pre>
-   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.minio.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param region Region name to access service in endpoint.
-   * @param clientTimestamp client TimeStamp Format ISO8601 to create signatures or Client time will be used.
-   *
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
-   *          OkHttpClient httpClient)
-   */
-  public MinioClient(String endpoint, String accessKey, String secretKey, String region , String clientTimestamp)
-          throws InvalidEndpointException, InvalidPortException {
-    this(endpoint,  accessKey, secretKey, region);
-    this.mClientTimeStamp = clientTimestamp;
   }
 
   /**
@@ -410,7 +364,6 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -480,7 +433,6 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -522,7 +474,6 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -608,7 +559,6 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -654,7 +604,6 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -3502,6 +3451,75 @@ public class MinioClient {
     // Set the contentType
     Map<String, String> headerMap = new HashMap<>();
     headerMap.put("Content-Type", contentType);
+
+    putObject(bucketName, objectName, null, new BufferedInputStream(stream), headerMap, null);
+  }
+
+  /**
+   * Uploads data from given stream as object to given bucket where the stream size is unknown.
+   * <p>
+   * If the stream has more than 525MiB data, the client uses a multipart session automatically.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code StringBuilder builder = new StringBuilder();
+   * for (int i = 0; i < 1000; i++) {
+   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *   builder.append("(29 letters)\n");
+   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *   builder.append("(31 letters)\n");
+   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *   builder.append("(39 letters)\n");
+   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *   builder.append("computers after System 7.\n");
+   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *   builder.append("---\n");
+   * }
+   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   * // create object
+   * minioClient.putObject("my-bucketname", "my-objectname", bais, "application/octet-stream");
+   * bais.close();
+   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param stream      stream to upload.
+   * @param contentType Content type of the stream.
+   * @param clientTimeStamp   Client TimeStamp Format ISO8601 to create signatures or Client time will be used.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName)
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, String contentType, String clientTimeStamp)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException,
+           InvalidArgumentException, InsufficientDataException {
+
+    // Set the contentType
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("Content-Type", contentType);
+    this.mClientTimeStamp = clientTimeStamp;
 
     putObject(bucketName, objectName, null, new BufferedInputStream(stream), headerMap, null);
   }
