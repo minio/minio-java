@@ -948,6 +948,7 @@ public class MinioClient {
       xAmzDate = date.toString(DateFormat.AMZ_DATE_FORMAT);
     }else{
       date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(xAmzDate);
+      this.mClientTimeStamp = null; //So it's not reused
     }
     requestBuilder.header("x-amz-date", xAmzDate);
 
