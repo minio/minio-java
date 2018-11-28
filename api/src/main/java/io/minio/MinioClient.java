@@ -161,6 +161,8 @@ public class MinioClient {
   private static final String US_EAST_1 = "us-east-1";
   private static final String UPLOAD_ID = "uploadId";
 
+  private String mClientTimeStamp = null;
+
   private static XmlPullParserFactory xmlPullParserFactory = null;
 
   static {
@@ -210,6 +212,7 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -234,6 +237,7 @@ public class MinioClient {
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -296,6 +300,7 @@ public class MinioClient {
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -335,6 +340,7 @@ public class MinioClient {
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -345,6 +351,48 @@ public class MinioClient {
   public MinioClient(String endpoint, String accessKey, String secretKey, String region)
     throws InvalidEndpointException, InvalidPortException {
     this(endpoint, 0, accessKey, secretKey, region, !(endpoint != null && endpoint.startsWith("http://")));
+  }
+
+
+  /**
+   * Creates Minio client object with given endpoint, access key, secret key and region name
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
+   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1"); }</pre>
+   * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
+   *              Valid endpoints:
+   *              * https://s3.amazonaws.com
+   *              * https://s3.amazonaws.com/
+   *              * https://play.minio.io:9000
+   *              * http://play.minio.io:9010/
+   *              * localhost
+   *              * localhost.localdomain
+   *              * play.minio.io
+   *              * 127.0.0.1
+   *              * 192.168.1.60
+   *              * ::1</pre>
+   * @param accessKey Access key to access service in endpoint.
+   * @param secretKey Secret key to access service in endpoint.
+   * @param region Region name to access service in endpoint.
+   * @param clientTimestamp client TimeStamp Format ISO8601 to create signatures or Client time will be used.
+   *
+   * @see #MinioClient(String endpoint)
+   * @see #MinioClient(URL url)
+   * @see #MinioClient(URL url, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
+   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure,
+   *          OkHttpClient httpClient)
+   */
+  public MinioClient(String endpoint, String accessKey, String secretKey, String region , String clientTimestamp)
+          throws InvalidEndpointException, InvalidPortException {
+    this(endpoint,  accessKey, secretKey, region);
+    this.mClientTimeStamp = clientTimestamp;
   }
 
   /**
@@ -362,6 +410,7 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -431,6 +480,7 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -472,6 +522,7 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
@@ -557,6 +608,7 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -602,6 +654,7 @@ public class MinioClient {
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
+   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region, String clientTimestamp)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
@@ -938,8 +991,16 @@ public class MinioClient {
     if (sha256Hash != null) {
       requestBuilder.header("x-amz-content-sha256", sha256Hash);
     }
-    DateTime date = new DateTime();
-    requestBuilder.header("x-amz-date", date.toString(DateFormat.AMZ_DATE_FORMAT));
+
+    String xAmzDate = mClientTimeStamp;
+    DateTime date ;
+    if (xAmzDate == null){
+      date = new DateTime();
+      xAmzDate = date.toString(DateFormat.AMZ_DATE_FORMAT);
+    }else{
+      date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(xAmzDate);
+    }
+    requestBuilder.header("x-amz-date", xAmzDate);
 
     if (chunkedUpload) {
       // Add empty request body for calculating seed signature.
