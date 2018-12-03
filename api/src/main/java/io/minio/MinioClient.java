@@ -2949,13 +2949,14 @@ public class MinioClient {
     if (region == null || US_EAST_1.equals(region)) {
       // for 'us-east-1', location constraint is not required.  for more info
       // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+      region = US_EAST_1;
       configString = "";
     } else {
       CreateBucketConfiguration config = new CreateBucketConfiguration(region);
       configString = config.toString();
     }
 
-    HttpResponse response = executePut(bucketName, null, null, null, US_EAST_1, configString, 0);
+    HttpResponse response = executePut(bucketName, null, null, null, region, configString, 0);
     response.body().close();
   }
 
