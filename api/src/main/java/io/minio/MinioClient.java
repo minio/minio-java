@@ -17,6 +17,9 @@
 
 package io.minio;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -57,6 +60,8 @@ import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 
+import io.minio.notification.NotificationInfo;
+
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -68,6 +73,8 @@ import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -815,8 +822,8 @@ public class MinioClient {
    * @param length         Length of HTTP request body.
    */
   private Request createRequest(Method method, String bucketName, String objectName,
-                                String region, Map<String,String> headerMap,
-                                Map<String,String> queryParamMap, final String contentType,
+                                String region, Multimap<String,String> headerMap,
+                                Multimap<String,String> queryParamMap, final String contentType,
                                 Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException,
            IOException, InternalException {
@@ -870,7 +877,7 @@ public class MinioClient {
     }
 
     if (queryParamMap != null) {
-      for (Map.Entry<String,String> entry : queryParamMap.entrySet()) {
+      for (Map.Entry<String,String> entry : queryParamMap.entries()) {
         urlBuilder.addEncodedQueryParameter(S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
       }
     }
@@ -880,7 +887,7 @@ public class MinioClient {
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
     if (headerMap != null) {
-      for (Map.Entry<String,String> entry : headerMap.entrySet()) {
+      for (Map.Entry<String,String> entry : headerMap.entries()) {
         requestBuilder.header(entry.getKey(), entry.getValue());
       }
     }
@@ -998,9 +1005,29 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
-    String contentType = null;
+
+    Multimap<String, String> queryParamMultiMap = null;
+    if (queryParamMap != null) {
+      queryParamMultiMap = Multimaps.forMap(queryParamMap);
+    }
+
+    Multimap<String, String> headerMultiMap = null;
     if (headerMap != null) {
-      contentType = headerMap.get("Content-Type");
+      headerMultiMap = Multimaps.forMap(headerMap);
+    }
+
+    return executeReq(method, region, bucketName, objectName, headerMultiMap, queryParamMultiMap, body, length);
+  }
+
+  private HttpResponse executeReq(Method method, String region, String bucketName, String objectName,
+                               Multimap<String,String> headerMap, Multimap<String,String> queryParamMap,
+                               Object body, int length)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException {
+    String contentType = null;
+    if (headerMap != null && headerMap.get("Content-Type") != null) {
+      contentType = String.join(" ", headerMap.get("Content-Type"));
     }
     if (body != null && !(body instanceof InputStream || body instanceof RandomAccessFile || body instanceof byte[])) {
       byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
@@ -2053,8 +2080,16 @@ public class MinioClient {
       body = new byte[0];
     }
 
+    Multimap<String, String> queryParamMap = null;
+    if (reqParams != null) {
+      queryParamMap = HashMultimap.create();
+      for (Map.Entry<String, String> m: reqParams.entrySet()) {
+        queryParamMap.put(m.getKey(), m.getValue());
+      }
+    }
+
     String region = getRegion(bucketName);
-    Request request = createRequest(method, bucketName, objectName, region, null, reqParams, null, body, 0);
+    Request request = createRequest(method, bucketName, objectName, region, null, queryParamMap, null, body, 0);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
@@ -4303,6 +4338,63 @@ public class MinioClient {
     }
   }
 
+  /**
+   * Listen to bucket notifications.
+   *
+   * @param bucketName Bucket name.
+   * @param prefix Prefix of concerned objects events.
+   * @param suffix Suffix of concerned objects events.
+   * @param events List of events to watch.
+   * @param eventCallback Event handler.
+   *
+   */
+
+  public void listenBucketNotification(String bucketName, String prefix, String suffix, String[] events,
+      BucketEventListener eventCallback)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+                    InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+                    InternalException  {
+
+    Multimap<String,String> queryParamMap = HashMultimap.create();
+    queryParamMap.put("prefix", prefix);
+    queryParamMap.put("suffix", suffix);
+    for (String event: events) {
+      queryParamMap.put("events", event);
+    }
+
+    String bodyContent = "";
+    Scanner scanner = null;
+    HttpResponse response = null;
+    ObjectMapper mapper = new ObjectMapper();
+
+    try {
+      response = executeReq(Method.GET, getRegion(bucketName),
+          bucketName, "", null, queryParamMap, null, 0);
+      scanner = new Scanner(response.body().charStream());
+      scanner.useDelimiter("\n");
+      while (scanner.hasNext()) {
+        bodyContent = scanner.next().trim();
+        if (bodyContent.equals("")) {
+          continue;
+        }
+        NotificationInfo ni = mapper.readValue(bodyContent, NotificationInfo.class);
+        eventCallback.updateEvent(ni);
+      }
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw e;
+    } finally {
+      if (response != null) {
+        response.body().close();
+      }
+      if (scanner != null) {
+        scanner.close();
+      }
+    }
+  }
+
+
 
   /**
    * Skips data of up to given length in given input stream.
@@ -4449,3 +4541,4 @@ public class MinioClient {
     this.traceStream = null;
   }
 }
+
