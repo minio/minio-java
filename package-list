@@ -2,4 +2,5 @@ io.minio
 io.minio.errors
 io.minio.http
 io.minio.messages
+io.minio.notification
 io.minio.org.apache.commons.validator.routines
