@@ -1272,6 +1272,55 @@ try {
 }
 ```
 
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName,vServerSideEncryption sse, String fileName)
+
+`public void putObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)`
+
+Uploads contents from a file to objectName and encrypt with a sse key.
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-java.lang.String-)
+
+__Parameters__
+
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``sse``  | _ServerSideEncryption_  | Form of server-side encryption [ServerSideEncryption](http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html). |
+| ``fileName``  | _String_  | File name. |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+
+__Example__
+
+
+```java
+try {
+  KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+  keyGen.init(256);
+  ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+  minioClient.putObject("mybucket",  "island.jpg", sse, "/mnt/photos/island.jpg")
+  System.out.println("island.jpg is uploaded successfully");
+} catch(MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+
 <a name="statObject"></a>
 ### statObject(String bucketName, String objectName)
 
