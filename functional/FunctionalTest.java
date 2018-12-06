@@ -932,7 +932,7 @@ public class FunctionalTest {
       String objectName = getRandomName();
       Map<String, String> headerMap = new HashMap<>();
       headerMap.put("Content-Type", customContentType);
-      headerMap.put("x-amz-meta-my-custom-data", "foo");
+      headerMap.put("my-custom-data", "foo");
       try (final InputStream is = new ContentInputStream(1)) {
         client.putObject(bucketName, objectName, is, 1, headerMap);
       }
@@ -2345,7 +2345,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("X-Amz-Meta-Test", "testValue");
+      headerMap.put("Test", "testValue");
 
       try (final InputStream is = new ContentInputStream(1)) {
         client.putObject(bucketName, objectName, is, 1, headerMap);

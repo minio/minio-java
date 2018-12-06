@@ -1175,7 +1175,7 @@ try {
   // create object
   Map<String, String> headerMap = new HashMap<>();
   headerMap.put("Content-Type", "application/octet-stream");
-  headerMap.put("X-Amz-Meta-Key", "meta-data");
+  headerMap.put("Key", "meta-data");
   
   //Generate symmetric 256 bit AES key.
   KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
