@@ -920,6 +920,39 @@ public class FunctionalTest {
 
 
   /**
+   * Test: putObject(String bucketName, String objectName, ServerSideEncryption sse, String filename). To test SSE_C
+   *
+   */
+
+  public static void putObject_test17() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: putObject(String bucketName, String objectName, ServerSideEncryption sse, "
+              + "String filename). To test SSE_C. ");
+    }
+    long startTime = System.currentTimeMillis();
+    // Generate a new 256 bit AES key - This key must be remembered by the client.
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    try {
+      String objectName = getRandomName();
+      String filename = createFile1Mb();
+      client.putObject(bucketName, objectName, sse, filename);
+      Files.delete(Paths.get(filename));
+      client.removeObject(bucketName, objectName);
+
+      mintSuccessLog("putObject(String bucketName, String objectName, ServerSideEncryption sse, "
+                      + "String filename). To test SSE_C",
+              "size: 1 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("putObject(String bucketName, String objectName, ServerSideEncryption sse, "
+                      + "String filename). To test SSE_C",
+              "size: 1 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
    * Test: statObject(String bucketName, String objectName).
    */
   public static void statObject_test1() throws Exception {
@@ -2932,6 +2965,7 @@ public class FunctionalTest {
       getObject_test7();
       putObject_test13();
       putObject_test16();
+      putObject_test17();
       copyObject_test10();
     }
 

@@ -3413,7 +3413,75 @@ public class MinioClient {
     putObject(bucketName, objectName, size, new BufferedInputStream(stream), headerMap, sse);
   }
 
-  
+
+
+  /**
+   * Uploads given file as object in given bucket and encrypt with a sse key.
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again. The client will examine all parts of any current upload session
+   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
+   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * </p>
+   * <p>
+   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * </p>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param fileName    File name to upload.
+   * @param sse         encryption metadata.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoResponseException         upon no response from server
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   * @see #putObject(String bucketName, String objectName, String fileName)
+   */
+
+  public void putObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)
+          throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
+          InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+          InternalException, InvalidArgumentException, InsufficientDataException {
+
+    if (sse.getType() == ServerSideEncryption.Type.SSE_C && !this.baseUrl.isHttps()) {
+      throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
+    } else if (sse.getType() == ServerSideEncryption.Type.SSE_KMS && !this.baseUrl.isHttps()) {
+      throw new InvalidArgumentException("SSE_KMS operations must be performed over a secure connection.");
+    }
+
+    if (fileName == null || "".equals(fileName)) {
+      throw new InvalidArgumentException("empty file name is not allowed");
+    }
+    Path filePath = Paths.get(fileName);
+    if (!Files.isRegularFile(filePath)) {
+      throw new InvalidArgumentException("'" + fileName + "': not a regular file");
+    }
+
+    String contentType = Files.probeContentType(filePath);
+    long size = Files.size(filePath);
+
+    RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
+
+    // Set the contentType
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("Content-Type", contentType);
+
+    try {
+      putObject(bucketName, objectName, size, file, headerMap, sse);
+    } finally {
+      file.close();
+    }
+
+  }
+
+
   /**
    * Uploads data from given stream as object to given bucket where the stream size is unknown.
    * <p>
