@@ -1569,6 +1569,115 @@ public class MinioClient {
   }
 
   /**
+   * Gets encrypted object's data in the given bucket and stores it to given file name.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", sse, "photo.jpg"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param sse         encryption metadata.
+   * @param fileName    file name to download into.
+   *
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   */
+  public void getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)
+          throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+          InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+          InternalException, InvalidArgumentException {
+
+    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
+            || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
+      throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
+    } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
+      throw new InvalidArgumentException("SSE-C provided keys must be made over a secure connection.");
+    }
+
+    Path filePath = Paths.get(fileName);
+    boolean fileExists = Files.exists(filePath);
+
+    if (fileExists && !Files.isRegularFile(filePath)) {
+      throw new InvalidArgumentException(fileName + ": not a regular file");
+    }
+
+    ObjectStat objectStat = statObject(bucketName, objectName, sse);
+    long length = objectStat.length();
+    String etag = objectStat.etag();
+
+    String tempFileName = fileName + "." + etag + ".part.minio";
+    Path tempFilePath = Paths.get(tempFileName);
+    boolean tempFileExists = Files.exists(tempFilePath);
+
+    if (tempFileExists && !Files.isRegularFile(tempFilePath)) {
+      throw new IOException(tempFileName + ": not a regular file");
+    }
+
+    long tempFileSize = 0;
+    if (tempFileExists) {
+      tempFileSize = Files.size(tempFilePath);
+      if (tempFileSize > length) {
+        Files.delete(tempFilePath);
+        tempFileExists = false;
+        tempFileSize = 0;
+      }
+    }
+
+    if (fileExists) {
+      long fileSize = Files.size(filePath);
+      if (fileSize == length) {
+        // already downloaded. nothing to do
+        return;
+      } else if (fileSize > length) {
+        throw new InvalidArgumentException("Source object, '" + objectName + "', size:" + length
+                + " is smaller than the destination file, '" + fileName + "', size:" + fileSize);
+      } else if (!tempFileExists) {
+        // before resuming the download, copy filename to tempfilename
+        Files.copy(filePath, tempFilePath);
+        tempFileSize = fileSize;
+        tempFileExists = true;
+      }
+    }
+
+    InputStream is = null;
+    OutputStream os = null;
+    try {
+      is = getObject(bucketName, objectName, sse);
+      os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+      long bytesWritten = ByteStreams.copy(is, os);
+      is.close();
+      os.close();
+
+      if (bytesWritten != length - tempFileSize) {
+        throw new IOException(tempFileName + ": unexpected data written.  expected = " + (length - tempFileSize)
+                + ", written = " + bytesWritten);
+      }
+      Files.move(tempFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
+    } finally {
+      if (is != null) {
+        is.close();
+      }
+      if (os != null) {
+        os.close();
+      }
+    }
+
+
+  }
+
+  /**
    * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
    * after use else the connection will remain open.
    *
@@ -1762,8 +1871,8 @@ public class MinioClient {
         // already downloaded. nothing to do
         return;
       } else if (fileSize > length) {
-        throw new InvalidArgumentException("'" + fileName + "': object size " + length + " is smaller than file size "
-                                           + fileSize);
+        throw new InvalidArgumentException("Source object, '" + objectName + "', size:" + length
+                 + " is smaller than the destination file, '" + fileName + "', size:" + fileSize);
       } else if (!tempFileExists) {
         // before resuming the download, copy filename to tempfilename
         Files.copy(filePath, tempFilePath);
