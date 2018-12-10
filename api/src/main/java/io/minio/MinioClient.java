@@ -99,6 +99,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -169,6 +171,31 @@ public class MinioClient {
   private static final String UPLOAD_ID = "uploadId";
 
   private static XmlPullParserFactory xmlPullParserFactory = null;
+
+  private static final Set<String> amzHeaders = new HashSet<>();
+
+  static {
+    amzHeaders.add("server-side-encryption");
+    amzHeaders.add("server-side-encryption-aws-kms-key-id");
+    amzHeaders.add("server-side-encryption-context");
+    amzHeaders.add("server-side-encryption-customer-algorithm");
+    amzHeaders.add("server-side-encryption-customer-key");
+    amzHeaders.add("server-side-encryption-customer-key-md5");
+    amzHeaders.add("website-redirect-location");
+    amzHeaders.add("storage-class");
+  }
+  
+  private static final Set<String> standardHeaders = new HashSet<>();
+
+  static {
+    standardHeaders.add("content-type");
+    standardHeaders.add("cache-control");
+    standardHeaders.add("content-encoding");
+    standardHeaders.add("content-disposition");
+    standardHeaders.add("content-language");
+    standardHeaders.add("expires");
+    standardHeaders.add("range");
+  }
 
   static {
     try {
@@ -1006,6 +1033,10 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
 
+    if (headerMap != null) {
+      headerMap = normalizeHeaders(headerMap);
+    }
+    
     Multimap<String, String> queryParamMultiMap = null;
     if (queryParamMap != null) {
       queryParamMultiMap = Multimaps.forMap(queryParamMap);
@@ -1324,6 +1355,23 @@ public class MinioClient {
   }
 
 
+  private Map<String, String> normalizeHeaders(Map<String,String> headerMap) {
+    Map<String,String> normHeaderMap = new HashMap<String,String>();
+    for (Map.Entry<String, String> entry : headerMap.entrySet()) {
+      String key = entry.getKey();
+      String value = entry.getValue();
+      String keyLowerCased = key.toLowerCase(Locale.US);
+      if (amzHeaders.contains(keyLowerCased)) {
+        key = "x-amz-" + key;
+      } else if (!standardHeaders.contains(keyLowerCased)
+                 && !keyLowerCased.startsWith("x-amz-")) {
+        key = "x-amz-meta-" + key;
+      }
+      normHeaderMap.put(key, value);
+    }
+    return normHeaderMap;
+  }
+           
   /**
    * Executes PUT method for given request parameters.
    *
@@ -1339,7 +1387,7 @@ public class MinioClient {
                                   Map<String,String> queryParamMap, String region, Object data, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException {    
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
                                     data, length);

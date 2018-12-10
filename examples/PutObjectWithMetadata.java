@@ -69,7 +69,7 @@ public class PutObjectWithMetadata {
       Map<String, String> headerMap = new HashMap<>();
  
       // Add custom metadata
-      headerMap.put("X-Amz-Meta-CustomMeta", "TEST");
+      headerMap.put("CustomMeta", "TEST");
       
       // Add custom content type
       headerMap.put("Content-Type", "application/octet-stream");
