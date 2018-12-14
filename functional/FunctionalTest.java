@@ -2857,13 +2857,20 @@ public class FunctionalTest {
     }
 
     long startTime = System.currentTimeMillis();
+    String file = createFile1Mb();
+    String bucketName = getRandomName();
+
     try {
-      String bucketName = getRandomName();
       client.makeBucket(bucketName, region);
 
       class TestBucketListener implements BucketEventListener {
         int eventsReceived = 0;
+        Exception lastException = null;
         NotificationEvent firstEvent = null;
+
+        public void updateError(Exception e) {
+          lastException = e;
+        }
 
         @Override
         public void updateEvent(NotificationInfo info) {
@@ -2882,36 +2889,58 @@ public class FunctionalTest {
           try {
             client.listenBucketNotification(bucketName, "prefix", "suffix", events, bl);
           } catch (Exception e) {
-            System.out.println(e);
+            bl.updateError(e);
           }
         }}).start();
-
-      String file1kb = createFile(1024);
 
       // Upload an object until we detect an event, this is done
       // in a loop because bucket listening is called in a thread
       // and may or may not be executed at this point.
-      while (bl.eventsReceived < 1) {
-        client.putObject(bucketName, "prefix-random-suffix", file1kb);
-        Thread.sleep(300);
+      for (int i = 0; i < 20; i++) {
+        client.putObject(bucketName, "prefix-random-suffix", file);
+        Thread.sleep(500);
+        if (bl.eventsReceived > 0 || bl.lastException != null) {
+          break;
+        }
       }
 
+      // Fail for any exception but ignore NotImplemented error
+      if (bl.lastException != null) {
+        ErrorResponse errorResponse = null;
+        if (bl.lastException instanceof ErrorResponseException) {
+          ErrorResponseException exp = (ErrorResponseException) bl.lastException;
+          errorResponse = exp.errorResponse();
+        }
+        if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+          mintIgnoredLog("listenBucketNotification(String bucketName)", null, startTime);
+          return;
+        } else {
+          mintFailedLog("listenBucketNotification(String bucketName)", null, startTime,
+              null, bl.lastException.toString() + " >>> " + Arrays.toString(bl.lastException.getStackTrace()));
+          throw bl.lastException;
+        }
+      }
+
+      // No exception at this point, check events result
+      if (bl.eventsReceived == 0) {
+        throw new Exception("[FAILED] No event notification is received");
+      }
       if (!bl.firstEvent.s3.bucket.name.equals(bucketName)) {
         throw new Exception("[FAILED] Bucket name expected: " + bucketName + ", Got: " + bl.firstEvent.s3.bucket.name);
       }
-
       if (!bl.firstEvent.s3.object.key.equals("prefix-random-suffix")) {
-        throw new Exception("[FAILED] Bucket name expected: " + file1kb + ", Got: " + bl.firstEvent.s3.object.key);
+        throw new Exception("[FAILED] Bucket name expected: " + file + ", Got: " + bl.firstEvent.s3.object.key);
       }
-
-      Files.delete(Paths.get(file1kb));
-      client.removeObject(bucketName, "prefix-random-suffix");
-      client.removeBucket(bucketName);
       mintSuccessLog("listenBucketNotification(String bucketName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog("listenBucketNotification(String bucketName)", null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
+    } finally {
+      // Cleanup
+      Files.delete(Paths.get(file));
+      client.removeObject(bucketName, "prefix-random-suffix");
+      client.removeBucket(bucketName);
     }
   }
 
@@ -3100,7 +3129,6 @@ public class FunctionalTest {
         }
       } else {
         FunctionalTest.runTests();
-
         // Get new bucket name to avoid minio azure gateway failure.
         bucketName = getRandomName();
         // Quick tests with passed region.
