@@ -1327,6 +1327,41 @@ public class FunctionalTest {
     }
   }
 
+
+  /**
+   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName).
+   */
+  public static void getObject_test9() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+              "Test: getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)"
+      );
+    }
+
+    long startTime = System.currentTimeMillis();
+    // Generate a new 256 bit AES key - This key must be remembered by the client.
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    try {
+      String objectName = getRandomName();
+      String filename = createFile1Mb();
+      client.putObject(bucketName, objectName, sse, filename);
+      client.getObject(bucketName, objectName, sse, objectName + ".downloaded");
+      Files.delete(Paths.get(objectName + ".downloaded"));
+      client.removeObject(bucketName, objectName);
+
+      mintSuccessLog("getObject(String bucketName, String objectName, ServerSideEncryption sse, "
+                      + "String filename). To test SSE_C",
+              "size: 1 MB", startTime);
+    } catch (Exception e) {
+      mintFailedLog("getObject(String bucketName, String objectName, ServerSideEncryption sse, "
+                      + "String filename). To test SSE_C",
+              "size: 1 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
   /**
    * Test: listObjects(final String bucketName).
    */
@@ -2963,6 +2998,7 @@ public class FunctionalTest {
     if (tlsEnabled) {
       statObject_test2();
       getObject_test7();
+      getObject_test9();
       putObject_test13();
       putObject_test16();
       putObject_test17();
