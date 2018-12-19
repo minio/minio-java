@@ -3841,16 +3841,11 @@ public class MinioClient {
       }
 
       if (part != null && partNumber == part.partNumber() && expectedReadSize == part.partSize()) {
-        String md5Hash = Digest.md5Hash(data, expectedReadSize);
-        if (md5Hash.equals(part.etag())) {
-          // this part is already uploaded
-          totalParts[partNumber - 1] = new Part(part.partNumber(), part.etag());
-          skipStream(data, expectedReadSize);
+        totalParts[partNumber - 1] = new Part(part.partNumber(), part.etag());
+        skipStream(data, expectedReadSize);
 
-          part = getPart(existingParts);
-
-          continue;
-        }
+        part = getPart(existingParts);
+        continue;
       }
 
       // In multi-part uploads, Set encryption headers in the case of SSE-C.
