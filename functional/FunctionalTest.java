@@ -511,42 +511,6 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: multipart resume: putObject(String bucketName, String objectName, InputStream body, long size,
-   *                                   String contentType).
-   */
-  public static void putObject_test5() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: multipart resume: putObject(String bucketName, String objectName, InputStream body, "
-                         + "long size, String contentType)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    long size = 20 * MB;
-    try {
-      String objectName = getRandomName();
-      try (InputStream is = new ContentInputStream(13 * MB)) {
-        client.putObject(bucketName, objectName, is, size, nullContentType);
-      } catch (EOFException e) {
-        ignore();
-      }
-
-      size = 13 * MB;
-      try (final InputStream is = new ContentInputStream(size)) {
-        client.putObject(bucketName, objectName, is, size, nullContentType);
-      }
-      client.removeObject(bucketName, objectName);
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, long size,"
-                      + " String contentType)",
-                    "contentType: " + nullContentType + ", size: " + String.valueOf(size), startTime);
-    } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
-                    "contentType: " + nullContentType + ", size: " + String.valueOf(size), startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
    * Test: putObject(String bucketName, String objectName, InputStream body, long size, String contentType).
    * where objectName has multiple path segments.
    */
@@ -791,7 +755,7 @@ public class FunctionalTest {
     keyGen.init(256);
     ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
-    
+
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * MB)) {
@@ -799,7 +763,7 @@ public class FunctionalTest {
       }
 
       client.removeObject(bucketName, objectName);
-      
+
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
                        + "long size, ServerSideEncryption sse) using SSE_C.",
                       "size: 1 MB", startTime);
@@ -821,7 +785,7 @@ public class FunctionalTest {
                         + "long size, ServerSideEncryption sse) using SSE_S3.");
     }
     long startTime = System.currentTimeMillis();
-    
+
     ServerSideEncryption sse = ServerSideEncryption.atRest();
 
     try {
@@ -831,7 +795,7 @@ public class FunctionalTest {
       }
 
       client.removeObject(bucketName, objectName);
-      
+
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
                        + "long size, ServerSideEncryption sse) using SSE_S3.",
                       "size: 1 MB", startTime);
@@ -853,14 +817,14 @@ public class FunctionalTest {
                         + "long size, ServerSideEncryption sse) using SSE_KMS.");
     }
     long startTime = System.currentTimeMillis();
-    
+
     Map<String,String> myContext = new HashMap<>();
     myContext.put("key1","value1");
 
     String keyId = "";
     keyId = System.getenv("MINT_KEY_ID");
     if (keyId.equals("")) {
-      mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime); 
+      mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
     }
     ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
 
@@ -871,7 +835,7 @@ public class FunctionalTest {
       }
 
       client.removeObject(bucketName, objectName);
-      
+
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
                        + "long size, ServerSideEncryption sse) using SSE_KMS.",
                       "size: 1 MB", startTime);
@@ -898,7 +862,7 @@ public class FunctionalTest {
     keyGen.init(256);
     ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
-    
+
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
@@ -906,7 +870,7 @@ public class FunctionalTest {
       }
 
       client.removeObject(bucketName, objectName);
-      
+
       mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
                        + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).",
                       "size: 6 MB", startTime);
@@ -1019,9 +983,9 @@ public class FunctionalTest {
       try (final InputStream is = new ContentInputStream(1)) {
         client.putObject(bucketName, objectName, is, 1, sse);
       }
-        
+
       ObjectStat objectStat = client.statObject(bucketName, objectName, sse);
-      
+
       if (!(objectName.equals(objectStat.name()) && (objectStat.length() == 1)
             && bucketName.equals(objectStat.bucketName()))) {
         throw new Exception("[FAILED] object stat differs");
@@ -1048,7 +1012,7 @@ public class FunctionalTest {
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
-  } 
+  }
 
   /**
    * Test: getObject(String bucketName, String objectName).
@@ -1067,7 +1031,7 @@ public class FunctionalTest {
 
       client.getObject(bucketName, objectName)
           .close();
-      
+
       client.removeObject(bucketName, objectName);
       mintSuccessLog("getObject(String bucketName, String objectName)",null, startTime);
     } catch (Exception e) {
@@ -1218,7 +1182,7 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse). 
+   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse).
    * To test getObject when object is put using SSE_C.
    */
   public static void getObject_test7() throws Exception {
@@ -1237,7 +1201,7 @@ public class FunctionalTest {
       String putString;
       int bytes_read_put;
       try (final InputStream is = new ContentInputStream(3 * MB)) {
-        
+
         client.putObject(bucketName, objectName, is, 3 * MB, sse);
         byte [] putbyteArray = new byte[is.available()];
         bytes_read_put = is.read(putbyteArray);
@@ -2445,7 +2409,7 @@ public class FunctionalTest {
 
   /**
    * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
-   * CopyConditions copyConditions, ServerSideEncryption sseTarget) 
+   * CopyConditions copyConditions, ServerSideEncryption sseTarget)
    * To test using SSE_C.
    */
   public static void copyObject_test10() throws Exception {
@@ -2460,13 +2424,13 @@ public class FunctionalTest {
       String objectName = getRandomName();
 
       // Generate a new 256 bit AES key - This key must be remembered by the client.
-      byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8); 
+      byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-      
+
       ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
       ServerSideEncryption sseSource = ServerSideEncryption.copyWithCustomerKey(secretKeySpec);
-        
-      byte[] keyTarget = "98765432100123456789012345678901".getBytes(StandardCharsets.UTF_8); 
+
+      byte[] keyTarget = "98765432100123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
 
       ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
@@ -2478,8 +2442,8 @@ public class FunctionalTest {
       // Attempt to remove the user-defined metadata from the object
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
-        
-   
+
+
       client.copyObject(bucketName, objectName, sseSource, bucketName,
           objectName, copyConditions, sseTarget);
       ObjectStat objectStat = client.statObject(bucketName, objectName, sseTarget);
@@ -2501,7 +2465,7 @@ public class FunctionalTest {
 
   /**
    * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
-   * CopyConditions copyConditions, ServerSideEncryption sseTarget) 
+   * CopyConditions copyConditions, ServerSideEncryption sseTarget)
    * To test using SSE_S3.
    */
   public static void copyObject_test11() throws Exception {
@@ -2514,7 +2478,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      
+
       ServerSideEncryption sse = ServerSideEncryption.atRest();
 
       try (final InputStream is = new ContentInputStream(1)) {
@@ -2524,8 +2488,8 @@ public class FunctionalTest {
       // Attempt to remove the user-defined metadata from the object
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
-        
-   
+
+
       client.copyObject(bucketName, objectName, null, bucketName,
           objectName, copyConditions, sse);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -2550,7 +2514,7 @@ public class FunctionalTest {
 
 /**
    * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
-   * CopyConditions copyConditions, ServerSideEncryption sseTarget) 
+   * CopyConditions copyConditions, ServerSideEncryption sseTarget)
    * To test using SSE_KMS.
    */
   public static void copyObject_test12() throws Exception {
@@ -2563,14 +2527,14 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      
+
       Map<String,String> myContext = new HashMap<>();
       myContext.put("key1","value1");
 
       String keyId = "";
       keyId = System.getenv("MINT_KEY_ID");
       if (keyId.equals("")) {
-        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime); 
+        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
       }
       ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
 
@@ -2581,7 +2545,7 @@ public class FunctionalTest {
       // Attempt to remove the user-defined metadata from the object
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
-        
+
       client.copyObject(bucketName, objectName, null, bucketName,
           objectName, copyConditions, sse);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -2967,7 +2931,6 @@ public class FunctionalTest {
     putObject_test2();
     putObject_test3();
     putObject_test4();
-    putObject_test5();
     putObject_test6();
     putObject_test7();
     putObject_test8();
@@ -2975,7 +2938,7 @@ public class FunctionalTest {
     putObject_test10();
     putObject_test11();
     putObject_test12();
-    
+
     statObject_test1();
 
     getObject_test1();
@@ -3042,7 +3005,7 @@ public class FunctionalTest {
       copyObject_test11();
       copyObject_test12();
     }
-    
+
     getBucketPolicy_test1();
     setBucketPolicy_test1();
 

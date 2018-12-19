@@ -944,7 +944,7 @@ __Parameters__
 __Example__
 
 
-The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MiB in multiple parts. This allows failed uploads to resume safely by only uploading the missing parts. Uploaded data is carefully verified using MD5SUM signatures.
+The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MiB in multiple parts.
 
 
 ```java
@@ -1009,7 +1009,7 @@ __Parameters__
 __Example__
 
 
-The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MB in multiple parts. This allows failed uploads to resume safely by only uploading the missing parts. Uploaded data is carefully verified using MD5SUM signatures.
+The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MB in multiple parts.
 
 
 ```java
@@ -1137,12 +1137,12 @@ try {
   }
   ByteArrayInputStream bais = new
   ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-  
+
   //Generate symmetric 256 bit AES key.
   KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
   symKeyGenerator.init(256);
   SecretKey symKey = symKeyGenerator.generateKey();
-  
+
   // Create an object
   minioClient.putObject("mybucket", "myobject", bais, bais.available(), "application/octet-stream", symKey);
   bais.close();
@@ -1221,17 +1221,17 @@ try {
   }
   ByteArrayInputStream bais = new
   ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-  
+
   // create object
   Map<String, String> headerMap = new HashMap<>();
   headerMap.put("Content-Type", "application/octet-stream");
   headerMap.put("Key", "meta-data");
-  
+
   //Generate symmetric 256 bit AES key.
   KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
   symKeyGenerator.init(256);
   SecretKey symKey = symKeyGenerator.generateKey();
-  
+
   // Create an object
   minioClient.putObject("mybucket", "myobject", bais, bais.available(), headerMap, symKey);
   bais.close();
@@ -1308,11 +1308,11 @@ try {
   }
   ByteArrayInputStream bais = new
   ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-  
+
   KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("RSA");
   keyGenerator.initialize(1024, new SecureRandom());
   KeyPair keypair = keyGenerator.generateKeyPair();
-  
+
   // Create an object
   minioClient.putObject("mybucket", "myobject", bais, bais.available(), "application/octet-stream", keypair);
   bais.close();
