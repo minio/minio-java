@@ -1,0 +1,149 @@
+/*
+ * Minio Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2019 Minio, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.minio;
+
+import java.util.HashMap;
+import java.util.Map;
+import io.minio.errors.InvalidArgumentException;
+import io.minio.CopyConditions;
+
+public class ComposeSource {
+  private String bucketName;
+  private String objectName;
+  private Long offset;
+  private Long length;
+  private ServerSideEncryption sseSource;
+  private Map<String, String> headerMap ;
+
+  /**
+   * Create new ComposeSource for given bucket and object.
+   */
+  public ComposeSource(String bucketName, String objectName ) 
+    throws InvalidArgumentException {
+    this(bucketName, objectName, null, null, null, null, null);
+  }
+  /**
+   * Create new ComposeSource for given bucket, object, offset and length.
+   */
+  public ComposeSource(String bucketName, String objectName, Long offset, 
+      Long length)
+    throws InvalidArgumentException {
+    this(bucketName, objectName, offset, length, null, null, null);
+  }
+  /**
+   * Create new ComposeSource for given bucket, object, offset, length 
+   * and headerMap.
+   */
+  public ComposeSource(String bucketName, String objectName, Long offset,
+      Long length,Map<String, String> headerMap) 
+    throws InvalidArgumentException {
+    this(bucketName, objectName, offset, length, headerMap, null, null);
+  }
+
+  /**
+   * Create new ComposeSource for given bucket, object, offset, length, 
+   * headerMap and CopyConditions.
+   */
+  public ComposeSource(String bucketName, String objectName, Long offset, 
+      Long length,Map<String, String> headerMap,
+      CopyConditions copyConditions)
+    throws InvalidArgumentException {
+    this(bucketName, objectName, offset, length, headerMap, 
+      copyConditions, null);
+  }
+
+  /**
+   * Creates new ComposeSource for given bucket, object, offset, length,
+   * headerMap, CopyConditions and server side encryption.
+   *
+   * @throws InvalidArgumentException
+   *          When offset or lenghth is negative
+   */
+  public ComposeSource(String bucketName, String objectName, Long offset,
+       Long length, Map<String, String> headerMap, 
+       CopyConditions copyConditions, ServerSideEncryption sseSource)
+    throws InvalidArgumentException {
+    if (bucketName == null) {
+      throw new InvalidArgumentException("Source bucket name cannot be empty");
+    }
+    if (objectName == null) {
+      throw new InvalidArgumentException("Source object name cannot be empty");
+    }
+    if ((offset != null && offset < 0) || (length != null && length < 0)) {
+      throw new InvalidArgumentException("Offset/Length can not be negative");
+    }
+    this.bucketName = bucketName;
+    this.objectName = objectName;
+    this.offset = offset;
+    this.length = length;
+    if (headerMap == null ) {
+      headerMap = new HashMap<String, String>();
+    }
+    headerMap.put("x-amz-copy-source", S3Escaper.encodePath(bucketName + "/"
+        + objectName));
+    if (copyConditions != null) {
+      headerMap.putAll(copyConditions.getConditions());
+    }
+    if (sseSource != null) {
+      sseSource.marshal(headerMap);
+    }
+    this.headerMap = headerMap;
+    this.sseSource = sseSource;
+  }
+  /**
+   * Returns Server Side Encryption.
+   */
+  public ServerSideEncryption sseSource() {
+    return sseSource;
+  }
+
+  /**
+   * Returns bucket name.
+   */
+  public String bucketName() {
+    return bucketName;
+  }
+
+  /**
+   * Returns object name.
+   */
+  public String objectName() {
+    return objectName;
+  }
+
+  /**
+   * Returns offset.
+   */
+  public Long offset() {
+    return offset;
+  }
+
+  /**
+   * Returns length.
+   */
+  public Long length() {
+    return length;
+  }
+
+  /**
+   * Returns headerMap.
+   */
+  public Map<String, String> headers() {
+    return  headerMap;
+  }
+
+}

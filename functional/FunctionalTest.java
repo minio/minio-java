@@ -2621,6 +2621,153 @@ public class FunctionalTest {
     }
   }
 
+
+  /**
+   * Test: composeObject(String bucketName, String objectName,
+   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; userMetaData, ServerSideEncryption sseTarget).
+   */
+  public static void composeObject_test1() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget).");
+    }
+    long startTime = System.currentTimeMillis();
+
+    try {
+      String destinationObjectName = getRandomName();
+      String filename1 = createFile6Mb();
+      String filename2 = createFile6Mb();
+      client.putObject(bucketName, filename1, filename1, null, null, null, null);
+      client.putObject(bucketName, filename2, filename2, null, null, null, null);
+      ComposeSource s1 = new ComposeSource(bucketName,filename1, null, null, null, null, null );
+      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, null );
+
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
+      listSourceObjects.add(s1);
+      listSourceObjects.add(s2);
+
+      client.composeObject(bucketName,destinationObjectName,listSourceObjects, null, null);
+      Files.delete(Paths.get(filename1));
+      Files.delete(Paths.get(filename2));
+
+      client.removeObject(bucketName, filename1);
+      client.removeObject(bucketName, filename2);
+      client.removeObject(bucketName, destinationObjectName);
+
+      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget)",
+          "size: 6 MB & 6 MB ", startTime);
+    } catch (Exception e) {
+      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget)",
+          "size: 6 MB & 6 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: composeObject(String bucketName, String objectName,
+   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; userMetaData, ServerSideEncryption sseTarget).
+   */
+  public static void composeObject_test2() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with offset and length.");
+    }
+    long startTime = System.currentTimeMillis();
+
+    try {
+      String destinationObjectName = getRandomName();
+      String filename1 = createFile6Mb();
+      String filename2 = createFile6Mb();
+      client.putObject(bucketName, filename1, filename1, null, null, null, null);
+      client.putObject(bucketName, filename2, filename2, null, null, null, null);
+      ComposeSource s1 = new ComposeSource(bucketName,filename1, 10L, 6291436L, null, null, null );
+      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, null );
+
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
+      listSourceObjects.add(s1);
+      listSourceObjects.add(s2);
+
+      client.composeObject(bucketName,destinationObjectName,listSourceObjects, null, null);
+      Files.delete(Paths.get(filename1));
+      Files.delete(Paths.get(filename2));
+
+      client.removeObject(bucketName, filename1);
+      client.removeObject(bucketName, filename2);
+      client.removeObject(bucketName, destinationObjectName);
+
+      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget)",
+          "with offset and length.", startTime);
+
+    } catch (Exception e) {
+      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget)",
+          "with offset and length.", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: composeObject(String bucketName, String objectName,
+   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; userMetaData, ServerSideEncryption sseTarget).
+   */
+
+  public static void composeObject_test3() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C source and SSE_C Target");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+
+      // Generate a new 256 bit AES key - This key must be remembered by the client.
+      byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
+      SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+
+      ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
+      //ServerSideEncryption sseSource = ServerSideEncryption.copyWithCustomerKey(secretKeySpec);
+
+      byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
+      SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
+
+      ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
+
+      String filename1 = createFile6Mb();
+      String filename2 = createFile6Mb();
+      client.putObject(bucketName, filename1, filename1, null, null, ssePut, null);
+      client.putObject(bucketName, filename2, filename2, null, null, ssePut, null);
+      ComposeSource s1 = new ComposeSource(bucketName,filename1, null, null, null, null, ssePut );
+      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, ssePut );
+
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
+      listSourceObjects.add(s1);
+      listSourceObjects.add(s2);
+
+      client.composeObject(bucketName,objectName,listSourceObjects, null, sseTarget);
+      Files.delete(Paths.get(filename1));
+      Files.delete(Paths.get(filename2));
+
+      client.removeObject(bucketName, filename1);
+      client.removeObject(bucketName, filename2);
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget)",
+          "with SSE_C source and SSE_C Target", startTime);
+    } catch (Exception e) {
+      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C source and ",
+          "SSE_C Target", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+
+
+
   /**
    * Test: deleteBucketLifeCycle(String bucketName).
    */
@@ -3009,6 +3156,9 @@ public class FunctionalTest {
     copyObject_test7();
     copyObject_test8();
     copyObject_test9();
+    composeObject_test1();
+    composeObject_test2();
+
 
     // SSE_C tests will only work over TLS connection
     Locale locale = Locale.ENGLISH;
@@ -3021,6 +3171,7 @@ public class FunctionalTest {
       putObject_test16();
       putObject_test17();
       copyObject_test10();
+      composeObject_test3();
     }
 
     // SSE_S3 and SSE_KMS only work with endpoint="s3.amazonaws.com"

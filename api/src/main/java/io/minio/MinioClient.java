@@ -42,6 +42,7 @@ import io.minio.http.Scheme;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CopyObjectResult;
+import io.minio.messages.CopyPartResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
@@ -104,6 +105,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -2325,6 +2327,218 @@ public class MinioClient {
     }
   }
 
+
+  /**
+   * Create an object by concatenating a list of source objects using server-side copying.
+   * </p>
+   * <b>Example:</b><br>   *
+   * <pre>
+   * {@code minioClient.composeObject(String bucketName, String objectName, 
+   * List<ComposeSource> composeSource, Map<String,String> userMetaData,
+   * ServiceConfigurationError sse );}
+   * </pre>
+   *
+   * @param bucketName
+   *          Destination Bucket to be created upon compose.
+   * @param objectName
+   *          Destination Object to be created upon compose.
+   * @param sseTarget
+   *          Server Side Encryption.
+   * @param userMetaData
+   *          User Meta data.
+   * @param composeSources
+   *          List of Source Objects used to compose Object
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void  composeObject(String bucketName, String objectName, 
+      List<ComposeSource> composeSources, Map<String,String> userMetaData, 
+      ServerSideEncryption sseTarget)
+   throws InvalidBucketNameException, NoSuchAlgorithmException,
+    InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+    XmlPullParserException, ErrorResponseException, InternalException, 
+    InvalidArgumentException, InvalidResponseException {
+    if (bucketName == null) {
+      throw new InvalidArgumentException("Destination bucket name cannot be empty");
+    }
+    if (objectName == null) {
+      throw new InvalidArgumentException("Destination object name cannot be empty");
+    }
+
+    // Validate encryption for destination
+    if ( sseTarget != null ) {
+      if ((sseTarget.getType() == ServerSideEncryption.Type.SSE_C)
+          && (!this.baseUrl.isHttps())) {
+        throw new InvalidArgumentException(
+          "SSE_C operations must be performed over a secure connection.");
+      } else if ((sseTarget.getType() == (ServerSideEncryption.Type.SSE_KMS)) 
+          && (!this.baseUrl.isHttps())) {
+        throw new InvalidArgumentException(
+          "SSE_KMS operations must be performed over a secure connection.");
+      }
+    }
+
+    if (composeSources.isEmpty() || composeSources.size() > MAX_MULTIPART_COUNT ) {
+      throw new InvalidArgumentException("There must be as least one and up to " 
+       + "MAX_MULTIPART_COUNT source objects.");
+    }
+
+    int i = 0;
+    int totalParts = 0;
+    long totalSize = 0;
+    long[]  sourceSize =  new long[composeSources.size()];
+    for (ComposeSource source : composeSources) {
+
+      Map<String, String> sourceHeader = source.headers();
+      // Error out if client side encryption is used in this source object when
+      // more than one source objects are given.
+      if ((composeSources.size() > 1 ) 
+          && sourceHeader.containsKey("x-amz-meta-x-amz-key")) {
+        throw new InvalidArgumentException("Client side encryption is used in source" 
+        + " object" + source.bucketName() + source.objectName());
+      }
+      ObjectStat os = null;
+      //Validate encryption for source object
+      if (source.sseSource() != null ) {
+        os = statObject(source.bucketName(), source.objectName(), 
+        source.sseSource());
+      } else {
+        os = statObject(source.bucketName(), source.objectName());
+      }
+
+      long offset = source.offset() == null ? 0L :  source.offset();
+      long length = source.length() == null ? 0L :  source.length();
+      long sizeOfCopy = 0L;
+      if (offset == 0 && length == 0) {
+        sizeOfCopy = os.length();
+      } else if (offset != 0 && length == 0) {
+        sizeOfCopy = os.length() - offset;
+      } else if (length != 0) {
+        sizeOfCopy = length;
+      }
+      // Check if a segment is specified is within object bounds
+      if ( length > os.length()) {
+        throw new InvalidArgumentException("Source specified length " + length
+         + " is more than " + "size of Object " + os.length());
+      }
+      if ( sizeOfCopy < MIN_MULTIPART_SIZE && i < composeSources.size() - 1 ) {
+        throw new InvalidArgumentException(" Source Object " + i +  " is too small"
+        +  " size :  " + sizeOfCopy + " and it is not the last part");
+      }
+
+      totalSize = totalSize + sizeOfCopy;
+      if ( totalSize > MAX_OBJECT_SIZE ) {
+        throw new InvalidArgumentException(" Cannot compose an object of size"
+        + " more than " + MAX_OBJECT_SIZE );
+      }
+      totalParts += partsRequired(sizeOfCopy);
+      sourceSize[i] = sizeOfCopy;
+      if ( totalParts > MAX_MULTIPART_COUNT ) {
+        throw new InvalidArgumentException(" Your proposed compose object requires"
+        + " more than " + MAX_MULTIPART_COUNT + " parts.");
+      }
+
+      // Ensure that the object has not been changed while
+      // we are copying data. Add x-amz-copy-source-if-match
+      // if it is not provided as a part of CopyCondition
+      if (!sourceHeader.containsKey("x-amz-copy-source-if-match")) {
+        sourceHeader.put("x-amz-copy-source-if-match",os.etag());
+      }
+      i++;
+    }
+
+    // Initiate a new multipart upload.
+    // Set user-metadata on the destination object. If no
+    // userMetaData is specified, and there is only one source,
+    // (only) then metadata from source is copied.
+    if ( userMetaData == null  && composeSources.size() == 1  ) {
+      userMetaData = new HashMap<String,String>();
+      userMetaData.putAll(composeSources.get(0).headers());
+    }
+
+    // Now, handle multipart-copy cases.
+    Map<String, String> headerMap = new HashMap<>();
+    if (sseTarget != null) {
+      if ( userMetaData != null ) {
+        sseTarget.marshal(userMetaData);
+      } else {
+        userMetaData = new HashMap<>();
+        sseTarget.marshal(userMetaData);
+      }
+    }
+    if (userMetaData != null ) {
+      headerMap.putAll(userMetaData);
+    }
+
+    String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
+
+    int partNumber = 1;
+    Part[] totalPart = new Part[totalParts];
+    int counter = 0;
+
+    for (ComposeSource sourceObject : composeSources) {
+      headerMap.putAll(sourceObject.headers());
+      List<String> rangeList = getByteRange(sourceObject, sourceSize[counter]);
+      for (int k = 0; k < rangeList.size(); k++) {
+        headerMap.put("x-amz-copy-source-range", rangeList.get(k));
+        String eTag = uploadPartCopy(bucketName, objectName, uploadId, partNumber,
+            headerMap);
+        totalPart[partNumber - 1] = new Part(partNumber, eTag);
+        partNumber++;
+      }
+      counter++;
+    }
+    completeMultipart(bucketName, objectName, uploadId, totalPart);
+  }
+
+  private int partsRequired(Long length ) {
+    /* maxPartSize will always be an int as 5 *1024 *1024* 1024 *1024 /10000-1
+    * = 549810794.96749675
+    which is within int range
+    */
+    long maxPartSize = MAX_OBJECT_SIZE / ( MAX_MULTIPART_COUNT - 1 );
+    long partCount = length / maxPartSize;
+    if ( length % maxPartSize > 0L ) {
+      partCount ++;
+    }
+    return (int)partCount;
+  }
+
+  private List<String> getByteRange( ComposeSource source, long size ) {
+    List<String> list = new LinkedList<String>();
+    int requiredParts = partsRequired(size);
+    long offset = source.offset() == null ? 0L : source.offset();
+    long quot = size / requiredParts;
+    long rem = size % requiredParts;
+    long nextStart = offset;
+    //long curPartSize = quot;
+    for ( int j = 0; j < requiredParts; j++) {
+      long curPartSize = quot;
+      if ( j < rem ) {
+        curPartSize++;
+      }
+      long cStart = nextStart;
+      long  cEnd = cStart + curPartSize - 1;
+      nextStart = cEnd + 1;
+      list.add("bytes=" + cStart + "-" + cEnd);
+    }
+    return list;
+  }
+
+
   /**
    * Returns a presigned URL string with given HTTP method, expiry time and custom request params for a 
    * specific object in the bucket.
@@ -4259,6 +4473,8 @@ public class MinioClient {
   }
 
 
+
+
   /**
    * Executes put object. If size of object data is <= 5MiB, single put object is used
    * else multipart put object is used.
@@ -5021,6 +5237,37 @@ public class MinioClient {
     result.parseXml(response.body().charStream());
     response.body().close();
     return result.uploadId();
+  }
+
+  /**
+   * Executes uploadPartCopy multipart upload of given bucket name, 
+   * object name, upload ID and parts.
+   */
+  private String uploadPartCopy(String bucketName, String objectName,
+      String uploadId, int partNumber, Map<String, String> headerMap)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, 
+      InsufficientDataException, IOException, InvalidKeyException, 
+      NoResponseException, XmlPullParserException, ErrorResponseException,
+      InternalException, InvalidResponseException {
+
+    HttpResponse response = null;
+    Map<String,String> queryParamMap = null;
+    if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
+      queryParamMap = new LinkedHashMap<>();
+      queryParamMap.put("partNumber", Integer.toString(partNumber));
+      queryParamMap.put("uploadId", uploadId);
+
+    }
+    response = executePut(bucketName, objectName, headerMap, queryParamMap,
+       getRegion(bucketName) ,"", 0);
+
+    CopyPartResult result = new CopyPartResult();
+    try (ResponseBody body = response.body()) {
+      result.parseXml(body.charStream());
+    }
+    response.body().close();
+    return result.etag();
+
   }
 
 
