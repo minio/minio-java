@@ -129,7 +129,7 @@ import javax.net.ssl.X509TrustManager;
  * </ul>
  * <h2>Bucket</h2>
  * <ul>
- * <li> Creating an object, including automatic upload resuming for large objects.</li>
+ * <li> Creating an object, including automatic multipart for large objects.</li>
  * <li> Listing objects in a bucket</li>
  * <li> Listing active multipart uploads</li>
  * </ul>
@@ -184,7 +184,7 @@ public class MinioClient {
     amzHeaders.add("website-redirect-location");
     amzHeaders.add("storage-class");
   }
-  
+
   private static final Set<String> standardHeaders = new HashSet<>();
 
   static {
@@ -818,7 +818,7 @@ public class MinioClient {
         }
       }
     };
-                                                             
+
     final SSLContext sslContext = SSLContext.getInstance("SSL");
     sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
     final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
@@ -833,7 +833,7 @@ public class MinioClient {
         })
       .build();
   }
-  
+
 
   /**
    * Creates Request object for given request parameters.
@@ -910,7 +910,7 @@ public class MinioClient {
     }
 
     HttpUrl url = urlBuilder.build();
-    
+
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
     if (headerMap != null) {
@@ -997,19 +997,19 @@ public class MinioClient {
     requestBuilder.method(method.toString(), requestBody);
     return requestBuilder.build();
   }
-  
-  
+
+
   /**
    * Checks whether port should be omitted in Host header.
-   * 
+   *
    * <p>
    * HTTP Spec (rfc2616) defines that port should be omitted in Host header
    * when port and service matches (i.e HTTP -> 80, HTTPS -> 443)
-   * 
+   *
    * @param url Url object
    */
   private boolean shouldOmitPortInHostHeader(HttpUrl url) {
-    return (url.scheme().equals("http") && url.port() == 80) 
+    return (url.scheme().equals("http") && url.port() == 80)
       || (url.scheme().equals("https") && url.port() == 443);
   }
 
@@ -1036,7 +1036,7 @@ public class MinioClient {
     if (headerMap != null) {
       headerMap = normalizeHeaders(headerMap);
     }
-    
+
     Multimap<String, String> queryParamMultiMap = null;
     if (queryParamMap != null) {
       queryParamMultiMap = Multimaps.forMap(queryParamMap);
@@ -1311,7 +1311,7 @@ public class MinioClient {
   private HttpResponse executeHead(String bucketName, String objectName, Map<String,String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException { 
+           InternalException {
 
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, headerMap,
                                     null, null, 0);
@@ -1371,7 +1371,7 @@ public class MinioClient {
     }
     return normHeaderMap;
   }
-           
+
   /**
    * Executes PUT method for given request parameters.
    *
@@ -1387,7 +1387,7 @@ public class MinioClient {
                                   Map<String,String> queryParamMap, String region, Object data, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {    
+           InternalException {
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
                                     data, length);
@@ -1489,7 +1489,7 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException {
-    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3) 
+    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
         || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
       throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
     } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
@@ -1707,7 +1707,7 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException {
-    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3) 
+    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
         || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
       throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
     } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
@@ -1790,11 +1790,11 @@ public class MinioClient {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
-  
+
     if ((objectName == null) || (objectName.isEmpty())) {
       throw new InvalidArgumentException("object name cannot be empty");
     }
-      
+
     if (offset < 0) {
       throw new InvalidArgumentException("offset should be zero or greater");
     }
@@ -2436,11 +2436,11 @@ public class MinioClient {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
-    
+
     if ((objectName == null) || (objectName.isEmpty())) {
       throw new InvalidArgumentException("object name cannot be empty");
     }
-    
+
     executeDelete(bucketName, objectName, null);
   }
 
@@ -3189,12 +3189,10 @@ public class MinioClient {
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, abort the uploaded parts automatically.
    * </p>
    *
    * @param bucketName  Bucket name.
@@ -3249,12 +3247,10 @@ public class MinioClient {
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, we abort all the uploaded content.
    * </p>
    *
    * @param bucketName  Bucket name.
@@ -3284,12 +3280,10 @@ public class MinioClient {
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, we abort the uploaded parts automatically.
    * </p>
    *
    * </p><b>Example:</b><br>
@@ -3353,12 +3347,10 @@ public class MinioClient {
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, we abort the uploaded parts automatically.
    * </p>
    *
    * </p><b>Example:</b><br>
@@ -3423,12 +3415,10 @@ public class MinioClient {
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, we abort the uploaded parts automatically.
    * </p>
    *
    * </p><b>Example:</b><br>
@@ -3487,20 +3477,18 @@ public class MinioClient {
 
 
   /**
-   * Uploads data from given stream as object to given bucket with specified meta data 
+   * Uploads data from given stream as object to given bucket with specified meta data
    * and encrypt the stream with a sse key.
 
    * <p>
-   * If the object is larger than 5MB, the client will automatically use a multipart session. 
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, we abort the uploaded parts automatically.
    * </p>
    *
    * </p><b>Example:</b><br>
@@ -3579,12 +3567,10 @@ public class MinioClient {
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, we abort the uploaded parts automatically.
    * </p>
    *
    * @param bucketName  Bucket name.
@@ -3646,12 +3632,10 @@ public class MinioClient {
    * </p>
    * <p>
    * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again. The client will examine all parts of any current upload session
-   * and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail
-   * before uploading any more data. Otherwise, it will resume uploading where the session left off.
+   * the exact same object again.
    * </p>
    * <p>
-   * If the multipart session fails, the user is responsible for resuming or removing the session.
+   * If the multipart session fails, we abort the uploaded parts automaticlly.
    * </p>
    *
    * </p><b>Example:</b><br>
@@ -3745,8 +3729,8 @@ public class MinioClient {
 
 
   /**
-   * Executes put object. If size of object data is <= 5MiB, single put object is used else multipart put object is
-   * used. This method also resumes if previous multipart put is found.
+   * Executes put object. If size of object data is <= 5MiB, single put object is used
+   * else multipart put object is used.
    *
    * @param bucketName
    *          Bucket name.
@@ -3791,81 +3775,57 @@ public class MinioClient {
     int lastPartSize = rv[2];
     Part[] totalParts = new Part[partCount];
 
-    // check whether there is incomplete multipart upload or not
-    String uploadId = getLatestIncompleteUploadId(bucketName, objectName);
-    Iterator<Result<Part>> existingParts = null;
-    Part part = null;
-    boolean isResumeMultipart = false;
-    if (uploadId != null) {
-      isResumeMultipart = true;
-      // resume previous multipart upload
-      existingParts = listObjectParts(bucketName, objectName, uploadId).iterator();
-      if (existingParts.hasNext()) {
-        part = existingParts.next().get();
-      }
-    } else {
-      // initiate new multipart upload ie no previous multipart found or no previous valid parts for
-      // multipart found
-      if (sse != null) {
-        sse.marshal(headerMap);
-      }
-      uploadId = initMultipartUpload(bucketName, objectName, headerMap);
+    // if sse is requested set the necessary headers before we begin the multipart session.
+    if (sse != null) {
+      sse.marshal(headerMap);
     }
 
-    int expectedReadSize = partSize;
-    for (int partNumber = 1; partNumber <= partCount; partNumber++) {
-      if (partNumber == partCount) {
-        expectedReadSize = lastPartSize;
-      }
+    // initiate new multipart upload.
+    String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
 
-      // For unknown sized stream, check available size.
-      int availableSize = 0;
-      if (unknownSize) {
-        // Check whether data is available one byte more than expectedReadSize.
-        availableSize = getAvailableSize(data, expectedReadSize + 1);
-        // If availableSize is less or equal to expectedReadSize, then we reached last part.
-        if (availableSize <= expectedReadSize) {
-          // If it is first part, do single put object.
-          if (partNumber == 1) {
-            putObject(bucketName, objectName, availableSize, data, null, 0, headerMap);
-            // if its not resuming previous multipart, remove newly created multipart upload.
-            if (!isResumeMultipart) {
-              abortMultipartUpload(bucketName, objectName, uploadId);
+    try {
+      int expectedReadSize = partSize;
+      for (int partNumber = 1; partNumber <= partCount; partNumber++) {
+        if (partNumber == partCount) {
+          expectedReadSize = lastPartSize;
+        }
+
+        // For unknown sized stream, check available size.
+        int availableSize = 0;
+        if (unknownSize) {
+          // Check whether data is available one byte more than expectedReadSize.
+          availableSize = getAvailableSize(data, expectedReadSize + 1);
+          // If availableSize is less or equal to expectedReadSize, then we reached last part.
+          if (availableSize <= expectedReadSize) {
+            // If it is first part, do single put object.
+            if (partNumber == 1) {
+              putObject(bucketName, objectName, availableSize, data, null, 0, headerMap);
+              return;
             }
-            return;
+            expectedReadSize = availableSize;
+            partCount = partNumber;
           }
-
-          expectedReadSize = availableSize;
-          partCount = partNumber;
         }
-      }
 
-      if (part != null && partNumber == part.partNumber() && expectedReadSize == part.partSize()) {
-        String md5Hash = Digest.md5Hash(data, expectedReadSize);
-        if (md5Hash.equals(part.etag())) {
-          // this part is already uploaded
-          totalParts[partNumber - 1] = new Part(part.partNumber(), part.etag());
-          skipStream(data, expectedReadSize);
-
-          part = getPart(existingParts);
-
-          continue;
+        // In multi-part uploads, Set encryption headers in the case of SSE-C.
+        Map<String, String> encryptionHeaders = new HashMap<>();
+        if (sse != null && sse.getType() == ServerSideEncryption.Type.SSE_C) {
+          sse.marshal(encryptionHeaders);
         }
-      }
 
-      // In multi-part uploads, Set encryption headers in the case of SSE-C.
-      Map<String, String> encryptionHeaders = new HashMap<>();
-      if (sse != null && sse.getType() == ServerSideEncryption.Type.SSE_C) {
-        sse.marshal(encryptionHeaders);
+        String etag = putObject(bucketName, objectName, expectedReadSize, data,
+                                uploadId, partNumber, encryptionHeaders);
+        totalParts[partNumber - 1] = new Part(partNumber, etag);
       }
-      
-      String etag = putObject(bucketName, objectName, expectedReadSize, data, uploadId, partNumber, encryptionHeaders);
-      totalParts[partNumber - 1] = new Part(partNumber, etag);
+      // All parts have been uploaded, complete the multipart upload.
+      completeMultipart(bucketName, objectName, uploadId, totalParts);
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      abortMultipartUpload(bucketName, objectName, uploadId);
+      throw e;
     }
-
-    completeMultipart(bucketName, objectName, uploadId, totalParts);
   }
-
 
   /**
    * Get JSON string of bucket policy of the given bucket.
@@ -4069,47 +4029,6 @@ public class MinioClient {
     NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
     setBucketNotification(bucketName, notificationConfiguration);
   }
-
-
-  /**
-   * Returns next part if exists.
-   */
-  private Part getPart(Iterator<Result<Part>> existingParts)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Part part;
-    part = null;
-    if (existingParts.hasNext()) {
-      part = existingParts.next().get();
-    }
-    return part;
-  }
-
-
-  /**
-   * Returns latest upload ID of incomplete multipart upload of given bucket name and object name.
-   */
-  private String getLatestIncompleteUploadId(String bucketName, String objectName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
-    Upload latestUpload = null;
-    for (Result<Upload> result : listIncompleteUploads(bucketName, objectName, true, false)) {
-      Upload upload = result.get();
-      if (upload.objectName().equals(objectName)
-            && (latestUpload == null || latestUpload.initiated().compareTo(upload.initiated()) < 0)) {
-        latestUpload = upload;
-      }
-    }
-
-    if (latestUpload != null) {
-      return latestUpload.uploadId();
-    } else {
-      return null;
-    }
-  }
-
 
   /**
    * Lists incomplete uploads of objects in given bucket.
@@ -4621,44 +4540,6 @@ public class MinioClient {
   }
 
 
-
-  /**
-   * Skips data of up to given length in given input stream.
-   *
-   * @param inputStream  Input stream which is intance of {@link RandomAccessFile} or {@link BufferedInputStream}.
-   * @param n            Length of bytes to skip.
-   */
-  private void skipStream(Object inputStream, long n)
-    throws IOException, InsufficientDataException {
-    RandomAccessFile file = null;
-    BufferedInputStream stream = null;
-    if (inputStream instanceof RandomAccessFile) {
-      file = (RandomAccessFile) inputStream;
-    } else if (inputStream instanceof BufferedInputStream) {
-      stream = (BufferedInputStream) inputStream;
-    } else {
-      throw new IllegalArgumentException("unsupported input stream object");
-    }
-
-    if (file != null) {
-      file.seek(file.getFilePointer() + n);
-      return;
-    }
-
-    long bytesSkipped;
-    long totalBytesSkipped = 0;
-
-    while ((bytesSkipped = stream.skip(n - totalBytesSkipped)) >= 0) {
-      totalBytesSkipped += bytesSkipped;
-      if (totalBytesSkipped == n) {
-        return;
-      }
-    }
-
-    throw new InsufficientDataException("Insufficient data.  bytes skipped " + totalBytesSkipped + " expected " + n);
-  }
-
-
   /**
    * Calculates multipart size of given size and returns three element array contains part size, part count
    * and last part size.
@@ -4767,4 +4648,3 @@ public class MinioClient {
     this.traceStream = null;
   }
 }
-
