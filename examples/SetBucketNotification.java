@@ -1,5 +1,5 @@
 /*
- * Minio Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2017 Minio, Inc.
+ * Minio Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2017, 2018 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
 import io.minio.messages.NotificationConfiguration;
-import io.minio.messages.TopicConfiguration;
+import io.minio.messages.QueueConfiguration;
 import io.minio.messages.EventType;
 import io.minio.messages.Filter;
 
@@ -39,9 +39,8 @@ public class SetBucketNotification {
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
-      /* play.minio.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F",
-                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      /* Local Minio for test and development. */
+      MinioClient minioClient = new MinioClient("http://127.0.0.1:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETKEY");
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
@@ -50,23 +49,23 @@ public class SetBucketNotification {
       // Get current notification configuration.
       NotificationConfiguration notificationConfiguration = minioClient.getBucketNotification("my-bucketname");
 
-      // Add a new topic configuration.
-      List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
-      TopicConfiguration topicConfiguration = new TopicConfiguration();
-      topicConfiguration.setTopic("arn:aws:sns:us-west-2:444455556666:sns-topic-xyz");
+      // Add a new SQS configuration.
+      List<QueueConfiguration> queueConfigurationList = notificationConfiguration.queueConfigurationList();
+      QueueConfiguration queueConfiguration = new QueueConfiguration();
+      queueConfiguration.setQueue("arn:minio:sqs::1:webhook");
 
       List<EventType> eventList = new LinkedList<>();
       eventList.add(EventType.OBJECT_CREATED_PUT);
       eventList.add(EventType.OBJECT_CREATED_COPY);
-      topicConfiguration.setEvents(eventList);
+      queueConfiguration.setEvents(eventList);
 
       Filter filter = new Filter();
       filter.setPrefixRule("images");
       filter.setSuffixRule("pg");
-      topicConfiguration.setFilter(filter);
+      queueConfiguration.filter(filter);
 
-      topicConfigurationList.add(topicConfiguration);
-      notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+      queueConfigurationList.add(queueConfiguration);
+      notificationConfiguration.setQueueConfigurationList(queueConfigurationList);
 
       // Set updated notification configuration.
       minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
