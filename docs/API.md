@@ -15,13 +15,13 @@ MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ
 MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 ```
 
-| Bucket operations |  Object operations | Presigned operations  | Bucket Policy Operations
+| Bucket operations |  Object operations | Presigned operations  | Bucket Policy/LifeCycle Operations
 |:--- |:--- |:--- |:--- |
 | [`makeBucket`](#makeBucket)  |[`getObject`](#getObject)   |[`presignedGetObject`](#presignedGetObject)   | [`getBucketPolicy`](#getBucketPolicy)   |
 | [`listBuckets`](#listBuckets)  | [`putObject`](#putObject)  | [`presignedPutObject`](#presignedPutObject)  | [`setBucketPolicy`](#setBucketPolicy)   |
-| [`bucketExists`](#bucketExists)  | [`copyObject`](#copyObject)  | [`presignedPostPolicy`](#presignedPostPolicy)  |  |
-| [`removeBucket`](#removeBucket)  | [`statObject`](#statObject) |   |   |
-| [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |   |
+| [`bucketExists`](#bucketExists)  | [`copyObject`](#copyObject)  | [`presignedPostPolicy`](#presignedPostPolicy)  | [`setBucketLifeCycle`](#setBucketLifeCycle) |
+| [`removeBucket`](#removeBucket)  | [`statObject`](#statObject) |   |  [`getBucketLifeCycle`](#getBucketLifeCycle) |
+| [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |  [`deleteBucketLifeCycle`](#deleteBucketLifeCycle) |
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
 | [`listenBucketNotification`](#listenBucketNotification) |  |   |   |
 
@@ -642,6 +642,139 @@ try {
   } else {
     System.out.println("mybucket does not exist");
   }
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+<a name="setBucketLifeCycle"></a>
+### setBucketLifeCycle(String bucketName, String lifeCycle)
+`public void setBucketLifeCycle(String bucketName, String lifeCycle)`
+
+Set a life cydle on bucket.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketLifeCycle-java.lang.String-java.lang.String-io.minio.BucketLifeCycle-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``lifeCycle`` | _String_ | Life cycle XML for the bucket. |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+
+__Example__
+
+
+```java
+try {
+    /* Amazon S3: */
+  MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
+                                          "YOUR-SECRETACCESSKEY");
+  String lifeCycle = "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
+                + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
+                + "</Rule></LifecycleConfiguration>";
+
+
+  minioClient.setBucketLifecycle("lifecycleminiotest", lifeCycle);
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+<a name="getBucketLifeCycle"></a>
+### getBucketLifeCycle(String bucketName)
+`public String getBucketLifeCycle(String bucketName)`
+
+Get the lifecycle of the bucket.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketLifeCycle-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+
+__Example__
+
+
+```java
+
+try {
+   /* Amazon S3: */
+   MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
+            "YOUR-SECRETACCESSKEY");
+   String lifecycle = minioClient.getBucketLifecycle("my-bucketName" );
+   System.out.println(" Life Cycle is : " + lifecycle );
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+<a name="deleteBucketLifeCycle"></a>
+### deleteBucketLifeCycle(String bucketName)
+`private void deleteBucketLifeCycle(String bucketName)`
+
+Delete the lifecycle of the bucket.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketLifeCycle-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+
+__Example__
+
+
+```java
+
+try {
+   /* Amazon S3: */
+   MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
+            "YOUR-SECRETACCESSKEY");
+   minioClient.deleteBucketLifeCycle("my-bucketName" );
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }

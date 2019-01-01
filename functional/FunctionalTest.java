@@ -2637,6 +2637,69 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: setBucketLifeCycle(String bucketName, String lifeCycle).
+   */
+  public static void setBucketLifeCycle_test1() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: setBucketLifeCycle(String bucketName, String lifeCycle)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String lifeCycle = "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
+              + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
+              + "</Rule></LifecycleConfiguration>";
+      client.setBucketLifeCycle(bucketName, lifeCycle);
+      mintSuccessLog("setBucketLifeCycle(String bucketName, String lifeCycle)", null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("setBucketLifeCycle(String bucketName, String lifeCycle) ",
+               null, startTime, null,
+                e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: deleteBucketLifeCycle(String bucketName).
+   */
+  public static void deleteBucketLifeCycle_test1() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: deleteBucketLifeCycle(String bucketNam)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      client.deleteBucketLifeCycle(bucketName);
+      mintSuccessLog("deleteBucketLifeCycle(String bucketName)", null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("deleteBucketLifeCycle(String bucketName) ",
+              null, startTime, null,
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: getBucketLifeCycle(String bucketName).
+   */
+  public static void getBucketLifeCycle_test1() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getBucketLifeCycle(String bucketName)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      client.getBucketLifeCycle(bucketName);
+      mintSuccessLog("getBucketLifeCycle(String bucketName)", null, startTime);
+    } catch (Exception e) {
+      mintFailedLog("getBucketLifeCycle(String bucketName) ",
+              null, startTime, null,
+              e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
    * Test: setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration).
    */
   public static void setBucketNotification_test1() throws Exception {
@@ -2747,7 +2810,6 @@ public class FunctionalTest {
       throw e;
     }
   }
-
 
   /**
    * Test: removeAllBucketNotification(String bucketName).
@@ -3004,6 +3066,9 @@ public class FunctionalTest {
       putObject_test15();
       copyObject_test11();
       copyObject_test12();
+      setBucketLifeCycle_test1();
+      getBucketLifeCycle_test1();
+      deleteBucketLifeCycle_test1();
     }
 
     getBucketPolicy_test1();
