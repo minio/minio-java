@@ -1353,7 +1353,7 @@ public class FunctionalTest {
         }
       }
 
-      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
         ignore(r.get());
       }
 
@@ -1392,7 +1392,7 @@ public class FunctionalTest {
         }
       }
 
-      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
         ignore(r.get());
       }
 
@@ -1431,7 +1431,7 @@ public class FunctionalTest {
         }
       }
 
-      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
         ignore(r.get());
       }
 
@@ -1504,7 +1504,7 @@ public class FunctionalTest {
         throw new Exception("item count differs, expected: " + objCount + ", got: " + i);
       }
 
-      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
         ignore(r.get());
       }
 
@@ -1546,7 +1546,7 @@ public class FunctionalTest {
         }
       }
 
-      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
         ignore(r.get());
       }
 
@@ -1587,11 +1587,11 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: removeObject(final String bucketName, final Iterable&lt;String&gt; objectNames).
+   * Test: removeObjects(final String bucketName, final Iterable&lt;String&gt; objectNames).
    */
   public static void removeObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: removeObject(final String bucketName, final Iterable<String> objectNames)");
+      System.out.println("Test: removeObjects(final String bucketName, final Iterable<String> objectNames)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1605,12 +1605,12 @@ public class FunctionalTest {
       }
       objectNames[3] = "nonexistent-object";
 
-      for (Result<?> r : client.removeObject(bucketName, Arrays.asList(objectNames))) {
+      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
         ignore(r.get());
       }
-      mintSuccessLog("removeObject(final String bucketName, final Iterable<String> objectNames)", null, startTime);
+      mintSuccessLog("removeObjects(final String bucketName, final Iterable<String> objectNames)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("removeObject(final String bucketName, final Iterable<String> objectNames)",
+      mintFailedLog("removeObjects(final String bucketName, final Iterable<String> objectNames)",
                     null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }

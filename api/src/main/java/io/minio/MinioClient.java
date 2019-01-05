@@ -747,6 +747,8 @@ public class MinioClient {
 
   /**
    * Validates if given bucket name is DNS compatible.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
    */
   private void checkBucketName(String name) throws InvalidBucketNameException {
     if (name == null) {
@@ -1259,6 +1261,8 @@ public class MinioClient {
 
   /**
    * Returns text of given XML element.
+   *
+   * @throws XmlPullParserException upon parsing response xml
    */
   private String getText(XmlPullParser xpp) throws XmlPullParserException {
     if (xpp.getEventType() == XmlPullParser.TEXT) {
@@ -1445,8 +1449,14 @@ public class MinioClient {
    * @return Populated object metadata.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
@@ -1478,11 +1488,18 @@ public class MinioClient {
    * @return Populated object metadata.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @see ObjectStat
    */
   public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)
@@ -1518,8 +1535,14 @@ public class MinioClient {
    * @return string contains URL to download the object.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
@@ -1554,11 +1577,18 @@ public class MinioClient {
    * @return {@link InputStream} containing the object data.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public InputStream getObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -1697,11 +1727,18 @@ public class MinioClient {
    * @return {@link InputStream} containing the object data.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -1740,11 +1777,18 @@ public class MinioClient {
    * @return {@link InputStream} containing the object's data.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public InputStream getObject(String bucketName, String objectName, long offset)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -1776,11 +1820,18 @@ public class MinioClient {
    * @return {@link InputStream} containing the object's data.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public InputStream getObject(String bucketName, String objectName, long offset, Long length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -1826,11 +1877,18 @@ public class MinioClient {
    * @param fileName    file name.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void getObject(String bucketName, String objectName, String fileName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -1923,12 +1981,19 @@ public class MinioClient {
    * @param destBucketName
    *          Bucket name where the object will be copied to.
    *
-   * @throws InvalidBucketNameException
-   *           upon an invalid bucket name
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws NoResponseException         upon no response from server
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void copyObject(String bucketName, String objectName, String destBucketName)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -1958,12 +2023,19 @@ public class MinioClient {
    *          Object name to be created, if not provided uses source object name
    *          as destination object name.
    *
-   * @throws InvalidBucketNameException
-   *           upon an invalid bucket name
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws NoResponseException         upon no response from server
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -1995,12 +2067,19 @@ public class MinioClient {
    * @param copyConditions
    *          CopyConditions object with collection of supported CopyObject conditions.
    *
-   * @throws InvalidBucketNameException
-   *           upon an invalid bucket name
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws NoResponseException         upon no response from server
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void copyObject(String bucketName, String objectName, String destBucketName,
                          CopyConditions copyConditions)
@@ -2036,12 +2115,19 @@ public class MinioClient {
    * @param copyConditions
    *          CopyConditions object with collection of supported CopyObject conditions.
    *
-   * @throws InvalidBucketNameException
-   *           upon an invalid bucket name, invalid object name.
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws NoResponseException         upon no response from server
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void copyObject(String bucketName, String objectName, String destBucketName,
                          String destObjectName, CopyConditions copyConditions)
@@ -2081,12 +2167,19 @@ public class MinioClient {
    * @param sseTarget
    *          Target Encryption metadata.
    *
-   * @throws InvalidBucketNameException
-   *           upon an invalid bucket name, invalid object name.
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws NoResponseException         upon no response from server
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws IOException                 upon connection error
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
                          String destObjectName, CopyConditions copyConditions, ServerSideEncryption sseTarget)
@@ -2141,12 +2234,19 @@ public class MinioClient {
    *          Additional metadata to set on the destination object when
    *          setMetadataDirective is set to 'REPLACE'.
    *
-   * @throws InvalidBucketNameException
-   *           upon an invalid bucket name, invalid object name.
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
    * @throws InvalidKeyException
    *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void copyObject(String bucketName, String objectName, String destBucketName,
                          String destObjectName, CopyConditions copyConditions,
@@ -2216,10 +2316,18 @@ public class MinioClient {
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String getPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires,
@@ -2266,10 +2374,18 @@ public class MinioClient {
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires,
@@ -2293,10 +2409,18 @@ public class MinioClient {
    *
    * @return string contains URL to download the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
@@ -2320,8 +2444,18 @@ public class MinioClient {
    *
    * @return string contains URL to download the object
    *
-   * @throws IOException     upon connection error
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String presignedGetObject(String bucketName, String objectName)
@@ -2345,10 +2479,18 @@ public class MinioClient {
    *
    * @return string contains URL to upload the object.
    *
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws IOException                  upon signature calculation failure
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String presignedPutObject(String bucketName, String objectName, Integer expires)
@@ -2372,8 +2514,18 @@ public class MinioClient {
    *
    * @return string contains URL to upload the object.
    *
-   * @throws IOException     upon connection error
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature calculation
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
    */
   public String presignedPutObject(String bucketName, String objectName)
@@ -2403,6 +2555,20 @@ public class MinioClient {
    * @param policy Post policy of an object.
    * @return Map of strings to construct form-data.
    *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   *
    * @see PostPolicy
    */
   public Map<String, String> presignedPostPolicy(PostPolicy policy)
@@ -2423,11 +2589,18 @@ public class MinioClient {
    * @param objectName Object name in the bucket.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void removeObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -2496,7 +2669,7 @@ public class MinioClient {
    * objectNames.add("my-objectname1");
    * objectNames.add("my-objectname2");
    * objectNames.add("my-objectname3");
-   * for (Result<DeleteError> errorResult: minioClient.removeObject("my-bucketname", objectNames)) {
+   * for (Result<DeleteError> errorResult: minioClient.removeObjects("my-bucketname", objectNames)) {
    *     DeleteError error = errorResult.get();
    *     System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
    * } }</pre>
@@ -2504,7 +2677,7 @@ public class MinioClient {
    * @param bucketName Bucket name.
    * @param objectNames List of Object names in the bucket.
    */
-  public Iterable<Result<DeleteError>> removeObject(final String bucketName, final Iterable<String> objectNames) {
+  public Iterable<Result<DeleteError>> removeObjects(final String bucketName, final Iterable<String> objectNames) {
     return new Iterable<Result<DeleteError>>() {
       @Override
       public Iterator<Result<DeleteError>> iterator() {
@@ -2608,6 +2781,8 @@ public class MinioClient {
    * @param bucketName Bucket name.
    *
    * @return an iterator of Result Items.
+   *
+   ** @throws XmlPullParserException      upon parsing response xml
    */
   public Iterable<Result<Item>> listObjects(final String bucketName) throws XmlPullParserException {
     return listObjects(bucketName, null);
@@ -2621,6 +2796,8 @@ public class MinioClient {
    * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
    *
    * @return an iterator of Result Items.
+   *
+   * @throws XmlPullParserException      upon parsing response xml
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix)
     throws XmlPullParserException {
@@ -2630,7 +2807,7 @@ public class MinioClient {
 
 
   /**
-   * Lists object information as {@code Iterable<Result><Item>>} in given bucket, prefix and recursive flag.
+   * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix and recursive flag.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname");
@@ -2657,7 +2834,7 @@ public class MinioClient {
 
 
   /**
-   * Lists object information as {@code Iterable<Result><Item>>} in given bucket, prefix, recursive flag and S3 API
+   * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix, recursive flag and S3 API
    * version to use.
    *
    * </p><b>Example:</b><br>
@@ -3031,11 +3208,17 @@ public class MinioClient {
    *
    * @return List of bucket type.
    *
-   * @throws NoResponseException     upon no response from server
-   * @throws IOException             upon connection error
-   * @throws XmlPullParserException  upon parsing response xml
-   * @throws ErrorResponseException  upon unsuccessful execution
-   * @throws InternalException       upon internal library error
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    */
   public List<Bucket> listBuckets()
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -3065,11 +3248,17 @@ public class MinioClient {
    * @return True if the bucket exists and the user has at least read access.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   *
    */
   public boolean bucketExists(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -3094,11 +3283,17 @@ public class MinioClient {
    * @param bucketName Bucket name.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution.
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    */
   public void makeBucket(String bucketName)
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
@@ -3119,11 +3314,19 @@ public class MinioClient {
    * @param region     region in which the bucket will be created.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws RegionConflictException     upon  passed region conflicts with the one
+   *                                     previously specified.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    */
   public void makeBucket(String bucketName, String region)
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
@@ -3168,11 +3371,17 @@ public class MinioClient {
    * @param bucketName Bucket name.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    */
   public void removeBucket(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -3201,14 +3410,20 @@ public class MinioClient {
    * @param contentType File content type of the object, user supplied.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    */
   public void putObject(String bucketName, String objectName, String fileName, String contentType)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3258,14 +3473,20 @@ public class MinioClient {
    * @param fileName    File name to upload.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    */
   public void putObject(String bucketName, String objectName, String fileName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,  IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3318,16 +3539,22 @@ public class MinioClient {
    * @param contentType Content type of the stream.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3387,17 +3614,23 @@ public class MinioClient {
    * @param headerMap   Custom/additional meta data of the object.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, long size,
                         Map<String, String> headerMap)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3452,17 +3685,23 @@ public class MinioClient {
    * @param sse         encryption metadata.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, long size,
                         ServerSideEncryption sse)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3533,17 +3772,23 @@ public class MinioClient {
    * @param sse         encryption metadata.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, long size,
                         Map<String, String> headerMap, ServerSideEncryption sse)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3579,11 +3824,17 @@ public class MinioClient {
    * @param sse         encryption metadata.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
@@ -3669,16 +3920,23 @@ public class MinioClient {
    * @param contentType Content type of the stream.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    *
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, String contentType)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3743,7 +4001,7 @@ public class MinioClient {
    */
   private void putObject(String bucketName, String objectName, Long size, Object data,
       Map<String, String> headerMap, ServerSideEncryption sse)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException,
            InvalidArgumentException, InsufficientDataException {
@@ -3848,6 +4106,23 @@ public class MinioClient {
    * @throws XmlPullParserException       upon parsing response xml
    * @throws InternalException            upon internal library error
    * @throws ErrorResponseException       upon unsuccessful execution
+   *
+   *
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws InvalidObjectPrefixException upon invalid object prefix.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws BucketPolicyTooLargeException  upon bucket policy too large in size
    */
   public String getBucketPolicy(String bucketName)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
@@ -3924,6 +4199,20 @@ public class MinioClient {
    * builder.append("    \"Version\": \"2012-10-17\"\n");
    * builder.append("}\n");
    * setBucketPolicy("my-bucketname", builder.toString()); }</pre>
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws InvalidObjectPrefixException upon invalid object prefix.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error   *
    */
   public void setBucketPolicy(String bucketName, String policy)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
@@ -3950,8 +4239,15 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws InvalidObjectPrefixException upon invalid object prefix.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
@@ -3987,8 +4283,15 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws InvalidObjectPrefixException upon invalid object prefix.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
@@ -4015,8 +4318,15 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws InvalidObjectPrefixException upon invalid object prefix.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
@@ -4042,7 +4352,6 @@ public class MinioClient {
     return listIncompleteUploads(bucketName, null, true, true);
   }
 
-
   /**
    * Lists incomplete uploads of objects in given bucket and prefix.
    *
@@ -4050,13 +4359,14 @@ public class MinioClient {
    * @param prefix filters the list of uploads to include only those that start with prefix.
    *
    * @return an iterator of Upload.
+   *
+   * @throws XmlPullParserException      upon parsing response xml
    * @see #listIncompleteUploads(String, String, boolean)
    */
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
-    throws XmlPullParserException {
+          throws XmlPullParserException {
     return listIncompleteUploads(bucketName, prefix, true, true);
   }
-
 
   /**
    * Lists incomplete uploads of objects in given bucket, prefix and recursive flag.
@@ -4082,7 +4392,6 @@ public class MinioClient {
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive) {
     return listIncompleteUploads(bucketName, prefix, recursive, true);
   }
-
 
   /**
    * Returns {@code Iterable<Result<Upload>>} of given bucket name, prefix and recursive flag.
@@ -4223,7 +4532,6 @@ public class MinioClient {
       }
     };
   }
-
 
   /**
    * Executes List Incomplete uploads S3 call for given bucket name, key marker, upload id marker, prefix,
@@ -4464,8 +4772,14 @@ public class MinioClient {
    * @param objectName Object name in the bucket.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoResponseException         upon no response from server
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
    * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
@@ -4491,6 +4805,19 @@ public class MinioClient {
    * @param suffix Suffix of concerned objects events.
    * @param events List of events to watch.
    * @param eventCallback Event handler.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *            upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *            InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *            upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
    *
    */
 
@@ -4562,7 +4889,6 @@ public class MinioClient {
 
     return new int[] { (int) partSize, (int) partCount, (int) lastPartSize };
   }
-
 
   /**
    * Return available size of given input stream up to given expected read size.  If less data is available than
@@ -4643,6 +4969,7 @@ public class MinioClient {
    * Disables HTTP call tracing previously enabled.
    *
    * @see #traceOn
+   * @throws IOException                 upon connection error
    */
   public void traceOff() throws IOException {
     this.traceStream = null;
