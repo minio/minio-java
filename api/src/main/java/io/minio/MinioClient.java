@@ -950,6 +950,10 @@ public class MinioClient {
           String[] hashes = Digest.sha256Md5Hashes(data, len);
           sha256Hash = hashes[0];
           md5Hash = hashes[1];
+        } else if (method == Method.PUT && queryParamMap != null && queryParamMap.containsKey("lifecycle")) {
+          String[] hashes = Digest.sha256Md5Hashes(data, len);
+          sha256Hash = hashes[0];
+          md5Hash = hashes[1];
         } else {
           // Fix issue #567: Compute SHA256 hash only.
           sha256Hash = Digest.sha256Hash(data, len);
@@ -4228,6 +4232,125 @@ public class MinioClient {
     response.body().close();
   }
 
+  /**
+   * Set XML string of LifeCycle on a given bucket.
+   * Delete the lifecycle of bucket in case a null is passed as lifeCycle.
+   * @param bucketName   Bucket name.
+   * @param lifeCycle    Bucket policy XML string.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String lifecycle  = "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
+   * + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration></Rule></LifecycleConfiguration>";
+   *
+   * setBucketLifecycle("my-bucketname", lifecycle); }</pre>
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException    upon requested algorithm was not found during
+   *                                     signature calculation
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   *                                     InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException         upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   */
+  public void setBucketLifeCycle(String bucketName, String lifeCycle)
+          throws InvalidBucketNameException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+          XmlPullParserException, ErrorResponseException, InternalException,InvalidArgumentException {
+    if ((lifeCycle == null) || "".equals(lifeCycle)) {
+      throw new InvalidArgumentException("life cycle cannot be empty");
+    }
+    Map<String, String> headerMap = new HashMap<>();
+    headerMap.put("Content-Length", Integer.toString(lifeCycle.length()));
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("lifecycle", "");
+    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, lifeCycle, 0);
+    response.body().close();
+  }
+
+  /**
+   * Delete the LifeCycle of bucket.
+   *
+   * @param bucketName   Bucket name.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code  deleteBucketLifeCycle("my-bucketname"); }</pre>
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException    upon requested algorithm was not found during
+   *                                     signature calculation
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   *                                     InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException         upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   */
+  public void deleteBucketLifeCycle(String bucketName)
+          throws InvalidBucketNameException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+          XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("lifecycle", "");
+    HttpResponse response = executeDelete(bucketName,  "", queryParamMap);
+    response.body().close();
+  }
+
+  /** Get bucket life cycle configuration.
+   *
+   * @param bucketName   Bucket name.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code String bucketLifeCycle = minioClient.getBucketLifecycle("my-bucketname");
+   * }</pre>
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException    upon requested algorithm was not found during
+   *                                     signature calculation
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   *                                     InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException         upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   *
+   */
+  public String getBucketLifeCycle(String bucketName)
+          throws InvalidBucketNameException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
+          XmlPullParserException, ErrorResponseException, InternalException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("lifecycle", "");
+    HttpResponse response = null;
+    String bodyContent = "";
+    Scanner scanner = null ;
+    try {
+      response = executeGet(bucketName, "", null, queryParamMap);
+      scanner = new Scanner(response.body().charStream());
+      // read entire body stream to string.
+      scanner.useDelimiter("\\A");
+      if (scanner.hasNext()) {
+        bodyContent = scanner.next();
+      }
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_LIFECYCLE_CONFIGURATION) {
+        throw e;
+      }
+    } finally {
+      if (response != null && response.body() != null) {
+        response.body().close();
+      }
+      if (scanner != null) {
+        scanner.close();
+      }
+    }
+    return bodyContent;
+  }
 
   /**
    * Get bucket notification configuration
