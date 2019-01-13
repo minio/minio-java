@@ -56,7 +56,7 @@ public class PutObjectEncryptedKms {
       // To test SSE-KMS
       ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("Key-Id", myContext);
 
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), sse);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, sse, null);
             
       bais.close();
 

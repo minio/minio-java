@@ -59,7 +59,7 @@ public class PutStatObjectEncrypted {
       // To test SSE-C
       ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
         
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), sse);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, sse, null);
       
       bais.close();
 

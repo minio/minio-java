@@ -3,12 +3,14 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
 
+
 import javax.crypto.KeyGenerator;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
+
 
 public class PutGetObjectEncryptedFile {
 /**
@@ -36,7 +38,7 @@ public class PutGetObjectEncryptedFile {
 
       // To test SSE-C
       ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-      minioClient.putObject(bucketName, objectName, sse, inputfile);
+      minioClient.putObject(bucketName, objectName, inputfile, null, null, sse, null);
       System.out.println("my-objectname is encrypted and uploaded successfully.");
 
       minioClient.getObject(bucketName, objectName, sse, outputfile);

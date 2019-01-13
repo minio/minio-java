@@ -78,7 +78,8 @@ public class PutObjectWithMetadata {
       headerMap.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
 
       // Create object 'my-objectname' in 'my-bucketname' with custom metadata in headerMap
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), headerMap); 
+      minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), headerMap,
+              null, null);
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
     } catch (MinioException e) {

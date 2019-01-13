@@ -559,7 +559,7 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_OCTET_STREAM);
   }
 
   // this case only occurs for minio cloud storage
@@ -584,7 +584,7 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_OCTET_STREAM);
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
@@ -609,7 +609,7 @@ public class MinioClientTest {
     String inputString = "hello worl";
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
+    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_OCTET_STREAM);
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
@@ -638,7 +638,7 @@ public class MinioClientTest {
       ascii[i - 1] = (byte) i;
     }
     String contentType = null;
-    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11, contentType);
+    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11L, null, null, contentType);
   }
 
   @SuppressFBWarnings("NP")
@@ -662,7 +662,7 @@ public class MinioClientTest {
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
     String contentType = null;
-    client.putObject(BUCKET, "key", data, 11, contentType);
+    client.putObject(BUCKET, "key", data, 11L, null, null, contentType);
   }
 
   @Test
@@ -684,7 +684,7 @@ public class MinioClientTest {
     String inputString = HELLO_WORLD;
     ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
 
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_JAVASCRIPT);
+    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_JAVASCRIPT);
   }
 
   @Test
@@ -828,7 +828,7 @@ public class MinioClientTest {
     server.start();
 
     MinioClient client = new MinioClient(server.url("").toString(), "access_key", "secret_key", "us-east-1");
-    client.putObject(BUCKET, "key", new ByteArrayInputStream(new byte[]{'a'}), 1, headerMap);
+    client.putObject(BUCKET, "key", new ByteArrayInputStream(new byte[]{'a'}), 1L, headerMap, null, null);
 
     return server.takeRequest();
   }

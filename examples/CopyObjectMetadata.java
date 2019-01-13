@@ -67,7 +67,8 @@ public class CopyObjectMetadata {
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
       // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), "application/octet-stream");
+      minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()),null, null,
+              "application/octet-stream");
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
 

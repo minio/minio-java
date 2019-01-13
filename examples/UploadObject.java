@@ -20,6 +20,9 @@ import java.security.InvalidKeyException;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import static java.nio.file.StandardOpenOption.*;
+import java.nio.file.*;
+
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 
@@ -39,7 +42,7 @@ public class UploadObject {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Upload 'my-filename' as object 'my-objectname' in 'my-bucketname'.
-      minioClient.putObject("my-bucketname", "my-objectname", "my-filename");
+      minioClient.putObject("my-bucketname", "my-objectname", "my-filename", null, null, null, null);
       System.out.println("my-filename is uploaded to my-objectname successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
