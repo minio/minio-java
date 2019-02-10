@@ -1,6 +1,6 @@
 /*
  * Minio Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015, 2016, 2017 Minio, Inc.
+ * (C) 2015, 2016, 2017, 2018, 2019 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3019,10 +3019,14 @@ public class MinioClient {
 
     if (prefix != null) {
       queryParamMap.put("prefix", prefix);
+    } else {
+      queryParamMap.put("prefix", "");
     }
 
     if (delimiter != null) {
       queryParamMap.put("delimiter", delimiter);
+    } else {
+      queryParamMap.put("delimiter", "");
     }
 
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
@@ -3186,10 +3190,14 @@ public class MinioClient {
 
     if (prefix != null) {
       queryParamMap.put("prefix", prefix);
+    } else {
+      queryParamMap.put("prefix", "");
     }
 
     if (delimiter != null) {
       queryParamMap.put("delimiter", delimiter);
+    } else {
+      queryParamMap.put("delimiter", "");
     }
 
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
@@ -4672,10 +4680,26 @@ public class MinioClient {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("uploads", "");
     queryParamMap.put("max-uploads", Integer.toString(maxUploads));
-    queryParamMap.put("prefix", prefix);
-    queryParamMap.put("key-marker", keyMarker);
-    queryParamMap.put("upload-id-marker", uploadIdMarker);
-    queryParamMap.put("delimiter", delimiter);
+
+    if (prefix != null) {
+      queryParamMap.put("prefix", prefix);
+    } else {
+      queryParamMap.put("prefix", "");
+    }
+
+    if (delimiter != null) {
+      queryParamMap.put("delimiter", delimiter);
+    } else {
+      queryParamMap.put("delimiter", "");
+    }
+
+    if (keyMarker != null) {
+      queryParamMap.put("key-marker", keyMarker);
+    }
+
+    if (uploadIdMarker != null) {
+      queryParamMap.put("upload-id-marker", uploadIdMarker);
+    }
 
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
 
