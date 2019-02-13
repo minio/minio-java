@@ -15,19 +15,19 @@ Java 1.8 or above, with one of the following environments:
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>6.0.1</version>
+    <version>6.0.2</version>
 </dependency>
 ```
 
 ## Download from gradle
 ```xml
 dependencies {
-    compile 'io.minio:minio:6.0.1'
+    compile 'io.minio:minio:6.0.2'
 }
 ```
 
 ## Download from JAR
-You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/6.0.1/) directly from maven.
+You can download the latest [JAR](http://repo1.maven.org/maven2/io/minio/minio/6.0.2/) directly from maven.
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
@@ -80,12 +80,12 @@ public class FileUploader {
 
 #### Compile FileUploader
 ```sh
-javac -cp "minio-6.0.1-all.jar"  FileUploader.java
+javac -cp "minio-6.0.2-all.jar"  FileUploader.java
 ```
 
 #### Run FileUploader
 ```sh
-java -cp "minio-6.0.1-all.jar:." FileUploader
+java -cp "minio-6.0.2-all.jar:." FileUploader
 /home/user/Photos/asiaphotos.zip is successfully uploaded as asiaphotos.zip to `asiatrip` bucket.
 
 mc ls play/asiatrip/
