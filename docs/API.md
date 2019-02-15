@@ -1374,9 +1374,7 @@ try {
 Uploads given file as object in given bucket.
 If the object is larger than 5MB, the client will automatically use a multipart session.
 
-If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
-
-If the multipart session fails, the user is responsible for resuming or removing the session
+If the multipart session fails, the uploaded parts are aborted automatically.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.lang.String-java.lang.String-)
 
@@ -1421,9 +1419,7 @@ try {
 Uploads data from given stream as object to given bucket where the stream size is unknown.
 If the stream has more than 525MiB data, the client uses a multipart session automatically.
 
-If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
-
-If the multipart session fails, the user is responsible for resuming or removing the session.
+If the multipart session fails, the uploaded parts are aborted automatically.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-java.lang.String-)
 
@@ -1580,7 +1576,7 @@ __Parameters__
 __Example__
 
 
-The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MB in multiple parts. This allows failed uploads to resume safely by only uploading the missing parts. Uploaded data is carefully verified using MD5SUM signatures.
+The maximum size of a single object is limited to 5TB. putObject transparently uploads objects larger than 5MB in multiple parts. Uploaded data is carefully verified using MD5SUM signatures.
 
 
 ```java
@@ -1600,9 +1596,7 @@ try {
 Uploads data from given stream as object to given bucket where the stream size is unknown.
 If the stream has more than 525MiB data, the client uses a multipart session automatically.
 
-If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
-
-If the multipart session fails, the user is responsible for resuming or removing the session.
+If the multipart session fails, the uploaded parts are aborted automatically.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-io.minio.ServerSideEncryption-)
 
@@ -1667,9 +1661,7 @@ StringBuilder builder = new StringBuilder();
 Uploads data from given stream as object to given bucket with specified meta data.
 If the object is larger than 5MB, the client will automatically use a multipart session.
 
-If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
-
-If the multipart session fails, the user is responsible for resuming or removing the session.
+If the multipart session fails, the uploaded parts are aborted automatically.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-long-java.util.Map-)
 
