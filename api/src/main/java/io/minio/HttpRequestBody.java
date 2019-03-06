@@ -71,7 +71,7 @@ class HttpRequestBody extends RequestBody {
   public void writeTo(BufferedSink sink) throws IOException {
     if (data instanceof InputStream) {
       InputStream stream = (InputStream) data;
-      sink.write(Okio.source(stream), len);
+      sink.writeAll(Okio.source(stream));
     } else if (data instanceof RandomAccessFile) {
       RandomAccessFile file = (RandomAccessFile) data;
       sink.write(Okio.source(Channels.newInputStream(file.getChannel())), len);
