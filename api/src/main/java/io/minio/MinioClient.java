@@ -1095,14 +1095,6 @@ public class MinioClient {
     }
 
     Response response = this.httpClient.newCall(request).execute();
-    if (response == null) {
-      if (this.traceStream != null) {
-        this.traceStream.println("<NO RESPONSE>");
-        this.traceStream.println(END_HTTP);
-      }
-      throw new NoResponseException();
-    }
-
     if (this.traceStream != null) {
       this.traceStream.println(response.protocol().toString().toUpperCase(Locale.US) + " " + response.code());
       this.traceStream.println(response.headers());
