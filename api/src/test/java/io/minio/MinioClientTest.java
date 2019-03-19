@@ -605,31 +605,6 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
-  @Test(expected = ErrorResponseException.class)
-  public void testPutOversizedSmallPut()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, BUCKET_KEY, "1",
-                                                        null);
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.setResponseCode(405); // method not allowed set by minio cloud storage
-    response.setBody(new Buffer().writeUtf8(errResponse.toString()));
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    String inputString = "how long is a piece of string? too long!";
-    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
-
-    client.putObject(BUCKET, "key", data, 11, APPLICATION_OCTET_STREAM);
-    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
-  }
-
   @SuppressFBWarnings("NP")
   @Test
   public void testSpecialCharsNameWorks()
