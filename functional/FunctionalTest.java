@@ -1602,7 +1602,11 @@ public class FunctionalTest {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-      } catch (EOFException e) {
+      } catch (ErrorResponseException e) {
+        if (!e.errorResponse().code().equals("IncompleteBody")) {
+          throw e;
+        }
+      } catch (java.net.ProtocolException e) {
         ignore();
       }
 
@@ -1636,7 +1640,11 @@ public class FunctionalTest {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-      } catch (EOFException e) {
+      } catch (ErrorResponseException e) {
+        if (!e.errorResponse().code().equals("IncompleteBody")) {
+          throw e;
+        }
+      } catch (java.net.ProtocolException e) {
         ignore();
       }
 
@@ -1672,7 +1680,11 @@ public class FunctionalTest {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-      } catch (EOFException e) {
+      } catch (ErrorResponseException e) {
+        if (!e.errorResponse().code().equals("IncompleteBody")) {
+          throw e;
+        }
+      } catch (java.net.ProtocolException e) {
         ignore();
       }
 
@@ -1708,7 +1720,11 @@ public class FunctionalTest {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, 9 * MB, nullContentType);
-      } catch (EOFException e) {
+      } catch (ErrorResponseException e) {
+        if (!e.errorResponse().code().equals("IncompleteBody")) {
+          throw e;
+        }
+      } catch (java.net.ProtocolException e) {
         ignore();
       }
 
