@@ -24,7 +24,8 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |  [`deleteBucketLifeCycle`](#deleteBucketLifeCycle) |
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
 | [`listenBucketNotification`](#listenBucketNotification) |  |   |   |
-
+| [`setBucketNotification`](#setBucketNotification) |  |   |   |
+| [`getBucketNotification`](#getBucketNotification) |  |   |   |
 
 ## 1. Constructors
 
@@ -651,9 +652,9 @@ try {
 ### setBucketLifeCycle(String bucketName, String lifeCycle)
 `public void setBucketLifeCycle(String bucketName, String lifeCycle)`
 
-Set a life cydle on bucket.
+Set a life cycle on bucket.
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketLifeCycle-java.lang.String-java.lang.String-io.minio.BucketLifeCycle-)
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketLifeCycle-java.lang.String-java.lang.String-)
 
 __Parameters__
 
@@ -744,7 +745,7 @@ try {
 
 Delete the lifecycle of the bucket.
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketLifeCycle-java.lang.String-)
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketLifeCycle-java.lang.String-)
 
 __Parameters__
 
@@ -786,7 +787,7 @@ try {
 
 Listen to events related to objects under the specified bucket.
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String[].io.minio.BucketEventListener-)
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String-java.lang.String:A-io.minio.BucketEventListener-)
 
 __Parameters__
 
@@ -796,11 +797,20 @@ __Parameters__
 | ``prefix`` | _String_ | Only listen for objects with the given prefix. |
 | ``suffix`` | _String_ | Only listen for objects with the given suffix. |
 | ``events`` | _String[]_ | Only listen for the specified events, such as s3:ObjectCreated:*, s3:ObjectAccessed:*, s3:ObjectRemoved:*, ..  |
+| ``listener`` | _BucketEventListener_ | Interface with updateEvent method |
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``RuntimeException`` : runtime exception. |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
 
 
 __Example__
@@ -821,8 +831,116 @@ __Example__
   } catch (Exception e) {
     System.out.println("Error occurred: " + e);
   }
-
   ```
+
+  <a name="setBucketNotification"></a>
+### setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
+`public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)`
+
+Set bucket notification configuration.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketNotification-java.lang.String-io.minio.messages.NotificationConfiguration-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``notificationConfiguration`` | _NotificationConfiguration_ | Notification configuration to be set. |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidObjectPrefixException`` : upon invalid object prefix. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+
+
+__Example__
+
+
+```java
+ try {
+      NotificationConfiguration notificationConfiguration = minioClient.getBucketNotification("my-bucketname");
+
+      // Add a new SQS configuration.
+      List<QueueConfiguration> queueConfigurationList = notificationConfiguration.queueConfigurationList();
+      QueueConfiguration queueConfiguration = new QueueConfiguration();
+      queueConfiguration.setQueue("arn:minio:sqs::1:webhook");
+
+      List<EventType> eventList = new LinkedList<>();
+      eventList.add(EventType.OBJECT_CREATED_PUT);
+      eventList.add(EventType.OBJECT_CREATED_COPY);
+      queueConfiguration.setEvents(eventList);
+
+      Filter filter = new Filter();
+      filter.setPrefixRule("images");
+      filter.setSuffixRule("pg");
+      queueConfiguration.setFilter(filter);
+
+      queueConfigurationList.add(queueConfiguration);
+      notificationConfiguration.setQueueConfigurationList(queueConfigurationList);
+
+      // Set updated notification configuration.
+      minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
+      System.out.println("Bucket notification is set successfully");
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+```
+
+  <a name="getBucketNotification"></a>
+### getBucketNotification(String bucketName)
+`public NotificationConfiguration getBucketNotification(String bucketName)`
+
+Get bucket notification configuration.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketNotification-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  ``NotificationConfiguration``:  NotificationConfiguration    | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidObjectPrefixException`` : upon invalid object prefix. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+
+
+__Example__
+
+
+```java
+ try {
+      /* play.minio.io for test and development. */
+      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F",
+                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      NotificationConfiguration notificationConfiguration = minioClient.getBucketNotification("my-bucketname");
+      System.out.println(notificationConfiguration);
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+```
+
+
 
 <a name="listIncompleteUploads"></a>
 ###  listIncompleteUploads(String bucketName)
@@ -970,7 +1088,7 @@ try {
 
 Get bucket policy for a bucket.
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketPolicy-java.lang.String-java.lang.String-)
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketPolicy-java.lang.String-)
 
 __Parameters__
 
@@ -1012,7 +1130,7 @@ try {
 
 Set a policy on bucket.
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketPolicy-java.lang.String-java.lang.String-io.minio.BucketPolicy-)
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketPolicy-java.lang.String-java.lang.String-)
 
 __Parameters__
 
