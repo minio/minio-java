@@ -111,7 +111,7 @@ class ChunkedInputStream extends InputStream {
       }
 
       totalBytesRead += bytesRead;
-      pos = bytesRead;
+      pos += bytesRead;
       len = buf.length - totalBytesRead;
     }
 
