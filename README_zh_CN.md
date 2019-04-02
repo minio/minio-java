@@ -157,6 +157,7 @@ mc ls play/asiatrip/
 ## 了解更多
 * [Minio官方文档](https://docs.minio.io)
 * [Minio Java Client SDK API文档](https://docs.minio.io/docs/java-client-api-reference)
+* [创建属于你的照片API服务-完整示例](https://github.com/minio/minio-java-rest-example)
 
 ## 贡献
 [贡献者指南](https://github.com/minio/minio-java/blob/master/docs/zh_CN/CONTRIBUTING.md)
