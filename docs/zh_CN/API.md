@@ -1442,6 +1442,5 @@ try {
 
 ## 5. 了解更多
 
-
-- [创建属于你的照片API服务示例](https://docs.minio.io/docs/java-photo-api-service)
+- [创建属于你的照片API服务示例](https://github.com/minio/minio-java-rest-example)
 - [完整的JavaDoc](http://minio.github.io/minio-java/)
