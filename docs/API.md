@@ -2763,4 +2763,4 @@ try {
 ## 5. Explore Further
 
 - [Build your own Photo API Service - Full Application Example ](https://github.com/minio/minio-java-rest-example)
-- [Complete JavaDoc](http://minio.github.io/minio-java/io/minio/MinioClient.html)
+- [Complete JavaDoc](http://minio.github.io/minio-java/)
