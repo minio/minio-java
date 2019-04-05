@@ -44,7 +44,7 @@ $ ./gradlew closeAndReleaseRepository
 ```
 
 ### Tag
-Tag and sign your release commit, additionally this step requires you to have access toMinIO's trusted private key.
+Tag and sign your release commit, additionally this step requires you to have access to MinIO's trusted private key.
 ```
 $ export GNUPGHOME=/media/${USER}/Minio2/trusted
 $ git tag -s 0.3.0

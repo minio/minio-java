@@ -1,6 +1,6 @@
 /*
- *MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015, 2016, 2017, 2018, 2019MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
+ * (C) 2015, 2016, 2017, 2018, 2019 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -223,7 +223,7 @@ public class MinioClient {
 
 
   /**
-   * CreatesMinIO client object with given endpoint using anonymous access.
+   * Creates MinIO client object with given endpoint using anonymous access.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000"); }</pre>
@@ -258,7 +258,7 @@ public class MinioClient {
 
 
   /**
-   * CreatesMinIO client object with given URL object using anonymous access.
+   * Creates MinIO client object with given URL object using anonymous access.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000")); }</pre>
@@ -281,7 +281,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object with given HttpUrl object using anonymous access.
+   * Creates MinIO client object with given HttpUrl object using anonymous access.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000")); }</pre>
@@ -305,7 +305,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object with given endpoint, access key and secret key.
+   * Creates MinIO client object with given endpoint, access key and secret key.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
@@ -343,7 +343,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object with given endpoint, access key, secret key and region name
+   * Creates MinIO client object with given endpoint, access key, secret key and region name
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
@@ -382,7 +382,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object with given URL object, access key and secret key.
+   * Creates MinIO client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"),
@@ -409,7 +409,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object with given URL object, access key and secret key.
+   * Creates MinIO client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"),
@@ -437,7 +437,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.
+   * Creates MinIO client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
@@ -478,7 +478,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object with given endpoint, access key and secret key using secure (HTTPS) connection.
+   * Creates MinIO client object with given endpoint, access key and secret key using secure (HTTPS) connection.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
@@ -519,7 +519,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object using given endpoint, port, access key, secret key and secure option.
+   * Creates MinIO client object using given endpoint, port, access key, secret key and secure option.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
@@ -561,7 +561,7 @@ public class MinioClient {
   }
 
   /**
-   * CreatesMinIO client object using given endpoint, port, access key, secret key, region and secure option.
+   * Creates MinIO client object using given endpoint, port, access key, secret key, region and secure option.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
@@ -604,7 +604,7 @@ public class MinioClient {
 
 
   /**
-   * CreatesMinIO client object using given endpoint, port, access key, secret key, region and secure option.
+   * Creates MinIO client object using given endpoint, port, access key, secret key, region and secure option.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =

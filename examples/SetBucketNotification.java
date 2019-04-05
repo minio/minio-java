@@ -1,5 +1,5 @@
 /*
- *MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2017, 2018MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2017, 2018 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class SetBucketNotification {
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
-      /* LocalMinIO for test and development. */
+      /* Local MinIO for test and development. */
       MinioClient minioClient = new MinioClient("http://127.0.0.1:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETKEY");
 
       /* Amazon S3: */

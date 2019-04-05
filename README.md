@@ -1,6 +1,6 @@
-#MinIO Java SDK for Amazon S3 Compatible Cloud Storage [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
+# MinIO Java SDK for Amazon S3 Compatible Cloud Storage [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
 
-TheMinIO Java Client SDK provides simple APIs to access any Amazon S3 compatible object storage server.
+The MinIO Java Client SDK provides simple APIs to access any Amazon S3 compatible object storage server.
 
 This quickstart guide will show you how to install the client SDK and execute an example java program. For a complete list of APIs and examples, please take a look at the [Java Client API Reference](http://docs.min.io/docs/java-client-api-reference) documentation.
 
@@ -40,7 +40,7 @@ You need three items in order to connect to an object storage server.
 | Access Key    | Access key is like user ID that uniquely identifies your account.   |
 | Secret Key     | Secret key is the password to your account.    |
 
-For the following example, we will use a freely hostedMinIO server running at [https://play.min.io:9000](https://play.min.io:9000). Feel free to use this service for test and development. Access credentials shown in this example are open to the public.
+For the following example, we will use a freely hosted MinIO server running at [https://play.min.io:9000](https://play.min.io:9000). Feel free to use this service for test and development. Access credentials shown in this example are open to the public.
 
 #### FileUploader.java
 ```java
@@ -56,7 +56,7 @@ import io.minio.errors.MinioException;
 public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
-      // Create a minioClient with theMinIO Server name, Port, Access key and Secret key.
+      // Create a minioClient with the MinIO Server name, Port, Access key and Secret key.
       MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Check if the bucket already exists.
