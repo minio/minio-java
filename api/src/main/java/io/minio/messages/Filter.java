@@ -1,5 +1,5 @@
 /*
- * Minio Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2017 Minio, Inc.
+ *MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2017MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

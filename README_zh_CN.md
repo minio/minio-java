@@ -1,8 +1,8 @@
-# 适用于与Amazon S3兼容的云存储的Minio Java SDK [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
+# 适用于与Amazon S3兼容的云存储的Minio Java SDK [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
 
 Minio Java Client SDK提供简单的API来访问任何与Amazon S3兼容的对象存储服务。
 
-本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](http://docs.minio.io/docs/java-client-api-reference)文档。
+本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](http://docs.min.io/docs/java-client-api-reference)文档。
 
 ## 最低需求
 Java 1.8或更高版本:
@@ -41,7 +41,7 @@ dependencies {
 | Secret Key     | Secret key是你账户的密码。    |
 
 
-在下面的例子的中，我们将使用一个运行在[https://play.minio.io:9000](https://play.minio.io:9000)的免费托管的Minio服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
+在下面的例子的中，我们将使用一个运行在[https://play.min.io:9000](https://play.min.io:9000)的免费托管的Minio服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
 
 #### FileUploader.java
 
@@ -59,7 +59,7 @@ public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       // 使用Minio服务的URL，端口，Access key和Secret key创建一个MinioClient对象
-      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // 检查存储桶是否已经存在
       boolean isExist = minioClient.bucketExists("asiatrip");
@@ -98,32 +98,32 @@ mc ls play/asiatrip/
 
 下面链接是完整的API文档
 
-* [API完整文档](https://docs.minio.io/docs/java-client-api-reference)
+* [API完整文档](https://docs.min.io/docs/java-client-api-reference)
 
 ### API文档: 操作存储桶
-* [`makeBucket`](https://docs.minio.io/docs/java-client-api-reference#makeBucket)
-* [`listBuckets`](https://docs.minio.io/docs/java-client-api-reference#listBuckets)
-* [`bucketExists`](https://docs.minio.io/docs/java-client-api-reference#bucketExists)
-* [`removeBucket`](https://docs.minio.io/docs/java-client-api-reference#removeBucket)
-* [`listObjects`](https://docs.minio.io/docs/java-client-api-reference#listObjects)
-* [`listIncompleteUploads`](https://docs.minio.io/docs/java-client-api-reference#listIncompleteUploads)
+* [`makeBucket`](https://docs.min.io/docs/java-client-api-reference#makeBucket)
+* [`listBuckets`](https://docs.min.io/docs/java-client-api-reference#listBuckets)
+* [`bucketExists`](https://docs.min.io/docs/java-client-api-reference#bucketExists)
+* [`removeBucket`](https://docs.min.io/docs/java-client-api-reference#removeBucket)
+* [`listObjects`](https://docs.min.io/docs/java-client-api-reference#listObjects)
+* [`listIncompleteUploads`](https://docs.min.io/docs/java-client-api-reference#listIncompleteUploads)
 
 ### API文档: 操作文件对象
-* [`getObject`](https://docs.minio.io/docs/java-client-api-reference#getObject)
-* [`putObject`](https://docs.minio.io/docs/java-client-api-reference#putObject)
-* [`copyObject`](https://docs.minio.io/docs/java-client-api-reference#copyObject)
-* [`statObject`](https://docs.minio.io/docs/java-client-api-reference#statObject)
-* [`removeObject`](https://docs.minio.io/docs/java-client-api-reference#removeObject)
-* [`removeIncompleteUpload`](https://docs.minio.io/docs/java-client-api-reference#removeIncompleteUpload)
+* [`getObject`](https://docs.min.io/docs/java-client-api-reference#getObject)
+* [`putObject`](https://docs.min.io/docs/java-client-api-reference#putObject)
+* [`copyObject`](https://docs.min.io/docs/java-client-api-reference#copyObject)
+* [`statObject`](https://docs.min.io/docs/java-client-api-reference#statObject)
+* [`removeObject`](https://docs.min.io/docs/java-client-api-reference#removeObject)
+* [`removeIncompleteUpload`](https://docs.min.io/docs/java-client-api-reference#removeIncompleteUpload)
 
 ### API文档: Presigned操作
-* [`presignedGetObject`](https://docs.minio.io/docs/java-client-api-reference#presignedGetObject)
-* [`presignedPutObject`](https://docs.minio.io/docs/java-client-api-reference#presignedPutObject)
-* [`presignedPostPolicy`](https://docs.minio.io/docs/java-client-api-reference#presignedPostPolicy)
+* [`presignedGetObject`](https://docs.min.io/docs/java-client-api-reference#presignedGetObject)
+* [`presignedPutObject`](https://docs.min.io/docs/java-client-api-reference#presignedPutObject)
+* [`presignedPostPolicy`](https://docs.min.io/docs/java-client-api-reference#presignedPostPolicy)
 
 ### API文档: 操作存储桶策略
-* [`getBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#getBucketPolicy)
-* [`setBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#setBucketPolicy)
+* [`getBucketPolicy`](https://docs.min.io/docs/java-client-api-reference#getBucketPolicy)
+* [`setBucketPolicy`](https://docs.min.io/docs/java-client-api-reference#setBucketPolicy)
 
 ## 完整示例
 
@@ -155,8 +155,8 @@ mc ls play/asiatrip/
 * [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 
 ## 了解更多
-* [Minio官方文档](https://docs.minio.io)
-* [Minio Java Client SDK API文档](https://docs.minio.io/docs/java-client-api-reference)
+* [Minio官方文档](https://docs.min.io)
+* [Minio Java Client SDK API文档](https://docs.min.io/docs/java-client-api-reference)
 * [创建属于你的照片API服务-完整示例](https://github.com/minio/minio-java-rest-example)
 
 ## 贡献
