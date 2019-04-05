@@ -32,7 +32,7 @@ EOF
 ```
 
 #### Upload to maven
-Upload all artifacts belonging to `io.minio` artifact repository, additionally this step requires you to have access toMinIO's trusted private key.
+Upload all artifacts belonging to `io.minio` artifact repository, additionally this step requires you to have access to MinIO's trusted private key.
 ```sh
 $ ./gradlew uploadArchives
 ```
