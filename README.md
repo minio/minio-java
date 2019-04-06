@@ -1,8 +1,8 @@
-# Minio Java SDK for Amazon S3 Compatible Cloud Storage [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
+# MinIO Java SDK for Amazon S3 Compatible Cloud Storage [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
 
-The Minio Java Client SDK provides simple APIs to access any Amazon S3 compatible object storage server.
+The MinIO Java Client SDK provides simple APIs to access any Amazon S3 compatible object storage server.
 
-This quickstart guide will show you how to install the client SDK and execute an example java program. For a complete list of APIs and examples, please take a look at the [Java Client API Reference](http://docs.minio.io/docs/java-client-api-reference) documentation.
+This quickstart guide will show you how to install the client SDK and execute an example java program. For a complete list of APIs and examples, please take a look at the [Java Client API Reference](http://docs.min.io/docs/java-client-api-reference) documentation.
 
 ## Minimum Requirements
 Java 1.8 or above, with one of the following environments:
@@ -40,7 +40,7 @@ You need three items in order to connect to an object storage server.
 | Access Key    | Access key is like user ID that uniquely identifies your account.   |
 | Secret Key     | Secret key is the password to your account.    |
 
-For the following example, we will use a freely hosted Minio server running at [https://play.minio.io:9000](https://play.minio.io:9000). Feel free to use this service for test and development. Access credentials shown in this example are open to the public.
+For the following example, we will use a freely hosted MinIO server running at [https://play.min.io:9000](https://play.min.io:9000). Feel free to use this service for test and development. Access credentials shown in this example are open to the public.
 
 #### FileUploader.java
 ```java
@@ -56,8 +56,8 @@ import io.minio.errors.MinioException;
 public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
-      // Create a minioClient with the Minio Server name, Port, Access key and Secret key.
-      MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      // Create a minioClient with the MinIO Server name, Port, Access key and Secret key.
+      MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Check if the bucket already exists.
       boolean isExist = minioClient.bucketExists("asiatrip");
@@ -95,32 +95,32 @@ mc ls play/asiatrip/
 ## API Reference
 The full API Reference is available here.
 
-* [Complete API Reference](https://docs.minio.io/docs/java-client-api-reference)
+* [Complete API Reference](https://docs.min.io/docs/java-client-api-reference)
 
 ### API Reference: Bucket Operations
-* [`makeBucket`](https://docs.minio.io/docs/java-client-api-reference#makeBucket)
-* [`listBuckets`](https://docs.minio.io/docs/java-client-api-reference#listBuckets)
-* [`bucketExists`](https://docs.minio.io/docs/java-client-api-reference#bucketExists)
-* [`removeBucket`](https://docs.minio.io/docs/java-client-api-reference#removeBucket)
-* [`listObjects`](https://docs.minio.io/docs/java-client-api-reference#listObjects)
-* [`listIncompleteUploads`](https://docs.minio.io/docs/java-client-api-reference#listIncompleteUploads)
+* [`makeBucket`](https://docs.min.io/docs/java-client-api-reference#makeBucket)
+* [`listBuckets`](https://docs.min.io/docs/java-client-api-reference#listBuckets)
+* [`bucketExists`](https://docs.min.io/docs/java-client-api-reference#bucketExists)
+* [`removeBucket`](https://docs.min.io/docs/java-client-api-reference#removeBucket)
+* [`listObjects`](https://docs.min.io/docs/java-client-api-reference#listObjects)
+* [`listIncompleteUploads`](https://docs.min.io/docs/java-client-api-reference#listIncompleteUploads)
 
 ### API Reference: Object Operations
-* [`getObject`](https://docs.minio.io/docs/java-client-api-reference#getObject)
-* [`putObject`](https://docs.minio.io/docs/java-client-api-reference#putObject)
-* [`copyObject`](https://docs.minio.io/docs/java-client-api-reference#copyObject)
-* [`statObject`](https://docs.minio.io/docs/java-client-api-reference#statObject)
-* [`removeObject`](https://docs.minio.io/docs/java-client-api-reference#removeObject)
-* [`removeIncompleteUpload`](https://docs.minio.io/docs/java-client-api-reference#removeIncompleteUpload)
+* [`getObject`](https://docs.min.io/docs/java-client-api-reference#getObject)
+* [`putObject`](https://docs.min.io/docs/java-client-api-reference#putObject)
+* [`copyObject`](https://docs.min.io/docs/java-client-api-reference#copyObject)
+* [`statObject`](https://docs.min.io/docs/java-client-api-reference#statObject)
+* [`removeObject`](https://docs.min.io/docs/java-client-api-reference#removeObject)
+* [`removeIncompleteUpload`](https://docs.min.io/docs/java-client-api-reference#removeIncompleteUpload)
 
 ### API Reference: Presigned Operations
-* [`presignedGetObject`](https://docs.minio.io/docs/java-client-api-reference#presignedGetObject)
-* [`presignedPutObject`](https://docs.minio.io/docs/java-client-api-reference#presignedPutObject)
-* [`presignedPostPolicy`](https://docs.minio.io/docs/java-client-api-reference#presignedPostPolicy)
+* [`presignedGetObject`](https://docs.min.io/docs/java-client-api-reference#presignedGetObject)
+* [`presignedPutObject`](https://docs.min.io/docs/java-client-api-reference#presignedPutObject)
+* [`presignedPostPolicy`](https://docs.min.io/docs/java-client-api-reference#presignedPostPolicy)
 
 ### API Reference: Bucket Policy Operations
-* [`getBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#getBucketPolicy)
-* [`setBucketPolicy`](https://docs.minio.io/docs/java-client-api-reference#setBucketPolicy)
+* [`getBucketPolicy`](https://docs.min.io/docs/java-client-api-reference#getBucketPolicy)
+* [`setBucketPolicy`](https://docs.min.io/docs/java-client-api-reference#setBucketPolicy)
 
 ## Full Examples
 
@@ -160,8 +160,8 @@ The full API Reference is available here.
 * [PutObjectEncryptedS3.java](https://github.com/minio/minio-java/tree/master/examples/PutObjectEncryptedS3.java)
 
 ## Explore Further
-* [Complete Documentation](https://docs.minio.io)
-* [Minio Java Client SDK API Reference](https://docs.minio.io/docs/java-client-api-reference)
+* [Complete Documentation](https://docs.min.io)
+* [Minio Java Client SDK API Reference](https://docs.min.io/docs/java-client-api-reference)
 * [Build your own Photo API Service - Full Application Example ](https://github.com/minio/minio-java-rest-example)
 
 ## Contribute

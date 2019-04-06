@@ -1,8 +1,8 @@
 # Java Client API Reference [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
 
-## Initialize Minio Client object.
+## Initialize MinIO Client object.
 
-## Minio
+## MinIO
 
 ```java
 MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
@@ -33,60 +33,60 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |  |
 |---|
 |`public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException`   |
-| Creates Minio client object with given endpoint using anonymous access.  |
+| Creates MinIO client object with given endpoint using anonymous access.  |
 | [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-)  |
 
 
 |   |
 |---|
 |`public MinioClient(URL url) throws InvalidEndpointException, InvalidPortException`   |
-| Creates Minio client object with given url using anonymous access.  |
+| Creates MinIO client object with given url using anonymous access.  |
 | [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-)  |
 
 
 |  |
 |---|
 | `public MinioClient(okhttp3.HttpUrl url) throws  InvalidEndpointException, InvalidPortException`  |
-|Creates Minio client object with given HttpUrl object using anonymous access.  |
+|Creates MinIO client object with given HttpUrl object using anonymous access.  |
 | [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-okhttp3.HttpUrl-)  |
 
 |   |
 |---|
 | `public MinioClient(String endpoint, String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException`  |
-|  Creates Minio client object with given endpoint, access key and secret key. |
+|  Creates MinIO client object with given endpoint, access key and secret key. |
 |   [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-)|
 
 |   |
 |---|
 | `public MinioClient(String endpoint, int port,  String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.  |
+| Creates MinIO client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.  |
 | [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-)  |
 
 
 |   |
 |---|
 | `public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure) throws InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object with given endpoint, access key and secret key using secure (HTTPS) connection.  |
+| Creates MinIO client object with given endpoint, access key and secret key using secure (HTTPS) connection.  |
 |  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-boolean-) |
 
 
 |   |
 |---|
 | `public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure) throws InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object using given endpoint, port, access key, secret key and secure option.  |
+| Creates MinIO client object using given endpoint, port, access key, secret key and secure option.  |
 |  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-boolean-) |
 
 |   |
 |---|
 | `public MinioClient(okhttp3.HttpUrl url, String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException`  |
-| Creates Minio client object with given URL object, access key and secret key.  |
+| Creates MinIO client object with given URL object, access key and secret key.  |
 | [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-okhttp3.HttpUrl-java.lang.String-java.lang.String-)  |
 
 
 |   |
 |---|
 | `public MinioClient(URL url, String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException`  |
-|  Creates Minio client object with given URL object, access key and secret key. |
+|  Creates MinIO client object with given URL object, access key and secret key. |
 |  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.net.URL-java.lang.String-java.lang.String-) |
 
 
@@ -94,7 +94,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |   |
 |---|
 | `public MinioClient(String endpoint, String accessKey, String secretKey, String region) throws InvalidEndpointException, InvalidPortException`  |
-|  Creates Minio client object with given URL object, access key and secret key. |
+|  Creates MinIO client object with given URL object, access key and secret key. |
 |  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-java.lang.String-java.lang.String-java.lang.String-) |
 
 
@@ -102,7 +102,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |   |
 |---|
 | `public MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure) throws InvalidEndpointException, InvalidPortException`  |
-|  Creates Minio client object using given endpoint, port, access key, secret key, region and secure option. |
+|  Creates MinIO client object using given endpoint, port, access key, secret key, region and secure option. |
 |  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-java.lang.String-boolean-) |
 
 
@@ -110,7 +110,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 |   |
 |---|
 | `public MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure, okhttp3.OkHttpClient httpClient) throws InvalidEndpointException, InvalidPortException`  |
-|  Creates Minio client object using given endpoint, port, access key, secret key, region and secure option. |
+|  Creates MinIO client object using given endpoint, port, access key, secret key, region and secure option. |
 |  [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#MinioClient-java.lang.String-int-java.lang.String-java.lang.String-java.lang.String-boolean-) |
 
 
@@ -135,7 +135,7 @@ __Parameters__
 __Example__
 
 
-### Minio
+### MinIO
 
 
 ```java

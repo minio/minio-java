@@ -32,7 +32,7 @@ EOF
 ```
 
 #### Upload to maven
-Upload all artifacts belonging to `io.minio` artifact repository, additionally this step requires you to have access to Minio's trusted private key.
+Upload all artifacts belonging to `io.minio` artifact repository, additionally this step requires you to have access to MinIO's trusted private key.
 ```sh
 $ ./gradlew uploadArchives
 ```
@@ -44,7 +44,7 @@ $ ./gradlew closeAndReleaseRepository
 ```
 
 ### Tag
-Tag and sign your release commit, additionally this step requires you to have access to Minio's trusted private key.
+Tag and sign your release commit, additionally this step requires you to have access to MinIO's trusted private key.
 ```
 $ export GNUPGHOME=/media/${USER}/Minio2/trusted
 $ git tag -s 0.3.0
