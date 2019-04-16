@@ -100,7 +100,6 @@ import java.security.cert.X509Certificate;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -108,8 +107,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
@@ -928,7 +930,15 @@ public class MinioClient {
       // Handle putobject specially to use chunked upload.
       if (method == Method.PUT && objectName != null && body != null && body instanceof InputStream && length > 0) {
         sha256Hash = "STREAMING-AWS4-HMAC-SHA256-PAYLOAD";
-        requestBuilder.header("Content-Encoding", "aws-chunked");
+
+        String contentEncoding = "aws-chunked";
+        if (headerMap != null) {
+          contentEncoding = Stream.concat(Stream.of("aws-chunked"),
+              headerMap.get("Content-Encoding").stream()).distinct().filter(encoding -> !encoding.isEmpty())
+              .collect(Collectors.joining(","));
+        }
+        requestBuilder.header("Content-Encoding", contentEncoding);
+
         requestBuilder.header("x-amz-decoded-content-length", Integer.toString(length));
         chunkedUpload = true;
       } else if (url.isHttps()) {
