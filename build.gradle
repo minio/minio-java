@@ -226,7 +226,7 @@ project(':api') {
                         developer {
                             id 'minio'
                             name 'Minio Inc.'
-                            email 'dev@minio.io'
+                            email 'dev@min.io'
                         }
                     }
                 }
@@ -268,7 +268,7 @@ project(':functional') {
         main = 'FunctionalTest'
         classpath = sourceSets.main.runtimeClasspath
 
-        ext.endPoint = 'https://play.minio.io:9000'
+        ext.endPoint = 'https://play.min.io:9000'
         if (rootProject.hasProperty('endPoint')) {
             ext.endPoint = rootProject.properties['endPoint']
         }
