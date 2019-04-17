@@ -161,7 +161,7 @@ The full API Reference is available here.
 
 ## Explore Further
 * [Complete Documentation](https://docs.min.io)
-* [Minio Java Client SDK API Reference](https://docs.min.io/docs/java-client-api-reference)
+* [MinIO Java Client SDK API Reference](https://docs.min.io/docs/java-client-api-reference)
 * [Build your own Photo API Service - Full Application Example ](https://github.com/minio/minio-java-rest-example)
 
 ## Contribute

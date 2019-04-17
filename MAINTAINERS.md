@@ -1,5 +1,5 @@
 # For maintainers only
-Minio Java SDK uses [gradle](https://gradle.org/) build system.
+MinIO Java SDK uses [gradle](https://gradle.org/) build system.
 
 ## Responsibilities
 Go through [Maintainer Responsibility Guide](https://gist.github.com/abperiasamy/f4d9b31d3186bbd26522).

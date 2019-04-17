@@ -162,7 +162,7 @@ public class MinioClient {
   private static final int MAX_BUCKET_POLICY_SIZE = 12 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
-  private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
+  private static final String DEFAULT_USER_AGENT = "MinIO (" + System.getProperty("os.arch") + "; "
       + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
   private static final String NULL_STRING = "(null)";
   private static final String S3_AMAZONAWS_COM = "s3.amazonaws.com";

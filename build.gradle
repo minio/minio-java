@@ -205,7 +205,7 @@ project(':api') {
                 pom.project {
                     name 'minio'
                     packaging 'jar'
-                    description 'Minio Java SDK for Amazon S3 Compatible Cloud Storage'
+                    description 'MinIO Java SDK for Amazon S3 Compatible Cloud Storage'
                     url 'https://github.com/minio/minio-java'
                     inceptionYear '2015'
 
@@ -225,7 +225,7 @@ project(':api') {
                     developers {
                         developer {
                             id 'minio'
-                            name 'Minio Inc.'
+                            name 'MinIO Inc.'
                             email 'dev@min.io'
                         }
                     }
