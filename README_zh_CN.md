@@ -1,6 +1,6 @@
-# 适用于与Amazon S3兼容的云存储的Minio Java SDK [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
+# 适用于与Amazon S3兼容的云存储的MinIO Java SDK [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
 
-Minio Java Client SDK提供简单的API来访问任何与Amazon S3兼容的对象存储服务。
+MinIO Java Client SDK提供简单的API来访问任何与Amazon S3兼容的对象存储服务。
 
 本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](http://docs.min.io/docs/java-client-api-reference)文档。
 
@@ -41,7 +41,7 @@ dependencies {
 | Secret Key     | Secret key是你账户的密码。    |
 
 
-在下面的例子的中，我们将使用一个运行在[https://play.min.io:9000](https://play.min.io:9000)的免费托管的Minio服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
+在下面的例子的中，我们将使用一个运行在[https://play.min.io:9000](https://play.min.io:9000)的免费托管的MinIO服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
 
 #### FileUploader.java
 
@@ -58,7 +58,7 @@ import io.minio.errors.MinioException;
 public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
-      // 使用Minio服务的URL，端口，Access key和Secret key创建一个MinioClient对象
+      // 使用MinIO服务的URL，端口，Access key和Secret key创建一个MinioClient对象
       MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // 检查存储桶是否已经存在
@@ -155,8 +155,8 @@ mc ls play/asiatrip/
 * [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 
 ## 了解更多
-* [Minio官方文档](https://docs.min.io)
-* [Minio Java Client SDK API文档](https://docs.min.io/docs/java-client-api-reference)
+* [MinIO官方文档](https://docs.min.io)
+* [MinIO Java Client SDK API文档](https://docs.min.io/docs/java-client-api-reference)
 * [创建属于你的照片API服务-完整示例](https://github.com/minio/minio-java-rest-example)
 
 ## 贡献
