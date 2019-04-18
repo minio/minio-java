@@ -1196,13 +1196,10 @@ public class FunctionalTest {
       }
 
       InputStream stream = client.getObject(bucketName, objectName, sse);
-      byte[] getbyteArray = new byte[stream.available()];
+      byte[] getbyteArray = new byte[stream.available()]; 
       int bytes_read_get = stream.read(getbyteArray);
       String getString = new String(getbyteArray, StandardCharsets.UTF_8);
       stream.close();
-
-      // client.getObject(bucketName, objectName, sse)
-      // .close();
 
       // Compare if contents received are same as the initial uploaded object.
       if ((!putString.equals(getString)) || (bytes_read_put != bytes_read_get)) {

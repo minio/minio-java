@@ -68,6 +68,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.Protocol;
 
 import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
@@ -657,11 +658,14 @@ public class MinioClient {
     if (httpClient != null) {
       this.httpClient = httpClient;
     } else {
+      List<Protocol> protocol = new LinkedList<>();
+      protocol.add(Protocol.HTTP_1_1);
       this.httpClient = new OkHttpClient();
       this.httpClient = this.httpClient.newBuilder()
         .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
         .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
         .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
+        .protocols(protocol)
         .build();
     }
 
