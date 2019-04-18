@@ -162,7 +162,7 @@ public class MinioClient {
   private static final int MAX_BUCKET_POLICY_SIZE = 12 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
-  private static final String DEFAULT_USER_AGENT = "Minio (" + System.getProperty("os.arch") + "; "
+  private static final String DEFAULT_USER_AGENT = "MinIO (" + System.getProperty("os.arch") + "; "
       + System.getProperty("os.arch") + ") minio-java/" + MinioProperties.INSTANCE.getVersion();
   private static final String NULL_STRING = "(null)";
   private static final String S3_AMAZONAWS_COM = "s3.amazonaws.com";
@@ -226,17 +226,17 @@ public class MinioClient {
    * Creates MinIO client object with given endpoint using anonymous access.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000"); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io:9000"); }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -261,7 +261,7 @@ public class MinioClient {
    * Creates MinIO client object with given URL object using anonymous access.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000")); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.min.io:9000")); }</pre>
    *
    * @param url Endpoint URL object.
    *
@@ -284,7 +284,7 @@ public class MinioClient {
    * Creates MinIO client object with given HttpUrl object using anonymous access.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000")); }</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.min.io:9000")); }</pre>
    *
    * @param url Endpoint HttpUrl object.
    *
@@ -308,17 +308,17 @@ public class MinioClient {
    * Creates MinIO client object with given endpoint, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io:9000",
    *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -346,17 +346,17 @@ public class MinioClient {
    * Creates MinIO client object with given endpoint, access key, secret key and region name
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.minio.io:9000",
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io:9000",
    *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1"); }</pre>
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -385,7 +385,7 @@ public class MinioClient {
    * Creates MinIO client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"),
+   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.min.io:9000"),
    *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param url Endpoint URL object.
@@ -412,7 +412,7 @@ public class MinioClient {
    * Creates MinIO client object with given URL object, access key and secret key.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"),
+   * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.min.io:9000"),
    *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
    *
    * @param url Endpoint HttpUrl object.
@@ -441,18 +441,18 @@ public class MinioClient {
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
-   *                  new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+   *                  new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
    * }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -482,18 +482,18 @@ public class MinioClient {
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
-   *                      new MinioClient("play.minio.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true);
+   *                      new MinioClient("play.min.io:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true);
    * }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -523,18 +523,18 @@ public class MinioClient {
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false);
+   *          new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false);
    * }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -565,18 +565,18 @@ public class MinioClient {
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false);
+   *          new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false);
    * }</pre>
    *
    * @param endpoint  Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.<pre>
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -608,7 +608,7 @@ public class MinioClient {
    *
    * </p><b>Example:</b><br>
    * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.minio.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false,
+   *          new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false,
    *          customHttpClient);
    * }</pre>
    *
@@ -616,11 +616,11 @@ public class MinioClient {
    *              Valid endpoints:
    *              * https://s3.amazonaws.com
    *              * https://s3.amazonaws.com/
-   *              * https://play.minio.io:9000
-   *              * http://play.minio.io:9010/
+   *              * https://play.min.io:9000
+   *              * http://play.min.io:9010/
    *              * localhost
    *              * localhost.localdomain
-   *              * play.minio.io
+   *              * play.min.io
    *              * 127.0.0.1
    *              * 192.168.1.60
    *              * ::1</pre>
@@ -2546,7 +2546,7 @@ public class MinioClient {
    * for (Map.Entry<String,String> entry : formData.entrySet()) {
    *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
    * }
-   * System.out.println(" -F file=@/tmp/userpic.png https://play.minio.io:9000/my-bucketname"); }</pre>
+   * System.out.println(" -F file=@/tmp/userpic.png https://play.min.io:9000/my-bucketname"); }</pre>
    *
    * @param policy Post policy of an object.
    * @return Map of strings to construct form-data.

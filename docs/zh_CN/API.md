@@ -1,11 +1,11 @@
-# Java Client API参考文档 [![Slack](https://slack.minio.io/slack?type=svg)](https://slack.minio.io)
+# Java Client API参考文档 [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
 
 ## 初始化Minio Client object。
 
 ## MinIO
 
 ```java
-MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 ```
 
 ## AWS S3
@@ -95,9 +95,9 @@ __参数__
 |---|---|---|
 | `endpoint`  |  _string_ | endPoint是一个URL，域名，IPv4或者IPv6地址。以下是合法的endpoints: |
 | | |https://s3.amazonaws.com |
-| | |https://play.minio.io:9000 |
+| | |https://play.min.io:9000 |
 | | |localhost |
-| | |play.minio.io|
+| | |play.min.io|
 | `port` | _int_  | TCP/IP端口号。可选，默认值是，如果是http,则默认80端口，如果是https,则默认是443端口。|
 | `accessKey`   | _string_   |accessKey类似于用户ID，用于唯一标识你的账户。 |
 |`secretKey`  |  _string_   | secretKey是你账户的密码。|
@@ -114,31 +114,31 @@ __示例__
 
 ```java
 // 1. public MinioClient(String endpoint)
-MinioClient minioClient = new MinioClient("https://play.minio.io:9000");
+MinioClient minioClient = new MinioClient("https://play.min.io:9000");
 
 // 2. public MinioClient(URL url)
-MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"));
+MinioClient minioClient = new MinioClient(new URL("https://play.min.io:9000"));
 
 // 3. public MinioClient(com.squareup.okhttp.HttpUrl url)
- MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.minio.io:9000"));
+ MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.min.io:9000"));
 
 // 4. public MinioClient(String endpoint, String accessKey, String secretKey)
-MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
 // 5. public MinioClient(String endpoint, int port,  String accessKey, String secretKey)
-MinioClient minioClient = new MinioClient("https://play.minio.io", 9000, "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+MinioClient minioClient = new MinioClient("https://play.min.io", 9000, "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
 // 6. public MinioClient(String endpoint, String accessKey, String secretKey, boolean insecure)
-MinioClient minioClient = new MinioClient("https://play.minio.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
+MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
 
 // 7. public MinioClient(String endpoint, int port,  String accessKey, String secretKey, boolean insecure)
-MinioClient minioClient = new MinioClient("https://play.minio.io", 9000, "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
+MinioClient minioClient = new MinioClient("https://play.min.io", 9000, "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
 
 // 8. public MinioClient(com.squareup.okhttp.HttpUrl url, String accessKey, String secretKey)
- MinioClient minioClient = new MinioClient(new URL("https://play.minio.io:9000"), "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+ MinioClient minioClient = new MinioClient(new URL("https://play.min.io:9000"), "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
 // 9. public MinioClient(URL url, String accessKey, String secretKey)
-MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.minio.io:9000"), "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.min.io:9000"), "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 ```
 
 
@@ -1435,7 +1435,7 @@ try {
 	for (Map.Entry<String,String> entry : formData.entrySet()) {
     System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
 	}
-	System.out.println(" -F file=@/tmp/userpic.png  https://play.minio.io:9000/mybucket");
+	System.out.println(" -F file=@/tmp/userpic.png  https://play.min.io:9000/mybucket");
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 ```
