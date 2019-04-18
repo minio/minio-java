@@ -32,9 +32,24 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.TimeZone;
 
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidArgumentException;
+import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidEndpointException;
+import io.minio.errors.InvalidExpiresRangeException;
+import io.minio.errors.InvalidPortException;
+import io.minio.errors.MinioException;
+import io.minio.errors.NoResponseException;
+import io.minio.errors.RegionConflictException;
+import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -45,13 +60,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InvalidArgumentException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.MinioException;
-import io.minio.errors.RegionConflictException;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.Item;
@@ -757,5 +765,71 @@ public class MinioClientTest {
     // Get the bucket policy for the new bucket and check
     String policyString = client.getBucketPolicy(BUCKET);
     assertEquals(expectedPolicyString, policyString);
+  }
+
+
+  @Test
+  public void testAwsChunkedAndGzipEncodingWhenAnyEncodingSpecifiedByClient()
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
+          InterruptedException {
+    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", "random"));
+    RecordedRequest recordedRequest1 = putObjectWithHeaders(headerMap);
+    Assert.assertEquals("aws-chunked,random", recordedRequest1.getHeader("Content-Encoding"));
+  }
+
+  @Test
+  public void testAwsChunkedAndGzipEncodingWhenGzipSpecifiedByClient()
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
+          InterruptedException {
+    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", "gzip"));
+    RecordedRequest recordedRequest = putObjectWithHeaders(headerMap);
+    Assert.assertEquals("aws-chunked,gzip", recordedRequest.getHeader("Content-Encoding"));
+  }
+
+  @Test
+  @SuppressFBWarnings("NP")
+  public void testAwsChunkedEncodingWhenNoEncodingSpecifiedByClient()
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
+          InterruptedException {
+    Map<String, String> headerMap = null;
+    RecordedRequest recordedRequest = putObjectWithHeaders(headerMap);
+
+    Assert.assertEquals("aws-chunked", recordedRequest.getHeader("Content-Encoding"));
+  }
+
+  @Test
+  public void testAwsChunkedIsNotDuplicatedWhenAwsChunkedEncodingSpecifiedByClient()
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
+          InterruptedException {
+    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", "aws-chunked"));
+    RecordedRequest recordedRequest = putObjectWithHeaders(headerMap);
+    Assert.assertEquals("aws-chunked", recordedRequest.getHeader("Content-Encoding"));
+  }
+
+  @Test
+  public void testAwsChunkedWhenEmptyEncodingSpecifiedByClient()
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
+          InterruptedException {
+    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", ""));
+    RecordedRequest recordedRequest1 = putObjectWithHeaders(headerMap);
+    Assert.assertEquals("aws-chunked", recordedRequest1.getHeader("Content-Encoding"));
+  }
+
+
+  private RecordedRequest putObjectWithHeaders(Map<String, String> headerMap)
+  throws IOException, InvalidEndpointException, InvalidPortException, InvalidBucketNameException,
+         NoSuchAlgorithmException, InvalidKeyException, NoResponseException, XmlPullParserException,
+         ErrorResponseException, InternalException, InvalidArgumentException, InsufficientDataException,
+         InterruptedException {
+    MockResponse response = new MockResponse();
+    response.setResponseCode(200);
+    MockWebServer server = new MockWebServer();
+    server.enqueue(response);
+    server.start();
+
+    MinioClient client = new MinioClient(server.url("").toString(), "access_key", "secret_key", "us-east-1");
+    client.putObject(BUCKET, "key", new ByteArrayInputStream(new byte[]{'a'}), 1, headerMap);
+
+    return server.takeRequest();
   }
 }
