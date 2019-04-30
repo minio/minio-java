@@ -93,7 +93,8 @@ public class PutObjectUiProgressBar extends JFrame {
           bis);
 
       pmis.getProgressMonitor().setMillisToPopup(10);
-      minioClient.putObject("bank", "my-objectname", pmis, bis.available(), "application/octet-stream");
+      minioClient.putObject("bank", "my-objectname", pmis, Long.valueOf(pmis.available()), null, null,
+              "application/octet-stream");
       System.out.println("my-objectname is uploaded successfully");
     } catch (FileNotFoundException e) {
       // TODO Auto-generated catch block

@@ -52,7 +52,7 @@ public class PutObjectEncryptedS3 {
       // To test SSE-S3
       ServerSideEncryption sse = ServerSideEncryption.atRest();
       
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), sse);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, sse, null);
         
       bais.close();
     

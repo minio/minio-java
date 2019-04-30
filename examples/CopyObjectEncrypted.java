@@ -61,7 +61,7 @@ public class CopyObjectEncrypted {
       ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
         
       // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
-      minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), ssePut);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, ssePut, null);
       System.out.println("my-objectname is uploaded successfully");
         
       minioClient.copyObject("my-bucketname", "my-objectname", sseSource, "my-destbucketname",

@@ -1772,6 +1772,75 @@ StringBuilder builder = new StringBuilder();
  System.out.println("my-objectname is uploaded successfully");
 ```
 
+
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName, InputStream stream, Map<String,String> headerMap)
+
+`public void putObject(String bucketName, String objectName, InputStream stream, long size, Map<String,String> headerMap)`
+Uploads data from given stream as object to given bucket with specified meta data.
+If the object is larger than 5MB, the client will automatically use a multipart session.
+
+If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
+
+If the multipart session fails, the user is responsible for resuming or removing the session.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.io.InputStream-long-java.util.Map-)
+
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``stream``  | _InputStream_  | stream to upload. |
+| ``headerMap``  | _Map<String,String>_  | Custom/additional meta data of the object. |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+
+__Example__
+
+```java
+ StringBuilder builder = new StringBuilder();
+ for (int i = 0; i < 1000; i++) {
+   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   builder.append("(29 letters)\n");
+   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   builder.append("(31 letters)\n");
+   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   builder.append("(39 letters)\n");
+   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   builder.append("computers after System 7.\n");
+   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   builder.append("---\n");
+ }
+ ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+ // create object
+ Map<String, String> headerMap = new HashMap<>();
+ headerMap.put("Content-Type", "application/octet-stream");
+ minioClient.putObject("my-bucketname", "my-objectname", bais, headerMap);
+ bais.close();
+ System.out.println("my-objectname is uploaded successfully");
+```
+
 <a name="putObject"></a>
 ### putObject(String bucketName, String objectName, InputStream stream, long size, Map<String,String> headerMap)
 
@@ -1838,6 +1907,7 @@ __Example__
  bais.close();
  System.out.println("my-objectname is uploaded successfully");
 ```
+
 <a name="putObject"></a>
 ### putObject(String bucketName, String objectName, InputStream stream, long size, Map<String, String> headerMap, SecretKey key)
  `public void putObject(String bucketName, String objectName, InputStream stream, long size, Map<String, String> headerMap,
@@ -1966,7 +2036,7 @@ try {
 
 
 <a name="putObject"></a>
-### putObject(String bucketName, String objectName,vServerSideEncryption sse, String fileName)
+### putObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)
 
 `public void putObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)`
 
@@ -2011,6 +2081,211 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
+```
+
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName, InputStream stream, Map<String,String> headerMap, ServerSideEncryption sse)
+
+`public void putObject(String bucketName, String objectName, InputStream stream, Map<String,String> headerMap, ServerSideEncryption sse)`
+Uploads data from given stream as object to given bucket with specified meta data and encrypt with a sse key.
+If the object is larger than 5MB, the client will automatically use a multipart session.
+
+If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
+
+If the multipart session fails, the user is responsible for resuming or removing the session.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.util.Map-io.minio.ServerSideEncryption-)
+
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``stream``  | _InputStream_  | stream to upload. |
+| ``headerMap``  | _Map<String,String>_  | Custom/additional meta data of the object. |
+| ``sse``  | _ServerSideEncryption_  | Form of server-side encryption [ServerSideEncryption](http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html). |
+
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+
+__Example__
+
+```java
+ StringBuilder builder = new StringBuilder();
+ for (int i = 0; i < 1000; i++) {
+   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   builder.append("(29 letters)\n");
+   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   builder.append("(31 letters)\n");
+   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   builder.append("(39 letters)\n");
+   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   builder.append("computers after System 7.\n");
+   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   builder.append("---\n");
+ }
+ ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+ KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+ keyGen.init(256);
+ ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+ // create object
+ Map<String, String> headerMap = new HashMap<>();
+ headerMap.put("Content-Type", "application/octet-stream");
+ minioClient.putObject("my-bucketname", "my-objectname", bais, headerMap, sse);
+ bais.close();
+ System.out.println("my-objectname is uploaded successfully");
+```
+
+
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName, String fileName, Long size, Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
+
+`public void putObject(String bucketName, String objectName, String fileName, Long size, Map<String, String> headerMap, ServerSideEncryption sse, String contentType)`
+Uploads contents from a file as object to given bucket with specified meta data and encrypt with a sse key.
+If the object is larger than 5MB, the client will automatically use a multipart session.
+
+If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
+
+If the multipart session fails, the user is responsible for resuming or removing the session.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.lang.String-java.lang.Long-java.util.Map-io.minio.ServerSideEncryption-java.lang.String)
+
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``fineName``  | _String_  | File name to upload. |
+| ``stream``  | _InputStream_  | stream to upload. |
+| ``size``  | _long_  | Size of the file. |
+| ``headerMap``  | _Map<String,String>_  | Custom/additional meta data of the object. |
+| ``sse``  | _ServerSideEncryption_  | Form of server-side encryption [ServerSideEncryption](http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html). |
+| ``contentType``  | _String_ | File content type of the object, user supplied. |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+
+__Example__
+
+```java
+try {
+  KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+  keyGen.init(256);
+  ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+  Map<String, String> headerMap = new HashMap<>();
+  headerMap.put("my-custom-data", "foo");
+  minioClient.putObject("mybucket",  "island.jpg", "/mnt/photos/island.jpg",headerMap,sse, "application/octet-stream" );
+  System.out.println("island.jpg is uploaded successfully");
+} catch(MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+
+
+<a name="putObject"></a>
+### putObject(String bucketName, String objectName, InputStream stream, Long size, Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
+
+`public void putObject(String bucketName, String objectName, InputStream stream, Long size, Map<String, String> headerMap, ServerSideEncryption sse, String contentType)`
+Uploads data from given stream as object to given bucket with specified meta data and encrypt with a sse key.
+If the object is larger than 5MB, the client will automatically use a multipart session.
+
+If the session fails, the user may attempt to re-upload the object by attempting to create the exact same object again. The client will examine all parts of any current upload session and attempt to reuse the session automatically. If a mismatch is discovered, the upload will fail before uploading any more data. Otherwise, it will resume uploading where the session left off.
+
+If the multipart session fails, the user is responsible for resuming or removing the session.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-java.util.Map-io.minio.ServerSideEncryption-java.lang.String)
+
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| ``objectName``  | _String_  | Object name in the bucket. |
+| ``stream``  | _InputStream_  | stream to upload. |
+| ``size``  | _long_  | Size of the data to read from ``stream`` that will be uploaded. |
+| ``headerMap``  | _Map<String,String>_  | Custom/additional meta data of the object. |
+| ``sse``  | _ServerSideEncryption_  | Form of server-side encryption [ServerSideEncryption](http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html). |
+| ``contentType``  | _String_ | File content type of the object, user supplied. |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+
+__Example__
+
+```java
+ StringBuilder builder = new StringBuilder();
+ for (int i = 0; i < 1000; i++) {
+   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   builder.append("(29 letters)\n");
+   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   builder.append("(31 letters)\n");
+   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   builder.append("(39 letters)\n");
+   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   builder.append("computers after System 7.\n");
+   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   builder.append("---\n");
+ }
+ ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+ KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+ keyGen.init(256);
+ ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+ // create object
+ Map<String, String> headerMap = new HashMap<>();
+ headerMap.put("my-custom-data", "foo");
+ minioClient.putObject("my-bucketname", "my-objectname", bais, bias.available(), headerMap, sse, contentType);
+ bais.close();
+ System.out.println("my-objectname is uploaded successfully");
 ```
 
 

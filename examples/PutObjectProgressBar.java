@@ -59,7 +59,8 @@ public class PutObjectProgressBar {
     InputStream pis = new BufferedInputStream(new ProgressStream("Uploading... ",
                                                                  ProgressBarStyle.ASCII,
                                                                  new FileInputStream(file)));
-    minioClient.putObject(bucketName, objectName, pis, pis.available(), "application/octet-stream");
+    minioClient.putObject(bucketName, objectName, pis, Long.valueOf(pis.available()), null, null,
+            "application/octet-stream");
     pis.close();
     System.out.println("my-objectname is uploaded successfully");
   }
