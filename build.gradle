@@ -52,18 +52,18 @@ subprojects {
     }
 
     dependencies {
-        compile "com.google.http-client:google-http-client-xml:1.20.0"
+        compile "com.google.http-client:google-http-client-xml:1.24.1"
         compile "com.google.guava:guava:25.1-jre"
         compile "com.squareup.okhttp3:okhttp:3.13.1"
-        compile "com.squareup.okio:okio:1.17.3"
+        compile "com.squareup.okio:okio:1.17.2"
         compile "joda-time:joda-time:2.7"
         compile "com.fasterxml.jackson.core:jackson-annotations:2.9.6"
         compile "com.fasterxml.jackson.core:jackson-core:2.9.6"
         compile "com.fasterxml.jackson.core:jackson-databind:2.9.6"
         compile 'com.google.code.findbugs:annotations:3.0.1'
-        compile 'com.google.code.findbugs:jsr305:3.0.1'
+        compile 'com.google.code.findbugs:jsr305:3.0.2'
 
-        testCompile "com.squareup.okhttp3:mockwebserver:3.7.0"
+        testCompile "com.squareup.okhttp3:mockwebserver:3.13.1"
         testCompile "junit:junit:4.12"
     }
 
@@ -137,6 +137,14 @@ project(':api') {
     nexusStaging {
         packageGroup = group
         stagingProfileId = '9b746c9f8abc1'
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force 'com.fasterxml.jackson.core:jackson-annotations:2.9.6'
+            force 'com.google.code.findbugs:jsr305:3.0.2'
+            failOnVersionConflict()
+        }
     }
 
     jar {
