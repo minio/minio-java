@@ -19,6 +19,7 @@ package io.minio;
 
 import static org.junit.Assert.assertEquals;
 
+import io.minio.errors.InvalidResponseException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -122,6 +123,7 @@ public class MinioClientTest {
     new MinioClient("-minio.example.com");
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
+
 
   @Test(expected = InvalidEndpointException.class)
   public void testIsValidEndpoint3() throws MinioException {
@@ -506,7 +508,7 @@ public class MinioClientTest {
   }
 
 
-  @Test(expected = ErrorResponseException.class)
+  @Test(expected = InvalidResponseException.class)
   public void testMakeBucketFails()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
@@ -563,7 +565,7 @@ public class MinioClientTest {
   }
 
   // this case only occurs for minio cloud storage
-  @Test(expected = ErrorResponseException.class)
+  @Test(expected = InvalidResponseException.class)
   public void testPutSmallObjectFails()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
@@ -820,7 +822,7 @@ public class MinioClientTest {
   throws IOException, InvalidEndpointException, InvalidPortException, InvalidBucketNameException,
          NoSuchAlgorithmException, InvalidKeyException, NoResponseException, XmlPullParserException,
          ErrorResponseException, InternalException, InvalidArgumentException, InsufficientDataException,
-         InterruptedException {
+         InterruptedException, InvalidResponseException {
     MockResponse response = new MockResponse();
     response.setResponseCode(200);
     MockWebServer server = new MockWebServer();

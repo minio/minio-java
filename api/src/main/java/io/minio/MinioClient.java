@@ -33,6 +33,7 @@ import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidObjectPrefixException;
 import io.minio.errors.InvalidPortException;
+import io.minio.errors.InvalidResponseException;
 import io.minio.errors.NoResponseException;
 import io.minio.errors.RegionConflictException;
 import io.minio.http.HeaderParser;
@@ -1051,7 +1052,7 @@ public class MinioClient {
                                Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
 
     if (headerMap != null) {
       headerMap = normalizeHeaders(headerMap);
@@ -1075,7 +1076,7 @@ public class MinioClient {
                                Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     String contentType = null;
     if (headerMap != null && headerMap.get("Content-Type") != null) {
       contentType = String.join(" ", headerMap.get("Content-Type"));
@@ -1137,7 +1138,11 @@ public class MinioClient {
         if (scanner.hasNext()) {
           errorXml = scanner.next();
         }
-
+        
+        // Error in case of Non-XML response from server
+        if (!("application/xml".equals(response.headers().get("content-type")))) {
+          throw new InvalidResponseException();
+        }
         errorResponse = new ErrorResponse(new StringReader(errorXml));
         if (this.traceStream != null) {
           this.traceStream.println(errorXml);
@@ -1210,7 +1215,7 @@ public class MinioClient {
   private void updateRegionCache(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     if (bucketName != null && this.accessKey != null && this.secretKey != null
           && !BucketRegionCache.INSTANCE.exists(bucketName)) {
       Map<String,String> queryParamMap = new HashMap<>();
@@ -1258,7 +1263,7 @@ public class MinioClient {
    */
   private String getRegion(String bucketName) throws InvalidBucketNameException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, NoResponseException, XmlPullParserException,
-          ErrorResponseException, InternalException {
+          ErrorResponseException, InternalException, InvalidResponseException {
     String region;
     if (this.region == null || "".equals(this.region)) {
       updateRegionCache(bucketName);
@@ -1294,7 +1299,7 @@ public class MinioClient {
                                   Map<String,String> queryParamMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     return execute(Method.GET, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, null, 0);
   }
 
@@ -1308,7 +1313,7 @@ public class MinioClient {
   private HttpResponse executeHead(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, null,
                                     null, null, 0);
     response.body().close();
@@ -1325,7 +1330,7 @@ public class MinioClient {
   private HttpResponse executeHead(String bucketName, String objectName, Map<String,String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
 
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, headerMap,
                                     null, null, 0);
@@ -1343,7 +1348,7 @@ public class MinioClient {
   private HttpResponse executeDelete(String bucketName, String objectName, Map<String,String> queryParamMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.DELETE, getRegion(bucketName), bucketName, objectName, null,
                                     queryParamMap, null, 0);
     response.body().close();
@@ -1364,7 +1369,7 @@ public class MinioClient {
                                    Map<String,String> queryParamMap, Object data)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     return execute(Method.POST, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, data, 0);
   }
 
@@ -1401,7 +1406,7 @@ public class MinioClient {
                                   Map<String,String> queryParamMap, String region, Object data, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
                                     data, length);
@@ -1423,7 +1428,7 @@ public class MinioClient {
                                   Map<String,String> queryParamMap, Object data, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     return executePut(bucketName, objectName, headerMap, queryParamMap, getRegion(bucketName), data, length);
   }
 
@@ -1470,12 +1475,13 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    * @see ObjectStat
    */
   public ObjectStat statObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException,InvalidResponseException {
     HttpResponse response = executeHead(bucketName, objectName);
     ResponseHeader header = response.header();
     Map<String,List<String>> httpHeaders = response.httpHeaders();
@@ -1510,12 +1516,13 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    * @see ObjectStat
    */
   public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
         || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
       throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
@@ -1556,11 +1563,12 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String getObjectUrl(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     Request request = createRequest(Method.GET, bucketName, objectName, getRegion(bucketName),
         null, null, null, null, 0);
     HttpUrl url = request.url();
@@ -1599,12 +1607,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public InputStream getObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     return getObject(bucketName, objectName, 0, null);
   }
 
@@ -1633,11 +1641,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)
           throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-          InternalException, InvalidArgumentException {
+          InternalException, InvalidArgumentException, InvalidResponseException {
 
     if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
             || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
@@ -1749,11 +1758,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
         || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
       throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
@@ -1799,12 +1809,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public InputStream getObject(String bucketName, String objectName, long offset)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     return getObject(bucketName, objectName, offset, null);
   }
 
@@ -1842,12 +1852,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public InputStream getObject(String bucketName, String objectName, long offset, Long length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,
-           InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
@@ -1899,11 +1909,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void getObject(String bucketName, String objectName, String fileName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     Path filePath = Paths.get(fileName);
     boolean fileExists = Files.exists(filePath);
 
@@ -2004,11 +2015,12 @@ public class MinioClient {
    * @throws IOException                 upon connection error
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void copyObject(String bucketName, String objectName, String destBucketName)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-      InvalidArgumentException {
+      InvalidArgumentException, InvalidResponseException {
 
     copyObject(bucketName, objectName, destBucketName, null, null, null);
   }
@@ -2046,11 +2058,12 @@ public class MinioClient {
    * @throws IOException                 upon connection error
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-      InvalidArgumentException {
+      InvalidArgumentException, InvalidResponseException {
 
     copyObject(bucketName, objectName, destBucketName, destObjectName, null, null);
   }
@@ -2090,12 +2103,13 @@ public class MinioClient {
    * @throws IOException                 upon connection error
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void copyObject(String bucketName, String objectName, String destBucketName,
                          CopyConditions copyConditions)
         throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
         NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-        InvalidArgumentException {
+        InvalidArgumentException, InvalidResponseException {
 
     copyObject(bucketName, objectName, destBucketName, null, copyConditions, null);
   }
@@ -2138,12 +2152,13 @@ public class MinioClient {
    * @throws IOException                 upon connection error
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void copyObject(String bucketName, String objectName, String destBucketName,
                          String destObjectName, CopyConditions copyConditions)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-      InvalidArgumentException {
+      InvalidArgumentException, InvalidResponseException {
 
     copyObject(bucketName, objectName, destBucketName, destObjectName, copyConditions, null);
   }
@@ -2190,12 +2205,13 @@ public class MinioClient {
    * @throws IOException                 upon connection error
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
                          String destObjectName, CopyConditions copyConditions, ServerSideEncryption sseTarget)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-      InvalidArgumentException {
+      InvalidArgumentException, InvalidResponseException {
 
     if ((sseTarget.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
       throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
@@ -2257,13 +2273,14 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void copyObject(String bucketName, String objectName, String destBucketName,
                          String destObjectName, CopyConditions copyConditions,
                          Map<String,String> metadata)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
-      InvalidArgumentException {
+      InvalidArgumentException, InvalidResponseException {
 
     if (bucketName == null) {
       throw new InvalidArgumentException("Source bucket name cannot be empty");
@@ -2339,12 +2356,13 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String getPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires,
                                       Map<String, String> reqParams)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+           InternalException, InvalidExpiresRangeException, InvalidResponseException {
     // Validate input.
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
@@ -2397,12 +2415,13 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires,
                                    Map<String, String> reqParams)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+           InternalException, InvalidExpiresRangeException, InvalidResponseException {
     return getPresignedObjectUrl(Method.GET, bucketName, objectName, expires, reqParams);
   }
 
@@ -2432,11 +2451,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+           InternalException, InvalidExpiresRangeException, InvalidResponseException {
     return presignedGetObject(bucketName, objectName, expires, null);
   }
 
@@ -2467,11 +2487,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String presignedGetObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+           InternalException, InvalidExpiresRangeException, InvalidResponseException {
     return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME, null);
   }
 
@@ -2502,11 +2523,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String presignedPutObject(String bucketName, String objectName, Integer expires)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+           InternalException, InvalidExpiresRangeException, InvalidResponseException {
     return getPresignedObjectUrl(Method.PUT, bucketName, objectName, expires, null);
   }
 
@@ -2537,11 +2559,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidExpiresRangeException upon input expires is out of range
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String presignedPutObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidExpiresRangeException {
+           InternalException, InvalidExpiresRangeException, InvalidResponseException {
     return presignedPutObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
   }
 
@@ -2578,13 +2601,13 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   *
+   * @throws InvalidResponseException    upon a non-xml response from server
    * @see PostPolicy
    */
   public Map<String, String> presignedPostPolicy(PostPolicy policy)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName()));
   }
 
@@ -2611,11 +2634,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void removeObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException {
+           InternalException, InvalidArgumentException, InvalidResponseException {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
@@ -2631,7 +2655,7 @@ public class MinioClient {
   private List<DeleteError> removeObject(String bucketName, List<DeleteObject> objectList)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("delete", "");
 
@@ -2712,7 +2736,7 @@ public class MinioClient {
               }
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                     | InternalException | InvalidResponseException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (errorList != null) {
@@ -2908,7 +2932,7 @@ public class MinioClient {
               this.listBucketResult = listObjectsV2(bucketName, continuationToken, prefix, delimiter);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                     | InternalException | InvalidResponseException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listBucketResult != null) {
@@ -3015,7 +3039,7 @@ public class MinioClient {
   private ListBucketResult listObjectsV2(String bucketName, String continuationToken, String prefix, String delimiter)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("list-type", "2");
 
@@ -3079,7 +3103,7 @@ public class MinioClient {
               this.listBucketResult = listObjectsV1(bucketName, marker, prefix, delimiter);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                     | InternalException | InvalidResponseException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listBucketResult != null) {
@@ -3187,7 +3211,7 @@ public class MinioClient {
   private ListBucketResultV1 listObjectsV1(String bucketName, String marker, String prefix, String delimiter)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
 
     if (marker != null) {
@@ -3237,11 +3261,12 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public List<Bucket> listBuckets()
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     HttpResponse response = executeGet(null, null, null, null);
     ListAllMyBucketsResult result = new ListAllMyBucketsResult();
     result.parseXml(response.body().charStream());
@@ -3276,12 +3301,13 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from serve
    *
    */
   public boolean bucketExists(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     try {
       executeHead(bucketName, null);
       return true;
@@ -3312,11 +3338,12 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from serve
    */
   public void makeBucket(String bucketName)
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
                 IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-                InternalException {
+                InternalException, InvalidResponseException {
     this.makeBucket(bucketName, null);
   }
 
@@ -3345,11 +3372,12 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
 
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from serve
    */
   public void makeBucket(String bucketName, String region)
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
                 IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-                InternalException {
+                InternalException, InvalidResponseException {
     // If region param is not provided, set it with the one provided by constructor
     if (region == null) {
       region = this.region;
@@ -3400,11 +3428,12 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void removeBucket(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     executeDelete(bucketName, null, null);
   }
 
@@ -3437,6 +3466,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -3444,7 +3474,7 @@ public class MinioClient {
   public void putObject(String bucketName, String objectName, String fileName)
     throws InvalidBucketNameException, NoSuchAlgorithmException,  IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     putObject(bucketName, objectName, fileName, null, null, null, null);
   }
 
@@ -3478,6 +3508,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -3485,7 +3516,7 @@ public class MinioClient {
   public void putObject(String bucketName, String objectName, String fileName, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     putObject(bucketName, objectName, fileName, null, null, null, contentType );
   }
 
@@ -3519,6 +3550,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -3526,7 +3558,7 @@ public class MinioClient {
   public void putObject(String bucketName, String objectName, String fileName, ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException,InvalidResponseException {
     putObject(bucketName, objectName, fileName, null, null, sse, null);
   }
 
@@ -3569,7 +3601,7 @@ public class MinioClient {
                         Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
 
     if (fileName == null || "".equals(fileName)) {
       throw new InvalidArgumentException("empty file name is not allowed");
@@ -3651,6 +3683,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -3658,7 +3691,7 @@ public class MinioClient {
   public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     putObject(bucketName, objectName, stream, size, null, null, contentType);
   }
 
@@ -3719,6 +3752,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -3726,7 +3760,7 @@ public class MinioClient {
   public void putObject(String bucketName, String objectName, InputStream stream, Map<String, String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     if (headerMap == null) {
       headerMap = new HashMap<>();
     }
@@ -3792,6 +3826,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -3800,7 +3835,7 @@ public class MinioClient {
                         Map<String, String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException , InvalidResponseException {
     putObject(bucketName, objectName, stream, size, headerMap, null, null);
   }
 
@@ -3859,6 +3894,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -3867,7 +3903,7 @@ public class MinioClient {
                         ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     putObject(bucketName, objectName, stream, size, null, sse, null);
   }
 
@@ -3940,6 +3976,7 @@ public class MinioClient {
      * @throws InternalException           upon internal library error
      * @throws InvalidArgumentException    upon invalid value is passed to a method.
      * @throws InsufficientDataException   upon getting EOFException while reading given
+     * @throws InvalidResponseException    upon a non-xml response from server
      *
      * @deprecated As of release 6.1
      */
@@ -3948,7 +3985,7 @@ public class MinioClient {
                           Map<String, String> headerMap, ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     putObject(bucketName, objectName, stream, null, headerMap, sse, null );
   }
 
@@ -4020,6 +4057,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -4028,7 +4066,7 @@ public class MinioClient {
                         Map<String, String> headerMap, ServerSideEncryption sse)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     putObject(bucketName, objectName, stream, size, headerMap, sse, null);
   }
 
@@ -4088,6 +4126,7 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    * @deprecated As of release 6.1
    */
@@ -4095,7 +4134,7 @@ public class MinioClient {
   public void putObject(String bucketName, String objectName, InputStream stream, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     putObject(bucketName, objectName, stream, null, null, null, contentType);
   }
 
@@ -4168,14 +4207,14 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   *
+   * @throws InvalidResponseException    upon a non-xml response from server
    * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, Long size,
                         Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
 
     if (!(stream instanceof BufferedInputStream)) {
       stream = new BufferedInputStream(stream);
@@ -4203,7 +4242,7 @@ public class MinioClient {
                            Map<String, String> headerMap, String uploadId, int partNumber)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     HttpResponse response = null;
 
     Map<String,String> queryParamMap = null;
@@ -4237,7 +4276,7 @@ public class MinioClient {
       Map<String, String> headerMap, ServerSideEncryption sse,  String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException {
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
     boolean unknownSize = false;
 
     if (size == null) {
@@ -4377,11 +4416,13 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws BucketPolicyTooLargeException  upon bucket policy too large in size
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String getBucketPolicy(String bucketName)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException, BucketPolicyTooLargeException {
+           XmlPullParserException, ErrorResponseException, InternalException, BucketPolicyTooLargeException,
+           InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
@@ -4466,12 +4507,13 @@ public class MinioClient {
    * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error   *
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void setBucketPolicy(String bucketName, String policy)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+           XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> headerMap = new HashMap<>();
     headerMap.put("Content-Type", "application/json");
 
@@ -4505,11 +4547,13 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void setBucketLifeCycle(String bucketName, String lifeCycle)
           throws InvalidBucketNameException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-          XmlPullParserException, ErrorResponseException, InternalException,InvalidArgumentException {
+          XmlPullParserException, ErrorResponseException, InternalException,InvalidArgumentException,
+          InvalidResponseException {
     if ((lifeCycle == null) || "".equals(lifeCycle)) {
       throw new InvalidArgumentException("life cycle cannot be empty");
     }
@@ -4539,11 +4583,12 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void deleteBucketLifeCycle(String bucketName)
           throws InvalidBucketNameException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-          XmlPullParserException, ErrorResponseException, InternalException {
+          XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
     HttpResponse response = executeDelete(bucketName,  "", queryParamMap);
@@ -4568,12 +4613,13 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    */
   public String getBucketLifeCycle(String bucketName)
           throws InvalidBucketNameException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-          XmlPullParserException, ErrorResponseException, InternalException {
+          XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
     HttpResponse response = null;
@@ -4624,12 +4670,13 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    */
   public NotificationConfiguration getBucketNotification(String bucketName)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+           XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
 
@@ -4668,12 +4715,13 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    */
   public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+           XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
     HttpResponse response = executePut(bucketName, null, null, queryParamMap, notificationConfiguration.toString(), 0);
@@ -4703,12 +4751,12 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
-   *
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void removeAllBucketNotification(String bucketName)
     throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
-           XmlPullParserException, ErrorResponseException, InternalException {
+           XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
     setBucketNotification(bucketName, notificationConfiguration);
   }
@@ -4797,7 +4845,7 @@ public class MinioClient {
                                                                       prefix, delimiter, 1000);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                     | InternalException | InvalidResponseException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listMultipartUploadsResult != null) {
@@ -4914,7 +4962,7 @@ public class MinioClient {
                                                            String prefix, String delimiter, int maxUploads)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     if (maxUploads < 0 || maxUploads > 1000) {
       maxUploads = 1000;
     }
@@ -4958,7 +5006,7 @@ public class MinioClient {
   private String initMultipartUpload(String bucketName, String objectName, Map<String, String> headerMap)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException , InvalidResponseException {
     // set content type if not set already
     if (headerMap.get("Content-Type") == null) {
       headerMap.put("Content-Type", "application/octet-stream");
@@ -4982,7 +5030,7 @@ public class MinioClient {
   private void completeMultipart(String bucketName, String objectName, String uploadId, Part[] parts)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
 
@@ -5038,7 +5086,7 @@ public class MinioClient {
               this.listPartsResult = listObjectParts(bucketName, objectName, uploadId, nextPartNumberMarker);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException e) {
+                     | InternalException | InvalidResponseException e) {
               this.error = new Result<>(null, e);
             } finally {
               if (this.listPartsResult != null) {
@@ -5121,7 +5169,7 @@ public class MinioClient {
   private ListPartsResult listObjectParts(String bucketName, String objectName, String uploadId, int partNumberMarker)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
     if (partNumberMarker > 0) {
@@ -5143,7 +5191,7 @@ public class MinioClient {
   private void abortMultipartUpload(String bucketName, String objectName, String uploadId)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
     executeDelete(bucketName, objectName, queryParamMap);
@@ -5172,11 +5220,12 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void removeIncompleteUpload(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+           InternalException, InvalidResponseException {
     for (Result<Upload> r : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = r.get();
       if (objectName.equals(upload.objectName())) {
@@ -5207,6 +5256,7 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    */
 
@@ -5214,7 +5264,7 @@ public class MinioClient {
       BucketEventListener eventCallback)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
                     InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-                    InternalException  {
+                    InternalException, InvalidResponseException  {
 
     Multimap<String,String> queryParamMap = HashMultimap.create();
     queryParamMap.put("prefix", prefix);
