@@ -1286,6 +1286,20 @@ public class MinioClient {
     return null;
   }
 
+  private void checkReadRequestSse(ServerSideEncryption sse) throws InvalidArgumentException {
+    if (sse == null) {
+      return;
+    }
+
+    if (sse.getType() != ServerSideEncryption.Type.SSE_C) {
+      throw new InvalidArgumentException("only SSE_C is supported for all read requests.");
+    }
+
+    if (sse.getType().requiresTls() && !this.baseUrl.isHttps()) {
+      throw new InvalidArgumentException(sse.getType().name()
+                                         + "operations must be performed over a secure connection.");
+    }
+  }
 
   /**
    * Executes GET method for given request parameters.
@@ -1481,13 +1495,8 @@ public class MinioClient {
   public ObjectStat statObject(String bucketName, String objectName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException,InvalidResponseException {
-    HttpResponse response = executeHead(bucketName, objectName);
-    ResponseHeader header = response.header();
-    Map<String,List<String>> httpHeaders = response.httpHeaders();
-    ObjectStat objectStat = new ObjectStat(bucketName, objectName, header, httpHeaders);
-
-    return objectStat;
+           InternalException, InvalidResponseException, InvalidArgumentException {
+    return statObject(bucketName, objectName, null);
   }
 
   /**
@@ -1523,14 +1532,14 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InvalidResponseException {
-    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
-        || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
-      throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
-    } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
-      throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
+    checkReadRequestSse(sse);
+
+    Map<String, String> headers = null;
+    if (sse != null) {
+      headers = new HashMap<>();
+      sse.marshal(headers);
     }
-    Map<String, String> headers = new HashMap<>();
-    sse.marshal(headers);
+
     HttpResponse response = executeHead(bucketName, objectName, headers);
     ResponseHeader header = response.header();
     Map<String,List<String>> httpHeaders = response.httpHeaders();
