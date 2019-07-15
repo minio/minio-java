@@ -61,8 +61,8 @@ public class CopyObjectEncryptedKms {
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
 
-      minioClient.copyObject("my-bucketname", "my-objectname", null, "my-destbucketname",
-                             "my-objectname-copy", null, sse);
+      minioClient.copyObject("my-destbucketname", "my-objectname-copy", null, sse,
+                             "my-bucketname", "my-objectname", null, null);
       System.out.println("my-objectname-copy copied to my-destbucketname successfully");
         
     } catch (MinioException e) {

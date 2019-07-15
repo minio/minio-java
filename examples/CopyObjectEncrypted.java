@@ -64,8 +64,8 @@ public class CopyObjectEncrypted {
       minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, ssePut, null);
       System.out.println("my-objectname is uploaded successfully");
         
-      minioClient.copyObject("my-bucketname", "my-objectname", sseSource, "my-destbucketname",
-                             "my-objectname-copy", null, sseTarget);
+      minioClient.copyObject("my-destbucketname", "my-objectname-copy", null, sseTarget,
+                             "my-bucketname", "my-objectname", sseSource, null);
 
       bais.close();
 
