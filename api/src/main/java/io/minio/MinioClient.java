@@ -1285,7 +1285,7 @@ public class MinioClient {
       return;
     }
 
-    if (sse.getType() != ServerSideEncryption.Type.SSE_C) {
+    if (sse.type() != ServerSideEncryption.Type.SSE_C) {
       throw new InvalidArgumentException("only SSE_C is supported for all read requests.");
     }
 
@@ -1300,8 +1300,8 @@ public class MinioClient {
       return;
     }
 
-    if (sse.getType().requiresTls() && !this.baseUrl.isHttps()) {
-      throw new InvalidArgumentException(sse.getType().name()
+    if (sse.type().requiresTls() && !this.baseUrl.isHttps()) {
+      throw new InvalidArgumentException(sse.type().name()
                                          + " operations must be performed over a secure connection.");
     }
   }
@@ -1541,8 +1541,7 @@ public class MinioClient {
 
     Map<String, String> headers = null;
     if (sse != null) {
-      headers = new HashMap<>();
-      sse.marshal(headers);
+      headers = sse.headers();
     }
 
     HttpResponse response = executeHead(bucketName, objectName, headers);
@@ -1833,7 +1832,7 @@ public class MinioClient {
     }
 
     if (sse != null) {
-      sse.marshal(headerMap);
+      headerMap.putAll(sse.headers());
     }
 
     HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
@@ -2364,11 +2363,11 @@ public class MinioClient {
     headerMap.put("x-amz-copy-source", S3Escaper.encodePath(srcBucketName + "/" + srcObjectName));
 
     if (sse != null) {
-      sse.marshal(headerMap);
+      headerMap.putAll(sse.headers());
     }
 
     if (srcSse != null) {
-      srcSse.marshal(headerMap);
+      headerMap.putAll(srcSse.copySourceHeaders());
     }
 
     if (copyConditions != null) {
@@ -4359,8 +4358,7 @@ public class MinioClient {
 
     if (sse != null) {
       checkWriteRequestSse(sse);
-      // The correct approach is see.marshal() needs to accept boolean isHttps and do above checks inside.
-      sse.marshal(headerMap);
+      headerMap.putAll(sse.headers());
     }
 
 
@@ -4375,11 +4373,6 @@ public class MinioClient {
     int partCount = rv[1];
     int lastPartSize = rv[2];
     Part[] totalParts = new Part[partCount];
-
-    // if sse is requested set the necessary headers before we begin the multipart session.
-    if (sse != null) {
-      sse.marshal(headerMap);
-    }
 
     // initiate new multipart upload.
     String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
@@ -4408,10 +4401,10 @@ public class MinioClient {
           }
         }
 
-        // In multi-part uploads, Set encryption headers in the case of SSE-C.
-        Map<String, String> encryptionHeaders = new HashMap<>();
-        if (sse != null && sse.getType() == ServerSideEncryption.Type.SSE_C) {
-          sse.marshal(encryptionHeaders);
+        Map<String, String> encryptionHeaders = null;
+        // In multi-part uploads, set encryption headers in the case of SSE-C.
+        if (sse != null && sse.type() == ServerSideEncryption.Type.SSE_C) {
+          encryptionHeaders = sse.headers();
         }
 
         String etag = putObject(bucketName, objectName, data, expectedReadSize, encryptionHeaders,
