@@ -48,7 +48,8 @@ public class ObjectStat {
     this.bucketName = bucketName;
     this.name = name;
     this.contentType = header.contentType();
-    this.createdTime = (Date) header.lastModified().clone();
+    Date lastModified = header.lastModified();
+    this.createdTime = lastModified == null ? new Date(-1L) : (Date) header.lastModified().clone();
     this.length = header.contentLength();
 
     if (header.etag() != null) {
