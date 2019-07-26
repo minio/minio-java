@@ -1,7 +1,7 @@
 
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015, 2016, 2017, 2018 MinIO, Inc.
+ * (C) 2015-2019 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -515,7 +515,7 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = "/path/to/" + getRandomName();
+      String objectName = "path/to/" + getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
         client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, null,customContentType);
       }
@@ -1008,6 +1008,32 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: statObject(String bucketName, "/").
+   */
+  public static void statObject_test3() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: statObject(String bucketName, \"/\")");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      client.statObject(bucketName, "/");
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_KEY) {
+        mintFailedLog("statObject(String bucketName, \"/\")", null, startTime, null,
+                      e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    } catch (Exception e) {
+      mintFailedLog("statObject(String bucketName, \"/\")", null, startTime, null,
+                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    } finally {
+      mintSuccessLog("statObject(String bucketName, \"/\"`)", null, startTime);
+    }
+  }
+
+  /**
    * Test: getObject(String bucketName, String objectName).
    */
   public static void getObject_test1() throws Exception {
@@ -1196,7 +1222,7 @@ public class FunctionalTest {
       }
 
       InputStream stream = client.getObject(bucketName, objectName, sse);
-      byte[] getbyteArray = new byte[stream.available()]; 
+      byte[] getbyteArray = new byte[stream.available()];
       int bytes_read_get = stream.read(getbyteArray);
       String getString = new String(getbyteArray, StandardCharsets.UTF_8);
       stream.close();
@@ -3022,6 +3048,8 @@ public class FunctionalTest {
       putObject_test17();
       copyObject_test10();
     }
+
+    statObject_test3();
 
     // SSE_S3 and SSE_KMS only work with endpoint="s3.amazonaws.com"
     String requestUrl = endpoint;
