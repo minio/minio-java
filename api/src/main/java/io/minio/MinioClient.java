@@ -1622,8 +1622,252 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InvalidResponseException {
-    return getObject(bucketName, objectName, 0, null);
+    return getObject(bucketName, objectName, null, null, null);
   }
+
+
+  /**
+   * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
+   * after use else the connection will remain open.
+   *
+   * <p><b>Example:</b>
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name in the bucket.
+   * @param sse        Encryption metadata only required for SSE-C.
+   *
+   * @return {@link InputStream} containing the object data.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InvalidResponseException {
+    return getObject(bucketName, objectName, null, null, sse);
+  }
+
+
+  /**
+   * Gets object's data starting from given offset as {@link InputStream} in the given bucket. The InputStream must be
+   * closed after use else the connection will remain open.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param offset      Offset to read at.
+   *
+   * @return {@link InputStream} containing the object's data.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public InputStream getObject(String bucketName, String objectName, long offset)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InvalidResponseException {
+    return getObject(bucketName, objectName, offset, null, null);
+  }
+
+
+  /**
+   * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The InputStream must be
+   * closed after use else the connection will remain open.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param offset      Offset to read at.
+   * @param length      Length to read.
+   *
+   * @return {@link InputStream} containing the object's data.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public InputStream getObject(String bucketName, String objectName, long offset, Long length)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InvalidResponseException {
+    return getObject(bucketName, objectName, offset, length, null);
+  }
+
+
+  /**
+   * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The InputStream must be
+   * closed after use else the connection will remain open.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, sse);
+   * byte[] buf = new byte[16384];
+   * int bytesRead;
+   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
+   *   System.out.println(new String(buf, 0, bytesRead));
+   * }
+   * stream.close(); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param offset      Offset to read at.
+   * @param length      Length to read.
+   * @param sse         Server side encryption.
+   *
+   * @return {@link InputStream} containing the object's data.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public InputStream getObject(String bucketName, String objectName, Long offset, Long length,
+                               ServerSideEncryption sse)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InvalidResponseException {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
+    }
+
+    if ((objectName == null) || (objectName.isEmpty())) {
+      throw new InvalidArgumentException("object name cannot be empty");
+    }
+
+    if (offset != null && offset < 0) {
+      throw new InvalidArgumentException("offset should be zero or greater");
+    }
+
+    if (length != null && length <= 0) {
+      throw new InvalidArgumentException("length should be greater than zero");
+    }
+
+    checkReadRequestSse(sse);
+
+    if (length != null && offset == null) {
+      offset = 0L;
+    }
+
+    Map<String,String> headerMap = null;
+    if (offset != null || length != null || sse != null) {
+      headerMap = new HashMap<>();
+    }
+
+    if (length != null) {
+      headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
+    } else if (offset != null) {
+      headerMap.put("Range", "bytes=" + offset + "-");
+    }
+
+    if (sse != null) {
+      sse.marshal(headerMap);
+    }
+
+    HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
+    return response.body().byteStream();
+  }
+
+
+  /**
+   * Gets object's data in the given bucket and stores it to given file name.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name in the bucket.
+   * @param fileName    file name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void getObject(String bucketName, String objectName, String fileName)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InvalidResponseException {
+    getObject(bucketName, objectName, null, fileName);
+  }
+
 
   /**
    * Gets encrypted object's data in the given bucket and stores it to given file name.
@@ -1656,13 +1900,7 @@ public class MinioClient {
           throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
           InternalException, InvalidArgumentException, InvalidResponseException {
-
-    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
-            || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
-      throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
-    } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
-      throw new InvalidArgumentException("SSE-C provided keys must be made over a secure connection.");
-    }
+    checkReadRequestSse(sse);
 
     Path filePath = Paths.get(fileName);
     boolean fileExists = Files.exists(filePath);
@@ -1712,7 +1950,7 @@ public class MinioClient {
     InputStream is = null;
     OutputStream os = null;
     try {
-      is = getObject(bucketName, objectName, sse);
+      is = getObject(bucketName, objectName, tempFileSize, null, sse);
       os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       long bytesWritten = ByteStreams.copy(is, os);
       is.close();
@@ -1731,268 +1969,8 @@ public class MinioClient {
         os.close();
       }
     }
-
-
   }
 
-  /**
-   * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
-   * after use else the connection will remain open.
-   *
-   * <p><b>Example:</b>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param sse        Encryption metadata only required for SSE-C.
-   *
-   * @return {@link InputStream} containing the object data.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
-   * @throws InsufficientDataException  upon getting EOFException while reading given
-   *           InputStream even before reading given length
-   * @throws IOException                 upon connection error
-   * @throws InvalidKeyException
-   *           upon an invalid access key or secret key
-   * @throws NoResponseException         upon no response from server
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   * @throws InvalidResponseException    upon a non-xml response from server
-   */
-  public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InvalidResponseException {
-    if ((sse.getType() == ServerSideEncryption.Type.SSE_S3)
-        || (sse.getType() == ServerSideEncryption.Type.SSE_KMS)) {
-      throw new InvalidArgumentException("Invalid encryption option specified for encryption type " + sse.getType());
-    } else if ((sse.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
-      throw new InvalidArgumentException("SSE_C provided keys must be made over a secure connection.");
-    }
-    Map<String, String> headers = new HashMap<>();
-    sse.marshal(headers);
-    HttpResponse response = executeGet(bucketName, objectName, headers, null);
-    return response.body().byteStream();
-  }
-
-
-  /**
-   * Gets object's data starting from given offset as {@link InputStream} in the given bucket. The InputStream must be
-   * closed after use else the connection will remain open.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offset      Offset to read at.
-   *
-   * @return {@link InputStream} containing the object's data.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
-   * @throws InsufficientDataException  upon getting EOFException while reading given
-   *           InputStream even before reading given length
-   * @throws IOException                 upon connection error
-   * @throws InvalidKeyException
-   *           upon an invalid access key or secret key
-   * @throws NoResponseException         upon no response from server
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   * @throws InvalidResponseException    upon a non-xml response from server
-   */
-  public InputStream getObject(String bucketName, String objectName, long offset)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InvalidResponseException {
-    return getObject(bucketName, objectName, offset, null);
-  }
-
-
-  /**
-   * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The InputStream must be
-   * closed after use else the connection will remain open.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param offset      Offset to read at.
-   * @param length      Length to read.
-   *
-   * @return {@link InputStream} containing the object's data.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
-   * @throws InsufficientDataException  upon getting EOFException while reading given
-   *           InputStream even before reading given length
-   * @throws IOException                 upon connection error
-   * @throws InvalidKeyException
-   *           upon an invalid access key or secret key
-   * @throws NoResponseException         upon no response from server
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   * @throws InvalidResponseException    upon a non-xml response from server
-   */
-  public InputStream getObject(String bucketName, String objectName, long offset, Long length)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InvalidResponseException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new InvalidArgumentException("bucket name cannot be empty");
-    }
-
-    if ((objectName == null) || (objectName.isEmpty())) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
-
-    if (offset < 0) {
-      throw new InvalidArgumentException("offset should be zero or greater");
-    }
-
-    if (length != null && length <= 0) {
-      throw new InvalidArgumentException("length should be greater than zero");
-    }
-
-    Map<String,String> headerMap = new HashMap<>();
-    if (length != null) {
-      headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
-    } else if (offset > 0) {
-      headerMap.put("Range", "bytes=" + offset + "-");
-    }
-
-    HttpResponse response = executeGet(bucketName, objectName, headerMap, null);
-    return response.body().byteStream();
-  }
-
-
-  /**
-   * Gets object's data in the given bucket and stores it to given file name.
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg"); }</pre>
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name in the bucket.
-   * @param fileName    file name.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
-   * @throws InsufficientDataException  upon getting EOFException while reading given
-   *           InputStream even before reading given length
-   * @throws IOException                 upon connection error
-   * @throws InvalidKeyException
-   *           upon an invalid access key or secret key
-   * @throws NoResponseException         upon no response from server
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   * @throws InvalidResponseException    upon a non-xml response from server
-   */
-  public void getObject(String bucketName, String objectName, String fileName)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InvalidResponseException {
-    Path filePath = Paths.get(fileName);
-    boolean fileExists = Files.exists(filePath);
-
-    if (fileExists && !Files.isRegularFile(filePath)) {
-      throw new InvalidArgumentException(fileName + ": not a regular file");
-    }
-
-    ObjectStat objectStat = statObject(bucketName, objectName);
-    long length = objectStat.length();
-    String etag = objectStat.etag();
-
-    String tempFileName = fileName + "." + etag + ".part.minio";
-    Path tempFilePath = Paths.get(tempFileName);
-    boolean tempFileExists = Files.exists(tempFilePath);
-
-    if (tempFileExists && !Files.isRegularFile(tempFilePath)) {
-      throw new IOException(tempFileName + ": not a regular file");
-    }
-
-    long tempFileSize = 0;
-    if (tempFileExists) {
-      tempFileSize = Files.size(tempFilePath);
-      if (tempFileSize > length) {
-        Files.delete(tempFilePath);
-        tempFileExists = false;
-        tempFileSize = 0;
-      }
-    }
-
-    if (fileExists) {
-      long fileSize = Files.size(filePath);
-      if (fileSize == length) {
-        // already downloaded. nothing to do
-        return;
-      } else if (fileSize > length) {
-        throw new InvalidArgumentException("Source object, '" + objectName + "', size:" + length
-                 + " is smaller than the destination file, '" + fileName + "', size:" + fileSize);
-      } else if (!tempFileExists) {
-        // before resuming the download, copy filename to tempfilename
-        Files.copy(filePath, tempFilePath);
-        tempFileSize = fileSize;
-        tempFileExists = true;
-      }
-    }
-
-    InputStream is = null;
-    OutputStream os = null;
-    try {
-      is = getObject(bucketName, objectName, tempFileSize);
-      os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-      long bytesWritten = ByteStreams.copy(is, os);
-      is.close();
-      os.close();
-
-      if (bytesWritten != length - tempFileSize) {
-        throw new IOException(tempFileName + ": unexpected data written.  expected = " + (length - tempFileSize)
-                                + ", written = " + bytesWritten);
-      }
-
-      Files.move(tempFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
-    } finally {
-      if (is != null) {
-        is.close();
-      }
-      if (os != null) {
-        os.close();
-      }
-    }
-  }
 
   /**
    * Copy a source object into a new destination object with same object name.
