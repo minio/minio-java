@@ -903,13 +903,7 @@ public class MinioClient {
 
     if (objectName != null) {
       // Limitation: OkHttp does not allow to add '.' and '..' as path segment.
-      for (String pathSegment : objectName.split("/")) {
-        urlBuilder.addEncodedPathSegment(S3Escaper.encode(pathSegment));
-      }
-      if (objectName.endsWith("/")) {
-        // Fix issue #648: preserve trailing '/' to work with proxies like nginx.
-        urlBuilder.addPathSegment("");
-      }
+      urlBuilder.addEncodedPathSegments(S3Escaper.encodePath(objectName));
     }
 
     if (queryParamMap != null) {
@@ -1221,7 +1215,7 @@ public class MinioClient {
       Map<String,String> queryParamMap = new HashMap<>();
       queryParamMap.put("location", null);
 
-      HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, "/",
+      HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
           null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
