@@ -1,7 +1,6 @@
 language: java
 sudo: false
 jdk:
-- oraclejdk8
 - oraclejdk9
 - openjdk8
 - openjdk9
@@ -10,10 +9,12 @@ jdk:
 # packages from some locations, Modifiying java truststore workaround is
 # inspired from this link: https://github.com/travis-ci/travis-ci/issues/9368#issuecomment-395470644
 before_install:
-- rm "${JAVA_HOME}/lib/security/cacerts" && ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts" || test true
+  - rm "${JAVA_HOME}/lib/security/cacerts" && ln -s /etc/ssl/certs/java/cacerts "${JAVA_HOME}/lib/security/cacerts" || test true
+
 script:
-- ./gradlew check
-- ./gradlew runFunctionalTest
+  - ./gradlew check
+  - ./gradlew runFunctionalTest
+
 notifications:
   slack:
     secure: SXnv/KuRr7tH1pq8CGhtgZt6RtlffSJR6uld3G36zpd2ozHEM1cjMQiY0sogPT5Xj0SSZ3apcs1G9DDb13UBz3goYYrd5rj4KIX++3PXgX9o+sP6g20Mo5lI4slFeKIfG/pERp9VZrk3epfzGXRBN+5H/l3nXEleznWPCbu8rTc=
