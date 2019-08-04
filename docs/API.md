@@ -2992,7 +2992,7 @@ try {
 
 `public Map<String,String> presignedPostPolicy(PostPolicy policy)`
 
-Allows setting policy conditions to a presigned URL for POST operations. Policies such as bucket name to receive object uploads, key name prefixes, expiry policy may be set.
+Allows setting policy conditions to a presigned URL for POST operations. Policies such as bucket name to receive object uploads, key name prefixes, expiry policy may be set. The client receives HTTP status code under key success_action_status, when the file is uploaded successfully. If its value is set to 201, the client notifies with a XML document containing the key where the file was uploaded to.
 
 [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPostPolicy-io.minio.PostPolicy-)
 
@@ -3022,10 +3022,13 @@ __Example__
 
 ```java
 try {
-	PostPolicy policy = new PostPolicy("mybucket", "myobject",
-  DateTime.now().plusDays(7));
+	PostPolicy policy = new PostPolicy("mybucket", "myobject", DateTime.now().plusDays(7));
+	// 'my-objectname' should be 'image/png' content type
 	policy.setContentType("image/png");
+	// set success action status to 201 to receive XML document
+	policy.setSuccessActionStatus(201);
 	Map<String,String> formData = minioClient.presignedPostPolicy(policy);
+	// Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
 	System.out.print("curl -X POST ");
 	for (Map.Entry<String,String> entry : formData.entrySet()) {
     System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());

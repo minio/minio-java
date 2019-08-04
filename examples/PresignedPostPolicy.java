@@ -45,6 +45,10 @@ public class PresignedPostPolicy {
       PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
       // 'my-objectname' should be 'image/png' content type
       policy.setContentType("image/png");
+      // set success action status to 201 because we want the client to notify us with the S3 key
+      // where the file was uploaded to.
+      policy.setSuccessActionStatus(201);
+
       Map<String,String> formData = minioClient.presignedPostPolicy(policy);
 
       // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
