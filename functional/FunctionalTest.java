@@ -2036,7 +2036,7 @@ public class FunctionalTest {
 
       String destBucketName = getRandomName();
       client.makeBucket(destBucketName);
-      client.copyObject(bucketName, objectName, destBucketName);
+      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, null);
       client.getObject(destBucketName, objectName).close();
 
       client.removeObject(bucketName, objectName);
@@ -2074,7 +2074,7 @@ public class FunctionalTest {
       invalidETag.setMatchETag("TestETag");
 
       try {
-        client.copyObject(bucketName, objectName, destBucketName, invalidETag);
+        client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, invalidETag);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("PreconditionFailed")) {
           throw e;
@@ -2120,7 +2120,7 @@ public class FunctionalTest {
       copyConditions.setMatchETag(stat.etag());
 
       // File should be copied as ETag set in copyConditions matches object's ETag.
-      client.copyObject(bucketName, objectName, destBucketName, copyConditions);
+      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
       client.getObject(destBucketName, objectName).close();
 
       client.removeObject(bucketName, objectName);
@@ -2162,7 +2162,7 @@ public class FunctionalTest {
 
       // File should be copied as ETag set in copyConditions doesn't match object's
       // ETag.
-      client.copyObject(bucketName, objectName, destBucketName, copyConditions);
+      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
       client.getObject(destBucketName, objectName).close();
 
       client.removeObject(bucketName, objectName);
@@ -2205,7 +2205,7 @@ public class FunctionalTest {
       matchingETagNone.setMatchETagNone(stat.etag());
 
       try {
-        client.copyObject(bucketName, objectName, destBucketName, matchingETagNone);
+        client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, matchingETagNone);
       } catch (ErrorResponseException e) {
         // File should not be copied as ETag set in copyConditions matches object's
         // ETag.
@@ -2254,7 +2254,7 @@ public class FunctionalTest {
       modifiedDateCondition.setModified(dateRepresentation);
 
       // File should be copied as object was modified after the set date.
-      client.copyObject(bucketName, objectName, destBucketName, modifiedDateCondition);
+      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, modifiedDateCondition);
       client.getObject(destBucketName, objectName).close();
 
       client.removeObject(bucketName, objectName);
@@ -2298,7 +2298,7 @@ public class FunctionalTest {
       invalidUnmodifiedCondition.setUnmodified(dateRepresentation);
 
       try {
-        client.copyObject(bucketName, objectName, destBucketName, invalidUnmodifiedCondition);
+        client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, invalidUnmodifiedCondition);
       } catch (ErrorResponseException e) {
         // File should not be copied as object was modified after date set in
         // copyConditions.
@@ -2349,7 +2349,8 @@ public class FunctionalTest {
       Map<String, String> metadata = new HashMap<>();
       metadata.put("Content-Type", customContentType);
 
-      client.copyObject(bucketName, objectName, destBucketName, objectName, copyConditions, metadata);
+      client.copyObject(destBucketName, objectName, metadata, null,
+                        bucketName, objectName, null, copyConditions);
 
       ObjectStat objectStat = client.statObject(destBucketName, objectName);
       if (!customContentType.equals(objectStat.contentType())) {
@@ -2395,7 +2396,8 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, bucketName, objectName, copyConditions, new HashMap<String, String>());
+      client.copyObject(bucketName, objectName, new HashMap<String, String>(), null,
+                        bucketName, objectName, null, copyConditions);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
@@ -2448,7 +2450,7 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, sseSource, bucketName, objectName, copyConditions, sseTarget);
+      client.copyObject(bucketName, objectName, null, sseTarget, bucketName, objectName, sseSource, copyConditions);
       ObjectStat objectStat = client.statObject(bucketName, objectName, sseTarget);
 
       client.removeObject(bucketName, objectName);
@@ -2489,7 +2491,7 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, null, bucketName, objectName, copyConditions, sse);
+      client.copyObject(bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
@@ -2541,7 +2543,7 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, null, bucketName, objectName, copyConditions, sse);
+      client.copyObject(bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");

@@ -79,8 +79,8 @@ public class CopyObjectMetadata {
       Map<String, String> metadata = new HashMap<>();
       metadata.put("Content-Type", "application/javascript");
 
-      minioClient.copyObject("my-bucketname", "my-objectname", "my-destbucketname",
-                             "my-objectname-copy", copyConditions, metadata);
+      minioClient.copyObject("my-destbucketname", "my-objectname-copy", metadata, null,
+                             "my-bucketname", "my-objectname", null, copyConditions);
       System.out.println("my-objectname-copy copied to my-destbucketname successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

@@ -1295,6 +1295,17 @@ public class MinioClient {
     }
   }
 
+  private void checkWriteRequestSse(ServerSideEncryption sse) throws InvalidArgumentException {
+    if (sse == null) {
+      return;
+    }
+
+    if (sse.getType().requiresTls() && !this.baseUrl.isHttps()) {
+      throw new InvalidArgumentException(sse.getType().name()
+                                         + " operations must be performed over a secure connection.");
+    }
+  }
+
   /**
    * Executes GET method for given request parameters.
    *
@@ -1997,13 +2008,15 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   * @deprecated As of release 7.0
    */
+  @Deprecated
   public void copyObject(String bucketName, String objectName, String destBucketName)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException, InvalidResponseException {
-
-    copyObject(bucketName, objectName, destBucketName, null, null, null);
+    copyObject(destBucketName, objectName, null, null, bucketName, objectName, null, null);
   }
 
   /**
@@ -2040,13 +2053,18 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   * @deprecated As of release 7.0
    */
+  @Deprecated
   public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException, InvalidResponseException {
-
-    copyObject(bucketName, objectName, destBucketName, destObjectName, null, null);
+    if (destObjectName == null) {
+      destObjectName = objectName;
+    }
+    copyObject(destBucketName, destObjectName, null, null, bucketName, objectName, null, null);
   }
 
   /**
@@ -2085,14 +2103,15 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   * @deprecated As of release 7.0
    */
-  public void copyObject(String bucketName, String objectName, String destBucketName,
-                         CopyConditions copyConditions)
+  @Deprecated
+  public void copyObject(String bucketName, String objectName, String destBucketName, CopyConditions copyConditions)
         throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
         NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
         InvalidArgumentException, InvalidResponseException {
-
-    copyObject(bucketName, objectName, destBucketName, null, copyConditions, null);
+    copyObject(destBucketName, objectName, null, null, bucketName, objectName, null, copyConditions);
   }
 
   /**
@@ -2134,14 +2153,19 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   * @deprecated As of release 7.0
    */
-  public void copyObject(String bucketName, String objectName, String destBucketName,
-                         String destObjectName, CopyConditions copyConditions)
+  @Deprecated
+  public void copyObject(String bucketName, String objectName, String destBucketName, String destObjectName,
+                         CopyConditions copyConditions)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException, InvalidResponseException {
-
-    copyObject(bucketName, objectName, destBucketName, destObjectName, copyConditions, null);
+    if (destObjectName == null) {
+      destObjectName = objectName;
+    }
+    copyObject(destBucketName, destObjectName, null, null, bucketName, objectName, null, copyConditions);
   }
 
   /**
@@ -2187,30 +2211,19 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   * @deprecated As of release 7.0
    */
+  @Deprecated
   public void copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String destBucketName,
                          String destObjectName, CopyConditions copyConditions, ServerSideEncryption sseTarget)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException, InvalidResponseException {
-
-    if ((sseTarget.getType() == ServerSideEncryption.Type.SSE_C) && (!this.baseUrl.isHttps())) {
-      throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
-    } else if ((sseTarget.getType() == (ServerSideEncryption.Type.SSE_KMS)) && (!this.baseUrl.isHttps())) {
-      throw new InvalidArgumentException("SSE_KMS operations must be performed over a secure connection.");
+    if (destObjectName == null) {
+      destObjectName = objectName;
     }
-    Map<String, String> headerTarget = new HashMap<>();
-    Map<String, String> headers = new HashMap<>();
-    sseTarget.marshal(headerTarget);
-    if (sseTarget.getType() == ServerSideEncryption.Type.SSE_C) {
-      Map<String, String> headerSource = new HashMap<>();
-      sseSource.marshal(headerSource);
-      headers.putAll(headerSource);
-      headers.putAll(headerTarget);
-    } else {
-      headers.putAll(headerTarget);
-    }
-    copyObject(bucketName, objectName, destBucketName, destObjectName, copyConditions, headers);
+    copyObject(destBucketName, destObjectName, null, sseTarget, bucketName, objectName, sseSource, copyConditions);
   }
 
   /**
@@ -2255,49 +2268,114 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   * @deprecated As of release 7.0
    */
+  @Deprecated
   public void copyObject(String bucketName, String objectName, String destBucketName,
                          String destObjectName, CopyConditions copyConditions,
                          Map<String,String> metadata)
       throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
       NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
       InvalidArgumentException, InvalidResponseException {
-
-    if (bucketName == null) {
-      throw new InvalidArgumentException("Source bucket name cannot be empty");
-    }
-    if (objectName == null) {
-      throw new InvalidArgumentException("Source object name cannot be empty");
-    }
-    if (destBucketName == null) {
-      throw new InvalidArgumentException("Destination bucket name cannot be empty");
-    }
-
-    // Escape source object path.
-    String sourceObjectPath = S3Escaper.encodePath(bucketName + "/" + objectName);
-
-    // Destination object name is optional, if empty default to source object name.
     if (destObjectName == null) {
       destObjectName = objectName;
     }
+    copyObject(destBucketName, destObjectName, metadata, null, bucketName, objectName, null, copyConditions);
+  }
 
-    Map<String, String> headerMap = new HashMap<>();
 
-    // Set the object source
-    headerMap.put("x-amz-copy-source", sourceObjectPath);
+  /**
+   * Copy a source object into a new object with the provided name in the provided bucket.
+   * optionally can take a key value CopyConditions and server side encryption as well for
+   * conditionally attempting copyObject.
+   *
+   * </p>
+   * <b>Example:</b><br>
+   *
+   * <pre>
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", headers, sse, "my-srcbucketname",
+   * "my-srcobjname", srcSse, copyConditions);}
+   * </pre>
+   *
+   * @param bucketName
+   *          Destination bucket name.
+   * @param objectName
+   *          Destination object name.
+   * @param headerMap
+   *          Destination object custom metadata.
+   * @param sse
+   *          Server side encryption of destination object.
+   * @param srcBucketName
+   *          Source bucket name.
+   * @param srcObjectName
+   *          Source object name.
+   * @param srcSse
+   *          Server side encryption of source object.
+   * @param copyConditions
+   *          CopyConditions object with collection of supported CopyObject conditions.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void copyObject(String bucketName, String objectName, Map<String,String> headerMap, ServerSideEncryption sse,
+                         String srcBucketName, String srcObjectName, ServerSideEncryption srcSse,
+                         CopyConditions copyConditions)
+    throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+           NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
+           InvalidArgumentException, InvalidResponseException {
+    if (bucketName == null) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
+    }
 
-    // If no conditions available, skip addition else add the conditions to the header
+    if (objectName == null) {
+      throw new InvalidArgumentException("object name cannot be empty");
+    }
+
+    checkWriteRequestSse(sse);
+
+    if (srcBucketName == null) {
+      throw new InvalidArgumentException("Source bucket name cannot be empty");
+    }
+
+    // Source object name is optional, if empty default to object name.
+    if (srcObjectName == null) {
+      srcObjectName = objectName;
+    }
+
+    checkReadRequestSse(srcSse);
+
+    if (headerMap == null) {
+      headerMap = new HashMap<>();
+    }
+
+    headerMap.put("x-amz-copy-source", S3Escaper.encodePath(srcBucketName + "/" + srcObjectName));
+
+    if (sse != null) {
+      sse.marshal(headerMap);
+    }
+
+    if (srcSse != null) {
+      srcSse.marshal(headerMap);
+    }
+
     if (copyConditions != null) {
       headerMap.putAll(copyConditions.getConditions());
     }
 
-    // Set metadata on the destination of object.
-    if (metadata != null) {
-      headerMap.putAll(metadata);
-    }
-
-    HttpResponse response = executePut(destBucketName, destObjectName, headerMap,
-        null, "", 0);
+    HttpResponse response = executePut(bucketName, objectName, headerMap, null, "", 0);
 
     // For now ignore the copyObjectResult, just read and parse it.
     CopyObjectResult result = new CopyObjectResult();
@@ -3449,7 +3527,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, String fileName)
@@ -3491,7 +3569,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, String fileName, String contentType)
@@ -3533,7 +3611,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, String fileName, ServerSideEncryption sse)
@@ -3666,7 +3744,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream, long size, String contentType)
@@ -3735,7 +3813,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream, Map<String, String> headerMap)
@@ -3809,7 +3887,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream, long size,
@@ -3877,7 +3955,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream, long size,
@@ -3959,7 +4037,7 @@ public class MinioClient {
      * @throws InsufficientDataException   upon getting EOFException while reading given
      * @throws InvalidResponseException    upon a non-xml response from server
      *
-     * @deprecated As of release 6.1
+     * @deprecated As of release 7.0
      */
   @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream,
@@ -4040,7 +4118,7 @@ public class MinioClient {
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream, long size,
@@ -4109,7 +4187,7 @@ public class MinioClient {
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
    *
-   * @deprecated As of release 6.1
+   * @deprecated As of release 7.0
    */
   @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream, String contentType)
@@ -4280,23 +4358,14 @@ public class MinioClient {
     }
 
     if (sse != null) {
-      if (sse.getType() == ServerSideEncryption.Type.SSE_C && !this.baseUrl.isHttps()) {
-        throw new InvalidArgumentException("SSE_C operations must be performed over a secure connection.");
-      } else if (sse.getType() == ServerSideEncryption.Type.SSE_KMS && !this.baseUrl.isHttps()) {
-        throw new InvalidArgumentException("SSE_KMS operations must be performed over a secure connection.");
-      }
-
+      checkWriteRequestSse(sse);
       // The correct approach is see.marshal() needs to accept boolean isHttps and do above checks inside.
       sse.marshal(headerMap);
     }
 
 
     if (size <= MIN_MULTIPART_SIZE) {
-      // Single put object.
-      if (sse != null) {
-        sse.marshal(headerMap);
-      }
-      putObject(bucketName, objectName, data, size.intValue(),headerMap , null, 0);
+      putObject(bucketName, objectName, data, size.intValue(), headerMap, null, 0);
       return;
     }
 
