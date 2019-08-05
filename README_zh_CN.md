@@ -41,7 +41,7 @@ dependencies {
 | Secret Key     | Secret key是你账户的密码。    |
 
 
-在下面的例子的中，我们将使用一个运行在[https://play.min.io:9000](https://play.min.io:9000)的免费托管的MinIO服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
+在下面的例子的中，我们将使用一个运行在[https://play.min.io](https://play.min.io)的免费托管的MinIO服务。你可以随意使用此服务进行测试和开发。此示例中显示的访问凭据是公开的。
 
 #### FileUploader.java
 
@@ -59,7 +59,7 @@ public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       // 使用MinIO服务的URL，端口，Access key和Secret key创建一个MinioClient对象
-      MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // 检查存储桶是否已经存在
       boolean isExist = minioClient.bucketExists("asiatrip");

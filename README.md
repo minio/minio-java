@@ -40,7 +40,7 @@ You need three items in order to connect to an object storage server.
 | Access Key    | Access key is like user ID that uniquely identifies your account.   |
 | Secret Key     | Secret key is the password to your account.    |
 
-For the following example, we will use a freely hosted MinIO server running at [https://play.min.io:9000](https://play.min.io:9000). Feel free to use this service for test and development. Access credentials shown in this example are open to the public.
+For the following example, we will use a freely hosted MinIO server running at [https://play.min.io](https://play.min.io). Feel free to use this service for test and development. Access credentials shown in this example are open to the public.
 
 #### FileUploader.java
 ```java
@@ -57,7 +57,7 @@ public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       // Create a minioClient with the MinIO Server name, Port, Access key and Secret key.
-      MinioClient minioClient = new MinioClient("https://play.min.io:9000", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Check if the bucket already exists.
       boolean isExist = minioClient.bucketExists("asiatrip");
