@@ -53,7 +53,7 @@ public class CopyObjectEncrypted {
       SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
         
       ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
-      ServerSideEncryption sseSource = ServerSideEncryption.copyWithCustomerKey(secretKeySpec);
+      ServerSideEncryption sseSource = ServerSideEncryption.withCustomerKey(secretKeySpec);
         
       byte[] keyTarget = "98765432100123456789012345678901".getBytes("UTF-8"); 
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
