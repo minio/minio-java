@@ -4414,6 +4414,7 @@ public class MinioClient {
       // All parts have been uploaded, complete the multipart upload.
       completeMultipart(bucketName, objectName, uploadId, totalParts);
     } catch (RuntimeException e) {
+      abortMultipartUpload(bucketName, objectName, uploadId);
       throw e;
     } catch (Exception e) {
       abortMultipartUpload(bucketName, objectName, uploadId);
