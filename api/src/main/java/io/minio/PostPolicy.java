@@ -31,6 +31,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 
 import io.minio.errors.InvalidArgumentException;
+import io.minio.SuccessActionStatus;
 
 
 /**
@@ -44,6 +45,7 @@ public class PostPolicy {
   private final boolean startsWith;
   private final DateTime expirationDate;
   private String contentType;
+  private int successActionStatus;
   private String contentEncoding;
   private long contentRangeStart;
   private long contentRangeEnd;
@@ -91,6 +93,18 @@ public class PostPolicy {
     this.contentType = contentType;
   }
 
+  /**
+   * Sets success action status.
+   */
+  public void setSuccessActionStatus(int successActionStatus) throws InvalidArgumentException {
+    if (!(successActionStatus ==  SuccessActionStatus.SuccessActionStatus200.getValue()
+        || successActionStatus == SuccessActionStatus.SuccessActionStatus201.getValue()
+        || successActionStatus == SuccessActionStatus.SuccessActionStatus204.getValue())) {
+      throw new InvalidArgumentException("Invalid action status, acceptable values are 200, 201, or 204");
+    }
+
+    this.successActionStatus = successActionStatus;
+  }
 
   /**
    * Sets content encoding.
@@ -209,6 +223,11 @@ public class PostPolicy {
     if (this.contentEncoding != null) {
       conditions.add(new String[]{"eq", "$Content-Encoding", this.contentEncoding});
       formData.put("Content-Encoding", this.contentEncoding);
+    }
+
+    if (this.successActionStatus > 0) {
+      conditions.add(new String[]{"eq", "success_action_status", Integer.toString(this.successActionStatus)});
+      formData.put("success_action_status", Integer.toString(this.successActionStatus));
     }
 
     if (this.contentRangeStart > 0 && this.contentRangeEnd > 0) {
