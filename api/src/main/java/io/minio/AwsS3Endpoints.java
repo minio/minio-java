@@ -58,6 +58,8 @@ enum AwsS3Endpoints {
     endpoints.put("ca-central-1", "s3.ca-central-1.amazonaws.com");
     // cn-north-1
     endpoints.put("cn-north-1", "s3.cn-north-1.amazonaws.com.cn");
+    // cn-northwest-1
+    endpoints.put("cn-northwest-1", "s3.cn-northwest-1.amazonaws.com.cn");
   }
 
   /**
