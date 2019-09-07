@@ -55,6 +55,7 @@ import io.minio.messages.ListBucketResult;
 import io.minio.messages.ListBucketResultV1;
 import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
+import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
@@ -1587,7 +1588,6 @@ public class MinioClient {
     HttpUrl url = request.url();
     return url.toString();
   }
-
 
   /**
    * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be closed
@@ -3402,7 +3402,7 @@ public class MinioClient {
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
                 IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
                 InternalException, InvalidResponseException {
-    this.makeBucket(bucketName, null);
+    this.makeBucket(bucketName, null, false);
   }
 
 
@@ -3436,6 +3436,41 @@ public class MinioClient {
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
                 IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
                 InternalException, InvalidResponseException {
+    this.makeBucket(bucketName, region, false);
+  }
+
+
+  /**
+   * Creates a bucket with given region and object lock option.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.makeBucket("my-bucketname", "us-east-1", true);
+   * System.out.println("my-bucketname is created successfully"); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param region     region in which the bucket will be created.
+   * @param objectLock enable object lock support.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws RegionConflictException     upon  passed region conflicts with the one
+   *                                     previously specified.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from serve
+   */
+  public void makeBucket(String bucketName, String region, boolean objectLock)
+    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
+                IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+                InternalException, InvalidResponseException {
     // If region param is not provided, set it with the one provided by constructor
     if (region == null) {
       region = this.region;
@@ -3455,8 +3490,169 @@ public class MinioClient {
       configString = config.toString();
     }
 
-    HttpResponse response = executePut(bucketName, null, null, null, region, configString, 0);
+    Map<String, String> headerMap = null;
+    if (objectLock) {
+      headerMap = new HashMap<>();
+      headerMap.put("x-amz-bucket-object-lock-enabled", "true");
+    }
+
+    HttpResponse response = executePut(bucketName, null, headerMap, null, region, configString, 0);
     response.body().close();
+  }
+
+
+  /**
+   * Enable object versioning in given bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.enableVersioning("my-bucketname");
+   * System.out.println("object versioning is enabled in my-bucketname"); }</pre>
+   *
+   * @param bucketName Bucket name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws RegionConflictException     upon  passed region conflicts with the one
+   *                                     previously specified.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from serve
+   */
+  public void enableVersioning(String bucketName)
+    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
+                IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+                InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("versioning", "");
+    String config = "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+        + "<Status>Enabled</Status></VersioningConfiguration>";
+    HttpResponse response = executePut(bucketName, null, null, queryParamMap, config, 0);
+    response.body().close();
+  }
+
+
+  /**
+   * Disable object versioning in given bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.disableVersioning("my-bucketname");
+   * System.out.println("object versioning is disabled in my-bucketname"); }</pre>
+   *
+   * @param bucketName Bucket name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws RegionConflictException     upon  passed region conflicts with the one
+   *                                     previously specified.
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   * @throws InvalidResponseException    upon a non-xml response from serve
+   */
+  public void disableVersioning(String bucketName)
+    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
+                IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+                InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("versioning", "");
+    String config = "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+        + "<Status>Suspended</Status></VersioningConfiguration>";
+    HttpResponse response = executePut(bucketName, null, null, queryParamMap, config, 0);
+    response.body().close();
+  }
+
+
+  /**
+   * Sets default object retention in given bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.setDefaultRetention("my-bucketname", config);
+   * System.out.println("Default object retention is set successfully in my-bucketname"); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param config     Object lock configuration.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("object-lock", "");
+
+    HttpResponse response = executePut(bucketName, null, null, queryParamMap, config, 0);
+    response.body().close();
+  }
+
+
+  /**
+   * Gets default object retention in given bucket.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname"); }</pre>
+   *
+   * @param bucketName Bucket name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public ObjectLockConfiguration getDefaultRetention(String bucketName)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("object-lock", "");
+
+    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
+
+    ObjectLockConfiguration result = new ObjectLockConfiguration();
+    try {
+      result.parseXml(response.body().charStream());
+    } finally {
+      response.body().close();
+    }
+    return result;
   }
 
 
