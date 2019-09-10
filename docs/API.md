@@ -248,6 +248,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 
@@ -299,6 +300,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 
@@ -342,6 +344,7 @@ Lists all buckets.
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -389,6 +392,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -440,6 +444,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -676,6 +681,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -722,6 +728,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -765,6 +772,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -811,6 +819,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -861,6 +870,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -923,6 +933,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -1112,6 +1123,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidBucketNameException `` : upon invalid bucket name.       |
 |        | ``BucketPolicyTooLargeException `` : upon bucket policy too large in size       |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1152,6 +1164,7 @@ __Parameters__
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1219,7 +1232,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
-
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1283,6 +1296,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -1348,6 +1362,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -1412,6 +1427,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1462,7 +1478,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
-
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 __Example__
 
 ```java
@@ -1555,7 +1571,7 @@ __Parameters__
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
 |        | ``NoResponseException`` : upon no response from server.            |
@@ -1614,16 +1630,21 @@ __Parameters__
 | ``size``  | _long_  | Size of the data to read from ``stream`` that will be uploaded. |
 | ``contentType``  | _String_ | Content type of the stream. |
 
-
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
 
 
 __Example__
@@ -1680,16 +1701,20 @@ __Parameters__
 | ``objectName``  | _String_  | Object name in the bucket. |
 | ``fileName``  | _String_  | File name. |
 
-
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1733,7 +1758,7 @@ __Parameters__
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
@@ -1743,6 +1768,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1800,7 +1826,7 @@ __Parameters__
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
@@ -1810,6 +1836,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1867,7 +1894,7 @@ __Parameters__
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
@@ -1877,6 +1904,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -1927,19 +1955,22 @@ master key passed to this function.
 | ``size``  | _long_  | Size of the data to read from ``stream`` that will be uploaded. |
 | ``headerMap``  | Map<String, String> | Custom/additional meta data of the object. |
 | ``key``  | _SecretKey_ | An object of type initialized with AES [SecretKey](https://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html).  |
- | Return Type	  | Exceptions	  |
+
+| Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
-| 		 | ``InvalidAlgorithmParameterException`` : upon wrong encryption algorithm used. |
-|		 | ``BadPaddingException`` : upon incorrect padding in a block. |
-|		 | ``IllegalBlockSizeException`` : upon incorrect block. |
-|		 | ``NoSuchPaddingException`` : upon wrong padding type specified. |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
  __Example__
  Object is encrypted using a randomly generated data encryption key. The data encryption key is then encrypted using a master key known only to the client (wrapped in encryptionMaterials object). The encrypted data encryption key is uploaded as the object header along with the IV used and the encrypted object to the remote server.
  ```java
@@ -2017,6 +2048,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2067,6 +2099,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2122,6 +2155,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2197,6 +2231,7 @@ __Parameters__
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2312,11 +2347,16 @@ __Parameters__
 |:--- |:--- |
 |  ``ObjectStat``: Populated object meta data. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2365,6 +2405,8 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2410,6 +2452,8 @@ __Parameters__
 |        | ``IOException`` : upon connection error.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -2452,6 +2496,7 @@ __Parameters__
 |        | ``IOException`` : upon connection error.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -2492,6 +2537,7 @@ __Parameters__
 |        | ``IOException`` : upon connection error.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -2533,6 +2579,7 @@ __Parameters__
 |        | ``IOException`` : upon connection error.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -2567,7 +2614,7 @@ __Parameters__
 |:--- |:--- |
 |  None  | Listed Exceptions: |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``NoResponseException`` : upon no response from server.            |
@@ -2576,6 +2623,7 @@ __Parameters__
 |        | ``IOException`` : upon connection error.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -2608,12 +2656,17 @@ __Parameters__
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``NoResponseException`` : upon no response from server.            |
-|        | ``IOException`` : upon connection error.            |
-|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2653,17 +2706,19 @@ __Parameters__
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``NoResponseException`` : upon no response from server.            |
-|        | ``IOException`` : upon connection error.            |
-|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
-
-
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
-
 
 ```java
 try {
@@ -2734,20 +2789,20 @@ __Parameters__
 | ``bucketName``  | _String_  | Name of the bucket.  |
 | ``objectName``  | _String_  | Object name in the bucket. |
 
-
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
 |  None  | Listed Exceptions: |
-|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``IOException`` : upon connection error.            |
-|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
 |        | ``NoResponseException`` : upon no response from server.            |
-|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
-
+|        | ``IOException`` : upon connection error.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2795,6 +2850,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2842,6 +2898,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2889,6 +2946,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
@@ -2931,7 +2989,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
 |        | ``InternalException`` : upon internal library error.        |
-
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 __Example__
 
 ```java
@@ -2974,6 +3032,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 
 __Example__
@@ -3017,6 +3076,7 @@ __Parameters__
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``InvalidArgumentException`` : upon invalid value is passed to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
 
 __Example__
 
