@@ -3385,6 +3385,8 @@ public class MinioClient {
    * @param bucketName Bucket name.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws RegionConflictException  upon  passed region conflicts with the one
+   *            previously specified
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
@@ -4630,18 +4632,6 @@ public class MinioClient {
    * }</pre>
    *
    * @return bucket policy JSON string.
-   * @throws InvalidBucketNameException   upon an invalid bucket name
-   * @throws IOException                  upon connection error
-   * @throws InvalidKeyException          upon an invalid access key or secret key
-   * @throws NoSuchAlgorithmException     upon requested algorithm was not found during signature calculation
-   * @throws InsufficientDataException    upon insufficient data
-   * @throws NoResponseException          upon no response from server
-   * @throws XmlPullParserException       upon parsing response xml
-   * @throws InternalException            upon internal library error
-   * @throws ErrorResponseException       upon unsuccessful execution
-   *
-   *
-   *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
