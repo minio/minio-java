@@ -1290,8 +1290,8 @@ public class MinioClient {
       throw new InvalidArgumentException("only SSE_C is supported for all read requests.");
     }
 
-    if (sse.getType().requiresTls() && !this.baseUrl.isHttps()) {
-      throw new InvalidArgumentException(sse.getType().name()
+    if (sse.type().requiresTls() && !this.baseUrl.isHttps()) {
+      throw new InvalidArgumentException(sse.type().name()
                                          + "operations must be performed over a secure connection.");
     }
   }
