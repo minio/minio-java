@@ -26,6 +26,10 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listenBucketNotification`](#listenBucketNotification) |  |   |   |
 | [`setBucketNotification`](#setBucketNotification) |  |   |   |
 | [`getBucketNotification`](#getBucketNotification) |  |   |   |
+| [`enableVersioning`](#enableVersioning) |  |   |   |
+| [`disableVersioning`](#disableVersioning) |  |   |   |
+| [`setDefaultRetention`](#setDefaultRetention) |  |   |   |
+| [`getDefaultRetention`](#getDefaultRetention) |  |   |   |
 
 ## 1. Constructors
 
@@ -317,6 +321,59 @@ try {
     // Create bucket 'my-bucketname'.
     minioClient.makeBucket("mybucket","us-east-1");
     System.out.println("mybucket is created successfully");
+  }
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+<a name="makeBucket"></a>
+### makeBucket(String bucketName, String region, boolean objectLock)
+`public void makeBucket(String bucketName, String region, boolean objectLock)`
+
+Creates a new bucket with object lock functionality enabled.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#makeBucket-java.lang.String-java.lang.String-boolean-)
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_ | Name of the bucket.  |
+| ``region``  | _String_ | Region in which the bucket will be created.  |
+| ``objectLock``  | _bool_ | When true, enables object lock functionality  |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+| ``None``  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        |  ``RegionConflictException`` : upon  passed region conflicts with the one previously specified. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+
+
+__Example__
+
+
+```java
+try {
+  // Create bucket if it doesn't exist.
+  boolean found = minioClient.bucketExists("mybucket");
+  if (found) {
+    System.out.println("mybucket already exists");
+  } else {
+    // Create bucket 'my-bucketname' with object lock functionality enabled
+    minioClient.makeBucket("mybucket","us-east-1", true);
+    System.out.println("mybucket is created successfully with object lock functionality enabled.");
   }
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
@@ -949,6 +1006,213 @@ __Example__
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
+```
+
+<a name="enableVersioning"></a>
+### enableVersioning(String bucketName)
+`public void enableVersioning(String bucketName)`
+
+Object versioning is enabled in bucketName.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_ | Name of the bucket.  |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+| ``None``  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+__Example__
+
+
+```java
+try {
+    // Object versioning is enabled in my-bucketname
+    minioClient.enableVersioning("my-bucketname");
+    System.out.println("Object versioning is enabled in my-bucketname.");
+  }
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+
+<a name="disableVersioning"></a>
+### disableVersioning(String bucketName)
+`public void disableVersioning(String bucketName)`
+
+Object versioning is disabled in bucketName.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_ | Name of the bucket.  |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+| ``None``  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+__Example__
+
+
+```java
+try {
+    // Object versioning is disabled in my-bucketname
+    minioClient.disableVersioning("my-bucketname");
+    System.out.println("Object versioning is disabled in my-bucketname.");
+  }
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+<a name="setDefaultRetention"></a>
+### setDefaultRetention(String bucketName, ObjectLockConfiguration config)
+`public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)`
+
+Set default retention on bucket.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setDefaultRetention-java.lang.String-io.minio.messages.ObjectLockConfiguration- )
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_ | Name of the bucket.  |
+| ``config``  | _ObjectLockConfiguration_ | Object lock Configuration  |
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+| ``None``  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+__Example__
+
+
+```java
+try {
+      // Create bucket if it doesn't exist.
+      boolean found = s3Client.bucketExists("my-bucketname");
+      if (found) {
+           System.out.println("my-bucketname already exists");
+         } else {
+           // Create bucket 'my-bucketname' with object lock functionality enabled
+           s3Client.makeBucket("my-bucketname", null, true);
+           System.out.println("my-bucketname is created successfully with object lock functionality enabled.");
+         }
+   
+         // Declaring config with Retention mode as Compliance and
+         // duration as 100 days
+         ObjectLockConfiguration setConfig = new ObjectLockConfiguration(RetentionMode.COMPLIANCE,100 , DurationUnit.DAYS);
+   
+         // Set object lock configuration
+         s3Client.setDefaultRetention("my-bucketname",config);
+  
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
+```
+
+
+<a name="getDefaultRetention"></a>
+### getDefaultRetention(String bucketName)
+`public void getDefaultRetention(String bucketName)`
+
+Get default retention of bucket.
+   
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getDefaultRetention-java.lang.String- )
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_ | Name of the bucket.  |
+
+
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+| ``None``  | Listed Exceptions: |
+|        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+__Example__
+
+
+```java
+try {
+      // Create bucket if it doesn't exist.
+      boolean found = s3Client.bucketExists("my-bucketname");
+      if (found) {
+           System.out.println("my-bucketname already exists");
+         } else {
+           // Create bucket 'my-bucketname' with object lock functionality enabled
+           s3Client.makeBucket("my-bucketname", null, true);
+           System.out.println("my-bucketname is created successfully with object lock functionality enabled.");
+         }
+   
+         // Declaring config with Retention mode as Compliance and
+         // duration as 100 days
+         ObjectLockConfiguration setConfig = new ObjectLockConfiguration(RetentionMode.COMPLIANCE,100 , DurationUnit.DAYS);
+   
+         // Set object lock configuration
+         s3Client.setDefaultRetention("my-bucketname",config);
+         
+      // Get object lock configuration
+      ObjectLockConfiguration getConfig = s3Client.getDefaultRetention("my-bucketname");
+        
+      System.out.println(" Lock Configuration : " + getConfig)
+  
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
 ```
 
 
