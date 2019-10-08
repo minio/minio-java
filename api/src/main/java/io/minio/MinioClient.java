@@ -3513,8 +3513,6 @@ public class MinioClient {
    * @param bucketName Bucket name.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws RegionConflictException     upon  passed region conflicts with the one
-   *                                     previously specified.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
@@ -3529,7 +3527,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from serve
    */
   public void enableVersioning(String bucketName)
-    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
                 IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
                 InternalException, InvalidResponseException {
     Map<String, String> queryParamMap = new HashMap<>();
@@ -3551,8 +3549,6 @@ public class MinioClient {
    * @param bucketName Bucket name.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws RegionConflictException     upon  passed region conflicts with the one
-   *                                     previously specified.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws IOException                 upon connection error
@@ -3567,7 +3563,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from serve
    */
   public void disableVersioning(String bucketName)
-    throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
                 IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
                 InternalException, InvalidResponseException {
     Map<String, String> queryParamMap = new HashMap<>();
@@ -3601,13 +3597,12 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InvalidResponseException {
+           InternalException, InvalidResponseException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("object-lock", "");
 
@@ -3636,13 +3631,12 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public ObjectLockConfiguration getDefaultRetention(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InvalidResponseException {
+           InternalException, InvalidResponseException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("object-lock", "");
 
