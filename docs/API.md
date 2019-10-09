@@ -23,7 +23,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`removeBucket`](#removeBucket)  | [`statObject`](#statObject) |   |  [`getBucketLifeCycle`](#getBucketLifeCycle) |
 | [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |  [`deleteBucketLifeCycle`](#deleteBucketLifeCycle) |
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
-| [`listenBucketNotification`](#listenBucketNotification) |  |   |   |
+| [`listenBucketNotification`](#listenBucketNotification) | [`composeObject`](#composeObject) |   |   |
 | [`setBucketNotification`](#setBucketNotification) |  |   |   |
 | [`getBucketNotification`](#getBucketNotification) |  |   |   |
 | [`enableVersioning`](#enableVersioning) |  |   |   |
@@ -2474,7 +2474,7 @@ __Parameters__
 |Param   | Type	  | Description  |
 |:--- |:--- |:--- |
 | ``bucketName``  | _String_  | Name of the bucket.  |
-| ``fineName``  | _String_  | File name to upload. |
+| ``fileName``  | _String_  | File name to upload. |
 | ``stream``  | _InputStream_  | stream to upload. |
 | ``size``  | _long_  | Size of the file. |
 | ``headerMap``  | _Map<String,String>_  | Custom/additional meta data of the object. |
@@ -3079,6 +3079,64 @@ try {
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
 }
+```
+
+ <a name="composeObject"></a>
+### composeObject(String bucketName, String objectName, , List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)
+
+`public void composeObject(String bucketName, String objectName, , List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)`
+
+ Creates a new Object by combining different source objects.
+
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-java.lang.String-java.lang.String-)
+
+ __Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``sources``  | _Iterable<ComposeSource>_  | List of different Source Objects.  |
+| ``headerMap``  | _Map<String,String>_  | Map of user meta data  |
+| ``sse``  | _ServerSideEncryption_  | Form of server-side encryption [ServerSideEncryption](http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html). |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+ __Example__
+
+ ```java
+  try {
+      /* play.minio.io for test and development. */
+       MinioClient minioClient = new MinioClient("https://play.min.io:9000",
+      "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+       // Create a SourceInfo to compose Object.
+      ComposeSource s1 = new ComposeSource("my-bucketname-one", "my-objectname-one");
+      ComposeSource s2 = new ComposeSource("my-bucketname-two", "my-objectname-two");
+      ComposeSource s3 = new ComposeSource("my-bucketname-three", "my-objectname-three");
+       // Adding the SourceInfo to an ArrayList
+      List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
+      sourceObjectList.add(s1);
+      sourceObjectList.add(s2);
+      sourceObjectList.add(s3);
+       minioClient.composeObject("my-destination-bucket", "my-destination-object", sourceObjectList, null, null) ;
+      System.out.println("Object Composed successfully");
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+  }
 ```
 
 ## 4. Presigned operations

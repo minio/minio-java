@@ -42,6 +42,7 @@ import io.minio.http.Scheme;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CopyObjectResult;
+import io.minio.messages.CopyPartResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
@@ -160,6 +161,8 @@ public class MinioClient {
   private static final long DEFAULT_CONNECTION_TIMEOUT = 15 * 60;
   // maximum allowed object size is 5TiB
   private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
+  // maxPartSize - maximum part size 5GiB for a single multipart upload operation
+  private static final long MAX_PART_SIZE = 5L * 1024 * 1024 * 1024;
   private static final int MAX_MULTIPART_COUNT = 10000;
   // minimum allowed multipart size is 5MiB
   private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
@@ -2384,6 +2387,236 @@ public class MinioClient {
   }
 
   /**
+   * Create an object by concatenating a list of source objects using server-side copying.
+   * </p>
+   * <b>Example:</b><br>   *
+   * <pre>
+   * {@code minioClient.composeObject(String bucketName, String objectName,
+   * List<ComposeSource> composeSource, Map<String,String> userMetaData,
+   * ServiceConfigurationError sse );}
+   * </pre>
+   *
+   * @param bucketName
+   *          Destination Bucket to be created upon compose.
+   * @param objectName
+   *          Destination Object to be created upon compose.
+   * @param sources
+   *          List of Source Objects used to compose Object.
+   * @param headerMap
+   *          User Meta data.
+   * @param sse
+   *          Server Side Encryption.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+
+  public void composeObject(String bucketName, String objectName, List<ComposeSource> sources,
+      Map<String,String> headerMap, ServerSideEncryption sse)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+    InternalException, InvalidArgumentException, InvalidResponseException {
+    if (bucketName == null) {
+      throw new InvalidArgumentException("Destination bucket name cannot be empty");
+    }
+
+    if (objectName == null) {
+      throw new InvalidArgumentException("Destination object name cannot be empty");
+    }
+
+    if (sources.isEmpty()) {
+      throw new InvalidArgumentException("compose sources cannot be empty");
+    }
+
+    checkWriteRequestSse(sse);
+
+    long objectSize = 0;
+    int partsCount = 0;
+    for (int i = 0; i < sources.size(); i++) {
+      ComposeSource src = sources.get(i);
+
+      checkReadRequestSse(src.sse());
+
+      ObjectStat stat = statObject(src.bucketName(), src.objectName(), src.sse());
+      src.buildHeaders(stat.length(), stat.etag());
+
+      if (i != 0 && src.headers().containsKey("x-amz-meta-x-amz-key")) {
+        throw new InvalidArgumentException("Client side encryption is not supported for more than one source");
+      }
+
+      long size = stat.length();
+      if (src.length() != null) {
+        size = src.length();
+      } else if (src.offset() != null) {
+        size -= src.offset();
+      }
+
+      if (size < MIN_MULTIPART_SIZE && sources.size() != 1 && i != (sources.size() - 1)) {
+        throw new InvalidArgumentException("source " + src.bucketName() + "/" + src.objectName() + ": size "
+          + size + " must be greater than " + MIN_MULTIPART_SIZE);
+      }
+
+      objectSize += size;
+      if (objectSize > MAX_OBJECT_SIZE) {
+        throw new InvalidArgumentException("Destination object size must be less than " + MAX_OBJECT_SIZE);
+      }
+
+      if (size > MAX_PART_SIZE) {
+        long count = size / MAX_PART_SIZE;
+        long lastPartSize = size - (count * MAX_PART_SIZE);
+        if (lastPartSize > 0) {
+          count++;
+        } else {
+          lastPartSize = MAX_PART_SIZE;
+        }
+
+        if (lastPartSize < MIN_MULTIPART_SIZE && sources.size() != 1 && i != (sources.size() - 1)) {
+          throw new InvalidArgumentException("source " + src.bucketName() + "/" + src.objectName() + ": "
+            + "for multipart split upload of " + size
+            + ", last part size is less than " + MIN_MULTIPART_SIZE);
+        }
+
+        partsCount += (int)count;
+      } else {
+        partsCount++;
+      }
+
+      if (partsCount > MAX_MULTIPART_COUNT) {
+        throw new InvalidArgumentException("Compose sources create more than allowed multipart count "
+          + MAX_MULTIPART_COUNT);
+      }
+    }
+
+    if (partsCount == 1) {
+      ComposeSource src = sources.get(0);
+      if (headerMap == null) {
+        headerMap = new HashMap<>();
+      }
+      if ((src.offset() != null) && ( src.length() == null)) {
+        headerMap.put("x-amz-copy-source-range", "bytes=" + src.offset() + "-" );
+      }
+
+      if ((src.offset() != null) && ( src.length() != null)) {
+        headerMap.put("x-amz-copy-source-range", "bytes=" + src.offset() + "-" + (src.offset() + src.length() - 1));
+      }
+      copyObject(bucketName, objectName, headerMap, sse, src.bucketName(), src.objectName(), src.sse(),
+          src.copyConditions());
+      return;
+    }
+
+    Map<String, String> sseHeaders = null;
+    if (sse != null) {
+      sseHeaders = sse.headers();
+      if (headerMap == null) {
+        headerMap = new HashMap<>();
+      }
+      headerMap.putAll(sseHeaders);
+    }
+
+    String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
+
+    int partNumber = 0;
+    Part[] totalParts = new Part[partsCount];
+    try {
+      for (int i = 0; i < sources.size(); i++) {
+        ComposeSource src = sources.get(i);
+
+        long size = src.objectSize();
+        if (src.length() != null) {
+          size = src.length();
+        } else if (src.offset() != null) {
+          size -= src.offset();
+        }
+        long offset = 0;
+        if (src.offset() != null) {
+          offset = src.offset();
+        }
+
+        if (size <= MAX_PART_SIZE) {
+          partNumber++;
+          Map<String, String> headers = null;
+          if (src.headers() == null) {
+            headers = new HashMap<>();
+          } else {
+            headers = src.headers();
+          }
+          if (src.length() != null) {
+            headers.put("x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + src.length() - 1));
+          } else if (src.offset() != null) {
+            headers.put("x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + size - 1));
+          }
+          if (sseHeaders != null) {
+            headers.putAll(sseHeaders);
+          }
+          String eTag = uploadPartCopy(bucketName, objectName, uploadId, partNumber, headers);
+
+          totalParts[partNumber - 1] = new Part(partNumber, eTag);
+          continue;
+        }
+
+        while (size > 0) {
+          partNumber++;
+
+          long startBytes = offset;
+          long endBytes = startBytes + MAX_PART_SIZE;
+          if (size < MAX_PART_SIZE) {
+            endBytes = startBytes + size;
+          }
+
+          Map<String, String> headers = src.headers();
+          headers.put("x-amz-copy-source-range", "bytes=" + startBytes + "-" + endBytes);
+          if (sseHeaders != null) {
+            headers.putAll(sseHeaders);
+          }
+          String eTag = uploadPartCopy(bucketName, objectName, uploadId, partNumber, headers);
+
+          totalParts[partNumber - 1] = new Part(partNumber, eTag);
+
+          offset = startBytes;
+          size -= (endBytes - startBytes);
+        }
+      }
+
+      completeMultipart(bucketName, objectName, uploadId, totalParts);
+    } catch (RuntimeException e) {
+      abortMultipartUpload(bucketName, objectName, uploadId);
+      throw e;
+    } catch (Exception e) {
+      abortMultipartUpload(bucketName, objectName, uploadId);
+      throw e;
+    }
+  }
+
+  private String uploadPartCopy(String bucketName, String objectName, String uploadId, int partNumber,
+      Map<String, String> headerMap)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+    InternalException, InvalidResponseException {
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("partNumber", Integer.toString(partNumber));
+    queryParamMap.put("uploadId", uploadId);
+    HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, "", 0);
+    CopyPartResult result = new CopyPartResult();
+    try (ResponseBody body = response.body()) {
+      result.parseXml(body.charStream());
+    }
+    return result.etag();
+  }
+
+
+  /**
    * Returns a presigned URL string with given HTTP method, expiry time and custom request params for a 
    * specific object in the bucket.
    *
@@ -3359,7 +3592,7 @@ public class MinioClient {
    * @throws XmlPullParserException      upon parsing response xml
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
-   * @throws InvalidResponseException    upon a non-xml response from serve
+   * @throws InvalidResponseException    upon a non-xml response from server
    *
    */
   public boolean bucketExists(String bucketName)
@@ -3398,7 +3631,7 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InsufficientDataException   upon getting EOFException while reading given
-   * @throws InvalidResponseException    upon a non-xml response from serve
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void makeBucket(String bucketName)
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
@@ -3432,7 +3665,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
 
    * @throws InsufficientDataException   upon getting EOFException while reading given
-   * @throws InvalidResponseException    upon a non-xml response from serve
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void makeBucket(String bucketName, String region)
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
@@ -3467,7 +3700,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
 
    * @throws InsufficientDataException   upon getting EOFException while reading given
-   * @throws InvalidResponseException    upon a non-xml response from serve
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void makeBucket(String bucketName, String region, boolean objectLock)
     throws InvalidBucketNameException, RegionConflictException, NoSuchAlgorithmException, InsufficientDataException,
@@ -3524,7 +3757,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
 
    * @throws InsufficientDataException   upon getting EOFException while reading given
-   * @throws InvalidResponseException    upon a non-xml response from serve
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void enableVersioning(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -3560,7 +3793,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
 
    * @throws InsufficientDataException   upon getting EOFException while reading given
-   * @throws InvalidResponseException    upon a non-xml response from serve
+   * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void disableVersioning(String bucketName)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -5232,7 +5465,7 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException , InvalidResponseException {
     // set content type if not set already
-    if (headerMap.get("Content-Type") == null) {
+    if ((headerMap != null) && (headerMap.get("Content-Type") == null)) {
       headerMap.put("Content-Type", "application/octet-stream");
     }
 
