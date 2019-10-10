@@ -31,7 +31,6 @@ import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidObjectPrefixException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.NoResponseException;
@@ -1073,7 +1072,7 @@ public class MinioClient {
                                Multimap<String,String> headerMap, Multimap<String,String> queryParamMap,
                                Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InvalidKeyException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     String contentType = null;
     if (headerMap != null && headerMap.get("Content-Type") != null) {
@@ -4691,7 +4690,6 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
-   * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, Long size,
                         Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
@@ -4860,7 +4858,6 @@ public class MinioClient {
    *
    * @return bucket policy JSON string.
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -4876,7 +4873,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String getBucketPolicy(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, BucketPolicyTooLargeException,
            InvalidResponseException {
@@ -4953,7 +4950,6 @@ public class MinioClient {
    * setBucketPolicy("my-bucketname", builder.toString()); }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -4968,7 +4964,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void setBucketPolicy(String bucketName, String policy)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> headerMap = new HashMap<>();
@@ -5115,7 +5111,6 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -5131,7 +5126,7 @@ public class MinioClient {
    *
    */
   public NotificationConfiguration getBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
@@ -5160,7 +5155,6 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -5176,7 +5170,7 @@ public class MinioClient {
    *
    */
   public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
@@ -5196,7 +5190,6 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -5211,7 +5204,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void removeAllBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
