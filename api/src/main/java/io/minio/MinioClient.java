@@ -222,13 +222,15 @@ public class MinioClient {
 
   private static long getLongProperty(String name, long defaultValue) {
     String property = System.getProperty(name);
-    if(null == property) {
-      LOGGER.info(() -> "The configuration item [" + name + "] was not found, using the default configuration: [" + defaultValue + "]");
+    if (null == property) {
+      LOGGER.info(() -> "The configuration item [" + name + "] was not found, "
+              + "using the default configuration: [" + defaultValue + "]");
     } else {
       try {
         return Long.parseLong(property);
       } catch (NumberFormatException e) {
-        LOGGER.warning(() -> "The configuration item [" + name + "] must be numeric, using the default configuration: [" + defaultValue + "]");
+        LOGGER.warning(() -> "The configuration item [" + name + "] must be numeric, "
+               + "using the default configuration: [" + defaultValue + "]");
       }
     }
     return defaultValue;
