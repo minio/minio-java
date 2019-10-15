@@ -158,11 +158,11 @@ import javax.net.ssl.X509TrustManager;
 public class MinioClient {
   private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // default network I/O timeout is 15 minutes
-  private static final long DEFAULT_CONNECTION_TIMEOUT = 15 * 60;
+  private static final long DEFAULT_CONNECTION_TIMEOUT;
   // maximum allowed object size is 5TiB
-  private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
+  private static final long MAX_OBJECT_SIZE;
   // maxPartSize - maximum part size 5GiB for a single multipart upload operation
-  private static final long MAX_PART_SIZE = 5L * 1024 * 1024 * 1024;
+  private static final long MAX_PART_SIZE;
   private static final int MAX_MULTIPART_COUNT = 10000;
   // minimum allowed multipart size is 5MiB
   private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
@@ -214,6 +214,30 @@ public class MinioClient {
     }
   }
 
+  static {
+    DEFAULT_CONNECTION_TIMEOUT = getLongProperty("minio.default_connection_timeout", 15L * 60);
+    MAX_OBJECT_SIZE = getLongProperty("minio.max_object_size", 5L * 1024 * 1024 * 1024 * 1024);
+    MAX_PART_SIZE = getLongProperty("minio.max_part_size", 5L * 1024 * 1024 * 1024);
+
+    System.out.println(DEFAULT_CONNECTION_TIMEOUT);
+    System.out.println(MAX_OBJECT_SIZE);
+    System.out.println(MAX_PART_SIZE);
+  }
+
+  private static long getLongProperty(String name, long defaultValue) {
+    String property = System.getProperty(name);
+    if(null == property) {
+      LOGGER.info(() -> "The configuration item [" + name + "] was not found, using the default configuration: [" + defaultValue + "]");
+    } else {
+      try {
+        return Long.parseLong(property);
+      } catch (NumberFormatException e) {
+        LOGGER.warning(() -> "The configuration item [" + name + "] must be numeric, using the default configuration: [" + defaultValue + "]");
+      }
+    }
+    return defaultValue;
+  }
+
   private PrintWriter traceStream;
 
   // the current client instance's base URL.
@@ -228,7 +252,6 @@ public class MinioClient {
   private String userAgent = DEFAULT_USER_AGENT;
 
   private OkHttpClient httpClient;
-
 
   /**
    * Creates MinIO client object with given endpoint using anonymous access.
