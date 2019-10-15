@@ -218,10 +218,6 @@ public class MinioClient {
     DEFAULT_CONNECTION_TIMEOUT = getLongProperty("minio.default_connection_timeout", 15L * 60);
     MAX_OBJECT_SIZE = getLongProperty("minio.max_object_size", 5L * 1024 * 1024 * 1024 * 1024);
     MAX_PART_SIZE = getLongProperty("minio.max_part_size", 5L * 1024 * 1024 * 1024);
-
-    System.out.println(DEFAULT_CONNECTION_TIMEOUT);
-    System.out.println(MAX_OBJECT_SIZE);
-    System.out.println(MAX_PART_SIZE);
   }
 
   private static long getLongProperty(String name, long defaultValue) {
