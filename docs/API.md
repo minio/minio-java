@@ -26,6 +26,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listenBucketNotification`](#listenBucketNotification) | [`composeObject`](#composeObject) |   |   |
 | [`setBucketNotification`](#setBucketNotification) |  |   |   |
 | [`getBucketNotification`](#getBucketNotification) |  |   |   |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) |  |   |   |
 | [`enableVersioning`](#enableVersioning) |  |   |   |
 | [`disableVersioning`](#disableVersioning) |  |   |   |
 | [`setDefaultRetention`](#setDefaultRetention) |  |   |   |
@@ -899,7 +900,7 @@ __Example__
   }
   ```
 
-  <a name="setBucketNotification"></a>
+<a name="setBucketNotification"></a>
 ### setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
 `public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)`
 
@@ -918,7 +919,6 @@ __Parameters__
 |:--- |:--- |
 |  None  | Listed Exceptions: |
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``InvalidObjectPrefixException`` : upon invalid object prefix. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
 |        | ``IOException`` : upon connection error.            |
@@ -963,7 +963,7 @@ __Example__
     }
 ```
 
-  <a name="getBucketNotification"></a>
+<a name="getBucketNotification"></a>
 ### getBucketNotification(String bucketName)
 `public NotificationConfiguration getBucketNotification(String bucketName)`
 
@@ -1006,6 +1006,74 @@ __Example__
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
+```
+
+<a name="removeAllBucketNotification"></a>
+### removeAllBucketNotification(String bucketName)
+`public void removeAllBucketNotification(String bucketName)`
+
+Remove all notification configuration from a bucket.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeAllBucketNotification-java.lang.String)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+
+__Example__
+
+
+```java
+
+    
+try {
+      // Add a new topic configuration.
+      List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+      TopicConfiguration topicConfiguration = new TopicConfiguration();
+      topicConfiguration.setTopic(topic);
+
+      List<EventType> eventList = new LinkedList<>();
+      eventList.add(EventType.OBJECT_CREATED_PUT);
+      eventList.add(EventType.OBJECT_CREATED_COPY);
+      topicConfiguration.setEvents(eventList);
+
+      Filter filter = new Filter();
+      filter.setPrefixRule("images");
+      filter.setSuffixRule("pg");
+      topicConfiguration.setFilter(filter);
+
+      topicConfigurationList.add(topicConfiguration);
+      notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+
+      client.setBucketNotification("my-bucketname", notificationConfiguration);
+
+      notificationConfiguration = new NotificationConfiguration();
+      String expectedResult = notificationConfiguration.toString();
+
+      client.removeAllBucketNotification("my-bucketname");
+      System.out.println("Bucket notification is removed successfully");
+
+      notificationConfiguration = client.getBucketNotification(destBucketName);
+      String result = notificationConfiguration.toString();
+     } catch (MinioException e) {
+            System.out.println("Error occurred: " + e);
+     }
 ```
 
 <a name="enableVersioning"></a>
@@ -1376,7 +1444,6 @@ __Parameters__
 |:--- |:--- |
 |  _String_: Bucket policy JSON string. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``InvalidObjectPrefixException`` : upon invalid object prefix.        |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
@@ -1419,7 +1486,6 @@ __Parameters__
 |:--- |:--- |
 |  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``InvalidObjectPrefixException`` : upon invalid object prefix.        |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
