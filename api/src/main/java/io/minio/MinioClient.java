@@ -109,6 +109,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -1554,6 +1555,68 @@ public class MinioClient {
     return objectStat;
   }
 
+
+  /**
+   * Returns meta data information of given object in given bucket, if it is present and accessible.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   *      Optional<ObjectStat> objectStat = minioClient.statOptionalObject("my-bucketname", "my-objectname");
+   *      if(objectStat.isPresent()) {
+   *          System.out.println(objectStat.get());
+   *      }
+   * }</pre>
+   *
+   * @param bucketName
+   *         Bucket name.
+   * @param objectName
+   *         Object name in the bucket.
+   *
+   * @return Optional containing populated object metadata.
+   *
+   * @see ObjectStat
+   * @see Optional
+   */
+  public Optional<ObjectStat> statOptionalObject(String bucketName, String objectName) {
+    try {
+      return Optional.ofNullable(statObject(bucketName, objectName));
+    } catch (Exception e) {
+      return Optional.empty();
+    }
+  }
+
+  /**
+   * Returns meta data information of given object in given bucket, if it is present and accessible.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   *      Optional<ObjectStat> objectStat = minioClient.statOptionalObject("my-bucketname", "my-objectname");
+   *      if(objectStat.isPresent()) {
+   *          System.out.println(objectStat.get());
+   *      }
+   * }</pre>
+   *
+   * @param bucketName
+   *         Bucket name.
+   * @param objectName
+   *         Object name in the bucket.
+   * @param sse
+   *         Encryption metadata only required for SSE-C.
+   *
+   * @return Optional containing populated object metadata.
+   *
+   * @see ObjectStat
+   * @see Optional
+   */
+  public Optional<ObjectStat> statOptionalObject(String bucketName, String objectName, ServerSideEncryption sse) {
+    try {
+      return Optional.ofNullable(statObject(bucketName, objectName,sse));
+    } catch (Exception e) {
+      return Optional.empty();
+    }
+  }
+
+
   /**
    * Gets object's URL in given bucket.  The URL is ONLY useful to retrieve the object's data if the object has
    * public read permissions.
@@ -1589,6 +1652,33 @@ public class MinioClient {
         null, null, null, null, 0);
     HttpUrl url = request.url();
     return url.toString();
+  }
+
+  /**
+   * Gets object's URL in given bucket if object is present and accessible. The URL is ONLY useful to retrieve the object's data if the
+   * object has public read permissions.
+   *
+   * <p><b>Example:</b>
+   * <pre>{@code
+   *      Optional<String> url = minioClient.getOptionalObjectUrl("my-bucketname", "my-objectname");
+   *      if(url.isPresent()) {
+   *          System.out.println(url.get());
+   *      }
+   * }</pre>
+   *
+   * @param bucketName
+   *         Bucket name.
+   * @param objectName
+   *         Object name in the bucket.
+   *
+   * @return Optional of string containing the URL to download the object.
+   */
+  public Optional<String> getOptionalObjectUrl(String bucketName, String objectName) {
+    try {
+      return Optional.ofNullable(getObjectUrl(bucketName, objectName));
+    } catch (Exception e) {
+      return Optional.empty();
+    }
   }
 
   /**
@@ -2675,6 +2765,51 @@ public class MinioClient {
     Request request = createRequest(method, bucketName, objectName, region, null, queryParamMap, null, body, 0);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
+  }
+
+  /**
+   * <p>Returns a presigned URL string for a specific object in the bucket if the object is present and accessible.</p>
+   *
+   * <p>The url can be presigned with the following values:
+   * <ul>
+   *     <li>given HTTP method</li>
+   *     <li>expiry time</li>
+   *     <li>custom request params</li>
+   * </ul></p>
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   * Optional<String> url = minioClient.getOptionalPresignedObjectUrl(Method.DELETE,
+   *                                                                  "my-bucketname",
+   *                                                                  "my-objectname",
+   *                                                                  60 * 60 * 24,
+   *                                                                  reqParams);
+   * if(url.isPresent()) {
+   *      System.out.println(url.get());
+   * }
+   * }</pre>
+   *
+   * @param method
+   *         HTTP {@link Method}.
+   * @param bucketName
+   *         Bucket name.
+   * @param objectName
+   *         Object name in the bucket.
+   * @param expires
+   *         Expiration time in seconds of presigned URL.
+   * @param reqParams
+   *         Override values for set of response headers. Currently supported request parameters are [response-expires,
+   *         response-content-type, response-cache-control, response-content-disposition]
+   *
+   * @return Optional of string containing the URL to download the object.
+   */
+  public Optional<String> getOptionalPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires,
+                                                        Map<String, String> reqParams) {
+    try {
+      return Optional.ofNullable(getPresignedObjectUrl(method, bucketName, objectName, expires, reqParams));
+    } catch (Exception e) {
+      return Optional.empty();
+    }
   }
 
   /**
