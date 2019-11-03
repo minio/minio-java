@@ -1580,6 +1580,8 @@ public class MinioClient {
   public Optional<ObjectStat> statOptionalObject(String bucketName, String objectName) {
     try {
       return Optional.ofNullable(statObject(bucketName, objectName));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
@@ -1611,6 +1613,8 @@ public class MinioClient {
   public Optional<ObjectStat> statOptionalObject(String bucketName, String objectName, ServerSideEncryption sse) {
     try {
       return Optional.ofNullable(statObject(bucketName, objectName,sse));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
@@ -1655,8 +1659,8 @@ public class MinioClient {
   }
 
   /**
-   * Gets object's URL in given bucket if object is present and accessible. The URL is ONLY useful to retrieve the object's data if the
-   * object has public read permissions.
+   * Gets object's URL in given bucket if object is present and accessible.
+   * The URL is ONLY useful to retrieve the object's data if the object has public read permissions.
    *
    * <p><b>Example:</b>
    * <pre>{@code
@@ -1676,6 +1680,8 @@ public class MinioClient {
   public Optional<String> getOptionalObjectUrl(String bucketName, String objectName) {
     try {
       return Optional.ofNullable(getObjectUrl(bucketName, objectName));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
@@ -2068,8 +2074,8 @@ public class MinioClient {
   }
 
   /**
-   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket if it exists and is accessible. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket,
+   * if it exists and is accessible. The InputStream must be closed after use else the connection will remain open.
    *
    * <p><b>Example:</b>
    * <pre>{@code
@@ -2093,14 +2099,16 @@ public class MinioClient {
   public Optional<InputStream> getOptionalObject(String bucketName, String objectName) {
     try {
       return Optional.ofNullable(getObject(bucketName, objectName));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
   }
 
   /**
-   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket if it exists and is accessible. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket,
+   * if it exists and is accessible. The InputStream must be closed after use else the connection will remain open.
    *
    * <p><b>Example:</b>
    * <pre>{@code
@@ -2126,6 +2134,8 @@ public class MinioClient {
   public Optional<InputStream> getOptionalObject(String bucketName, String objectName, ServerSideEncryption sse) {
     try {
       return Optional.ofNullable(getObject(bucketName, objectName, sse));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
@@ -2133,8 +2143,8 @@ public class MinioClient {
 
 
   /**
-   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket if it exists and is accessible. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket,
+   * if it exists and is accessible. The InputStream must be closed after use else the connection will remain open.
    *
    * <p><b>Example:</b>
    * <pre>{@code
@@ -2160,6 +2170,8 @@ public class MinioClient {
   public Optional<InputStream> getOptionalObject(String bucketName, String objectName, long offset) {
     try {
       return Optional.ofNullable(getObject(bucketName, objectName, offset));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
@@ -2167,12 +2179,12 @@ public class MinioClient {
 
 
   /**
-   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket if it exists and is accessible. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket,
+   * if it exists and is accessible. The InputStream must be closed after use else the connection will remain open.
    *
    * <p><b>Example:</b>
    * <pre>{@code
-   * Optional<InputStream> optionalStream = minioClient.getOptionalObject("my-bucketname", "my-objectname", 1024L, 4096L);
+   * Optional<InputStream> optionalStream = minioClient.getOptionalObject("my-bucket", "my-object", 1024L, 4096L);
    * if(stream.isPresent) {
    *      InputStream stream = optionalStream.get();
    *      // ... do something with it...
@@ -2196,6 +2208,8 @@ public class MinioClient {
   public Optional<InputStream> getOptionalObject(String bucketName, String objectName, long offset, Long length) {
     try {
       return Optional.ofNullable(getObject(bucketName, objectName, offset, length));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
@@ -2203,12 +2217,12 @@ public class MinioClient {
 
 
   /**
-   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket if it exists and is accessible. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets an Optional containing the entire object's data as {@link InputStream} in given bucket,
+   * if it exists and is accessible. The InputStream must be closed after use else the connection will remain open.
    *
    * <p><b>Example:</b>
    * <pre>{@code
-   * Optional<InputStream> optionalStream = minioClient.getOptionalObject("my-bucketname", "my-objectname", 1024L, 4096L, sse);
+   * Optional<InputStream> optionalStream = minioClient.getOptionalObject("my-bucket", "my-object", 1024L, 4096L, sse);
    * if(stream.isPresent) {
    *      InputStream stream = optionalStream.get();
    *      // ... do something with it...
@@ -2235,6 +2249,8 @@ public class MinioClient {
                                                  ServerSideEncryption sse) {
     try {
       return Optional.ofNullable(getObject(bucketName, objectName, offset, length, sse));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
@@ -2976,10 +2992,12 @@ public class MinioClient {
    *
    * @return Optional of string containing the URL to download the object.
    */
-  public Optional<String> getOptionalPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires,
-                                                        Map<String, String> reqParams) {
+  public Optional<String> getOptionalPresignedObjectUrl(Method method, String bucketName, String objectName,
+                                                        Integer expires, Map<String, String> reqParams) {
     try {
       return Optional.ofNullable(getPresignedObjectUrl(method, bucketName, objectName, expires, reqParams));
+    } catch (RuntimeException e) {
+      throw e;
     } catch (Exception e) {
       return Optional.empty();
     }
