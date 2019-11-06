@@ -17,110 +17,41 @@
 
 package io.minio;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.minio.errors.BucketPolicyTooLargeException;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidArgumentException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidPortException;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.NoResponseException;
-import io.minio.errors.RegionConflictException;
+import io.minio.errors.*;
 import io.minio.http.HeaderParser;
 import io.minio.http.Method;
 import io.minio.http.Scheme;
-import io.minio.messages.Bucket;
-import io.minio.messages.CompleteMultipartUpload;
-import io.minio.messages.CopyObjectResult;
-import io.minio.messages.CopyPartResult;
-import io.minio.messages.CreateBucketConfiguration;
-import io.minio.messages.DeleteError;
-import io.minio.messages.DeleteObject;
-import io.minio.messages.DeleteRequest;
-import io.minio.messages.DeleteResult;
-import io.minio.messages.ErrorResponse;
-import io.minio.messages.InitiateMultipartUploadResult;
-import io.minio.messages.Item;
-import io.minio.messages.ListAllMyBucketsResult;
-import io.minio.messages.ListBucketResult;
-import io.minio.messages.ListBucketResultV1;
-import io.minio.messages.ListMultipartUploadsResult;
-import io.minio.messages.ListPartsResult;
-import io.minio.messages.ObjectLockConfiguration;
-import io.minio.messages.Part;
-import io.minio.messages.Prefix;
-import io.minio.messages.Upload;
-import io.minio.messages.NotificationConfiguration;
-import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
-
+import io.minio.messages.*;
 import io.minio.notification.NotificationInfo;
-
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okhttp3.Protocol;
-
+import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
+import okhttp3.*;
 import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.RandomAccessFile;
-import java.io.StringReader;
+import javax.net.ssl.*;
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-
+import java.nio.file.*;
 import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 /**
  * <p>
@@ -3002,101 +2933,40 @@ public class MinioClient {
    * @param objectNames List of Object names in the bucket.
    */
   public Iterable<Result<DeleteError>> removeObjects(final String bucketName, final Iterable<String> objectNames) {
-    return new Iterable<Result<DeleteError>>() {
-      @Override
-      public Iterator<Result<DeleteError>> iterator() {
-        return new Iterator<Result<DeleteError>>() {
-          private Result<DeleteError> error;
-          private Iterator<DeleteError> errorIterator;
-          private boolean completed = false;
-          private Iterator<String> objectNameIter = objectNames.iterator();
+    List<Result<DeleteError>> resultDeleteErrorList = new ArrayList<>();
 
-          private synchronized void populate() {
-            List<DeleteError> errorList = null;
+    final int batchSize = 1000;
+    // divide the objectNames to sublists of the given batchSize
+    Iterable<List<String>> subObjectLists = Iterables.partition(objectNames, batchSize);
+    Result<DeleteError> error = null;
+    List<DeleteError> errorList = new ArrayList<>();
+
+    for (List<String> subObjectList : subObjectLists) {
+      try {
+        List<DeleteObject> subDeleteObjectList = subObjectList.stream().map(objectName -> {
             try {
-              List<DeleteObject> objectList = new LinkedList<DeleteObject>();
-              int i = 0;
-              while (objectNameIter.hasNext() && i < 1000) {
-                objectList.add(new DeleteObject(objectNameIter.next()));
-                i++;
-              }
-
-              if (i > 0) {
-                errorList = removeObject(bucketName, objectList);
-              }
-            } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
-                     | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException | InvalidResponseException e) {
-              this.error = new Result<>(null, e);
-            } finally {
-              if (errorList != null) {
-                this.errorIterator = errorList.iterator();
-              } else {
-                this.errorIterator = new LinkedList<DeleteError>().iterator();
-              }
+              return new DeleteObject(objectName);
+            } catch (XmlPullParserException e) {
+              throw new RuntimeException(e);
             }
-          }
-
-          @Override
-          public boolean hasNext() {
-            if (this.completed) {
-              return false;
-            }
-
-            if (this.error == null && this.errorIterator == null) {
-              populate();
-            }
-
-            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
-              populate();
-            }
-
-            if (this.error != null) {
-              return true;
-            }
-
-            if (this.errorIterator.hasNext()) {
-              return true;
-            }
-
-            this.completed = true;
-            return false;
-          }
-
-          @Override
-          public Result<DeleteError> next() {
-            if (this.completed) {
-              throw new NoSuchElementException();
-            }
-
-            if (this.error == null && this.errorIterator == null) {
-              populate();
-            }
-
-            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
-              populate();
-            }
-
-            if (this.error != null) {
-              this.completed = true;
-              return this.error;
-            }
-
-            if (this.errorIterator.hasNext()) {
-              return new Result<>(this.errorIterator.next(), null);
-            }
-
-            this.completed = true;
-            throw new NoSuchElementException();
-          }
-
-          @Override
-          public void remove() {
-            throw new UnsupportedOperationException();
-          }
-        };
+          }).collect(Collectors.toList());
+        errorList.addAll(removeObject(bucketName, subDeleteObjectList));
+      } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
+              | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
+              | InternalException | InvalidResponseException | RuntimeException e) {
+        error = new Result<>(null, e);
+        break;
       }
-    };
+    }
+
+    for (DeleteError deleteError : errorList) {
+      resultDeleteErrorList.add(new Result<>(deleteError, null));
+    }
+    if (null != error) {
+      resultDeleteErrorList.add(error);
+    }
+
+    return resultDeleteErrorList;
   }
 
   /**
