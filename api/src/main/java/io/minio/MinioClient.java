@@ -18,6 +18,7 @@
 package io.minio;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
@@ -3009,24 +3010,26 @@ public class MinioClient {
           private Result<DeleteError> error;
           private Iterator<DeleteError> errorIterator;
           private boolean completed = false;
-          private Iterator<String> objectNameIter = objectNames.iterator();
+          // divide the objectNames to sublists of the given batchSize
+          private Iterator<List<String>> subObjectListsIter =
+                  Iterables.partition(objectNames, 1000).iterator();
 
           private synchronized void populate() {
             List<DeleteError> errorList = null;
             try {
-              List<DeleteObject> objectList = new LinkedList<DeleteObject>();
-              int i = 0;
-              while (objectNameIter.hasNext() && i < 1000) {
-                objectList.add(new DeleteObject(objectNameIter.next()));
-                i++;
-              }
-
-              if (i > 0) {
-                errorList = removeObject(bucketName, objectList);
+              if (subObjectListsIter.hasNext()) {
+                List<DeleteObject> subDeleteObjectList = subObjectListsIter.next().stream().map(objectName -> {
+                  try {
+                    return new DeleteObject(objectName);
+                  } catch (XmlPullParserException e) {
+                    throw new RuntimeException(e);
+                  }
+                }).collect(Collectors.toList());
+                errorList = removeObject(bucketName, subDeleteObjectList);
               }
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
-                     | InternalException | InvalidResponseException e) {
+                     | InternalException | InvalidResponseException | RuntimeException e ) {
               this.error = new Result<>(null, e);
             } finally {
               if (errorList != null) {
