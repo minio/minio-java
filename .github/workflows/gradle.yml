@@ -31,5 +31,7 @@ jobs:
           ./gradlew runFunctionalTest
       - name: Gradle build on ${{ matrix.java-version }}
         if: matrix.os == 'windows-latest'
-        run: gradlew.bat runFunctionalTest
+        run: |
+          $Env:Path += ';.'
+          gradlew.bat runFunctionalTest
 
