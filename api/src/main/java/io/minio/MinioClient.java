@@ -2985,7 +2985,8 @@ public class MinioClient {
 
 
   /**
-   * Removes multiple objects from a bucket.
+   * Removes multiple objects from a bucket. As objects removal are lazily executed, its required
+   * to iterate the returned Iterable.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code // Create object list for removal.
@@ -3000,6 +3001,8 @@ public class MinioClient {
    *
    * @param bucketName Bucket name.
    * @param objectNames List of Object names in the bucket.
+   *
+   * @return (lazy) Iterable of the Result DeleteErrors.
    */
   public Iterable<Result<DeleteError>> removeObjects(final String bucketName, final Iterable<String> objectNames) {
     return new Iterable<Result<DeleteError>>() {
