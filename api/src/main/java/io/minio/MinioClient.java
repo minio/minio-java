@@ -1542,9 +1542,7 @@ public class MinioClient {
            InternalException, InvalidArgumentException, InvalidResponseException {
     checkReadRequestSse(sse);
     checkBucketName(bucketName);
-    if ( objectName == null ) {
-      throw new InvalidArgumentException("Invalid Stat Object Argument(s). Object name cannot be null.");
-    } else if ( objectName.equals("") ) {
+    if ( objectName == null || objectName.equals("") ) {
       throw new InvalidArgumentException("Invalid Stat Object Argument(s). Object name cannot be empty.");
     }
 
