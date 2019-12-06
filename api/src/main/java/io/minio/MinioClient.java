@@ -970,7 +970,6 @@ public class MinioClient {
           // Fix issue #567: Compute SHA256 hash only.
           sha256Hash = Digest.sha256Hash(data, len);
           if ( method == Method.HEAD ) {
-            requestBuilder.removeHeader("Accept-Encoding");
             requestBuilder.header("Accept-Encoding", "identity");
           }
         }
