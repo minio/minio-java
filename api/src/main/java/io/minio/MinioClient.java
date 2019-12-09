@@ -1541,6 +1541,10 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InvalidResponseException {
     checkReadRequestSse(sse);
+    checkBucketName(bucketName);
+    if ( objectName == null || objectName.equals("") ) {
+      throw new InvalidArgumentException("Invalid Stat Object Argument(s). Object name cannot be empty.");
+    }
 
     Map<String, String> headers = null;
     if (sse != null) {
