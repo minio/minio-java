@@ -226,7 +226,7 @@ public class PostPolicy {
     }
 
     if (this.successActionStatus > 0) {
-      conditions.add(new String[]{"eq", "success_action_status", Integer.toString(this.successActionStatus)});
+      conditions.add(new String[]{"eq", "$success_action_status", Integer.toString(this.successActionStatus)});
       formData.put("success_action_status", Integer.toString(this.successActionStatus));
     }
 
