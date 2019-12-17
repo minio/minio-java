@@ -957,6 +957,8 @@ public class MinioClient {
           len = 0;
         }
 
+        // Disable default gzip compression by okhttp library.
+        requestBuilder.header("Accept-Encoding", "identity");
         if (method == Method.POST && queryParamMap != null && queryParamMap.containsKey("delete")) {
           // Fix issue #579: Treat 'Delete Multiple Objects' specially which requires MD5 hash.
           String[] hashes = Digest.sha256Md5Hashes(data, len);
@@ -969,9 +971,6 @@ public class MinioClient {
         } else {
           // Fix issue #567: Compute SHA256 hash only.
           sha256Hash = Digest.sha256Hash(data, len);
-          if ( method == Method.HEAD ) {
-            requestBuilder.header("Accept-Encoding", "identity");
-          }
         }
       }
     } else {
