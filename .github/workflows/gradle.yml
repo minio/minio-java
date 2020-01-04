@@ -15,7 +15,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        java-version: ['8.0.x', '9.0.x', '10.0.x']
+        java-version: [1.8, 9, 10, 11, 12, 13]
         os: [ubuntu-latest, windows-latest]
 
     steps:
