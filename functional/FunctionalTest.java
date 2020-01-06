@@ -3152,16 +3152,14 @@ public class FunctionalTest {
    */
   public static void listenBucketNotification_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listenBucketNotification(String bucketName)");
+      System.out.println("Test: listenBucketNotification(String bucketName, String prefix,"
+          + "String suffix, String[] events)");
     }
-
     long startTime = System.currentTimeMillis();
     String file = createFile1Kb();
     String bucketName = getRandomName();
-
     try {
       client.makeBucket(bucketName, region);
-
       class TestBucketListener implements BucketEventListener {
         int eventsReceived = 0;
         Exception lastException = null;
@@ -3185,8 +3183,15 @@ public class FunctionalTest {
       new Thread(new Runnable() {
         public void run() {
           String[] events = { "s3:ObjectCreated:*", "s3:ObjectAccessed:*" };
-          try {
-            client.listenBucketNotification(bucketName, "prefix", "suffix", events, bl);
+          try (CloseableIterator<Result<NotificationInfo>> ci = client
+            .listenBucketNotification(bucketName, "prefix", "suffix", events)) {
+            while (ci.hasNext()) {
+              NotificationInfo ni = ci.next().get();
+              if (ni != null) {
+                bl.updateEvent(ni);
+                break;
+              }
+            }
           } catch (Exception e) {
             bl.updateError(e);
           }
@@ -3226,7 +3231,8 @@ public class FunctionalTest {
         throw new Exception("[FAILED] No event notification is received");
       }
       if (!bl.firstEvent.s3.bucket.name.equals(bucketName)) {
-        throw new Exception("[FAILED] Bucket name expected: " + bucketName + ", Got: " + bl.firstEvent.s3.bucket.name);
+        throw new Exception("[FAILED] Bucket name expected: " + bucketName + ", Got: "
+          + bl.firstEvent.s3.bucket.name);
       }
       if (!bl.firstEvent.s3.object.key.equals("prefix-random-suffix")) {
         throw new Exception("[FAILED] Bucket name expected: " + file + ", Got: " + bl.firstEvent.s3.object.key);
