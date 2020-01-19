@@ -17,6 +17,8 @@
 
 package io.minio;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -5716,7 +5718,6 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    *
    */
-
   public void listenBucketNotification(String bucketName, String prefix, String suffix, String[] events,
       BucketEventListener eventCallback)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -5760,6 +5761,126 @@ public class MinioClient {
         scanner.close();
       }
     }
+  }
+
+  /**
+   * Listen to bucket notifications. As bucket notification are lazily executed,
+   * its required to iterate. The returned closeable iterator must be used with
+   * try with resource or else the stream will not be closed.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   *  try (CloseableIterator<Result<NotificationInfo>> ci = client
+   * .listenBucketNotification("my-bucket", "", "", events)) {
+   *  while (ci.hasNext()) {
+   *    NotificationInfo info = ci.next().get();
+   *    System.out.println(info.toString());
+   *   }
+   *  } catch (IOException e) {
+   *    System.out.println("Error occurred: " + e);
+   *  }
+   * }
+   * </pre>
+   *
+   * @param bucketName Bucket name.
+   * @param prefix Prefix of concerned objects events.
+   * @param suffix Suffix of concerned objects events.
+   * @param events List of events to watch.
+   *
+   * @return (lazy) CloseableIterator of the Result NotificationInfo.
+   *
+   */
+  public CloseableIterator<Result<NotificationInfo>> listenBucketNotification(String bucketName, String prefix,
+      String suffix, String[] events)
+    throws IOException, InvalidKeyException, NoSuchAlgorithmException, InsufficientDataException,
+    InvalidResponseException, InternalException, NoResponseException, InvalidBucketNameException,
+    XmlPullParserException, ErrorResponseException {
+
+    Multimap<String, String> queryParamMap = HashMultimap.create();
+    queryParamMap.put("prefix", prefix);
+    queryParamMap.put("suffix", suffix);
+    for (String event : events) {
+      queryParamMap.put("events", event);
+    }
+
+    HttpResponse response = executeReq(Method.GET, getRegion(bucketName),
+        bucketName, "", null, queryParamMap, null, 0);
+
+    return new CloseableIterator<Result<NotificationInfo>>() {
+      Scanner scanner  = new Scanner(response.body().charStream()).useDelimiter("\n");
+
+      String notificationString = null;
+      ObjectMapper mapper = new ObjectMapper();
+      NotificationInfo notificationInfo = null;
+      boolean isClosed = false;
+
+      @Override
+      public void close() throws IOException {
+        if (!isClosed) {
+          try {
+            response.body().close();
+            scanner.close();
+          } finally {
+            isClosed = true;
+          }
+        }
+      }
+
+      public boolean populate()  {
+        if (isClosed) {
+          return false;
+        }
+
+        if (notificationString != null) {
+          return true;
+        }
+
+        while (scanner.hasNext()) {
+          notificationString = scanner.next().trim();
+          if ( !notificationString.equals("")) {
+            break;
+          }
+        }
+
+        if (notificationString  == null || notificationString.equals("")) {
+          try {
+            close();
+          } catch (IOException e) {
+            isClosed = true;
+          }
+          return false;
+        }
+        return true;
+      }
+
+      @Override
+      public boolean hasNext() {
+        return populate();
+      }
+
+      @Override
+      public Result<NotificationInfo> next() {
+        if (isClosed) {
+          throw new NoSuchElementException();
+        }
+        if ((notificationString  == null || notificationString.equals("")) &&  !populate() ) {
+              throw  new NoSuchElementException();
+        }
+
+        try {
+              notificationInfo = mapper.readValue(notificationString, NotificationInfo.class);
+              return new Result<>(notificationInfo, null);
+            } catch (JsonParseException e) {
+              return new Result<>(null, e);
+            } catch ( JsonMappingException e) {
+              return new Result<>(null, e);
+            } catch ( IOException e) {
+              return new Result<>(null, e);
+        } finally {
+          notificationInfo = null;
+        }
+      }
+    };
   }
 
 
