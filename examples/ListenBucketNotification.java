@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-import org.xmlpull.v1.XmlPullParserException;
-
+import io.minio.CloseableIterator;
 import io.minio.MinioClient;
-import io.minio.BucketEventListener;
-import io.minio.errors.MinioException;
+import io.minio.Result;
 import io.minio.notification.NotificationInfo;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import org.xmlpull.v1.XmlPullParserException;
+import io.minio.errors.MinioException;
 
 public class ListenBucketNotification {
   /**
@@ -34,25 +33,22 @@ public class ListenBucketNotification {
     try {
       /* play.min.io for test and development. */
       MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+          "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
-      /* Amazon S3: */
-      // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-      //                                           "YOUR-SECRETACCESSKEY");
-
-      class TestBucketListener implements BucketEventListener {
-        @Override
-        public void updateEvent(NotificationInfo info) {
+      String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+      try (CloseableIterator<Result<NotificationInfo>> ci = minioClient
+        .listenBucketNotification("bcketName", "", "", events)) {
+        while (ci.hasNext()) {
+          NotificationInfo info = ci.next().get();
           System.out.println(info.records[0].s3.bucket.name + "/"
               + info.records[0].s3.object.key + " has been created");
         }
+      } catch (IOException e) {
+        System.out.println("Error occurred: " + e);
       }
-
-      minioClient.listenBucketNotification("my-bucketname", "", "",
-          new String[]{"s3:ObjectCreated:*"}, new TestBucketListener());
-
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
+
     }
   }
 }

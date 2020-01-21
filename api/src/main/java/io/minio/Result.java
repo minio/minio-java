@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -47,7 +49,8 @@ public class Result<T> {
    * Returns given Type if exception is null, else respective exception is thrown.
    */
   public T get()
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+           JsonParseException, JsonMappingException,IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException {
     if (ex == null) {
@@ -56,22 +59,45 @@ public class Result<T> {
 
     if (ex instanceof InvalidBucketNameException) {
       throw (InvalidBucketNameException) ex;
-    } else if (ex instanceof NoSuchAlgorithmException) {
-      throw (NoSuchAlgorithmException) ex;
-    } else if (ex instanceof InsufficientDataException) {
-      throw (InsufficientDataException) ex;
-    } else if (ex instanceof IOException) {
-      throw (IOException) ex;
-    } else if (ex instanceof InvalidKeyException) {
-      throw (InvalidKeyException) ex;
-    } else if (ex instanceof NoResponseException) {
-      throw (NoResponseException) ex;
-    } else if (ex instanceof XmlPullParserException) {
-      throw (XmlPullParserException) ex;
-    } else if (ex instanceof ErrorResponseException) {
-      throw (ErrorResponseException) ex;
-    } else {
-      throw (InternalException) ex;
     }
+
+    if (ex instanceof NoSuchAlgorithmException) {
+      throw (NoSuchAlgorithmException) ex;
+    }
+
+    if (ex instanceof InsufficientDataException) {
+      throw (InsufficientDataException) ex;
+    }
+
+    if (ex instanceof InvalidKeyException) {
+      throw (InvalidKeyException) ex;
+    }
+
+    if (ex instanceof NoResponseException) {
+      throw (NoResponseException) ex;
+    }
+
+    if (ex instanceof XmlPullParserException) {
+      throw (XmlPullParserException) ex;
+    }
+
+    if (ex instanceof ErrorResponseException) {
+      throw (ErrorResponseException) ex;
+    }
+
+    if (ex instanceof JsonParseException) {
+      throw (JsonParseException) ex;
+    }
+
+    if (ex instanceof JsonMappingException) {
+      throw (JsonMappingException) ex;
+    }
+
+    if (ex instanceof IOException) {
+      throw (IOException) ex;
+    }
+
+    throw (InternalException) ex;
+
   }
 }

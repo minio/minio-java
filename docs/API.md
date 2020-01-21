@@ -848,12 +848,14 @@ try {
 ```
 
 <a name="listenBucketNotification"></a>
-### listenBucketNotification(String bucketName, String prefix, String suffix, String[] events, BucketEventListener listener)
-`public void listenBucketNotification(String bucketName, String prefix, String suffix, String[] events, BucketEventListener listener)`
-
+### listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)
+`public CloseableIterator<Result<NotificationInfo>> listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)`
+ 
 Listen to events related to objects under the specified bucket.
+The returned closeable iterator must be used with try-with-resource
+else the stream will not be closed leading to a leaky connection.
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String-java.lang.String:A-io.minio.BucketEventListener-)
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String-java.lang.String-)
 
 __Parameters__
 
@@ -863,11 +865,10 @@ __Parameters__
 | ``prefix`` | _String_ | Only listen for objects with the given prefix. |
 | ``suffix`` | _String_ | Only listen for objects with the given suffix. |
 | ``events`` | _String[]_ | Only listen for the specified events, such as s3:ObjectCreated:*, s3:ObjectAccessed:*, s3:ObjectRemoved:*, ..  |
-| ``listener`` | _BucketEventListener_ | Interface with updateEvent method |
 
-| Return Type	  | Exceptions	  |
+|Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: |
+|   ``CloseableIterator<Result<NotificationInfo>>``:an iterator of Result NotificationInfo.        | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
@@ -884,20 +885,22 @@ __Example__
 
 
 ```java
-  try {
-    class TestBucketListener implements BucketEventListener {
-      @Override
-      public void updateEvent(NotificationInfo info) {
-        System.out.println(info.records[0].s3.bucket.name + "/"
-           + info.records[0].s3.object.key + " has been created");
+ try {
+      String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+      try (CloseableIterator<Result<NotificationInfo>> ci = minioClient
+        .listenBucketNotification("bcketName", "", "", events)) {
+        while (ci.hasNext()) {
+          NotificationInfo info = ci.next().get();
+          System.out.println(info.records[0].s3.bucket.name + "/"
+              + info.records[0].s3.object.key + " has been created");
+        }
+      } catch (IOException e) {
+        System.out.println("Error occurred: " + e);
       }
-    }
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
 
-    minioClient.listenBucketNotification("testbucket", "", "",
-        new String[]{"s3:ObjectCreated:*", "s3:ObjectAccessed:*"}, new TestBucketListener());
-  } catch (Exception e) {
-    System.out.println("Error occurred: " + e);
-  }
+    }
   ```
 
 <a name="setBucketNotification"></a>
