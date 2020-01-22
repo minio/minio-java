@@ -40,5 +40,8 @@ public class DateFormat {
   public static final DateTimeFormatter HTTP_HEADER_DATE_FORMAT =
       DateTimeFormat.forPattern("EEE',' dd MMM yyyy HH':'mm':'ss 'GMT'").withZoneUTC().withLocale(Locale.US);
 
+  public static final DateTimeFormatter RETENTION_DATE_FORMAT = EXPIRATION_DATE_FORMAT;
+     // DateTimeFormat.forPattern("yyyy-MM-dd'T'HH':'mm':'ss'Z'").withZoneUTC().withLocale(Locale.US);    
+
   private DateFormat() {}
 }

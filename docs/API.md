@@ -25,10 +25,10 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
 | [`listenBucketNotification`](#listenBucketNotification) | [`composeObject`](#composeObject) |   |   |
 | [`setBucketNotification`](#setBucketNotification) | [`selectObjectContent`](#selectObjectContent) |   |   |
-| [`getBucketNotification`](#getBucketNotification) |  |   |   |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) |  |   |   |
-| [`enableVersioning`](#enableVersioning) |  |   |   |
-| [`disableVersioning`](#disableVersioning) |  |   |   |
+| [`getBucketNotification`](#getBucketNotification) |`setObjectRetention`](#setObjectRetention) |   |   |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | `getObjectRetention`](#getObjectRetention) |   |   |
+| [`enableVersioning`](#enableVersioning) | `setObjectLegalHold`](#setObjectLegalHold) |   |   |
+| [`disableVersioning`](#disableVersioning) | `getObjectLegalHold`](#getObjectLegalHold) |   |   |
 | [`setDefaultRetention`](#setDefaultRetention) |  |   |   |
 | [`getDefaultRetention`](#getDefaultRetention) |  |   |   |
 
@@ -3151,9 +3151,9 @@ try {
 ```
 
  <a name="composeObject"></a>
-### composeObject(String bucketName, String objectName, , List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)
+### composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)
 
-`public void composeObject(String bucketName, String objectName, , List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)`
+`public void composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)`
 
  Creates a new Object by combining different source objects.
 
@@ -3268,6 +3268,212 @@ try {
 } catch (MinioException e) {
   System.out.println("Error occurred: " + e);
 }
+```
+
+<a name="setObjectRetention"></a>
+### setObjectRetention(String bucketName, String objectName, String versionId, boolean bypassGovernanceRetention, ObjectRetentionConfiguration config)
+
+`public void setObjectLockRetention(String bucketName, String objectName, String versionId, boolean bypassGovernanceRetention, ObjectRetentionConfiguration config)`
+
+
+Applies object retention lock onto an object..
+
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectRetention-java.lang.String-java.lang.String-java.lang.String-java.lang.boolean-io.minio.messages.ObjectRetentionConfiguration-)
+
+ __Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName``  | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``versionId``       |  _String_ |  Object version .|
+| ``bypassGovernanceRetention``       | _bool_ |  By pass Governance Retention .|
+| ``cofig``       | ``ObjectRetentionConfiguration`` |  Object retention configuration .|
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+ __Example__
+
+ ```java
+  try {
+      /* play.minio.io for test and development. */
+       MinioClient minioClient = new MinioClient("https://play.min.io:9000",
+      "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
+      DateTime retentionUntil = new DateTime(2020, Calendar.MAY, 3, 10, 10);
+
+      ObjectRetentionConfiguration config = 
+          new ObjectRetentionConfiguration(RetentionMode.COMPLIANCE, retentionUntil );
+
+      // Set object lock configuration
+      s3Client.setObjectLockRetention("my-bucketName" , "my-objectName", "", true , config );
+      System.out.println("Object lock retention configured successfully");
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+  }
+```
+
+
+ <a name="getObjectRetention"></a>
+### getObjectRetention(String bucketName, String objectName, String versionId)
+
+`public ObjectRetentionConfiguration getObjectRetention(String bucketName, String objectName, String versionId)`
+
+Returns retention set on a given object.
+
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectRetention-java.lang.String-java.lang.String-java.lang.String-)
+
+ __Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``versionId``  |_String_| Object Version.  |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  ``ObjectRetentionConfiguration	`` : ObjectRetentionConfiguration object  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+ __Example__
+
+ ```java
+  try {
+      /* play.minio.io for test and development. */
+       MinioClient minioClient = new MinioClient("https://play.min.io:9000",
+      "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+        ObjectLockRetention t = s3Client.getObjectRetention("my-bucketName", "my-objectName", "");
+      System.out.println( " Mode " + t.mode());
+      System.out.println( " Retention " + t.getRetentionDate());
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+  }
+```
+
+
+<a name="setObjectLegalHold"></a>
+### setObjectLegalHold(String bucketName, String objectName, String versionId, boolean legalHold)
+
+`public void setObjectLegalHold(String bucketName, String objectName, String versionId, boolean legalHold)`
+
+
+Applies legal hold on an object..
+
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-java.lang.boolean-)
+
+ __Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName``  | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``versionId``       |  _String_ |  Object version .|
+| ``legalHold``       | _bool_ | Legal Hold value .|
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+ __Example__
+
+ ```java
+  try {
+      /* play.minio.io for test and development. */
+       MinioClient minioClient = new MinioClient("https://play.min.io:9000",
+      "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
+      // Set object lock configuration
+      s3Client.setObjectLegalHold("my-bucketName" , "my-objectName", "", true );
+      System.out.println("Object legal hold set successfully");
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+  }
+```
+
+
+ <a name="getObjectLegalHold"></a>
+### getObjectLegalHold(String bucketName, String objectName, String versionId)
+
+`public ObjectLocKLegalHold getObjectLegalHold(String bucketName, String objectName, String versionId)`
+
+Returns retention set on a given object.
+
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-)
+
+ __Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``versionId``  |_String_| Object Version.  |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  ``ObjectLockLegalHold	`` : ObjectLockLegalHold object  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+ __Example__
+
+ ```java
+  try {
+      /* play.minio.io for test and development. */
+       MinioClient minioClient = new MinioClient("https://play.min.io:9000",
+            "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      ObjectLockLegalHold t = s3Client.getObjectLegalHold("my-bucketName", "my-objectName", "");
+      System.out.println(" Lock  Configuration : " + objectLockLegalHold.getStatus());
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+  }
 ```
 
 ## 4. Presigned operations

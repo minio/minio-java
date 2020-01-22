@@ -59,6 +59,7 @@ import io.minio.messages.ListBucketResultV1;
 import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
 import io.minio.messages.ObjectLockConfiguration;
+import io.minio.messages.ObjectLockLegalHold;
 import io.minio.messages.OutputSerialization;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
@@ -67,6 +68,7 @@ import io.minio.messages.NotificationConfiguration;
 import io.minio.messages.SelectObjectContentRequest;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 
+import io.minio.messages.ObjectRetentionConfiguration;
 import io.minio.notification.NotificationInfo;
 
 import okhttp3.HttpUrl;
@@ -976,10 +978,15 @@ public class MinioClient {
           String[] hashes = Digest.sha256Md5Hashes(data, len);
           sha256Hash = hashes[0];
           md5Hash = hashes[1];
-        } else if (method == Method.PUT && queryParamMap != null && queryParamMap.containsKey("lifecycle")) {
+        } else if (method == Method.PUT && queryParamMap != null &&  queryParamMap.containsKey("lifecycle"))  {
           String[] hashes = Digest.sha256Md5Hashes(data, len);
           sha256Hash = hashes[0];
           md5Hash = hashes[1];
+        } else if (method == Method.PUT && headerMap.containsKey("retention")) {
+          String[] hashes = Digest.sha256Md5Hashes(data, len);
+          sha256Hash = hashes[0];
+          md5Hash = hashes[1];
+          headerMap.remove("retention","");
         } else {
           // Fix issue #567: Compute SHA256 hash only.
           sha256Hash = Digest.sha256Hash(data, len);
@@ -3896,6 +3903,201 @@ public class MinioClient {
 
 
   /**
+   * Applies object retention lock onto an object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.setObjectRetention("my-bucketname", "my-object", config );
+   * System.out.println("Set object retention on my-object successfully."); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name.
+   * @param versionId  Object versio id.
+   * @param bypassGovernanceRetention  By pass governance retention.
+   * @param config     Object lock configuration.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void setObjectRetention(String bucketName, String objectName, String versionId, 
+          boolean bypassGovernanceRetention, ObjectRetentionConfiguration config)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("retention", "");
+
+    if (!versionId.isEmpty()) {
+      queryParamMap.put("versionId", versionId);
+    }
+
+    Map<String, String> headerMap = new HashMap<>();
+    if (bypassGovernanceRetention) {
+      headerMap.put("x-amz-bypass-governance-retention", "True");
+    }
+
+    HttpResponse response = executePut(bucketName, objectName, headerMap, queryParamMap, config, 0);
+    response.body().close();
+  }
+
+  /**
+   * Fetches object retention lock of an object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   * ObjectRetentionConfiguration objectRetentionConfiguration = minioClient.getObjectRetention("my-bucketname", 
+   * "my-object", "version-Id" );
+   * System.out.println("Mode " + objectRetentionConfiguration.mode()); 
+   * System.out.println("Retanetion Until  " + objectRetentionConfiguration.getRetentionDate()); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name.
+   * @param versionId  Version Id.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public ObjectRetentionConfiguration getObjectRetention(String bucketName, String objectName, String versionId)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("retention", "");
+
+    if ( !(versionId == null || versionId.isEmpty())) {
+      queryParamMap.put("versionId",versionId);
+    }
+
+    HttpResponse response = executeGet(bucketName, objectName, null, queryParamMap);
+    ObjectRetentionConfiguration result = new ObjectRetentionConfiguration();
+    try {
+      result.parseXml(response.body().charStream());
+    } finally {
+      response.body().close();
+    }
+    return result;
+  }
+
+
+ 
+  
+   /**
+   * Applies object legal hold on an object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.setObjectLegalHold("my-bucketname", "my-object", "", true );
+   * System.out.println("Legal Hold set on my-object successfully."); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name.
+   * @param versionId  Object versio id.   * 
+   * @param legalHold  Legal Hold Status
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void setObjectLegalHold(String bucketName, String objectName, String versionId, 
+          boolean legalHold)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("legal-hold", "");
+
+    if (!versionId.isEmpty()) {
+      queryParamMap.put("versionId", versionId);
+    }
+
+    ObjectLockLegalHold objectLockLegalHold = new ObjectLockLegalHold(legalHold);
+
+    HttpResponse response = executePut(bucketName, objectName, null, queryParamMap, objectLockLegalHold, 0);
+    response.body().close();
+  }
+
+  /**
+   * Fetches Legal hold status of an object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code 
+   * ObjectLockLegalHold objectLockLegalHold = minioClient.getObjectLegalHold("my-bucketname", "my-object", "" );
+   * System.out.println("Legal Hold Status " + objectLockLegalHold.getStatus()); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name.
+   * @param versionId  Object version id. 
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public ObjectLockLegalHold getObjectLegalHold(String bucketName, String objectName, String versionId)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+            InternalException, InvalidResponseException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("legal-hold", "");
+
+    if (!versionId.isEmpty()) {
+      queryParamMap.put("versionId", versionId);
+    }
+    HttpResponse response = executeGet(bucketName, objectName, null, queryParamMap);
+
+    ObjectLockLegalHold result = new ObjectLockLegalHold();
+    try {
+      result.parseXml(response.body().charStream());
+    } finally {
+      response.body().close();
+    }
+    return result;
+  }
+
+  /**
    * Removes a bucket.
    * <p>
    * NOTE: -
@@ -4096,6 +4298,51 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
 
+    putObject(bucketName, objectName, fileName, size, headerMap, sse, contentType, false);
+  }
+
+
+   /**
+   * Uploads given file as object in given bucket.
+   * <p>
+   * If the object is larger than 5MB, the client will automatically use a multipart session.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again.
+   * </p>
+   * <p>
+   * If the multipart session fails, abort the uploaded parts automatically.
+   * </p>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param fileName    File name to upload.
+   * @param size        Size of all the data that will be uploaded.
+   * @param headerMap   Custom/additional meta data of the object.
+   * @param sse         encryption metadata.
+   * @param contentType Content type of the stream.
+   * @param objectLockRetention Object lock retention.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InsufficientDataException   upon getting EOFException while reading given
+   */
+  public void putObject(String bucketName, String objectName, String fileName, Long size, Map<String, String> headerMap,
+                        ServerSideEncryption sse, String contentType, boolean objectLockRetention)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
+
     if (fileName == null || "".equals(fileName)) {
       throw new InvalidArgumentException("empty file name is not allowed");
     }
@@ -4111,6 +4358,9 @@ public class MinioClient {
       size = Files.size(filePath);
     }
     RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
+    if (objectLockRetention) {
+      headerMap.put("retention","");
+    }
 
     try {
       putObject(bucketName, objectName, size, file, headerMap, sse, contentType);
@@ -4710,6 +4960,92 @@ public class MinioClient {
 
     if (!(stream instanceof BufferedInputStream)) {
       stream = new BufferedInputStream(stream);
+    }
+    putObject(bucketName, objectName, stream, size, headerMap, sse, contentType, false);
+  }
+
+    /**
+   * Uploads data from given stream as object to given bucket where the stream size is unknown.
+   * <p>
+   * If the stream has more than 525MiB data, the client uses a multipart session automatically.
+   * </p>
+   * <p>
+   * If the session fails, the user may attempt to re-upload the object by attempting to create
+   * the exact same object again.
+   * </p>
+   * <p>
+   * If the multipart session fails, we abort the uploaded parts automaticlly.
+   * </p>
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code StringBuilder builder = new StringBuilder();
+   * for (int i = 0; i < 1000; i++) {
+   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+   *   builder.append("(29 letters)\n");
+   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+   *   builder.append("(31 letters)\n"); 
+   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
+   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
+   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
+   *   builder.append("(39 letters)\n");
+   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
+   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
+   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
+   *   builder.append("computers after System 7.\n");
+   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
+   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
+   *   builder.append("---\n");
+   * }
+   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+   * // create object
+   * Map<String, String> headerMap = new HashMap<>();
+   * headerMap.put("Content-Type", "application/octet-stream");
+   * headerMap.put("X-Amz-Meta-Key", "meta-data");
+
+   * //Generate symmetric 256 bit AES key.
+   * KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
+   * symKeyGenerator.init(256);
+   * SecretKey symKey = symKeyGenerator.generateKey();
+
+   * minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), headerMap, symKey);
+   * bais.close();
+   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param stream      stream to upload.
+   * @param size        Size of all the data that will be uploaded.
+   * @param headerMap   Custom/additional meta data of the object.
+   * @param sse         encryption metadata.
+   * @param contentType Content type of the stream.
+   * @param objectLockRetention Objecct Lock Retention.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, Long size, 
+              Map<String, String> headerMap, ServerSideEncryption sse, String contentType, boolean objectLockRetention)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
+
+    if (!(stream instanceof BufferedInputStream)) {
+      stream = new BufferedInputStream(stream);
+    }
+    if (objectLockRetention) {
+      headerMap.put("retention","");
     }
     putObject(bucketName, objectName, size, stream, headerMap, sse, contentType);
   }
