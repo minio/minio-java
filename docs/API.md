@@ -24,7 +24,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |  [`deleteBucketLifeCycle`](#deleteBucketLifeCycle) |
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
 | [`listenBucketNotification`](#listenBucketNotification) | [`composeObject`](#composeObject) |   |   |
-| [`setBucketNotification`](#setBucketNotification) |  |   |   |
+| [`setBucketNotification`](#setBucketNotification) | [`selectObjectContent`](#selectObjectContent) |   |   |
 | [`getBucketNotification`](#getBucketNotification) |  |   |   |
 | [`removeAllBucketNotification`](#removeAllBucketNotification) |  |   |   |
 | [`enableVersioning`](#enableVersioning) |  |   |   |
@@ -3206,6 +3206,68 @@ try {
       System.out.println("Error occurred: " + e);
     }
   }
+```
+
+ <a name="selectObjectContent"></a>
+### selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)
+
+`public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)`
+
+Select object content using SQL expression.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-java.lang.String-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``sqlExpression``  | _String_  | SQL expression.  |
+| ``is``  | _InputSerialization_  | Object's input specification. |
+| ``os``  | _OutputSerialization_  | Object's output specification. |
+| ``requestProgress``  | _boolean_  | Flag to request progress information.  |
+| ``scanStartRange``  | _Long_  | scan start range of the object.  |
+| ``scanEndRange``  | _Long_  | scan end range of the object.  |
+| ``sse``  | _ServerSideEncryption_  | Form of server-side encryption [ServerSideEncryption](http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html). |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  SelectResponseStream  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidArgumentException`` : upon empty object name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+__Example__
+
+```java
+try {
+  /* play.min.io for test and development. */
+  MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+  String sqlExpression = "select * from S3Object";
+  InputSerialization is = InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE, null, null, null);
+  OutputSerialization os = OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+  SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression, is, os, true, null, null, null);
+  byte[] buf = new byte[512];
+  int bytesRead = stream.read(buf, 0, buf.length);
+  System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+  Stats stats = stream.stats();
+  System.out.println("bytes scanned: " + stats.bytesScanned());
+  System.out.println("bytes processed: " + stats.bytesProcessed());
+  System.out.println("bytes returned: " + stats.bytesReturned());
+  stream.close();
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
 ```
 
 ## 4. Presigned operations

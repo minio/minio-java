@@ -3251,6 +3251,76 @@ public class FunctionalTest {
   }
 
   /**
+   * Test: selectObjectContent(String bucketName, String objectName, String sqlExpression,
+   *                           InputSerialization is, OutputSerialization os, boolean requestProgress,
+   *                           Long scanStartRange, Long scanEndRange, ServerSideEncryption sse).
+   */
+  public static void selectObjectContent_test1() throws Exception {
+    String testName = "selectObjectContent(String bucketName, String objectName, String sqlExpression,"
+        + " InputSerialization is, OutputSerialization os, boolean requestProgress,"
+        + " Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)";
+
+    if (!mintEnv) {
+      System.out.println("Test: " + testName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String objectName = getRandomName();
+    SelectResponseStream responseStream = null;
+    try {
+      String expectedResult = "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
+          + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",,4900.00\n"
+          + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
+          + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
+          + "air, moon roof, loaded\",4799.00\n";
+      byte[] data = ("Year,Make,Model,Description,Price\n" + expectedResult).getBytes(StandardCharsets.UTF_8);
+      ByteArrayInputStream bais = new ByteArrayInputStream(data);
+      client.putObject(bucketName, objectName, bais, Long.valueOf(data.length), null, null, null);
+
+      String sqlExpression = "select * from S3Object";
+      InputSerialization is = InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE,
+                                                     null, null, null);
+      OutputSerialization os = OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+
+      responseStream = client.selectObjectContent(bucketName, objectName, sqlExpression,
+                                                                       is, os, true, null, null, null);
+
+      String result = new String(readAllBytes(responseStream), StandardCharsets.UTF_8);
+      if (!result.equals(expectedResult)) {
+        throw new Exception("result mismatch; expected: " + expectedResult + ", got: " + result);
+      }
+
+      Stats stats = responseStream.stats();
+
+      if (stats == null) {
+        throw new Exception("stats is null");
+      }
+
+      if (stats.bytesScanned() != 256) {
+        throw new Exception("stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned());
+      }
+
+      if (stats.bytesProcessed() != 256) {
+        throw new Exception("stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed());
+      }
+
+      if (stats.bytesReturned() != 222) {
+        throw new Exception("stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
+      }
+
+      mintSuccessLog(testName, null, startTime);
+    } catch (Exception e) {
+      mintFailedLog(testName, null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    } finally {
+      if (responseStream != null) {
+        responseStream.close();
+      }
+      client.removeObject(bucketName, objectName);
+    }
+  }
+
+  /**
    * runTests: runs as much as possible of test combinations.
    */
   public static void runTests() throws Exception {
@@ -3328,6 +3398,8 @@ public class FunctionalTest {
     composeObject_test2();
     composeObject_test3();
 
+    selectObjectContent_test1();
+
     // SSE_C tests will only work over TLS connection
     Locale locale = Locale.ENGLISH;
     boolean tlsEnabled = endpoint.toLowerCase(locale).contains("https://");
@@ -3400,6 +3472,7 @@ public class FunctionalTest {
     copyObject_test1();
     getBucketPolicy_test1();
     setBucketPolicy_test1();
+    selectObjectContent_test1();
     listenBucketNotification_test1();
 
     teardown();

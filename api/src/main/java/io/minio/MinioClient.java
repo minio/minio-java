@@ -51,6 +51,7 @@ import io.minio.messages.DeleteRequest;
 import io.minio.messages.DeleteResult;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
+import io.minio.messages.InputSerialization;
 import io.minio.messages.Item;
 import io.minio.messages.ListAllMyBucketsResult;
 import io.minio.messages.ListBucketResult;
@@ -58,10 +59,12 @@ import io.minio.messages.ListBucketResultV1;
 import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
 import io.minio.messages.ObjectLockConfiguration;
+import io.minio.messages.OutputSerialization;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
+import io.minio.messages.SelectObjectContentRequest;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 
 import io.minio.notification.NotificationInfo;
@@ -783,6 +786,13 @@ public class MinioClient {
       String msg = "bucket name does not follow Amazon S3 standards. For more information refer "
           + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
       throw new InvalidBucketNameException(name, msg);
+    }
+  }
+
+
+  private void checkObjectName(String objectName) throws InvalidArgumentException {
+    if ((objectName == null) || (objectName.isEmpty())) {
+      throw new InvalidArgumentException("object name cannot be empty");
     }
   }
 
@@ -1546,9 +1556,7 @@ public class MinioClient {
            InternalException, InvalidArgumentException, InvalidResponseException {
     checkReadRequestSse(sse);
     checkBucketName(bucketName);
-    if ( objectName == null || objectName.equals("") ) {
-      throw new InvalidArgumentException("Invalid Stat Object Argument(s). Object name cannot be empty.");
-    }
+    checkObjectName(objectName);
 
     Map<String, String> headers = null;
     if (sse != null) {
@@ -1812,9 +1820,7 @@ public class MinioClient {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if ((objectName == null) || (objectName.isEmpty())) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     if (offset != null && offset < 0) {
       throw new InvalidArgumentException("offset should be zero or greater");
@@ -2345,17 +2351,15 @@ public class MinioClient {
     throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
            NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
            InvalidArgumentException, InvalidResponseException {
-    if (bucketName == null) {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if (objectName == null) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     checkWriteRequestSse(sse);
 
-    if (srcBucketName == null) {
+    if ((srcBucketName == null) || (srcBucketName.isEmpty())) {
       throw new InvalidArgumentException("Source bucket name cannot be empty");
     }
 
@@ -2435,13 +2439,11 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
     InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
     InternalException, InvalidArgumentException, InvalidResponseException {
-    if (bucketName == null) {
-      throw new InvalidArgumentException("Destination bucket name cannot be empty");
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if (objectName == null) {
-      throw new InvalidArgumentException("Destination object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     if (sources.isEmpty()) {
       throw new InvalidArgumentException("compose sources cannot be empty");
@@ -2942,9 +2944,7 @@ public class MinioClient {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if ((objectName == null) || (objectName.isEmpty())) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     executeDelete(bucketName, objectName, null);
   }
@@ -5883,6 +5883,65 @@ public class MinioClient {
         }
       }
     };
+  }
+
+
+  /**
+   * Select object content using SQL expression.
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name.
+   * @param sqlExpression SQL expression.
+   * @param is Input serialization.
+   * @param os Output serialization.
+   * @param requestProgress Request progress in response.
+   * @param scanStartRange scan start range.
+   * @param scanEndRange scan end range.
+   * @param sse Server side encryption.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws InvalidArgumentException  upon empty object name is given
+   * @throws NoSuchAlgorithmException
+   *            upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *            InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *            upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   */
+
+  public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression,
+                                          InputSerialization is, OutputSerialization os, boolean requestProgress,
+                                          Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)
+    throws InvalidBucketNameException, InvalidArgumentException, NoSuchAlgorithmException, InsufficientDataException,
+           IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
+    }
+    checkObjectName(objectName);
+    checkReadRequestSse(sse);
+
+    Map<String, String> headerMap = null;
+    if (sse != null) {
+      headerMap = sse.headers();
+    }
+
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("select", "");
+    queryParamMap.put("select-type", "2");
+
+    SelectObjectContentRequest request = new SelectObjectContentRequest(sqlExpression, requestProgress, is, os,
+                                                                        scanStartRange, scanEndRange);
+    HttpResponse response = execute(Method.POST, getRegion(bucketName), bucketName, objectName,
+                                    headerMap, queryParamMap, request, 0);
+    return new SelectResponseStream(response.body().byteStream());
   }
 
 
