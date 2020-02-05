@@ -5879,6 +5879,7 @@ public class MinioClient {
             } catch ( IOException e) {
               return new Result<>(null, e);
         } finally {
+          notificationString = null;
           notificationInfo = null;
         }
       }
