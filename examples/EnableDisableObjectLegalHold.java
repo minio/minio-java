@@ -24,13 +24,13 @@ import java.io.ByteArrayInputStream;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.MinioClient;
-import io.minio.messages.ObjectLockLegalHold;
 import io.minio.errors.MinioException;
 
-public class SetGetObjectLegalHold {
+public class EnableDisableObjectLegalHold {
   /**
-   * MinioClient.setObjectLegalHold() example.
-   * MinioClient.getObjectLegalHold() example.
+   * MinioClient.enableObjectLegalHold() example.
+   * MinioClient.disableObjectLegalHold() example.
+   * MinioClient.isObjectLegalHoldEnabled() example.
    */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
@@ -67,15 +67,20 @@ public class SetGetObjectLegalHold {
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
 
-      // Set object legal hold.
-      minioClient.setObjectLegalHold("my-bucketname" , "my-objectname", "" , true );
+      // Enable object legal hold.
+      minioClient.enableObjectLegalHold("my-bucketname" , "my-objectname", "" );
 
-      // Get object legal hols status
-      ObjectLockLegalHold objectLockLegalHold =  minioClient.getObjectLegalHold("my-bucketname" , 
-            "my-objectname", "" );
+      // Check if the object legal hold is enabled or not.
+      System.out.println(" Is object legal hold is enabled " + minioClient.isObjectLegalHoldEnabled("my-bucketname", 
+          "my-objectname", "" ));
 
-      System.out.println(" Legal hold status " + objectLockLegalHold.getStatus());
-          
+      // Disable object legal hold.
+      minioClient.disableObjectLegalHold("my-bucketname" , "my-objectname", "" );
+
+      // Check if the object legal hold is enabled or not.
+      System.out.println(" Is object legal hold is enabled " + minioClient.isObjectLegalHoldEnabled("my-bucketname", 
+          "my-objectname", "" ));
+    
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

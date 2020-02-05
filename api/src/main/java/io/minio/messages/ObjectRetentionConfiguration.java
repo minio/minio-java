@@ -50,11 +50,11 @@ public class ObjectRetentionConfiguration extends XmlEntity {
     super();
     super.name = "Retention";
     if (mode == null) {
-      throw new InvalidArgumentException("null mode.");
+      throw new InvalidArgumentException("null is not allowed in mode. Valid values are 'COMPLIANCE' and 'GOVERNANCE'");
     }
     this.mode = mode.toString();
     if (retainUntilDate == null) {
-      throw new InvalidArgumentException("null retain until date.");
+      throw new InvalidArgumentException("retain until date cant be null, it must be a valid date.");
     }
     
     this.retainUntilDate = retainUntilDate.toString(DateFormat.RETENTION_DATE_FORMAT);  

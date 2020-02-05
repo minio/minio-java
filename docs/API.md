@@ -27,9 +27,9 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`setBucketNotification`](#setBucketNotification) | [`selectObjectContent`](#selectObjectContent) |   |   |
 | [`getBucketNotification`](#getBucketNotification) |`setObjectRetention`](#setObjectRetention) |   |   |
 | [`removeAllBucketNotification`](#removeAllBucketNotification) | `getObjectRetention`](#getObjectRetention) |   |   |
-| [`enableVersioning`](#enableVersioning) | `setObjectLegalHold`](#setObjectLegalHold) |   |   |
-| [`disableVersioning`](#disableVersioning) | `getObjectLegalHold`](#getObjectLegalHold) |   |   |
-| [`setDefaultRetention`](#setDefaultRetention) |  |   |   |
+| [`enableVersioning`](#enableVersioning) | `enableObjectLegalHold`](#enableObjectLegalHold) |   |   |
+| [`disableVersioning`](#disableVersioning) | `disableObjectLegalHold`](#disableObjectLegalHold) |   |   |
+| [`setDefaultRetention`](#setDefaultRetention) | `isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled)  |   |   |
 | [`getDefaultRetention`](#getDefaultRetention) |  |   |   |
 
 ## 1. Constructors
@@ -3376,16 +3376,14 @@ Returns retention set on a given object.
   }
 ```
 
+<a name="enableObjectLegalHold"></a>
+### enableObjectLegalHold(String bucketName, String objectName, String versionId)
 
-<a name="setObjectLegalHold"></a>
-### setObjectLegalHold(String bucketName, String objectName, String versionId, boolean legalHold)
+`public void enableObjectLegalHold(String bucketName, String objectName, String versionId)`
 
-`public void setObjectLegalHold(String bucketName, String objectName, String versionId, boolean legalHold)`
+Enables legal hold on an object.
 
-
-Applies legal hold on an object..
-
- [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-java.lang.boolean-)
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-)
 
  __Parameters__
 
@@ -3394,7 +3392,6 @@ Applies legal hold on an object..
 | ``bucketName``  | _String_  | Destination bucket name. |
 | ``objectName``  | _String_ | Destination object name to be created, if not provided defaults to source object name.|
 | ``versionId``       |  _String_ |  Object version .|
-| ``legalHold``       | _bool_ | Legal Hold value .|
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
@@ -3420,8 +3417,57 @@ Applies legal hold on an object..
       "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Set object lock configuration
-      s3Client.setObjectLegalHold("my-bucketName" , "my-objectName", "", true );
-      System.out.println("Object legal hold set successfully");
+      s3Client.enableObjectLegalHold("my-bucketName" , "my-objectName", "" );
+      System.out.println("Object legal hold enabled successfully on my-objectName");
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
+    }
+  }
+```
+
+<a name="disableObjectLegalHold"></a>
+### disableObjectLegalHold(String bucketName, String objectName, String versionId)
+
+`public void disableObjectLegalHold(String bucketName, String objectName, String versionId)`
+
+Disables legal hold on an object.
+
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-)
+
+ __Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName``  | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``versionId``       |  _String_ |  Object version .|
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+ __Example__
+
+ ```java
+  try {
+      /* play.minio.io for test and development. */
+       MinioClient minioClient = new MinioClient("https://play.min.io:9000",
+      "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+
+      // Set object lock configuration
+      s3Client.disableObjectLegalHold("my-bucketName" , "my-objectName", "" );
+      System.out.println("Object legal hold disabled successfully on my-objectName");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
@@ -3429,14 +3475,14 @@ Applies legal hold on an object..
 ```
 
 
- <a name="getObjectLegalHold"></a>
-### getObjectLegalHold(String bucketName, String objectName, String versionId)
+ <a name="isObjectLegalHoldEnabled"></a>
+### isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
 
-`public ObjectLocKLegalHold getObjectLegalHold(String bucketName, String objectName, String versionId)`
+`public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)`
 
-Returns retention set on a given object.
+Returns true if object legal hold is enabled.
 
- [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-)
+ [View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#isObjectLegalHoldEnabled-java.lang.String-java.lang.String-java.lang.String-)
 
  __Parameters__
 
@@ -3448,7 +3494,7 @@ Returns retention set on a given object.
 
 | Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  ``ObjectLockLegalHold	`` : ObjectLockLegalHold object  | Listed Exceptions: |
+|  ``boolean	`` : Is object lock legal hold enabled  | Listed Exceptions: |
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
@@ -3468,8 +3514,8 @@ Returns retention set on a given object.
       /* play.minio.io for test and development. */
        MinioClient minioClient = new MinioClient("https://play.min.io:9000",
             "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
-      ObjectLockLegalHold t = s3Client.getObjectLegalHold("my-bucketName", "my-objectName", "");
-      System.out.println(" Lock  Configuration : " + objectLockLegalHold.getStatus());
+      boolean isObjectLegalHoldEnabled = s3Client.isObjectLegalHoldEnabled("my-bucketName", "my-objectName", "");
+      System.out.println(" Is object lock enabled : " + isObjectLegalHoldEnabled);
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

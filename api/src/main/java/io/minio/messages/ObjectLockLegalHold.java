@@ -50,9 +50,9 @@ public class ObjectLockLegalHold extends XmlEntity{
   }
 
   /**
-   * Indicates whether the specified object has a Legal Hold in place.
+   * Indicates whether the specified object has a Legal Hold in place or not.
    */
-  public String getStatus() {
-    return status;
+  public Boolean getStatus() {
+    return Boolean.parseBoolean(status);
   }
 }

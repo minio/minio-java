@@ -78,7 +78,7 @@ public class SetGetObjectLockRetentionConfig {
           new ObjectRetentionConfiguration(RetentionMode.COMPLIANCE, retentionUntil);
 
       // Set object lock configuration
-      minioClient.setObjectRetention("my-bucketname" , "my-objectname", "" , true, config );
+      minioClient.setObjectRetention("my-bucketname" , "my-objectname", "" , config, true );
 
       // Get object lock retention
       ObjectRetentionConfiguration objectRetentionConfiguration =  minioClient.getObjectRetention("my-bucketname" , 

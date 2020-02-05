@@ -3906,14 +3906,14 @@ public class MinioClient {
    * Applies object retention lock onto an object.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.setObjectRetention("my-bucketname", "my-object", config );
+   * <pre>{@code minioClient.setObjectRetention("my-bucketname", "my-object", config, true );
    * System.out.println("Set object retention on my-object successfully."); }</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
    * @param versionId  Object versio id.
-   * @param bypassGovernanceRetention  By pass governance retention.
    * @param config     Object lock configuration.
+   * @param bypassGovernanceRetention  By pass governance retention.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoSuchAlgorithmException
@@ -3928,17 +3928,24 @@ public class MinioClient {
    * @throws ErrorResponseException      upon unsuccessful execution
    * @throws InternalException           upon internal library error
    * @throws InvalidResponseException    upon a non-xml response from server
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
    */
   public void setObjectRetention(String bucketName, String objectName, String versionId, 
-          boolean bypassGovernanceRetention, ObjectRetentionConfiguration config)
+          ObjectRetentionConfiguration config, boolean bypassGovernanceRetention)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidResponseException {
+           InternalException, InvalidResponseException, InvalidArgumentException {
+
+    if (config == null ) {
+      throw new InvalidArgumentException("null value is not allowed in config.");
+    }
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if (!versionId.isEmpty()) {
+    if (versionId == null) {
+      queryParamMap.put("versionId", "");
+    } else {
       queryParamMap.put("versionId", versionId);
     }
 
@@ -4000,21 +4007,17 @@ public class MinioClient {
     }
     return result;
   }
-
-
- 
   
-   /**
-   * Applies object legal hold on an object.
+  /**
+   * Enables object legal hold on an object.
    *
    * </p><b>Example:</b><br>
-   * <pre>{@code minioClient.setObjectLegalHold("my-bucketname", "my-object", "", true );
-   * System.out.println("Legal Hold set on my-object successfully."); }</pre>
+   * <pre>{@code minioClient.enableObjectLegalHold("my-bucketname", "my-object", "");
+   * System.out.println("Legal Hold enabled on my-object successfully."); }</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
-   * @param versionId  Object versio id.   * 
-   * @param legalHold  Legal Hold Status
+   * @param versionId  Object version id.
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
    * @throws NoSuchAlgorithmException
@@ -4030,8 +4033,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidResponseException    upon a non-xml response from server
    */
-  public void setObjectLegalHold(String bucketName, String objectName, String versionId, 
-          boolean legalHold)
+  public void enableObjectLegalHold(String bucketName, String objectName, String versionId)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
@@ -4043,19 +4045,63 @@ public class MinioClient {
       queryParamMap.put("versionId", versionId);
     }
 
-    ObjectLockLegalHold objectLockLegalHold = new ObjectLockLegalHold(legalHold);
+    ObjectLockLegalHold objectLockLegalHold = new ObjectLockLegalHold(true);
 
     HttpResponse response = executePut(bucketName, objectName, null, queryParamMap, objectLockLegalHold, 0);
     response.body().close();
   }
 
   /**
-   * Fetches Legal hold status of an object.
+   * Disable object legal hold on an object.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code minioClient.disableObjectLegalHold("my-bucketname", "my-object", "");
+   * System.out.println("Legal Hold disabled on my-object successfully."); }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name.
+   * @param versionId  Object version id.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void disableObjectLegalHold(String bucketName, String objectName, String versionId)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("legal-hold", "");
+
+    if (!versionId.isEmpty()) {
+      queryParamMap.put("versionId", versionId);
+    }
+
+    ObjectLockLegalHold objectLockLegalHold = new ObjectLockLegalHold(false);
+
+    HttpResponse response = executePut(bucketName, objectName, null, queryParamMap, objectLockLegalHold, 0);
+    response.body().close();
+  }
+
+  /**
+   * Returns true is the object legal hold is enabled.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code 
-   * ObjectLockLegalHold objectLockLegalHold = minioClient.getObjectLegalHold("my-bucketname", "my-object", "" );
-   * System.out.println("Legal Hold Status " + objectLockLegalHold.getStatus()); }</pre>
+   * Boolean isObjectLegalHoldEnabled = minioClient.isObjectLegalHoldEnabled("my-bucketname", 
+   *  "my-object", "" );
+   * System.out.println("Is Object Legal Hold enabled " + isObjectLegalHoldEnabled); }</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
@@ -4075,7 +4121,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidResponseException    upon a non-xml response from server
    */
-  public ObjectLockLegalHold getObjectLegalHold(String bucketName, String objectName, String versionId)
+  public Boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
             InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
             InternalException, InvalidResponseException {
@@ -4094,7 +4140,7 @@ public class MinioClient {
     } finally {
       response.body().close();
     }
-    return result;
+    return result.getStatus();
   }
 
   /**
