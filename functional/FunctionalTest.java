@@ -1,4 +1,3 @@
-
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
  * (C) 2015-2019 MinIO, Inc.
@@ -1008,28 +1007,28 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: statObject(String bucketName, "/").
+   * Test: statObject(String bucketName, "randomName/").
    */
   public static void statObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: statObject(String bucketName, \"/\")");
+      System.out.println("Test: statObject(String bucketName, \"randomName/\")");
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      client.statObject(bucketName, "/");
+      client.statObject(bucketName, getRandomName() + "/");
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_KEY) {
-        mintFailedLog("statObject(String bucketName, \"/\")", null, startTime, null,
+        mintFailedLog("statObject(String bucketName, \"randomName/\")", null, startTime, null,
                       e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     } catch (Exception e) {
-      mintFailedLog("statObject(String bucketName, \"/\")", null, startTime, null,
+      mintFailedLog("statObject(String bucketName, \"randomName/\")", null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } finally {
-      mintSuccessLog("statObject(String bucketName, \"/\"`)", null, startTime);
+      mintSuccessLog("statObject(String bucketName, \"randomName/\"`)", null, startTime);
     }
   }
 
