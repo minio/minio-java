@@ -19,7 +19,6 @@ package io.minio.messages;
 import org.xmlpull.v1.XmlPullParserException;
 
 import io.minio.DateFormat;
-import java.util.Date;
 import org.joda.time.DateTime;
 import com.google.api.client.util.Key;
 import io.minio.errors.InvalidArgumentException;
@@ -35,7 +34,7 @@ public class ObjectRetentionConfiguration extends XmlEntity {
   private String retainUntilDate;
 
  /**
-   * Constructs a new ObjectLockRetention object.
+   * Constructs a new ObjectRetentionConfiguration object.
    */
   public ObjectRetentionConfiguration() throws XmlPullParserException {
     super();
@@ -43,38 +42,35 @@ public class ObjectRetentionConfiguration extends XmlEntity {
   }
 
   /**
-   * Constructs a new CustomRetention object with given retention.
+   * Constructs a new ObjectRetentionConfiguration object with given retention 
+   * until date and mode.
    */
   public ObjectRetentionConfiguration(RetentionMode mode,  DateTime retainUntilDate) throws XmlPullParserException,
           InvalidArgumentException {
-    super();
-    super.name = "Retention";
+    this();
     if (mode == null) {
-      throw new InvalidArgumentException("null is not allowed in mode. Valid values are 'COMPLIANCE' and 'GOVERNANCE'");
+      throw new InvalidArgumentException("null mode is not allowed");
     }
     this.mode = mode.toString();
     if (retainUntilDate == null) {
-      throw new InvalidArgumentException("retain until date cant be null, it must be a valid date.");
-    }
-    
-    this.retainUntilDate = retainUntilDate.toString(DateFormat.RETENTION_DATE_FORMAT);  
+      throw new InvalidArgumentException("null retainUntilDate is not allowed");
+    }    
+    this.retainUntilDate = retainUntilDate.toString(DateFormat.EXPIRATION_DATE_FORMAT);  
   }
 
   /**
    * Returns mode.
    */
   public RetentionMode mode() {
-    return RetentionMode.fromString(mode);
+    return this.mode == null ? null : RetentionMode.fromString(this.mode);
   }
 
   /**
    * Returns retain until date.
    */
-  public Date retainUntil() {
-    if (retainUntilDate == null ) {
-      return null;
-    }
-    return DateFormat.RETENTION_DATE_FORMAT.parseDateTime(retainUntilDate).toDate();
+  public DateTime retainUntilDate() {
+    return this.retainUntilDate == null ? null : 
+        DateFormat.EXPIRATION_DATE_FORMAT.parseDateTime(this.retainUntilDate);
   }
 }
 

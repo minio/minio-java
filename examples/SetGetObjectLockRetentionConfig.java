@@ -14,21 +14,29 @@
  * limitations under the License.
  */
 
+import io.minio.MinioClient;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidEndpointException;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.InvalidPortException;
+import io.minio.errors.InvalidArgumentException;
+import io.minio.errors.MinioException;
+import io.minio.errors.NoResponseException;
+import io.minio.errors.RegionConflictException;
+import io.minio.messages.ObjectRetentionConfiguration;
+import io.minio.messages.RetentionMode;
+
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 
 import org.joda.time.DateTime;
-import java.security.InvalidKeyException;
-import java.lang.StringBuilder;
-import java.io.ByteArrayInputStream;
-
 import org.xmlpull.v1.XmlPullParserException;
-
-import io.minio.MinioClient;
-import io.minio.messages.ObjectRetentionConfiguration;
-import io.minio.messages.RetentionMode;
-import io.minio.errors.MinioException;
 
 public class SetGetObjectLockRetentionConfig {
   /**
@@ -36,7 +44,11 @@ public class SetGetObjectLockRetentionConfig {
    * MinioClient.getObjectRetention() example.
    */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+  throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException, 
+         InvalidResponseException, InsufficientDataException, NoResponseException,
+         InternalException, ErrorResponseException, InvalidBucketNameException,
+         InvalidPortException, InvalidEndpointException, RegionConflictException,
+         InvalidArgumentException {
     try {
 
       /* play.min.io for test and development. */
@@ -53,10 +65,9 @@ public class SetGetObjectLockRetentionConfig {
         System.out.println("my-bucketname is created successfully with object lock functionality enabled.");
       }
 
-      DateTime retentionUntil = new DateTime(2025, Calendar.MAY, 0, 0, 0);
 
       StringBuilder builder = new StringBuilder();
-      for (int i = 0; i < 1000; i++) {
+      for (int i = 0; i < 100; i++) {
         builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
         builder.append("(29 letters)\n");
         builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
@@ -73,7 +84,10 @@ public class SetGetObjectLockRetentionConfig {
       System.out.println("my-objectname is uploaded successfully");
       
       // Declaring config with Retention mode as Compliance and
-      // retain until MAY 2025
+      // retain until MAY 2021
+
+
+      DateTime retentionUntil = new DateTime(2021, Calendar.MAY, 0, 0, 0);
       ObjectRetentionConfiguration config = 
           new ObjectRetentionConfiguration(RetentionMode.COMPLIANCE, retentionUntil);
 
@@ -85,7 +99,7 @@ public class SetGetObjectLockRetentionConfig {
             "my-objectname", "" );
 
       System.out.println(" Mode : " + objectRetentionConfiguration.mode());
-      //System.out.println(" Retainuntil Date : " + objectRetentionConfiguration.getRetentionDate());
+      System.out.println(" Retainuntil Date : " + objectRetentionConfiguration.retainUntilDate());
       
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

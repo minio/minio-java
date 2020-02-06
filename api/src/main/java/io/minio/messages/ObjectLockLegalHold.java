@@ -29,7 +29,7 @@ public class ObjectLockLegalHold extends XmlEntity{
   private String status;
 
   /**
-   * Constructs a new CustomRetention object with given retention.
+   * Constructs a new ObjectLockLegalHold object .
    */
   public ObjectLockLegalHold() throws XmlPullParserException {
     super();
@@ -37,12 +37,11 @@ public class ObjectLockLegalHold extends XmlEntity{
   }
 
   /**
-   * Constructs a new CustomRetention object with given retention.
+   * Constructs a new ObjectLockLegalHold object with given status.
    */
-  public ObjectLockLegalHold(boolean legalHold) throws  XmlPullParserException {
-    super();
-    super.name = "LegalHold";
-    if (legalHold) {
+  public ObjectLockLegalHold(boolean status) throws  XmlPullParserException {
+    this();
+    if (status) {
       this.status = "ON";
     } else {
       this.status = "OFF";
@@ -52,7 +51,7 @@ public class ObjectLockLegalHold extends XmlEntity{
   /**
    * Indicates whether the specified object has a Legal Hold in place or not.
    */
-  public Boolean getStatus() {
-    return Boolean.parseBoolean(status);
+  public boolean status() {
+    return status != null && status.equals("ON");
   }
 }

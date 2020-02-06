@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-
-import java.security.InvalidKeyException;
-import java.lang.StringBuilder;
-import java.io.ByteArrayInputStream;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidEndpointException;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.InvalidPortException;
+import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.MinioException;
+import io.minio.errors.NoResponseException;
+import io.minio.errors.RegionConflictException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class EnableDisableObjectLegalHold {
   /**
@@ -33,7 +39,11 @@ public class EnableDisableObjectLegalHold {
    * MinioClient.isObjectLegalHoldEnabled() example.
    */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException, 
+           InvalidResponseException, InsufficientDataException, NoResponseException,
+           InternalException, ErrorResponseException, InvalidBucketNameException,
+           InvalidPortException, InvalidEndpointException, RegionConflictException,
+           InvalidArgumentException {
     try {
 
       /* play.min.io for test and development. */

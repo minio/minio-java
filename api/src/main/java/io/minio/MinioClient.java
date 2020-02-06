@@ -877,7 +877,7 @@ public class MinioClient {
   private Request createRequest(Method method, String bucketName, String objectName,
                                 String region, Multimap<String,String> headerMap,
                                 Multimap<String,String> queryParamMap, final String contentType,
-                                Object body, int length)
+                                Object body, int length, boolean md5Required)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException,
            IOException, InternalException {
     if (bucketName == null && objectName != null) {
@@ -973,20 +973,10 @@ public class MinioClient {
 
         // Disable default gzip compression by okhttp library.
         requestBuilder.header("Accept-Encoding", "identity");
-        if (method == Method.POST && queryParamMap != null && queryParamMap.containsKey("delete")) {
-          // Fix issue #579: Treat 'Delete Multiple Objects' specially which requires MD5 hash.
+        if (md5Required) {
           String[] hashes = Digest.sha256Md5Hashes(data, len);
           sha256Hash = hashes[0];
           md5Hash = hashes[1];
-        } else if (method == Method.PUT && queryParamMap != null &&  queryParamMap.containsKey("lifecycle"))  {
-          String[] hashes = Digest.sha256Md5Hashes(data, len);
-          sha256Hash = hashes[0];
-          md5Hash = hashes[1];
-        } else if (method == Method.PUT && headerMap.containsKey("retention")) {
-          String[] hashes = Digest.sha256Md5Hashes(data, len);
-          sha256Hash = hashes[0];
-          md5Hash = hashes[1];
-          headerMap.remove("retention","");
         } else {
           // Fix issue #567: Compute SHA256 hash only.
           sha256Hash = Digest.sha256Hash(data, len);
@@ -1067,7 +1057,7 @@ public class MinioClient {
    */
   private HttpResponse execute(Method method, String region, String bucketName, String objectName,
                                Map<String,String> headerMap, Map<String,String> queryParamMap,
-                               Object body, int length)
+                               Object body, int length, boolean md5Required)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
@@ -1086,12 +1076,13 @@ public class MinioClient {
       headerMultiMap = Multimaps.forMap(headerMap);
     }
 
-    return executeReq(method, region, bucketName, objectName, headerMultiMap, queryParamMultiMap, body, length);
+    return executeReq(method, region, bucketName, objectName, headerMultiMap, queryParamMultiMap,
+            body, length, md5Required);
   }
 
   private HttpResponse executeReq(Method method, String region, String bucketName, String objectName,
                                Multimap<String,String> headerMap, Multimap<String,String> queryParamMap,
-                               Object body, int length)
+                               Object body, int length, boolean md5Required)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
@@ -1107,7 +1098,7 @@ public class MinioClient {
 
     Request request = createRequest(method, bucketName, objectName, region,
                                     headerMap, queryParamMap,
-                                    contentType, body, length);
+                                    contentType, body, length, md5Required);
 
     if (this.accessKey != null && this.secretKey != null) {
       request = Signer.signV4(request, region, accessKey, secretKey);
@@ -1240,7 +1231,7 @@ public class MinioClient {
       queryParamMap.put("location", null);
 
       HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
-          null, queryParamMap, null, 0);
+          null, queryParamMap, null, 0, false);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
       XmlPullParser xpp = xmlPullParserFactory.newPullParser();
@@ -1343,7 +1334,7 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
-    return execute(Method.GET, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, null, 0);
+    return execute(Method.GET, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, null, 0, false);
   }
 
 
@@ -1358,7 +1349,7 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, null,
-                                    null, null, 0);
+                                    null, null, 0, false);
     response.body().close();
     return response;
   }
@@ -1376,7 +1367,7 @@ public class MinioClient {
            InternalException, InvalidResponseException {
 
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, headerMap,
-                                    null, null, 0);
+                                    null, null, 0, false);
     response.body().close();
     return response;
   }
@@ -1393,7 +1384,7 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.DELETE, getRegion(bucketName), bucketName, objectName, null,
-                                    queryParamMap, null, 0);
+                                    queryParamMap, null, 0, false);
     response.body().close();
     return response;
   }
@@ -1413,7 +1404,27 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
-    return execute(Method.POST, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, data, 0);
+    return execute(Method.POST, getRegion(bucketName), bucketName, objectName, headerMap, 
+            queryParamMap, data, 0, false);
+  }
+
+  /**
+   * Executes POST method for given request parameters.
+   *
+   * @param bucketName     Bucket name.
+   * @param objectName     Object name in the bucket.
+   * @param headerMap      Map of HTTP headers for the request.
+   * @param queryParamMap  Map of HTTP query parameters of the request.
+   * @param data           HTTP request body data.
+   * @param md5Required    Is MD5 calculations required.
+   */
+  private HttpResponse executePost(String bucketName, String objectName, Map<String,String> headerMap,
+                                   Map<String,String> queryParamMap, Object data, boolean md5Required)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+    return execute(Method.POST, getRegion(bucketName), bucketName, objectName, headerMap, 
+            queryParamMap, data, 0, md5Required);
   }
 
 
@@ -1446,13 +1457,36 @@ public class MinioClient {
    * @param length         Length of HTTP request body data.
    */
   private HttpResponse executePut(String bucketName, String objectName, Map<String,String> headerMap,
-                                  Map<String,String> queryParamMap, String region, Object data, int length)
+                  Map<String,String> queryParamMap, String region, Object data, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
-                                    data, length);
+                                    data, length, false);
+    return response;
+  }
+
+    /**
+   * Executes PUT method for given request parameters.
+   *
+   * @param bucketName     Bucket name.
+   * @param objectName     Object name in the bucket.
+   * @param headerMap      Map of HTTP headers for the request.
+   * @param queryParamMap  Map of HTTP query parameters of the request.
+   * @param region         Amazon S3 region of the bucket.
+   * @param data           HTTP request body data.
+   * @param length         Length of HTTP request body data.
+   * @param md5Required    Is MD5 calculations required.
+   */
+  private HttpResponse executePut(String bucketName, String objectName, Map<String,String> headerMap,
+                  Map<String,String> queryParamMap, String region, Object data, int length, boolean md5Required)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+    HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
+                                    headerMap, queryParamMap,
+                                    data, length, md5Required);
     return response;
   }
 
@@ -1472,7 +1506,27 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
-    return executePut(bucketName, objectName, headerMap, queryParamMap, getRegion(bucketName), data, length);
+    return executePut(bucketName, objectName, headerMap, queryParamMap, getRegion(bucketName), data, length, false);
+  }
+
+   /**
+   * Executes PUT method for given request parameters.
+   *
+   * @param bucketName     Bucket name.
+   * @param objectName     Object name in the bucket.
+   * @param headerMap      Map of HTTP headers for the request.
+   * @param queryParamMap  Map of HTTP query parameters of the request.
+   * @param data           HTTP request body data.
+   * @param length         Length of HTTP request body data.
+   * @param md5Required    Is MD5 calculations required.
+   */
+  private HttpResponse executePut(String bucketName, String objectName, Map<String,String> headerMap,
+                                  Map<String,String> queryParamMap, Object data, int length,  boolean md5Required)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+    return executePut(bucketName, objectName, headerMap, queryParamMap, 
+                      getRegion(bucketName), data, length, md5Required);
   }
 
 
@@ -1609,7 +1663,7 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     Request request = createRequest(Method.GET, bucketName, objectName, getRegion(bucketName),
-        null, null, null, null, 0);
+        null, null, null, null, 0, false);
     HttpUrl url = request.url();
     return url.toString();
   }
@@ -2689,7 +2743,7 @@ public class MinioClient {
     }
 
     String region = getRegion(bucketName);
-    Request request = createRequest(method, bucketName, objectName, region, null, queryParamMap, null, body, 0);
+    Request request = createRequest(method, bucketName, objectName, region, null, queryParamMap, null, body, 0, false);
     HttpUrl url = Signer.presignV4(request, region, accessKey, secretKey, expires);
     return url.toString();
   }
@@ -2965,7 +3019,7 @@ public class MinioClient {
     queryParamMap.put("delete", "");
 
     DeleteRequest request = new DeleteRequest(objectList);
-    HttpResponse response = executePost(bucketName, null, null, queryParamMap, request);
+    HttpResponse response = executePost(bucketName, null, null, queryParamMap, request, true);
 
     String bodyContent = "";
     // Use scanner to read entire body stream to string.
@@ -3994,8 +4048,10 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if ( !(versionId == null || versionId.isEmpty())) {
-      queryParamMap.put("versionId",versionId);
+    if (versionId == null) {
+      queryParamMap.put("versionId", "");
+    } else {
+      queryParamMap.put("versionId", versionId);
     }
 
     HttpResponse response = executeGet(bucketName, objectName, null, queryParamMap);
@@ -4041,7 +4097,9 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (!versionId.isEmpty()) {
+    if (versionId == null) {
+      queryParamMap.put("versionId", "");
+    } else {
       queryParamMap.put("versionId", versionId);
     }
 
@@ -4084,7 +4142,9 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (!versionId.isEmpty()) {
+    if (versionId == null) {
+      queryParamMap.put("versionId", "");
+    } else {
       queryParamMap.put("versionId", versionId);
     }
 
@@ -4099,7 +4159,7 @@ public class MinioClient {
    *
    * </p><b>Example:</b><br>
    * <pre>{@code 
-   * Boolean isObjectLegalHoldEnabled = minioClient.isObjectLegalHoldEnabled("my-bucketname", 
+   * boolean isObjectLegalHoldEnabled = minioClient.isObjectLegalHoldEnabled("my-bucketname", 
    *  "my-object", "" );
    * System.out.println("Is Object Legal Hold enabled " + isObjectLegalHoldEnabled); }</pre>
    *
@@ -4121,7 +4181,7 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidResponseException    upon a non-xml response from server
    */
-  public Boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
+  public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
             InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
             InternalException, InvalidResponseException {
@@ -4129,7 +4189,9 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (!versionId.isEmpty()) {
+    if (versionId == null) {
+      queryParamMap.put("versionId", "");
+    } else {
       queryParamMap.put("versionId", versionId);
     }
     HttpResponse response = executeGet(bucketName, objectName, null, queryParamMap);
@@ -4140,7 +4202,7 @@ public class MinioClient {
     } finally {
       response.body().close();
     }
-    return result.getStatus();
+    return result.status();
   }
 
   /**
@@ -4404,12 +4466,13 @@ public class MinioClient {
       size = Files.size(filePath);
     }
     RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
+    boolean md5Required = false;
     if (objectLockRetention) {
-      headerMap.put("retention","");
+      md5Required = true;
     }
 
     try {
-      putObject(bucketName, objectName, size, file, headerMap, sse, contentType);
+      putObject(bucketName, objectName, size, file, headerMap, sse, contentType, md5Required);
     } finally {
       file.close();
     }
@@ -5090,10 +5153,11 @@ public class MinioClient {
     if (!(stream instanceof BufferedInputStream)) {
       stream = new BufferedInputStream(stream);
     }
+    boolean md5Required = false;
     if (objectLockRetention) {
-      headerMap.put("retention","");
+      md5Required = true;
     }
-    putObject(bucketName, objectName, size, stream, headerMap, sse, contentType);
+    putObject(bucketName, objectName, size, stream, headerMap, sse, contentType, md5Required);
   }
 
   /**
@@ -5111,9 +5175,12 @@ public class MinioClient {
    *          Upload ID of multipart put object.
    * @param partNumber
    *          Part number of multipart put object.
+   * @param md5Required
+   *          Is MD5 calculations required.
    */
   private String putObject(String bucketName, String objectName, Object data, int length,
-                           Map<String, String> headerMap, String uploadId, int partNumber)
+                           Map<String, String> headerMap, String uploadId, int partNumber,
+                           boolean md5Required)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
@@ -5126,7 +5193,7 @@ public class MinioClient {
       queryParamMap.put(UPLOAD_ID, uploadId);
     }
 
-    response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
+    response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length, md5Required);
 
     response.body().close();
     return response.header().etag();
@@ -5147,7 +5214,8 @@ public class MinioClient {
    *          Object data.
    */
   private void putObject(String bucketName, String objectName, Long size, Object data,
-      Map<String, String> headerMap, ServerSideEncryption sse,  String contentType)
+                         Map<String, String> headerMap, ServerSideEncryption sse,  
+                         String contentType, boolean md5Required)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
@@ -5179,7 +5247,7 @@ public class MinioClient {
 
 
     if (size <= MIN_MULTIPART_SIZE) {
-      putObject(bucketName, objectName, data, size.intValue(), headerMap, null, 0);
+      putObject(bucketName, objectName, data, size.intValue(), headerMap, null, 0, md5Required);
       return;
     }
 
@@ -5209,7 +5277,7 @@ public class MinioClient {
           if (availableSize <= expectedReadSize) {
             // If it is first part, do single put object.
             if (partNumber == 1) {
-              putObject(bucketName, objectName, data, availableSize, headerMap, null, 0);
+              putObject(bucketName, objectName, data, availableSize, headerMap, null, 0, md5Required);
               return;
             }
             expectedReadSize = availableSize;
@@ -5224,7 +5292,7 @@ public class MinioClient {
         }
 
         String etag = putObject(bucketName, objectName, data, expectedReadSize, encryptionHeaders,
-                                uploadId, partNumber);
+                                uploadId, partNumber, md5Required);
         totalParts[partNumber - 1] = new Part(partNumber, etag);
       }
       // All parts have been uploaded, complete the multipart upload.
@@ -5407,7 +5475,7 @@ public class MinioClient {
     headerMap.put("Content-Length", Integer.toString(lifeCycle.length()));
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
-    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, lifeCycle, 0);
+    HttpResponse response = executePut(bucketName, null, headerMap, queryParamMap, lifeCycle, 0, true);
     response.body().close();
   }
 
@@ -6122,7 +6190,7 @@ public class MinioClient {
 
     try {
       response = executeReq(Method.GET, getRegion(bucketName),
-          bucketName, "", null, queryParamMap, null, 0);
+          bucketName, "", null, queryParamMap, null, 0, false);
       scanner = new Scanner(response.body().charStream());
       scanner.useDelimiter("\n");
       while (scanner.hasNext()) {
@@ -6188,7 +6256,7 @@ public class MinioClient {
     }
 
     HttpResponse response = executeReq(Method.GET, getRegion(bucketName),
-        bucketName, "", null, queryParamMap, null, 0);
+        bucketName, "", null, queryParamMap, null, 0, false);
 
     return new CloseableIterator<Result<NotificationInfo>>() {
       Scanner scanner  = new Scanner(response.body().charStream()).useDelimiter("\n");
@@ -6323,7 +6391,7 @@ public class MinioClient {
     SelectObjectContentRequest request = new SelectObjectContentRequest(sqlExpression, requestProgress, is, os,
                                                                         scanStartRange, scanEndRange);
     HttpResponse response = execute(Method.POST, getRegion(bucketName), bucketName, objectName,
-                                    headerMap, queryParamMap, request, 0);
+                                    headerMap, queryParamMap, request, 0, false);
     return new SelectResponseStream(response.body().byteStream());
   }
 
