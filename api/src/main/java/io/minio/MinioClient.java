@@ -60,6 +60,8 @@ import io.minio.messages.ListPartsResult;
 import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
+import io.minio.messages.PutBucketEncryptionRequest;
+import io.minio.messages.PutBucketEncryptionResponse;
 import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
@@ -3929,6 +3931,32 @@ public class MinioClient {
            InternalException, InvalidResponseException {
     executeDelete(bucketName, null, null);
   }
+
+/**
+   * @throws XmlPullParserException 
+   * @throws IOException 
+   * @throws InvalidResponseException 
+   * @throws InternalException 
+   * @throws ErrorResponseException 
+   * @throws NoResponseException 
+   * @throws InsufficientDataException 
+   * @throws NoSuchAlgorithmException 
+   * @throws InvalidBucketNameException 
+   * @throws InvalidKeyException 
+     * 
+     */
+    public void putBucketEncryption(Bucket bucket, ServerSideEncryption serv) throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, NoResponseException, ErrorResponseException, InternalException, InvalidResponseException, IOException, XmlPullParserException {
+      PutBucketEncryptionRequest req = new PutBucketEncryptionRequest(serv, bucket);
+      HttpResponse resp = null;
+      try {
+        resp = executePut(bucket.name(), null, new HashMap<String, String>(), new HashMap<String, String>(), req, 0);
+        } finally {
+          resp.response().close();
+      }
+      if(resp.response().isSuccessful()) {
+        int code = resp.response().code();
+      }
+    }
 
   /**
    * Uploads given file as object in given bucket.
