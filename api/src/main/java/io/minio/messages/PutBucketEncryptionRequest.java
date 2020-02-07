@@ -1,4 +1,5 @@
 package io.minio.messages;
+
 import org.xmlpull.v1.XmlPullParserException;
 
 import com.google.api.client.util.Key;
@@ -11,7 +12,7 @@ import io.minio.messages.XmlEntity;
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class PutBucketEncryptionRequest extends XmlEntity {
   @Key("ServerSideEncryption")
-  private ServerSideEncryption ServerSideEncryption;
+  private ServerSideEncryption serverSideEncryption;
   @Key("Bucket")
   private Bucket bucket;
 
@@ -25,7 +26,7 @@ public class PutBucketEncryptionRequest extends XmlEntity {
     super.name = "Put";
     super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
 
-    this.ServerSideEncryption = serv;
+    this.serverSideEncryption = serv;
     this.bucket = b;
   }
 }

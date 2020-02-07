@@ -35,6 +35,7 @@ import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
+import io.minio.errors.MinioException;
 import io.minio.errors.NoResponseException;
 import io.minio.errors.RegionConflictException;
 import io.minio.http.HeaderParser;
@@ -61,7 +62,6 @@ import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.PutBucketEncryptionRequest;
-import io.minio.messages.PutBucketEncryptionResponse;
 import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
@@ -3801,8 +3801,7 @@ public class MinioClient {
    *           upon an invalid access key or secret key
    * @throws NoResponseException         upon no response from server
    * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
+39   * @throws InternalException           upon internal library error
 
    * @throws InsufficientDataException   upon getting EOFException while reading given
    * @throws InvalidResponseException    upon a non-xml response from server
@@ -3932,31 +3931,30 @@ public class MinioClient {
     executeDelete(bucketName, null, null);
   }
 
-/**
-   * @throws XmlPullParserException 
-   * @throws IOException 
-   * @throws InvalidResponseException 
-   * @throws InternalException 
-   * @throws ErrorResponseException 
-   * @throws NoResponseException 
-   * @throws InsufficientDataException 
-   * @throws NoSuchAlgorithmException 
-   * @throws InvalidBucketNameException 
-   * @throws InvalidKeyException 
-     * 
-     */
-    public void putBucketEncryption(Bucket bucket, ServerSideEncryption serv) throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, NoResponseException, ErrorResponseException, InternalException, InvalidResponseException, IOException, XmlPullParserException {
-      PutBucketEncryptionRequest req = new PutBucketEncryptionRequest(serv, bucket);
-      HttpResponse resp = null;
-      try {
-        resp = executePut(bucket.name(), null, new HashMap<String, String>(), new HashMap<String, String>(), req, 0);
-        } finally {
-          resp.response().close();
-      }
-      if(resp.response().isSuccessful()) {
-        int code = resp.response().code();
-      }
-    }
+  /**
+   * Puts Encryption for specified bucket.
+   * 
+   * @param bucket Bucket object.
+   * @param serv ServerSideEncryption object.
+   * 
+   * @return code Response code
+   * 
+   * @throws XmlPullParserException      upon parsing response XML
+   * @throws IOException                 upon connection error
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InvalidKeyException         upon an invalid access key or secret key
+   * @throws MinioException              upon null bucket object received
+   */
+  public int putBucketEncryption(Bucket bucket, ServerSideEncryption serv) 
+    throws InvalidKeyException, NoSuchAlgorithmException,
+           IOException, XmlPullParserException, MinioException {
+    PutBucketEncryptionRequest req = new PutBucketEncryptionRequest(serv, bucket);
+    HttpResponse resp = executePut(bucket.name(), null, new HashMap<String, String>(), 
+        new HashMap<String, String>(), req, 0);
+    return resp.response().code();
+  }
+  
 
   /**
    * Uploads given file as object in given bucket.
