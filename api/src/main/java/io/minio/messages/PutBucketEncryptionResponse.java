@@ -1,6 +1,7 @@
 package io.minio.messages;
 
 import java.io.IOException;
+
 import java.io.Reader;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -9,7 +10,10 @@ import com.google.api.client.util.Key;
 
 import io.minio.ErrorCode;
 import io.minio.messages.XmlEntity;
-    
+
+/**
+ * Helper class to parse Amazon AWS S3 Put Bucket Encryption Response XML.
+ */    
 public class PutBucketEncryptionResponse extends XmlEntity {
   @Key("Code")
   protected String code;
@@ -21,7 +25,7 @@ public class PutBucketEncryptionResponse extends XmlEntity {
   }
 
   /**
-   * Constructs a new ErrorResponse object by reading given reader stream.
+   * Constructs a new PutBucketEncryptionResponse object by reading given reader stream.
    */
   public PutBucketEncryptionResponse(Reader reader) throws IOException, XmlPullParserException {
     this();
@@ -29,7 +33,7 @@ public class PutBucketEncryptionResponse extends XmlEntity {
   }
 
   /**
-   * Constructs a new ErrorResponse object with error code, bucket name, object
+   * Constructs a new PutBucketEncryptionResponse object with error code, bucket name, object
    * name, resource, request ID and host ID.
    */
   public PutBucketEncryptionResponse(ErrorCode errorCode, String bucketName, String objectName, String resource,

@@ -8,7 +8,9 @@ import io.minio.ServerSideEncryption;
 import io.minio.messages.Bucket;
 import io.minio.messages.XmlEntity;
 
-
+/**
+ * Helper class to create Amazon AWS S3 request XML containing information for bucket encryption.
+ */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class PutBucketEncryptionRequest extends XmlEntity {
   @Key("ServerSideEncryption")
@@ -19,7 +21,7 @@ public class PutBucketEncryptionRequest extends XmlEntity {
 
 
   /**
-   * Constructs new delete request for given object list and quiet flag.
+   * Constructs new request for given server side encryption object and bucket.
    */
   public PutBucketEncryptionRequest(ServerSideEncryption serv, Bucket b) throws XmlPullParserException {
     super();
