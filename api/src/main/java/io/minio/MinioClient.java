@@ -17,6 +17,8 @@
 
 package io.minio;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -31,7 +33,6 @@ import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidObjectPrefixException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.NoResponseException;
@@ -50,6 +51,7 @@ import io.minio.messages.DeleteRequest;
 import io.minio.messages.DeleteResult;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
+import io.minio.messages.InputSerialization;
 import io.minio.messages.Item;
 import io.minio.messages.ListAllMyBucketsResult;
 import io.minio.messages.ListBucketResult;
@@ -57,10 +59,12 @@ import io.minio.messages.ListBucketResultV1;
 import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
 import io.minio.messages.ObjectLockConfiguration;
+import io.minio.messages.OutputSerialization;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
+import io.minio.messages.SelectObjectContentRequest;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 
 import io.minio.notification.NotificationInfo;
@@ -807,6 +811,13 @@ public class MinioClient {
   }
 
 
+  private void checkObjectName(String objectName) throws InvalidArgumentException {
+    if ((objectName == null) || (objectName.isEmpty())) {
+      throw new InvalidArgumentException("object name cannot be empty");
+    }
+  }
+
+
   /**
    * Sets HTTP connect, write and read timeouts.  A value of 0 means no timeout, otherwise values must be between 1 and
    * Integer.MAX_VALUE when converted to milliseconds.
@@ -979,6 +990,8 @@ public class MinioClient {
           len = 0;
         }
 
+        // Disable default gzip compression by okhttp library.
+        requestBuilder.header("Accept-Encoding", "identity");
         if (method == Method.POST && queryParamMap != null && queryParamMap.containsKey("delete")) {
           // Fix issue #579: Treat 'Delete Multiple Objects' specially which requires MD5 hash.
           String[] hashes = Digest.sha256Md5Hashes(data, len);
@@ -1094,7 +1107,7 @@ public class MinioClient {
                                Multimap<String,String> headerMap, Multimap<String,String> queryParamMap,
                                Object body, int length)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InvalidKeyException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     String contentType = null;
     if (headerMap != null && headerMap.get("Content-Type") != null) {
@@ -1563,6 +1576,8 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InvalidResponseException {
     checkReadRequestSse(sse);
+    checkBucketName(bucketName);
+    checkObjectName(objectName);
 
     Map<String, String> headers = null;
     if (sse != null) {
@@ -1826,9 +1841,7 @@ public class MinioClient {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if ((objectName == null) || (objectName.isEmpty())) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     if (offset != null && offset < 0) {
       throw new InvalidArgumentException("offset should be zero or greater");
@@ -2359,17 +2372,15 @@ public class MinioClient {
     throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
            NoResponseException, ErrorResponseException, InternalException, IOException, XmlPullParserException,
            InvalidArgumentException, InvalidResponseException {
-    if (bucketName == null) {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if (objectName == null) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     checkWriteRequestSse(sse);
 
-    if (srcBucketName == null) {
+    if ((srcBucketName == null) || (srcBucketName.isEmpty())) {
       throw new InvalidArgumentException("Source bucket name cannot be empty");
     }
 
@@ -2449,13 +2460,11 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
     InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
     InternalException, InvalidArgumentException, InvalidResponseException {
-    if (bucketName == null) {
-      throw new InvalidArgumentException("Destination bucket name cannot be empty");
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if (objectName == null) {
-      throw new InvalidArgumentException("Destination object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     if (sources.isEmpty()) {
       throw new InvalidArgumentException("compose sources cannot be empty");
@@ -2956,9 +2965,7 @@ public class MinioClient {
       throw new InvalidArgumentException("bucket name cannot be empty");
     }
 
-    if ((objectName == null) || (objectName.isEmpty())) {
-      throw new InvalidArgumentException("object name cannot be empty");
-    }
+    checkObjectName(objectName);
 
     executeDelete(bucketName, objectName, null);
   }
@@ -3007,7 +3014,8 @@ public class MinioClient {
 
 
   /**
-   * Removes multiple objects from a bucket.
+   * Removes multiple objects from a bucket. As objects removal are lazily executed, its required
+   * to iterate the returned Iterable.
    *
    * </p><b>Example:</b><br>
    * <pre>{@code // Create object list for removal.
@@ -3022,6 +3030,8 @@ public class MinioClient {
    *
    * @param bucketName Bucket name.
    * @param objectNames List of Object names in the bucket.
+   *
+   * @return (lazy) Iterable of the Result DeleteErrors.
    */
   public Iterable<Result<DeleteError>> removeObjects(final String bucketName, final Iterable<String> objectNames) {
     return new Iterable<Result<DeleteError>>() {
@@ -4712,7 +4722,6 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
-   * @see #putObject(String bucketName, String objectName, String fileName)
    */
   public void putObject(String bucketName, String objectName, InputStream stream, Long size,
                         Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
@@ -4881,7 +4890,6 @@ public class MinioClient {
    *
    * @return bucket policy JSON string.
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -4897,7 +4905,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public String getBucketPolicy(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, BucketPolicyTooLargeException,
            InvalidResponseException {
@@ -4974,7 +4982,6 @@ public class MinioClient {
    * setBucketPolicy("my-bucketname", builder.toString()); }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -4989,7 +4996,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void setBucketPolicy(String bucketName, String policy)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> headerMap = new HashMap<>();
@@ -5136,7 +5143,6 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -5152,7 +5158,7 @@ public class MinioClient {
    *
    */
   public NotificationConfiguration getBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
@@ -5181,7 +5187,6 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -5197,7 +5202,7 @@ public class MinioClient {
    *
    */
   public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Map<String,String> queryParamMap = new HashMap<>();
@@ -5217,7 +5222,6 @@ public class MinioClient {
    * }</pre>
    *
    * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws InvalidObjectPrefixException upon invalid object prefix.
    * @throws NoSuchAlgorithmException
    *           upon requested algorithm was not found during signature calculation
    * @throws InsufficientDataException  upon getting EOFException while reading given
@@ -5232,7 +5236,7 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    */
   public void removeAllBucketNotification(String bucketName)
-    throws InvalidBucketNameException, InvalidObjectPrefixException, NoSuchAlgorithmException,
+    throws InvalidBucketNameException, NoSuchAlgorithmException,
            InsufficientDataException, IOException, InvalidKeyException, NoResponseException,
            XmlPullParserException, ErrorResponseException, InternalException, InvalidResponseException {
     NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
@@ -5737,7 +5741,6 @@ public class MinioClient {
    * @throws InvalidResponseException    upon a non-xml response from server
    *
    */
-
   public void listenBucketNotification(String bucketName, String prefix, String suffix, String[] events,
       BucketEventListener eventCallback)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
@@ -5781,6 +5784,186 @@ public class MinioClient {
         scanner.close();
       }
     }
+  }
+
+  /**
+   * Listen to bucket notifications. As bucket notification are lazily executed,
+   * its required to iterate. The returned closeable iterator must be used with
+   * try with resource or else the stream will not be closed.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   *  try (CloseableIterator<Result<NotificationInfo>> ci = client
+   * .listenBucketNotification("my-bucket", "", "", events)) {
+   *  while (ci.hasNext()) {
+   *    NotificationInfo info = ci.next().get();
+   *    System.out.println(info.toString());
+   *   }
+   *  } catch (IOException e) {
+   *    System.out.println("Error occurred: " + e);
+   *  }
+   * }
+   * </pre>
+   *
+   * @param bucketName Bucket name.
+   * @param prefix Prefix of concerned objects events.
+   * @param suffix Suffix of concerned objects events.
+   * @param events List of events to watch.
+   *
+   * @return (lazy) CloseableIterator of the Result NotificationInfo.
+   *
+   */
+  public CloseableIterator<Result<NotificationInfo>> listenBucketNotification(String bucketName, String prefix,
+      String suffix, String[] events)
+    throws IOException, InvalidKeyException, NoSuchAlgorithmException, InsufficientDataException,
+    InvalidResponseException, InternalException, NoResponseException, InvalidBucketNameException,
+    XmlPullParserException, ErrorResponseException {
+
+    Multimap<String, String> queryParamMap = HashMultimap.create();
+    queryParamMap.put("prefix", prefix);
+    queryParamMap.put("suffix", suffix);
+    for (String event : events) {
+      queryParamMap.put("events", event);
+    }
+
+    HttpResponse response = executeReq(Method.GET, getRegion(bucketName),
+        bucketName, "", null, queryParamMap, null, 0);
+
+    return new CloseableIterator<Result<NotificationInfo>>() {
+      Scanner scanner  = new Scanner(response.body().charStream()).useDelimiter("\n");
+
+      String notificationString = null;
+      ObjectMapper mapper = new ObjectMapper();
+      NotificationInfo notificationInfo = null;
+      boolean isClosed = false;
+
+      @Override
+      public void close() throws IOException {
+        if (!isClosed) {
+          try {
+            response.body().close();
+            scanner.close();
+          } finally {
+            isClosed = true;
+          }
+        }
+      }
+
+      public boolean populate()  {
+        if (isClosed) {
+          return false;
+        }
+
+        if (notificationString != null) {
+          return true;
+        }
+
+        while (scanner.hasNext()) {
+          notificationString = scanner.next().trim();
+          if ( !notificationString.equals("")) {
+            break;
+          }
+        }
+
+        if (notificationString  == null || notificationString.equals("")) {
+          try {
+            close();
+          } catch (IOException e) {
+            isClosed = true;
+          }
+          return false;
+        }
+        return true;
+      }
+
+      @Override
+      public boolean hasNext() {
+        return populate();
+      }
+
+      @Override
+      public Result<NotificationInfo> next() {
+        if (isClosed) {
+          throw new NoSuchElementException();
+        }
+        if ((notificationString  == null || notificationString.equals("")) &&  !populate() ) {
+              throw  new NoSuchElementException();
+        }
+
+        try {
+              notificationInfo = mapper.readValue(notificationString, NotificationInfo.class);
+              return new Result<>(notificationInfo, null);
+            } catch (JsonParseException e) {
+              return new Result<>(null, e);
+            } catch ( JsonMappingException e) {
+              return new Result<>(null, e);
+            } catch ( IOException e) {
+              return new Result<>(null, e);
+        } finally {
+          notificationString = null;
+          notificationInfo = null;
+        }
+      }
+    };
+  }
+
+
+  /**
+   * Select object content using SQL expression.
+   *
+   * @param bucketName Bucket name.
+   * @param objectName Object name.
+   * @param sqlExpression SQL expression.
+   * @param is Input serialization.
+   * @param os Output serialization.
+   * @param requestProgress Request progress in response.
+   * @param scanStartRange scan start range.
+   * @param scanEndRange scan end range.
+   * @param sse Server side encryption.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws InvalidArgumentException  upon empty object name is given
+   * @throws NoSuchAlgorithmException
+   *            upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *            InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *            upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   */
+
+  public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression,
+                                          InputSerialization is, OutputSerialization os, boolean requestProgress,
+                                          Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)
+    throws InvalidBucketNameException, InvalidArgumentException, NoSuchAlgorithmException, InsufficientDataException,
+           IOException, InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new InvalidArgumentException("bucket name cannot be empty");
+    }
+    checkObjectName(objectName);
+    checkReadRequestSse(sse);
+
+    Map<String, String> headerMap = null;
+    if (sse != null) {
+      headerMap = sse.headers();
+    }
+
+    Map<String,String> queryParamMap = new HashMap<>();
+    queryParamMap.put("select", "");
+    queryParamMap.put("select-type", "2");
+
+    SelectObjectContentRequest request = new SelectObjectContentRequest(sqlExpression, requestProgress, is, os,
+                                                                        scanStartRange, scanEndRange);
+    HttpResponse response = execute(Method.POST, getRegion(bucketName), bucketName, objectName,
+                                    headerMap, queryParamMap, request, 0);
+    return new SelectResponseStream(response.body().byteStream());
   }
 
 

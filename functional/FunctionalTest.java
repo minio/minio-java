@@ -1,4 +1,3 @@
-
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
  * (C) 2015-2019 MinIO, Inc.
@@ -1008,28 +1007,28 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: statObject(String bucketName, "/").
+   * Test: statObject(String bucketName, "randomName/").
    */
   public static void statObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: statObject(String bucketName, \"/\")");
+      System.out.println("Test: statObject(String bucketName, \"randomName/\")");
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      client.statObject(bucketName, "/");
+      client.statObject(bucketName, getRandomName() + "/");
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_KEY) {
-        mintFailedLog("statObject(String bucketName, \"/\")", null, startTime, null,
+        mintFailedLog("statObject(String bucketName, \"randomName/\")", null, startTime, null,
                       e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     } catch (Exception e) {
-      mintFailedLog("statObject(String bucketName, \"/\")", null, startTime, null,
+      mintFailedLog("statObject(String bucketName, \"randomName/\")", null, startTime, null,
                     e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } finally {
-      mintSuccessLog("statObject(String bucketName, \"/\"`)", null, startTime);
+      mintSuccessLog("statObject(String bucketName, \"randomName/\"`)", null, startTime);
     }
   }
 
@@ -3152,16 +3151,14 @@ public class FunctionalTest {
    */
   public static void listenBucketNotification_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listenBucketNotification(String bucketName)");
+      System.out.println("Test: listenBucketNotification(String bucketName, String prefix,"
+          + "String suffix, String[] events)");
     }
-
     long startTime = System.currentTimeMillis();
     String file = createFile1Kb();
     String bucketName = getRandomName();
-
     try {
       client.makeBucket(bucketName, region);
-
       class TestBucketListener implements BucketEventListener {
         int eventsReceived = 0;
         Exception lastException = null;
@@ -3185,8 +3182,15 @@ public class FunctionalTest {
       new Thread(new Runnable() {
         public void run() {
           String[] events = { "s3:ObjectCreated:*", "s3:ObjectAccessed:*" };
-          try {
-            client.listenBucketNotification(bucketName, "prefix", "suffix", events, bl);
+          try (CloseableIterator<Result<NotificationInfo>> ci = client
+            .listenBucketNotification(bucketName, "prefix", "suffix", events)) {
+            while (ci.hasNext()) {
+              NotificationInfo ni = ci.next().get();
+              if (ni != null) {
+                bl.updateEvent(ni);
+                break;
+              }
+            }
           } catch (Exception e) {
             bl.updateError(e);
           }
@@ -3226,7 +3230,8 @@ public class FunctionalTest {
         throw new Exception("[FAILED] No event notification is received");
       }
       if (!bl.firstEvent.s3.bucket.name.equals(bucketName)) {
-        throw new Exception("[FAILED] Bucket name expected: " + bucketName + ", Got: " + bl.firstEvent.s3.bucket.name);
+        throw new Exception("[FAILED] Bucket name expected: " + bucketName + ", Got: "
+          + bl.firstEvent.s3.bucket.name);
       }
       if (!bl.firstEvent.s3.object.key.equals("prefix-random-suffix")) {
         throw new Exception("[FAILED] Bucket name expected: " + file + ", Got: " + bl.firstEvent.s3.object.key);
@@ -3241,6 +3246,76 @@ public class FunctionalTest {
       Files.delete(Paths.get(file));
       client.removeObject(bucketName, "prefix-random-suffix");
       client.removeBucket(bucketName);
+    }
+  }
+
+  /**
+   * Test: selectObjectContent(String bucketName, String objectName, String sqlExpression,
+   *                           InputSerialization is, OutputSerialization os, boolean requestProgress,
+   *                           Long scanStartRange, Long scanEndRange, ServerSideEncryption sse).
+   */
+  public static void selectObjectContent_test1() throws Exception {
+    String testName = "selectObjectContent(String bucketName, String objectName, String sqlExpression,"
+        + " InputSerialization is, OutputSerialization os, boolean requestProgress,"
+        + " Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)";
+
+    if (!mintEnv) {
+      System.out.println("Test: " + testName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String objectName = getRandomName();
+    SelectResponseStream responseStream = null;
+    try {
+      String expectedResult = "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
+          + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",,4900.00\n"
+          + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
+          + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
+          + "air, moon roof, loaded\",4799.00\n";
+      byte[] data = ("Year,Make,Model,Description,Price\n" + expectedResult).getBytes(StandardCharsets.UTF_8);
+      ByteArrayInputStream bais = new ByteArrayInputStream(data);
+      client.putObject(bucketName, objectName, bais, Long.valueOf(data.length), null, null, null);
+
+      String sqlExpression = "select * from S3Object";
+      InputSerialization is = InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE,
+                                                     null, null, null);
+      OutputSerialization os = OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+
+      responseStream = client.selectObjectContent(bucketName, objectName, sqlExpression,
+                                                                       is, os, true, null, null, null);
+
+      String result = new String(readAllBytes(responseStream), StandardCharsets.UTF_8);
+      if (!result.equals(expectedResult)) {
+        throw new Exception("result mismatch; expected: " + expectedResult + ", got: " + result);
+      }
+
+      Stats stats = responseStream.stats();
+
+      if (stats == null) {
+        throw new Exception("stats is null");
+      }
+
+      if (stats.bytesScanned() != 256) {
+        throw new Exception("stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned());
+      }
+
+      if (stats.bytesProcessed() != 256) {
+        throw new Exception("stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed());
+      }
+
+      if (stats.bytesReturned() != 222) {
+        throw new Exception("stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
+      }
+
+      mintSuccessLog(testName, null, startTime);
+    } catch (Exception e) {
+      mintFailedLog(testName, null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    } finally {
+      if (responseStream != null) {
+        responseStream.close();
+      }
+      client.removeObject(bucketName, objectName);
     }
   }
 
@@ -3322,6 +3397,8 @@ public class FunctionalTest {
     composeObject_test2();
     composeObject_test3();
 
+    selectObjectContent_test1();
+
     // SSE_C tests will only work over TLS connection
     Locale locale = Locale.ENGLISH;
     boolean tlsEnabled = endpoint.toLowerCase(locale).contains("https://");
@@ -3394,6 +3471,7 @@ public class FunctionalTest {
     copyObject_test1();
     getBucketPolicy_test1();
     setBucketPolicy_test1();
+    selectObjectContent_test1();
     listenBucketNotification_test1();
 
     teardown();

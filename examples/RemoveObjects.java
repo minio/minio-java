@@ -48,6 +48,7 @@ public class RemoveObjects {
       objectNames.add("my-objectname3");
 
       // Remove object all objects 'objectNames' list from 'my-bucketname'.
+      // It is required to traverse over the returned Iterable for lazy evaluation.
       for (Result<DeleteError> errorResult: minioClient.removeObjects("my-bucketname", objectNames)) {
         DeleteError error = errorResult.get();
         System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());

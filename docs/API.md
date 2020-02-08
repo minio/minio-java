@@ -24,8 +24,9 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listObjects`](#listObjects)  | [`removeObject`](#removeObject) |   |  [`deleteBucketLifeCycle`](#deleteBucketLifeCycle) |
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
 | [`listenBucketNotification`](#listenBucketNotification) | [`composeObject`](#composeObject) |   |   |
-| [`setBucketNotification`](#setBucketNotification) |  |   |   |
+| [`setBucketNotification`](#setBucketNotification) | [`selectObjectContent`](#selectObjectContent) |   |   |
 | [`getBucketNotification`](#getBucketNotification) |  |   |   |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) |  |   |   |
 | [`enableVersioning`](#enableVersioning) |  |   |   |
 | [`disableVersioning`](#disableVersioning) |  |   |   |
 | [`setDefaultRetention`](#setDefaultRetention) |  |   |   |
@@ -847,12 +848,14 @@ try {
 ```
 
 <a name="listenBucketNotification"></a>
-### listenBucketNotification(String bucketName, String prefix, String suffix, String[] events, BucketEventListener listener)
-`public void listenBucketNotification(String bucketName, String prefix, String suffix, String[] events, BucketEventListener listener)`
-
+### listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)
+`public CloseableIterator<Result<NotificationInfo>> listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)`
+ 
 Listen to events related to objects under the specified bucket.
+The returned closeable iterator must be used with try-with-resource
+else the stream will not be closed leading to a leaky connection.
 
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String-java.lang.String:A-io.minio.BucketEventListener-)
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String-java.lang.String-)
 
 __Parameters__
 
@@ -862,11 +865,10 @@ __Parameters__
 | ``prefix`` | _String_ | Only listen for objects with the given prefix. |
 | ``suffix`` | _String_ | Only listen for objects with the given suffix. |
 | ``events`` | _String[]_ | Only listen for the specified events, such as s3:ObjectCreated:*, s3:ObjectAccessed:*, s3:ObjectRemoved:*, ..  |
-| ``listener`` | _BucketEventListener_ | Interface with updateEvent method |
 
-| Return Type	  | Exceptions	  |
+|Return Type	  | Exceptions	  |
 |:--- |:--- |
-|  None  | Listed Exceptions: |
+|   ``CloseableIterator<Result<NotificationInfo>>``:an iterator of Result NotificationInfo.        | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
@@ -883,23 +885,25 @@ __Example__
 
 
 ```java
-  try {
-    class TestBucketListener implements BucketEventListener {
-      @Override
-      public void updateEvent(NotificationInfo info) {
-        System.out.println(info.records[0].s3.bucket.name + "/"
-           + info.records[0].s3.object.key + " has been created");
+ try {
+      String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+      try (CloseableIterator<Result<NotificationInfo>> ci = minioClient
+        .listenBucketNotification("bcketName", "", "", events)) {
+        while (ci.hasNext()) {
+          NotificationInfo info = ci.next().get();
+          System.out.println(info.records[0].s3.bucket.name + "/"
+              + info.records[0].s3.object.key + " has been created");
+        }
+      } catch (IOException e) {
+        System.out.println("Error occurred: " + e);
       }
-    }
+    } catch (MinioException e) {
+      System.out.println("Error occurred: " + e);
 
-    minioClient.listenBucketNotification("testbucket", "", "",
-        new String[]{"s3:ObjectCreated:*", "s3:ObjectAccessed:*"}, new TestBucketListener());
-  } catch (Exception e) {
-    System.out.println("Error occurred: " + e);
-  }
+    }
   ```
 
-  <a name="setBucketNotification"></a>
+<a name="setBucketNotification"></a>
 ### setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
 `public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)`
 
@@ -918,7 +922,6 @@ __Parameters__
 |:--- |:--- |
 |  None  | Listed Exceptions: |
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``InvalidObjectPrefixException`` : upon invalid object prefix. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
 |        | ``IOException`` : upon connection error.            |
@@ -963,7 +966,7 @@ __Example__
     }
 ```
 
-  <a name="getBucketNotification"></a>
+<a name="getBucketNotification"></a>
 ### getBucketNotification(String bucketName)
 `public NotificationConfiguration getBucketNotification(String bucketName)`
 
@@ -1006,6 +1009,74 @@ __Example__
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
+```
+
+<a name="removeAllBucketNotification"></a>
+### removeAllBucketNotification(String bucketName)
+`public void removeAllBucketNotification(String bucketName)`
+
+Remove all notification configuration from a bucket.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeAllBucketNotification-java.lang.String)
+
+__Parameters__
+
+|Param   | Type   | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Name of the bucket.  |
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  None  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
+|        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+
+__Example__
+
+
+```java
+
+    
+try {
+      // Add a new topic configuration.
+      List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+      TopicConfiguration topicConfiguration = new TopicConfiguration();
+      topicConfiguration.setTopic(topic);
+
+      List<EventType> eventList = new LinkedList<>();
+      eventList.add(EventType.OBJECT_CREATED_PUT);
+      eventList.add(EventType.OBJECT_CREATED_COPY);
+      topicConfiguration.setEvents(eventList);
+
+      Filter filter = new Filter();
+      filter.setPrefixRule("images");
+      filter.setSuffixRule("pg");
+      topicConfiguration.setFilter(filter);
+
+      topicConfigurationList.add(topicConfiguration);
+      notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+
+      client.setBucketNotification("my-bucketname", notificationConfiguration);
+
+      notificationConfiguration = new NotificationConfiguration();
+      String expectedResult = notificationConfiguration.toString();
+
+      client.removeAllBucketNotification("my-bucketname");
+      System.out.println("Bucket notification is removed successfully");
+
+      notificationConfiguration = client.getBucketNotification(destBucketName);
+      String result = notificationConfiguration.toString();
+     } catch (MinioException e) {
+            System.out.println("Error occurred: " + e);
+     }
 ```
 
 <a name="enableVersioning"></a>
@@ -1376,7 +1447,6 @@ __Parameters__
 |:--- |:--- |
 |  _String_: Bucket policy JSON string. | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``InvalidObjectPrefixException`` : upon invalid object prefix.        |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
@@ -1419,7 +1489,6 @@ __Parameters__
 |:--- |:--- |
 |  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``InvalidObjectPrefixException`` : upon invalid object prefix.        |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.  |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
@@ -3137,6 +3206,68 @@ try {
       System.out.println("Error occurred: " + e);
     }
   }
+```
+
+ <a name="selectObjectContent"></a>
+### selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)
+
+`public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)`
+
+Select object content using SQL expression.
+
+[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-java.lang.String-java.lang.String-)
+
+__Parameters__
+
+|Param   | Type	  | Description  |
+|:--- |:--- |:--- |
+| ``bucketName``  | _String_  | Destination bucket name. |
+| ``objectName`` | _String_ | Destination object name to be created, if not provided defaults to source object name.|
+| ``sqlExpression``  | _String_  | SQL expression.  |
+| ``is``  | _InputSerialization_  | Object's input specification. |
+| ``os``  | _OutputSerialization_  | Object's output specification. |
+| ``requestProgress``  | _boolean_  | Flag to request progress information.  |
+| ``scanStartRange``  | _Long_  | scan start range of the object.  |
+| ``scanEndRange``  | _Long_  | scan end range of the object.  |
+| ``sse``  | _ServerSideEncryption_  | Form of server-side encryption [ServerSideEncryption](http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html). |
+
+| Return Type	  | Exceptions	  |
+|:--- |:--- |
+|  SelectResponseStream  | Listed Exceptions: |
+|        | ``InvalidBucketNameException`` : upon invalid bucket name. |
+|        | ``InvalidArgumentException`` : upon empty object name. |
+|        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
+|        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
+|        | ``IOException`` : upon connection error.            |
+|        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
+|        | ``NoResponseException`` : upon no response from server.            |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
+|        | ``ErrorResponseException`` : upon unsuccessful execution.            |
+|        | ``InternalException`` : upon internal library error.        |
+|        | ``InvalidArgumentException`` : upon passing of an invalid value to a method.        |
+|        | ``InvalidResponseException`` : upon a non-xml response from server.        |
+
+__Example__
+
+```java
+try {
+  /* play.min.io for test and development. */
+  MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+  String sqlExpression = "select * from S3Object";
+  InputSerialization is = InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE, null, null, null);
+  OutputSerialization os = OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+  SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression, is, os, true, null, null, null);
+  byte[] buf = new byte[512];
+  int bytesRead = stream.read(buf, 0, buf.length);
+  System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+  Stats stats = stream.stats();
+  System.out.println("bytes scanned: " + stats.bytesScanned());
+  System.out.println("bytes processed: " + stats.bytesProcessed());
+  System.out.println("bytes returned: " + stats.bytesReturned());
+  stream.close();
+} catch (MinioException e) {
+  System.out.println("Error occurred: " + e);
+}
 ```
 
 ## 4. Presigned operations

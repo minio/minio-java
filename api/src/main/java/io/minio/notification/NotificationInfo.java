@@ -20,6 +20,7 @@ package io.minio.notification;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Arrays;
 
 @SuppressFBWarnings("UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -28,5 +29,12 @@ public class NotificationInfo {
   public NotificationEvent[] records;
   @JsonProperty("Err")
   public String err;
+
+
+  @Override
+  public String toString() {
+    return "NotificationInfo{" + "records=" + Arrays.toString(records)
+      + ", err='" + err + '\'' + '}';
+  }
 }
 
