@@ -3948,7 +3948,7 @@ public class MinioClient {
    */
   public int putBucketEncryption(Bucket bucket, ServerSideEncryption serv) 
     throws InvalidKeyException, NoSuchAlgorithmException,
-           IOException, XmlPullParserException, MinioException {
+           IOException, XmlPullParserException, MinioException, InvalidResponseException {
     PutBucketEncryptionRequest req = new PutBucketEncryptionRequest(serv, bucket);
     HttpResponse resp = executePut(bucket.name(), null, new HashMap<String, String>(), 
         new HashMap<String, String>(), req, 0);

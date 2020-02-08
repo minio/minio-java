@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
 
+import io.minio.ServerSideEncryption.Type;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -90,7 +91,23 @@ public class MinioClientTest {
   private static final String MD5_HASH_STRING = "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"";
   private static final ObjectMapper objectMapper =
       new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+  
+  static class ServerSideEncryptionImpl extends ServerSideEncryption{
 
+    @Override
+    public Type type() {
+      // TODO Auto-generated method stub
+      return null;
+    }
+
+    @Override
+    public Map<String, String> headers() {
+      // TODO Auto-generated method stub
+      return null;
+    }
+    
+  }
+  
   @Test()
   public void setUserAgentOnceSet() throws IOException, MinioException {
     String expectedHost = "example.com";
@@ -767,6 +784,34 @@ public class MinioClientTest {
     // Get the bucket policy for the new bucket and check
     String policyString = client.getBucketPolicy(BUCKET);
     assertEquals(expectedPolicyString, policyString);
+  }
+
+  @Test
+  public void testPutBucketEncryption()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+    Bucket bckt = new Bucket();
+    ServerSideEncryptionImpl serv = new ServerSideEncryptionImpl();
+    int expectedcode = 200;
+    MinioClient client = new MinioClient(server.url(""));
+ 
+    response.setResponseCode(expectedcode);
+    server.enqueue(response);
+    int cd = client.putBucketEncryption(bckt, serv);
+    assertEquals(expectedcode, cd);
+  }
+  
+  @Test(expected = NullPointerException.class)
+  public void testInvalidPutBucketEncryption()
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+    MockWebServer server = new MockWebServer();
+    MockResponse response = new MockResponse();
+    ServerSideEncryptionImpl serv = new ServerSideEncryptionImpl();
+    MinioClient client = new MinioClient(server.url(""));
+    server.enqueue(response);
+    client.putBucketEncryption(null, serv);
+    throw new InvalidResponseException();
   }
 
 
