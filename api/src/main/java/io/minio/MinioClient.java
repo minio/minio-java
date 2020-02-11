@@ -163,13 +163,6 @@ public class MinioClient {
   private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // default network I/O timeout is 15 minutes
   private static final long DEFAULT_CONNECTION_TIMEOUT = 15 * 60;
-  // maximum allowed object size is 5TiB
-  private static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
-  // maxPartSize - maximum part size 5GiB for a single multipart upload operation
-  private static final long MAX_PART_SIZE = 5L * 1024 * 1024 * 1024;
-  private static final int MAX_MULTIPART_COUNT = 10000;
-  // minimum allowed multipart size is 5MiB
-  private static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
   // maximum allowed bucket policy size is 12KiB
   private static final int MAX_BUCKET_POLICY_SIZE = 12 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
@@ -2472,29 +2465,30 @@ public class MinioClient {
         size -= src.offset();
       }
 
-      if (size < MIN_MULTIPART_SIZE && sources.size() != 1 && i != (sources.size() - 1)) {
+      if (size < PutObjectOptions.MIN_MULTIPART_SIZE && sources.size() != 1 && i != (sources.size() - 1)) {
         throw new InvalidArgumentException("source " + src.bucketName() + "/" + src.objectName() + ": size "
-          + size + " must be greater than " + MIN_MULTIPART_SIZE);
+          + size + " must be greater than " + PutObjectOptions.MIN_MULTIPART_SIZE);
       }
 
       objectSize += size;
-      if (objectSize > MAX_OBJECT_SIZE) {
-        throw new InvalidArgumentException("Destination object size must be less than " + MAX_OBJECT_SIZE);
+      if (objectSize > PutObjectOptions.MAX_OBJECT_SIZE) {
+        throw new InvalidArgumentException("Destination object size must be less than "
+                                           + PutObjectOptions.MAX_OBJECT_SIZE);
       }
 
-      if (size > MAX_PART_SIZE) {
-        long count = size / MAX_PART_SIZE;
-        long lastPartSize = size - (count * MAX_PART_SIZE);
+      if (size > PutObjectOptions.MAX_PART_SIZE) {
+        long count = size / PutObjectOptions.MAX_PART_SIZE;
+        long lastPartSize = size - (count * PutObjectOptions.MAX_PART_SIZE);
         if (lastPartSize > 0) {
           count++;
         } else {
-          lastPartSize = MAX_PART_SIZE;
+          lastPartSize = PutObjectOptions.MAX_PART_SIZE;
         }
 
-        if (lastPartSize < MIN_MULTIPART_SIZE && sources.size() != 1 && i != (sources.size() - 1)) {
+        if (lastPartSize < PutObjectOptions.MIN_MULTIPART_SIZE && sources.size() != 1 && i != (sources.size() - 1)) {
           throw new InvalidArgumentException("source " + src.bucketName() + "/" + src.objectName() + ": "
             + "for multipart split upload of " + size
-            + ", last part size is less than " + MIN_MULTIPART_SIZE);
+            + ", last part size is less than " + PutObjectOptions.MIN_MULTIPART_SIZE);
         }
 
         partsCount += (int)count;
@@ -2502,9 +2496,9 @@ public class MinioClient {
         partsCount++;
       }
 
-      if (partsCount > MAX_MULTIPART_COUNT) {
+      if (partsCount > PutObjectOptions.MAX_MULTIPART_COUNT) {
         throw new InvalidArgumentException("Compose sources create more than allowed multipart count "
-          + MAX_MULTIPART_COUNT);
+          + PutObjectOptions.MAX_MULTIPART_COUNT);
       }
     }
 
@@ -2553,7 +2547,7 @@ public class MinioClient {
           offset = src.offset();
         }
 
-        if (size <= MAX_PART_SIZE) {
+        if (size <= PutObjectOptions.MAX_PART_SIZE) {
           partNumber++;
           Map<String, String> headers = null;
           if (src.headers() == null) {
@@ -2579,8 +2573,8 @@ public class MinioClient {
           partNumber++;
 
           long startBytes = offset;
-          long endBytes = startBytes + MAX_PART_SIZE;
-          if (size < MAX_PART_SIZE) {
+          long endBytes = startBytes + PutObjectOptions.MAX_PART_SIZE;
+          if (size < PutObjectOptions.MAX_PART_SIZE) {
             endBytes = startBytes + size;
           }
 
@@ -4089,7 +4083,10 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InsufficientDataException   upon getting EOFException while reading given
+   *
+   * @deprecated As of release 7.0
    */
+  @Deprecated
   public void putObject(String bucketName, String objectName, String fileName,  Long size,
                         Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
@@ -4701,7 +4698,10 @@ public class MinioClient {
    * @throws InternalException           upon internal library error
    * @throws InvalidArgumentException    upon invalid value is passed to a method.
    * @throws InvalidResponseException    upon a non-xml response from server
+   *
+   * @deprecated As of release 7.0
    */
+  @Deprecated
   public void putObject(String bucketName, String objectName, InputStream stream, Long size,
                         Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
@@ -4712,42 +4712,6 @@ public class MinioClient {
       stream = new BufferedInputStream(stream);
     }
     putObject(bucketName, objectName, size, stream, headerMap, sse, contentType);
-  }
-
-  /**
-   * Executes put object and returns ETag of the object.
-   *
-   * @param bucketName
-   *          Bucket name.
-   * @param objectName
-   *          Object name in the bucket.
-   * @param length
-   *          Length of object data.
-   * @param data
-   *          Object data.
-   * @param uploadId
-   *          Upload ID of multipart put object.
-   * @param partNumber
-   *          Part number of multipart put object.
-   */
-  private String putObject(String bucketName, String objectName, Object data, int length,
-                           Map<String, String> headerMap, String uploadId, int partNumber)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidResponseException {
-    HttpResponse response = null;
-
-    Map<String,String> queryParamMap = null;
-    if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
-      queryParamMap = new HashMap<>();
-      queryParamMap.put("partNumber", Integer.toString(partNumber));
-      queryParamMap.put(UPLOAD_ID, uploadId);
-    }
-
-    response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
-
-    response.body().close();
-    return response.header().etag();
   }
 
 
@@ -4763,7 +4727,10 @@ public class MinioClient {
    *          Size of object data.
    * @param data
    *          Object data.
+   *
+   * @deprecated As of release 7.0
    */
+  @Deprecated
   private void putObject(String bucketName, String objectName, Long size, Object data,
       Map<String, String> headerMap, ServerSideEncryption sse,  String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
@@ -4773,7 +4740,7 @@ public class MinioClient {
 
     if (size == null) {
       unknownSize = true;
-      size = MAX_OBJECT_SIZE;
+      size = PutObjectOptions.MAX_OBJECT_SIZE;
     }
 
     if (headerMap == null) {
@@ -4796,7 +4763,7 @@ public class MinioClient {
     }
 
 
-    if (size <= MIN_MULTIPART_SIZE) {
+    if (size <= PutObjectOptions.MIN_MULTIPART_SIZE) {
       putObject(bucketName, objectName, data, size.intValue(), headerMap, null, 0);
       return;
     }
@@ -4855,6 +4822,235 @@ public class MinioClient {
       throw e;
     }
   }
+
+
+  /**
+   * Executes put object and returns ETag of the object.
+   *
+   * @param bucketName
+   *          Bucket name.
+   * @param objectName
+   *          Object name in the bucket.
+   * @param length
+   *          Length of object data.
+   * @param data
+   *          Object data.
+   * @param uploadId
+   *          Upload ID of multipart put object.
+   * @param partNumber
+   *          Part number of multipart put object.
+   */
+  private String putObject(String bucketName, String objectName, Object data, int length,
+                           Map<String, String> headerMap, String uploadId, int partNumber)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+    HttpResponse response = null;
+
+    Map<String,String> queryParamMap = null;
+    if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
+      queryParamMap = new HashMap<>();
+      queryParamMap.put("partNumber", Integer.toString(partNumber));
+      queryParamMap.put(UPLOAD_ID, uploadId);
+    }
+
+    response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
+
+    response.body().close();
+    return response.header().etag();
+  }
+
+
+  private void putObject(String bucketName, String objectName, PutObjectOptions options, Object data)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
+    Map<String, String> headerMap = new HashMap<>();
+
+    if (options.headers() != null) {
+      headerMap.putAll(options.headers());
+    }
+
+    if (options.sse() != null) {
+      checkWriteRequestSse(options.sse());
+      headerMap.putAll(options.sse().headers());
+    }
+
+    if (headerMap.get("Content-Type") == null) {
+      headerMap.put("Content-Type", options.contentType());
+    }
+
+    // initiate new multipart upload.
+    String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
+
+    long uploadedSize = 0L;
+    int partCount = options.partCount();
+    Part[] totalParts = new Part[PutObjectOptions.MAX_MULTIPART_COUNT];
+
+    try {
+      for (int partNumber = 1; partNumber <= partCount || partCount < 0; partNumber++) {
+        long availableSize = (long) getAvailableSize(data, (int) options.partSize() + 1);
+
+        // If availableSize is less or equal to options.partSize(), then we have reached last part.
+        if (availableSize <= options.partSize()) {
+          if (partCount > 0) {
+            if (partNumber != partCount) {
+              throw new IOException("unexpected EOF");
+            }
+
+            if (availableSize + uploadedSize != options.objectSize()) {
+              throw new IOException("unexpected EOF");
+            }
+          } else {
+            partCount = partNumber;
+          }
+        } else {
+          availableSize = options.partSize();
+        }
+
+        Map<String, String> ssecHeaders = null;
+        // set encryption headers in the case of SSE-C.
+        if (options.sse() != null && options.sse().type() == ServerSideEncryption.Type.SSE_C) {
+          ssecHeaders = options.sse().headers();
+        }
+
+        String etag = putObject(bucketName, objectName, data, (int) availableSize, ssecHeaders, uploadId,
+                                partNumber);
+        totalParts[partNumber - 1] = new Part(partNumber, etag);
+        uploadedSize += availableSize;
+      }
+
+      completeMultipart(bucketName, objectName, uploadId, totalParts);
+    } catch (RuntimeException e) {
+      abortMultipartUpload(bucketName, objectName, uploadId);
+      throw e;
+    } catch (Exception e) {
+      abortMultipartUpload(bucketName, objectName, uploadId);
+      throw e;
+    }
+  }
+
+
+  /**
+   * Uploads data from given file as object to given bucket using given PutObjectOptions.
+   * If any error occurs, partial uploads are aborted.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
+   * minioClient.putObject("my-bucketname", "my-objectname", "trip.mp4", options);
+   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param filename    Name of file to upload.
+   * @param options     Options to be used during object upload.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void putObject(String bucketName, String objectName, String filename, PutObjectOptions options)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
+    checkBucketName(bucketName);
+    checkObjectName(objectName);
+
+    if (filename == null || "".equals(filename)) {
+      throw new InvalidArgumentException("empty filename is not allowed");
+    }
+
+    if (options == null) {
+      throw new InvalidArgumentException("PutObjectOptions must be provided");
+    }
+
+    Path filePath = Paths.get(filename);
+    if (!Files.isRegularFile(filePath)) {
+      throw new InvalidArgumentException(filename + ": not a regular file");
+    }
+
+    if (options.contentType().equals("application/octet-stream")
+        && options.headers() != null && options.headers().get("Content-Type") == null) {
+      options.setContentType(Files.probeContentType(filePath));
+    }
+
+    if (options.objectSize() != Files.size(filePath)) {
+      throw new InvalidArgumentException("file size " + Files.size(filePath) + " and object size in options "
+                                         + options.objectSize() + " does not match");
+    }
+
+    RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
+
+    try {
+      putObject(bucketName, objectName, options, file);
+    } finally {
+      file.close();
+    }
+  }
+
+
+  /**
+   * Uploads data from given stream as object to given bucket using given PutObjectOptions.
+   * If any error occurs, partial uploads are aborted.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
+   * minioClient.putObject("my-bucketname", "my-objectname", inputStream, options);
+   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   *
+   * @param bucketName  Bucket name.
+   * @param objectName  Object name to create in the bucket.
+   * @param stream      Stream to upload.
+   * @param options     Options to be used during object upload.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
+    checkBucketName(bucketName);
+    checkObjectName(objectName);
+
+    if (stream == null) {
+      throw new InvalidArgumentException("InputStream must be provided");
+    }
+
+    if (options == null) {
+      throw new InvalidArgumentException("PutObjectOptions must be provided");
+    }
+
+    if (!(stream instanceof BufferedInputStream)) {
+      stream = new BufferedInputStream(stream);
+    }
+
+    putObject(bucketName, objectName, options, stream);
+  }
+
 
   /**
    * Get JSON string of bucket policy of the given bucket.
@@ -5952,12 +6148,12 @@ public class MinioClient {
    */
   private static int[] calculateMultipartSize(long size)
     throws InvalidArgumentException {
-    if (size > MAX_OBJECT_SIZE) {
+    if (size > PutObjectOptions.MAX_OBJECT_SIZE) {
       throw new InvalidArgumentException("size " + size + " is greater than allowed size 5TiB");
     }
 
-    double partSize = Math.ceil((double) size / MAX_MULTIPART_COUNT);
-    partSize = Math.ceil(partSize / MIN_MULTIPART_SIZE) * MIN_MULTIPART_SIZE;
+    double partSize = Math.ceil((double) size / PutObjectOptions.MAX_MULTIPART_COUNT);
+    partSize = Math.ceil(partSize / PutObjectOptions.MIN_MULTIPART_SIZE) * PutObjectOptions.MIN_MULTIPART_SIZE;
 
     double partCount = Math.ceil(size / partSize);
 
