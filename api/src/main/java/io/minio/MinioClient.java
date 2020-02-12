@@ -1057,6 +1057,30 @@ public class MinioClient {
    */
   private HttpResponse execute(Method method, String region, String bucketName, String objectName,
                                Map<String,String> headerMap, Map<String,String> queryParamMap,
+                               Object body, int length)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+
+    return execute(method, region, bucketName, objectName, headerMap, queryParamMap,
+            body, length, false);
+  }
+
+    /**
+   * Executes given request parameters.
+   *
+   * @param method         HTTP method.
+   * @param region         Amazon S3 region of the bucket.
+   * @param bucketName     Bucket name.
+   * @param objectName     Object name in the bucket.
+   * @param headerMap      Map of HTTP headers for the request.
+   * @param queryParamMap  Map of HTTP query parameters of the request.
+   * @param body           HTTP request body.
+   * @param length         Length of HTTP request body.
+   * @param md5Required    Validates if md5 is required.
+   */
+  private HttpResponse execute(Method method, String region, String bucketName, String objectName,
+                               Map<String,String> headerMap, Map<String,String> queryParamMap,
                                Object body, int length, boolean md5Required)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
@@ -1231,7 +1255,7 @@ public class MinioClient {
       queryParamMap.put("location", null);
 
       HttpResponse response = execute(Method.GET, US_EAST_1, bucketName, null,
-          null, queryParamMap, null, 0, false);
+          null, queryParamMap, null, 0);
 
       // existing XmlEntity does not work, so fallback to regular parsing.
       XmlPullParser xpp = xmlPullParserFactory.newPullParser();
@@ -1334,7 +1358,7 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
-    return execute(Method.GET, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, null, 0, false);
+    return execute(Method.GET, getRegion(bucketName), bucketName, objectName, headerMap, queryParamMap, null, 0);
   }
 
 
@@ -1349,7 +1373,7 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, null,
-                                    null, null, 0, false);
+                                    null, null, 0);
     response.body().close();
     return response;
   }
@@ -1367,7 +1391,7 @@ public class MinioClient {
            InternalException, InvalidResponseException {
 
     HttpResponse response = execute(Method.HEAD, getRegion(bucketName), bucketName, objectName, headerMap,
-                                    null, null, 0, false);
+                                    null, null, 0);
     response.body().close();
     return response;
   }
@@ -1384,7 +1408,7 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.DELETE, getRegion(bucketName), bucketName, objectName, null,
-                                    queryParamMap, null, 0, false);
+                                    queryParamMap, null, 0);
     response.body().close();
     return response;
   }
@@ -1405,7 +1429,7 @@ public class MinioClient {
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
     return execute(Method.POST, getRegion(bucketName), bucketName, objectName, headerMap, 
-            queryParamMap, data, 0, false);
+            queryParamMap, data, 0);
   }
 
   /**
@@ -1463,7 +1487,7 @@ public class MinioClient {
            InternalException, InvalidResponseException {
     HttpResponse response = execute(Method.PUT, region, bucketName, objectName,
                                     headerMap, queryParamMap,
-                                    data, length, false);
+                                    data, length);
     return response;
   }
 
@@ -4405,52 +4429,6 @@ public class MinioClient {
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
-
-    putObject(bucketName, objectName, fileName, size, headerMap, sse, contentType, false);
-  }
-
-
-   /**
-   * Uploads given file as object in given bucket.
-   * <p>
-   * If the object is larger than 5MB, the client will automatically use a multipart session.
-   * </p>
-   * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again.
-   * </p>
-   * <p>
-   * If the multipart session fails, abort the uploaded parts automatically.
-   * </p>
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name to create in the bucket.
-   * @param fileName    File name to upload.
-   * @param size        Size of all the data that will be uploaded.
-   * @param headerMap   Custom/additional meta data of the object.
-   * @param sse         encryption metadata.
-   * @param contentType Content type of the stream.
-   * @param objectLockRetention Object lock retention.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
-   * @throws IOException                 upon connection error
-   * @throws InvalidKeyException
-   *           upon an invalid access key or secret key
-   * @throws NoResponseException         upon no response from server
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   * @throws InsufficientDataException   upon getting EOFException while reading given
-   */
-  public void putObject(String bucketName, String objectName, String fileName, Long size, Map<String, String> headerMap,
-                        ServerSideEncryption sse, String contentType, boolean objectLockRetention)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
-
     if (fileName == null || "".equals(fileName)) {
       throw new InvalidArgumentException("empty file name is not allowed");
     }
@@ -4466,18 +4444,13 @@ public class MinioClient {
       size = Files.size(filePath);
     }
     RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
-    boolean md5Required = false;
-    if (objectLockRetention) {
-      md5Required = true;
-    }
 
     try {
-      putObject(bucketName, objectName, size, file, headerMap, sse, contentType, md5Required);
+      putObject(bucketName, objectName, size, file, headerMap, sse, contentType);
     } finally {
       file.close();
     }
   }
-
 
   /**
    * Uploads data from given stream as object to given bucket.
@@ -5070,94 +5043,7 @@ public class MinioClient {
     if (!(stream instanceof BufferedInputStream)) {
       stream = new BufferedInputStream(stream);
     }
-    putObject(bucketName, objectName, stream, size, headerMap, sse, contentType, false);
-  }
-
-    /**
-   * Uploads data from given stream as object to given bucket where the stream size is unknown.
-   * <p>
-   * If the stream has more than 525MiB data, the client uses a multipart session automatically.
-   * </p>
-   * <p>
-   * If the session fails, the user may attempt to re-upload the object by attempting to create
-   * the exact same object again.
-   * </p>
-   * <p>
-   * If the multipart session fails, we abort the uploaded parts automaticlly.
-   * </p>
-   *
-   * </p><b>Example:</b><br>
-   * <pre>{@code StringBuilder builder = new StringBuilder();
-   * for (int i = 0; i < 1000; i++) {
-   *   builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
-   *   builder.append("(29 letters)\n");
-   *   builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
-   *   builder.append("(31 letters)\n"); 
-   *   builder.append("Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
-   *   builder.append("NASAs Space Shuttle. (32 letters)\n");
-   *   builder.append("The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
-   *   builder.append("(39 letters)\n");
-   *   builder.append("How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
-   *   builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
-   *   builder.append("Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
-   *   builder.append("computers after System 7.\n");
-   *   builder.append("A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
-   *   builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
-   *   builder.append("---\n");
-   * }
-   * ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
-   * // create object
-   * Map<String, String> headerMap = new HashMap<>();
-   * headerMap.put("Content-Type", "application/octet-stream");
-   * headerMap.put("X-Amz-Meta-Key", "meta-data");
-
-   * //Generate symmetric 256 bit AES key.
-   * KeyGenerator symKeyGenerator = KeyGenerator.getInstance("AES");
-   * symKeyGenerator.init(256);
-   * SecretKey symKey = symKeyGenerator.generateKey();
-
-   * minioClient.putObject("my-bucketname", "my-objectname", bais, bais.available(), headerMap, symKey);
-   * bais.close();
-   * System.out.println("my-objectname is uploaded successfully"); }</pre>
-   *
-   * @param bucketName  Bucket name.
-   * @param objectName  Object name to create in the bucket.
-   * @param stream      stream to upload.
-   * @param size        Size of all the data that will be uploaded.
-   * @param headerMap   Custom/additional meta data of the object.
-   * @param sse         encryption metadata.
-   * @param contentType Content type of the stream.
-   * @param objectLockRetention Objecct Lock Retention.
-   *
-   * @throws InvalidBucketNameException  upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException
-   *           upon requested algorithm was not found during signature calculation
-   * @throws InsufficientDataException  upon getting EOFException while reading given
-   *           InputStream even before reading given length
-   * @throws IOException                 upon connection error
-   * @throws InvalidKeyException
-   *           upon an invalid access key or secret key
-   * @throws NoResponseException         upon no response from server
-   * @throws XmlPullParserException      upon parsing response xml
-   * @throws ErrorResponseException      upon unsuccessful execution
-   * @throws InternalException           upon internal library error
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
-   * @throws InvalidResponseException    upon a non-xml response from server
-   */
-  public void putObject(String bucketName, String objectName, InputStream stream, Long size, 
-              Map<String, String> headerMap, ServerSideEncryption sse, String contentType, boolean objectLockRetention)
-    throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
-           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
-           InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
-
-    if (!(stream instanceof BufferedInputStream)) {
-      stream = new BufferedInputStream(stream);
-    }
-    boolean md5Required = false;
-    if (objectLockRetention) {
-      md5Required = true;
-    }
-    putObject(bucketName, objectName, size, stream, headerMap, sse, contentType, md5Required);
+    putObject(bucketName, objectName, size, stream, headerMap, sse, contentType);
   }
 
   /**
@@ -5175,12 +5061,9 @@ public class MinioClient {
    *          Upload ID of multipart put object.
    * @param partNumber
    *          Part number of multipart put object.
-   * @param md5Required
-   *          Is MD5 calculations required.
    */
   private String putObject(String bucketName, String objectName, Object data, int length,
-                           Map<String, String> headerMap, String uploadId, int partNumber,
-                           boolean md5Required)
+                           Map<String, String> headerMap, String uploadId, int partNumber)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
@@ -5193,7 +5076,7 @@ public class MinioClient {
       queryParamMap.put(UPLOAD_ID, uploadId);
     }
 
-    response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length, md5Required);
+    response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
 
     response.body().close();
     return response.header().etag();
@@ -5214,8 +5097,7 @@ public class MinioClient {
    *          Object data.
    */
   private void putObject(String bucketName, String objectName, Long size, Object data,
-                         Map<String, String> headerMap, ServerSideEncryption sse,  
-                         String contentType, boolean md5Required)
+                         Map<String, String> headerMap, ServerSideEncryption sse, String contentType)
     throws InvalidBucketNameException, NoSuchAlgorithmException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidArgumentException, InsufficientDataException, InvalidResponseException {
@@ -5247,7 +5129,7 @@ public class MinioClient {
 
 
     if (size <= MIN_MULTIPART_SIZE) {
-      putObject(bucketName, objectName, data, size.intValue(), headerMap, null, 0, md5Required);
+      putObject(bucketName, objectName, data, size.intValue(), headerMap, null, 0);
       return;
     }
 
@@ -5277,7 +5159,7 @@ public class MinioClient {
           if (availableSize <= expectedReadSize) {
             // If it is first part, do single put object.
             if (partNumber == 1) {
-              putObject(bucketName, objectName, data, availableSize, headerMap, null, 0, md5Required);
+              putObject(bucketName, objectName, data, availableSize, headerMap, null, 0);
               return;
             }
             expectedReadSize = availableSize;
@@ -5292,7 +5174,7 @@ public class MinioClient {
         }
 
         String etag = putObject(bucketName, objectName, data, expectedReadSize, encryptionHeaders,
-                                uploadId, partNumber, md5Required);
+                                uploadId, partNumber);
         totalParts[partNumber - 1] = new Part(partNumber, etag);
       }
       // All parts have been uploaded, complete the multipart upload.
@@ -6391,7 +6273,7 @@ public class MinioClient {
     SelectObjectContentRequest request = new SelectObjectContentRequest(sqlExpression, requestProgress, is, os,
                                                                         scanStartRange, scanEndRange);
     HttpResponse response = execute(Method.POST, getRegion(bucketName), bucketName, objectName,
-                                    headerMap, queryParamMap, request, 0, false);
+                                    headerMap, queryParamMap, request, 0);
     return new SelectResponseStream(response.body().byteStream());
   }
 
