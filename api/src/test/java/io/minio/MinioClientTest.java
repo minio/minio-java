@@ -20,7 +20,6 @@ package io.minio;
 import static org.junit.Assert.assertEquals;
 
 import io.minio.errors.InvalidResponseException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -33,24 +32,15 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.TimeZone;
 
 import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
 import io.minio.errors.InvalidArgumentException;
-import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidPortException;
 import io.minio.errors.MinioException;
-import io.minio.errors.NoResponseException;
 import io.minio.errors.RegionConflictException;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
@@ -543,153 +533,6 @@ public class MinioClientTest {
   }
 
   @Test
-  public void testPutSmallObject()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    String inputString = HELLO_WORLD;
-    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
-
-    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_OCTET_STREAM);
-  }
-
-  // this case only occurs for minio cloud storage
-  @Test(expected = InvalidResponseException.class)
-  public void testPutSmallObjectFails()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, BUCKET_KEY, "1",
-                                                        null);
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.setResponseCode(405); // method not allowed set by minio cloud storage
-    response.setBody(new Buffer().writeUtf8(errResponse.toString()));
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    String inputString = HELLO_WORLD;
-    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
-
-    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_OCTET_STREAM);
-    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
-  }
-
-  @Test(expected = InsufficientDataException.class)
-  public void testPutIncompleteSmallPut()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.METHOD_NOT_ALLOWED, null, null, BUCKET_KEY, "1",
-                                                        null);
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.setResponseCode(405); // method not allowed set by minio cloud storage
-    response.setBody(new Buffer().writeUtf8(errResponse.toString()));
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    String inputString = "hello worl";
-    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
-
-    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_OCTET_STREAM);
-    throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
-  }
-
-  @SuppressFBWarnings("NP")
-  @Test
-  public void testSpecialCharsNameWorks()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    String inputString = HELLO_WORLD;
-    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
-
-    byte[] ascii = new byte[255];
-    for (int i = 1; i < 256; i++) {
-      ascii[i - 1] = (byte) i;
-    }
-    String contentType = null;
-    client.putObject(BUCKET, "世界" + new String(ascii, "UTF-8"), data, 11L, null, null, contentType);
-  }
-
-  @SuppressFBWarnings("NP")
-  @Test
-  public void testNullContentTypeWorks()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    String inputString = HELLO_WORLD;
-    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
-
-    String contentType = null;
-    client.putObject(BUCKET, "key", data, 11L, null, null, contentType);
-  }
-
-  @Test
-  public void testCustomContentTypeWorks()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    MockWebServer server = new MockWebServer();
-    MockResponse response = new MockResponse();
-
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
-    response.addHeader(LAST_MODIFIED, MON_04_MAY_2015_07_58_51_GMT);
-    response.addHeader("ETag", MD5_HASH_STRING);
-    response.setResponseCode(200);
-
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url(""));
-
-    String inputString = HELLO_WORLD;
-    ByteArrayInputStream data = new ByteArrayInputStream(inputString.getBytes(StandardCharsets.UTF_8));
-
-    client.putObject(BUCKET, "key", data, 11L, null, null, APPLICATION_JAVASCRIPT);
-  }
-
-  @Test
   public void testSigningKey()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     MockWebServer server = new MockWebServer();
@@ -767,71 +610,5 @@ public class MinioClientTest {
     // Get the bucket policy for the new bucket and check
     String policyString = client.getBucketPolicy(BUCKET);
     assertEquals(expectedPolicyString, policyString);
-  }
-
-
-  @Test
-  public void testAwsChunkedAndGzipEncodingWhenAnyEncodingSpecifiedByClient()
-          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
-          InterruptedException {
-    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", "random"));
-    RecordedRequest recordedRequest1 = putObjectWithHeaders(headerMap);
-    Assert.assertEquals("aws-chunked,random", recordedRequest1.getHeader("Content-Encoding"));
-  }
-
-  @Test
-  public void testAwsChunkedAndGzipEncodingWhenGzipSpecifiedByClient()
-          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
-          InterruptedException {
-    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", "gzip"));
-    RecordedRequest recordedRequest = putObjectWithHeaders(headerMap);
-    Assert.assertEquals("aws-chunked,gzip", recordedRequest.getHeader("Content-Encoding"));
-  }
-
-  @Test
-  @SuppressFBWarnings("NP")
-  public void testAwsChunkedEncodingWhenNoEncodingSpecifiedByClient()
-          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
-          InterruptedException {
-    Map<String, String> headerMap = null;
-    RecordedRequest recordedRequest = putObjectWithHeaders(headerMap);
-
-    Assert.assertEquals("aws-chunked", recordedRequest.getHeader("Content-Encoding"));
-  }
-
-  @Test
-  public void testAwsChunkedIsNotDuplicatedWhenAwsChunkedEncodingSpecifiedByClient()
-          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
-          InterruptedException {
-    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", "aws-chunked"));
-    RecordedRequest recordedRequest = putObjectWithHeaders(headerMap);
-    Assert.assertEquals("aws-chunked", recordedRequest.getHeader("Content-Encoding"));
-  }
-
-  @Test
-  public void testAwsChunkedWhenEmptyEncodingSpecifiedByClient()
-          throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
-          InterruptedException {
-    Map<String, String> headerMap = new HashMap<>(Collections.singletonMap("Content-Encoding", ""));
-    RecordedRequest recordedRequest1 = putObjectWithHeaders(headerMap);
-    Assert.assertEquals("aws-chunked", recordedRequest1.getHeader("Content-Encoding"));
-  }
-
-
-  private RecordedRequest putObjectWithHeaders(Map<String, String> headerMap)
-  throws IOException, InvalidEndpointException, InvalidPortException, InvalidBucketNameException,
-         NoSuchAlgorithmException, InvalidKeyException, NoResponseException, XmlPullParserException,
-         ErrorResponseException, InternalException, InvalidArgumentException, InsufficientDataException,
-         InterruptedException, InvalidResponseException {
-    MockResponse response = new MockResponse();
-    response.setResponseCode(200);
-    MockWebServer server = new MockWebServer();
-    server.enqueue(response);
-    server.start();
-
-    MinioClient client = new MinioClient(server.url("").toString(), "access_key", "secret_key", "us-east-1");
-    client.putObject(BUCKET, "key", new ByteArrayInputStream(new byte[]{'a'}), 1L, headerMap, null, null);
-
-    return server.takeRequest();
   }
 }
