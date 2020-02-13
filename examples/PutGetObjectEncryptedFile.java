@@ -28,6 +28,7 @@ public class PutGetObjectEncryptedFile {
       String bucketName = "my-bucketname";
       String inputfile = "my-inputfile";
       String outputfile = "my-outputfile";
+      long inputfileSize = 100000L;
 
       // Generate a new 256 bit AES key - This key must be remembered by the client.
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
@@ -35,7 +36,7 @@ public class PutGetObjectEncryptedFile {
 
       // To test SSE-C
       ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-      PutObjectOptions options = new PutObjectOptions(-1, 6000000);
+      PutObjectOptions options = new PutObjectOptions(inputfileSize, -1);
       options.setSse(sse);
       minioClient.putObject(bucketName, objectName, inputfile, options);
       System.out.println("my-objectname is encrypted and uploaded successfully.");

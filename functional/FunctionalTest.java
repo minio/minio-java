@@ -2265,7 +2265,7 @@ public class FunctionalTest {
       Thread[] threads = new Thread[7];
 
       for (int i = 0; i < 7; i++) {
-        threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile6Mb()));
+        threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile6Mb(), 6 * MB));
       }
 
       for (int i = 0; i < 7; i++) {

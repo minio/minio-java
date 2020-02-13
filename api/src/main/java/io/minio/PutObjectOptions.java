@@ -31,7 +31,7 @@ public class PutObjectOptions {
   private long objectSize = -1;
   private long partSize = -1;
   private int partCount = -1;
-  private String contentType = "application/octet-stream";
+  private String contentType = null;
   private Map<String, String> headers = null;
   private ServerSideEncryption sse = null;
 
@@ -108,7 +108,16 @@ public class PutObjectOptions {
     this.partCount = -1;
   }
 
-  public void setContentType(String contentType) {
+  /**
+   * Sets content type.
+   *
+   * @throws IllegalArgumentException upon null or empty content type.
+   */
+  public void setContentType(String contentType) throws IllegalArgumentException {
+    if (contentType == null || contentType.equals("")) {
+      throw new IllegalArgumentException("invalid content type");
+    }
+
     this.contentType = contentType;
   }
 
@@ -132,8 +141,20 @@ public class PutObjectOptions {
     return this.partCount;
   }
 
+  /**
+   * Gets content type. It returns, if content type is set (or) value of "Content-Type" header (or)
+   * default "application/octet-stream".
+   */
   public String contentType() {
-    return this.contentType;
+    if (this.contentType != null) {
+      return this.contentType;
+    }
+
+    if (this.headers == null || this.headers.get("Content-Type") == null) {
+      return "application/octet-stream";
+    }
+
+    return this.headers.get("Content-Type");
   }
 
   public Map<String, String> headers() {
