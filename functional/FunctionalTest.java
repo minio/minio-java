@@ -2596,10 +2596,22 @@ public class FunctionalTest {
           + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
           "size: 6 MB & 6 MB ", startTime);
     } catch (Exception e) {
-      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "size: 6 MB & 6 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)", null, startTime);
+      } else {
+        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+            "size: 6 MB & 6 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -2640,10 +2652,23 @@ public class FunctionalTest {
           "with offset and length.", startTime);
 
     } catch (Exception e) {
-      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with offset and length.", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+    // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)" 
+            + "with offset and length." , null, startTime);
+      } else {
+        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+            "with offset and length.", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -2679,10 +2704,23 @@ public class FunctionalTest {
           "with one source.", startTime);
 
     } catch (Exception e) {
-      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)"
+            + "with one source." , null, startTime);
+      } else {
+        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
             + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with one source.", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+            "with one source.", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -2735,10 +2773,23 @@ public class FunctionalTest {
           + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
           "with SSE_C and SSE_C Target", startTime);
     } catch (Exception e) {
-      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and ",
-          "SSE_C Target", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and"
+            + "SSE_C Target", null, startTime);
+      } else {
+        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and ",
+            "SSE_C Target", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -2785,10 +2836,23 @@ public class FunctionalTest {
           + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
           "with SSE_C on one source object ", startTime);
     } catch (Exception e) {
-      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on ",
-          "one source object", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on and"
+            + "one source object", null, startTime);
+      } else {
+        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on ",
+            "one source object", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -2833,10 +2897,23 @@ public class FunctionalTest {
           + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
           "SSE_C Target only.", startTime);
     } catch (Exception e) {
-      mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget) SSE_C Target ",
-              " only." , startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C only",
+            null, startTime);
+      } else {
+        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) SSE_C Target ",
+            " only." , startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
