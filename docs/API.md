@@ -249,7 +249,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -301,7 +300,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -354,7 +352,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -398,7 +395,6 @@ Lists all buckets.
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -446,7 +442,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -498,7 +493,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -734,7 +728,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -782,7 +775,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -826,7 +818,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -874,7 +865,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -926,7 +916,6 @@ __Parameters__
 |        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -989,7 +978,6 @@ __Parameters__
 |        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1032,7 +1020,6 @@ __Parameters__
 |        | ``InsufficientDataException`` :  Thrown to indicate that reading the InputStream gets end of file exception before reading the complete length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1102,7 +1089,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1146,7 +1132,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1190,7 +1175,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1248,7 +1232,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1451,7 +1434,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1493,7 +1475,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1560,7 +1541,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1624,7 +1604,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1690,7 +1669,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1755,7 +1733,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1806,7 +1783,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1860,7 +1836,6 @@ __Parameters__
 |:--- |:--- |
 |  None  | Listed Exceptions: |
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``IOException`` : upon connection error.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
@@ -1907,7 +1882,6 @@ __Parameters__
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -1970,7 +1944,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2041,7 +2014,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2095,7 +2067,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2163,7 +2134,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2231,7 +2201,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2296,7 +2265,6 @@ master key passed to this function.
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2375,7 +2343,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2426,7 +2393,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2482,7 +2448,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2558,7 +2523,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2616,7 +2580,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2684,7 +2647,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2733,7 +2695,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -2779,7 +2740,6 @@ __Parameters__
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``IOException`` : upon connection error.            |
@@ -2823,7 +2783,6 @@ __Parameters__
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``IOException`` : upon connection error.            |
@@ -2906,7 +2865,6 @@ __Parameters__
 |        |  ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``IOException`` : upon connection error.            |
@@ -2950,7 +2908,6 @@ __Parameters__
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``IOException`` : upon connection error.            |
@@ -2993,7 +2950,6 @@ __Parameters__
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``IOException`` : upon connection error.            |
@@ -3043,7 +2999,6 @@ __Parameters__
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``IOException`` : upon connection error.            |
@@ -3129,7 +3084,6 @@ __Parameters__
 |        | ``InvalidBucketNameException`` : upon invalid bucket name. |
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
 |        | ``IOException`` : upon connection error.            |
@@ -3177,7 +3131,6 @@ try {
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3240,7 +3193,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3298,7 +3250,6 @@ Applies object retention lock onto an object..
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3353,7 +3304,6 @@ Returns retention set on a given object.
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3401,7 +3351,6 @@ Enables legal hold on an object.
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3450,7 +3399,6 @@ Disables legal hold on an object.
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3500,7 +3448,6 @@ Returns true if object legal hold is enabled.
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3550,7 +3497,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3598,7 +3544,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3646,7 +3591,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3689,7 +3633,6 @@ __Parameters__
 |        | ``NoSuchAlgorithmException`` : upon requested algorithm was not found during signature calculation.           |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InvalidExpiresRangeException`` : upon input expires is out of range.            |
@@ -3732,7 +3675,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |
@@ -3776,7 +3718,6 @@ __Parameters__
 |        | ``InsufficientDataException`` : Thrown to indicate that reading given InputStream gets EOFException before reading given length. |
 |        | ``IOException`` : upon connection error.            |
 |        | ``InvalidKeyException`` : upon an invalid access key or secret key.           |
-|        | ``NoResponseException`` : upon no response from server.            |
 |        | ``org.xmlpull.v1.XmlPullParserException`` : upon parsing response XML.            |
 |        | ``ErrorResponseException`` : upon unsuccessful execution.            |
 |        | ``InternalException`` : upon internal library error.        |

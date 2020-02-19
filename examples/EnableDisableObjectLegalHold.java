@@ -23,7 +23,6 @@ import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.MinioException;
-import io.minio.errors.NoResponseException;
 import io.minio.errors.RegionConflictException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class EnableDisableObjectLegalHold {
    */
   public static void main(String[] args)
     throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException, 
-           InvalidResponseException, InsufficientDataException, NoResponseException,
+           InvalidResponseException, InsufficientDataException,
            InternalException, ErrorResponseException, InvalidBucketNameException,
            InvalidPortException, InvalidEndpointException, RegionConflictException,
            IllegalArgumentException {
