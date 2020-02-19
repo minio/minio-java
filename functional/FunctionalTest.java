@@ -1855,7 +1855,7 @@ public class FunctionalTest {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
-      } catch (java.io.IOException e) {
+      } catch (InsufficientDataException e) {
         ignore();
       }
 
@@ -1895,7 +1895,7 @@ public class FunctionalTest {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
-      } catch (java.io.IOException e) {
+      } catch (InsufficientDataException e) {
         ignore();
       }
 
@@ -1940,7 +1940,7 @@ public class FunctionalTest {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
-      } catch (java.io.IOException e) {
+      } catch (InsufficientDataException e) {
         ignore();
       }
 
@@ -1983,7 +1983,7 @@ public class FunctionalTest {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
-      } catch (java.io.IOException e) {
+      } catch (InsufficientDataException e) {
         ignore();
       }
 

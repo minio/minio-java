@@ -44,15 +44,19 @@ public class Result<T> {
 
   /** Returns given Type if exception is null, else respective exception is thrown. */
   public T get()
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          JsonParseException, JsonMappingException, IOException, InvalidKeyException,
-          XmlParserException, ErrorResponseException, InternalException {
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, JsonParseException, JsonMappingException, IOException,
+          InvalidKeyException, XmlParserException, ErrorResponseException, InternalException {
     if (ex == null) {
       return type;
     }
 
     if (ex instanceof InvalidBucketNameException) {
       throw (InvalidBucketNameException) ex;
+    }
+
+    if (ex instanceof IllegalArgumentException) {
+      throw (IllegalArgumentException) ex;
     }
 
     if (ex instanceof NoSuchAlgorithmException) {

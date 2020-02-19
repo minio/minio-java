@@ -16,8 +16,8 @@
 
 package io.minio;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.Channels;
 import okhttp3.MediaType;
@@ -27,14 +27,28 @@ import okio.Okio;
 
 /** RequestBody that wraps a single data object. */
 class HttpRequestBody extends RequestBody {
-  private final String contentType;
-  private final Object data;
-  private final int len;
+  private RandomAccessFile file = null;
+  private BufferedInputStream stream = null;
+  private byte[] bytes = null;
+  private int length = -1;
+  private String contentType = null;
 
-  HttpRequestBody(final String contentType, final Object data, final int len) {
+  HttpRequestBody(final RandomAccessFile file, final int length, final String contentType) {
+    this.file = file;
+    this.length = length;
     this.contentType = contentType;
-    this.data = data;
-    this.len = len;
+  }
+
+  HttpRequestBody(final BufferedInputStream stream, final int length, final String contentType) {
+    this.stream = stream;
+    this.length = length;
+    this.contentType = contentType;
+  }
+
+  HttpRequestBody(final byte[] bytes, final int length, final String contentType) {
+    this.bytes = bytes;
+    this.length = length;
+    this.contentType = contentType;
   }
 
   @Override
@@ -53,30 +67,17 @@ class HttpRequestBody extends RequestBody {
 
   @Override
   public long contentLength() {
-    if (data instanceof InputStream || data instanceof RandomAccessFile || data instanceof byte[]) {
-      return len;
-    }
-
-    if (len == 0) {
-      return -1;
-    } else {
-      return len;
-    }
+    return length;
   }
 
   @Override
   public void writeTo(BufferedSink sink) throws IOException {
-    if (data instanceof InputStream) {
-      InputStream stream = (InputStream) data;
-      sink.writeAll(Okio.source(stream));
-    } else if (data instanceof RandomAccessFile) {
-      RandomAccessFile file = (RandomAccessFile) data;
-      sink.write(Okio.source(Channels.newInputStream(file.getChannel())), len);
-    } else if (data instanceof byte[]) {
-      byte[] bytes = (byte[]) data;
-      sink.write(bytes, 0, len);
+    if (file != null) {
+      sink.write(Okio.source(Channels.newInputStream(file.getChannel())), length);
+    } else if (stream != null) {
+      sink.write(Okio.source(stream), length);
     } else {
-      sink.writeUtf8(data.toString());
+      sink.write(bytes, 0, length);
     }
   }
 }
