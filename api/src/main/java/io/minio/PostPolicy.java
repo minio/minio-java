@@ -16,22 +16,20 @@
 
 package io.minio;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
+import com.google.common.io.BaseEncoding;
+import io.minio.errors.InvalidArgumentException;
+import io.minio.SuccessActionStatus;
+import io.minio.Time;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
-
-import org.joda.time.DateTime;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
-import com.google.common.io.BaseEncoding;
-
-import io.minio.errors.InvalidArgumentException;
-import io.minio.SuccessActionStatus;
 
 
 /**
@@ -43,7 +41,7 @@ public class PostPolicy {
   private final String bucketName;
   private final String objectName;
   private final boolean startsWith;
-  private final DateTime expirationDate;
+  private final ZonedDateTime expirationDate;
   private String contentType;
   private int successActionStatus;
   private String contentEncoding;
@@ -51,7 +49,7 @@ public class PostPolicy {
   private long contentRangeEnd;
 
 
-  public PostPolicy(String bucketName, String objectName, DateTime expirationDate)
+  public PostPolicy(String bucketName, String objectName, ZonedDateTime expirationDate)
     throws InvalidArgumentException {
     this(bucketName, objectName, false, expirationDate);
   }
@@ -61,7 +59,7 @@ public class PostPolicy {
    * Creates PostPolicy for given bucket name, object name, string to match object name starting with
    * and expiration time.
    */
-  public PostPolicy(String bucketName, String objectName, boolean startsWith, DateTime expirationDate)
+  public PostPolicy(String bucketName, String objectName, boolean startsWith, ZonedDateTime expirationDate)
     throws InvalidArgumentException {
     if (bucketName == null) {
       throw new InvalidArgumentException("null bucket name");
@@ -162,7 +160,7 @@ public class PostPolicy {
     sb.append("{");
 
     if (expirationDate != null) {
-      sb.append("\"expiration\":" + "\"" + expirationDate.toString(DateFormat.EXPIRATION_DATE_FORMAT) + "\"");
+      sb.append("\"expiration\":" + "\"" + expirationDate.format(Time.EXPIRATION_DATE_FORMAT) + "\"");
     }
 
     if (!conditions.isEmpty()) {
@@ -238,17 +236,17 @@ public class PostPolicy {
     conditions.add(new String[]{"eq", "$x-amz-algorithm", ALGORITHM});
     formData.put("x-amz-algorithm", ALGORITHM);
 
-    DateTime date = new DateTime();
-    String credential = Signer.credential(accessKey, date, region);
+    ZonedDateTime utcNow = ZonedDateTime.now(Time.UTC);
+    String credential = Signer.credential(accessKey, utcNow, region);
     conditions.add(new String[]{"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
 
-    String amzDate = date.toString(DateFormat.AMZ_DATE_FORMAT);
+    String amzDate = utcNow.format(Time.AMZ_DATE_FORMAT);
     conditions.add(new String[]{"eq","$x-amz-date", amzDate});
     formData.put("x-amz-date", amzDate);
 
     String policybase64 = BaseEncoding.base64().encode(this.marshalJson(conditions));
-    String signature =  Signer.postPresignV4(policybase64, secretKey, date, region);
+    String signature =  Signer.postPresignV4(policybase64, secretKey, utcNow, region);
 
     formData.put("policy", policybase64);
     formData.put("x-amz-signature", signature);

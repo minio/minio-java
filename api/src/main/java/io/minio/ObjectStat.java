@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +27,7 @@ import java.util.Map;
 public class ObjectStat {
   private final String bucketName;
   private final String name;
-  private final Date createdTime;
+  private final ZonedDateTime createdTime;
   private final long length;
   private final String etag;
   private final String contentType;
@@ -48,7 +48,7 @@ public class ObjectStat {
     this.bucketName = bucketName;
     this.name = name;
     this.contentType = header.contentType();
-    this.createdTime = (Date) header.lastModified().clone();
+    this.createdTime = header.lastModified();
     this.length = header.contentLength();
 
     if (header.etag() != null) {
@@ -64,11 +64,12 @@ public class ObjectStat {
   /**
    * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and content type.
    */
-  public ObjectStat(String bucketName, String name, Date createdTime, long length, String etag, String contentType) {
+  public ObjectStat(String bucketName, String name, ZonedDateTime createdTime, long length, String etag,
+                    String contentType) {
     this.bucketName = bucketName;
     this.name = name;
     this.contentType = contentType;
-    this.createdTime = (Date) createdTime.clone();
+    this.createdTime = createdTime;
     this.length = length;
     if (etag != null) {
       this.etag = etag.replaceAll("\"", "");
@@ -146,8 +147,8 @@ public class ObjectStat {
   /**
    * Returns created time.
    */
-  public Date createdTime() {
-    return (Date) createdTime.clone();
+  public ZonedDateTime createdTime() {
+    return createdTime;
   }
 
 

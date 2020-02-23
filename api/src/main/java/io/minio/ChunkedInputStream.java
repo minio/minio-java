@@ -17,17 +17,16 @@
 
 package io.minio;
 
+import io.minio.errors.InternalException;
+import io.minio.errors.InsufficientDataException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-
-import org.joda.time.DateTime;
-
-import io.minio.errors.InternalException;
-import io.minio.errors.InsufficientDataException;
+import java.time.ZonedDateTime;
 
 
 class ChunkedInputStream extends InputStream {
@@ -54,7 +53,7 @@ class ChunkedInputStream extends InputStream {
   private InputStream inputStream;
   private int streamSize;
   private int length;
-  private DateTime date;
+  private ZonedDateTime date;
   private String region;
   private String secretKey;
   private String prevSignature;
@@ -72,8 +71,8 @@ class ChunkedInputStream extends InputStream {
   /**
    * Create new ChunkedInputStream for given input stream.
    */
-  public ChunkedInputStream(InputStream inputStream, int streamSize, DateTime date, String region, String secretKey,
-                            String seedSignature) throws IOException {
+  public ChunkedInputStream(InputStream inputStream, int streamSize, ZonedDateTime date, String region,
+                            String secretKey, String seedSignature) throws IOException {
     this.inputStream = inputStream;
     this.streamSize = streamSize;
     this.date = date;

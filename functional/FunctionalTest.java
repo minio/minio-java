@@ -19,6 +19,7 @@ import java.security.*;
 import java.math.BigInteger;
 import java.util.*;
 import java.io.*;
+import java.time.*;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -28,8 +29,6 @@ import java.nio.charset.StandardCharsets;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import org.joda.time.DateTime;
 
 import okhttp3.OkHttpClient;
 import okhttp3.HttpUrl;
@@ -311,7 +310,7 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      Date expectedTime = new Date();
+      long nowSeconds = ZonedDateTime.now().toEpochSecond();
       String bucketName = getRandomName();
       boolean found = false;
       client.makeBucket(bucketName);
@@ -322,12 +321,11 @@ public class FunctionalTest {
           }
 
           found = true;
-          Date time = bucket.creationDate();
-          long diff = time.getTime() - expectedTime.getTime();
           // excuse 15 minutes
-          if (diff > (15 * 60 * 1000)) {
-            throw new Exception(
-                "[FAILED] bucket creation time too apart. expected: " + expectedTime + ", got: " + time);
+          if ((bucket.creationDate().toEpochSecond() - nowSeconds) > (15 * 60)) {
+            throw new Exception("[FAILED] bucket creation time too apart in "
+                                + (bucket.creationDate().toEpochSecond() - nowSeconds)
+                                + " seconds");
           }
         }
       }
@@ -1938,7 +1936,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      PostPolicy policy = new PostPolicy(bucketName, objectName, DateTime.now().plusDays(7));
+      PostPolicy policy = new PostPolicy(bucketName, objectName, ZonedDateTime.now().plusDays(7));
       policy.setContentRange(1 * MB, 4 * MB);
       Map<String, String> formData = client.presignedPostPolicy(policy);
 
@@ -2248,9 +2246,7 @@ public class FunctionalTest {
       client.makeBucket(destBucketName);
 
       CopyConditions modifiedDateCondition = new CopyConditions();
-      DateTime dateRepresentation = new DateTime(2015, Calendar.MAY, 3, 10, 10);
-
-      modifiedDateCondition.setModified(dateRepresentation);
+      modifiedDateCondition.setModified(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
 
       // File should be copied as object was modified after the set date.
       client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, modifiedDateCondition);
@@ -2292,9 +2288,7 @@ public class FunctionalTest {
       client.makeBucket(destBucketName);
 
       CopyConditions invalidUnmodifiedCondition = new CopyConditions();
-      DateTime dateRepresentation = new DateTime(2015, Calendar.MAY, 3, 10, 10);
-
-      invalidUnmodifiedCondition.setUnmodified(dateRepresentation);
+      invalidUnmodifiedCondition.setUnmodified(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
 
       try {
         client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, invalidUnmodifiedCondition);

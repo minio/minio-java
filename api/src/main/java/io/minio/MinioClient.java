@@ -19,12 +19,13 @@ package io.minio;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -60,31 +61,15 @@ import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
 import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.ObjectLockLegalHold;
+import io.minio.messages.ObjectRetentionConfiguration;
 import io.minio.messages.OutputSerialization;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.messages.SelectObjectContentRequest;
-import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
-
-import io.minio.messages.ObjectRetentionConfiguration;
 import io.minio.notification.NotificationInfo;
-
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okhttp3.Protocol;
-
-import org.joda.time.DateTime;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-import org.xmlpull.v1.XmlPullParserFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -101,13 +86,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.KeyManagementException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -128,6 +112,17 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import okhttp3.Protocol;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 /**
  * <p>
@@ -994,8 +989,8 @@ public class MinioClient {
     if (sha256Hash != null) {
       requestBuilder.header("x-amz-content-sha256", sha256Hash);
     }
-    DateTime date = new DateTime();
-    requestBuilder.header("x-amz-date", date.toString(DateFormat.AMZ_DATE_FORMAT));
+    ZonedDateTime date = ZonedDateTime.now();
+    requestBuilder.header("x-amz-date", date.format(Time.AMZ_DATE_FORMAT));
 
     if (chunkedUpload) {
       // Add empty request body for calculating seed signature.

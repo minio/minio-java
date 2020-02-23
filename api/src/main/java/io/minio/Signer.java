@@ -16,25 +16,23 @@
 
 package io.minio;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+import com.google.common.io.BaseEncoding;
+
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.joda.time.DateTime;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
-import com.google.common.io.BaseEncoding;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
@@ -83,7 +81,7 @@ class Signer {
 
   private Request request;
   private String contentSha256;
-  private DateTime date;
+  private ZonedDateTime date;
   private String region;
   private String accessKey;
   private String secretKey;
@@ -114,7 +112,7 @@ class Signer {
    * @param prevSignature  Previous signature of chunk upload.
    *
    */
-  public Signer(Request request, String contentSha256, DateTime date, String region, String accessKey,
+  public Signer(Request request, String contentSha256, ZonedDateTime date, String region, String accessKey,
                 String secretKey, String prevSignature) {
     this.request = request;
     this.contentSha256 = contentSha256;
@@ -127,7 +125,7 @@ class Signer {
 
 
   private void setScope() {
-    this.scope = this.date.toString(DateFormat.SIGNER_DATE_FORMAT) + "/" + this.region + "/s3/aws4_request";
+    this.scope = this.date.format(Time.SIGNER_DATE_FORMAT) + "/" + this.region + "/s3/aws4_request";
   }
 
 
@@ -193,7 +191,7 @@ class Signer {
 
   private void setStringToSign() {
     this.stringToSign = "AWS4-HMAC-SHA256" + "\n"
-      + this.date.toString(DateFormat.AMZ_DATE_FORMAT) + "\n"
+      + this.date.format(Time.AMZ_DATE_FORMAT) + "\n"
       + this.scope + "\n"
       + this.canonicalRequestHash;
   }
@@ -201,7 +199,7 @@ class Signer {
 
   private void setChunkStringToSign() throws NoSuchAlgorithmException {
     this.stringToSign = "AWS4-HMAC-SHA256-PAYLOAD" + "\n"
-      + this.date.toString(DateFormat.AMZ_DATE_FORMAT) + "\n"
+      + this.date.format(Time.AMZ_DATE_FORMAT) + "\n"
       + this.scope + "\n"
       + this.prevSignature + "\n"
       + Digest.sha256Hash("") + "\n"
@@ -213,7 +211,7 @@ class Signer {
     String aws4SecretKey = "AWS4" + this.secretKey;
 
     byte[] dateKey = sumHmac(aws4SecretKey.getBytes(StandardCharsets.UTF_8),
-                             this.date.toString(DateFormat.SIGNER_DATE_FORMAT).getBytes(StandardCharsets.UTF_8));
+                             this.date.format(Time.SIGNER_DATE_FORMAT).getBytes(StandardCharsets.UTF_8));
 
     byte[] dateRegionKey = sumHmac(dateKey, this.region.getBytes(StandardCharsets.UTF_8));
 
@@ -238,7 +236,7 @@ class Signer {
   /**
    * Returns chunk signature calculated using given arguments.
    */
-  public static String getChunkSignature(String chunkSha256, DateTime date, String region, String secretKey,
+  public static String getChunkSignature(String chunkSha256, ZonedDateTime date, String region, String secretKey,
                                          String prevSignature)
     throws NoSuchAlgorithmException, InvalidKeyException {
     Signer signer = new Signer(null, chunkSha256, date, region, null, secretKey, prevSignature);
@@ -257,7 +255,7 @@ class Signer {
   public static String getChunkSeedSignature(Request request, String region, String secretKey)
     throws NoSuchAlgorithmException, InvalidKeyException {
     String contentSha256 = request.header("x-amz-content-sha256");
-    DateTime date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(request.header("x-amz-date"));
+    ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
 
     Signer signer = new Signer(request, contentSha256, date, region, null, secretKey, null);
     signer.setScope();
@@ -276,7 +274,7 @@ class Signer {
   public static Request signV4(Request request, String region, String accessKey, String secretKey)
     throws NoSuchAlgorithmException, InvalidKeyException {
     String contentSha256 = request.header("x-amz-content-sha256");
-    DateTime date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(request.header("x-amz-date"));
+    ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
 
     Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
     signer.setScope();
@@ -302,7 +300,7 @@ class Signer {
     urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Credential"),
                                         S3Escaper.encode(this.accessKey + "/" + this.scope));
     urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Date"),
-                                        S3Escaper.encode(this.date.toString(DateFormat.AMZ_DATE_FORMAT)));
+                                        S3Escaper.encode(this.date.format(Time.AMZ_DATE_FORMAT)));
     urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-Expires"),
                                         S3Escaper.encode(Integer.toString(expires)));
     urlBuilder.addEncodedQueryParameter(S3Escaper.encode("X-Amz-SignedHeaders"),
@@ -328,7 +326,7 @@ class Signer {
   public static HttpUrl presignV4(Request request, String region, String accessKey, String secretKey, int expires)
     throws NoSuchAlgorithmException, InvalidKeyException {
     String contentSha256 = "UNSIGNED-PAYLOAD";
-    DateTime date = DateFormat.AMZ_DATE_FORMAT.parseDateTime(request.header("x-amz-date"));
+    ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
 
     Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
     signer.setScope();
@@ -346,15 +344,15 @@ class Signer {
   /**
    * Returns credential string of given access key, date and region.
    */
-  public static String credential(String accessKey, DateTime date, String region) {
-    return accessKey + "/" + date.toString(DateFormat.SIGNER_DATE_FORMAT) + "/" + region + "/s3/aws4_request";
+  public static String credential(String accessKey, ZonedDateTime date, String region) {
+    return accessKey + "/" + date.format(Time.SIGNER_DATE_FORMAT) + "/" + region + "/s3/aws4_request";
   }
 
 
   /**
    * Returns pre-signed post policy string for given stringToSign, secret key, date and region.
    */
-  public static String postPresignV4(String stringToSign, String secretKey, DateTime date, String region)
+  public static String postPresignV4(String stringToSign, String secretKey, ZonedDateTime date, String region)
     throws NoSuchAlgorithmException, InvalidKeyException {
     Signer signer = new Signer(null, null, date, region, null, secretKey, null);
     signer.stringToSign = stringToSign;

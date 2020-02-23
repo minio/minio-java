@@ -18,9 +18,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
+import java.time.ZonedDateTime;
 
 import org.xmlpull.v1.XmlPullParserException;
-import org.joda.time.DateTime;
 
 import io.minio.MinioClient;
 import io.minio.PostPolicy;
@@ -42,7 +42,7 @@ public class PresignedPostPolicy {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Create new PostPolicy object for 'my-bucketname', 'my-objectname' and 7 days expire time from now.
-      PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
+      PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", ZonedDateTime.now().plusDays(7));
       // 'my-objectname' should be 'image/png' content type
       policy.setContentType("image/png");
       // set success action status to 201 because we want the client to notify us with the S3 key

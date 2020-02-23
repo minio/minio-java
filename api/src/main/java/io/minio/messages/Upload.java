@@ -16,13 +16,10 @@
 
 package io.minio.messages;
 
-import java.util.Date;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import com.google.api.client.util.Key;
-
-import io.minio.DateFormat;
+import io.minio.Time;
+import java.time.ZonedDateTime;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 /**
@@ -94,8 +91,8 @@ public class Upload extends XmlEntity {
   /**
    * Returns initated time.
    */
-  public Date initiated() {
-    return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(initiated).toDate();
+  public ZonedDateTime initiated() {
+    return ZonedDateTime.parse(initiated, Time.RESPONSE_DATE_FORMAT);
   }
 
 
