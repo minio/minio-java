@@ -25,11 +25,11 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSK
 | [`listIncompleteUploads`](#listIncompleteUploads)  | [`removeIncompleteUpload`](#removeIncompleteUpload) |   |   |
 | [`listenBucketNotification`](#listenBucketNotification) | [`composeObject`](#composeObject) |   |   |
 | [`setBucketNotification`](#setBucketNotification) | [`selectObjectContent`](#selectObjectContent) |   |   |
-| [`getBucketNotification`](#getBucketNotification) |`setObjectRetention`](#setObjectRetention) |   |   |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) | `getObjectRetention`](#getObjectRetention) |   |   |
-| [`enableVersioning`](#enableVersioning) | `enableObjectLegalHold`](#enableObjectLegalHold) |   |   |
-| [`disableVersioning`](#disableVersioning) | `disableObjectLegalHold`](#disableObjectLegalHold) |   |   |
-| [`setDefaultRetention`](#setDefaultRetention) | `isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled)  |   |   |
+| [`getBucketNotification`](#getBucketNotification) | [`setObjectRetention`](#setObjectRetention) |   |   |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`getObjectRetention`](#getObjectRetention) |   |   |
+| [`enableVersioning`](#enableVersioning) | [`enableObjectLegalHold`](#enableObjectLegalHold) |   |   |
+| [`disableVersioning`](#disableVersioning) | [`disableObjectLegalHold`](#disableObjectLegalHold) |   |   |
+| [`setDefaultRetention`](#setDefaultRetention) | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled)  |   |   |
 | [`getDefaultRetention`](#getDefaultRetention) |  |   |   |
 
 ## 1. Constructors
