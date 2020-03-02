@@ -16,34 +16,32 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/**
- * Helper class to generate Amazon AWS S3 request XML for
- * SelectObjectContentRequest/InputSerialization/CSV information.
- */
+/** Helper class to denote CSV input serialization request XML as per SelectObjectContentRequest. */
+@Root(name = "CSV")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class CsvInputSerialization extends XmlEntity {
-  @Key("AllowQuotedRecordDelimiter")
+public class CsvInputSerialization {
+  @Element(name = "AllowQuotedRecordDelimiter", required = false)
   private boolean allowQuotedRecordDelimiter;
 
-  @Key("Comments")
+  @Element(name = "Comments", required = false)
   private Character comments;
 
-  @Key("FieldDelimiter")
+  @Element(name = "FieldDelimiter", required = false)
   private Character fieldDelimiter;
 
-  @Key("FileHeaderInfo")
-  private String fileHeaderInfo;
+  @Element(name = "FileHeaderInfo", required = false)
+  private FileHeaderInfo fileHeaderInfo;
 
-  @Key("QuoteCharacter")
+  @Element(name = "QuoteCharacter", required = false)
   private Character quoteCharacter;
 
-  @Key("QuoteEscapeCharacter")
+  @Element(name = "QuoteEscapeCharacter", required = false)
   private Character quoteEscapeCharacter;
 
-  @Key("RecordDelimiter")
+  @Element(name = "RecordDelimiter", required = false)
   private Character recordDelimiter;
 
   /** Constructs a new CsvInputSerialization object. */
@@ -54,17 +52,11 @@ public class CsvInputSerialization extends XmlEntity {
       FileHeaderInfo fileHeaderInfo,
       Character quoteCharacter,
       Character quoteEscapeCharacter,
-      Character recordDelimiter)
-      throws XmlPullParserException {
-    super();
-    this.name = "CSV";
-
+      Character recordDelimiter) {
     this.allowQuotedRecordDelimiter = allowQuotedRecordDelimiter;
     this.comments = comments;
     this.fieldDelimiter = fieldDelimiter;
-    if (fileHeaderInfo != null) {
-      this.fileHeaderInfo = fileHeaderInfo.toString();
-    }
+    this.fileHeaderInfo = fileHeaderInfo;
     this.quoteCharacter = quoteCharacter;
     this.quoteEscapeCharacter = quoteEscapeCharacter;
     this.recordDelimiter = recordDelimiter;

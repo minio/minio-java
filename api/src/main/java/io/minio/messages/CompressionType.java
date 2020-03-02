@@ -16,7 +16,7 @@
 
 package io.minio.messages;
 
-/** CSV/JSON object's compression format. */
+/** CSV/JSON object's compression format for select object content. */
 public enum CompressionType {
   NONE,
   GZIP,

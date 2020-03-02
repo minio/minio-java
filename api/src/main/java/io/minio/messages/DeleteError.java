@@ -16,22 +16,15 @@
 
 package io.minio.messages;
 
-import java.io.IOException;
-import java.io.Reader;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 error response XML. */
-@SuppressWarnings("unused")
+/**
+ * Denotes Error response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html.
+ */
+@Root(name = "Error", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 public class DeleteError extends ErrorResponse {
-  /** Constructs a new ErrorResponse object by reading given reader stream. */
-  public DeleteError() throws XmlPullParserException {
-    super();
-    super.name = "Error";
-  }
-
-  /** Constructs a new ErrorResponse object by reading given reader stream. */
-  public DeleteError(Reader reader) throws IOException, XmlPullParserException {
-    this();
-    this.parseXml(reader);
-  }
+  private static final long serialVersionUID = 1905162041950251407L; // fix SE_BAD_FIELD
 }

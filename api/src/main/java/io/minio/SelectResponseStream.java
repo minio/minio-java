@@ -19,6 +19,7 @@ package io.minio;
 import com.google.common.io.ByteStreams;
 import io.minio.errors.InternalException;
 import io.minio.errors.MinioException;
+import io.minio.messages.Progress;
 import io.minio.messages.Stats;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
@@ -141,15 +142,17 @@ public class SelectResponseStream extends InputStream {
         new ByteArrayInputStream(data, headerLength, payloadLength);
 
     if (headerMap.get(":event-type").equals("Progress")) {
-      Stats stats = new Stats("Progress");
-      stats.parseXml(new InputStreamReader(payloadStream, StandardCharsets.UTF_8));
+      Stats stats =
+          (Stats)
+              Xml.unmarshal(
+                  Progress.class, new InputStreamReader(payloadStream, StandardCharsets.UTF_8));
       this.stats = stats;
       return false;
     }
 
     if (headerMap.get(":event-type").equals("Stats")) {
-      Stats stats = new Stats("Stats");
-      stats.parseXml(new InputStreamReader(payloadStream, StandardCharsets.UTF_8));
+      Stats stats =
+          Xml.unmarshal(Stats.class, new InputStreamReader(payloadStream, StandardCharsets.UTF_8));
       this.stats = stats;
       return false;
     }

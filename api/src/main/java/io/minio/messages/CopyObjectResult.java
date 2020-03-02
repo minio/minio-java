@@ -17,32 +17,33 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import io.minio.Time;
 import java.time.ZonedDateTime;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing object item information. */
-@SuppressWarnings({"SameParameterValue", "unused"})
-public class CopyObjectResult extends XmlEntity {
-  @Key("ETag")
+/**
+ * Denotes CopyObject response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html.
+ */
+@Root(name = "CopyObjectResult", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class CopyObjectResult {
+  @Element(name = "ETag")
   private String etag;
 
-  @Key("LastModified")
-  private String lastModified;
+  @Element(name = "LastModified")
+  private ResponseDate lastModified;
 
-  public CopyObjectResult() throws XmlPullParserException {
-    super();
-    super.name = "CopyObjectResult";
-  }
-
-  /** Returns last modified time of the object. */
-  public ZonedDateTime lastModified() {
-    return ZonedDateTime.parse(lastModified, Time.RESPONSE_DATE_FORMAT);
-  }
+  public CopyObjectResult() {}
 
   /** Returns ETag of the object. */
   public String etag() {
     return etag;
+  }
+
+  /** Returns last modified time. */
+  public ZonedDateTime lastModified() {
+    return lastModified.zonedDateTime();
   }
 }

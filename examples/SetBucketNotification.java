@@ -17,7 +17,6 @@
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import io.minio.messages.EventType;
-import io.minio.messages.Filter;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.messages.QueueConfiguration;
 import java.io.IOException;
@@ -54,11 +53,8 @@ public class SetBucketNotification {
       eventList.add(EventType.OBJECT_CREATED_PUT);
       eventList.add(EventType.OBJECT_CREATED_COPY);
       queueConfiguration.setEvents(eventList);
-
-      Filter filter = new Filter();
-      filter.setPrefixRule("images");
-      filter.setSuffixRule("pg");
-      queueConfiguration.setFilter(filter);
+      queueConfiguration.setPrefixRule("images");
+      queueConfiguration.setSuffixRule("pg");
 
       queueConfigurationList.add(queueConfiguration);
       notificationConfiguration.setQueueConfigurationList(queueConfigurationList);

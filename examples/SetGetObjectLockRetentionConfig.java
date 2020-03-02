@@ -25,7 +25,7 @@ import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
-import io.minio.messages.ObjectRetentionConfiguration;
+import io.minio.messages.Retention;
 import io.minio.messages.RetentionMode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -81,22 +81,18 @@ public class SetGetObjectLockRetentionConfig {
       System.out.println("my-objectname is uploaded successfully");
 
       // Declaring config with Retention mode as Compliance and
-      // retain until MAY 2021
-
+      // retain until one year to current date.
       ZonedDateTime retentionUntil = ZonedDateTime.now().plusYears(1);
-      ObjectRetentionConfiguration config =
-          new ObjectRetentionConfiguration(RetentionMode.COMPLIANCE, retentionUntil);
+      Retention config = new Retention(RetentionMode.COMPLIANCE, retentionUntil);
 
       // Set object lock configuration
       minioClient.setObjectRetention("my-bucketname", "my-objectname", "", config, true);
 
       // Get object lock retention
-      ObjectRetentionConfiguration objectRetentionConfiguration =
-          minioClient.getObjectRetention("my-bucketname", "my-objectname", "");
+      Retention retention = minioClient.getObjectRetention("my-bucketname", "my-objectname", "");
 
-      System.out.println(" Mode : " + objectRetentionConfiguration.mode());
-      System.out.println(" Retainuntil Date : " + objectRetentionConfiguration.retainUntilDate());
-
+      System.out.println("Mode: " + retention.mode());
+      System.out.println("Retainuntil Date: " + retention.retainUntilDate());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

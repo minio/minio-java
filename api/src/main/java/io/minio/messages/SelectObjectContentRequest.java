@@ -16,30 +16,34 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest information.
+ * Denotes select object content request XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_SelectObjectContent.html.
  */
+@Root(name = "SelectObjectContentRequest")
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class SelectObjectContentRequest extends XmlEntity {
-  @Key("Expression")
+public class SelectObjectContentRequest {
+  @Element(name = "Expression")
   private String expression;
 
-  @Key("ExpressionType")
-  private String expressionType;
+  @Element(name = "ExpressionType")
+  private String expressionType = "SQL";
 
-  @Key("RequestProgress")
+  @Element(name = "RequestProgress", required = false)
   private RequestProgress requestProgress;
 
-  @Key("InputSerialization")
+  @Element(name = "InputSerialization")
   private InputSerialization inputSerialization;
 
-  @Key("OutputSerialization")
+  @Element(name = "OutputSerialization")
   private OutputSerialization outputSerialization;
 
-  @Key("ScanRange")
+  @Element(name = "ScanRange", required = false)
   private ScanRange scanRange;
 
   /** Constructs new SelectObjectContentRequest object for given parameters. */
@@ -49,14 +53,8 @@ public class SelectObjectContentRequest extends XmlEntity {
       InputSerialization is,
       OutputSerialization os,
       Long scanStartRange,
-      Long scanEndRange)
-      throws XmlPullParserException {
-    super();
-    this.name = "SelectObjectContentRequest";
-    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
-
+      Long scanEndRange) {
     this.expression = expression;
-    this.expressionType = "SQL";
     if (requestProgress) {
       this.requestProgress = new RequestProgress();
     }

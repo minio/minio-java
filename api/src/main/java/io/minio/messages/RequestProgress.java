@@ -16,23 +16,19 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest/RequestProgress
- * information.
+ * Helper class to denote progress request in select object content request XML for
+ * SelectObjectContentRequest.
  */
+@Root(name = "RequestProgress", strict = false)
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class RequestProgress extends XmlEntity {
-  @Key("Enabled")
-  private boolean enabled;
+public class RequestProgress {
+  @Element(name = "Enabled")
+  private boolean enabled = true;
 
   /** Constructs a new RequestProgress object. */
-  public RequestProgress() throws XmlPullParserException {
-    super();
-    super.name = "ScanRange";
-
-    this.enabled = true;
-  }
+  public RequestProgress() {}
 }

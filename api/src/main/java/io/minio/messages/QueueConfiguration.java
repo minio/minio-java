@@ -16,38 +16,17 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import java.util.LinkedList;
-import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing queue configuration. */
-public class QueueConfiguration extends XmlEntity {
-  @Key("Id")
-  private String id;
-
-  @Key("Queue")
+/** Helper class to denote Queue configuration of NotificationConfiguration. */
+@Root(name = "QueueConfiguration", strict = false)
+public class QueueConfiguration extends NotificationCommonConfiguration {
+  @Element(name = "Queue")
   private String queue;
 
-  @Key("Event")
-  private List<String> events = new LinkedList<>();
-
-  @Key("Filter")
-  private Filter filter;
-
-  public QueueConfiguration() throws XmlPullParserException {
+  public QueueConfiguration() {
     super();
-    super.name = "QueueConfiguration";
-  }
-
-  /** Returns id. */
-  public String id() {
-    return id;
-  }
-
-  /** Sets id. */
-  public void setId(String id) {
-    this.id = id;
   }
 
   /** Returns queue. */
@@ -58,25 +37,5 @@ public class QueueConfiguration extends XmlEntity {
   /** Sets queue. */
   public void setQueue(String queue) {
     this.queue = queue;
-  }
-
-  /** Returns events. */
-  public List<EventType> events() throws IllegalArgumentException {
-    return EventType.fromStringList(events);
-  }
-
-  /** Sets event. */
-  public void setEvents(List<EventType> events) {
-    this.events = EventType.toStringList(events);
-  }
-
-  /** Sets filter. */
-  public void setFilter(Filter filter) {
-    this.filter = filter;
-  }
-
-  /** Returns filter. */
-  public Filter filter() {
-    return filter;
   }
 }

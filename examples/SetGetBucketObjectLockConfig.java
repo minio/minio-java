@@ -16,8 +16,8 @@
 
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import io.minio.messages.DurationUnit;
 import io.minio.messages.ObjectLockConfiguration;
+import io.minio.messages.RetentionDurationDays;
 import io.minio.messages.RetentionMode;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -25,11 +25,10 @@ import java.security.NoSuchAlgorithmException;
 import org.xmlpull.v1.XmlPullParserException;
 
 public class SetGetBucketObjectLockConfig {
-  /** MinioClient.makeBucket() example. */
+  /** Set/Get Bucket Object Lock configuration example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
-
       /* Amazon S3: */
       MinioClient s3Client =
           new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
@@ -45,10 +44,9 @@ public class SetGetBucketObjectLockConfig {
             "my-bucketname is created successfully with object lock functionality enabled.");
       }
 
-      // Declaring config with Retention mode as Compliance and
-      // duration as 100 days
+      // Declaring config with Retention mode as Compliance and duration as 100 days
       ObjectLockConfiguration config =
-          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, 100, DurationUnit.DAYS);
+          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
 
       // Set object lock configuration
       s3Client.setDefaultRetention("my-bucketname", config);
@@ -56,8 +54,9 @@ public class SetGetBucketObjectLockConfig {
       // Get object lock configuration
       ObjectLockConfiguration bucketConfig = s3Client.getDefaultRetention("my-bucketname");
 
-      System.out.println(" Lock Configuration : " + bucketConfig);
-
+      System.out.println("Default retention configuration of bucket");
+      System.out.println("Mode: " + bucketConfig.mode());
+      System.out.println("Duration: " + bucketConfig.duration());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

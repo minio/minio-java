@@ -16,48 +16,48 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult Version 1
- * information.
+ * Denotes list objects v1 response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html.
  */
-@SuppressWarnings({"SameParameterValue", "unused"})
-public class ListBucketResultV1 extends XmlEntity {
-  @Key("Name")
+@Root(name = "ListBucketResult", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class ListBucketResultV1 {
+  @Element(name = "Name")
   private String name;
 
-  @Key("Prefix")
+  @Element(name = "Prefix", required = false)
   private String prefix;
 
-  @Key("Marker")
+  @Element(name = "Marker", required = false)
   private String marker;
 
-  @Key("NextMarker")
+  @Element(name = "NextMarker", required = false)
   private String nextMarker;
 
-  @Key("MaxKeys")
+  @Element(name = "MaxKeys")
   private int maxKeys;
 
-  @Key("Delimiter")
+  @Element(name = "Delimiter", required = false)
   private String delimiter;
 
-  @Key("IsTruncated")
+  @Element(name = "IsTruncated", required = false)
   private boolean isTruncated;
 
-  @Key("Contents")
+  @ElementList(name = "Contents", inline = true, required = false)
   private List<Item> contents;
 
-  @Key("CommonPrefixes")
+  @ElementList(name = "CommonPrefixes", inline = true, required = false)
   private List<Prefix> commonPrefixes;
 
-  public ListBucketResultV1() throws XmlPullParserException {
-    super();
-    super.name = "ListBucketResult";
-  }
+  public ListBucketResultV1() {}
 
   /** Returns next marker. */
   public String nextMarker() {
@@ -99,6 +99,7 @@ public class ListBucketResultV1 extends XmlEntity {
     if (contents == null) {
       return new LinkedList<>();
     }
+
     return contents;
   }
 
@@ -107,6 +108,7 @@ public class ListBucketResultV1 extends XmlEntity {
     if (commonPrefixes == null) {
       return new LinkedList<>();
     }
+
     return commonPrefixes;
   }
 }

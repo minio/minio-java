@@ -16,39 +16,39 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing Rule information. */
-@SuppressWarnings("SameParameterValue")
-public class Rule extends XmlEntity {
-  @Key("DefaultRetention")
+/** Helper class to denote Rule information for ObjectLockConfiguration. */
+@Root(name = "Rule", strict = false)
+public class Rule {
+  @Element(name = "DefaultRetention", required = false)
   private DefaultRetention defaultRetention;
 
-  public Rule() throws XmlPullParserException {
-    super();
-    this.name = "Rule";
-  }
+  public Rule() {}
 
   /** Constructs a new Rule object with given retention. */
-  public Rule(RetentionMode mode, int duration, DurationUnit unit) throws XmlPullParserException {
-    this();
-
-    this.defaultRetention = new DefaultRetention(mode, duration, unit);
+  public Rule(RetentionMode mode, RetentionDuration duration) {
+    if (mode != null && duration != null) {
+      this.defaultRetention = new DefaultRetention(mode, duration);
+    }
   }
 
-  /** Returns mode. */
+  /** Returns retention mode. */
   public RetentionMode mode() {
+    if (defaultRetention == null) {
+      return null;
+    }
+
     return defaultRetention.mode();
   }
 
-  /** Returns days. */
-  public Integer days() {
-    return defaultRetention.days();
-  }
+  /** Returns retention duration. */
+  public RetentionDuration duration() {
+    if (defaultRetention == null) {
+      return null;
+    }
 
-  /** Returns years. */
-  public Integer years() {
-    return defaultRetention.years();
+    return defaultRetention.duration();
   }
 }

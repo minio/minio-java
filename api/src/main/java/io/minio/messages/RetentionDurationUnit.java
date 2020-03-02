@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2019 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package io.minio.messages;
 
-/** DurationUnit of default retention configuration. */
-public enum DurationUnit {
+/** Duration unit of default retention configuration. */
+public enum RetentionDurationUnit {
   DAYS,
   YEARS;
 }

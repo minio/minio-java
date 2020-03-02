@@ -16,34 +16,32 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import io.minio.Time;
 import java.time.ZonedDateTime;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing Part information. */
-@SuppressWarnings({"WeakerAccess", "unused"})
-public class Part extends XmlEntity {
-  @Key("PartNumber")
+/**
+ * Helper class to denote Part information of a multipart upload and used in CompleteMultipartUpload
+ * and ListPartsResult.
+ */
+@Root(name = "Part", strict = false)
+public class Part {
+  @Element(name = "PartNumber")
   private int partNumber;
 
-  @Key("ETag")
+  @Element(name = "ETag")
   private String etag;
 
-  @Key("LastModified")
-  private String lastModified;
+  @Element(name = "LastModified", required = false)
+  private ResponseDate lastModified;
 
-  @Key("Size")
+  @Element(name = "Size", required = false)
   private Long size;
 
-  public Part() throws XmlPullParserException {
-    this(0, null);
-  }
+  public Part() {}
 
   /** Constructs a new Part object with given part number and ETag. */
-  public Part(int partNumber, String etag) throws XmlPullParserException {
-    super();
-    super.name = "Part";
+  public Part(int partNumber, String etag) {
 
     this.partNumber = partNumber;
     this.etag = etag;
@@ -61,7 +59,7 @@ public class Part extends XmlEntity {
 
   /** Returns last modified time. */
   public ZonedDateTime lastModified() {
-    return ZonedDateTime.parse(lastModified, Time.RESPONSE_DATE_FORMAT);
+    return lastModified.zonedDateTime();
   }
 
   /** Returns part size. */

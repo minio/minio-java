@@ -16,37 +16,43 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import java.io.IOException;
-import java.io.Reader;
 import java.util.LinkedList;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to create Amazon AWS S3 request XML containing information for Multiple object
- * deletion.
+ * Denotes Delete objects response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html.
  */
-@SuppressWarnings({"SameParameterValue", "unused"})
-public class DeleteResult extends XmlEntity {
-  @Key("Deleted")
-  private List<DeletedObject> objectList = new LinkedList<>();
+@Root(name = "DeleteResult", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class DeleteResult {
+  @ElementList(name = "Deleted", inline = true, required = false)
+  private List<DeletedObject> objectList;
 
-  @Key("Error")
-  private List<DeleteError> errorList = new LinkedList<>();
+  @ElementList(name = "Error", inline = true, required = false)
+  private List<DeleteError> errorList;
 
   /** Constructs new delete result by parsing content on given reader. */
-  public DeleteResult(Reader reader) throws IOException, XmlPullParserException {
-    super();
-    super.name = "DeleteResult";
-    this.parseXml(reader);
-  }
+  public DeleteResult() {}
 
+  /** Returns deleted object list. */
   public List<DeletedObject> objectList() {
+    if (objectList == null) {
+      return new LinkedList<>();
+    }
+
     return objectList;
   }
 
+  /** Returns delete error list. */
   public List<DeleteError> errorList() {
+    if (errorList == null) {
+      return new LinkedList<>();
+    }
+
     return errorList;
   }
 }

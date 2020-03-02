@@ -16,35 +16,56 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import java.util.LinkedList;
+import java.util.List;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing Filter. */
-@SuppressWarnings("WeakerAccess")
-public class Filter extends XmlEntity {
-  @Key("S3Key")
-  private S3Key s3Key = new S3Key();
+/**
+ * Helper class to denote Filter configuration of CloudFunctionConfiguration, QueueConfiguration or
+ * TopicConfiguration.
+ */
+@Root(name = "Filter", strict = false)
+public class Filter {
+  @ElementList(name = "S3Key")
+  private List<FilterRule> filterRuleList;
 
-  public Filter() throws XmlPullParserException {
-    super();
-    super.name = "Filter";
+  public Filter() {}
+
+  /**
+   * Sets filter rule to list. As per Amazon AWS S3 server behavior, its not possible to set more
+   * than one rule for "prefix" or "suffix". However the spec
+   * http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTnotification.html is not clear
+   * about this behavior.
+   */
+  private void setRule(String name, String value) throws IllegalArgumentException {
+    if (value.length() > 1024) {
+      throw new IllegalArgumentException("value '" + value + "' is more than 1024 long");
+    }
+
+    if (filterRuleList == null) {
+      filterRuleList = new LinkedList<>();
+    }
+
+    for (FilterRule rule : filterRuleList) {
+      // Remove rule.name is same as given name.
+      if (rule.name().equals(name)) {
+        filterRuleList.remove(rule);
+      }
+    }
+
+    filterRuleList.add(new FilterRule(name, value));
   }
 
-  /** Returns S3 Key. */
-  public S3Key s3Key() {
-    return s3Key;
+  public void setPrefixRule(String value) throws IllegalArgumentException {
+    setRule("prefix", value);
   }
 
-  /** Sets S3 Key. */
-  public void setS3Key(S3Key s3Key) {
-    this.s3Key = s3Key;
+  public void setSuffixRule(String value) throws IllegalArgumentException {
+    setRule("suffix", value);
   }
 
-  public void setPrefixRule(String value) throws IllegalArgumentException, XmlPullParserException {
-    s3Key.setPrefixRule(value);
-  }
-
-  public void setSuffixRule(String value) throws IllegalArgumentException, XmlPullParserException {
-    s3Key.setSuffixRule(value);
+  public List<FilterRule> filterRuleList() {
+    return filterRuleList;
   }
 }

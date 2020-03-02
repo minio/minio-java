@@ -16,39 +16,25 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import com.google.api.client.xml.XmlNamespaceDictionary;
-import java.io.IOException;
-import java.io.Reader;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Stats/Progress message in S3 select response message. */
-public class Stats extends XmlEntity {
-  @Key("BytesScanned")
+/** Helper class to denote Stats information of S3 select response message. */
+@Root(name = "Stats", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class Stats {
+  @Element(name = "BytesScanned")
   private long bytesScanned = -1;
 
-  @Key("BytesProcessed")
+  @Element(name = "BytesProcessed")
   private long bytesProcessed = -1;
 
-  @Key("BytesReturned")
+  @Element(name = "BytesReturned")
   private long bytesReturned = -1;
 
   /** Constructs a new Stats object. */
-  public Stats(String name) throws XmlPullParserException {
-    super();
-    super.name = name;
-  }
-
-  /**
-   * Fills up this Stats object's fields by reading/parsing values from given Reader input stream.
-   */
-  @Override
-  public void parseXml(Reader reader) throws IOException, XmlPullParserException {
-    XmlNamespaceDictionary namespaceDictionary = new XmlNamespaceDictionary();
-    namespaceDictionary.set("s3", "http://s3.amazonaws.com/doc/2006-03-01/");
-    namespaceDictionary.set("", "");
-    super.parseXml(reader, namespaceDictionary);
-  }
+  public Stats() {}
 
   /** Returns bytes scanned. */
   public long bytesScanned() {

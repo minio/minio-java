@@ -60,9 +60,9 @@ public class SelectObjectContent {
 
       String sqlExpression = "select * from S3Object";
       InputSerialization is =
-          InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE, null, null, null);
+          new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
       OutputSerialization os =
-          OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+          new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
 
       SelectResponseStream stream =
           minioClient.selectObjectContent(

@@ -23,6 +23,7 @@ import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
+import io.minio.errors.XmlParserException;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +32,6 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import me.tongfei.progressbar.ProgressBarStyle;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class PutObjectProgressBar {
   /** MinioClient.putObjectProgressBar() example. */
@@ -39,7 +39,7 @@ public class PutObjectProgressBar {
       throws InvalidKeyException, NoSuchAlgorithmException, InvalidEndpointException,
           InvalidPortException, InvalidBucketNameException, InsufficientDataException,
           ErrorResponseException, InternalException, IllegalArgumentException, IOException,
-          XmlPullParserException, InvalidResponseException {
+          XmlParserException, InvalidResponseException {
     /* play.min.io for test and development. */
     MinioClient minioClient =
         new MinioClient(
@@ -58,8 +58,7 @@ public class PutObjectProgressBar {
     InputStream pis =
         new BufferedInputStream(
             new ProgressStream("Uploading... ", ProgressBarStyle.ASCII, new FileInputStream(file)));
-    minioClient.putObject(
-        "my-bucketname", "my-objectname", pis, new PutObjectOptions(pis.available(), -1));
+    minioClient.putObject(bucketName, objectName, pis, new PutObjectOptions(pis.available(), -1));
     pis.close();
     System.out.println("my-objectname is uploaded successfully");
   }

@@ -16,25 +16,20 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to generate Amazon AWS S3 request XML for
- * SelectObjectContentRequest/InputSerialization/JSON information.
+ * Helper class to denote JSON input serialization request XML as per SelectObjectContentRequest.
  */
+@Root(name = "JSON")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class JsonInputSerialization extends XmlEntity {
-  @Key("Type")
-  private String type;
+public class JsonInputSerialization {
+  @Element(name = "Type", required = false)
+  private JsonType type;
 
   /** Constructs a new JsonInputSerialization object. */
-  public JsonInputSerialization(JsonType type) throws XmlPullParserException {
-    super();
-    this.name = "JSON";
-
-    if (type != null) {
-      this.type = type.toString();
-    }
+  public JsonInputSerialization(JsonType type) {
+    this.type = type;
   }
 }

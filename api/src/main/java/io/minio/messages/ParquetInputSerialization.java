@@ -16,15 +16,10 @@
 
 package io.minio.messages;
 
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to generate Amazon AWS S3 request XML for
- * SelectObjectContentRequest/InputSerialization/Parquet information.
+ * Helper class to denote Parquet input serialization request XML as per SelectObjectContentRequest.
  */
-public class ParquetInputSerialization extends XmlEntity {
-  public ParquetInputSerialization() throws XmlPullParserException {
-    super();
-    this.name = "Parquet";
-  }
-}
+@Root(name = "Parquet")
+public class ParquetInputSerialization {}

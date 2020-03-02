@@ -16,25 +16,27 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing initiate multipart upload result. */
-@SuppressWarnings({"SameParameterValue", "unused"})
-public class InitiateMultipartUploadResult extends XmlEntity {
-  @Key("Bucket")
+/**
+ * Denotes CreateMultipartUpload response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html.
+ */
+@Root(name = "InitiateMultipartUploadResult", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class InitiateMultipartUploadResult {
+  @Element(name = "Bucket")
   private String bucketName;
 
-  @Key("Key")
+  @Element(name = "Key")
   private String objectName;
 
-  @Key("UploadId")
+  @Element(name = "UploadId")
   private String uploadId;
 
-  public InitiateMultipartUploadResult() throws XmlPullParserException {
-    super();
-    this.name = "InitiateMultipartUploadResult";
-  }
+  public InitiateMultipartUploadResult() {}
 
   /** Returns bucket name. */
   public String bucketName() {

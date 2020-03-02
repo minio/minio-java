@@ -16,26 +16,23 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to construct create bucket configuration request XML for Amazon AWS S3. */
-public class CreateBucketConfiguration extends XmlEntity {
-  @Key("LocationConstraint")
+/**
+ * Denotes create bucket configuration request XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html.
+ */
+@Root(name = "CreateBucketConfiguration")
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
+public class CreateBucketConfiguration {
+  @Element(name = "LocationConstraint")
   private String locationConstraint;
 
   /** Constructs a new CreateBucketConfiguration object with given location constraint. */
-  public CreateBucketConfiguration(String locationConstraint) throws XmlPullParserException {
-    super();
-    super.name = "CreateBucketConfiguration";
-    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
-
+  public CreateBucketConfiguration(String locationConstraint) {
     this.locationConstraint = locationConstraint;
-  }
-
-  /** Returns location constraint. */
-  @SuppressWarnings("unused")
-  public String locationConstraint() {
-    return locationConstraint;
   }
 }

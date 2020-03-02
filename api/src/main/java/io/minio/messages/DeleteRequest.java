@@ -16,32 +16,28 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to create Amazon AWS S3 request XML containing information for Multiple object
- * deletion.
+ * Denotes delete (multiple) objects request XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html.
  */
+@Root(name = "Delete")
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class DeleteRequest extends XmlEntity {
-  @Key("Quiet")
+public class DeleteRequest {
+  @Element(name = "Quiet", required = false)
   private boolean quiet;
 
-  @Key("Object")
+  @ElementList(name = "Object", inline = true)
   private List<DeleteObject> objectList;
 
-  public DeleteRequest(List<DeleteObject> objectList) throws XmlPullParserException {
-    this(objectList, true);
-  }
-
   /** Constructs new delete request for given object list and quiet flag. */
-  public DeleteRequest(List<DeleteObject> objectList, boolean quiet) throws XmlPullParserException {
-    super();
-    super.name = "Delete";
-    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
-
+  public DeleteRequest(List<DeleteObject> objectList, boolean quiet) {
     this.objectList = objectList;
     this.quiet = quiet;
   }

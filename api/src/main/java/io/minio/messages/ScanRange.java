@@ -16,26 +16,24 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest/ScanRange
- * information.
+ * Helper class to denote scan range in select object content request XML for
+ * SelectObjectContentRequest.
  */
+@Root(name = "ScanRange")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class ScanRange extends XmlEntity {
-  @Key("Start")
+public class ScanRange {
+  @Element(name = "Start", required = false)
   private Long start;
 
-  @Key("End")
+  @Element(name = "End", required = false)
   private Long end;
 
   /** Constructs new ScanRange object for given start and end. */
-  public ScanRange(Long start, Long end) throws XmlPullParserException {
-    super();
-    super.name = "ScanRange";
-
+  public ScanRange(Long start, Long end) {
     this.start = start;
     this.end = end;
   }

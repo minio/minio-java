@@ -16,49 +16,40 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import com.google.api.client.xml.XmlNamespaceDictionary;
 import io.minio.ErrorCode;
-import java.io.IOException;
-import java.io.Reader;
-import org.xmlpull.v1.XmlPullParserException;
+import java.io.Serializable;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 error response XML. */
-@SuppressWarnings("unused")
-public class ErrorResponse extends XmlEntity {
-  @Key("Code")
-  protected String code;
+/** Denotes Error response XML of any S3 REST APIs. */
+@Root(name = "ErrorResponse", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class ErrorResponse implements Serializable {
+  private static final long serialVersionUID = 1905162041950251407L; // fix SE_BAD_FIELD
 
-  @Key("Message")
-  protected String message;
-
-  @Key("BucketName")
-  protected String bucketName;
-
-  @Key("Key")
-  protected String objectName;
-
-  @Key("Resource")
-  protected String resource;
-
-  @Key("RequestId")
-  protected String requestId;
-
-  @Key("HostId")
-  protected String hostId;
-
+  @Element(name = "Code")
   protected ErrorCode errorCode;
 
-  public ErrorResponse() throws XmlPullParserException {
-    super();
-    super.name = "ErrorResponse";
-  }
+  @Element(name = "Message", required = false)
+  protected String message;
 
-  /** Constructs a new ErrorResponse object by reading given reader stream. */
-  public ErrorResponse(Reader reader) throws IOException, XmlPullParserException {
-    this();
-    this.parseXml(reader);
-  }
+  @Element(name = "BucketName", required = false)
+  protected String bucketName;
+
+  @Element(name = "Key", required = false)
+  protected String objectName;
+
+  @Element(name = "Resource", required = false)
+  protected String resource;
+
+  @Element(name = "RequestId", required = false)
+  protected String requestId;
+
+  @Element(name = "HostId", required = false)
+  protected String hostId;
+
+  public ErrorResponse() {}
 
   /**
    * Constructs a new ErrorResponse object with error code, bucket name, object name, resource,
@@ -70,12 +61,8 @@ public class ErrorResponse extends XmlEntity {
       String objectName,
       String resource,
       String requestId,
-      String hostId)
-      throws XmlPullParserException {
-    this();
+      String hostId) {
     this.errorCode = errorCode;
-    this.code = errorCode.code();
-    this.message = errorCode.message();
     this.bucketName = bucketName;
     this.objectName = objectName;
     this.resource = resource;
@@ -85,21 +72,16 @@ public class ErrorResponse extends XmlEntity {
 
   /** Returns error code. */
   public ErrorCode errorCode() {
-    if (this.errorCode == null) {
-      this.errorCode = ErrorCode.fromString(this.code);
-    }
-
     return this.errorCode;
-  }
-
-  /** Returns error code string. */
-  public String code() {
-    return this.code;
   }
 
   /** Returns error message. */
   public String message() {
-    return this.message;
+    if (this.message != null) {
+      return this.message;
+    }
+
+    return this.errorCode.message();
   }
 
   /** Returns bucket name. */
@@ -127,39 +109,27 @@ public class ErrorResponse extends XmlEntity {
     return resource;
   }
 
-  /**
-   * Fills up this ErrorResponse object's fields by reading/parsing values from given Reader input
-   * stream.
-   */
-  @Override
-  public void parseXml(Reader reader) throws IOException, XmlPullParserException {
-    XmlNamespaceDictionary namespaceDictionary = new XmlNamespaceDictionary();
-    namespaceDictionary.set("", "");
-    super.parseXml(reader, namespaceDictionary);
-  }
-
-  /** Returns string with field values. */
-  public String getString() {
-    return "ErrorResponse("
-        + "code="
-        + code
+  /** Returns string representation of this object. */
+  public String toString() {
+    return "ErrorResponse(code = "
+        + errorCode.code()
         + ", "
-        + "message="
-        + message
+        + "message = "
+        + message()
         + ", "
-        + "bucketName="
+        + "bucketName = "
         + bucketName
         + ", "
-        + "objectName="
+        + "objectName = "
         + objectName
         + ", "
-        + "resource="
+        + "resource = "
         + resource
         + ", "
-        + "requestId="
+        + "requestId = "
         + requestId
         + ", "
-        + "hostId="
+        + "hostId = "
         + hostId
         + ")";
   }

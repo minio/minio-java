@@ -16,45 +16,45 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to parse Amazon AWS S3 response XML containing ListMultipartUploadResult
- * information.
+ * Denotes list of multipart uploads response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html.
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
-public class ListMultipartUploadsResult extends XmlEntity {
-  @Key("Upload")
-  List<Upload> uploads;
-
-  @Key("Bucket")
+@Root(name = "ListMultipartUploadsResult", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class ListMultipartUploadsResult {
+  @Element(name = "Bucket")
   private String bucketName;
 
-  @Key("KeyMarker")
+  @Element(name = "KeyMarker", required = false)
   private String keyMarker;
 
-  @Key("UploadIdMarker")
+  @Element(name = "UploadIdMarker", required = false)
   private String uploadIdMarker;
 
-  @Key("NextKeyMarker")
+  @Element(name = "NextKeyMarker", required = false)
   private String nextKeyMarker;
 
-  @Key("NextUploadIdMarker")
+  @Element(name = "NextUploadIdMarker", required = false)
   private String nextUploadIdMarker;
 
-  @Key("MaxUploads")
+  @Element(name = "MaxUploads")
   private int maxUploads;
 
-  @Key("IsTruncated")
+  @Element(name = "IsTruncated", required = false)
   private boolean isTruncated;
 
-  public ListMultipartUploadsResult() throws XmlPullParserException {
-    super();
-    super.name = "ListMultipartUploadsResult";
-  }
+  @ElementList(name = "Upload", inline = true, required = false)
+  List<Upload> uploads;
+
+  public ListMultipartUploadsResult() {}
 
   /** Returns whether the result is truncated or not. */
   public boolean isTruncated() {
@@ -94,8 +94,9 @@ public class ListMultipartUploadsResult extends XmlEntity {
   /** Returns List of Upload. */
   public List<Upload> uploads() {
     if (uploads == null) {
-      return new ArrayList<>();
+      return new LinkedList<>();
     }
+
     return uploads;
   }
 }

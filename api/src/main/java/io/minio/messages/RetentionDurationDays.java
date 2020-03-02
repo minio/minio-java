@@ -1,6 +1,5 @@
 /*
- * Minio Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2019 Minio, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +16,23 @@
 
 package io.minio.messages;
 
-import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Text;
 
-/**
- * Denotes UploadPartCopy response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html.
- */
-@Root(name = "CopyPartResult", strict = false)
-@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class CopyPartResult extends CopyObjectResult {}
+@Root(name = "Days")
+public class RetentionDurationDays implements RetentionDuration {
+  @Text(required = false)
+  private Integer days;
+
+  public RetentionDurationDays(int days) {
+    this.days = Integer.valueOf(days);
+  }
+
+  public RetentionDurationUnit unit() {
+    return RetentionDurationUnit.DAYS;
+  }
+
+  public int duration() {
+    return days;
+  }
+}

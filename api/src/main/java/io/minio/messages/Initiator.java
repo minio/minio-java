@@ -16,22 +16,22 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing initator information. */
-@SuppressWarnings("unused")
-public class Initiator extends XmlEntity {
-  @Key("ID")
+/**
+ * Helper class to denote Initator information of a multipart upload and used in
+ * ListMultipartUploadsResult and ListPartsResult.
+ */
+@Root(name = "Initiator", strict = false)
+public class Initiator {
+  @Element(name = "ID")
   private String id;
 
-  @Key("DisplayName")
+  @Element(name = "DisplayName")
   private String displayName;
 
-  public Initiator() throws XmlPullParserException {
-    super();
-    this.name = "Initiator";
-  }
+  public Initiator() {}
 
   /** Returns initiator ID. */
   public String id() {

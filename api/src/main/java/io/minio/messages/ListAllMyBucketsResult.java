@@ -16,28 +16,29 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
 /**
- * Helper class to parse Amazon AWS S3 response XML containing ListAllMyBucketsResult information.
+ * Denotes list buckets response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html.
  */
-public class ListAllMyBucketsResult extends XmlEntity {
-  @Key("Owner")
+@Root(name = "ListAllMyBucketsResult", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class ListAllMyBucketsResult {
+  @Element(name = "Owner")
   private Owner owner;
 
-  @Key("Buckets")
-  private Buckets buckets;
+  @ElementList(name = "Buckets")
+  private List<Bucket> buckets;
 
-  public ListAllMyBucketsResult() throws XmlPullParserException {
-    super();
-    this.name = "ListAllMyBucketsResult";
-  }
+  public ListAllMyBucketsResult() {}
 
   /** Returns owner. */
-  @SuppressWarnings("unused")
   public Owner owner() {
     return owner;
   }
@@ -48,6 +49,6 @@ public class ListAllMyBucketsResult extends XmlEntity {
       return new LinkedList<>();
     }
 
-    return buckets.bucketList();
+    return buckets;
   }
 }

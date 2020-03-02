@@ -16,7 +16,15 @@
 
 package io.minio;
 
+import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
+import org.simpleframework.xml.convert.Converter;
+import org.simpleframework.xml.stream.InputNode;
+import org.simpleframework.xml.stream.OutputNode;
+
 /** Amazon AWS S3 error codes. */
+@Root(name = "ErrorCode")
+@Convert(ErrorCode.ErrorCodeConverter.class)
 public enum ErrorCode {
   // custom error codes
   NO_SUCH_OBJECT("NoSuchKey", "Object does not exist"),
@@ -167,17 +175,24 @@ public enum ErrorCode {
 
   /** Returns ErrorCode of given code string. */
   public static ErrorCode fromString(String codeString) {
-    if (codeString == null) {
-      return null;
-    }
-
     for (ErrorCode ec : ErrorCode.values()) {
       if (codeString.equals(ec.code)) {
         return ec;
       }
     }
 
-    // Unknown error code string.  Its not a standard Amazon S3 error.
-    return null;
+    throw new IllegalArgumentException("unknown error code string '" + codeString + "'");
+  }
+
+  public static class ErrorCodeConverter implements Converter<ErrorCode> {
+    @Override
+    public ErrorCode read(InputNode node) throws Exception {
+      return ErrorCode.fromString(node.getValue());
+    }
+
+    @Override
+    public void write(OutputNode node, ErrorCode errorCode) throws Exception {
+      node.setValue(errorCode.code());
+    }
   }
 }

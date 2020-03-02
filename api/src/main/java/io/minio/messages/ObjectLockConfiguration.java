@@ -16,34 +16,39 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to construct create bucket configuration request XML for Amazon AWS S3. */
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class ObjectLockConfiguration extends XmlEntity {
-  @Key("ObjectLockEnabled")
+/**
+ * Denotes object lock configuration request/response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectLockConfiguration.html and
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectLockConfiguration.html.
+ */
+@Root(name = "ObjectLockConfiguration", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class ObjectLockConfiguration {
+  @Element(name = "ObjectLockEnabled")
   private String objectLockEnabled = "Enabled";
 
-  @Key("Rule")
+  @Element(name = "Rule", required = false)
   private Rule rule;
 
-  /** Constructs a new ObjectLockConfiguration object. */
-  public ObjectLockConfiguration() throws XmlPullParserException {
-    super();
-    super.name = "ObjectLockConfiguration";
-    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
-  }
+  public ObjectLockConfiguration() {}
 
   /** Constructs a new ObjectLockConfiguration object with given retention. */
-  public ObjectLockConfiguration(RetentionMode mode, int duration, DurationUnit unit)
-      throws XmlPullParserException {
-    this();
+  public ObjectLockConfiguration(RetentionMode mode, RetentionDuration duration)
+      throws IllegalArgumentException {
+    if (mode != null && duration != null) {
+      this.rule = new Rule(mode, duration);
+    }
 
-    this.rule = new Rule(mode, duration, unit);
+    if (mode != null || duration != null) {
+      throw new IllegalArgumentException("mode or duration is null");
+    }
   }
 
-  /** Returns mode. */
+  /** Returns retention mode. */
   public RetentionMode mode() {
     if (rule == null) {
       return null;
@@ -52,21 +57,12 @@ public class ObjectLockConfiguration extends XmlEntity {
     return rule.mode();
   }
 
-  /** Returns days. */
-  public Integer days() {
+  /** Returns retention duration. */
+  public RetentionDuration duration() {
     if (rule == null) {
       return null;
     }
 
-    return rule.days();
-  }
-
-  /** Returns years. */
-  public Integer years() {
-    if (rule == null) {
-      return null;
-    }
-
-    return rule.years();
+    return rule.duration();
   }
 }

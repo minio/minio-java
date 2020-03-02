@@ -16,28 +16,29 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import java.util.LinkedList;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing notification configuration. */
-public class NotificationConfiguration extends XmlEntity {
-  @Key("CloudFunctionConfiguration")
-  private List<CloudFunctionConfiguration> cloudFunctionConfigurationList = new LinkedList<>();
+/**
+ * Denotes Notification configuration request/response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotificationConfiguration.html and
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketNotificationConfiguration.html.
+ */
+@Root(name = "NotificationConfiguration", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class NotificationConfiguration {
+  @ElementList(name = "CloudFunctionConfiguration", inline = true, required = false)
+  private List<CloudFunctionConfiguration> cloudFunctionConfigurationList;
 
-  @Key("QueueConfiguration")
-  private List<QueueConfiguration> queueConfigurationList = new LinkedList<>();
+  @ElementList(name = "QueueConfiguration", inline = true, required = false)
+  private List<QueueConfiguration> queueConfigurationList;
 
-  @Key("TopicConfiguration")
-  private List<TopicConfiguration> topicConfigurationList = new LinkedList<>();
+  @ElementList(name = "TopicConfiguration", inline = true, required = false)
+  private List<TopicConfiguration> topicConfigurationList;
 
-  /** Constructs a new notification configuration with default namespace. */
-  public NotificationConfiguration() throws XmlPullParserException {
-    super();
-    super.name = "NotificationConfiguration";
-    super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
-  }
+  public NotificationConfiguration() {}
 
   /** Returns cloud function configuration. */
   public List<CloudFunctionConfiguration> cloudFunctionConfigurationList() {

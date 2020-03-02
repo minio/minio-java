@@ -798,7 +798,7 @@ public class FunctionalTest {
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       } catch (ErrorResponseException e) {
-        if (!e.errorResponse().code().equals("InvalidStorageClass")) {
+        if (e.errorResponse().errorCode() != ErrorCode.INVALID_STORAGE_CLASS) {
           throw e;
         }
       }
@@ -1852,7 +1852,7 @@ public class FunctionalTest {
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
-        if (!e.errorResponse().code().equals("IncompleteBody")) {
+        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
       } catch (java.io.IOException e) {
@@ -1892,7 +1892,7 @@ public class FunctionalTest {
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
-        if (!e.errorResponse().code().equals("IncompleteBody")) {
+        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
       } catch (java.io.IOException e) {
@@ -1937,7 +1937,7 @@ public class FunctionalTest {
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
-        if (!e.errorResponse().code().equals("IncompleteBody")) {
+        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
       } catch (java.io.IOException e) {
@@ -1980,7 +1980,7 @@ public class FunctionalTest {
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
-        if (!e.errorResponse().code().equals("IncompleteBody")) {
+        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
         }
       } catch (java.io.IOException e) {
@@ -2358,7 +2358,7 @@ public class FunctionalTest {
         client.copyObject(
             destBucketName, objectName, null, null, bucketName, null, null, invalidETag);
       } catch (ErrorResponseException e) {
-        if (!e.errorResponse().code().equals("PreconditionFailed")) {
+        if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
           throw e;
         }
       }
@@ -2517,7 +2517,7 @@ public class FunctionalTest {
       } catch (ErrorResponseException e) {
         // File should not be copied as ETag set in copyConditions matches object's
         // ETag.
-        if (!e.errorResponse().code().equals("PreconditionFailed")) {
+        if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
           throw e;
         }
       }
@@ -2631,7 +2631,7 @@ public class FunctionalTest {
       } catch (ErrorResponseException e) {
         // File should not be copied as object was modified after date set in
         // copyConditions.
-        if (!e.errorResponse().code().equals("PreconditionFailed")) {
+        if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
           throw e;
         }
       }
@@ -3567,11 +3567,8 @@ public class FunctionalTest {
       eventList.add(EventType.OBJECT_CREATED_PUT);
       eventList.add(EventType.OBJECT_CREATED_COPY);
       topicConfiguration.setEvents(eventList);
-
-      Filter filter = new Filter();
-      filter.setPrefixRule("images");
-      filter.setSuffixRule("pg");
-      topicConfiguration.setFilter(filter);
+      topicConfiguration.setPrefixRule("images");
+      topicConfiguration.setSuffixRule("pg");
 
       topicConfigurationList.add(topicConfiguration);
       notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
@@ -3688,11 +3685,8 @@ public class FunctionalTest {
       eventList.add(EventType.OBJECT_CREATED_PUT);
       eventList.add(EventType.OBJECT_CREATED_COPY);
       topicConfiguration.setEvents(eventList);
-
-      Filter filter = new Filter();
-      filter.setPrefixRule("images");
-      filter.setSuffixRule("pg");
-      topicConfiguration.setFilter(filter);
+      topicConfiguration.setPrefixRule("images");
+      topicConfiguration.setSuffixRule("pg");
 
       topicConfigurationList.add(topicConfiguration);
       notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
@@ -3832,9 +3826,9 @@ public class FunctionalTest {
 
       String sqlExpression = "select * from S3Object";
       InputSerialization is =
-          InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE, null, null, null);
+          new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
       OutputSerialization os =
-          OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+          new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
 
       responseStream =
           client.selectObjectContent(
