@@ -19,43 +19,41 @@ package io.minio;
 
 import static org.junit.Assert.assertEquals;
 
-import io.minio.errors.InvalidResponseException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-
-import java.security.InvalidKeyException;
-
-import java.security.NoSuchAlgorithmException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.TimeZone;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InvalidResponseException;
 import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
-import org.junit.Assert;
-import org.junit.Test;
-import org.xmlpull.v1.XmlPullParserException;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.Item;
 import io.minio.messages.Owner;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
+import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Iterator;
+
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
+
+import org.junit.Assert;
+import org.junit.Test;
+import org.xmlpull.v1.XmlPullParserException;
+
 
 @SuppressWarnings("unused")
 public class MinioClientTest {
@@ -75,7 +73,7 @@ public class MinioClientTest {
   private static final String MAT_DESC = "x-amz-meta-x-amz-matdesc";
   private static final String ACCEPT_RANGES = "Accept-Ranges";
   private static final String CONTENT_RANGE = "Content-Range";
-  private static final String SUN_29_JUN_2015_22_01_10_GMT = "Sun, 29 Jun 2015 22:01:10 GMT";
+  private static final String MON_29_JUN_2015_22_01_10_GMT = "Mon, 29 Jun 2015 22:01:10 GMT";
   private static final String BUCKET_KEY = "/bucket/key";
   private static final String MD5_HASH_STRING = "\"5eb63bbbe01eeed093cb22bb8f5acdc3\"";
   private static final ObjectMapper objectMapper =
@@ -169,7 +167,7 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
     response.setResponseCode(200);
-    response.setHeader("Date", "Sun, 05 Jun 2015 22:01:10 GMT");
+    response.setHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.setHeader(CONTENT_LENGTH, "5080");
     response.setHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response.setHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
@@ -179,12 +177,9 @@ public class MinioClientTest {
     server.start();
 
     // build expected request
-    Calendar expectedDate = Calendar.getInstance();
-    expectedDate.clear();
-    expectedDate.setTimeZone(TimeZone.getTimeZone("GMT"));
-    expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
+    ZonedDateTime expectedDate = ZonedDateTime.parse(MON_04_MAY_2015_07_58_51_GMT, Time.HTTP_HEADER_DATE_FORMAT);
     ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key",
-                                                 expectedDate.getTime(),
+                                                 expectedDate,
                                                  5080,
                                                  "a670520d9d36833b3e28d1e4b73cbe22",
                                                  APPLICATION_OCTET_STREAM);
@@ -372,7 +367,7 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.addHeader(CONTENT_LENGTH, "414");
     response.addHeader(CONTENT_TYPE, "application/xml");
     response.setBody(new Buffer().writeUtf8(body));
@@ -388,13 +383,7 @@ public class MinioClientTest {
     assertEquals("key", item.objectName());
     assertEquals(11, item.objectSize());
     assertEquals("STANDARD", item.storageClass());
-
-    Calendar expectedDate = Calendar.getInstance();
-    expectedDate.clear();
-    expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
-    expectedDate.set(2015, Calendar.MAY, 5, 2, 21, 15);
-    expectedDate.set(Calendar.MILLISECOND, 716);
-    assertEquals(expectedDate.getTime(), item.lastModified());
+    assertEquals("2015-05-05T02:21:15.716Z", item.lastModified().format(Time.RESPONSE_DATE_FORMAT));
 
     Owner owner = item.owner();
     assertEquals("minio", owner.id());
@@ -405,14 +394,11 @@ public class MinioClientTest {
   public void testListBuckets()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
       ParseException {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
     final String body = "<ListAllMyBucketsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner><Buckets><Bucket><Name>bucket</Name><CreationDate>2015-05-05T20:35:51.410Z</CreationDate></Bucket><Bucket><Name>foo</Name><CreationDate>2015-05-05T20:35:47.170Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.addHeader(CONTENT_LENGTH, "351");
     response.addHeader(CONTENT_TYPE, "application/xml");
     response.setBody(new Buffer().writeUtf8(body));
@@ -426,18 +412,11 @@ public class MinioClientTest {
 
     Bucket bucket = buckets.next();
     assertEquals(BUCKET, bucket.name());
-    assertEquals(dateFormat.parse("2015-05-05T20:35:51.410Z"), bucket.creationDate());
+    assertEquals("2015-05-05T20:35:51.410Z", bucket.creationDate().format(Time.RESPONSE_DATE_FORMAT));
 
     bucket = buckets.next();
     assertEquals("foo", bucket.name());
-    assertEquals(dateFormat.parse("2015-05-05T20:35:47.170Z"), bucket.creationDate());
-
-    Calendar expectedDate = Calendar.getInstance();
-    expectedDate.clear();
-    expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
-    expectedDate.set(2015, Calendar.MAY, 5, 20, 35, 47);
-    expectedDate.set(Calendar.MILLISECOND, 170);
-    assertEquals(expectedDate.getTime(), bucket.creationDate());
+    assertEquals("2015-05-05T20:35:47.170Z", bucket.creationDate().format(Time.RESPONSE_DATE_FORMAT));
   }
 
   @Test
@@ -446,7 +425,7 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
 
     server.enqueue(response);
@@ -464,7 +443,7 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(404);
 
     server.enqueue(response);
@@ -483,10 +462,10 @@ public class MinioClientTest {
     MockResponse response1 = new MockResponse();
     MockResponse response2 = new MockResponse();
 
-    response1.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response1.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response1.setResponseCode(200);
 
-    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response2.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response2.setResponseCode(200);
 
     server.enqueue(response1);
@@ -507,7 +486,7 @@ public class MinioClientTest {
     final ErrorResponse errResponse = new ErrorResponse(ErrorCode.BUCKET_ALREADY_EXISTS, null, null, "/bucket", "1",
                                                         null);
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(409); // status conflict
     response.setBody(new Buffer().writeUtf8(errResponse.toString()));
 
@@ -544,7 +523,7 @@ public class MinioClientTest {
     server.enqueue(response1);
 
     MockResponse response2 = new MockResponse();
-    response2.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response2.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response2.addHeader(CONTENT_LENGTH, "5080");
     response2.addHeader(CONTENT_TYPE, APPLICATION_OCTET_STREAM);
     response2.addHeader("ETag", "\"a670520d9d36833b3e28d1e4b73cbe22\"");
@@ -555,12 +534,9 @@ public class MinioClientTest {
     server.start();
 
     // build expected request
-    Calendar expectedDate = Calendar.getInstance();
-    expectedDate.clear();
-    expectedDate.setTimeZone(TimeZone.getTimeZone("UTC"));
-    expectedDate.set(2015, Calendar.MAY, 4, 7, 58, 51);
+    ZonedDateTime expectedDate = ZonedDateTime.parse(MON_04_MAY_2015_07_58_51_GMT, Time.HTTP_HEADER_DATE_FORMAT);
     String contentType = APPLICATION_OCTET_STREAM;
-    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key", expectedDate.getTime(), 5080,
+    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key", expectedDate, 5080,
                                                  "a670520d9d36833b3e28d1e4b73cbe22", contentType);
 
     // get request
@@ -577,7 +553,7 @@ public class MinioClientTest {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
 
     server.enqueue(response);
@@ -598,7 +574,7 @@ public class MinioClientTest {
 
     String expectedPolicyString = "{\"Version\":\"2012-10-17\",\"Statement\":[]}";
 
-    response.addHeader("Date", SUN_29_JUN_2015_22_01_10_GMT);
+    response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(200);
     response.setBody(expectedPolicyString);
 

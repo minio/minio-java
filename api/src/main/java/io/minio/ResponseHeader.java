@@ -16,13 +16,10 @@
 
 package io.minio;
 
-import java.util.Date;
-
-import org.joda.time.DateTime;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.http.Header;
-
+import io.minio.Time;
+import java.time.ZonedDateTime;
 
 /**
  * HTTP response header class.
@@ -34,11 +31,11 @@ public class ResponseHeader {
   @Header("Content-Type")
   private String contentType;
   @Header("Date")
-  private DateTime date;
+  private ZonedDateTime date;
   @Header("ETag")
   private String etag;
   @Header("Last-Modified")
-  private DateTime lastModified;
+  private ZonedDateTime lastModified;
   @Header("Server")
   private String server;
   @Header("Status Code")
@@ -89,15 +86,15 @@ public class ResponseHeader {
    * Sets date.
    */
   public void setDate(String date) {
-    this.date = DateFormat.HTTP_HEADER_DATE_FORMAT.parseDateTime(date);
+    this.date = ZonedDateTime.parse(date, Time.HTTP_HEADER_DATE_FORMAT);
   }
 
 
   /**
    * Returns date.
    */
-  public Date date() {
-    return this.date.toDate();
+  public ZonedDateTime date() {
+    return this.date;
   }
 
 
@@ -121,15 +118,15 @@ public class ResponseHeader {
    * Sets last modified time.
    */
   public void setLastModified(String lastModified) {
-    this.lastModified = DateFormat.HTTP_HEADER_DATE_FORMAT.parseDateTime(lastModified);
+    this.lastModified = ZonedDateTime.parse(lastModified, Time.HTTP_HEADER_DATE_FORMAT);
   }
 
 
   /**
    * Returns last modified time.
    */
-  public Date lastModified() {
-    return this.lastModified.toDate();
+  public ZonedDateTime lastModified() {
+    return this.lastModified;
   }
 
 

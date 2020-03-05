@@ -16,13 +16,10 @@
 
 package io.minio.messages;
 
-import java.util.Date;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import com.google.api.client.util.Key;
-
-import io.minio.DateFormat;
+import io.minio.Time;
+import java.time.ZonedDateTime;
+import org.xmlpull.v1.XmlPullParserException;
 
 
 /**
@@ -73,8 +70,8 @@ public class Item extends XmlEntity {
   /**
    * Returns last modified time of the object.
    */
-  public Date lastModified() {
-    return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(lastModified).toDate();
+  public ZonedDateTime lastModified() {
+    return ZonedDateTime.parse(lastModified, Time.RESPONSE_DATE_FORMAT);
   }
 
 

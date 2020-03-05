@@ -16,12 +16,11 @@
 
 package io.minio.messages;
 
-import org.xmlpull.v1.XmlPullParserException;
-
-import io.minio.DateFormat;
-import org.joda.time.DateTime;
 import com.google.api.client.util.Key;
+import io.minio.Time;
 import io.minio.errors.InvalidArgumentException;
+import java.time.ZonedDateTime;
+import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * Helper class to parse Amazon AWS S3 response XML containing ObjectLockRetention information.
@@ -45,17 +44,20 @@ public class ObjectRetentionConfiguration extends XmlEntity {
    * Constructs a new ObjectRetentionConfiguration object with given retention 
    * until date and mode.
    */
-  public ObjectRetentionConfiguration(RetentionMode mode,  DateTime retainUntilDate) throws XmlPullParserException,
-          InvalidArgumentException {
+  public ObjectRetentionConfiguration(RetentionMode mode,  ZonedDateTime retainUntilDate)
+    throws XmlPullParserException, InvalidArgumentException {
     this();
+
     if (mode == null) {
       throw new InvalidArgumentException("null mode is not allowed");
     }
-    this.mode = mode.toString();
+
     if (retainUntilDate == null) {
       throw new InvalidArgumentException("null retainUntilDate is not allowed");
-    }    
-    this.retainUntilDate = retainUntilDate.toString(DateFormat.EXPIRATION_DATE_FORMAT);  
+    }
+
+    this.mode = mode.toString();
+    this.retainUntilDate = retainUntilDate.format(Time.EXPIRATION_DATE_FORMAT);
   }
 
   /**
@@ -68,9 +70,7 @@ public class ObjectRetentionConfiguration extends XmlEntity {
   /**
    * Returns retain until date.
    */
-  public DateTime retainUntilDate() {
-    return this.retainUntilDate == null ? null : 
-        DateFormat.EXPIRATION_DATE_FORMAT.parseDateTime(this.retainUntilDate);
+  public ZonedDateTime retainUntilDate() {
+    return retainUntilDate == null ? null : ZonedDateTime.parse(retainUntilDate, Time.EXPIRATION_DATE_FORMAT);
   }
 }
-

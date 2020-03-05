@@ -17,10 +17,10 @@
 
 package io.minio.messages;
 
-import org.joda.time.DateTime;
-import org.xmlpull.v1.XmlPullParserException;
 import com.google.api.client.util.Key;
-import io.minio.DateFormat;
+import io.minio.Time;
+import java.time.ZonedDateTime;
+import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * Helper class to parse Amazon AWS S3 response XML containing
@@ -41,8 +41,8 @@ public class CopyPartResult extends XmlEntity {
   /**
    * Returns last modified time of the object.
    */
-  public DateTime lastModified() {
-    return DateFormat.RESPONSE_DATE_FORMAT.parseDateTime(lastModified).toDateTime();
+  public ZonedDateTime lastModified() {
+    return ZonedDateTime.parse(lastModified, Time.RESPONSE_DATE_FORMAT);
   }
 
   /**

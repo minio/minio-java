@@ -33,9 +33,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Calendar;
+import java.time.ZonedDateTime;
 
-import org.joda.time.DateTime;
 import org.xmlpull.v1.XmlPullParserException;
 
 public class SetGetObjectLockRetentionConfig {
@@ -86,8 +85,7 @@ public class SetGetObjectLockRetentionConfig {
       // Declaring config with Retention mode as Compliance and
       // retain until MAY 2021
 
-
-      DateTime retentionUntil = new DateTime(2021, Calendar.MAY, 0, 0, 0);
+      ZonedDateTime retentionUntil = ZonedDateTime.now().plusYears(1);
       ObjectRetentionConfiguration config = 
           new ObjectRetentionConfiguration(RetentionMode.COMPLIANCE, retentionUntil);
 
