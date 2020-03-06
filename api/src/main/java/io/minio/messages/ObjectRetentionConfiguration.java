@@ -18,7 +18,6 @@ package io.minio.messages;
 
 import com.google.api.client.util.Key;
 import io.minio.Time;
-import io.minio.errors.InvalidArgumentException;
 import java.time.ZonedDateTime;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -45,15 +44,15 @@ public class ObjectRetentionConfiguration extends XmlEntity {
    * until date and mode.
    */
   public ObjectRetentionConfiguration(RetentionMode mode,  ZonedDateTime retainUntilDate)
-    throws XmlPullParserException, InvalidArgumentException {
+    throws XmlPullParserException, IllegalArgumentException {
     this();
 
     if (mode == null) {
-      throw new InvalidArgumentException("null mode is not allowed");
+      throw new IllegalArgumentException("null mode is not allowed");
     }
 
     if (retainUntilDate == null) {
-      throw new InvalidArgumentException("null retainUntilDate is not allowed");
+      throw new IllegalArgumentException("null retainUntilDate is not allowed");
     }
 
     this.mode = mode.toString();

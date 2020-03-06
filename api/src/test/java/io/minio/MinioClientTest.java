@@ -25,7 +25,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InvalidResponseException;
-import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.MinioException;
@@ -127,7 +126,7 @@ public class MinioClientTest {
 
   @SuppressFBWarnings("NP")
   @Test(expected = MinioException.class)
-  public void newClientWithNullStringFails() throws InvalidArgumentException, MinioException {
+  public void newClientWithNullStringFails() throws IllegalArgumentException, MinioException {
     String url = null;
     new MinioClient(url);
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
@@ -281,7 +280,7 @@ public class MinioClientTest {
     assertEquals(expectedObject, new String(result, StandardCharsets.UTF_8));
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testGetObjectOffsetIsNegativeReturnsError()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     final String expectedObject = HELLO;
@@ -305,7 +304,7 @@ public class MinioClientTest {
     Assert.fail("Should of thrown an exception");
   }
 
-  @Test(expected = InvalidArgumentException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testGetObjectLengthIsZeroReturnsError()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
     final String expectedObject = HELLO;

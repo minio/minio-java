@@ -23,8 +23,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import com.google.api.client.util.Key;
 
-import io.minio.errors.InvalidArgumentException;
-
 
 /**
  * Helper class to parse Amazon AWS S3 response XML containing S3Key.
@@ -55,9 +53,9 @@ public class S3Key extends XmlEntity {
    * However the spec http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTnotification.html
    * is not clear about this behavior.
    */
-  private void setRule(String name, String value) throws InvalidArgumentException, XmlPullParserException {
+  private void setRule(String name, String value) throws IllegalArgumentException, XmlPullParserException {
     if (value.length() > 1024) {
-      throw new InvalidArgumentException("value '" + value + "' is more than 1024 long");
+      throw new IllegalArgumentException("value '" + value + "' is more than 1024 long");
     }
 
     for (FilterRule rule: filterRuleList) {
@@ -74,12 +72,12 @@ public class S3Key extends XmlEntity {
   }
 
 
-  public void setPrefixRule(String value) throws InvalidArgumentException, XmlPullParserException {
+  public void setPrefixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     setRule("prefix", value);
   }
 
 
-  public void setSuffixRule(String value) throws InvalidArgumentException, XmlPullParserException {
+  public void setSuffixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     setRule("suffix", value);
   }
 }

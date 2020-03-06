@@ -31,8 +31,6 @@ import javax.security.auth.Destroyable;
 
 import com.google.common.io.BaseEncoding;
 
-import io.minio.errors.InvalidArgumentException;
-
 
 /**
 * ServerSideEncryption represents a form of server-side encryption.
@@ -79,8 +77,8 @@ public abstract class ServerSideEncryption implements Destroyable {
   /**
    * Returns server side encryption headers for source object in Put Object - Copy.
    */
-  public Map<String, String> copySourceHeaders() throws InvalidArgumentException {
-    throw new InvalidArgumentException(this.type().name() + " is not supported in copy source");
+  public Map<String, String> copySourceHeaders() throws IllegalArgumentException {
+    throw new IllegalArgumentException(this.type().name() + " is not supported in copy source");
   }
 
   /**
@@ -301,9 +299,9 @@ public abstract class ServerSideEncryption implements Destroyable {
    * @return an instance of ServerSideEncryption implementing SSE-KMS.
    */
   public static ServerSideEncryption withManagedKeys(String keyId, Map<String,String> context)
-    throws InvalidArgumentException, UnsupportedEncodingException {
+    throws IllegalArgumentException, UnsupportedEncodingException {
     if (keyId == null) {
-      throw new InvalidArgumentException("The key-ID cannot be null");
+      throw new IllegalArgumentException("The key-ID cannot be null");
     }
     if (context == null) {
       return new ServerSideEncryptionKms(keyId, Optional.empty());

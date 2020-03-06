@@ -28,7 +28,6 @@ import io.minio.MinioClient;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
-import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
@@ -44,7 +43,7 @@ public class PutObjectProgressBar {
   public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException,
       InvalidEndpointException, InvalidPortException, InvalidBucketNameException,
       InsufficientDataException, NoResponseException, ErrorResponseException, InternalException,
-      InvalidArgumentException, IOException, XmlPullParserException, InvalidResponseException {
+      IllegalArgumentException, IOException, XmlPullParserException, InvalidResponseException {
     /* play.min.io for test and development. */
     MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
         "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");

@@ -17,7 +17,6 @@
 
 package io.minio;
 
-import io.minio.errors.InvalidArgumentException;
 import java.util.Map;
 
 public class PutObjectOptions {
@@ -45,20 +44,20 @@ public class PutObjectOptions {
    *
    * <p>A valid part size is between 5MiB to 5GiB (both limits inclusive).
    */
-  public PutObjectOptions(long objectSize, long partSize) throws InvalidArgumentException {
+  public PutObjectOptions(long objectSize, long partSize) throws IllegalArgumentException {
     if (partSize > 0) {
       if (partSize < MIN_MULTIPART_SIZE) {
-        throw new InvalidArgumentException("part size " + partSize + " is not supported; minimum allowed 5MiB");
+        throw new IllegalArgumentException("part size " + partSize + " is not supported; minimum allowed 5MiB");
       }
 
       if (partSize > MAX_PART_SIZE) {
-        throw new InvalidArgumentException("part size " + partSize + " is not supported; maximum allowed 5GiB");
+        throw new IllegalArgumentException("part size " + partSize + " is not supported; maximum allowed 5GiB");
       }
     }
 
     if (objectSize >= 0) {
       if (objectSize > MAX_OBJECT_SIZE) {
-        throw new InvalidArgumentException("object size " + objectSize + " is not supported; maximum allowed 5TiB");
+        throw new IllegalArgumentException("object size " + objectSize + " is not supported; maximum allowed 5TiB");
       }
 
       this.objectSize = objectSize;
@@ -71,7 +70,7 @@ public class PutObjectOptions {
         this.partSize = partSize;
         this.partCount = (int) Math.ceil((double) objectSize / partSize);
         if (this.partCount > MAX_MULTIPART_COUNT) {
-          throw new InvalidArgumentException("object size " + this.objectSize + " and part size " + this.partSize
+          throw new IllegalArgumentException("object size " + this.objectSize + " and part size " + this.partSize
                                              + " make more than " + MAX_MULTIPART_COUNT + "parts for upload");
         }
       } else {
@@ -91,7 +90,7 @@ public class PutObjectOptions {
     }
 
     if (partSize <= 0) {
-      throw new InvalidArgumentException("valid part size must be provided when object size is unknown");
+      throw new IllegalArgumentException("valid part size must be provided when object size is unknown");
     }
 
     this.objectSize = -1;

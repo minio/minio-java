@@ -19,8 +19,6 @@ package io.minio.messages;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.minio.errors.InvalidArgumentException;
-
 
 /**
  * Amazon AWS S3 event types for notifications.
@@ -55,7 +53,7 @@ public enum EventType {
   /**
    * Returns EventType of given string.
    */
-  public static EventType fromString(String eventTypeString) throws InvalidArgumentException {
+  public static EventType fromString(String eventTypeString) throws IllegalArgumentException {
     for (EventType et : EventType.values()) {
       if (eventTypeString.equals(et.value)) {
         return et;
@@ -63,14 +61,14 @@ public enum EventType {
     }
 
 
-    throw new InvalidArgumentException("unknown event '" + eventTypeString + "'");
+    throw new IllegalArgumentException("unknown event '" + eventTypeString + "'");
   }
 
 
   /**
    * Returns List&lt;EventType&gt; of given List&lt;String&gt;.
    */
-  public static List<EventType> fromStringList(List<String> eventList) throws InvalidArgumentException {
+  public static List<EventType> fromStringList(List<String> eventList) throws IllegalArgumentException {
     List<EventType> eventTypeList = new LinkedList<EventType>();
     for (String event: eventList) {
       eventTypeList.add(EventType.fromString(event));

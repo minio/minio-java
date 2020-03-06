@@ -17,7 +17,6 @@
 
 package io.minio;
 
-import io.minio.errors.InvalidArgumentException;
 import io.minio.Time;
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -38,12 +37,12 @@ public class CopyConditions {
   /**
    * Set modified condition, copy object modified since given time.
    *
-   * @throws InvalidArgumentException
+   * @throws IllegalArgumentException
    *           When date is null
    */
-  public void setModified(ZonedDateTime time) throws InvalidArgumentException {
+  public void setModified(ZonedDateTime time) throws IllegalArgumentException {
     if (time == null) {
-      throw new InvalidArgumentException("modified time cannot be empty");
+      throw new IllegalArgumentException("modified time cannot be empty");
     }
     copyConditions.put("x-amz-copy-source-if-modified-since",
                        time.format(Time.HTTP_HEADER_DATE_FORMAT));
@@ -52,12 +51,12 @@ public class CopyConditions {
   /**
    * Sets object unmodified condition, copy object unmodified since given time.
    *
-   * @throws InvalidArgumentException
+   * @throws IllegalArgumentException
    *           When date is null
    */
-  public void setUnmodified(ZonedDateTime time) throws InvalidArgumentException {
+  public void setUnmodified(ZonedDateTime time) throws IllegalArgumentException {
     if (time == null) {
-      throw new InvalidArgumentException("unmodified time can not be null");
+      throw new IllegalArgumentException("unmodified time can not be null");
     }
 
     copyConditions.put("x-amz-copy-source-if-unmodified-since",
@@ -68,12 +67,12 @@ public class CopyConditions {
    * Set matching ETag condition, copy object which matches
    * the following ETag.
    *
-   * @throws InvalidArgumentException
+   * @throws IllegalArgumentException
    *           When etag is null
    */
-  public void setMatchETag(String etag) throws InvalidArgumentException {
+  public void setMatchETag(String etag) throws IllegalArgumentException {
     if (etag == null) {
-      throw new InvalidArgumentException("ETag cannot be empty");
+      throw new IllegalArgumentException("ETag cannot be empty");
     }
     copyConditions.put("x-amz-copy-source-if-match", etag);
   }
@@ -82,12 +81,12 @@ public class CopyConditions {
    * Set matching ETag none condition, copy object which does not
    * match the following ETag.
    *
-   * @throws InvalidArgumentException
+   * @throws IllegalArgumentException
    *           When etag is null
    */
-  public void setMatchETagNone(String etag) throws InvalidArgumentException {
+  public void setMatchETagNone(String etag) throws IllegalArgumentException {
     if (etag == null) {
-      throw new InvalidArgumentException("ETag cannot be empty");
+      throw new IllegalArgumentException("ETag cannot be empty");
     }
     copyConditions.put("x-amz-copy-source-if-none-match", etag);
   }
