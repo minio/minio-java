@@ -1,4 +1,5 @@
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
@@ -63,8 +64,9 @@ public class PutGetObjectEncrypted {
       // To test SSE-C
       ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
-      minioClient.putObject(
-          "my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, sse, null);
+      PutObjectOptions options = new PutObjectOptions(bais.available(), -1);
+      options.setSse(sse);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, options);
 
       bais.close();
 

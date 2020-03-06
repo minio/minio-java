@@ -1,4 +1,5 @@
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
@@ -66,14 +67,9 @@ public class CopyObjectEncrypted {
       ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
 
       // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
-      minioClient.putObject(
-          "my-bucketname",
-          "my-objectname",
-          bais,
-          Long.valueOf(bais.available()),
-          null,
-          ssePut,
-          null);
+      PutObjectOptions options = new PutObjectOptions(bais.available(), -1);
+      options.setSse(ssePut);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, options);
       System.out.println("my-objectname is uploaded successfully");
 
       minioClient.copyObject(

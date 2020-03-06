@@ -17,6 +17,7 @@
 import static java.nio.file.StandardOpenOption.*;
 
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.nio.file.*;
@@ -42,7 +43,7 @@ public class UploadObject {
 
       // Upload 'my-filename' as object 'my-objectname' in 'my-bucketname'.
       minioClient.putObject(
-          "my-bucketname", "my-objectname", "my-filename", null, null, null, null);
+          "my-bucketname", "my-objectname", "my-filename", new PutObjectOptions(-1, 6000000));
       System.out.println("my-filename is uploaded to my-objectname successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

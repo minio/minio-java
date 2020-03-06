@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -58,13 +59,7 @@ public class PutObjectProgressBar {
         new BufferedInputStream(
             new ProgressStream("Uploading... ", ProgressBarStyle.ASCII, new FileInputStream(file)));
     minioClient.putObject(
-        bucketName,
-        objectName,
-        pis,
-        Long.valueOf(pis.available()),
-        null,
-        null,
-        "application/octet-stream");
+        "my-bucketname", "my-objectname", pis, new PutObjectOptions(pis.available(), -1));
     pis.close();
     System.out.println("my-objectname is uploaded successfully");
   }

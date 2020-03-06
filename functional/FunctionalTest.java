@@ -424,7 +424,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String filename = createFile1Kb();
-      client.putObject(bucketName, filename, filename, null, null, null, null);
+      client.putObject(bucketName, filename, filename, new PutObjectOptions(1 * KB, -1));
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
       mintSuccessLog(
@@ -452,7 +452,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String filename = createFile6Mb();
-      client.putObject(bucketName, filename, filename, null, null, null, null);
+      client.putObject(bucketName, filename, filename, new PutObjectOptions(6 * MB, -1));
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
       mintSuccessLog(
@@ -484,7 +484,9 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String filename = createFile1Kb();
-      client.putObject(bucketName, filename, filename, null, null, null, customContentType);
+      PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+      options.setContentType(customContentType);
+      client.putObject(bucketName, filename, filename, options);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
       mintSuccessLog(
@@ -517,8 +519,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, customContentType);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setContentType(customContentType);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       client.removeObject(bucketName, objectName);
@@ -554,8 +557,9 @@ public class FunctionalTest {
     try {
       String objectName = "path/to/" + getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, customContentType);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setContentType(customContentType);
+        client.putObject(bucketName, objectName, is, options);
       }
       client.removeObject(bucketName, objectName);
       mintSuccessLog(
@@ -587,14 +591,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(size)) {
-        client.putObject(
-            bucketName,
-            objectName,
-            is,
-            Long.valueOf(is.available()),
-            null,
-            null,
-            customContentType);
+        PutObjectOptions options = new PutObjectOptions(is.available(), -1);
+        options.setContentType(customContentType);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       client.removeObject(bucketName, objectName);
@@ -646,7 +645,9 @@ public class FunctionalTest {
       Map<String, String> headerMap = new HashMap<>();
       headerMap.put("Content-Type", customContentType);
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), headerMap, null, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setHeaders(headerMap);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       client.removeObject(bucketName, objectName);
@@ -688,7 +689,9 @@ public class FunctionalTest {
       headerMap.put("Content-Type", customContentType);
       headerMap.put("X-Amz-Storage-Class", storageClass);
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), headerMap, null, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setHeaders(headerMap);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -737,7 +740,9 @@ public class FunctionalTest {
       headerMap.put("Content-Type", customContentType);
       headerMap.put("X-Amz-Storage-Class", storageClass);
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), headerMap, null, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setHeaders(headerMap);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -789,7 +794,9 @@ public class FunctionalTest {
       headerMap.put("X-Amz-Storage-Class", storageClass);
 
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), headerMap, null, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setHeaders(headerMap);
+        client.putObject(bucketName, objectName, is, options);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("InvalidStorageClass")) {
           throw e;
@@ -834,7 +841,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       client.removeObject(bucketName, objectName);
@@ -873,7 +882,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       client.removeObject(bucketName, objectName);
@@ -920,7 +931,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       client.removeObject(bucketName, objectName);
@@ -961,7 +974,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(6 * MB), null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       client.removeObject(bucketName, objectName);
@@ -1001,7 +1016,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       String filename = createFile1Kb();
-      client.putObject(bucketName, objectName, filename, null, null, sse, null);
+      PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+      options.setSse(sse);
+      client.putObject(bucketName, objectName, filename, options);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, objectName);
 
@@ -1035,7 +1052,10 @@ public class FunctionalTest {
       headerMap.put("Content-Type", customContentType);
       headerMap.put("my-custom-data", "foo");
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, 1L, headerMap, null, customContentType);
+        PutObjectOptions options = new PutObjectOptions(1, -1);
+        options.setHeaders(headerMap);
+        options.setContentType(customContentType);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
@@ -1092,7 +1112,9 @@ public class FunctionalTest {
       ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, 1L, null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(1, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       ObjectStat objectStat = client.statObject(bucketName, objectName, sse);
@@ -1176,8 +1198,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       client.getObject(bucketName, objectName).close();
@@ -1205,8 +1226,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       client.getObject(bucketName, objectName, 1000L).close();
@@ -1237,8 +1257,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(6 * MB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(6 * MB, -1));
       }
 
       client.getObject(bucketName, objectName, 1000L, 64 * 1024L).close();
@@ -1268,8 +1287,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       client.getObject(bucketName, objectName, objectName + ".downloaded");
@@ -1305,8 +1323,7 @@ public class FunctionalTest {
     String objectName = "path/to/" + baseObjectName;
     try {
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       client.getObject(bucketName, objectName, baseObjectName + ".downloaded");
@@ -1338,7 +1355,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(0)) {
-        client.putObject(bucketName, objectName, is, 0L, null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(0, -1));
       }
 
       client.getObject(bucketName, objectName).close();
@@ -1376,8 +1393,9 @@ public class FunctionalTest {
       String putString;
       int bytes_read_put;
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
         byte[] putbyteArray = new byte[is.available()];
         bytes_read_put = is.read(putbyteArray);
         putString = new String(putbyteArray, StandardCharsets.UTF_8);
@@ -1427,8 +1445,7 @@ public class FunctionalTest {
     final String objectName = getRandomName();
     try {
       try (final InputStream is = new ContentInputStream(fullLength)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(fullLength), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(fullLength, -1));
       }
 
       try (final InputStream partialObjectStream =
@@ -1477,7 +1494,9 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       String filename = createFile1Kb();
-      client.putObject(bucketName, objectName, filename, null, null, sse, null);
+      PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+      options.setSse(sse);
+      client.putObject(bucketName, objectName, filename, options);
       client.getObject(bucketName, objectName, sse, objectName + ".downloaded");
       Files.delete(Paths.get(objectName + ".downloaded"));
       client.removeObject(bucketName, objectName);
@@ -1512,7 +1531,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, 1L, null, null, nullContentType);
+          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
         }
       }
 
@@ -1553,7 +1572,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, 1L, null, null, nullContentType);
+          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
         }
       }
 
@@ -1596,7 +1615,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, 1L, null, null, nullContentType);
+          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
         }
       }
 
@@ -1675,7 +1694,7 @@ public class FunctionalTest {
       for (i = 0; i < objCount; i++) {
         objectNames[i] = getRandomName();
         try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, 1L, null, null, nullContentType);
+          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
         }
       }
 
@@ -1726,7 +1745,7 @@ public class FunctionalTest {
       for (i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, 1L, null, null, nullContentType);
+          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
         }
       }
 
@@ -1769,7 +1788,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, 1L, null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1, -1));
       }
 
       client.removeObject(bucketName, objectName);
@@ -1798,7 +1817,7 @@ public class FunctionalTest {
       for (int i = 0; i < 3; i++) {
         objectNames[i] = getRandomName();
         try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, 1L, null, null, nullContentType);
+          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
         }
       }
       objectNames[3] = "nonexistent-object";
@@ -1831,13 +1850,12 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
         }
-      } catch (java.net.ProtocolException e) {
+      } catch (java.io.IOException e) {
         ignore();
       }
 
@@ -1872,13 +1890,12 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
         }
-      } catch (java.net.ProtocolException e) {
+      } catch (java.io.IOException e) {
         ignore();
       }
 
@@ -1918,13 +1935,12 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
         }
-      } catch (java.net.ProtocolException e) {
+      } catch (java.io.IOException e) {
         ignore();
       }
 
@@ -1962,13 +1978,12 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
         }
-      } catch (java.net.ProtocolException e) {
+      } catch (java.io.IOException e) {
         ignore();
       }
 
@@ -2004,8 +2019,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       byte[] inBytes;
@@ -2044,8 +2058,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       byte[] inBytes;
@@ -2089,8 +2102,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       byte[] inBytes;
@@ -2292,8 +2304,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2334,8 +2345,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2388,8 +2398,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2440,8 +2449,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2493,8 +2501,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2551,8 +2558,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2602,8 +2608,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2668,14 +2673,7 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(
-            bucketName,
-            objectName,
-            is,
-            Long.valueOf(1 * KB),
-            null,
-            null,
-            "application/octet-stream");
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
       String destBucketName = getRandomName();
@@ -2738,7 +2736,9 @@ public class FunctionalTest {
       headerMap.put("Test", "testValue");
 
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, 1L, headerMap, null, null);
+        PutObjectOptions options = new PutObjectOptions(1, -1);
+        options.setHeaders(headerMap);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       // Attempt to remove the user-defined metadata from the object
@@ -2807,7 +2807,9 @@ public class FunctionalTest {
       ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
 
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, 1L, null, ssePut, null);
+        PutObjectOptions options = new PutObjectOptions(1, -1);
+        options.setSse(ssePut);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       // Attempt to remove the user-defined metadata from the object
@@ -2865,7 +2867,9 @@ public class FunctionalTest {
       ServerSideEncryption sse = ServerSideEncryption.atRest();
 
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, 1L, null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(1, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       // Attempt to remove the user-defined metadata from the object
@@ -2927,7 +2931,9 @@ public class FunctionalTest {
       ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
 
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, 1L, null, sse, null);
+        PutObjectOptions options = new PutObjectOptions(1, -1);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
       }
 
       // Attempt to remove the user-defined metadata from the object
@@ -2977,8 +2983,9 @@ public class FunctionalTest {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, null, null, null, null);
-      client.putObject(bucketName, filename2, filename2, null, null, null, null);
+      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
+      client.putObject(bucketName, filename1, filename1, options);
+      client.putObject(bucketName, filename2, filename2, options);
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, null);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -3042,8 +3049,9 @@ public class FunctionalTest {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, null, null, null, null);
-      client.putObject(bucketName, filename2, filename2, null, null, null, null);
+      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
+      client.putObject(bucketName, filename1, filename1, options);
+      client.putObject(bucketName, filename2, filename2, options);
       ComposeSource s1 = new ComposeSource(bucketName, filename1, 10L, 6291436L, null, null, null);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -3108,7 +3116,7 @@ public class FunctionalTest {
     try {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, null, null, null, null);
+      client.putObject(bucketName, filename1, filename1, new PutObjectOptions(6 * MB, -1));
       ComposeSource s1 = new ComposeSource(bucketName, filename1, 10L, 6291436L, null, null, null);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
@@ -3182,8 +3190,10 @@ public class FunctionalTest {
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, null, null, ssePut, null);
-      client.putObject(bucketName, filename2, filename2, null, null, ssePut, null);
+      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
+      options.setSse(ssePut);
+      client.putObject(bucketName, filename1, filename1, options);
+      client.putObject(bucketName, filename2, filename2, options);
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, ssePut);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, ssePut);
 
@@ -3254,8 +3264,10 @@ public class FunctionalTest {
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, null, null, ssePut, null);
-      client.putObject(bucketName, filename2, filename2, null, null, null, null);
+      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
+      options.setSse(ssePut);
+      client.putObject(bucketName, filename1, filename1, options);
+      client.putObject(bucketName, filename2, filename2, new PutObjectOptions(6 * MB, -1));
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, ssePut);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -3324,8 +3336,9 @@ public class FunctionalTest {
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, null, null, null, null);
-      client.putObject(bucketName, filename2, filename2, null, null, null, null);
+      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
+      client.putObject(bucketName, filename1, filename1, options);
+      client.putObject(bucketName, filename2, filename2, options);
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, null);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -3714,114 +3727,73 @@ public class FunctionalTest {
   public static void listenBucketNotification_test1() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: listenBucketNotification(String bucketName, String prefix,"
+          "Test: listenBucketNotification(String bucketName, String prefix, "
               + "String suffix, String[] events)");
     }
+
     long startTime = System.currentTimeMillis();
     String file = createFile1Kb();
     String bucketName = getRandomName();
+    CloseableIterator<Result<NotificationInfo>> ci = null;
     try {
       client.makeBucket(bucketName, region);
-      class TestBucketListener implements BucketEventListener {
-        int eventsReceived = 0;
-        Exception lastException = null;
-        NotificationEvent firstEvent = null;
 
-        public void updateError(Exception e) {
-          lastException = e;
+      String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+      ci = client.listenBucketNotification(bucketName, "prefix", "suffix", events);
+
+      client.putObject(bucketName, "prefix-random-suffix", file, new PutObjectOptions(1 * KB, -1));
+
+      while (ci.hasNext()) {
+        NotificationInfo info = ci.next().get();
+        if (info.records.length == 0) {
+          continue;
         }
 
-        @Override
-        public void updateEvent(NotificationInfo info) {
-          if (info.records != null && info.records.length > 0) {
-            firstEvent = info.records[0];
+        boolean found = false;
+        for (int i = 0; i < info.records.length; i++) {
+          if (info.records[i].s3.object.key.equals("prefix-random-suffix")) {
+            found = true;
+            break;
           }
-          this.eventsReceived++;
         }
-      }
 
-      TestBucketListener bl = new TestBucketListener();
-
-      new Thread(
-              new Runnable() {
-                public void run() {
-                  String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
-                  try (CloseableIterator<Result<NotificationInfo>> ci =
-                      client.listenBucketNotification(bucketName, "prefix", "suffix", events)) {
-                    while (ci.hasNext()) {
-                      NotificationInfo ni = ci.next().get();
-                      if (ni != null) {
-                        bl.updateEvent(ni);
-                        break;
-                      }
-                    }
-                  } catch (Exception e) {
-                    bl.updateError(e);
-                  }
-                }
-              })
-          .start();
-
-      // Upload an object until we detect an event, this is done
-      // in a loop because bucket listening is called in a thread
-      // and may or may not be executed at this point.
-      for (int i = 0; i < 20; i++) {
-        client.putObject(bucketName, "prefix-random-suffix", file, null, null, null, null);
-        Thread.sleep(500);
-        if (bl.eventsReceived > 0 || bl.lastException != null) {
+        if (found) {
           break;
         }
       }
 
-      // Fail for any exception but ignore NotImplemented error
-      if (bl.lastException != null) {
-        ErrorResponse errorResponse = null;
-        if (bl.lastException instanceof ErrorResponseException) {
-          ErrorResponseException exp = (ErrorResponseException) bl.lastException;
-          errorResponse = exp.errorResponse();
-        }
+      mintSuccessLog(
+          "listenBucketNotification(String bucketName, String prefix, "
+              + "String suffix, String[] events)",
+          null,
+          startTime);
+    } catch (Exception e) {
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        ErrorResponse errorResponse = exp.errorResponse();
         if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-          mintIgnoredLog("listenBucketNotification(String bucketName)", null, startTime);
+          mintIgnoredLog(
+              "listenBucketNotification(String bucketName, String prefix, "
+                  + "String suffix, String[] events)",
+              null,
+              startTime);
           return;
-        } else {
-          mintFailedLog(
-              "listenBucketNotification(String bucketName)",
-              null,
-              startTime,
-              null,
-              bl.lastException.toString()
-                  + " >>> "
-                  + Arrays.toString(bl.lastException.getStackTrace()));
-          throw bl.lastException;
         }
       }
 
-      // No exception at this point, check events result
-      if (bl.eventsReceived == 0) {
-        throw new Exception("[FAILED] No event notification is received");
-      }
-      if (!bl.firstEvent.s3.bucket.name.equals(bucketName)) {
-        throw new Exception(
-            "[FAILED] Bucket name expected: "
-                + bucketName
-                + ", Got: "
-                + bl.firstEvent.s3.bucket.name);
-      }
-      if (!bl.firstEvent.s3.object.key.equals("prefix-random-suffix")) {
-        throw new Exception(
-            "[FAILED] Bucket name expected: " + file + ", Got: " + bl.firstEvent.s3.object.key);
-      }
-      mintSuccessLog("listenBucketNotification(String bucketName)", null, startTime);
-    } catch (Exception e) {
       mintFailedLog(
-          "listenBucketNotification(String bucketName)",
+          "listenBucketNotification(String bucketName, String prefix, "
+              + "String suffix, String[] events)",
           null,
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } finally {
-      // Cleanup
+      if (ci != null) {
+        ci.close();
+      }
+
       Files.delete(Paths.get(file));
       client.removeObject(bucketName, "prefix-random-suffix");
       client.removeBucket(bucketName);
@@ -3856,7 +3828,7 @@ public class FunctionalTest {
       byte[] data =
           ("Year,Make,Model,Description,Price\n" + expectedResult).getBytes(StandardCharsets.UTF_8);
       ByteArrayInputStream bais = new ByteArrayInputStream(data);
-      client.putObject(bucketName, objectName, bais, Long.valueOf(data.length), null, null, null);
+      client.putObject(bucketName, objectName, bais, new PutObjectOptions(data.length, -1));
 
       String sqlExpression = "select * from S3Object";
       InputSerialization is =
