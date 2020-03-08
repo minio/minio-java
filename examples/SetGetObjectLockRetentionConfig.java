@@ -22,7 +22,6 @@ import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.InvalidPortException;
-import io.minio.errors.InvalidArgumentException;
 import io.minio.errors.MinioException;
 import io.minio.errors.NoResponseException;
 import io.minio.errors.RegionConflictException;
@@ -47,7 +46,7 @@ public class SetGetObjectLockRetentionConfig {
          InvalidResponseException, InsufficientDataException, NoResponseException,
          InternalException, ErrorResponseException, InvalidBucketNameException,
          InvalidPortException, InvalidEndpointException, RegionConflictException,
-         InvalidArgumentException {
+         IllegalArgumentException {
     try {
 
       /* play.min.io for test and development. */

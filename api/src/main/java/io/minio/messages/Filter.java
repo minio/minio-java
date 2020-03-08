@@ -20,8 +20,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import com.google.api.client.util.Key;
 
-import io.minio.errors.InvalidArgumentException;
-
 
 /**
  * Helper class to parse Amazon AWS S3 response XML containing Filter.
@@ -54,12 +52,12 @@ public class Filter extends XmlEntity {
   }
 
 
-  public void setPrefixRule(String value) throws InvalidArgumentException, XmlPullParserException {
+  public void setPrefixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     s3Key.setPrefixRule(value);
   }
 
 
-  public void setSuffixRule(String value) throws InvalidArgumentException, XmlPullParserException {
+  public void setSuffixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     s3Key.setSuffixRule(value);
   }
 }

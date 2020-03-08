@@ -19,7 +19,6 @@ package io.minio;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
-import io.minio.errors.InvalidArgumentException;
 import io.minio.SuccessActionStatus;
 import io.minio.Time;
 import java.nio.charset.StandardCharsets;
@@ -50,7 +49,7 @@ public class PostPolicy {
 
 
   public PostPolicy(String bucketName, String objectName, ZonedDateTime expirationDate)
-    throws InvalidArgumentException {
+    throws IllegalArgumentException {
     this(bucketName, objectName, false, expirationDate);
   }
 
@@ -60,21 +59,21 @@ public class PostPolicy {
    * and expiration time.
    */
   public PostPolicy(String bucketName, String objectName, boolean startsWith, ZonedDateTime expirationDate)
-    throws InvalidArgumentException {
+    throws IllegalArgumentException {
     if (bucketName == null) {
-      throw new InvalidArgumentException("null bucket name");
+      throw new IllegalArgumentException("null bucket name");
     }
     this.bucketName = bucketName;
 
     if (objectName == null) {
-      throw new InvalidArgumentException("null object name or prefix");
+      throw new IllegalArgumentException("null object name or prefix");
     }
     this.objectName = objectName;
 
     this.startsWith = startsWith;
 
     if (expirationDate == null) {
-      throw new InvalidArgumentException("null expiration date");
+      throw new IllegalArgumentException("null expiration date");
     }
     this.expirationDate = expirationDate;
   }
@@ -83,9 +82,9 @@ public class PostPolicy {
   /**
    * Sets content type.
    */
-  public void setContentType(String contentType) throws InvalidArgumentException {
+  public void setContentType(String contentType) throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(contentType)) {
-      throw new InvalidArgumentException("empty content type");
+      throw new IllegalArgumentException("empty content type");
     }
 
     this.contentType = contentType;
@@ -94,11 +93,11 @@ public class PostPolicy {
   /**
    * Sets success action status.
    */
-  public void setSuccessActionStatus(int successActionStatus) throws InvalidArgumentException {
+  public void setSuccessActionStatus(int successActionStatus) throws IllegalArgumentException {
     if (!(successActionStatus ==  SuccessActionStatus.SuccessActionStatus200.getValue()
         || successActionStatus == SuccessActionStatus.SuccessActionStatus201.getValue()
         || successActionStatus == SuccessActionStatus.SuccessActionStatus204.getValue())) {
-      throw new InvalidArgumentException("Invalid action status, acceptable values are 200, 201, or 204");
+      throw new IllegalArgumentException("Invalid action status, acceptable values are 200, 201, or 204");
     }
 
     this.successActionStatus = successActionStatus;
@@ -107,9 +106,9 @@ public class PostPolicy {
   /**
    * Sets content encoding.
    */
-  public void setContentEncoding(String contentEncoding) throws InvalidArgumentException {
+  public void setContentEncoding(String contentEncoding) throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(contentEncoding)) {
-      throw new InvalidArgumentException("empty content encoding");
+      throw new IllegalArgumentException("empty content encoding");
     }
 
     this.contentEncoding = contentEncoding;
@@ -119,9 +118,9 @@ public class PostPolicy {
   /**
    * Sets content length.
    */
-  public void setContentLength(long contentLength) throws InvalidArgumentException {
+  public void setContentLength(long contentLength) throws IllegalArgumentException {
     if (contentLength <= 0) {
-      throw new InvalidArgumentException("negative content length");
+      throw new IllegalArgumentException("negative content length");
     }
 
     this.setContentRange(contentLength, contentLength);
@@ -131,13 +130,13 @@ public class PostPolicy {
   /**
    * Sets content range.
    */
-  public void setContentRange(long startRange, long endRange) throws InvalidArgumentException {
+  public void setContentRange(long startRange, long endRange) throws IllegalArgumentException {
     if (startRange <= 0 || endRange <= 0) {
-      throw new InvalidArgumentException("negative start/end range");
+      throw new IllegalArgumentException("negative start/end range");
     }
 
     if (startRange > endRange) {
-      throw new InvalidArgumentException("start range is higher than end range");
+      throw new IllegalArgumentException("start range is higher than end range");
     }
 
     this.contentRangeStart = startRange;
@@ -187,10 +186,10 @@ public class PostPolicy {
    * Returns form data of this post policy setting the provided region.
    */
   public Map<String,String> formData(String accessKey, String secretKey, String region)
-      throws NoSuchAlgorithmException, InvalidKeyException, InvalidArgumentException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IllegalArgumentException {
 
     if (Strings.isNullOrEmpty(region)) {
-      throw new InvalidArgumentException("empty region");
+      throw new IllegalArgumentException("empty region");
     }
 
     return makeFormData(accessKey, secretKey, region);

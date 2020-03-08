@@ -23,8 +23,6 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import com.google.api.client.util.Key;
 
-import io.minio.errors.InvalidArgumentException;
-
 
 /**
  * Helper class to parse Amazon AWS S3 response XML containing topic configuration.
@@ -74,7 +72,7 @@ public class TopicConfiguration extends XmlEntity {
   /**
    * Returns events.
    */
-  public List<EventType> events() throws InvalidArgumentException {
+  public List<EventType> events() throws IllegalArgumentException {
     return EventType.fromStringList(events);
   }
 

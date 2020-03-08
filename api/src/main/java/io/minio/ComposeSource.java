@@ -19,7 +19,6 @@ package io.minio;
 
 import java.util.Map;
 import java.util.TreeMap;
-import io.minio.errors.InvalidArgumentException;
 import io.minio.CopyConditions;
 
 public class ComposeSource {
@@ -36,7 +35,7 @@ public class ComposeSource {
   /**
    * Create new ComposeSource for given bucket and object.
    */
-  public ComposeSource(String bucketName, String objectName) throws InvalidArgumentException {
+  public ComposeSource(String bucketName, String objectName) throws IllegalArgumentException {
     this(bucketName, objectName, null, null, null, null, null);
   }
 
@@ -44,7 +43,7 @@ public class ComposeSource {
    * Create new ComposeSource for given bucket, object, offset and length.
    */
   public ComposeSource(String bucketName, String objectName, Long offset, Long length)
-    throws InvalidArgumentException {
+    throws IllegalArgumentException {
     this(bucketName, objectName, offset, length, null, null, null);
   }
 
@@ -52,7 +51,7 @@ public class ComposeSource {
    * Create new ComposeSource for given bucket, object, offset, length and headerMap.
    */
   public ComposeSource(String bucketName, String objectName, Long offset, Long length,
-      Map<String, String> headerMap) throws InvalidArgumentException {
+      Map<String, String> headerMap) throws IllegalArgumentException {
     this(bucketName, objectName, offset, length, headerMap, null, null);
   }
 
@@ -60,7 +59,7 @@ public class ComposeSource {
    * Create new ComposeSource for given bucket, object, offset, length, headerMap and CopyConditions.
    */
   public ComposeSource(String bucketName, String objectName, Long offset, Long length,
-      Map<String, String> headerMap, CopyConditions copyConditions) throws InvalidArgumentException {
+      Map<String, String> headerMap, CopyConditions copyConditions) throws IllegalArgumentException {
     this(bucketName, objectName, offset, length, headerMap, copyConditions, null);
   }
 
@@ -68,24 +67,24 @@ public class ComposeSource {
    * Creates new ComposeSource for given bucket, object, offset, length, headerMap, CopyConditions
    * and server side encryption.
    *
-   * @throws InvalidArgumentException    upon invalid value is passed to a method.
+   * @throws IllegalArgumentException    upon invalid value is passed to a method.
    */
   public ComposeSource(String bucketName, String objectName, Long offset, Long length, Map<String, String> headerMap,
-      CopyConditions copyConditions, ServerSideEncryption sse) throws InvalidArgumentException {
+      CopyConditions copyConditions, ServerSideEncryption sse) throws IllegalArgumentException {
     if (bucketName == null) {
-      throw new InvalidArgumentException("Source bucket name cannot be empty");
+      throw new IllegalArgumentException("Source bucket name cannot be empty");
     }
 
     if (objectName == null) {
-      throw new InvalidArgumentException("Source object name cannot be empty");
+      throw new IllegalArgumentException("Source object name cannot be empty");
     }
 
     if (offset != null && offset < 0) {
-      throw new InvalidArgumentException("Offset cannot be negative");
+      throw new IllegalArgumentException("Offset cannot be negative");
     }
 
     if (length != null && length < 0) {
-      throw new InvalidArgumentException("Length cannot be negative");
+      throw new IllegalArgumentException("Length cannot be negative");
     }
 
     if (length != null && offset == null) {
@@ -105,20 +104,20 @@ public class ComposeSource {
    * Constructs header  .
    *
    */
-  public void buildHeaders(long objectSize, String etag) throws InvalidArgumentException {
+  public void buildHeaders(long objectSize, String etag) throws IllegalArgumentException {
     if (offset != null && offset >= objectSize) {
-      throw new InvalidArgumentException("source " + bucketName + "/" + objectName + ": offset " + offset
+      throw new IllegalArgumentException("source " + bucketName + "/" + objectName + ": offset " + offset
         + " is beyond object size " + objectSize);
     }
 
     if (length != null) {
       if (length > objectSize) {
-        throw new InvalidArgumentException("source " + bucketName + "/" + objectName + ": length " + length
+        throw new IllegalArgumentException("source " + bucketName + "/" + objectName + ": length " + length
           + " is beyond object size " + objectSize);
       }
 
       if (offset + length > objectSize) {
-        throw new InvalidArgumentException("source " + bucketName + "/" + objectName + ": compose size "
+        throw new IllegalArgumentException("source " + bucketName + "/" + objectName + ": compose size "
           + (offset + length) + " is beyond object size " + objectSize);
       }
     }
