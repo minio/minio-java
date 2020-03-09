@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-/*************************/
-/* gradleVersion = '3.1' */
-/*************************/
+/***************************/
+/* gradleVersion = '6.2.2' */
+/***************************/
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.0'
-        classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.11.0'
-    }
+plugins {
+  id "com.github.johnrengelman.shadow" version "5.2.0"
+  id "com.github.spotbugs" version "4.0.1"
+  id "io.codearte.nexus-staging" version "0.21.2"
+  id "com.diffplug.gradle.spotless" version "3.27.2"
 }
 
 /*
@@ -43,9 +40,8 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'checkstyle'
-    apply plugin: 'pmd'
-    apply plugin: 'findbugs'
+    apply plugin: 'com.github.spotbugs'
+    apply plugin: "com.diffplug.gradle.spotless"
 
     repositories {
         mavenCentral()
@@ -56,10 +52,11 @@ subprojects {
         compile "com.google.guava:guava:25.1-jre"
         compile "com.squareup.okhttp3:okhttp:3.13.1"
         compile "com.squareup.okio:okio:1.17.2"
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.9.6"
-        compile "com.fasterxml.jackson.core:jackson-core:2.9.6"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.9.6"
-        compile 'com.google.code.findbugs:annotations:3.0.1'
+        compile "com.fasterxml.jackson.core:jackson-annotations:2.10.3"
+        compile "com.fasterxml.jackson.core:jackson-core:2.10.3"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.10.3"
+        compile 'com.github.spotbugs:spotbugs-annotations:4.0.0'
+        compile 'net.jcip:jcip-annotations:1.0'
         compile 'com.google.code.findbugs:jsr305:3.0.2'
 
         testCompile "com.squareup.okhttp3:mockwebserver:3.13.1"
@@ -72,35 +69,9 @@ subprojects {
         it.options.encoding = "UTF-8"
     }
 
-    checkstyle {
-        toolVersion = "6.5"
-        configFile = file("$rootDir/checkstyle.xml")
-        ignoreFailures = false
-        if (rootProject.hasProperty("checkstyle.ignoreFailures")) {
-            ignoreFailures = rootProject.properties["checkstyle.ignoreFailures"].toBoolean()
-        }
-    }
-
-    checkstyleMain {
-        source = fileTree(dir: "$rootDir/api/src/main", include: "**/*.java")
-	source += fileTree(dir: "$rootDir/functional", include: "**/*.java")
-	source += fileTree(dir: "$rootDir/examples", include: "**/*.java")
-    }
-
-    checkstyleTest {
-        source = fileTree(dir: "$rootDir/api/src/test", include: "**/*.java")
-    }
-
-    findbugs {
+    spotbugs {
         effort = "max"
         reportLevel = "low"
-    }
-
-    tasks.withType(FindBugs) {
-        reports {
-            xml.enabled = false
-            html.enabled = true
-         }
     }
 
     test {
@@ -124,6 +95,18 @@ subprojects {
     check.dependsOn localeTest
 
     sourceCompatibility = 1.8
+
+    spotless {
+        java {
+            target '**/*.java'
+            importOrder 'edu', 'com', 'io', 'java', 'javax', 'org', ''
+            removeUnusedImports()
+            googleJavaFormat()
+        }
+        groovyGradle {
+            target '*.gradle'
+        }
+    }
 }
 
 project(':api') {
@@ -141,7 +124,6 @@ project(':api') {
     configurations.all {
         resolutionStrategy {
             force 'com.fasterxml.jackson.core:jackson-annotations:2.9.6'
-            force 'com.google.code.findbugs:jsr305:3.0.2'
             failOnVersionConflict()
         }
     }
@@ -240,7 +222,6 @@ project(':api') {
             }
         }
     }
-
 }
 
 project(':examples') {
@@ -275,9 +256,9 @@ project(':functional') {
         main = 'FunctionalTest'
         classpath = sourceSets.main.runtimeClasspath
 
-        ext.endPoint = 'https://play.min.io'
-        if (rootProject.hasProperty('endPoint')) {
-            ext.endPoint = rootProject.properties['endPoint']
+        ext.endpoint = 'https://play.min.io'
+        if (rootProject.hasProperty('endpoint')) {
+            ext.endpoint = rootProject.properties['endpoint']
         }
 
         ext.accessKey = 'Q3AM3UQ867SPQQA43P2F'
@@ -297,7 +278,6 @@ project(':functional') {
 
         maxHeapSize = "4096m"
         jvmArgs "-Xms256m"
-        args = [ext.endPoint, ext.accessKey, ext.secretKey, ext.region]
+        args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
     }
-
 }

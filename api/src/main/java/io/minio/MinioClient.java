@@ -6307,82 +6307,8 @@ public class MinioClient {
     HttpResponse response = executeReq(Method.GET, getRegion(bucketName),
         bucketName, "", null, queryParamMap, null, 0, false);
 
-    return new CloseableIterator<Result<NotificationInfo>>() {
-      Scanner scanner  = new Scanner(response.body().charStream()).useDelimiter("\n");
-
-      String notificationString = null;
-      ObjectMapper mapper = new ObjectMapper();
-      NotificationInfo notificationInfo = null;
-      boolean isClosed = false;
-
-      @Override
-      public void close() throws IOException {
-        if (!isClosed) {
-          try {
-            response.body().close();
-            scanner.close();
-          } finally {
-            isClosed = true;
-          }
-        }
-      }
-
-      public boolean populate()  {
-        if (isClosed) {
-          return false;
-        }
-
-        if (notificationString != null) {
-          return true;
-        }
-
-        while (scanner.hasNext()) {
-          notificationString = scanner.next().trim();
-          if ( !notificationString.equals("")) {
-            break;
-          }
-        }
-
-        if (notificationString  == null || notificationString.equals("")) {
-          try {
-            close();
-          } catch (IOException e) {
-            isClosed = true;
-          }
-          return false;
-        }
-        return true;
-      }
-
-      @Override
-      public boolean hasNext() {
-        return populate();
-      }
-
-      @Override
-      public Result<NotificationInfo> next() {
-        if (isClosed) {
-          throw new NoSuchElementException();
-        }
-        if ((notificationString  == null || notificationString.equals("")) &&  !populate() ) {
-              throw  new NoSuchElementException();
-        }
-
-        try {
-              notificationInfo = mapper.readValue(notificationString, NotificationInfo.class);
-              return new Result<>(notificationInfo, null);
-            } catch (JsonParseException e) {
-              return new Result<>(null, e);
-            } catch ( JsonMappingException e) {
-              return new Result<>(null, e);
-            } catch ( IOException e) {
-              return new Result<>(null, e);
-        } finally {
-          notificationString = null;
-          notificationInfo = null;
-        }
-      }
-    };
+    NotificationInfoResult result = new NotificationInfoResult(response);
+    return result.closeableIterator();
   }
 
 
@@ -6550,5 +6476,92 @@ public class MinioClient {
    */
   public void traceOff() throws IOException {
     this.traceStream = null;
+  }
+
+  public static class NotificationInfoResult {
+    HttpResponse response = null;
+
+    public NotificationInfoResult(HttpResponse response) {
+      this.response = response;
+    }
+
+    /** returns closeable iterator of NotificationInfo result. */
+    public CloseableIterator<Result<NotificationInfo>> closeableIterator() {
+      return new CloseableIterator<Result<NotificationInfo>>() {
+        Scanner scanner = new Scanner(response.body().charStream()).useDelimiter("\n");
+        String notificationString = null;
+        ObjectMapper mapper = new ObjectMapper();
+        NotificationInfo notificationInfo = null;
+        boolean isClosed = false;
+
+        @Override
+        public void close() throws IOException {
+          if (!isClosed) {
+            try {
+              response.body().close();
+              scanner.close();
+            } finally {
+              isClosed = true;
+            }
+          }
+        }
+
+        public boolean populate() {
+          if (isClosed) {
+            return false;
+          }
+
+          if (notificationString != null) {
+            return true;
+          }
+
+          while (scanner.hasNext()) {
+            notificationString = scanner.next().trim();
+            if (!notificationString.equals("")) {
+              break;
+            }
+          }
+
+          if (notificationString == null || notificationString.equals("")) {
+            try {
+              close();
+            } catch (IOException e) {
+              isClosed = true;
+            }
+            return false;
+          }
+          return true;
+        }
+
+        @Override
+        public boolean hasNext() {
+          return populate();
+        }
+
+        @Override
+        public Result<NotificationInfo> next() {
+          if (isClosed) {
+            throw new NoSuchElementException();
+          }
+          if ((notificationString == null || notificationString.equals("")) && !populate()) {
+            throw new NoSuchElementException();
+          }
+
+          try {
+            notificationInfo = mapper.readValue(notificationString, NotificationInfo.class);
+            return new Result<>(notificationInfo, null);
+          } catch (JsonParseException e) {
+            return new Result<>(null, e);
+          } catch (JsonMappingException e) {
+            return new Result<>(null, e);
+          } catch (IOException e) {
+            return new Result<>(null, e);
+          } finally {
+            notificationString = null;
+            notificationInfo = null;
+          }
+        }
+      };
+    }
   }
 }

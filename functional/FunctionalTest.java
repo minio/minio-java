@@ -2444,7 +2444,7 @@ public class FunctionalTest {
       copyConditions.setReplaceMetadataDirective();
 
       client.copyObject(bucketName, objectName, null, sseTarget, bucketName, objectName, sseSource, copyConditions);
-      ObjectStat objectStat = client.statObject(bucketName, objectName, sseTarget);
+      client.statObject(bucketName, objectName, sseTarget); // Check for object existence.
 
       client.removeObject(bucketName, objectName);
       mintSuccessLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
