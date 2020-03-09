@@ -21,35 +21,26 @@ import io.minio.Time;
 import java.time.ZonedDateTime;
 import org.xmlpull.v1.XmlPullParserException;
 
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing bucket information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing bucket information. */
 @SuppressWarnings("SameParameterValue")
 public class Bucket extends XmlEntity {
   @Key("Name")
   private String name;
+
   @Key("CreationDate")
   private String creationDate;
-
 
   public Bucket() throws XmlPullParserException {
     super();
     super.name = "Bucket";
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String name() {
     return name;
   }
 
-
-  /**
-   * Returns creation date.
-   */
+  /** Returns creation date. */
   public ZonedDateTime creationDate() {
     return ZonedDateTime.parse(creationDate, Time.RESPONSE_DATE_FORMAT);
   }

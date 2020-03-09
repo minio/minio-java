@@ -17,13 +17,11 @@
 
 package io.minio;
 
-import java.time.format.DateTimeFormatter;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-/**
- * Time formatters for S3 APIs.
- */
+/** Time formatters for S3 APIs. */
 public class Time {
   public static final ZoneId UTC = ZoneId.of("Z");
 

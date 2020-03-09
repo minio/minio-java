@@ -23,22 +23,16 @@ import java.lang.reflect.Method;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import okhttp3.Headers;
 
-
-/**
- * HTTP header parser class.
- */
+/** HTTP header parser class. */
 public class HeaderParser {
   private static final Logger LOGGER = Logger.getLogger(HeaderParser.class.getName());
 
   /* private constructor */
   private HeaderParser() {}
 
-  /**
-   * Sets destination object from Headers object.
-   */
+  /** Sets destination object from Headers object. */
   public static void set(Headers headers, Object destination) {
 
     Field[] publicFields;
@@ -68,13 +62,15 @@ public class HeaderParser {
       }
 
       try {
-        Method setterMethod = cls.getMethod(setter, new Class[]{String.class});
+        Method setterMethod = cls.getMethod(setter, new Class[] {String.class});
         String valueString = headers.get(value);
         if (valueString != null) {
           setterMethod.invoke(destination, valueString);
         }
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException
-               | IllegalArgumentException e) {
+      } catch (NoSuchMethodException
+          | IllegalAccessException
+          | InvocationTargetException
+          | IllegalArgumentException e) {
         LOGGER.log(Level.SEVERE, "exception occured: ", e);
         LOGGER.log(Level.INFO, "setter: " + setter);
         LOGGER.log(Level.INFO, "annotation: " + value);

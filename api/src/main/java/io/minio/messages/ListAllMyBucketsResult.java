@@ -16,13 +16,10 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
-
-import com.google.api.client.util.Key;
-
 
 /**
  * Helper class to parse Amazon AWS S3 response XML containing ListAllMyBucketsResult information.
@@ -30,28 +27,22 @@ import com.google.api.client.util.Key;
 public class ListAllMyBucketsResult extends XmlEntity {
   @Key("Owner")
   private Owner owner;
+
   @Key("Buckets")
   private Buckets buckets;
-
 
   public ListAllMyBucketsResult() throws XmlPullParserException {
     super();
     this.name = "ListAllMyBucketsResult";
   }
 
-
-  /**
-   * Returns owner.
-   */
+  /** Returns owner. */
   @SuppressWarnings("unused")
   public Owner owner() {
     return owner;
   }
 
-
-  /**
-   * Returns List of buckets.
-   */
+  /** Returns List of buckets. */
   public List<Bucket> buckets() {
     if (buckets == null) {
       return new LinkedList<>();

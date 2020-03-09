@@ -16,104 +16,85 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult Version 1 information.
+ * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult Version 1
+ * information.
  */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class ListBucketResultV1 extends XmlEntity {
   @Key("Name")
   private String name;
+
   @Key("Prefix")
   private String prefix;
+
   @Key("Marker")
   private String marker;
+
   @Key("NextMarker")
   private String nextMarker;
+
   @Key("MaxKeys")
   private int maxKeys;
+
   @Key("Delimiter")
   private String delimiter;
+
   @Key("IsTruncated")
   private boolean isTruncated;
+
   @Key("Contents")
   private List<Item> contents;
+
   @Key("CommonPrefixes")
   private List<Prefix> commonPrefixes;
-
 
   public ListBucketResultV1() throws XmlPullParserException {
     super();
     super.name = "ListBucketResult";
   }
 
-
-  /**
-   * Returns next marker.
-   */
+  /** Returns next marker. */
   public String nextMarker() {
     return nextMarker;
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String name() {
     return name;
   }
 
-
-  /**
-   * Returns prefix.
-   */
+  /** Returns prefix. */
   public String prefix() {
     return prefix;
   }
 
-
-  /**
-   * Returns marker.
-   */
+  /** Returns marker. */
   public String marker() {
     return marker;
   }
 
-
-  /**
-   * Returns max keys.
-   */
+  /** Returns max keys. */
   public int maxKeys() {
     return maxKeys;
   }
 
-
-  /**
-   * Returns delimiter.
-   */
+  /** Returns delimiter. */
   public String delimiter() {
     return delimiter;
   }
 
-
-  /**
-   * Returns whether the result is truncated or not.
-   */
+  /** Returns whether the result is truncated or not. */
   public boolean isTruncated() {
     return isTruncated;
   }
 
-
-  /**
-   * Returns List of Items.
-   */
+  /** Returns List of Items. */
   public List<Item> contents() {
     if (contents == null) {
       return new LinkedList<>();
@@ -121,10 +102,7 @@ public class ListBucketResultV1 extends XmlEntity {
     return contents;
   }
 
-
-  /**
-   * Returns List of Prefix.
-   */
+  /** Returns List of Prefix. */
   public List<Prefix> commonPrefixes() {
     if (commonPrefixes == null) {
       return new LinkedList<>();

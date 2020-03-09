@@ -16,39 +16,29 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing Owner information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing Owner information. */
 @SuppressWarnings("SameParameterValue")
 public class Owner extends XmlEntity {
   @Key("ID")
   private String id;
+
   @Key("DisplayName")
   private String displayName;
-
 
   public Owner() throws XmlPullParserException {
     super();
     this.name = "Owner";
   }
 
-
-  /**
-   * Returns owner ID.
-   */
+  /** Returns owner ID. */
   public String id() {
     return id;
   }
 
-
-  /**
-   * Returns owner display name.
-   */
+  /** Returns owner display name. */
   public String displayName() {
     return displayName;
   }

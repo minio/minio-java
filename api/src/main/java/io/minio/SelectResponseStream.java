@@ -16,10 +16,10 @@
 
 package io.minio;
 
+import com.google.common.io.ByteStreams;
 import io.minio.errors.InternalException;
 import io.minio.errors.MinioException;
 import io.minio.messages.Stats;
-
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -30,13 +30,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.CRC32;
-
-import com.google.common.io.ByteStreams;
 import org.xmlpull.v1.XmlPullParserException;
 
-/**
- * Select object content response stream.
- */
+/** Select object content response stream. */
 public class SelectResponseStream extends InputStream {
   private InputStream inputStream;
   private CRC32 crcHasher;
@@ -48,12 +44,10 @@ public class SelectResponseStream extends InputStream {
   private Stats stats = null;
   private ByteArrayInputStream payloadStream = null;
 
-
   public SelectResponseStream(InputStream inputStream) {
     this.inputStream = inputStream;
     this.crcHasher = new CRC32();
   }
-
 
   private Map<String, String> decodeHeaderData(ByteArrayInputStream bais) throws IOException {
     Map<String, String> headerMap = new HashMap<>();
@@ -90,16 +84,18 @@ public class SelectResponseStream extends InputStream {
     return headerMap;
   }
 
-
   private boolean populate()
-    throws EOFException, IOException, InternalException, MinioException, XmlPullParserException {
+      throws EOFException, IOException, InternalException, MinioException, XmlPullParserException {
     ByteStreams.readFully(inputStream, prelude);
     ByteStreams.readFully(inputStream, preludeCrc);
     crcHasher.reset();
     crcHasher.update(prelude);
     if ((int) crcHasher.getValue() != ByteBuffer.wrap(preludeCrc).getInt()) {
-      throw new IOException("prelude CRC mismatch; expected: " + (int) crcHasher.getValue() + ", got: "
-                            + ByteBuffer.wrap(preludeCrc).getInt());
+      throw new IOException(
+          "prelude CRC mismatch; expected: "
+              + (int) crcHasher.getValue()
+              + ", got: "
+              + ByteBuffer.wrap(preludeCrc).getInt());
     }
 
     int totalLength = ByteBuffer.wrap(prelude, 0, 4).getInt();
@@ -111,8 +107,11 @@ public class SelectResponseStream extends InputStream {
     crcHasher.update(preludeCrc);
     crcHasher.update(data);
     if ((int) crcHasher.getValue() != ByteBuffer.wrap(messageCrc).getInt()) {
-      throw new IOException("message CRC mismatch; expected: " + (int) crcHasher.getValue() + ", got: "
-                            + ByteBuffer.wrap(messageCrc).getInt());
+      throw new IOException(
+          "message CRC mismatch; expected: "
+              + (int) crcHasher.getValue()
+              + ", got: "
+              + ByteBuffer.wrap(messageCrc).getInt());
     }
 
     int headerLength = ByteBuffer.wrap(prelude, 4, 4).getInt();
@@ -124,7 +123,8 @@ public class SelectResponseStream extends InputStream {
     }
 
     if (headerMap.get(":message-type").equals("error")) {
-      throw new MinioException(headerMap.get(":error-code") + ":" + headerMap.get(":error-message"));
+      throw new MinioException(
+          headerMap.get(":error-code") + ":" + headerMap.get(":error-message"));
     }
 
     if (headerMap.get(":event-type").equals("End")) {
@@ -137,7 +137,8 @@ public class SelectResponseStream extends InputStream {
       return false;
     }
 
-    ByteArrayInputStream payloadStream = new ByteArrayInputStream(data, headerLength, payloadLength);
+    ByteArrayInputStream payloadStream =
+        new ByteArrayInputStream(data, headerLength, payloadLength);
 
     if (headerMap.get(":event-type").equals("Progress")) {
       Stats stats = new Stats("Progress");
@@ -161,14 +162,12 @@ public class SelectResponseStream extends InputStream {
     throw new InternalException("unknown event-type '" + headerMap.get(":event-type") + "'");
   }
 
-
-  /**
-   * read single byte from payload.
-   */
+  /** read single byte from payload. */
   public int read() throws IOException {
     if (payloadStream == null) {
       try {
-        while (!this.populate()) {};
+        while (!this.populate()) {}
+        ;
       } catch (EOFException e) {
         return -1;
       } catch (MinioException | XmlPullParserException e) {
@@ -189,9 +188,7 @@ public class SelectResponseStream extends InputStream {
     inputStream.close();
   }
 
-  /**
-   * get progress stats.
-   */
+  /** get progress stats. */
   public Stats stats() {
     return this.stats;
   }

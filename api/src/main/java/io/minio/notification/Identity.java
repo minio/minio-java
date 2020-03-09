@@ -25,5 +25,3 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class Identity {
   public String principalId;
 }
-
-

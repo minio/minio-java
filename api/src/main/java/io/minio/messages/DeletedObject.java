@@ -16,31 +16,31 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to create Amazon AWS S3 request XML containing information for Multiple object deletion.
+ * Helper class to create Amazon AWS S3 request XML containing information for Multiple object
+ * deletion.
  */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class DeletedObject extends XmlEntity {
   @Key("Key")
   private String name;
+
   @Key("VersionId")
   private String versionId;
+
   @Key("DeleteMarker")
   private boolean deleteMarker;
+
   @Key("DeleteMarkerVersionId")
   private String deleteMarkerVersionId;
-
 
   public DeletedObject() throws XmlPullParserException {
     super();
     super.name = "Deleted";
   }
-
 
   public String name() {
     return name;

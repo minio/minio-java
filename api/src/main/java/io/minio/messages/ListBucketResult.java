@@ -16,124 +16,101 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult Version 2 information.
+ * Helper class to parse Amazon AWS S3 response XML containing ListBucketResult Version 2
+ * information.
  */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class ListBucketResult extends XmlEntity {
   @Key("Name")
   private String name;
+
   @Key("Prefix")
   private String prefix;
+
   @Key("ContinuationToken")
   private String continuationToken;
+
   @Key("NextContinuationToken")
   private String nextContinuationToken;
+
   @Key("StartAfter")
   private String startAfter;
+
   @Key("KeyCount")
   private String keyCount;
+
   @Key("MaxKeys")
   private int maxKeys;
+
   @Key("Delimiter")
   private String delimiter;
+
   @Key("IsTruncated")
   private boolean isTruncated;
+
   @Key("Contents")
   private List<Item> contents;
+
   @Key("CommonPrefixes")
   private List<Prefix> commonPrefixes;
-
 
   public ListBucketResult() throws XmlPullParserException {
     super();
     super.name = "ListBucketResult";
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String name() {
     return name;
   }
 
-
-  /**
-   * Returns prefix.
-   */
+  /** Returns prefix. */
   public String prefix() {
     return prefix;
   }
 
-
-  /**
-   * Returns continuation token.
-   */
+  /** Returns continuation token. */
   public String continuationToken() {
     return continuationToken;
   }
 
-
-  /**
-   * Returns next continuation token.
-   */
+  /** Returns next continuation token. */
   public String nextContinuationToken() {
     return nextContinuationToken;
   }
 
-
-  /**
-   * Returns start after.
-   */
+  /** Returns start after. */
   public String startAfter() {
     return startAfter;
   }
 
-
-  /**
-   * Returns key count.
-   */
+  /** Returns key count. */
   public String keyCount() {
     return keyCount;
   }
 
-
-  /**
-   * Returns max keys.
-   */
+  /** Returns max keys. */
   public int maxKeys() {
     return maxKeys;
   }
 
-
-  /**
-   * Returns delimiter.
-   */
+  /** Returns delimiter. */
   public String delimiter() {
     return delimiter;
   }
 
-
-  /**
-   * Returns whether the result is truncated or not.
-   */
+  /** Returns whether the result is truncated or not. */
   public boolean isTruncated() {
     return isTruncated;
   }
 
-
-  /**
-   * Returns List of Items.
-   */
+  /** Returns List of Items. */
   public List<Item> contents() {
     if (contents == null) {
       return new LinkedList<>();
@@ -141,10 +118,7 @@ public class ListBucketResult extends XmlEntity {
     return contents;
   }
 
-
-  /**
-   * Returns List of Prefix.
-   */
+  /** Returns List of Prefix. */
   public List<Prefix> commonPrefixes() {
     if (commonPrefixes == null) {
       return new LinkedList<>();

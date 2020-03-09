@@ -16,49 +16,40 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing S3Key.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing S3Key. */
 @SuppressWarnings("WeakerAccess")
 public class S3Key extends XmlEntity {
   @Key("FilterRule")
   private List<FilterRule> filterRuleList = new LinkedList<>();
-
 
   public S3Key() throws XmlPullParserException {
     super();
     super.name = "S3Key";
   }
 
-
-  /**
-   * Returns filter rule list.
-   */
+  /** Returns filter rule list. */
   public List<FilterRule> filterRuleList() {
     return filterRuleList;
   }
 
-
   /**
-   * Sets filter rule to list.
-   * As per Amazon AWS S3 server behavior, its not possible to set more than one rule for "prefix" or "suffix".
-   * However the spec http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTnotification.html
-   * is not clear about this behavior.
+   * Sets filter rule to list. As per Amazon AWS S3 server behavior, its not possible to set more
+   * than one rule for "prefix" or "suffix". However the spec
+   * http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTnotification.html is not clear
+   * about this behavior.
    */
-  private void setRule(String name, String value) throws IllegalArgumentException, XmlPullParserException {
+  private void setRule(String name, String value)
+      throws IllegalArgumentException, XmlPullParserException {
     if (value.length() > 1024) {
       throw new IllegalArgumentException("value '" + value + "' is more than 1024 long");
     }
 
-    for (FilterRule rule: filterRuleList) {
+    for (FilterRule rule : filterRuleList) {
       // Remove rule.name is same as given name.
       if (rule.name().equals(name)) {
         filterRuleList.remove(rule);
@@ -71,11 +62,9 @@ public class S3Key extends XmlEntity {
     filterRuleList.add(newRule);
   }
 
-
   public void setPrefixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     setRule("prefix", value);
   }
-
 
   public void setSuffixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     setRule("suffix", value);

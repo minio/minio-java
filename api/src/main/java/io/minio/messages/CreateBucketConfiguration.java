@@ -16,22 +16,15 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to construct create bucket configuration request XML for Amazon AWS S3.
- */
+/** Helper class to construct create bucket configuration request XML for Amazon AWS S3. */
 public class CreateBucketConfiguration extends XmlEntity {
   @Key("LocationConstraint")
   private String locationConstraint;
 
-
-  /**
-   * Constructs a new CreateBucketConfiguration object with given location constraint.
-   */
+  /** Constructs a new CreateBucketConfiguration object with given location constraint. */
   public CreateBucketConfiguration(String locationConstraint) throws XmlPullParserException {
     super();
     super.name = "CreateBucketConfiguration";
@@ -40,10 +33,7 @@ public class CreateBucketConfiguration extends XmlEntity {
     this.locationConstraint = locationConstraint;
   }
 
-
-  /**
-   * Returns location constraint.
-   */
+  /** Returns location constraint. */
   @SuppressWarnings("unused")
   public String locationConstraint() {
     return locationConstraint;

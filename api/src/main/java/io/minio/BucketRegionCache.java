@@ -19,17 +19,12 @@ package io.minio;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-/**
- * A singleton bucket/region cache map.
- */
+/** A singleton bucket/region cache map. */
 enum BucketRegionCache {
   INSTANCE;
   private final Map<String, String> regionMap = new ConcurrentHashMap<>();
 
-  /**
-   * Returns AWS region for given bucket name.
-   */
+  /** Returns AWS region for given bucket name. */
   public String region(String bucketName) {
     if (bucketName == null) {
       return "us-east-1";
@@ -43,28 +38,19 @@ enum BucketRegionCache {
     }
   }
 
-
-  /**
-   * Sets bucket name and its region to BucketRegionCache.
-   */
+  /** Sets bucket name and its region to BucketRegionCache. */
   public void set(String bucketName, String region) {
     this.regionMap.put(bucketName, region);
   }
 
-
-  /**
-   * Removes region cache of the bucket if any.
-   */
+  /** Removes region cache of the bucket if any. */
   public void remove(String bucketName) {
     if (bucketName != null) {
       this.regionMap.remove(bucketName);
     }
   }
 
-
-  /**
-   * Returns true if given bucket name is in the map else false.
-   */
+  /** Returns true if given bucket name is in the map else false. */
   public boolean exists(String bucketName) {
     return this.regionMap.get(bucketName) != null;
   }

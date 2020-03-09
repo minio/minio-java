@@ -16,6 +16,9 @@
 
 package io.minio;
 
+import com.google.common.io.BaseEncoding;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -24,25 +27,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
-import com.google.common.io.BaseEncoding;
-
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-
-
-/**
- * Various global static functions used.
- */
+/** Various global static functions used. */
 class Digest {
-  /**
-   * Private constructor.
-   */
+  /** Private constructor. */
   private Digest() {}
 
-
-  /**
-   * Returns SHA-256 hash of given string.
-   */
+  /** Returns SHA-256 hash of given string. */
   public static String sha256Hash(String string) throws NoSuchAlgorithmException {
     byte[] data = string.getBytes(StandardCharsets.UTF_8);
     MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
@@ -50,15 +40,14 @@ class Digest {
     return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
   }
 
-
   /**
    * Returns SHA-256 hash of given data and it's length.
    *
-   * @param data  must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
-   * @param len   length of data to be read for hash calculation.
+   * @param data must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
+   * @param len length of data to be read for hash calculation.
    */
   public static String sha256Hash(Object data, int len)
-    throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
+      throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
     MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
 
     if (data instanceof BufferedInputStream || data instanceof RandomAccessFile) {
@@ -66,22 +55,22 @@ class Digest {
     } else if (data instanceof byte[]) {
       sha256Digest.update((byte[]) data, 0, len);
     } else {
-      throw new InternalException("Unknown data source to calculate sha256 hash. This should not happen, "
-                                  + "please report this issue at https://github.com/minio/minio-java/issues");
+      throw new InternalException(
+          "Unknown data source to calculate sha256 hash. This should not happen, "
+              + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
     return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
   }
 
-
   /**
    * Returns SHA-256 and MD5 hashes of given data and it's length.
    *
-   * @param data  must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
-   * @param len   length of data to be read for hash calculation.
+   * @param data must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
+   * @param len length of data to be read for hash calculation.
    */
   public static String[] sha256Md5Hashes(Object data, int len)
-    throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
+      throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
     MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
     MessageDigest md5Digest = MessageDigest.getInstance("MD5");
 
@@ -91,23 +80,25 @@ class Digest {
       sha256Digest.update((byte[]) data, 0, len);
       md5Digest.update((byte[]) data, 0, len);
     } else {
-      throw new InternalException("Unknown data source to calculate sha256 hash. This should not happen, "
-                                  + "please report this issue at https://github.com/minio/minio-java/issues");
+      throw new InternalException(
+          "Unknown data source to calculate sha256 hash. This should not happen, "
+              + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
-    return new String[]{BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US),
-                        BaseEncoding.base64().encode(md5Digest.digest())};
+    return new String[] {
+      BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US),
+      BaseEncoding.base64().encode(md5Digest.digest())
+    };
   }
-
 
   /**
    * Returns MD5 hash of given data and it's length.
    *
-   * @param data  must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
-   * @param len   length of data to be read for hash calculation.
+   * @param data must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
+   * @param len length of data to be read for hash calculation.
    */
   public static String md5Hash(Object data, int len)
-    throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
+      throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
     MessageDigest md5Digest = MessageDigest.getInstance("MD5");
 
     if (data instanceof BufferedInputStream || data instanceof RandomAccessFile) {
@@ -115,19 +106,18 @@ class Digest {
     } else if (data instanceof byte[]) {
       md5Digest.update((byte[]) data, 0, len);
     } else {
-      throw new InternalException("Unknown data source to calculate sha256 hash. This should not happen, "
-                                  + "please report this issue at https://github.com/minio/minio-java/issues");
+      throw new InternalException(
+          "Unknown data source to calculate sha256 hash. This should not happen, "
+              + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
     return BaseEncoding.base64().encode(md5Digest.digest());
   }
 
-
-  /**
-   * Updated MessageDigest with bytes read from file and stream.
-   */
-  private static int updateDigests(Object inputStream, int len, MessageDigest sha256Digest, MessageDigest md5Digest)
-    throws IOException, InsufficientDataException {
+  /** Updated MessageDigest with bytes read from file and stream. */
+  private static int updateDigests(
+      Object inputStream, int len, MessageDigest sha256Digest, MessageDigest md5Digest)
+      throws IOException, InsufficientDataException {
     RandomAccessFile file = null;
     BufferedInputStream stream = null;
     if (inputStream instanceof RandomAccessFile) {
@@ -161,9 +151,9 @@ class Digest {
       }
 
       if (bytesRead < 0) {
-        // reached EOF 
-        throw new InsufficientDataException("Insufficient data.  bytes read " + totalBytesRead + " expected "
-                                            + len);
+        // reached EOF
+        throw new InsufficientDataException(
+            "Insufficient data.  bytes read " + totalBytesRead + " expected " + len);
       }
 
       if (bytesRead > 0) {

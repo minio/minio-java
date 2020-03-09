@@ -23,25 +23,18 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * <p>
  * <b>InetAddress</b> validation and conversion routines (<code>java.net.InetAddress</code>).
- * </p>
  *
  * <p>
  *
  * <p>
- * </p>
+ *
+ * <p>This class provides methods to validate a candidate IP address.
  *
  * <p>
- * This class provides methods to validate a candidate IP address.
- * </p>
  *
- * <p>
- * </p>
- *
- * <p>
- * This class is a Singleton; you can retrieve the instance via the {@link #getInstance()} method.
- * </p>
+ * <p>This class is a Singleton; you can retrieve the instance via the {@link #getInstance()}
+ * method.
  *
  * @version $Revision$
  * @since Validator 1.4
@@ -56,8 +49,7 @@ public class InetAddressValidator implements Serializable {
 
   private static final long serialVersionUID = -919201640201914789L;
 
-  private static final String IPV4_REGEX =
-      "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$";
+  private static final String IPV4_REGEX = "^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$";
 
   // Max number of hex groups (separated by :) in an IPV6 address
   private static final int IPV6_MAX_HEX_GROUPS = 8;
@@ -65,14 +57,10 @@ public class InetAddressValidator implements Serializable {
   // Max hex digits in each IPv6 group
   private static final int IPV6_MAX_HEX_DIGITS_PER_GROUP = 4;
 
-  /**
-   * Singleton instance of this class.
-   */
+  /** Singleton instance of this class. */
   private static final InetAddressValidator VALIDATOR = new InetAddressValidator();
 
-  /**
-   * IPv4 RegexValidator.
-   */
+  /** IPv4 RegexValidator. */
   private final RegexValidator ipv4Validator = new RegexValidator(IPV4_REGEX);
 
   /**
@@ -129,7 +117,6 @@ public class InetAddressValidator implements Serializable {
       if (ipSegment.length() > 1 && ipSegment.startsWith("0")) {
         return false;
       }
-
     }
 
     return true;
@@ -180,7 +167,7 @@ public class InetAddressValidator implements Serializable {
           if (!inet6Address.endsWith(octet)) {
             return false;
           }
-          if (index > octets.length - 1 || index > 6) {  // CHECKSTYLE IGNORE MagicNumber
+          if (index > octets.length - 1 || index > 6) { // CHECKSTYLE IGNORE MagicNumber
             // IPV4 occupies last two octets
             return false;
           }

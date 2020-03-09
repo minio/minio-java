@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-import java.nio.charset.StandardCharsets;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
 import io.minio.SelectResponseStream;
 import io.minio.errors.MinioException;
@@ -31,38 +22,50 @@ import io.minio.messages.InputSerialization;
 import io.minio.messages.OutputSerialization;
 import io.minio.messages.QuoteFields;
 import io.minio.messages.Stats;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class SelectObjectContent {
-  /**
-   * MinioClient.getObject() example.
-   */
+  /** MinioClient.getObject() example. */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.min.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      byte[] data = ("Year,Make,Model,Description,Price\n"
-                     + "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
-                     + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",\"\",4900.00\n"
-                     + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
-                     + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
-                     + "air, moon roof, loaded\",4799.00\n").getBytes(StandardCharsets.UTF_8);
+      byte[] data =
+          ("Year,Make,Model,Description,Price\n"
+                  + "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
+                  + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",\"\",4900.00\n"
+                  + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
+                  + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
+                  + "air, moon roof, loaded\",4799.00\n")
+              .getBytes(StandardCharsets.UTF_8);
       ByteArrayInputStream bais = new ByteArrayInputStream(data);
-      minioClient.putObject("my-bucketname", "my-objectName", bais, Long.valueOf(data.length), null, null, null);
+      minioClient.putObject(
+          "my-bucketname", "my-objectName", bais, Long.valueOf(data.length), null, null, null);
 
       String sqlExpression = "select * from S3Object";
-      InputSerialization is = InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE,
-                                                     null, null, null);
-      OutputSerialization os = OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+      InputSerialization is =
+          InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE, null, null, null);
+      OutputSerialization os =
+          OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
 
-      SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression,
-                                                                    is, os, true, null, null, null);
+      SelectResponseStream stream =
+          minioClient.selectObjectContent(
+              "my-bucketname", "my-objectName", sqlExpression, is, os, true, null, null, null);
 
       byte[] buf = new byte[512];
       int bytesRead = stream.read(buf, 0, buf.length);

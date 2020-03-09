@@ -16,32 +16,23 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing list of bucket information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing list of bucket information. */
 @SuppressWarnings("WeakerAccess")
 public class Buckets extends XmlEntity {
   @Key("Bucket")
   private List<Bucket> bucketList = new LinkedList<>();
-
 
   public Buckets() throws XmlPullParserException {
     super();
     super.name = "Buckets";
   }
 
-
-  /**
-   * Returns List of Buckets.
-   */
+  /** Returns List of Buckets. */
   public List<Bucket> bucketList() {
     return bucketList;
   }

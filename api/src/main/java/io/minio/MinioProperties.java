@@ -25,10 +25,7 @@ import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
-/**
- * Identifies and stores version information of minio-java package at run time.
- */
+/** Identifies and stores version information of minio-java package at run time. */
 enum MinioProperties {
   INSTANCE;
 

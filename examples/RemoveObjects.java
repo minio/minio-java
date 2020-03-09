@@ -14,29 +14,28 @@
  * limitations under the License.
  */
 
+import io.minio.MinioClient;
+import io.minio.Result;
+import io.minio.errors.MinioException;
+import io.minio.messages.DeleteError;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import io.minio.MinioClient;
-import io.minio.errors.MinioException;
-import io.minio.Result;
-import io.minio.messages.DeleteError;
-
 public class RemoveObjects {
-  /**
-   * MinioClient.removeObject() example removing multiple objects.
-   */
+  /** MinioClient.removeObject() example removing multiple objects. */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.min.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
@@ -49,9 +48,11 @@ public class RemoveObjects {
 
       // Remove object all objects 'objectNames' list from 'my-bucketname'.
       // It is required to traverse over the returned Iterable for lazy evaluation.
-      for (Result<DeleteError> errorResult: minioClient.removeObjects("my-bucketname", objectNames)) {
+      for (Result<DeleteError> errorResult :
+          minioClient.removeObjects("my-bucketname", objectNames)) {
         DeleteError error = errorResult.get();
-        System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
+        System.out.println(
+            "Failed to remove '" + error.objectName() + "'. Error:" + error.message());
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

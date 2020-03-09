@@ -16,86 +16,62 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing topic configuration.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing topic configuration. */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class TopicConfiguration extends XmlEntity {
   @Key("Id")
   private String id;
+
   @Key("Topic")
   private String topic;
+
   @Key("Event")
   private List<String> events = new LinkedList<>();
+
   @Key("Filter")
   private Filter filter;
-
 
   public TopicConfiguration() throws XmlPullParserException {
     super();
     super.name = "TopicConfiguration";
   }
 
-
-  /**
-   * Sets ID. This is used only in functional test.
-   */
+  /** Sets ID. This is used only in functional test. */
   public void setId(String id) {
     this.id = id;
   }
 
-
-  /**
-   * Returns topic.
-   */
+  /** Returns topic. */
   public String topic() {
     return topic;
   }
 
-
-  /**
-   * Sets topic.
-   */
+  /** Sets topic. */
   public void setTopic(String topic) {
     this.topic = topic;
   }
 
-
-  /**
-   * Returns events.
-   */
+  /** Returns events. */
   public List<EventType> events() throws IllegalArgumentException {
     return EventType.fromStringList(events);
   }
 
-
-  /**
-   * Sets event.
-   */
+  /** Sets event. */
   public void setEvents(List<EventType> events) {
     this.events = EventType.toStringList(events);
   }
 
-
-  /**
-   * Returns filter.
-   */
+  /** Returns filter. */
   public Filter filter() {
     return filter;
   }
 
-
-  /**
-   * Sets filter.
-   */
+  /** Sets filter. */
   public void setFilter(Filter filter) {
     this.filter = filter;
   }

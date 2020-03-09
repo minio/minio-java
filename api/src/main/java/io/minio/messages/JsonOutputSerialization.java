@@ -16,24 +16,19 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest/OutputSerialization/JSON
- * information.
+ * Helper class to generate Amazon AWS S3 request XML for
+ * SelectObjectContentRequest/OutputSerialization/JSON information.
  */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class JsonOutputSerialization extends XmlEntity {
   @Key("RecordDelimiter")
   private Character recordDelimiter;
 
-
-  /**
-   * Constructs a new JsonOutputSerialization object.
-   */
+  /** Constructs a new JsonOutputSerialization object. */
   public JsonOutputSerialization(Character recordDelimiter) throws XmlPullParserException {
     super();
     this.name = "JSON";

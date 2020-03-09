@@ -27,5 +27,3 @@ public class SourceInfo {
   public String port;
   public String userAgent;
 }
-
-

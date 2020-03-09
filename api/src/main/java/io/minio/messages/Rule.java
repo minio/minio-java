@@ -16,55 +16,38 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing Rule information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing Rule information. */
 @SuppressWarnings("SameParameterValue")
 public class Rule extends XmlEntity {
   @Key("DefaultRetention")
   private DefaultRetention defaultRetention;
-
 
   public Rule() throws XmlPullParserException {
     super();
     this.name = "Rule";
   }
 
-
-  /**
-   * Constructs a new Rule object with given retention.
-   */
+  /** Constructs a new Rule object with given retention. */
   public Rule(RetentionMode mode, int duration, DurationUnit unit) throws XmlPullParserException {
     this();
 
     this.defaultRetention = new DefaultRetention(mode, duration, unit);
   }
 
-
-  /**
-   * Returns mode.
-   */
+  /** Returns mode. */
   public RetentionMode mode() {
     return defaultRetention.mode();
   }
 
-
-  /**
-   * Returns days.
-   */
+  /** Returns days. */
   public Integer days() {
     return defaultRetention.days();
   }
 
-
-  /**
-   * Returns years.
-   */
+  /** Returns years. */
   public Integer years() {
     return defaultRetention.years();
   }

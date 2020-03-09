@@ -16,122 +16,95 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing ListPartsResult information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing ListPartsResult information. */
 @SuppressWarnings("unused")
 public class ListPartsResult extends XmlEntity {
   @Key("Bucket")
   private String bucketName;
+
   @Key("Key")
   private String objectName;
+
   @Key("Initiator")
   private Initiator initiator;
+
   @Key("Owner")
   private Owner owner;
+
   @Key("StorageClass")
   private String storageClass;
+
   @Key("PartNumberMarker")
   private int partNumberMarker;
+
   @Key("NextPartNumberMarker")
   private int nextPartNumberMarker;
+
   @Key("MaxParts")
   private int maxParts;
+
   @Key("IsTruncated")
   private boolean isTruncated;
+
   @Key("Part")
   private List<Part> partList;
-
 
   public ListPartsResult() throws XmlPullParserException {
     super();
     this.name = "ListPartsResult";
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String bucketName() {
     return bucketName;
   }
 
-
-  /**
-   * Returns object name.
-   */
+  /** Returns object name. */
   public String objectName() {
     return objectName;
   }
 
-
-  /**
-   * Returns storage class.
-   */
+  /** Returns storage class. */
   public String storageClass() {
     return storageClass;
   }
 
-
-  /**
-   * Returns initator information.
-   */
+  /** Returns initator information. */
   public Initiator initiator() {
     return initiator;
   }
 
-
-  /**
-   * Returns owner information.
-   */
+  /** Returns owner information. */
   public Owner owner() {
     return owner;
   }
 
-
-  /**
-   * Returns maximum parts information received.
-   */
+  /** Returns maximum parts information received. */
   public int maxParts() {
     return maxParts;
   }
 
-
-  /**
-   * Returns whether the result is truncated or not.
-   */
+  /** Returns whether the result is truncated or not. */
   public boolean isTruncated() {
     return isTruncated;
   }
 
-
-  /**
-   * Returns part number marker.
-   */
+  /** Returns part number marker. */
   public int partNumberMarker() {
     return partNumberMarker;
   }
 
-
-  /**
-   * Returns next part number marker.
-   */
+  /** Returns next part number marker. */
   public int nextPartNumberMarker() {
     return nextPartNumberMarker;
   }
 
-
-  /**
-   * Returns List of Part.
-   */
+  /** Returns List of Part. */
   public List<Part> partList() {
     if (partList == null) {
       return new LinkedList<>();

@@ -20,9 +20,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Object stat information.
- */
+/** Object stat information. */
 @SuppressWarnings("unused")
 public class ObjectStat {
   private final String bucketName;
@@ -31,20 +29,25 @@ public class ObjectStat {
   private final long length;
   private final String etag;
   private final String contentType;
-  private final Map<String,List<String>> httpHeaders;
+  private final Map<String, List<String>> httpHeaders;
 
   /**
-   * Creates ObjectStat with given bucket name, object name, and available response header information.
+   * Creates ObjectStat with given bucket name, object name, and available response header
+   * information.
    */
   public ObjectStat(String bucketName, String name, ResponseHeader header) {
     this(bucketName, name, header, null);
   }
 
-
   /**
-   * Creates ObjectStat with given bucket name, object name, available response header and HTTP Headers from response.
+   * Creates ObjectStat with given bucket name, object name, available response header and HTTP
+   * Headers from response.
    */
-  public ObjectStat(String bucketName, String name, ResponseHeader header, Map<String,List<String>> httpHeaders) {
+  public ObjectStat(
+      String bucketName,
+      String name,
+      ResponseHeader header,
+      Map<String, List<String>> httpHeaders) {
     this.bucketName = bucketName;
     this.name = name;
     this.contentType = header.contentType();
@@ -60,12 +63,17 @@ public class ObjectStat {
     this.httpHeaders = httpHeaders;
   }
 
-
   /**
-   * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and content type.
+   * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and
+   * content type.
    */
-  public ObjectStat(String bucketName, String name, ZonedDateTime createdTime, long length, String etag,
-                    String contentType) {
+  public ObjectStat(
+      String bucketName,
+      String name,
+      ZonedDateTime createdTime,
+      long length,
+      String etag,
+      String contentType) {
     this.bucketName = bucketName;
     this.name = name;
     this.contentType = contentType;
@@ -79,10 +87,7 @@ public class ObjectStat {
     this.httpHeaders = null;
   }
 
-
-  /**
-   * Checks whether given object is same as this ObjectStat.
-   */
+  /** Checks whether given object is same as this ObjectStat. */
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -110,13 +115,9 @@ public class ObjectStat {
       return false;
     }
     return contentType.equals(that.contentType);
-
   }
 
-
-  /**
-   * Returns hash of this ObjectStat.
-   */
+  /** Returns hash of this ObjectStat. */
   @Override
   public int hashCode() {
     int result = bucketName.hashCode();
@@ -128,54 +129,37 @@ public class ObjectStat {
     return result;
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String bucketName() {
     return bucketName;
   }
 
-  /**
-   * Returns object name.
-   */
+  /** Returns object name. */
   public String name() {
     return name;
   }
 
-
-  /**
-   * Returns created time.
-   */
+  /** Returns created time. */
   public ZonedDateTime createdTime() {
     return createdTime;
   }
 
-
-  /**
-   * Returns object length.
-   */
+  /** Returns object length. */
   public long length() {
     return length;
   }
 
-  /**
-   * Returns ETag.
-   */
+  /** Returns ETag. */
   public String etag() {
     return etag;
   }
 
-  /**
-   * Returns content type of object.
-   */
+  /** Returns content type of object. */
   public String contentType() {
     return contentType;
   }
 
-  /**
-   * Returns ObjectStat as string.
-   */
+  /** Returns ObjectStat as string. */
   @Override
   public String toString() {
     return "ObjectStat{"
@@ -183,7 +167,8 @@ public class ObjectStat {
         + bucketName
         + '\''
         + ", name='"
-        + name + '\''
+        + name
+        + '\''
         + ", contentType='"
         + contentType
         + '\''
@@ -197,10 +182,8 @@ public class ObjectStat {
         + '}';
   }
 
-  /**
-   * Gets HTTP headers.
-   */
-  public Map<String,List<String>> httpHeaders() {
+  /** Gets HTTP headers. */
+  public Map<String, List<String>> httpHeaders() {
     return httpHeaders;
   }
 }

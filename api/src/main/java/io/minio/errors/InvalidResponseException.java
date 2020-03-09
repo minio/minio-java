@@ -1,4 +1,3 @@
-
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2019 MinIO, Inc.
  *
@@ -20,23 +19,16 @@ package io.minio.errors;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import okhttp3.Request;
 
-
-/**
- * Thrown to indicate that non-xml response thrown from server.
- */
+/** Thrown to indicate that non-xml response thrown from server. */
 public class InvalidResponseException extends MinioException {
   @SuppressFBWarnings(value = "Se", justification = "Non-XML response from server")
   private Request request;
-
 
   public InvalidResponseException() {
     super("Non-XML response from server");
   }
 
-
-  /**
-   * Constructs a new InvalidResponseException with HTTP request object causes the error.
-   */
+  /** Constructs a new InvalidResponseException with HTTP request object causes the error. */
   public InvalidResponseException(Request request) {
     this();
     this.request = request;

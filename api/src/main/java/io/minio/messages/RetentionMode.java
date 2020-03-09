@@ -16,16 +16,12 @@
 
 package io.minio.messages;
 
-
-/**
- * Retention mode for the specified object.
- */
+/** Retention mode for the specified object. */
 public enum RetentionMode {
-  GOVERNANCE, COMPLIANCE;
+  GOVERNANCE,
+  COMPLIANCE;
 
-  /**
-   * Returns ErrorCode of given code string.
-   */
+  /** Returns ErrorCode of given code string. */
   public static RetentionMode fromString(String modeString) {
     if (modeString == null) {
       return null;
@@ -38,7 +34,7 @@ public enum RetentionMode {
     if (modeString.equals(RetentionMode.COMPLIANCE.toString())) {
       return RetentionMode.COMPLIANCE;
     }
-    
+
     // Unknown mode string.
     return null;
   }

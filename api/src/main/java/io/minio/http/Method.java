@@ -16,12 +16,13 @@
 
 package io.minio.http;
 
-
-/**
- * HTTP methods.
- */
+/** HTTP methods. */
 public enum Method {
-  GET("GET"), HEAD("HEAD"), POST("POST"), PUT("PUT"), DELETE("DELETE");
+  GET("GET"),
+  HEAD("HEAD"),
+  POST("POST"),
+  PUT("PUT"),
+  DELETE("DELETE");
   private final String value;
 
   private Method(String value) {

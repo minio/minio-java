@@ -16,75 +16,74 @@
 
 package io.minio.messages;
 
-import java.io.IOException;
-import java.io.Reader;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import com.google.api.client.util.Key;
 import com.google.api.client.xml.XmlNamespaceDictionary;
-
 import io.minio.ErrorCode;
+import java.io.IOException;
+import java.io.Reader;
+import org.xmlpull.v1.XmlPullParserException;
 
-
-/**
- * Helper class to parse Amazon AWS S3 error response XML.
- */
+/** Helper class to parse Amazon AWS S3 error response XML. */
 @SuppressWarnings("unused")
 public class ErrorResponse extends XmlEntity {
   @Key("Code")
   protected String code;
+
   @Key("Message")
   protected String message;
+
   @Key("BucketName")
   protected String bucketName;
+
   @Key("Key")
   protected String objectName;
+
   @Key("Resource")
   protected String resource;
+
   @Key("RequestId")
   protected String requestId;
+
   @Key("HostId")
   protected String hostId;
 
   protected ErrorCode errorCode;
-
 
   public ErrorResponse() throws XmlPullParserException {
     super();
     super.name = "ErrorResponse";
   }
 
-
-  /**
-   * Constructs a new ErrorResponse object by reading given reader stream.
-   */
+  /** Constructs a new ErrorResponse object by reading given reader stream. */
   public ErrorResponse(Reader reader) throws IOException, XmlPullParserException {
     this();
     this.parseXml(reader);
   }
 
-
   /**
-   * Constructs a new ErrorResponse object with error code, bucket name, object name, resource, request ID and host ID.
+   * Constructs a new ErrorResponse object with error code, bucket name, object name, resource,
+   * request ID and host ID.
    */
-  public ErrorResponse(ErrorCode errorCode, String bucketName, String objectName, String resource, String requestId,
-                       String hostId) throws XmlPullParserException {
+  public ErrorResponse(
+      ErrorCode errorCode,
+      String bucketName,
+      String objectName,
+      String resource,
+      String requestId,
+      String hostId)
+      throws XmlPullParserException {
     this();
-    this.errorCode  = errorCode;
-    this.code       = errorCode.code();
-    this.message    = errorCode.message();
+    this.errorCode = errorCode;
+    this.code = errorCode.code();
+    this.message = errorCode.message();
     this.bucketName = bucketName;
     this.objectName = objectName;
-    this.resource   = resource;
-    this.requestId  = requestId;
-    this.hostId     = hostId;
+    this.resource = resource;
+    this.requestId = requestId;
+    this.hostId = hostId;
   }
 
-
-  /**
-   * Returns error code.
-   */
+  /** Returns error code. */
   public ErrorCode errorCode() {
     if (this.errorCode == null) {
       this.errorCode = ErrorCode.fromString(this.code);
@@ -93,64 +92,44 @@ public class ErrorResponse extends XmlEntity {
     return this.errorCode;
   }
 
-  /**
-   * Returns error code string.
-   */
+  /** Returns error code string. */
   public String code() {
     return this.code;
   }
 
-
-  /**
-   * Returns error message.
-   */
+  /** Returns error message. */
   public String message() {
     return this.message;
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String bucketName() {
     return bucketName;
   }
 
-
-  /**
-   * Returns object name.
-   */
+  /** Returns object name. */
   public String objectName() {
     return objectName;
   }
 
-
-  /**
-   * Returns host ID.
-   */
+  /** Returns host ID. */
   public String hostId() {
     return hostId;
   }
 
-
-  /**
-   * Returns request ID.
-   */
+  /** Returns request ID. */
   public String requestId() {
     return requestId;
   }
 
-
-  /**
-   * Returns resource.
-   */
+  /** Returns resource. */
   public String resource() {
     return resource;
   }
 
-
   /**
-   * Fills up this ErrorResponse object's fields by reading/parsing values from given Reader input stream.
+   * Fills up this ErrorResponse object's fields by reading/parsing values from given Reader input
+   * stream.
    */
   @Override
   public void parseXml(Reader reader) throws IOException, XmlPullParserException {
@@ -159,19 +138,29 @@ public class ErrorResponse extends XmlEntity {
     super.parseXml(reader, namespaceDictionary);
   }
 
-
-  /**
-   * Returns string with field values.
-   */
+  /** Returns string with field values. */
   public String getString() {
     return "ErrorResponse("
-        + "code=" + code + ", "
-        + "message=" + message + ", "
-        + "bucketName=" + bucketName + ", "
-        + "objectName=" + objectName + ", "
-        + "resource=" + resource + ", "
-        + "requestId=" + requestId + ", "
-        + "hostId=" + hostId
+        + "code="
+        + code
+        + ", "
+        + "message="
+        + message
+        + ", "
+        + "bucketName="
+        + bucketName
+        + ", "
+        + "objectName="
+        + objectName
+        + ", "
+        + "resource="
+        + resource
+        + ", "
+        + "requestId="
+        + requestId
+        + ", "
+        + "hostId="
+        + hostId
         + ")";
   }
 }

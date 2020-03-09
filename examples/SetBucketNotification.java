@@ -14,43 +14,39 @@
  * limitations under the License.
  */
 
-import java.io.IOException;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-import java.util.LinkedList;
-import java.util.List;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
-import io.minio.messages.NotificationConfiguration;
-import io.minio.messages.QueueConfiguration;
+import io.minio.errors.MinioException;
 import io.minio.messages.EventType;
 import io.minio.messages.Filter;
-
-import io.minio.errors.MinioException;
+import io.minio.messages.NotificationConfiguration;
+import io.minio.messages.QueueConfiguration;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.LinkedList;
+import java.util.List;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class SetBucketNotification {
-  /**
-   * MinioClient.setBucketNotification() example.
-   */
+  /** MinioClient.setBucketNotification() example. */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* Local MinIO for test and development. */
-      MinioClient minioClient = new MinioClient("http://127.0.0.1:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETKEY");
+      MinioClient minioClient =
+          new MinioClient("http://127.0.0.1:9000", "YOUR-ACCESSKEYID", "YOUR-SECRETKEY");
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Get current notification configuration.
-      NotificationConfiguration notificationConfiguration = minioClient.getBucketNotification("my-bucketname");
+      NotificationConfiguration notificationConfiguration =
+          minioClient.getBucketNotification("my-bucketname");
 
       // Add a new SQS configuration.
-      List<QueueConfiguration> queueConfigurationList = notificationConfiguration.queueConfigurationList();
+      List<QueueConfiguration> queueConfigurationList =
+          notificationConfiguration.queueConfigurationList();
       QueueConfiguration queueConfiguration = new QueueConfiguration();
       queueConfiguration.setQueue("arn:minio:sqs::1:webhook");
 

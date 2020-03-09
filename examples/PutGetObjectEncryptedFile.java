@@ -1,35 +1,31 @@
-import java.io.IOException;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-
-import javax.crypto.KeyGenerator;
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
-
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.KeyGenerator;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class PutGetObjectEncryptedFile {
-/**
- * MinioClient.putObject() and MinioClient.getObject() to a file example for  SSE_C.
- */
+  /** MinioClient.putObject() and MinioClient.getObject() to a file example for SSE_C. */
   public static void main(String[] args)
-        throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
-        /* play.min.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      /* play.min.io for test and development. */
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
-      //* Amazon S3: */
+      // * Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-      //                                           "YOUR-SECRETACCESSKEY"); 
+      //                                           "YOUR-SECRETACCESSKEY");
 
       String objectName = "my-objectname";
       String bucketName = "my-bucketname";
-      String inputfile  = "my-inputfile";
+      String inputfile = "my-inputfile";
       String outputfile = "my-outputfile";
 
       // Generate a new 256 bit AES key - This key must be remembered by the client.
@@ -46,6 +42,5 @@ public class PutGetObjectEncryptedFile {
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
-
   }
 }

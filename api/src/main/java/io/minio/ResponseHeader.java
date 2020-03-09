@@ -18,209 +18,152 @@ package io.minio;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.http.Header;
-import io.minio.Time;
 import java.time.ZonedDateTime;
 
-/**
- * HTTP response header class.
- */
-@SuppressFBWarnings(value = "UwF", justification = "Everything in this class is initialized with reflections.")
+/** HTTP response header class. */
+@SuppressFBWarnings(
+    value = "UwF",
+    justification = "Everything in this class is initialized with reflections.")
 public class ResponseHeader {
   @Header("Content-Length")
   private long contentLength;
+
   @Header("Content-Type")
   private String contentType;
+
   @Header("Date")
   private ZonedDateTime date;
+
   @Header("ETag")
   private String etag;
+
   @Header("Last-Modified")
   private ZonedDateTime lastModified;
+
   @Header("Server")
   private String server;
+
   @Header("Status Code")
   private String statusCode;
+
   @Header("Transfer-Encoding")
   private String transferEncoding;
+
   @Header("x-amz-bucket-region")
   private String xamzBucketRegion;
+
   @Header("x-amz-id-2")
   private String xamzId2;
+
   @Header("x-amz-request-id")
   private String xamzRequestId;
-  
 
-  /**
-   * Sets content length.
-   */
+  /** Sets content length. */
   public void setContentLength(String contentLength) {
     this.contentLength = Long.parseLong(contentLength);
   }
 
-
-  /**
-   * Returns content length.
-   */
+  /** Returns content length. */
   public long contentLength() {
     return this.contentLength;
   }
 
-
-  /**
-   * Sets content type.
-   */
+  /** Sets content type. */
   public void setContentType(String contentType) {
     this.contentType = contentType;
   }
 
-
-  /**
-   * Returns content type.
-   */
+  /** Returns content type. */
   public String contentType() {
     return this.contentType;
   }
 
-
-  /**
-   * Sets date.
-   */
+  /** Sets date. */
   public void setDate(String date) {
     this.date = ZonedDateTime.parse(date, Time.HTTP_HEADER_DATE_FORMAT);
   }
 
-
-  /**
-   * Returns date.
-   */
+  /** Returns date. */
   public ZonedDateTime date() {
     return this.date;
   }
 
-
-  /**
-   * Sets ETag.
-   */
+  /** Sets ETag. */
   public void setEtag(String etag) {
     this.etag = etag.replaceAll("\"", "");
   }
 
-
-  /**
-   * Returns ETag.
-   */
+  /** Returns ETag. */
   public String etag() {
     return this.etag;
   }
 
-
-  /**
-   * Sets last modified time.
-   */
+  /** Sets last modified time. */
   public void setLastModified(String lastModified) {
     this.lastModified = ZonedDateTime.parse(lastModified, Time.HTTP_HEADER_DATE_FORMAT);
   }
 
-
-  /**
-   * Returns last modified time.
-   */
+  /** Returns last modified time. */
   public ZonedDateTime lastModified() {
     return this.lastModified;
   }
 
-
-  /**
-   * Sets server name.
-   */
+  /** Sets server name. */
   public void setServer(String server) {
     this.server = server;
   }
 
-
-  /**
-   * Returns server name.
-   */
+  /** Returns server name. */
   public String server() {
     return this.server;
   }
 
-
-  /**
-   * Sets status code.
-   */
+  /** Sets status code. */
   public void setStatusCode(String statusCode) {
     this.statusCode = statusCode;
   }
 
-
-  /**
-   * Returns status code.
-   */
+  /** Returns status code. */
   public String statusCode() {
     return this.statusCode;
   }
 
-
-  /**
-   * Sets transfer encoding.
-   */
+  /** Sets transfer encoding. */
   public void setTransferEncoding(String transferEncoding) {
     this.transferEncoding = transferEncoding;
   }
 
-
-  /**
-   * Returns transfer encoding.
-   */
+  /** Returns transfer encoding. */
   public String transferEncoding() {
     return this.transferEncoding;
   }
 
-
-  /**
-   * Sets Amazon bucket region.
-   */
+  /** Sets Amazon bucket region. */
   public void setXamzBucketRegion(String xamzBucketRegion) {
     this.xamzBucketRegion = xamzBucketRegion;
   }
 
-
-  /**
-   * Returns Amazon bucket region.
-   */
+  /** Returns Amazon bucket region. */
   public String xamzBucketRegion() {
     return this.xamzBucketRegion;
   }
 
-
-  /**
-   * Sets Amazon ID2.
-   */
+  /** Sets Amazon ID2. */
   public void setXamzId2(String xamzId2) {
     this.xamzId2 = xamzId2;
   }
 
-
-  /**
-   * Returns Amazon ID2.
-   */
+  /** Returns Amazon ID2. */
   public String xamzId2() {
     return this.xamzId2;
   }
 
-
-  /**
-   * Sets Amazon request ID.
-   */
+  /** Sets Amazon request ID. */
   public void setXamzRequestId(String xamzRequestId) {
     this.xamzRequestId = xamzRequestId;
   }
 
-
-  /**
-   * Returns Amazon request ID.
-   */
+  /** Returns Amazon request ID. */
   public String xamzRequestId() {
     return this.xamzRequestId;
   }

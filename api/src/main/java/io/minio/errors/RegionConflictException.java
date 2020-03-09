@@ -16,14 +16,9 @@
 
 package io.minio.errors;
 
-
-/**
- * Thrown to indicate that passed region conflicts with the one previously specified.
- */
+/** Thrown to indicate that passed region conflicts with the one previously specified. */
 public class RegionConflictException extends MinioException {
-  /**
-   * Constructs a new RegionConflictException with given error message.
-   */
+  /** Constructs a new RegionConflictException with given error message. */
   public RegionConflictException(String message) {
     super(message);
   }

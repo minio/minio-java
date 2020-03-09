@@ -36,28 +36,31 @@ public class PutObjectOptions {
   private ServerSideEncryption sse = null;
 
   /**
-   * Creates new PutObjectOptions object. Two ways to use PutObjectOptions when object size is concerned.
-   * * If object size is unknown, pass -1 to objectSize and pass valid partSize.
-   * * If object size is known, pass -1 to partSize for auto detect; else pass valid partSize to control
-   *   memory usage and no. of parts in upload.
-   * * If partSize is greater than objectSize, objectSize is used as partSize.
+   * Creates new PutObjectOptions object. Two ways to use PutObjectOptions when object size is
+   * concerned. * If object size is unknown, pass -1 to objectSize and pass valid partSize. * If
+   * object size is known, pass -1 to partSize for auto detect; else pass valid partSize to control
+   * memory usage and no. of parts in upload. * If partSize is greater than objectSize, objectSize
+   * is used as partSize.
    *
    * <p>A valid part size is between 5MiB to 5GiB (both limits inclusive).
    */
   public PutObjectOptions(long objectSize, long partSize) throws IllegalArgumentException {
     if (partSize > 0) {
       if (partSize < MIN_MULTIPART_SIZE) {
-        throw new IllegalArgumentException("part size " + partSize + " is not supported; minimum allowed 5MiB");
+        throw new IllegalArgumentException(
+            "part size " + partSize + " is not supported; minimum allowed 5MiB");
       }
 
       if (partSize > MAX_PART_SIZE) {
-        throw new IllegalArgumentException("part size " + partSize + " is not supported; maximum allowed 5GiB");
+        throw new IllegalArgumentException(
+            "part size " + partSize + " is not supported; maximum allowed 5GiB");
       }
     }
 
     if (objectSize >= 0) {
       if (objectSize > MAX_OBJECT_SIZE) {
-        throw new IllegalArgumentException("object size " + objectSize + " is not supported; maximum allowed 5TiB");
+        throw new IllegalArgumentException(
+            "object size " + objectSize + " is not supported; maximum allowed 5TiB");
       }
 
       this.objectSize = objectSize;
@@ -70,8 +73,14 @@ public class PutObjectOptions {
         this.partSize = partSize;
         this.partCount = (int) Math.ceil((double) objectSize / partSize);
         if (this.partCount > MAX_MULTIPART_COUNT) {
-          throw new IllegalArgumentException("object size " + this.objectSize + " and part size " + this.partSize
-                                             + " make more than " + MAX_MULTIPART_COUNT + "parts for upload");
+          throw new IllegalArgumentException(
+              "object size "
+                  + this.objectSize
+                  + " and part size "
+                  + this.partSize
+                  + " make more than "
+                  + MAX_MULTIPART_COUNT
+                  + "parts for upload");
         }
       } else {
         double pSize = Math.ceil((double) objectSize / MAX_MULTIPART_COUNT);
@@ -90,7 +99,8 @@ public class PutObjectOptions {
     }
 
     if (partSize <= 0) {
-      throw new IllegalArgumentException("valid part size must be provided when object size is unknown");
+      throw new IllegalArgumentException(
+          "valid part size must be provided when object size is unknown");
     }
 
     this.objectSize = -1;

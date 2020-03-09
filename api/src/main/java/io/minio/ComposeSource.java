@@ -19,7 +19,6 @@ package io.minio;
 
 import java.util.Map;
 import java.util.TreeMap;
-import io.minio.CopyConditions;
 
 public class ComposeSource {
   private String bucketName;
@@ -32,34 +31,36 @@ public class ComposeSource {
   private long objectSize;
   private Map<String, String> headers;
 
-  /**
-   * Create new ComposeSource for given bucket and object.
-   */
+  /** Create new ComposeSource for given bucket and object. */
   public ComposeSource(String bucketName, String objectName) throws IllegalArgumentException {
     this(bucketName, objectName, null, null, null, null, null);
   }
 
-  /**
-   * Create new ComposeSource for given bucket, object, offset and length.
-   */
+  /** Create new ComposeSource for given bucket, object, offset and length. */
   public ComposeSource(String bucketName, String objectName, Long offset, Long length)
-    throws IllegalArgumentException {
+      throws IllegalArgumentException {
     this(bucketName, objectName, offset, length, null, null, null);
   }
 
-  /**
-   * Create new ComposeSource for given bucket, object, offset, length and headerMap.
-   */
-  public ComposeSource(String bucketName, String objectName, Long offset, Long length,
-      Map<String, String> headerMap) throws IllegalArgumentException {
+  /** Create new ComposeSource for given bucket, object, offset, length and headerMap. */
+  public ComposeSource(
+      String bucketName, String objectName, Long offset, Long length, Map<String, String> headerMap)
+      throws IllegalArgumentException {
     this(bucketName, objectName, offset, length, headerMap, null, null);
   }
 
   /**
-   * Create new ComposeSource for given bucket, object, offset, length, headerMap and CopyConditions.
+   * Create new ComposeSource for given bucket, object, offset, length, headerMap and
+   * CopyConditions.
    */
-  public ComposeSource(String bucketName, String objectName, Long offset, Long length,
-      Map<String, String> headerMap, CopyConditions copyConditions) throws IllegalArgumentException {
+  public ComposeSource(
+      String bucketName,
+      String objectName,
+      Long offset,
+      Long length,
+      Map<String, String> headerMap,
+      CopyConditions copyConditions)
+      throws IllegalArgumentException {
     this(bucketName, objectName, offset, length, headerMap, copyConditions, null);
   }
 
@@ -67,10 +68,17 @@ public class ComposeSource {
    * Creates new ComposeSource for given bucket, object, offset, length, headerMap, CopyConditions
    * and server side encryption.
    *
-   * @throws IllegalArgumentException    upon invalid value is passed to a method.
+   * @throws IllegalArgumentException upon invalid value is passed to a method.
    */
-  public ComposeSource(String bucketName, String objectName, Long offset, Long length, Map<String, String> headerMap,
-      CopyConditions copyConditions, ServerSideEncryption sse) throws IllegalArgumentException {
+  public ComposeSource(
+      String bucketName,
+      String objectName,
+      Long offset,
+      Long length,
+      Map<String, String> headerMap,
+      CopyConditions copyConditions,
+      ServerSideEncryption sse)
+      throws IllegalArgumentException {
     if (bucketName == null) {
       throw new IllegalArgumentException("Source bucket name cannot be empty");
     }
@@ -100,25 +108,43 @@ public class ComposeSource {
     this.sse = sse;
   }
 
-  /**
-   * Constructs header  .
-   *
-   */
+  /** Constructs header . */
   public void buildHeaders(long objectSize, String etag) throws IllegalArgumentException {
     if (offset != null && offset >= objectSize) {
-      throw new IllegalArgumentException("source " + bucketName + "/" + objectName + ": offset " + offset
-        + " is beyond object size " + objectSize);
+      throw new IllegalArgumentException(
+          "source "
+              + bucketName
+              + "/"
+              + objectName
+              + ": offset "
+              + offset
+              + " is beyond object size "
+              + objectSize);
     }
 
     if (length != null) {
       if (length > objectSize) {
-        throw new IllegalArgumentException("source " + bucketName + "/" + objectName + ": length " + length
-          + " is beyond object size " + objectSize);
+        throw new IllegalArgumentException(
+            "source "
+                + bucketName
+                + "/"
+                + objectName
+                + ": length "
+                + length
+                + " is beyond object size "
+                + objectSize);
       }
 
       if (offset + length > objectSize) {
-        throw new IllegalArgumentException("source " + bucketName + "/" + objectName + ": compose size "
-          + (offset + length) + " is beyond object size " + objectSize);
+        throw new IllegalArgumentException(
+            "source "
+                + bucketName
+                + "/"
+                + objectName
+                + ": compose size "
+                + (offset + length)
+                + " is beyond object size "
+                + objectSize);
       }
     }
 
@@ -166,10 +192,7 @@ public class ComposeSource {
     return sse;
   }
 
-  /**
-   * Returns header.
-   *
-   */
+  /** Returns header. */
   public Map<String, String> headers() {
     Map<String, String> headers = null;
 

@@ -27,5 +27,3 @@ public class BucketMeta {
   public Identity ownerIdentity;
   public String arn;
 }
-
-

@@ -20,8 +20,8 @@ import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidResponseException;
 import io.minio.errors.InvalidPortException;
+import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
 import java.io.ByteArrayInputStream;
@@ -32,21 +32,22 @@ import org.xmlpull.v1.XmlPullParserException;
 
 public class EnableDisableObjectLegalHold {
   /**
-   * MinioClient.enableObjectLegalHold() example.
-   * MinioClient.disableObjectLegalHold() example.
+   * MinioClient.enableObjectLegalHold() example. MinioClient.disableObjectLegalHold() example.
    * MinioClient.isObjectLegalHoldEnabled() example.
    */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException, 
-           InvalidResponseException, InsufficientDataException,
-           InternalException, ErrorResponseException, InvalidBucketNameException,
-           InvalidPortException, InvalidEndpointException, RegionConflictException,
-           IllegalArgumentException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException,
+          InvalidResponseException, InsufficientDataException, InternalException,
+          ErrorResponseException, InvalidBucketNameException, InvalidPortException,
+          InvalidEndpointException, RegionConflictException, IllegalArgumentException {
     try {
 
       /* play.min.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Create bucket if it doesn't exist.
       boolean found = minioClient.bucketExists("my-bucketname");
@@ -55,14 +56,17 @@ public class EnableDisableObjectLegalHold {
       } else {
         // Create bucket 'my-bucketname' with object lock functionality enabled
         minioClient.makeBucket("my-bucketname", null, true);
-        System.out.println("my-bucketname is created successfully with object lock functionality enabled.");
+        System.out.println(
+            "my-bucketname is created successfully with object lock functionality enabled.");
       }
 
       StringBuilder builder = new StringBuilder();
       for (int i = 0; i < 1000; i++) {
-        builder.append("Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+        builder.append(
+            "Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
         builder.append("(29 letters)\n");
-        builder.append("Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+        builder.append(
+            "Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
         builder.append("---\n");
       }
 
@@ -70,25 +74,33 @@ public class EnableDisableObjectLegalHold {
       ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
       // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
-      minioClient.putObject("my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, null,
-              "application/octet-stream");
+      minioClient.putObject(
+          "my-bucketname",
+          "my-objectname",
+          bais,
+          Long.valueOf(bais.available()),
+          null,
+          null,
+          "application/octet-stream");
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
 
       // Enable object legal hold.
-      minioClient.enableObjectLegalHold("my-bucketname" , "my-objectname", "" );
+      minioClient.enableObjectLegalHold("my-bucketname", "my-objectname", "");
 
       // Check if the object legal hold is enabled or not.
-      System.out.println(" Is object legal hold is enabled " + minioClient.isObjectLegalHoldEnabled("my-bucketname", 
-          "my-objectname", "" ));
+      System.out.println(
+          " Is object legal hold is enabled "
+              + minioClient.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", ""));
 
       // Disable object legal hold.
-      minioClient.disableObjectLegalHold("my-bucketname" , "my-objectname", "" );
+      minioClient.disableObjectLegalHold("my-bucketname", "my-objectname", "");
 
       // Check if the object legal hold is enabled or not.
-      System.out.println(" Is object legal hold is enabled " + minioClient.isObjectLegalHoldEnabled("my-bucketname", 
-          "my-objectname", "" ));
-    
+      System.out.println(
+          " Is object legal hold is enabled "
+              + minioClient.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", ""));
+
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

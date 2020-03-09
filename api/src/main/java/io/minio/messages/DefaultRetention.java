@@ -16,34 +16,29 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing DefaultRetention information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing DefaultRetention information. */
 @SuppressWarnings("SameParameterValue")
 public class DefaultRetention extends XmlEntity {
   @Key("Mode")
   private String mode;
+
   @Key("Days")
   private Integer days;
+
   @Key("Years")
   private Integer years;
-
 
   public DefaultRetention() throws XmlPullParserException {
     super();
     this.name = "DefaultRetention";
   }
 
-
-  /**
-   * Constructs a new DefaultRetention object with given retention.
-   */
-  public DefaultRetention(RetentionMode mode, int duration, DurationUnit unit) throws XmlPullParserException {
+  /** Constructs a new DefaultRetention object with given retention. */
+  public DefaultRetention(RetentionMode mode, int duration, DurationUnit unit)
+      throws XmlPullParserException {
     this();
 
     if (mode != null) {
@@ -57,26 +52,17 @@ public class DefaultRetention extends XmlEntity {
     }
   }
 
-
-  /**
-   * Returns mode.
-   */
+  /** Returns mode. */
   public RetentionMode mode() {
     return RetentionMode.fromString(mode);
   }
 
-
-  /**
-   * Returns days.
-   */
+  /** Returns days. */
   public Integer days() {
     return days;
   }
 
-
-  /**
-   * Returns years.
-   */
+  /** Returns years. */
   public Integer years() {
     return years;
   }

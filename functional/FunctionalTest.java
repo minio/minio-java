@@ -15,34 +15,33 @@
  * limitations under the License.
  */
 
-import java.security.*;
-import java.math.BigInteger;
-import java.util.*;
-import java.io.*;
-import java.time.*;
-import java.util.concurrent.TimeUnit;
-
 import static java.nio.file.StandardOpenOption.*;
-import java.nio.file.*;
-import java.nio.charset.StandardCharsets;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.minio.*;
+import io.minio.errors.*;
+import io.minio.messages.*;
+import io.minio.notification.*;
+import java.io.*;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.security.*;
+import java.time.*;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
-import okhttp3.OkHttpClient;
 import okhttp3.HttpUrl;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.MultipartBody;
 import okhttp3.Response;
 
-import io.minio.*;
-import io.minio.messages.*;
-import io.minio.errors.*;
-import io.minio.notification.*;
-
-@SuppressFBWarnings(value = "REC", justification = "Allow catching super class Exception since it's tests")
+@SuppressFBWarnings(
+    value = "REC",
+    justification = "Allow catching super class Exception since it's tests")
 public class FunctionalTest {
   private static final String PASS = "PASS";
   private static final String FAILED = "FAIL";
@@ -62,15 +61,10 @@ public class FunctionalTest {
   private static String region;
   private static MinioClient client = null;
 
-  /**
-   * Do no-op.
-   */
-  public static void ignore(Object... args) {
-  }
+  /** Do no-op. */
+  public static void ignore(Object... args) {}
 
-  /**
-   * Create given sized file and returns its name.
-   */
+  /** Create given sized file and returns its name. */
   public static String createFile(int size) throws IOException {
     String filename = getRandomName();
 
@@ -93,9 +87,7 @@ public class FunctionalTest {
     return filename;
   }
 
-  /**
-   * Create 1 KB temporary file.
-   */
+  /** Create 1 KB temporary file. */
   public static String createFile1Kb() throws IOException {
     if (mintEnv) {
       String filename = getRandomName();
@@ -106,9 +98,7 @@ public class FunctionalTest {
     return createFile(1 * KB);
   }
 
-  /**
-   * Create 6 MB temporary file.
-   */
+  /** Create 6 MB temporary file. */
   public static String createFile6Mb() throws IOException {
     if (mintEnv) {
       String filename = getRandomName();
@@ -119,17 +109,12 @@ public class FunctionalTest {
     return createFile(6 * MB);
   }
 
-  /**
-   * Generate random name.
-   */
+  /** Generate random name. */
   public static String getRandomName() {
     return "minio-java-test-" + new BigInteger(32, random).toString(32);
   }
 
-  /**
-   * Returns byte array contains all data in given InputStream.
-   */
-
+  /** Returns byte array contains all data in given InputStream. */
   public static byte[] readAllBytes(InputStream is) throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     int nRead;
@@ -140,44 +125,51 @@ public class FunctionalTest {
     return buffer.toByteArray();
   }
 
-  /**
-   * Prints a success log entry in JSON format.
-   */
+  /** Prints a success log entry in JSON format. */
   public static void mintSuccessLog(String function, String args, long startTime) {
     if (mintEnv) {
-      System.out
-          .println(new MintLogger(function, args, System.currentTimeMillis() - startTime, PASS, null, null, null));
+      System.out.println(
+          new MintLogger(
+              function, args, System.currentTimeMillis() - startTime, PASS, null, null, null));
     }
   }
 
-  /**
-   * Prints a failure log entry in JSON format.
-   */
-  public static void mintFailedLog(String function, String args, long startTime, String message, String error) {
+  /** Prints a failure log entry in JSON format. */
+  public static void mintFailedLog(
+      String function, String args, long startTime, String message, String error) {
     if (mintEnv) {
       System.out.println(
-          new MintLogger(function, args, System.currentTimeMillis() - startTime, FAILED, null, message, error));
+          new MintLogger(
+              function,
+              args,
+              System.currentTimeMillis() - startTime,
+              FAILED,
+              null,
+              message,
+              error));
     }
   }
 
-  /**
-   * Prints a ignore log entry in JSON format.
-   */
+  /** Prints a ignore log entry in JSON format. */
   public static void mintIgnoredLog(String function, String args, long startTime) {
     if (mintEnv) {
-      System.out
-          .println(new MintLogger(function, args, System.currentTimeMillis() - startTime, IGNORED, null, null, null));
+      System.out.println(
+          new MintLogger(
+              function, args, System.currentTimeMillis() - startTime, IGNORED, null, null, null));
     }
   }
 
-  /**
-   * Read object content of the given url.
-   */
+  /** Read object content of the given url. */
   public static byte[] readObject(String urlString) throws Exception {
     Request.Builder requestBuilder = new Request.Builder();
     Request request = requestBuilder.url(HttpUrl.parse(urlString)).method("GET", null).build();
-    OkHttpClient transport = new OkHttpClient().newBuilder().connectTimeout(20, TimeUnit.SECONDS)
-        .writeTimeout(20, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build();
+    OkHttpClient transport =
+        new OkHttpClient()
+            .newBuilder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build();
     Response response = transport.newCall(request).execute();
 
     if (response == null) {
@@ -196,23 +188,31 @@ public class FunctionalTest {
       scanner.close();
       response.body().close();
 
-      throw new Exception("failed to read object. Response: " + response + ", Response body: " + errorXml);
+      throw new Exception(
+          "failed to read object. Response: " + response + ", Response body: " + errorXml);
     }
 
     return readAllBytes(response.body().byteStream());
   }
 
-  /**
-   * Write data to given object url.
-   */
+  /** Write data to given object url. */
   public static void writeObject(String urlString, byte[] dataBytes) throws Exception {
     Request.Builder requestBuilder = new Request.Builder();
     // Set header 'x-amz-acl' to 'bucket-owner-full-control', so objects created
     // anonymously, can be downloaded by bucket owner in AWS S3.
-    Request request = requestBuilder.url(HttpUrl.parse(urlString)).method("PUT", RequestBody.create(null, dataBytes))
-        .addHeader("x-amz-acl", "bucket-owner-full-control").build();
-    OkHttpClient transport = new OkHttpClient().newBuilder().connectTimeout(20, TimeUnit.SECONDS)
-        .writeTimeout(20, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build();
+    Request request =
+        requestBuilder
+            .url(HttpUrl.parse(urlString))
+            .method("PUT", RequestBody.create(null, dataBytes))
+            .addHeader("x-amz-acl", "bucket-owner-full-control")
+            .build();
+    OkHttpClient transport =
+        new OkHttpClient()
+            .newBuilder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build();
     Response response = transport.newCall(request).execute();
 
     if (response == null) {
@@ -231,13 +231,12 @@ public class FunctionalTest {
       scanner.close();
       response.body().close();
 
-      throw new Exception("failed to create object. Response: " + response + ", Response body: " + errorXml);
+      throw new Exception(
+          "failed to create object. Response: " + response + ", Response body: " + errorXml);
     }
   }
 
-  /**
-   * Test: makeBucket(String bucketName).
-   */
+  /** Test: makeBucket(String bucketName). */
   public static void makeBucket_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: makeBucket(String bucketName)");
@@ -250,15 +249,17 @@ public class FunctionalTest {
       client.removeBucket(name);
       mintSuccessLog("makeBucket(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("makeBucket(String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "makeBucket(String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: makeBucket(String bucketName, String region).
-   */
+  /** Test: makeBucket(String bucketName, String region). */
   public static void makeBucketwithRegion_test() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: makeBucket(String bucketName, String region)");
@@ -269,17 +270,21 @@ public class FunctionalTest {
       String name = getRandomName();
       client.makeBucket(name, "eu-west-1");
       client.removeBucket(name);
-      mintSuccessLog("makeBucket(String bucketName, String region)", "region: eu-west-1", startTime);
+      mintSuccessLog(
+          "makeBucket(String bucketName, String region)", "region: eu-west-1", startTime);
     } catch (Exception e) {
-      mintFailedLog("makeBucket(String bucketName, String region)", "region: eu-west-1", startTime, null,
+      mintFailedLog(
+          "makeBucket(String bucketName, String region)",
+          "region: eu-west-1",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: makeBucket(String bucketName, String region) where bucketName has
-   * periods in its name.
+   * Test: makeBucket(String bucketName, String region) where bucketName has periods in its name.
    */
   public static void makeBucketWithPeriod_test() throws Exception {
     if (!mintEnv) {
@@ -291,18 +296,22 @@ public class FunctionalTest {
     try {
       client.makeBucket(name, "eu-central-1");
       client.removeBucket(name);
-      mintSuccessLog("makeBucket(String bucketName, String region)", "name: " + name + ", region: eu-central-1",
+      mintSuccessLog(
+          "makeBucket(String bucketName, String region)",
+          "name: " + name + ", region: eu-central-1",
           startTime);
     } catch (Exception e) {
-      mintFailedLog("makeBucket(String bucketName, String region)", "name: " + name + ", region: eu-central-1",
-          startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "makeBucket(String bucketName, String region)",
+          "name: " + name + ", region: eu-central-1",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listBuckets().
-   */
+  /** Test: listBuckets(). */
   public static void listBuckets_test() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: listBuckets()");
@@ -317,15 +326,17 @@ public class FunctionalTest {
       for (Bucket bucket : client.listBuckets()) {
         if (bucket.name().equals(bucketName)) {
           if (found) {
-            throw new Exception("[FAILED] duplicate entry " + bucketName + " found in list buckets");
+            throw new Exception(
+                "[FAILED] duplicate entry " + bucketName + " found in list buckets");
           }
 
           found = true;
           // excuse 15 minutes
           if ((bucket.creationDate().toEpochSecond() - nowSeconds) > (15 * 60)) {
-            throw new Exception("[FAILED] bucket creation time too apart in "
-                                + (bucket.creationDate().toEpochSecond() - nowSeconds)
-                                + " seconds");
+            throw new Exception(
+                "[FAILED] bucket creation time too apart in "
+                    + (bucket.creationDate().toEpochSecond() - nowSeconds)
+                    + " seconds");
           }
         }
       }
@@ -335,15 +346,17 @@ public class FunctionalTest {
       }
       mintSuccessLog("listBuckets()", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("listBuckets()", null, startTime, null,
+      mintFailedLog(
+          "listBuckets()",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: bucketExists(String bucketName).
-   */
+  /** Test: bucketExists(String bucketName). */
   public static void bucketExists_test() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: bucketExists(String bucketName)");
@@ -359,15 +372,17 @@ public class FunctionalTest {
       client.removeBucket(name);
       mintSuccessLog("bucketExists(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("bucketExists(String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "bucketExists(String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: removeBucket(String bucketName).
-   */
+  /** Test: removeBucket(String bucketName). */
   public static void removeBucket_test() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: removeBucket(String bucketName)");
@@ -380,29 +395,27 @@ public class FunctionalTest {
       client.removeBucket(name);
       mintSuccessLog("removeBucket(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("removeBucket(String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "removeBucket(String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Tear down test setup.
-   */
+  /** Tear down test setup. */
   public static void setup() throws Exception {
     client.makeBucket(bucketName);
   }
 
-  /**
-   * Tear down test setup.
-   */
+  /** Tear down test setup. */
   public static void teardown() throws Exception {
     client.removeBucket(bucketName);
   }
 
-  /**
-   * Test: putObject(String bucketName, String objectName, String filename).
-   */
+  /** Test: putObject(String bucketName, String objectName, String filename). */
   public static void putObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: putObject(String bucketName, String objectName, String filename)");
@@ -414,45 +427,58 @@ public class FunctionalTest {
       client.putObject(bucketName, filename, filename, null, null, null, null);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
-      mintSuccessLog("putObject(String bucketName, String objectName, String filename)", "filename: 1KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, String filename)",
+          "filename: 1KB",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, String filename)", "filename: 1KB", startTime,
-          null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "putObject(String bucketName, String objectName, String filename)",
+          "filename: 1KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: multipart: putObject(String bucketName, String objectName, String
-   * filename).
-   */
+  /** Test: multipart: putObject(String bucketName, String objectName, String filename). */
   public static void putObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: multipart: putObject(String bucketName, String objectName, String filename)");
+      System.out.println(
+          "Test: multipart: putObject(String bucketName, String objectName, String filename)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String filename = createFile6Mb();
-      client.putObject(bucketName, filename, filename, null, null, null , null);
+      client.putObject(bucketName, filename, filename, null, null, null, null);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
-      mintSuccessLog("putObject(String bucketName, String objectName, String filename)", "filename: 6MB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, String filename)",
+          "filename: 6MB",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, String filename)", "filename: 6MB", startTime,
-          null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "putObject(String bucketName, String objectName, String filename)",
+          "filename: 6MB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: With content-type: putObject(String bucketName, String objectName,
-   * String filename, String contentType).
+   * Test: With content-type: putObject(String bucketName, String objectName, String filename,
+   * String contentType).
    */
   public static void putObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out
-          .println("Test: putObject(String bucketName, String objectName, String filename," + " String contentType)");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, String filename,"
+              + " String contentType)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -461,126 +487,157 @@ public class FunctionalTest {
       client.putObject(bucketName, filename, filename, null, null, null, customContentType);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
-      mintSuccessLog("putObject(String bucketName, String objectName, String filename, String contentType)",
-          "contentType: " + customContentType, startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, String filename, String contentType)",
+          "contentType: " + customContentType,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, String filename, String contentType)",
-          "contentType: " + customContentType, startTime, null,
+      mintFailedLog(
+          "putObject(String bucketName, String objectName, String filename, String contentType)",
+          "contentType: " + customContentType,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream body, long
-   * size, String contentType).
+   * Test: putObject(String bucketName, String objectName, InputStream body, long size, String
+   * contentType).
    */
   public static void putObject_test4() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream body, "
-          + "long size, String contentType)");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream body, "
+              + "long size, String contentType)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is , Long.valueOf(1 * KB), null, null,customContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, customContentType);
       }
 
       client.removeObject(bucketName, objectName);
       mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size," + " String contentType)",
-          "size: 1 KB, objectName: " + customContentType, startTime);
+          "putObject(String bucketName, String objectName, InputStream body, long size,"
+              + " String contentType)",
+          "size: 1 KB, objectName: " + customContentType,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
-          "size: 1 KB, objectName: " + customContentType, startTime, null,
+      mintFailedLog(
+          "putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
+          "size: 1 KB, objectName: " + customContentType,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream body, long
-   * size, String contentType). where objectName has multiple path segments.
+   * Test: putObject(String bucketName, String objectName, InputStream body, long size, String
+   * contentType). where objectName has multiple path segments.
    */
   public static void putObject_test6() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: objectName with path segments: "
-          + "putObject(String bucketName, String objectName, InputStream body, " + "long size, String contentType)");
+      System.out.println(
+          "Test: objectName with path segments: "
+              + "putObject(String bucketName, String objectName, InputStream body, "
+              + "long size, String contentType)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = "path/to/" + getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, null,customContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, customContentType);
       }
       client.removeObject(bucketName, objectName);
       mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size," + " String contentType)",
-          "size: 1 KB, contentType: " + customContentType, startTime);
+          "putObject(String bucketName, String objectName, InputStream body, long size,"
+              + " String contentType)",
+          "size: 1 KB, contentType: " + customContentType,
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size," + " String contentType)",
-          "size: 1 KB, contentType: " + customContentType, startTime, null,
+          "putObject(String bucketName, String objectName, InputStream body, long size,"
+              + " String contentType)",
+          "size: 1 KB, contentType: " + customContentType,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test put object with unknown sized stream.
-   */
+  /** Test put object with unknown sized stream. */
   public static void testPutObjectUnknownStreamSize(long size) throws Exception {
     if (!mintEnv) {
-      System.out
-          .println("Test: putObject(String bucketName, String objectName, InputStream body, " + "String contentType)");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream body, "
+              + "String contentType)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(size)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(is.available()), null, null,customContentType);
+        client.putObject(
+            bucketName,
+            objectName,
+            is,
+            Long.valueOf(is.available()),
+            null,
+            null,
+            customContentType);
       }
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream body, String contentType)",
-          "contentType: " + customContentType, startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream body, String contentType)",
+          "contentType: " + customContentType,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
-          "contentType: " + customContentType, startTime, null,
+      mintFailedLog(
+          "putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
+          "contentType: " + customContentType,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream body,
-   * String contentType).
+   * Test: putObject(String bucketName, String objectName, InputStream body, String contentType).
    */
   public static void putObject_test7() throws Exception {
     testPutObjectUnknownStreamSize(3 * KB);
   }
 
   /**
-   * Test: multipart: putObject(String bucketName, String objectName, InputStream
-   * body, String contentType).
+   * Test: multipart: putObject(String bucketName, String objectName, InputStream body, String
+   * contentType).
    */
   public static void putObject_test8() throws Exception {
     testPutObjectUnknownStreamSize(10 * MB);
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, Map&lt;String, String&gt; headerMap).
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * Map&lt;String, String&gt; headerMap).
    */
   public static void putObject_test9() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap).");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap).");
     }
 
     long startTime = System.currentTimeMillis();
@@ -594,27 +651,33 @@ public class FunctionalTest {
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap)", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap)",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, Map<String, String> headerMap)",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, Map&lt;String, String&gt; headerMap) with Storage Class
-   * REDUCED_REDUNDANCY.
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * Map&lt;String, String&gt; headerMap) with Storage Class REDUCED_REDUNDANCY.
    */
   @SuppressFBWarnings("UCF")
   public static void putObject_test10() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap). with Storage Class REDUCED_REDUNDANCY set");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap). with Storage Class REDUCED_REDUNDANCY set");
     }
 
     long startTime = System.currentTimeMillis();
@@ -638,25 +701,32 @@ public class FunctionalTest {
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap)", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap)",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, Map<String, String> headerMap)",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, Map&lt;String, String&gt; headerMap) with Storage Class STANDARD.
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * Map&lt;String, String&gt; headerMap) with Storage Class STANDARD.
    */
   public static void putObject_test11() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap). with Storage Class STANDARD set");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap). with Storage Class STANDARD set");
     }
 
     long startTime = System.currentTimeMillis();
@@ -682,26 +752,32 @@ public class FunctionalTest {
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap)", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap)",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, Map<String, String> headerMap)",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, Map&lt;String, String&gt; headerMap). with invalid Storage Class
-   * set
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * Map&lt;String, String&gt; headerMap). with invalid Storage Class set
    */
   public static void putObject_test12() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap). with invalid Storage Class set");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap). with invalid Storage Class set");
     }
 
     long startTime = System.currentTimeMillis();
@@ -722,25 +798,32 @@ public class FunctionalTest {
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, Map<String, String> headerMap)", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, Map<String, String> headerMap)",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, Map<String, String> headerMap)",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, ServerSideEncryption sse). To test SSE_C
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * ServerSideEncryption sse). To test SSE_C
    */
   public static void putObject_test13() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_C. ");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_C. ");
     }
     long startTime = System.currentTimeMillis();
     // Generate a new 256 bit AES key - This key must be remembered by the client.
@@ -751,30 +834,37 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName,  is, Long.valueOf(1 * KB), null, sse, null);
+        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
       }
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_C.", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_C.",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, ServerSideEncryption sse) using SSE_C.",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, ServerSideEncryption sse). To test SSE_S3
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * ServerSideEncryption sse). To test SSE_S3
    */
   public static void putObject_test14() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_S3.");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_S3.");
     }
     long startTime = System.currentTimeMillis();
 
@@ -783,30 +873,37 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB),null, sse,null);
+        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
       }
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_S3.", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_S3.",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, ServerSideEncryption sse) using SSE_S3.",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, ServerSideEncryption sse). To test SSE_KMS
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * ServerSideEncryption sse). To test SSE_KMS
    */
   public static void putObject_test15() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_KMS.");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_KMS.");
     }
     long startTime = System.currentTimeMillis();
 
@@ -823,30 +920,37 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is , Long.valueOf(1 * KB), null, sse, null);
+        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
       }
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_KMS.", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_KMS.",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, ServerSideEncryption sse) using SSE_KMS.",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream,
-   * long size, ServerSideEncryption sse). To test SSE_C (multi-part upload).
+   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
+   * ServerSideEncryption sse). To test SSE_C (multi-part upload).
    */
   public static void putObject_test16() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload). ");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload). ");
     }
     long startTime = System.currentTimeMillis();
     // Generate a new 256 bit AES key - This key must be remembered by the client.
@@ -862,27 +966,32 @@ public class FunctionalTest {
 
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, InputStream stream, "
-          + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).", "size: 6 MB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, InputStream stream, "
+              + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).",
+          "size: 6 MB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, InputStream stream, "
               + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).",
-          "size: 6 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 6 MB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, ServerSideEncryption
-   * sse, String filename). To test SSE_C
-   *
+   * Test: putObject(String bucketName, String objectName, ServerSideEncryption sse, String
+   * filename). To test SSE_C
    */
-
   public static void putObject_test17() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, ServerSideEncryption sse, "
-          + "String filename). To test SSE_C. ");
+      System.out.println(
+          "Test: putObject(String bucketName, String objectName, ServerSideEncryption sse, "
+              + "String filename). To test SSE_C. ");
     }
     long startTime = System.currentTimeMillis();
     // Generate a new 256 bit AES key - This key must be remembered by the client.
@@ -892,24 +1001,28 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       String filename = createFile1Kb();
-      client.putObject(bucketName, objectName,filename, null, null, sse, null);
+      client.putObject(bucketName, objectName, filename, null, null, sse, null);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("putObject(String bucketName, String objectName, ServerSideEncryption sse, "
-          + "String filename). To test SSE_C", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, ServerSideEncryption sse, "
+              + "String filename). To test SSE_C",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "putObject(String bucketName, String objectName, ServerSideEncryption sse, "
               + "String filename). To test SSE_C",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: statObject(String bucketName, String objectName).
-   */
+  /** Test: statObject(String bucketName, String objectName). */
   public static void statObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: statObject(String bucketName, String objectName)");
@@ -927,8 +1040,10 @@ public class FunctionalTest {
 
       ObjectStat objectStat = client.statObject(bucketName, objectName);
 
-      if (!(objectName.equals(objectStat.name()) && (objectStat.length() == 1)
-          && bucketName.equals(objectStat.bucketName()) && objectStat.contentType().equals(customContentType))) {
+      if (!(objectName.equals(objectStat.name())
+          && (objectStat.length() == 1)
+          && bucketName.equals(objectStat.bucketName())
+          && objectStat.contentType().equals(customContentType))) {
         throw new Exception("[FAILED] object stat differs");
       }
 
@@ -947,20 +1062,25 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
       mintSuccessLog("statObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("statObject(String bucketName, String objectName)", null, startTime, null,
+      mintFailedLog(
+          "statObject(String bucketName, String objectName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: statObject(String bucketName, String objectName, ServerSideEncryption
-   * sse). To test statObject using SSE_C.
+   * Test: statObject(String bucketName, String objectName, ServerSideEncryption sse). To test
+   * statObject using SSE_C.
    */
   public static void statObject_test2() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: statObject(String bucketName, String objectName, ServerSideEncryption sse)" + " using SSE_C.");
+          "Test: statObject(String bucketName, String objectName, ServerSideEncryption sse)"
+              + " using SSE_C.");
     }
 
     long startTime = System.currentTimeMillis();
@@ -977,7 +1097,8 @@ public class FunctionalTest {
 
       ObjectStat objectStat = client.statObject(bucketName, objectName, sse);
 
-      if (!(objectName.equals(objectStat.name()) && (objectStat.length() == 1)
+      if (!(objectName.equals(objectStat.name())
+          && (objectStat.length() == 1)
           && bucketName.equals(objectStat.bucketName()))) {
         throw new Exception("[FAILED] object stat differs");
       }
@@ -991,22 +1112,29 @@ public class FunctionalTest {
         throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
       }
       if (!values.get(0).equals("AES256")) {
-        throw new Exception("[FAILED] wrong metadata value. expected: AES256, got: " + values.get(0));
+        throw new Exception(
+            "[FAILED] wrong metadata value. expected: AES256, got: " + values.get(0));
       }
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("statObject(String bucketName, String objectName, ServerSideEncryption sse)" + " using SSE_C.",
-          null, startTime);
+      mintSuccessLog(
+          "statObject(String bucketName, String objectName, ServerSideEncryption sse)"
+              + " using SSE_C.",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("statObject(String bucketName, String objectName, ServerSideEncryption sse)" + " using SSE_C.",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "statObject(String bucketName, String objectName, ServerSideEncryption sse)"
+              + " using SSE_C.",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: statObject(String bucketName, "randomName/").
-   */
+  /** Test: statObject(String bucketName, "randomName/"). */
   public static void statObject_test3() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: statObject(String bucketName, \"randomName/\")");
@@ -1017,22 +1145,28 @@ public class FunctionalTest {
       client.statObject(bucketName, getRandomName() + "/");
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_KEY) {
-        mintFailedLog("statObject(String bucketName, \"randomName/\")", null, startTime, null,
-                      e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        mintFailedLog(
+            "statObject(String bucketName, \"randomName/\")",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     } catch (Exception e) {
-      mintFailedLog("statObject(String bucketName, \"randomName/\")", null, startTime, null,
-                    e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "statObject(String bucketName, \"randomName/\")",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } finally {
       mintSuccessLog("statObject(String bucketName, \"randomName/\"`)", null, startTime);
     }
   }
 
-  /**
-   * Test: getObject(String bucketName, String objectName).
-   */
+  /** Test: getObject(String bucketName, String objectName). */
   public static void getObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: getObject(String bucketName, String objectName)");
@@ -1042,7 +1176,8 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       client.getObject(bucketName, objectName).close();
@@ -1050,15 +1185,17 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
       mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName)", null, startTime, null,
+      mintFailedLog(
+          "getObject(String bucketName, String objectName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: getObject(String bucketName, String objectName, long offset).
-   */
+  /** Test: getObject(String bucketName, String objectName, long offset). */
   public static void getObject_test2() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: getObject(String bucketName, String objectName, long offset)");
@@ -1068,49 +1205,60 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB),null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       client.getObject(bucketName, objectName, 1000L).close();
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("getObject(String bucketName, String objectName, long offset)", "offset: 1000", startTime);
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, long offset)",
+          "offset: 1000",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, long offset)", "offset: 1000", startTime, null,
+      mintFailedLog(
+          "getObject(String bucketName, String objectName, long offset)",
+          "offset: 1000",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: getObject(String bucketName, String objectName, long offset, Long
-   * length).
-   */
+  /** Test: getObject(String bucketName, String objectName, long offset, Long length). */
   public static void getObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, long offset, Long length)");
+      System.out.println(
+          "Test: getObject(String bucketName, String objectName, long offset, Long length)");
     }
     long startTime = System.currentTimeMillis();
 
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 6 * MB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(6 * MB), null, null, nullContentType);
       }
 
       client.getObject(bucketName, objectName, 1000L, 64 * 1024L).close();
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("getObject(String bucketName, String objectName, long offset, Long length)",
-          "offset: 1000, length: 64 KB", startTime);
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, long offset, Long length)",
+          "offset: 1000, length: 64 KB",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, long offset, Long length)",
-          "offset: 1000, length: 64 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "getObject(String bucketName, String objectName, long offset, Long length)",
+          "offset: 1000, length: 64 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: getObject(String bucketName, String objectName, String filename).
-   */
+  /** Test: getObject(String bucketName, String objectName, String filename). */
   public static void getObject_test4() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: getObject(String bucketName, String objectName, String filename)");
@@ -1120,29 +1268,36 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB),null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       client.getObject(bucketName, objectName, objectName + ".downloaded");
       Files.delete(Paths.get(objectName + ".downloaded"));
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("getObject(String bucketName, String objectName, String filename)", null, startTime);
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, String filename)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, String filename)", null, startTime, null,
+      mintFailedLog(
+          "getObject(String bucketName, String objectName, String filename)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: getObject(String bucketName, String objectName, String filename). where
-   * objectName has multiple path segments.
+   * Test: getObject(String bucketName, String objectName, String filename). where objectName has
+   * multiple path segments.
    */
   public static void getObject_test5() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: objectName with multiple path segments: "
-          + "getObject(String bucketName, String objectName, String filename)");
+      System.out.println(
+          "Test: objectName with multiple path segments: "
+              + "getObject(String bucketName, String objectName, String filename)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1150,25 +1305,30 @@ public class FunctionalTest {
     String objectName = "path/to/" + baseObjectName;
     try {
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB),null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       client.getObject(bucketName, objectName, baseObjectName + ".downloaded");
       Files.delete(Paths.get(baseObjectName + ".downloaded"));
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("getObject(String bucketName, String objectName, String filename)", "objectName: " + objectName,
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, String filename)",
+          "objectName: " + objectName,
           startTime);
     } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, String filename)", "objectName: " + objectName,
-          startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "getObject(String bucketName, String objectName, String filename)",
+          "objectName: " + objectName,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: getObject(String bucketName, String objectName) zero size object.
-   */
+  /** Test: getObject(String bucketName, String objectName) zero size object. */
   public static void getObject_test6() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: getObject(String bucketName, String objectName) zero size object");
@@ -1178,26 +1338,31 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(0)) {
-        client.putObject(bucketName, objectName, is, 0L, null, null , nullContentType);
+        client.putObject(bucketName, objectName, is, 0L, null, null, nullContentType);
       }
 
       client.getObject(bucketName, objectName).close();
       client.removeObject(bucketName, objectName);
       mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName)", null, startTime, null,
+      mintFailedLog(
+          "getObject(String bucketName, String objectName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: getObject(String bucketName, String objectName, ServerSideEncryption
-   * sse). To test getObject when object is put using SSE_C.
+   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse). To test
+   * getObject when object is put using SSE_C.
    */
   public static void getObject_test7() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, ServerSideEncryption sse) using SSE_C");
+      System.out.println(
+          "Test: getObject(String bucketName, String objectName, ServerSideEncryption sse) using SSE_C");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1212,7 +1377,7 @@ public class FunctionalTest {
       int bytes_read_put;
       try (final InputStream is = new ContentInputStream(1 * KB)) {
 
-        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB),null, sse, null);
+        client.putObject(bucketName, objectName, is, Long.valueOf(1 * KB), null, sse, null);
         byte[] putbyteArray = new byte[is.available()];
         bytes_read_put = is.read(putbyteArray);
         putString = new String(putbyteArray, StandardCharsets.UTF_8);
@@ -1229,23 +1394,30 @@ public class FunctionalTest {
         throw new Exception("Contents received from getObject doesn't match initial contents.");
       }
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("getObject(String bucketName, String objectName, ServerSideEncryption sse)" + " using SSE_C.",
-          null, startTime);
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, ServerSideEncryption sse)"
+              + " using SSE_C.",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, ServerSideEncryption sse)" + " using SSE_C.", null,
-          startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "getObject(String bucketName, String objectName, ServerSideEncryption sse)"
+              + " using SSE_C.",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: getObject(String bucketName, String objectName, long offset, Long
-   * length) with offset=0.
+   * Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0.
    */
   public static void getObject_test8() throws Exception {
     if (!mintEnv) {
-      System.out
-          .println("Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0");
+      System.out.println(
+          "Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0");
     }
 
     final long startTime = System.currentTimeMillis();
@@ -1255,39 +1427,46 @@ public class FunctionalTest {
     final String objectName = getRandomName();
     try {
       try (final InputStream is = new ContentInputStream(fullLength)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf(fullLength),null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(fullLength), null, null, nullContentType);
       }
 
-      try (final InputStream partialObjectStream = client.getObject(bucketName, objectName, offset,
-          Long.valueOf(partialLength))) {
+      try (final InputStream partialObjectStream =
+          client.getObject(bucketName, objectName, offset, Long.valueOf(partialLength))) {
         byte[] result = new byte[fullLength];
         final int read = partialObjectStream.read(result);
         result = Arrays.copyOf(result, read);
         if (result.length != partialLength) {
-          throw new Exception(String.format(
-              "Expecting only the first %d bytes from partial getObject request; received %d bytes instead.",
-              partialLength, read));
+          throw new Exception(
+              String.format(
+                  "Expecting only the first %d bytes from partial getObject request; received %d bytes instead.",
+                  partialLength, read));
         }
       }
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
-          String.format("offset: %d, length: %d bytes", offset, partialLength), startTime);
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
+          String.format("offset: %d, length: %d bytes", offset, partialLength),
+          startTime);
     } catch (final Exception e) {
-      mintFailedLog("getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
-          String.format("offset: %d, length: %d bytes", offset, partialLength), startTime, null,
+      mintFailedLog(
+          "getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
+          String.format("offset: %d, length: %d bytes", offset, partialLength),
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: getObject(String bucketName, String objectName, ServerSideEncryption
-   * sse, String fileName).
+   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse, String
+   * fileName).
    */
   public static void getObject_test9() throws Exception {
     if (!mintEnv) {
-      System.out
-          .println("Test: getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)");
+      System.out.println(
+          "Test: getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1303,20 +1482,24 @@ public class FunctionalTest {
       Files.delete(Paths.get(objectName + ".downloaded"));
       client.removeObject(bucketName, objectName);
 
-      mintSuccessLog("getObject(String bucketName, String objectName, ServerSideEncryption sse, "
-          + "String filename). To test SSE_C", "size: 1 KB", startTime);
+      mintSuccessLog(
+          "getObject(String bucketName, String objectName, ServerSideEncryption sse, "
+              + "String filename). To test SSE_C",
+          "size: 1 KB",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "getObject(String bucketName, String objectName, ServerSideEncryption sse, "
               + "String filename). To test SSE_C",
-          "size: 1 KB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "size: 1 KB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listObjects(final String bucketName).
-   */
+  /** Test: listObjects(final String bucketName). */
   public static void listObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: listObjects(final String bucketName)");
@@ -1347,15 +1530,17 @@ public class FunctionalTest {
 
       mintSuccessLog("listObjects(final String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("listObjects(final String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "listObjects(final String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listObjects(bucketName, final String prefix).
-   */
+  /** Test: listObjects(bucketName, final String prefix). */
   public static void listObject_test2() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: listObjects(final String bucketName, final String prefix)");
@@ -1384,20 +1569,24 @@ public class FunctionalTest {
         ignore(r.get());
       }
 
-      mintSuccessLog("listObjects(final String bucketName, final String prefix)", "prefix :minio", startTime);
+      mintSuccessLog(
+          "listObjects(final String bucketName, final String prefix)", "prefix :minio", startTime);
     } catch (Exception e) {
-      mintFailedLog("listObjects(final String bucketName, final String prefix)", "prefix :minio", startTime, null,
+      mintFailedLog(
+          "listObjects(final String bucketName, final String prefix)",
+          "prefix :minio",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listObjects(bucketName, final String prefix, final boolean recursive).
-   */
+  /** Test: listObjects(bucketName, final String prefix, final boolean recursive). */
   public static void listObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listObjects(final String bucketName, final String prefix, final boolean recursive)");
+      System.out.println(
+          "Test: listObjects(final String bucketName, final String prefix, final boolean recursive)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1423,23 +1612,27 @@ public class FunctionalTest {
         ignore(r.get());
       }
 
-      mintSuccessLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix :minio, recursive: true", startTime);
+      mintSuccessLog(
+          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix :minio, recursive: true",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix :minio, recursive: true", startTime, null,
+      mintFailedLog(
+          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix :minio, recursive: true",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listObjects(final string bucketName).
-   */
+  /** Test: listObjects(final string bucketName). */
   public static void listObject_test4() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: empty bucket: listObjects(final String bucketName, final String prefix,"
-          + " final boolean recursive)");
+      System.out.println(
+          "Test: empty bucket: listObjects(final String bucketName, final String prefix,"
+              + " final boolean recursive)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1451,24 +1644,27 @@ public class FunctionalTest {
           break;
         }
       }
-      mintSuccessLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix :minioemptybucket, recursive: true", startTime);
+      mintSuccessLog(
+          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix :minioemptybucket, recursive: true",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix :minioemptybucket, recursive: true", startTime, null,
+      mintFailedLog(
+          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix :minioemptybucket, recursive: true",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: recursive: listObjects(bucketName, final String prefix, final boolean
-   * recursive).
-   */
+  /** Test: recursive: listObjects(bucketName, final String prefix, final boolean recursive). */
   public static void listObject_test5() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: recursive: listObjects(final String bucketName, final String prefix, " + "final boolean recursive)");
+          "Test: recursive: listObjects(final String bucketName, final String prefix, "
+              + "final boolean recursive)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1479,7 +1675,7 @@ public class FunctionalTest {
       for (i = 0; i < objCount; i++) {
         objectNames[i] = getRandomName();
         try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is , 1L, null, null, nullContentType);
+          client.putObject(bucketName, objectNames[i], is, 1L, null, null, nullContentType);
         }
       }
 
@@ -1497,24 +1693,30 @@ public class FunctionalTest {
         ignore(r.get());
       }
 
-      mintSuccessLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix :minio, recursive: true", startTime);
+      mintSuccessLog(
+          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix :minio, recursive: true",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("listObjects(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix :minio, recursive: true", startTime, null,
+      mintFailedLog(
+          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix :minio, recursive: true",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: listObjects(bucketName, final String prefix, final boolean recursive,
-   * final boolean useVersion1).
+   * Test: listObjects(bucketName, final String prefix, final boolean recursive, final boolean
+   * useVersion1).
    */
   public static void listObject_test6() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listObjects(final String bucketName, final String prefix, final boolean recursive, "
-          + "final boolean useVersion1)");
+      System.out.println(
+          "Test: listObjects(final String bucketName, final String prefix, final boolean recursive, "
+              + "final boolean useVersion1)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1543,20 +1745,21 @@ public class FunctionalTest {
       mintSuccessLog(
           "listObjects(final String bucketName, final String prefix, "
               + "final boolean recursive, final boolean useVersion1)",
-          "prefix :minio, recursive: true, useVersion1: true", startTime);
+          "prefix :minio, recursive: true, useVersion1: true",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "listObjects(final String bucketName, final String prefix, "
               + "final boolean recursive, final boolean useVersion1)",
-          "prefix :minio, recursive: true, useVersion1: true", startTime, null,
+          "prefix :minio, recursive: true, useVersion1: true",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: removeObject(String bucketName, String objectName).
-   */
+  /** Test: removeObject(String bucketName, String objectName). */
   public static void removeObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: removeObject(String bucketName, String objectName)");
@@ -1572,19 +1775,21 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
       mintSuccessLog("removeObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("removeObject(String bucketName, String objectName)", null, startTime, null,
+      mintFailedLog(
+          "removeObject(String bucketName, String objectName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: removeObjects(final String bucketName, final Iterable&lt;String&gt;
-   * objectNames).
-   */
+  /** Test: removeObjects(final String bucketName, final Iterable&lt;String&gt; objectNames). */
   public static void removeObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: removeObjects(final String bucketName, final Iterable<String> objectNames)");
+      System.out.println(
+          "Test: removeObjects(final String bucketName, final Iterable<String> objectNames)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1601,17 +1806,22 @@ public class FunctionalTest {
       for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
         ignore(r.get());
       }
-      mintSuccessLog("removeObjects(final String bucketName, final Iterable<String> objectNames)", null, startTime);
+      mintSuccessLog(
+          "removeObjects(final String bucketName, final Iterable<String> objectNames)",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("removeObjects(final String bucketName, final Iterable<String> objectNames)", null, startTime, null,
+      mintFailedLog(
+          "removeObjects(final String bucketName, final Iterable<String> objectNames)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listIncompleteUploads(String bucketName).
-   */
+  /** Test: listIncompleteUploads(String bucketName). */
   public static void listIncompleteUploads_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: listIncompleteUploads(String bucketName)");
@@ -1621,7 +1831,8 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 9 * MB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
@@ -1641,15 +1852,17 @@ public class FunctionalTest {
       client.removeIncompleteUpload(bucketName, objectName);
       mintSuccessLog("listIncompleteUploads(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("listIncompleteUploads(String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "listIncompleteUploads(String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listIncompleteUploads(String bucketName, String prefix).
-   */
+  /** Test: listIncompleteUploads(String bucketName, String prefix). */
   public static void listIncompleteUploads_test2() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: listIncompleteUploads(String bucketName, String prefix)");
@@ -1659,7 +1872,8 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 9 * MB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
@@ -1679,27 +1893,33 @@ public class FunctionalTest {
       client.removeIncompleteUpload(bucketName, objectName);
       mintSuccessLog("listIncompleteUploads(String bucketName, String prefix)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("listIncompleteUploads(String bucketName, String prefix)", null, startTime, null,
+      mintFailedLog(
+          "listIncompleteUploads(String bucketName, String prefix)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: listIncompleteUploads(final String bucketName, final String prefix,
-   * final boolean recursive).
+   * Test: listIncompleteUploads(final String bucketName, final String prefix, final boolean
+   * recursive).
    */
   public static void listIncompleteUploads_test3() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: listIncompleteUploads(final String bucketName, final String prefix, " + "final boolean recursive)");
+          "Test: listIncompleteUploads(final String bucketName, final String prefix, "
+              + "final boolean recursive)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 9 * MB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
@@ -1717,19 +1937,22 @@ public class FunctionalTest {
       }
 
       client.removeIncompleteUpload(bucketName, objectName);
-      mintSuccessLog("listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix: minio, recursive: true", startTime);
+      mintSuccessLog(
+          "listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix: minio, recursive: true",
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)",
-          "prefix: minio, recursive: true", startTime, null,
+      mintFailedLog(
+          "listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)",
+          "prefix: minio, recursive: true",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: removeIncompleteUpload(String bucketName, String objectName).
-   */
+  /** Test: removeIncompleteUpload(String bucketName, String objectName). */
   public static void removeIncompleteUploads_test() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: removeIncompleteUpload(String bucketName, String objectName)");
@@ -1739,7 +1962,8 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 9 * MB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(9 * MB), null, null, nullContentType);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("IncompleteBody")) {
           throw e;
@@ -1757,17 +1981,20 @@ public class FunctionalTest {
       }
 
       client.removeIncompleteUpload(bucketName, objectName);
-      mintSuccessLog("removeIncompleteUpload(String bucketName, String objectName)", null, startTime);
+      mintSuccessLog(
+          "removeIncompleteUpload(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("removeIncompleteUpload(String bucketName, String objectName)", null, startTime, null,
+      mintFailedLog(
+          "removeIncompleteUpload(String bucketName, String objectName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * public String presignedGetObject(String bucketName, String objectName).
-   */
+  /** public String presignedGetObject(String bucketName, String objectName). */
   public static void presignedGetObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: presignedGetObject(String bucketName, String objectName)");
@@ -1777,7 +2004,8 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       byte[] inBytes;
@@ -1795,26 +2023,29 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
       mintSuccessLog("presignedGetObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("presignedGetObject(String bucketName, String objectName)", null, startTime, null,
+      mintFailedLog(
+          "presignedGetObject(String bucketName, String objectName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: presignedGetObject(String bucketName, String objectName, Integer
-   * expires).
-   */
+  /** Test: presignedGetObject(String bucketName, String objectName, Integer expires). */
   public static void presignedGetObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: presignedGetObject(String bucketName, String objectName, Integer expires)");
+      System.out.println(
+          "Test: presignedGetObject(String bucketName, String objectName, Integer expires)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       byte[] inBytes;
@@ -1828,29 +2059,38 @@ public class FunctionalTest {
         throw new Exception("object content differs");
       }
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("presignedGetObject(String bucketName, String objectName, Integer expires)", null, startTime);
+      mintSuccessLog(
+          "presignedGetObject(String bucketName, String objectName, Integer expires)",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("presignedGetObject(String bucketName, String objectName, Integer expires)", null, startTime, null,
+      mintFailedLog(
+          "presignedGetObject(String bucketName, String objectName, Integer expires)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * public String presignedGetObject(String bucketName, String objectName,
-   * Integer expires, Map reqParams).
+   * public String presignedGetObject(String bucketName, String objectName, Integer expires, Map
+   * reqParams).
    */
   public static void presignedGetObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: presignedGetObject(String bucketName, String objectName, Integer expires, "
-          + "Map<String, String> reqParams)");
+      System.out.println(
+          "Test: presignedGetObject(String bucketName, String objectName, Integer expires, "
+              + "Map<String, String> reqParams)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       byte[] inBytes;
@@ -1867,20 +2107,24 @@ public class FunctionalTest {
         throw new Exception("object content differs");
       }
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,"
-          + " String> reqParams)", null, startTime);
+      mintSuccessLog(
+          "presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,"
+              + " String> reqParams)",
+          null,
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,"
               + " String> reqParams)",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * public String presignedPutObject(String bucketName, String objectName).
-   */
+  /** public String presignedPutObject(String bucketName, String objectName). */
   public static void presignedPutObject_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: presignedPutObject(String bucketName, String objectName)");
@@ -1895,19 +2139,21 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
       mintSuccessLog("presignedPutObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("presignedPutObject(String bucketName, String objectName)", null, startTime, null,
+      mintFailedLog(
+          "presignedPutObject(String bucketName, String objectName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: presignedPutObject(String bucketName, String objectName, Integer
-   * expires).
-   */
+  /** Test: presignedPutObject(String bucketName, String objectName, Integer expires). */
   public static void presignedPutObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: presignedPutObject(String bucketName, String objectName, Integer expires)");
+      System.out.println(
+          "Test: presignedPutObject(String bucketName, String objectName, Integer expires)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1917,17 +2163,22 @@ public class FunctionalTest {
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("presignedPutObject(String bucketName, String objectName, Integer expires)", null, startTime);
+      mintSuccessLog(
+          "presignedPutObject(String bucketName, String objectName, Integer expires)",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("presignedPutObject(String bucketName, String objectName, Integer expires)", null, startTime, null,
+      mintFailedLog(
+          "presignedPutObject(String bucketName, String objectName, Integer expires)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: presignedPostPolicy(PostPolicy policy).
-   */
+  /** Test: presignedPostPolicy(PostPolicy policy). */
   public static void presignedPostPolicy_test() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: presignedPostPolicy(PostPolicy policy)");
@@ -1946,14 +2197,20 @@ public class FunctionalTest {
         multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
       }
       try (final InputStream is = new ContentInputStream(1 * MB)) {
-        multipartBuilder.addFormDataPart("file", objectName, RequestBody.create(null, readAllBytes(is)));
+        multipartBuilder.addFormDataPart(
+            "file", objectName, RequestBody.create(null, readAllBytes(is)));
       }
 
       Request.Builder requestBuilder = new Request.Builder();
       String urlString = client.getObjectUrl(bucketName, "");
       Request request = requestBuilder.url(urlString).post(multipartBuilder.build()).build();
-      OkHttpClient transport = new OkHttpClient().newBuilder().connectTimeout(20, TimeUnit.SECONDS)
-          .writeTimeout(20, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build();
+      OkHttpClient transport =
+          new OkHttpClient()
+              .newBuilder()
+              .connectTimeout(20, TimeUnit.SECONDS)
+              .writeTimeout(20, TimeUnit.SECONDS)
+              .readTimeout(20, TimeUnit.SECONDS)
+              .build();
       Response response = transport.newCall(request).execute();
       if (response == null) {
         throw new Exception("no response from server");
@@ -1968,21 +2225,24 @@ public class FunctionalTest {
           errorXml = scanner.next();
         }
         scanner.close();
-        throw new Exception("failed to upload object. Response: " + response + ", Error: " + errorXml);
+        throw new Exception(
+            "failed to upload object. Response: " + response + ", Error: " + errorXml);
       }
 
       client.removeObject(bucketName, objectName);
       mintSuccessLog("presignedPostPolicy(PostPolicy policy)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("presignedPostPolicy(PostPolicy policy)", null, startTime, null,
+      mintFailedLog(
+          "presignedPostPolicy(PostPolicy policy)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: PutObject(): do put object using multi-threaded way in parallel.
-   */
+  /** Test: PutObject(): do put object using multi-threaded way in parallel. */
   public static void threadedPutObject() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: threadedPutObject");
@@ -2006,29 +2266,34 @@ public class FunctionalTest {
       }
 
       // All threads are completed.
-      mintSuccessLog("putObject(String bucketName, String objectName, String filename)", "filename: threaded6MB",
+      mintSuccessLog(
+          "putObject(String bucketName, String objectName, String filename)",
+          "filename: threaded6MB",
           startTime);
     } catch (Exception e) {
-      mintFailedLog("putObject(String bucketName, String objectName, String filename)", "filename: threaded6MB",
-          startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "putObject(String bucketName, String objectName, String filename)",
+          "filename: threaded6MB",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: copyObject(String bucketName, String objectName, String
-   * destBucketName).
-   */
+  /** Test: copyObject(String bucketName, String objectName, String destBucketName). */
   public static void copyObject_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName)");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       String destBucketName = getRandomName();
@@ -2039,29 +2304,38 @@ public class FunctionalTest {
       client.removeObject(bucketName, objectName);
       client.removeObject(destBucketName, objectName);
       client.removeBucket(destBucketName);
-      mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName)", null, startTime);
+      mintSuccessLog(
+          "copyObject(String bucketName, String objectName, String destBucketName)",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("copyObject(String bucketName, String objectName, String destBucketName)", null, startTime, null,
+      mintFailedLog(
+          "copyObject(String bucketName, String objectName, String destBucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions) with ETag to match.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions) with ETag to match.
    */
   public static void copyObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions) with Matching ETag (Negative Case)");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions) with Matching ETag (Negative Case)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       String destBucketName = getRandomName();
@@ -2071,7 +2345,8 @@ public class FunctionalTest {
       invalidETag.setMatchETag("TestETag");
 
       try {
-        client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, invalidETag);
+        client.copyObject(
+            destBucketName, objectName, null, null, bucketName, null, null, invalidETag);
       } catch (ErrorResponseException e) {
         if (!e.errorResponse().code().equals("PreconditionFailed")) {
           throw e;
@@ -2082,31 +2357,39 @@ public class FunctionalTest {
       client.removeBucket(destBucketName);
 
       mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName," + " CopyConditions copyConditions)",
-          "CopyConditions: invalidETag", startTime);
+          "copyObject(String bucketName, String objectName, String destBucketName,"
+              + " CopyConditions copyConditions)",
+          "CopyConditions: invalidETag",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, " + "CopyConditions copyConditions)",
-          "CopyConditions: invalidETag", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions)",
+          "CopyConditions: invalidETag",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions) with ETag to match.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions) with ETag to match.
    */
   public static void copyObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions) with Matching ETag (Positive Case)");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions) with Matching ETag (Positive Case)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       String destBucketName = getRandomName();
@@ -2117,38 +2400,48 @@ public class FunctionalTest {
       copyConditions.setMatchETag(stat.etag());
 
       // File should be copied as ETag set in copyConditions matches object's ETag.
-      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
+      client.copyObject(
+          destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
       client.getObject(destBucketName, objectName).close();
 
       client.removeObject(bucketName, objectName);
       client.removeObject(destBucketName, objectName);
       client.removeBucket(destBucketName);
       mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName," + " CopyConditions copyConditions)",
-          null, startTime);
+          "copyObject(String bucketName, String objectName, String destBucketName,"
+              + " CopyConditions copyConditions)",
+          null,
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName," + " CopyConditions copyConditions)",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "copyObject(String bucketName, String objectName, String destBucketName,"
+              + " CopyConditions copyConditions)",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions) with ETag to not match.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions) with ETag to not match.
    */
   public static void copyObject_test4() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions) with not matching ETag" + " (Positive Case)");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions) with not matching ETag"
+              + " (Positive Case)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       String destBucketName = getRandomName();
@@ -2159,7 +2452,8 @@ public class FunctionalTest {
 
       // File should be copied as ETag set in copyConditions doesn't match object's
       // ETag.
-      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
+      client.copyObject(
+          destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
       client.getObject(destBucketName, objectName).close();
 
       client.removeObject(bucketName, objectName);
@@ -2167,31 +2461,40 @@ public class FunctionalTest {
       client.removeBucket(destBucketName);
 
       mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName," + " CopyConditions copyConditions)",
-          null, startTime);
+          "copyObject(String bucketName, String objectName, String destBucketName,"
+              + " CopyConditions copyConditions)",
+          null,
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName," + "CopyConditions copyConditions)",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions)",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions) with ETag to not match.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions) with ETag to not match.
    */
   public static void copyObject_test5() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions) with not matching ETag" + " (Negative Case)");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions) with not matching ETag"
+              + " (Negative Case)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName,  is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       String destBucketName = getRandomName();
@@ -2202,7 +2505,8 @@ public class FunctionalTest {
       matchingETagNone.setMatchETagNone(stat.etag());
 
       try {
-        client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, matchingETagNone);
+        client.copyObject(
+            destBucketName, objectName, null, null, bucketName, null, null, matchingETagNone);
       } catch (ErrorResponseException e) {
         // File should not be copied as ETag set in copyConditions matches object's
         // ETag.
@@ -2215,31 +2519,40 @@ public class FunctionalTest {
       client.removeBucket(destBucketName);
 
       mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, " + "CopyConditions copyConditions)",
-          null, startTime);
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions)",
+          null,
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, " + "CopyConditions copyConditions)",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions)",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions) with object modified after condition.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions) with object modified after condition.
    */
   public static void copyObject_test6() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions) with modified after " + "condition (Positive Case)");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions) with modified after "
+              + "condition (Positive Case)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       String destBucketName = getRandomName();
@@ -2249,49 +2562,67 @@ public class FunctionalTest {
       modifiedDateCondition.setModified(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
 
       // File should be copied as object was modified after the set date.
-      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, modifiedDateCondition);
+      client.copyObject(
+          destBucketName, objectName, null, null, bucketName, null, null, modifiedDateCondition);
       client.getObject(destBucketName, objectName).close();
 
       client.removeObject(bucketName, objectName);
       client.removeObject(destBucketName, objectName);
       client.removeBucket(destBucketName);
       mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, " + "CopyConditions copyConditions)",
-          "CopyCondition: modifiedDateCondition", startTime);
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions)",
+          "CopyCondition: modifiedDateCondition",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, " + "CopyConditions copyConditions)",
-          "CopyCondition: modifiedDateCondition", startTime, null,
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions)",
+          "CopyCondition: modifiedDateCondition",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions) with object modified after condition.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions) with object modified after condition.
    */
   public static void copyObject_test7() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions) with modified after" + " condition (Negative Case)");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions) with modified after"
+              + " condition (Negative Case)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, Long.valueOf( 1 * KB), null, null, nullContentType);
+        client.putObject(
+            bucketName, objectName, is, Long.valueOf(1 * KB), null, null, nullContentType);
       }
 
       String destBucketName = getRandomName();
       client.makeBucket(destBucketName);
 
       CopyConditions invalidUnmodifiedCondition = new CopyConditions();
-      invalidUnmodifiedCondition.setUnmodified(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
+      invalidUnmodifiedCondition.setUnmodified(
+          ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
 
       try {
-        client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, invalidUnmodifiedCondition);
+        client.copyObject(
+            destBucketName,
+            objectName,
+            null,
+            null,
+            bucketName,
+            null,
+            null,
+            invalidUnmodifiedCondition);
       } catch (ErrorResponseException e) {
         // File should not be copied as object was modified after date set in
         // copyConditions.
@@ -2305,32 +2636,46 @@ public class FunctionalTest {
       // exception.
       client.removeBucket(destBucketName);
       mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, " + "CopyConditions copyConditions)",
-          "CopyCondition: invalidUnmodifiedCondition", startTime);
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions)",
+          "CopyCondition: invalidUnmodifiedCondition",
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, " + "CopyConditions copyConditions)",
-          "CopyCondition: invalidUnmodifiedCondition", startTime, null,
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions)",
+          "CopyCondition: invalidUnmodifiedCondition",
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions, Map metadata) replace object metadata.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions, Map metadata) replace object metadata.
    */
   public static void copyObject_test8() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions, Map<String, String> metadata)" + " replace object metadata");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions, Map<String, String> metadata)"
+              + " replace object metadata");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName,  is, Long.valueOf( 1 * KB), null, null, "application/octet-stream");
+        client.putObject(
+            bucketName,
+            objectName,
+            is,
+            Long.valueOf(1 * KB),
+            null,
+            null,
+            "application/octet-stream");
       }
 
       String destBucketName = getRandomName();
@@ -2342,37 +2687,48 @@ public class FunctionalTest {
       Map<String, String> metadata = new HashMap<>();
       metadata.put("Content-Type", customContentType);
 
-      client.copyObject(destBucketName, objectName, metadata, null,
-                        bucketName, objectName, null, copyConditions);
+      client.copyObject(
+          destBucketName, objectName, metadata, null, bucketName, objectName, null, copyConditions);
 
       ObjectStat objectStat = client.statObject(destBucketName, objectName);
       if (!customContentType.equals(objectStat.contentType())) {
         throw new Exception(
-            "content type differs. expected: " + customContentType + ", got: " + objectStat.contentType());
+            "content type differs. expected: "
+                + customContentType
+                + ", got: "
+                + objectStat.contentType());
       }
 
       client.removeObject(bucketName, objectName);
       client.removeObject(destBucketName, objectName);
       client.removeBucket(destBucketName);
-      mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName, "
-          + "CopyConditions copyConditions, Map<String, String> metadata)", null, startTime);
+      mintSuccessLog(
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions, Map<String, String> metadata)",
+          null,
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "copyObject(String bucketName, String objectName, String destBucketName, "
               + "CopyConditions copyConditions, Map<String, String> metadata)",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName,
-   * CopyConditions copyConditions, Map metadata) remove object metadata.
+   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
+   * copyConditions, Map metadata) remove object metadata.
    */
   public static void copyObject_test9() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, String destBucketName,"
-          + "CopyConditions copyConditions, Map<String, String> metadata)" + " remove object metadata");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+              + "CopyConditions copyConditions, Map<String, String> metadata)"
+              + " remove object metadata");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2382,41 +2738,56 @@ public class FunctionalTest {
       headerMap.put("Test", "testValue");
 
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName,  is, 1L, headerMap, null, null);
+        client.putObject(bucketName, objectName, is, 1L, headerMap, null, null);
       }
 
       // Attempt to remove the user-defined metadata from the object
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, new HashMap<String, String>(), null,
-                        bucketName, objectName, null, copyConditions);
+      client.copyObject(
+          bucketName,
+          objectName,
+          new HashMap<String, String>(),
+          null,
+          bucketName,
+          objectName,
+          null,
+          copyConditions);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
       }
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("copyObject(String bucketName, String objectName, String destBucketName, "
-          + "CopyConditions copyConditions, Map<String, String> metadata)", null, startTime);
+      mintSuccessLog(
+          "copyObject(String bucketName, String objectName, String destBucketName, "
+              + "CopyConditions copyConditions, Map<String, String> metadata)",
+          null,
+          startTime);
     } catch (Exception e) {
       mintFailedLog(
           "copyObject(String bucketName, String objectName, String destBucketName, "
               + "CopyConditions copyConditions, Map<String, String> metadata)",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption
-   * sseSource, String destBucketName, CopyConditions copyConditions,
-   * ServerSideEncryption sseTarget) To test using SSE_C.
+   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String
+   * destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget) To test using
+   * SSE_C.
    */
   public static void copyObject_test10() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)" + " using SSE_C. ");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_C. ");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2443,31 +2814,48 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, null, sseTarget, bucketName, objectName, sseSource, copyConditions);
+      client.copyObject(
+          bucketName,
+          objectName,
+          null,
+          sseTarget,
+          bucketName,
+          objectName,
+          sseSource,
+          copyConditions);
       client.statObject(bucketName, objectName, sseTarget); // Check for object existence.
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)" + " using SSE_C.",
-          null, startTime);
+      mintSuccessLog(
+          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_C.",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)" + " using SSE_C.",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_C.",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption
-   * sseSource, String destBucketName, CopyConditions copyConditions,
-   * ServerSideEncryption sseTarget) To test using SSE_S3.
+   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String
+   * destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget) To test using
+   * SSE_S3.
    */
   public static void copyObject_test11() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-          + " using SSE_S3. ");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_S3. ");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2477,41 +2865,51 @@ public class FunctionalTest {
       ServerSideEncryption sse = ServerSideEncryption.atRest();
 
       try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName,is, 1L, null, sse, null);
+        client.putObject(bucketName, objectName, is, 1L, null, sse, null);
       }
 
       // Attempt to remove the user-defined metadata from the object
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
+      client.copyObject(
+          bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
       }
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)" + " using SSE_S3.",
-          null, startTime);
+      mintSuccessLog(
+          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_S3.",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)" + " using SSE_S3.",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_S3.",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption
-   * sseSource, String destBucketName, CopyConditions copyConditions,
-   * ServerSideEncryption sseTarget) To test using SSE_KMS.
+   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String
+   * destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget) To test using
+   * SSE_KMS.
    */
   public static void copyObject_test12() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-          + " using SSE_KMS. ");
+      System.out.println(
+          "Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_KMS. ");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2536,32 +2934,42 @@ public class FunctionalTest {
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
 
-      client.copyObject(bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
+      client.copyObject(
+          bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
       ObjectStat objectStat = client.statObject(bucketName, objectName);
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
       }
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)" + " using SSE_KMS.",
-          null, startTime);
+      mintSuccessLog(
+          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_KMS.",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-          + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)" + " using SSE_KMS.",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
+              + " using SSE_KMS.",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
   /**
-   * Test: composeObject(String bucketName, String objectName,
-   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
+   * Test: composeObject(String bucketName, String objectName, List&lt;ComposeSource&gt;
+   * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget).");
+      System.out.println(
+          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget).");
     }
     long startTime = System.currentTimeMillis();
 
@@ -2571,14 +2979,14 @@ public class FunctionalTest {
       String filename2 = createFile6Mb();
       client.putObject(bucketName, filename1, filename1, null, null, null, null);
       client.putObject(bucketName, filename2, filename2, null, null, null, null);
-      ComposeSource s1 = new ComposeSource(bucketName,filename1, null, null, null, null, null );
-      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, null );
+      ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, null);
+      ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName,destinationObjectName,listSourceObjects, null, null);
+      client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
@@ -2586,9 +2994,11 @@ public class FunctionalTest {
       client.removeObject(bucketName, filename2);
       client.removeObject(bucketName, destinationObjectName);
 
-      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "size: 6 MB & 6 MB ", startTime);
+      mintSuccessLog(
+          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+          "size: 6 MB & 6 MB ",
+          startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -2598,25 +3008,33 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)", null, startTime);
+        mintIgnoredLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+            null,
+            startTime);
       } else {
-        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-            "size: 6 MB & 6 MB", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        mintFailedLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+            "size: 6 MB & 6 MB",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     }
   }
 
   /**
-   * Test: composeObject(String bucketName, String objectName,
-   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
+   * Test: composeObject(String bucketName, String objectName, List&lt;ComposeSource&gt;
+   * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with offset and length.");
+      System.out.println(
+          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with offset and length.");
     }
     long startTime = System.currentTimeMillis();
 
@@ -2626,14 +3044,14 @@ public class FunctionalTest {
       String filename2 = createFile6Mb();
       client.putObject(bucketName, filename1, filename1, null, null, null, null);
       client.putObject(bucketName, filename2, filename2, null, null, null, null);
-      ComposeSource s1 = new ComposeSource(bucketName,filename1, 10L, 6291436L, null, null, null );
-      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, null );
+      ComposeSource s1 = new ComposeSource(bucketName, filename1, 10L, 6291436L, null, null, null);
+      ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName,destinationObjectName,listSourceObjects, null, null);
+      client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
@@ -2641,61 +3059,11 @@ public class FunctionalTest {
       client.removeObject(bucketName, filename2);
       client.removeObject(bucketName, destinationObjectName);
 
-      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with offset and length.", startTime);
-
-    } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-    // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)" 
-            + "with offset and length." , null, startTime);
-      } else {
-        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-            "with offset and length.", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    }
-  }
-
-
-  /**
-   * Test: composeObject(String bucketName, String objectName,
-   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
-   */
-  public static void composeObject_test3() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with one source");
-    }
-    long startTime = System.currentTimeMillis();
-
-    try {
-      String destinationObjectName = getRandomName();
-      String filename1 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, null, null, null, null);
-      ComposeSource s1 = new ComposeSource(bucketName,filename1, 10L, 6291436L, null, null, null );
-
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
-      listSourceObjects.add(s1);
-
-      client.composeObject(bucketName,destinationObjectName,listSourceObjects, null, null);
-      Files.delete(Paths.get(filename1));
-
-      client.removeObject(bucketName, filename1);
-      client.removeObject(bucketName, destinationObjectName);
-
-      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with one source.", startTime);
+      mintSuccessLog(
+          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+          "with offset and length.",
+          startTime);
 
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
@@ -2706,27 +3074,95 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)"
-            + "with one source." , null, startTime);
+        mintIgnoredLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)"
+                + "with offset and length.",
+            null,
+            startTime);
       } else {
-        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-            "with one source.", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        mintFailedLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+            "with offset and length.",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     }
   }
 
   /**
-   * Test: composeObject(String bucketName, String objectName,
-   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
+   * Test: composeObject(String bucketName, String objectName, List&lt;ComposeSource&gt;
+   * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
+  public static void composeObject_test3() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with one source");
+    }
+    long startTime = System.currentTimeMillis();
 
+    try {
+      String destinationObjectName = getRandomName();
+      String filename1 = createFile6Mb();
+      client.putObject(bucketName, filename1, filename1, null, null, null, null);
+      ComposeSource s1 = new ComposeSource(bucketName, filename1, 10L, 6291436L, null, null, null);
+
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
+      listSourceObjects.add(s1);
+
+      client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
+      Files.delete(Paths.get(filename1));
+
+      client.removeObject(bucketName, filename1);
+      client.removeObject(bucketName, destinationObjectName);
+
+      mintSuccessLog(
+          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+          "with one source.",
+          startTime);
+
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)"
+                + "with one source.",
+            null,
+            startTime);
+      } else {
+        mintFailedLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+            "with one source.",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Test: composeObject(String bucketName, String objectName, List&lt;ComposeSource&gt;
+   * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
+   */
   public static void composeObject_test4() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C and SSE_C Target");
+      System.out.println(
+          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C and SSE_C Target");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2738,7 +3174,6 @@ public class FunctionalTest {
       SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
       ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
-
 
       byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
@@ -2749,23 +3184,25 @@ public class FunctionalTest {
       String filename2 = createFile6Mb();
       client.putObject(bucketName, filename1, filename1, null, null, ssePut, null);
       client.putObject(bucketName, filename2, filename2, null, null, ssePut, null);
-      ComposeSource s1 = new ComposeSource(bucketName,filename1, null, null, null, null, ssePut );
-      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, ssePut );
+      ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, ssePut);
+      ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, ssePut);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName,objectName,listSourceObjects, null, sseTarget);
+      client.composeObject(bucketName, objectName, listSourceObjects, null, sseTarget);
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
       client.removeObject(bucketName, filename1);
       client.removeObject(bucketName, filename2);
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with SSE_C and SSE_C Target", startTime);
+      mintSuccessLog(
+          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+          "with SSE_C and SSE_C Target",
+          startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -2775,27 +3212,34 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and"
-            + "SSE_C Target", null, startTime);
+        mintIgnoredLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and"
+                + "SSE_C Target",
+            null,
+            startTime);
       } else {
-        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and ",
-            "SSE_C Target", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        mintFailedLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and ",
+            "SSE_C Target",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     }
   }
 
   /**
-   * Test: composeObject(String bucketName, String objectName,
-   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
+   * Test: composeObject(String bucketName, String objectName, List&lt;ComposeSource&gt;
+   * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
-
   public static void composeObject_test5() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C on one source object");
+      System.out.println(
+          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C on one source object");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2812,23 +3256,25 @@ public class FunctionalTest {
       String filename2 = createFile6Mb();
       client.putObject(bucketName, filename1, filename1, null, null, ssePut, null);
       client.putObject(bucketName, filename2, filename2, null, null, null, null);
-      ComposeSource s1 = new ComposeSource(bucketName,filename1, null, null, null, null, ssePut );
-      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, null );
+      ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, ssePut);
+      ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName,objectName,listSourceObjects, null, null);
+      client.composeObject(bucketName, objectName, listSourceObjects, null, null);
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
       client.removeObject(bucketName, filename1);
       client.removeObject(bucketName, filename2);
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with SSE_C on one source object ", startTime);
+      mintSuccessLog(
+          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+          "with SSE_C on one source object ",
+          startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -2838,27 +3284,34 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on and"
-            + "one source object", null, startTime);
+        mintIgnoredLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on and"
+                + "one source object",
+            null,
+            startTime);
       } else {
-        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on ",
-            "one source object", startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        mintFailedLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on ",
+            "one source object",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     }
   }
 
   /**
-   * Test: composeObject(String bucketName, String objectName,
-   * List&lt;ComposeSource&gt; composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
+   * Test: composeObject(String bucketName, String objectName, List&lt;ComposeSource&gt;
+   * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
-
   public static void composeObject_test6() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C Target only.");
+      System.out.println(
+          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C Target only.");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2873,23 +3326,25 @@ public class FunctionalTest {
       String filename2 = createFile6Mb();
       client.putObject(bucketName, filename1, filename1, null, null, null, null);
       client.putObject(bucketName, filename2, filename2, null, null, null, null);
-      ComposeSource s1 = new ComposeSource(bucketName,filename1, null, null, null, null, null );
-      ComposeSource s2 = new ComposeSource(bucketName,filename2, null, null, null, null, null );
+      ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, null);
+      ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName,objectName,listSourceObjects, null, sseTarget);
+      client.composeObject(bucketName, objectName, listSourceObjects, null, sseTarget);
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
       client.removeObject(bucketName, filename1);
       client.removeObject(bucketName, filename2);
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-          + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "SSE_C Target only.", startTime);
+      mintSuccessLog(
+          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
+          "SSE_C Target only.",
+          startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -2899,22 +3354,25 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C only",
-            null, startTime);
+        mintIgnoredLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C only",
+            null,
+            startTime);
       } else {
-        mintFailedLog("composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) SSE_C Target ",
-            " only." , startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        mintFailedLog(
+            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) SSE_C Target ",
+            " only.",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     }
   }
 
-
-  /**
-   * Test: getBucketPolicy(String bucketName).
-   */
+  /** Test: getBucketPolicy(String bucketName). */
   public static void getBucketPolicy_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: getBucketPolicy(String bucketName)");
@@ -2922,9 +3380,11 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      String policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
-          + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::" + bucketName
-          + "/myobject*\"],\"Sid\":\"\"}]}";
+      String policy =
+          "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
+              + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::"
+              + bucketName
+              + "/myobject*\"],\"Sid\":\"\"}]}";
       client.setBucketPolicy(bucketName, policy);
       client.getBucketPolicy(bucketName);
       mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
@@ -2939,16 +3399,18 @@ public class FunctionalTest {
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
         mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
       } else {
-        mintFailedLog("getBucketPolicy(String bucketName)", null, startTime, null,
+        mintFailedLog(
+            "getBucketPolicy(String bucketName)",
+            null,
+            startTime,
+            null,
             e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     }
   }
 
-  /**
-   * Test: setBucketPolicy(String bucketName, String policy).
-   */
+  /** Test: setBucketPolicy(String bucketName, String policy). */
   public static void setBucketPolicy_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: setBucketPolicy(String bucketName, String policy)");
@@ -2956,8 +3418,11 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      String policy = "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Effect\":\"Allow\",\"Principal\":"
-          + "\"*\",\"Resource\":\"arn:aws:s3:::" + bucketName + "/myobject*\"}],\"Version\": \"2012-10-17\"}";
+      String policy =
+          "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Effect\":\"Allow\",\"Principal\":"
+              + "\"*\",\"Resource\":\"arn:aws:s3:::"
+              + bucketName
+              + "/myobject*\"}],\"Version\": \"2012-10-17\"}";
       client.setBucketPolicy(bucketName, policy);
       mintSuccessLog("setBucketPolicy(String bucketName, String policy)", null, startTime);
     } catch (Exception e) {
@@ -2969,19 +3434,23 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("setBucketPolicy(String bucketName, String objectPrefix, " + "PolicyType policyType)", null,
+        mintIgnoredLog(
+            "setBucketPolicy(String bucketName, String objectPrefix, " + "PolicyType policyType)",
+            null,
             startTime);
       } else {
-        mintFailedLog("setBucketPolicy(String bucketName, String objectPrefix, " + "PolicyType policyType)", null,
-            startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        mintFailedLog(
+            "setBucketPolicy(String bucketName, String objectPrefix, " + "PolicyType policyType)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
     }
   }
 
-  /**
-   * Test: setBucketLifeCycle(String bucketName, String lifeCycle).
-   */
+  /** Test: setBucketLifeCycle(String bucketName, String lifeCycle). */
   public static void setBucketLifeCycle_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: setBucketLifeCycle(String bucketName, String lifeCycle)");
@@ -2989,20 +3458,24 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      String lifeCycle = "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
-          + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>" + "</Rule></LifecycleConfiguration>";
+      String lifeCycle =
+          "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
+              + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
+              + "</Rule></LifecycleConfiguration>";
       client.setBucketLifeCycle(bucketName, lifeCycle);
       mintSuccessLog("setBucketLifeCycle(String bucketName, String lifeCycle)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("setBucketLifeCycle(String bucketName, String lifeCycle) ", null, startTime, null,
+      mintFailedLog(
+          "setBucketLifeCycle(String bucketName, String lifeCycle) ",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: deleteBucketLifeCycle(String bucketName).
-   */
+  /** Test: deleteBucketLifeCycle(String bucketName). */
   public static void deleteBucketLifeCycle_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: deleteBucketLifeCycle(String bucketNam)");
@@ -3013,15 +3486,17 @@ public class FunctionalTest {
       client.deleteBucketLifeCycle(bucketName);
       mintSuccessLog("deleteBucketLifeCycle(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("deleteBucketLifeCycle(String bucketName) ", null, startTime, null,
+      mintFailedLog(
+          "deleteBucketLifeCycle(String bucketName) ",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: getBucketLifeCycle(String bucketName).
-   */
+  /** Test: getBucketLifeCycle(String bucketName). */
   public static void getBucketLifeCycle_test1() throws Exception {
     if (!mintEnv) {
       System.out.println("Test: getBucketLifeCycle(String bucketName)");
@@ -3032,7 +3507,11 @@ public class FunctionalTest {
       client.getBucketLifeCycle(bucketName);
       mintSuccessLog("getBucketLifeCycle(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("getBucketLifeCycle(String bucketName) ", null, startTime, null,
+      mintFailedLog(
+          "getBucketLifeCycle(String bucketName) ",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
@@ -3054,7 +3533,8 @@ public class FunctionalTest {
 
     if (!mintEnv) {
       System.out.println(
-          "Test: setBucketNotification(String bucketName, " + "NotificationConfiguration notificationConfiguration)");
+          "Test: setBucketNotification(String bucketName, "
+              + "NotificationConfiguration notificationConfiguration)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -3065,7 +3545,8 @@ public class FunctionalTest {
       NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
 
       // Add a new topic configuration.
-      List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+      List<TopicConfiguration> topicConfigurationList =
+          notificationConfiguration.topicConfigurationList();
       TopicConfiguration topicConfiguration = new TopicConfiguration();
       topicConfiguration.setTopic(topic);
 
@@ -3085,18 +3566,22 @@ public class FunctionalTest {
       client.setBucketNotification(destBucketName, notificationConfiguration);
 
       client.removeBucket(destBucketName);
-      mintSuccessLog("setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)",
-          null, startTime);
+      mintSuccessLog(
+          "setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)",
+          null,
+          startTime);
     } catch (Exception e) {
-      mintFailedLog("setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)",
-          null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          "setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: getBucketNotification(String bucketName).
-   */
+  /** Test: getBucketNotification(String bucketName). */
   public static void getBucketNotification_test1() throws Exception {
     // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION'
     // environment variables.
@@ -3119,7 +3604,8 @@ public class FunctionalTest {
       NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
 
       // Add a new topic configuration.
-      List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+      List<TopicConfiguration> topicConfigurationList =
+          notificationConfiguration.topicConfigurationList();
       TopicConfiguration topicConfiguration = new TopicConfiguration();
       topicConfiguration.setTopic(topic);
 
@@ -3147,15 +3633,17 @@ public class FunctionalTest {
       client.removeBucket(destBucketName);
       mintSuccessLog("getBucketNotification(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("getBucketNotification(String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "getBucketNotification(String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: removeAllBucketNotification(String bucketName).
-   */
+  /** Test: removeAllBucketNotification(String bucketName). */
   public static void removeAllBucketNotification_test1() throws Exception {
     // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION'
     // environment variables.
@@ -3178,7 +3666,8 @@ public class FunctionalTest {
       NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
 
       // Add a new topic configuration.
-      List<TopicConfiguration> topicConfigurationList = notificationConfiguration.topicConfigurationList();
+      List<TopicConfiguration> topicConfigurationList =
+          notificationConfiguration.topicConfigurationList();
       TopicConfiguration topicConfiguration = new TopicConfiguration();
       topicConfiguration.setTopic(topic);
 
@@ -3211,19 +3700,22 @@ public class FunctionalTest {
       client.removeBucket(destBucketName);
       mintSuccessLog("removeAllBucketNotification(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("removeAllBucketNotification(String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "removeAllBucketNotification(String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
   }
 
-  /**
-   * Test: listenBucketNotification(String bucketName).
-   */
+  /** Test: listenBucketNotification(String bucketName). */
   public static void listenBucketNotification_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listenBucketNotification(String bucketName, String prefix,"
-          + "String suffix, String[] events)");
+      System.out.println(
+          "Test: listenBucketNotification(String bucketName, String prefix,"
+              + "String suffix, String[] events)");
     }
     long startTime = System.currentTimeMillis();
     String file = createFile1Kb();
@@ -3250,29 +3742,31 @@ public class FunctionalTest {
 
       TestBucketListener bl = new TestBucketListener();
 
-      new Thread(new Runnable() {
-        public void run() {
-          String[] events = { "s3:ObjectCreated:*", "s3:ObjectAccessed:*" };
-          try (CloseableIterator<Result<NotificationInfo>> ci = client
-            .listenBucketNotification(bucketName, "prefix", "suffix", events)) {
-            while (ci.hasNext()) {
-              NotificationInfo ni = ci.next().get();
-              if (ni != null) {
-                bl.updateEvent(ni);
-                break;
-              }
-            }
-          } catch (Exception e) {
-            bl.updateError(e);
-          }
-        }
-      }).start();
+      new Thread(
+              new Runnable() {
+                public void run() {
+                  String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+                  try (CloseableIterator<Result<NotificationInfo>> ci =
+                      client.listenBucketNotification(bucketName, "prefix", "suffix", events)) {
+                    while (ci.hasNext()) {
+                      NotificationInfo ni = ci.next().get();
+                      if (ni != null) {
+                        bl.updateEvent(ni);
+                        break;
+                      }
+                    }
+                  } catch (Exception e) {
+                    bl.updateError(e);
+                  }
+                }
+              })
+          .start();
 
       // Upload an object until we detect an event, this is done
       // in a loop because bucket listening is called in a thread
       // and may or may not be executed at this point.
       for (int i = 0; i < 20; i++) {
-        client.putObject(bucketName, "prefix-random-suffix", file,null,null,null, null);
+        client.putObject(bucketName, "prefix-random-suffix", file, null, null, null, null);
         Thread.sleep(500);
         if (bl.eventsReceived > 0 || bl.lastException != null) {
           break;
@@ -3290,8 +3784,14 @@ public class FunctionalTest {
           mintIgnoredLog("listenBucketNotification(String bucketName)", null, startTime);
           return;
         } else {
-          mintFailedLog("listenBucketNotification(String bucketName)", null, startTime, null,
-              bl.lastException.toString() + " >>> " + Arrays.toString(bl.lastException.getStackTrace()));
+          mintFailedLog(
+              "listenBucketNotification(String bucketName)",
+              null,
+              startTime,
+              null,
+              bl.lastException.toString()
+                  + " >>> "
+                  + Arrays.toString(bl.lastException.getStackTrace()));
           throw bl.lastException;
         }
       }
@@ -3301,15 +3801,23 @@ public class FunctionalTest {
         throw new Exception("[FAILED] No event notification is received");
       }
       if (!bl.firstEvent.s3.bucket.name.equals(bucketName)) {
-        throw new Exception("[FAILED] Bucket name expected: " + bucketName + ", Got: "
-          + bl.firstEvent.s3.bucket.name);
+        throw new Exception(
+            "[FAILED] Bucket name expected: "
+                + bucketName
+                + ", Got: "
+                + bl.firstEvent.s3.bucket.name);
       }
       if (!bl.firstEvent.s3.object.key.equals("prefix-random-suffix")) {
-        throw new Exception("[FAILED] Bucket name expected: " + file + ", Got: " + bl.firstEvent.s3.object.key);
+        throw new Exception(
+            "[FAILED] Bucket name expected: " + file + ", Got: " + bl.firstEvent.s3.object.key);
       }
       mintSuccessLog("listenBucketNotification(String bucketName)", null, startTime);
     } catch (Exception e) {
-      mintFailedLog("listenBucketNotification(String bucketName)", null, startTime, null,
+      mintFailedLog(
+          "listenBucketNotification(String bucketName)",
+          null,
+          startTime,
+          null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } finally {
@@ -3322,13 +3830,14 @@ public class FunctionalTest {
 
   /**
    * Test: selectObjectContent(String bucketName, String objectName, String sqlExpression,
-   *                           InputSerialization is, OutputSerialization os, boolean requestProgress,
-   *                           Long scanStartRange, Long scanEndRange, ServerSideEncryption sse).
+   * InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange,
+   * Long scanEndRange, ServerSideEncryption sse).
    */
   public static void selectObjectContent_test1() throws Exception {
-    String testName = "selectObjectContent(String bucketName, String objectName, String sqlExpression,"
-        + " InputSerialization is, OutputSerialization os, boolean requestProgress,"
-        + " Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)";
+    String testName =
+        "selectObjectContent(String bucketName, String objectName, String sqlExpression,"
+            + " InputSerialization is, OutputSerialization os, boolean requestProgress,"
+            + " Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)";
 
     if (!mintEnv) {
       System.out.println("Test: " + testName);
@@ -3338,22 +3847,26 @@ public class FunctionalTest {
     String objectName = getRandomName();
     SelectResponseStream responseStream = null;
     try {
-      String expectedResult = "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
-          + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",,4900.00\n"
-          + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
-          + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
-          + "air, moon roof, loaded\",4799.00\n";
-      byte[] data = ("Year,Make,Model,Description,Price\n" + expectedResult).getBytes(StandardCharsets.UTF_8);
+      String expectedResult =
+          "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
+              + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",,4900.00\n"
+              + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
+              + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
+              + "air, moon roof, loaded\",4799.00\n";
+      byte[] data =
+          ("Year,Make,Model,Description,Price\n" + expectedResult).getBytes(StandardCharsets.UTF_8);
       ByteArrayInputStream bais = new ByteArrayInputStream(data);
       client.putObject(bucketName, objectName, bais, Long.valueOf(data.length), null, null, null);
 
       String sqlExpression = "select * from S3Object";
-      InputSerialization is = InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE,
-                                                     null, null, null);
-      OutputSerialization os = OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
+      InputSerialization is =
+          InputSerialization.csv(null, false, null, null, FileHeaderInfo.USE, null, null, null);
+      OutputSerialization os =
+          OutputSerialization.csv(null, null, null, QuoteFields.ASNEEDED, null);
 
-      responseStream = client.selectObjectContent(bucketName, objectName, sqlExpression,
-                                                                       is, os, true, null, null, null);
+      responseStream =
+          client.selectObjectContent(
+              bucketName, objectName, sqlExpression, is, os, true, null, null, null);
 
       String result = new String(readAllBytes(responseStream), StandardCharsets.UTF_8);
       if (!result.equals(expectedResult)) {
@@ -3367,20 +3880,28 @@ public class FunctionalTest {
       }
 
       if (stats.bytesScanned() != 256) {
-        throw new Exception("stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned());
+        throw new Exception(
+            "stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned());
       }
 
       if (stats.bytesProcessed() != 256) {
-        throw new Exception("stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed());
+        throw new Exception(
+            "stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed());
       }
 
       if (stats.bytesReturned() != 222) {
-        throw new Exception("stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
+        throw new Exception(
+            "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
       }
 
       mintSuccessLog(testName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(testName, null, startTime, null, e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      mintFailedLog(
+          testName,
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } finally {
       if (responseStream != null) {
@@ -3390,9 +3911,7 @@ public class FunctionalTest {
     }
   }
 
-  /**
-   * runTests: runs as much as possible of test combinations.
-   */
+  /** runTests: runs as much as possible of test combinations. */
   public static void runTests() throws Exception {
     makeBucket_test1();
     if (endpoint.toLowerCase(Locale.US).contains("s3")) {
@@ -3484,7 +4003,6 @@ public class FunctionalTest {
       composeObject_test4();
       composeObject_test5();
       composeObject_test6();
-
     }
 
     statObject_test3();
@@ -3518,9 +4036,7 @@ public class FunctionalTest {
     removeAllBucketNotification_test1();
   }
 
-  /**
-   * runQuickTests: runs tests those completely quicker.
-   */
+  /** runQuickTests: runs tests those completely quicker. */
   public static void runQuickTests() throws Exception {
     makeBucket_test1();
     listBuckets_test();
@@ -3548,9 +4064,7 @@ public class FunctionalTest {
     teardown();
   }
 
-  /**
-   * main().
-   */
+  /** main(). */
   public static void main(String[] args) {
     if (args.length != 4) {
       System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");

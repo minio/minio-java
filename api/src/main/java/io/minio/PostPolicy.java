@@ -19,8 +19,6 @@ package io.minio;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
-import io.minio.SuccessActionStatus;
-import io.minio.Time;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -30,10 +28,7 @@ import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
 
-
-/**
- * Post policy information to be used to generate presigned post policy form-data.
- */
+/** Post policy information to be used to generate presigned post policy form-data. */
 public class PostPolicy {
   private static final String ALGORITHM = "AWS4-HMAC-SHA256";
 
@@ -47,19 +42,18 @@ public class PostPolicy {
   private long contentRangeStart;
   private long contentRangeEnd;
 
-
   public PostPolicy(String bucketName, String objectName, ZonedDateTime expirationDate)
-    throws IllegalArgumentException {
+      throws IllegalArgumentException {
     this(bucketName, objectName, false, expirationDate);
   }
 
-
   /**
-   * Creates PostPolicy for given bucket name, object name, string to match object name starting with
-   * and expiration time.
+   * Creates PostPolicy for given bucket name, object name, string to match object name starting
+   * with and expiration time.
    */
-  public PostPolicy(String bucketName, String objectName, boolean startsWith, ZonedDateTime expirationDate)
-    throws IllegalArgumentException {
+  public PostPolicy(
+      String bucketName, String objectName, boolean startsWith, ZonedDateTime expirationDate)
+      throws IllegalArgumentException {
     if (bucketName == null) {
       throw new IllegalArgumentException("null bucket name");
     }
@@ -78,10 +72,7 @@ public class PostPolicy {
     this.expirationDate = expirationDate;
   }
 
-
-  /**
-   * Sets content type.
-   */
+  /** Sets content type. */
   public void setContentType(String contentType) throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(contentType)) {
       throw new IllegalArgumentException("empty content type");
@@ -90,22 +81,19 @@ public class PostPolicy {
     this.contentType = contentType;
   }
 
-  /**
-   * Sets success action status.
-   */
+  /** Sets success action status. */
   public void setSuccessActionStatus(int successActionStatus) throws IllegalArgumentException {
-    if (!(successActionStatus ==  SuccessActionStatus.SuccessActionStatus200.getValue()
+    if (!(successActionStatus == SuccessActionStatus.SuccessActionStatus200.getValue()
         || successActionStatus == SuccessActionStatus.SuccessActionStatus201.getValue()
         || successActionStatus == SuccessActionStatus.SuccessActionStatus204.getValue())) {
-      throw new IllegalArgumentException("Invalid action status, acceptable values are 200, 201, or 204");
+      throw new IllegalArgumentException(
+          "Invalid action status, acceptable values are 200, 201, or 204");
     }
 
     this.successActionStatus = successActionStatus;
   }
 
-  /**
-   * Sets content encoding.
-   */
+  /** Sets content encoding. */
   public void setContentEncoding(String contentEncoding) throws IllegalArgumentException {
     if (Strings.isNullOrEmpty(contentEncoding)) {
       throw new IllegalArgumentException("empty content encoding");
@@ -114,10 +102,7 @@ public class PostPolicy {
     this.contentEncoding = contentEncoding;
   }
 
-
-  /**
-   * Sets content length.
-   */
+  /** Sets content length. */
   public void setContentLength(long contentLength) throws IllegalArgumentException {
     if (contentLength <= 0) {
       throw new IllegalArgumentException("negative content length");
@@ -126,10 +111,7 @@ public class PostPolicy {
     this.setContentRange(contentLength, contentLength);
   }
 
-
-  /**
-   * Sets content range.
-   */
+  /** Sets content range. */
   public void setContentRange(long startRange, long endRange) throws IllegalArgumentException {
     if (startRange <= 0 || endRange <= 0) {
       throw new IllegalArgumentException("negative start/end range");
@@ -143,14 +125,10 @@ public class PostPolicy {
     this.contentRangeEnd = endRange;
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String bucketName() {
     return this.bucketName;
   }
-
 
   private byte[] marshalJson(ArrayList<String[]> conditions) {
     StringBuilder sb = new StringBuilder();
@@ -159,7 +137,8 @@ public class PostPolicy {
     sb.append("{");
 
     if (expirationDate != null) {
-      sb.append("\"expiration\":" + "\"" + expirationDate.format(Time.EXPIRATION_DATE_FORMAT) + "\"");
+      sb.append(
+          "\"expiration\":" + "\"" + expirationDate.format(Time.EXPIRATION_DATE_FORMAT) + "\"");
     }
 
     if (!conditions.isEmpty()) {
@@ -181,11 +160,8 @@ public class PostPolicy {
     return sb.toString().getBytes(StandardCharsets.UTF_8);
   }
 
-
-  /**
-   * Returns form data of this post policy setting the provided region.
-   */
-  public Map<String,String> formData(String accessKey, String secretKey, String region)
+  /** Returns form data of this post policy setting the provided region. */
+  public Map<String, String> formData(String accessKey, String secretKey, String region)
       throws NoSuchAlgorithmException, InvalidKeyException, IllegalArgumentException {
 
     if (Strings.isNullOrEmpty(region)) {
@@ -195,57 +171,64 @@ public class PostPolicy {
     return makeFormData(accessKey, secretKey, region);
   }
 
-  protected Map<String,String> makeFormData(String accessKey, String secretKey, String region)
+  protected Map<String, String> makeFormData(String accessKey, String secretKey, String region)
       throws NoSuchAlgorithmException, InvalidKeyException {
 
     ArrayList<String[]> conditions = new ArrayList<>();
     Map<String, String> formData = new HashMap<>();
 
-    conditions.add(new String[]{"eq", "$bucket", this.bucketName});
+    conditions.add(new String[] {"eq", "$bucket", this.bucketName});
     formData.put("bucket", this.bucketName);
 
     if (this.startsWith) {
-      conditions.add(new String[]{"starts-with", "$key", this.objectName});
+      conditions.add(new String[] {"starts-with", "$key", this.objectName});
       formData.put("key", this.objectName);
     } else {
-      conditions.add(new String[]{"eq", "$key", this.objectName});
+      conditions.add(new String[] {"eq", "$key", this.objectName});
       formData.put("key", this.objectName);
     }
 
     if (this.contentType != null) {
-      conditions.add(new String[]{"eq", "$Content-Type", this.contentType});
+      conditions.add(new String[] {"eq", "$Content-Type", this.contentType});
       formData.put("Content-Type", this.contentType);
     }
 
     if (this.contentEncoding != null) {
-      conditions.add(new String[]{"eq", "$Content-Encoding", this.contentEncoding});
+      conditions.add(new String[] {"eq", "$Content-Encoding", this.contentEncoding});
       formData.put("Content-Encoding", this.contentEncoding);
     }
 
     if (this.successActionStatus > 0) {
-      conditions.add(new String[]{"eq", "$success_action_status", Integer.toString(this.successActionStatus)});
+      conditions.add(
+          new String[] {
+            "eq", "$success_action_status", Integer.toString(this.successActionStatus)
+          });
       formData.put("success_action_status", Integer.toString(this.successActionStatus));
     }
 
     if (this.contentRangeStart > 0 && this.contentRangeEnd > 0) {
-      conditions.add(new String[]{"content-length-range", Long.toString(this.contentRangeStart),
-                                  Long.toString(this.contentRangeEnd)});
+      conditions.add(
+          new String[] {
+            "content-length-range",
+            Long.toString(this.contentRangeStart),
+            Long.toString(this.contentRangeEnd)
+          });
     }
 
-    conditions.add(new String[]{"eq", "$x-amz-algorithm", ALGORITHM});
+    conditions.add(new String[] {"eq", "$x-amz-algorithm", ALGORITHM});
     formData.put("x-amz-algorithm", ALGORITHM);
 
     ZonedDateTime utcNow = ZonedDateTime.now(Time.UTC);
     String credential = Signer.credential(accessKey, utcNow, region);
-    conditions.add(new String[]{"eq", "$x-amz-credential", credential});
+    conditions.add(new String[] {"eq", "$x-amz-credential", credential});
     formData.put("x-amz-credential", credential);
 
     String amzDate = utcNow.format(Time.AMZ_DATE_FORMAT);
-    conditions.add(new String[]{"eq","$x-amz-date", amzDate});
+    conditions.add(new String[] {"eq", "$x-amz-date", amzDate});
     formData.put("x-amz-date", amzDate);
 
     String policybase64 = BaseEncoding.base64().encode(this.marshalJson(conditions));
-    String signature =  Signer.postPresignV4(policybase64, secretKey, utcNow, region);
+    String signature = Signer.postPresignV4(policybase64, secretKey, utcNow, region);
 
     formData.put("policy", policybase64);
     formData.put("x-amz-signature", signature);

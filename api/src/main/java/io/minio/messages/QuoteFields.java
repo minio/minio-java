@@ -16,10 +16,8 @@
 
 package io.minio.messages;
 
-
-/**
- * Indicates whether to use quotation marks around output fields.
- */
+/** Indicates whether to use quotation marks around output fields. */
 public enum QuoteFields {
-  ALWAYS, ASNEEDED;
+  ALWAYS,
+  ASNEEDED;
 }

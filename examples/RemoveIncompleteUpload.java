@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class RemoveIncompleteUpload {
-  /**
-   * MinioClient.removeIncompleteUpload() example.
-   */
+  /** MinioClient.removeIncompleteUpload() example. */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.min.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-                                                "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
@@ -40,7 +39,8 @@ public class RemoveIncompleteUpload {
 
       // Remove all incomplete multipart upload sessions for a given bucket and object name.
       minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
-      System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname");
+      System.out.println(
+          "successfully removed all incomplete upload session of my-bucketname/my-objectname");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

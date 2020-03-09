@@ -17,16 +17,12 @@
 
 package io.minio;
 
-import io.minio.Time;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * A container class to hold all the Conditions to be checked
- * before copying an object.
- */
+/** A container class to hold all the Conditions to be checked before copying an object. */
 public class CopyConditions {
   // Metadata directive "REPLACE" used to replace metadata on
   // destination object in copyObject().
@@ -37,38 +33,34 @@ public class CopyConditions {
   /**
    * Set modified condition, copy object modified since given time.
    *
-   * @throws IllegalArgumentException
-   *           When date is null
+   * @throws IllegalArgumentException When date is null
    */
   public void setModified(ZonedDateTime time) throws IllegalArgumentException {
     if (time == null) {
       throw new IllegalArgumentException("modified time cannot be empty");
     }
-    copyConditions.put("x-amz-copy-source-if-modified-since",
-                       time.format(Time.HTTP_HEADER_DATE_FORMAT));
+    copyConditions.put(
+        "x-amz-copy-source-if-modified-since", time.format(Time.HTTP_HEADER_DATE_FORMAT));
   }
 
   /**
    * Sets object unmodified condition, copy object unmodified since given time.
    *
-   * @throws IllegalArgumentException
-   *           When date is null
+   * @throws IllegalArgumentException When date is null
    */
   public void setUnmodified(ZonedDateTime time) throws IllegalArgumentException {
     if (time == null) {
       throw new IllegalArgumentException("unmodified time can not be null");
     }
 
-    copyConditions.put("x-amz-copy-source-if-unmodified-since",
-                       time.format(Time.HTTP_HEADER_DATE_FORMAT));
+    copyConditions.put(
+        "x-amz-copy-source-if-unmodified-since", time.format(Time.HTTP_HEADER_DATE_FORMAT));
   }
 
   /**
-   * Set matching ETag condition, copy object which matches
-   * the following ETag.
+   * Set matching ETag condition, copy object which matches the following ETag.
    *
-   * @throws IllegalArgumentException
-   *           When etag is null
+   * @throws IllegalArgumentException When etag is null
    */
   public void setMatchETag(String etag) throws IllegalArgumentException {
     if (etag == null) {
@@ -78,11 +70,9 @@ public class CopyConditions {
   }
 
   /**
-   * Set matching ETag none condition, copy object which does not
-   * match the following ETag.
+   * Set matching ETag none condition, copy object which does not match the following ETag.
    *
-   * @throws IllegalArgumentException
-   *           When etag is null
+   * @throws IllegalArgumentException When etag is null
    */
   public void setMatchETagNone(String etag) throws IllegalArgumentException {
     if (etag == null) {
@@ -92,18 +82,14 @@ public class CopyConditions {
   }
 
   /**
-   * Set replace metadata directive which specifies that
-   * destination object after copyObject() sets new
-   * metadata provided in the request.
+   * Set replace metadata directive which specifies that destination object after copyObject() sets
+   * new metadata provided in the request.
    */
   public void setReplaceMetadataDirective() {
     copyConditions.put("x-amz-metadata-directive", METADATA_DIRECTIVE_REPLACE);
   }
 
-  /**
-   * Get all the set copy conditions map.
-   *
-   */
+  /** Get all the set copy conditions map. */
   public Map<String, String> getConditions() {
     return Collections.unmodifiableMap(copyConditions);
   }

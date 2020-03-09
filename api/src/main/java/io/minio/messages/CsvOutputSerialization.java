@@ -16,34 +16,38 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest/OutputSerialization/CSV
- * information.
+ * Helper class to generate Amazon AWS S3 request XML for
+ * SelectObjectContentRequest/OutputSerialization/CSV information.
  */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class CsvOutputSerialization extends XmlEntity {
   @Key("FieldDelimiter")
   private Character fieldDelimiter;
+
   @Key("QuoteCharacter")
   private Character quoteCharacter;
+
   @Key("QuoteEscapeCharacter")
   private Character quoteEscapeCharacter;
+
   @Key("QuoteFields")
   private String quoteFields;
+
   @Key("RecordDelimiter")
   private Character recordDelimiter;
 
-
-  /**
-   * Constructs a new CsvOutputSerialization object.
-   */
-  public CsvOutputSerialization(Character fieldDelimiter, Character quoteCharacter, Character quoteEscapeCharacter,
-                                QuoteFields quoteFields, Character recordDelimiter) throws XmlPullParserException {
+  /** Constructs a new CsvOutputSerialization object. */
+  public CsvOutputSerialization(
+      Character fieldDelimiter,
+      Character quoteCharacter,
+      Character quoteEscapeCharacter,
+      QuoteFields quoteFields,
+      Character recordDelimiter)
+      throws XmlPullParserException {
     super();
     this.name = "CSV";
 

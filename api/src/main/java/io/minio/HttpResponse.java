@@ -18,51 +18,39 @@ package io.minio;
 
 import java.util.List;
 import java.util.Map;
-
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-
 /**
- * Packs {@link ResponseHeader} and {@link Response} into one object to pass/return in various methods.
+ * Packs {@link ResponseHeader} and {@link Response} into one object to pass/return in various
+ * methods.
  */
 class HttpResponse {
   ResponseHeader header;
   Response response;
-
 
   public HttpResponse(ResponseHeader header, Response response) {
     this.header = header;
     this.response = response;
   }
 
-
-  /**
-   * Gets header.
-   */
+  /** Gets header. */
   public ResponseHeader header() {
     return this.header;
   }
 
-
-  /**
-   * Gets body.
-   */
+  /** Gets body. */
   public ResponseBody body() {
     return this.response.body();
   }
 
-  /**
-   * Gets Response.
-   */
+  /** Gets Response. */
   public Response response() {
     return this.response;
   }
 
-  /**
-   * Gets HTTP headers.
-   */
-  public Map<String,List<String>> httpHeaders() {
+  /** Gets HTTP headers. */
+  public Map<String, List<String>> httpHeaders() {
     return this.response.headers().toMultimap();
   }
 }

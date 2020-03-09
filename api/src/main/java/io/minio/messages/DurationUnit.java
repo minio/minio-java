@@ -16,10 +16,8 @@
 
 package io.minio.messages;
 
-
-/**
- * DurationUnit of default retention configuration.
- */
+/** DurationUnit of default retention configuration. */
 public enum DurationUnit {
-  DAYS, YEARS;
+  DAYS,
+  YEARS;
 }

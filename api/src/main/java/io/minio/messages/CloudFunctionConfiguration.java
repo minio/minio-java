@@ -16,93 +16,66 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing cloud function configuration.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing cloud function configuration. */
 public class CloudFunctionConfiguration extends XmlEntity {
   @Key("Id")
   private String id;
+
   @Key("CloudFunction")
   private String cloudFunction;
+
   @Key("Event")
   private List<String> events = new LinkedList<>();
+
   @Key("Filter")
   private Filter filter;
-
 
   public CloudFunctionConfiguration() throws XmlPullParserException {
     super();
     super.name = "CloudFunctionConfiguration";
   }
 
-
-  /**
-   * Returns id.
-   */
+  /** Returns id. */
   public String id() {
     return id;
   }
 
-
-  /**
-   * Sets id.
-   */
+  /** Sets id. */
   public void setId(String id) {
     this.id = id;
   }
 
-
-  /**
-   * Returns cloudFunction.
-   */
+  /** Returns cloudFunction. */
   public String cloudFunction() {
     return cloudFunction;
   }
 
-
-  /**
-   * Sets cloudFunction.
-   */
+  /** Sets cloudFunction. */
   public void setCloudFunction(String cloudFunction) {
     this.cloudFunction = cloudFunction;
   }
 
-
-  /**
-   * Returns events.
-   */
+  /** Returns events. */
   public List<EventType> events() throws IllegalArgumentException {
     return EventType.fromStringList(events);
   }
 
-
-  /**
-   * Sets event.
-   */
+  /** Sets event. */
   public void setEvents(List<EventType> events) {
     this.events = EventType.toStringList(events);
   }
 
-
-  /**
-   * Returns filter.
-   */
+  /** Returns filter. */
   public Filter filter() {
     return filter;
   }
 
-
-  /**
-   * Sets filter.
-   */
+  /** Sets filter. */
   public void setFilter(Filter filter) {
     this.filter = filter;
   }

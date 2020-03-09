@@ -16,39 +16,29 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing initator information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing initator information. */
 @SuppressWarnings("unused")
 public class Initiator extends XmlEntity {
   @Key("ID")
   private String id;
+
   @Key("DisplayName")
   private String displayName;
-
 
   public Initiator() throws XmlPullParserException {
     super();
     this.name = "Initiator";
   }
 
-
-  /**
-   * Returns initiator ID.
-   */
+  /** Returns initiator ID. */
   public String id() {
     return id;
   }
 
-
-  /**
-   * Returns initiator display name.
-   */
+  /** Returns initiator display name. */
   public String displayName() {
     return displayName;
   }

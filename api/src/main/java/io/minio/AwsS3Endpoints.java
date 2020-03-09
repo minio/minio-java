@@ -19,10 +19,7 @@ package io.minio;
 import java.util.HashMap;
 import java.util.Map;
 
-
-/**
- * Amazon AWS S3 endpoints for various regions.
- */
+/** Amazon AWS S3 endpoints for various regions. */
 enum AwsS3Endpoints {
   INSTANCE;
   private final Map<String, String> endpoints = new HashMap<>();
@@ -32,7 +29,7 @@ enum AwsS3Endpoints {
     endpoints.put("ap-northeast-1", "s3-ap-northeast-1.amazonaws.com");
     // ap-northeast-2
     endpoints.put("ap-northeast-2", "s3-ap-northeast-2.amazonaws.com");
-    //ap-south-1
+    // ap-south-1
     endpoints.put("ap-south-1", "s3-ap-south-1.amazonaws.com");
     // ap-southeast-1
     endpoints.put("ap-southeast-1", "s3-ap-southeast-1.amazonaws.com");
@@ -54,7 +51,7 @@ enum AwsS3Endpoints {
     endpoints.put("us-east-1", "s3.amazonaws.com");
     // us-east-2
     endpoints.put("us-east-2", "s3-us-east-2.amazonaws.com");
-    //ca-central-1
+    // ca-central-1
     endpoints.put("ca-central-1", "s3.ca-central-1.amazonaws.com");
     // cn-north-1
     endpoints.put("cn-north-1", "s3.cn-north-1.amazonaws.com.cn");
@@ -62,9 +59,7 @@ enum AwsS3Endpoints {
     endpoints.put("cn-northwest-1", "s3.cn-northwest-1.amazonaws.com.cn");
   }
 
-  /**
-   * Gets Amazon S3 endpoint for the relevant region.
-   */
+  /** Gets Amazon S3 endpoint for the relevant region. */
   public String endpoint(String region) {
     String s = AwsS3Endpoints.INSTANCE.endpoints.get(region);
     if (s == null) {
