@@ -3268,15 +3268,52 @@ public class MinioClient {
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive,
                                             final boolean useVersion1) {
-    if (useVersion1) {
-      return listObjectsV1(bucketName, prefix, recursive);
-    }
-
-    return listObjectsV2(bucketName, prefix, recursive);
+    return listObjects(bucketName, prefix, recursive, false, false);
   }
 
 
-  private Iterable<Result<Item>> listObjectsV2(final String bucketName, final String prefix, final boolean recursive) {
+  /**
+   * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix, recursive flag, user metadata
+   * flag and S3 API version to use.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname", "my-object-prefix", true,
+   *                                    true, false);
+   * for (Result<Item> result : myObjects) {
+   *   Item item = result.get();
+   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * } }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param prefix     Prefix string.  List objects whose name starts with `prefix`.
+   * @param recursive when false, emulates a directory structure where each listing returned is either a full object
+   *                  or part of the object's key up to the first '/'. All objects wit the same prefix up to the first
+   *                  '/' will be merged into one entry.
+   * @param includeUserMetadata include user metadata of each object. This is MinIO specific extension to ListObjectsV2.
+   * @param useVersion1 If set, Amazon AWS S3 List Object V1 is used, else List Object V2 is used as default.
+   *
+   * @return an iterator of Result Items.
+   *
+   * @see #listObjects(String bucketName)
+   * @see #listObjects(String bucketName, String prefix)
+   * @see #listObjects(String bucketName, String prefix, boolean recursive)
+   */
+  public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix, final boolean recursive,
+                                            final boolean includeUserMetadata, final boolean useVersion1) {
+    if (useVersion1) {
+      if (includeUserMetadata) {
+        throw new IllegalArgumentException("include user metadata flag is not supported in version 1");
+      }
+
+      return listObjectsV1(bucketName, prefix, recursive);
+    }
+
+    return listObjectsV2(bucketName, prefix, recursive, includeUserMetadata);
+  }
+
+
+  private Iterable<Result<Item>> listObjectsV2(final String bucketName, final String prefix, final boolean recursive,
+                                               final boolean includeUserMetadata) {
     return new Iterable<Result<Item>>() {
       @Override
       public Iterator<Result<Item>> iterator() {
@@ -3303,7 +3340,8 @@ public class MinioClient {
             this.prefixIterator = null;
 
             try {
-              this.listBucketResult = listObjectsV2(bucketName, continuationToken, prefix, delimiter);
+              this.listBucketResult = listObjectsV2(bucketName, continuationToken, prefix, delimiter,
+                                                    includeUserMetadata);
             } catch (InvalidBucketNameException | NoSuchAlgorithmException | InsufficientDataException | IOException
                      | InvalidKeyException | NoResponseException | XmlPullParserException | ErrorResponseException
                      | InternalException | InvalidResponseException e) {
@@ -3410,7 +3448,8 @@ public class MinioClient {
    * @param prefix            Prefix string.  List objects whose name starts with `prefix`.
    * @param delimiter         Delimiter string.  Group objects whose name contains `delimiter`.
    */
-  private ListBucketResult listObjectsV2(String bucketName, String continuationToken, String prefix, String delimiter)
+  private ListBucketResult listObjectsV2(String bucketName, String continuationToken, String prefix, String delimiter,
+                                         boolean includeUserMetadata)
     throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
            InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
            InternalException, InvalidResponseException {
@@ -3431,6 +3470,10 @@ public class MinioClient {
       queryParamMap.put("delimiter", delimiter);
     } else {
       queryParamMap.put("delimiter", "");
+    }
+
+    if (includeUserMetadata) {
+      queryParamMap.put("metadata", "true");
     }
 
     HttpResponse response = executeGet(bucketName, null, null, queryParamMap);

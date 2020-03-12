@@ -19,6 +19,7 @@ package io.minio.messages;
 import com.google.api.client.util.Key;
 import io.minio.Time;
 import java.time.ZonedDateTime;
+import java.util.Map;
 import org.xmlpull.v1.XmlPullParserException;
 
 
@@ -39,6 +40,8 @@ public class Item extends XmlEntity {
   private String storageClass;
   @Key("Owner")
   private Owner owner;
+  @Key("UserMetadata")
+  private Map<String,String> userMetadata;
   private boolean isDir = false;
 
 
@@ -104,6 +107,14 @@ public class Item extends XmlEntity {
    */
   public Owner owner() {
     return owner;
+  }
+
+
+  /**
+   * Returns user metadata. This is MinIO specific extension to ListObjectsV2.
+   */
+  public Map<String,String> userMetadata() {
+    return userMetadata;
   }
 
 
