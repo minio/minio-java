@@ -14,26 +14,23 @@
  * limitations under the License.
  */
 
-import java.io.IOException;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-import org.xmlpull.v1.XmlPullParserException;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class GetBucketLifeCycle {
-    /**
-     * MinioClient.getBucketLifecycle() example.
-     */
+  /** MinioClient.getBucketLifecycle() example. */
   public static void main(String[] args)
-            throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
-        /* Amazon S3: */
-      MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-              "YOUR-SECRETACCESSKEY");
-      String lifecycle = minioClient.getBucketLifeCycle("my-bucketName" );
-      System.out.println(" Life Cycle is : " + lifecycle );
+      /* Amazon S3: */
+      MinioClient minioClient =
+          new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+      String lifecycle = minioClient.getBucketLifeCycle("my-bucketName");
+      System.out.println(" Life Cycle is : " + lifecycle);
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

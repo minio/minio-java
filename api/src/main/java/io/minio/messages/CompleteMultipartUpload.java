@@ -16,31 +16,22 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.Arrays;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to construct complete multipart upload request XML for Amazon AWS S3.
- */
+/** Helper class to construct complete multipart upload request XML for Amazon AWS S3. */
 @SuppressWarnings("unused")
 public class CompleteMultipartUpload extends XmlEntity {
   @Key("Part")
   private List<Part> partList;
 
-
   public CompleteMultipartUpload() throws XmlPullParserException {
     this(null);
   }
 
-
-  /**
-   * Constucts a new CompleteMultipartUpload object with given parts.
-   */
+  /** Constucts a new CompleteMultipartUpload object with given parts. */
   public CompleteMultipartUpload(Part[] parts) throws XmlPullParserException {
     super();
     super.name = "CompleteMultipartUpload";
@@ -53,10 +44,7 @@ public class CompleteMultipartUpload extends XmlEntity {
     }
   }
 
-
-  /**
-   * Returns List of Parts of mulitpart upload.
-   */
+  /** Returns List of Parts of mulitpart upload. */
   public List<Part> partList() {
     return partList;
   }

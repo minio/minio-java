@@ -16,74 +16,57 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to construct create bucket configuration request XML for Amazon AWS S3.
- */
+/** Helper class to construct create bucket configuration request XML for Amazon AWS S3. */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class ObjectLockConfiguration extends XmlEntity {
   @Key("ObjectLockEnabled")
   private String objectLockEnabled = "Enabled";
+
   @Key("Rule")
   private Rule rule;
 
-
-  /**
-   * Constructs a new ObjectLockConfiguration object.
-   */
+  /** Constructs a new ObjectLockConfiguration object. */
   public ObjectLockConfiguration() throws XmlPullParserException {
     super();
     super.name = "ObjectLockConfiguration";
     super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
   }
 
-
-  /**
-   * Constructs a new ObjectLockConfiguration object with given retention.
-   */
-  public ObjectLockConfiguration(RetentionMode mode, int duration, DurationUnit unit) throws XmlPullParserException {
+  /** Constructs a new ObjectLockConfiguration object with given retention. */
+  public ObjectLockConfiguration(RetentionMode mode, int duration, DurationUnit unit)
+      throws XmlPullParserException {
     this();
 
     this.rule = new Rule(mode, duration, unit);
   }
 
-
-  /**
-   * Returns mode.
-   */
+  /** Returns mode. */
   public RetentionMode mode() {
     if (rule == null) {
       return null;
     }
-    
+
     return rule.mode();
   }
 
-
-  /**
-   * Returns days.
-   */
+  /** Returns days. */
   public Integer days() {
     if (rule == null) {
       return null;
     }
-    
+
     return rule.days();
   }
 
-
-  /**
-   * Returns years.
-   */
+  /** Returns years. */
   public Integer years() {
     if (rule == null) {
       return null;
     }
-    
+
     return rule.years();
   }
 }

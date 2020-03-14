@@ -23,4 +23,3 @@ public interface BucketEventListener {
 
   void updateEvent(NotificationInfo info);
 }
-

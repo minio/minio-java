@@ -17,9 +17,9 @@
 
 package io.minio.notification;
 
-import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Map;
 
 @SuppressFBWarnings("UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -35,4 +35,3 @@ public class NotificationEvent {
   public EventMeta s3;
   public SourceInfo source;
 }
-

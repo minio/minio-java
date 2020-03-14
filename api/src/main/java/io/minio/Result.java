@@ -18,40 +18,30 @@ package io.minio;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidBucketNameException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import org.xmlpull.v1.XmlPullParserException;
 
-
-/**
- * A container class keeps any type and exception occured.
- */
+/** A container class keeps any type and exception occured. */
 public class Result<T> {
   private final T type;
   private final Exception ex;
-
 
   public Result(T type, Exception ex) {
     this.type = type;
     this.ex = ex;
   }
 
-
-  /**
-   * Returns given Type if exception is null, else respective exception is thrown.
-   */
+  /** Returns given Type if exception is null, else respective exception is thrown. */
   public T get()
-    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-           JsonParseException, JsonMappingException,IOException,
-           InvalidKeyException, XmlPullParserException, ErrorResponseException,
-           InternalException {
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+          JsonParseException, JsonMappingException, IOException, InvalidKeyException,
+          XmlPullParserException, ErrorResponseException, InternalException {
     if (ex == null) {
       return type;
     }
@@ -93,6 +83,5 @@ public class Result<T> {
     }
 
     throw (InternalException) ex;
-
   }
 }

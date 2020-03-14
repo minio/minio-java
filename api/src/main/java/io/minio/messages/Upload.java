@@ -21,92 +21,70 @@ import io.minio.Time;
 import java.time.ZonedDateTime;
 import org.xmlpull.v1.XmlPullParserException;
 
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing Upload information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing Upload information. */
 @SuppressWarnings("unused")
 public class Upload extends XmlEntity {
   @Key("Key")
   private String objectName;
+
   @Key("UploadId")
   private String uploadId;
+
   @Key("Initiator")
   private Initiator initiator;
+
   @Key("Owner")
   private Owner owner;
+
   @Key("StorageClass")
   private String storageClass;
+
   @Key("Initiated")
   private String initiated;
-  private long aggregatedPartSize;
 
+  private long aggregatedPartSize;
 
   public Upload() throws XmlPullParserException {
     super();
     super.name = "Upload";
   }
 
-
-  /**
-   * Returns object name.
-   */
+  /** Returns object name. */
   public String objectName() {
     return objectName;
   }
 
-
-  /**
-   * Returns upload ID.
-   */
+  /** Returns upload ID. */
   public String uploadId() {
     return uploadId;
   }
 
-
-  /**
-   * Returns initator information.
-   */
+  /** Returns initator information. */
   public Initiator initiator() {
     return initiator;
   }
 
-
-  /**
-   * Returns owner information.
-   */
+  /** Returns owner information. */
   public Owner owner() {
     return owner;
   }
 
-
-  /**
-   * Returns storage class.
-   */
+  /** Returns storage class. */
   public String storageClass() {
     return storageClass;
   }
 
-
-  /**
-   * Returns initated time.
-   */
+  /** Returns initated time. */
   public ZonedDateTime initiated() {
     return ZonedDateTime.parse(initiated, Time.RESPONSE_DATE_FORMAT);
   }
 
-
-  /**
-   * Returns aggregated part size.
-   */
+  /** Returns aggregated part size. */
   public long aggregatedPartSize() {
     return aggregatedPartSize;
   }
 
-
-  /**
-   * Sets given aggregated part size.
-   */
+  /** Sets given aggregated part size. */
   public void setAggregatedPartSize(long size) {
     this.aggregatedPartSize = size;
   }

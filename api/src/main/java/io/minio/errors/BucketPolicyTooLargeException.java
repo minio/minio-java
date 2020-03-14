@@ -16,22 +16,20 @@
 
 package io.minio.errors;
 
-/**
- * Thrown to indicate that given bucket name is not valid.
- */
+/** Thrown to indicate that given bucket name is not valid. */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class BucketPolicyTooLargeException extends MinioException {
 
   private final String bucketName;
 
   /**
-   * Constructs a new BucketPolicyTooLargeException with bucket name caused the error and error message.
+   * Constructs a new BucketPolicyTooLargeException with bucket name caused the error and error
+   * message.
    */
   public BucketPolicyTooLargeException(String bucketName) {
     super();
     this.bucketName = bucketName;
   }
-
 
   @Override
   public String toString() {

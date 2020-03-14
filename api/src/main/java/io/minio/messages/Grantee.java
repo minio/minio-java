@@ -16,69 +16,53 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing Grantee information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing Grantee information. */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class Grantee extends XmlEntity {
   @Key("ID")
   private String id;
+
   @Key("DisplayName")
   private String displayName;
+
   @Key("EmailAddress")
   private String emailAddress;
+
   @Key("Type")
   private String type;
+
   @Key("URI")
   private String uri;
-
 
   public Grantee() throws XmlPullParserException {
     super();
     this.name = "Grantee";
   }
 
-
-  /**
-   * Returns grantee id.
-   */
+  /** Returns grantee id. */
   public String id() {
     return id;
   }
 
-
-  /**
-   * Returns grantee display name.
-   */
+  /** Returns grantee display name. */
   public String displayName() {
     return displayName;
   }
 
-
-  /**
-   * Returns grantee email address.
-   */
+  /** Returns grantee email address. */
   public String emailAddress() {
     return emailAddress;
   }
 
-
-  /**
-   * Returns grantee type.
-   */
+  /** Returns grantee type. */
   public String type() {
     return type;
   }
 
-
-  /**
-   * Returns grantee URI.
-   */
+  /** Returns grantee URI. */
   public String uri() {
     return uri;
   }

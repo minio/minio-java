@@ -17,17 +17,15 @@
 
 package io.minio;
 
-import io.minio.errors.InternalException;
 import io.minio.errors.InsufficientDataException;
-
+import io.minio.errors.InternalException;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
-
 
 class ChunkedInputStream extends InputStream {
   // Chunk size in chunked upload for PUT object is 64KiB
@@ -38,7 +36,8 @@ class ChunkedInputStream extends InputStream {
   // 10000;chunk-signature=ad80c730a21e5b8d04586a2213dd63b9a0e99e0e2307b0ade35a65485a288648\r\n<65536-bytes>\r\n
   // From the above value, a full chunk size 65626 is by
   // len(hex string of 64KiB) = 5 (+)
-  // len(;chunk-signature=ad80c730a21e5b8d04586a2213dd63b9a0e99e0e2307b0ade35a65485a288648\r\n) = 83 (+)
+  // len(;chunk-signature=ad80c730a21e5b8d04586a2213dd63b9a0e99e0e2307b0ade35a65485a288648\r\n) = 83
+  // (+)
   // <65536 bytes> = 65536 (+)
   // len(\r\n) = 2
   private static final int FULL_CHUNK_LEN = 65626;
@@ -67,12 +66,15 @@ class ChunkedInputStream extends InputStream {
   // Counter denotes how many bytes the consumer read from this stream.
   private int bytesRead = 0;
 
-
-  /**
-   * Create new ChunkedInputStream for given input stream.
-   */
-  public ChunkedInputStream(InputStream inputStream, int streamSize, ZonedDateTime date, String region,
-                            String secretKey, String seedSignature) throws IOException {
+  /** Create new ChunkedInputStream for given input stream. */
+  public ChunkedInputStream(
+      InputStream inputStream,
+      int streamSize,
+      ZonedDateTime date,
+      String region,
+      String secretKey,
+      String seedSignature)
+      throws IOException {
     this.inputStream = inputStream;
     this.streamSize = streamSize;
     this.date = date;
@@ -91,7 +93,6 @@ class ChunkedInputStream extends InputStream {
     }
     this.length += FINAL_ADDITIONAL_CHUNK_LEN;
   }
-
 
   private int readData(byte[] buf) throws IOException {
     if (this.isEof) {
@@ -117,12 +118,13 @@ class ChunkedInputStream extends InputStream {
     return totalBytesRead;
   }
 
-
   private void createChunkBody(byte[] chunk)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException, InternalException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException,
+          InternalException {
     String chunkSha256 = Digest.sha256Hash(chunk, chunk.length);
-    String signature = Signer.getChunkSignature(chunkSha256, this.date, this.region, this.secretKey,
-                                                this.prevSignature);
+    String signature =
+        Signer.getChunkSignature(
+            chunkSha256, this.date, this.region, this.secretKey, this.prevSignature);
 
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     // Add metadata.
@@ -139,9 +141,9 @@ class ChunkedInputStream extends InputStream {
     this.prevSignature = signature;
   }
 
-
   private int readChunk(int chunkSize)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException, InternalException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, InsufficientDataException,
+          InternalException {
     byte[] chunk = new byte[chunkSize];
     int len = readData(chunk);
     if (len < 0) {
@@ -149,17 +151,15 @@ class ChunkedInputStream extends InputStream {
     }
 
     if (len != chunkSize) {
-      throw new InsufficientDataException("Insufficient data.  read = " + len + " expected = " + chunkSize);
+      throw new InsufficientDataException(
+          "Insufficient data.  read = " + len + " expected = " + chunkSize);
     }
 
     createChunkBody(chunk);
     return this.chunkBody.length;
   }
 
-
-  /**
-   * read single byte from chunk body.
-   */
+  /** read single byte from chunk body. */
   public int read() throws IOException {
     if (this.bytesRead == this.length) {
       // All chunks and final additional chunk are read.
@@ -196,15 +196,15 @@ class ChunkedInputStream extends InputStream {
       int value = this.chunkBody[this.chunkPos] & 0xFF;
       this.chunkPos++;
       return value;
-    } catch (NoSuchAlgorithmException | InvalidKeyException | InsufficientDataException | InternalException e) {
+    } catch (NoSuchAlgorithmException
+        | InvalidKeyException
+        | InsufficientDataException
+        | InternalException e) {
       throw new IOException(e.getCause());
     }
   }
 
-
-  /**
-   * return length of data ChunkedInputStream supposes to produce.
-   */
+  /** return length of data ChunkedInputStream supposes to produce. */
   public int length() {
     return this.length;
   }

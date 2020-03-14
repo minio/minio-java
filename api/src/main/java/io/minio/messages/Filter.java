@@ -16,46 +16,33 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing Filter.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing Filter. */
 @SuppressWarnings("WeakerAccess")
 public class Filter extends XmlEntity {
   @Key("S3Key")
   private S3Key s3Key = new S3Key();
-
 
   public Filter() throws XmlPullParserException {
     super();
     super.name = "Filter";
   }
 
-
-  /**
-   * Returns S3 Key.
-   */
+  /** Returns S3 Key. */
   public S3Key s3Key() {
     return s3Key;
   }
 
-
-  /**
-   * Sets S3 Key.
-   */
+  /** Sets S3 Key. */
   public void setS3Key(S3Key s3Key) {
     this.s3Key = s3Key;
   }
 
-
   public void setPrefixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     s3Key.setPrefixRule(value);
   }
-
 
   public void setSuffixRule(String value) throws IllegalArgumentException, XmlPullParserException {
     s3Key.setSuffixRule(value);

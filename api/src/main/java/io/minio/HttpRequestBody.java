@@ -20,15 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.Channels;
-
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
 import okio.Okio;
 
-/**
- * RequestBody that wraps a single data object.
- */
+/** RequestBody that wraps a single data object. */
 class HttpRequestBody extends RequestBody {
   private final String contentType;
   private final Object data;

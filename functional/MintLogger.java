@@ -49,16 +49,15 @@ public class MintLogger {
   @JsonProperty("error")
   private String error;
 
-  /**
-    * Constructor.
-    **/
-  public MintLogger(String function,
-                    String args,
-                    long duration,
-                    String status,
-                    String alert,
-                    String message,
-                    String error) {
+  /** Constructor. */
+  public MintLogger(
+      String function,
+      String args,
+      long duration,
+      String status,
+      String alert,
+      String message,
+      String error) {
     this.name = "minio-java";
     this.function = function;
     this.duration = duration;
@@ -69,79 +68,63 @@ public class MintLogger {
     this.error = error;
   }
 
-  /**
-    * Return JSON Log Entry.
-    **/
+  /** Return JSON Log Entry. */
   @JsonIgnore
   public String toString() {
 
     try {
-      return new ObjectMapper().setSerializationInclusion(Include.NON_NULL).writeValueAsString(this);
+      return new ObjectMapper()
+          .setSerializationInclusion(Include.NON_NULL)
+          .writeValueAsString(this);
     } catch (JsonProcessingException e) {
       e.printStackTrace();
     }
     return "";
   }
 
-  /**
-    * Return Alert.
-    **/
+  /** Return Alert. */
   @JsonIgnore
   public String alert() {
     return alert;
   }
 
-  /**
-    * Return Error.
-    **/
+  /** Return Error. */
   @JsonIgnore
   public String error() {
     return error;
   }
 
-  /**
-    * Return Message.
-    **/
+  /** Return Message. */
   @JsonIgnore
   public String message() {
     return message;
   }
 
-  /**
-    * Return args.
-    **/
+  /** Return args. */
   @JsonIgnore
   public String args() {
     return args;
   }
 
-  /**
-    * Return status.
-    **/
+  /** Return status. */
   @JsonIgnore
   public String status() {
     return status;
   }
 
-  /**
-    * Return name.
-    **/
+  /** Return name. */
   @JsonIgnore
   public String name() {
     return name;
   }
 
-  /**
-    * Return function.
-    **/
+  /** Return function. */
   @JsonIgnore
   public String function() {
     return function;
   }
 
-  /**
-    * Return duration.
-    **/
+  /** Return duration. */
   @JsonIgnore
   public long duration() {
     return duration;

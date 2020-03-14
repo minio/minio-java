@@ -16,10 +16,8 @@
 
 package io.minio.messages;
 
-import org.xmlpull.v1.XmlPullParserException;
-
 import com.google.api.client.util.Key;
-
+import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest information.
@@ -28,24 +26,31 @@ import com.google.api.client.util.Key;
 public class SelectObjectContentRequest extends XmlEntity {
   @Key("Expression")
   private String expression;
+
   @Key("ExpressionType")
   private String expressionType;
+
   @Key("RequestProgress")
   private RequestProgress requestProgress;
+
   @Key("InputSerialization")
   private InputSerialization inputSerialization;
+
   @Key("OutputSerialization")
   private OutputSerialization outputSerialization;
+
   @Key("ScanRange")
   private ScanRange scanRange;
 
-
-  /**
-   * Constructs new SelectObjectContentRequest object for given parameters.
-   */
-  public SelectObjectContentRequest(String expression, boolean requestProgress, InputSerialization is,
-                                    OutputSerialization os, Long scanStartRange, Long scanEndRange)
-    throws XmlPullParserException {
+  /** Constructs new SelectObjectContentRequest object for given parameters. */
+  public SelectObjectContentRequest(
+      String expression,
+      boolean requestProgress,
+      InputSerialization is,
+      OutputSerialization os,
+      Long scanStartRange,
+      Long scanEndRange)
+      throws XmlPullParserException {
     super();
     this.name = "SelectObjectContentRequest";
     super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");

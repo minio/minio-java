@@ -16,54 +16,38 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing filter rule.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing filter rule. */
 public class FilterRule extends XmlEntity {
   @Key("Name")
   private String name;
+
   @Key("Value")
   private String value;
-
 
   public FilterRule() throws XmlPullParserException {
     super();
     super.name = "FilterRule";
   }
 
-
-  /**
-   * Returns filter name.
-   */
+  /** Returns filter name. */
   public String name() {
     return name;
   }
 
-
-  /**
-   * Sets filter name.
-   */
+  /** Sets filter name. */
   public void setName(String name) {
     this.name = name;
   }
 
-
-  /**
-   * Returns filter value.
-   */
+  /** Returns filter value. */
   public String value() {
     return value;
   }
 
-
-  /**
-   * Sets filter value.
-   */
+  /** Sets filter value. */
   public void setValue(String value) {
     this.value = value;
   }

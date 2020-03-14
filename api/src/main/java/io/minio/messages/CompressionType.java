@@ -16,10 +16,9 @@
 
 package io.minio.messages;
 
-
-/**
- * CSV/JSON object's compression format.
- */
+/** CSV/JSON object's compression format. */
 public enum CompressionType {
-  NONE, GZIP, BZIP2;
+  NONE,
+  GZIP,
+  BZIP2;
 }

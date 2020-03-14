@@ -17,38 +17,41 @@
 import io.minio.CloseableIterator;
 import io.minio.MinioClient;
 import io.minio.Result;
+import io.minio.errors.MinioException;
 import io.minio.notification.NotificationInfo;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import org.xmlpull.v1.XmlPullParserException;
-import io.minio.errors.MinioException;
 
 public class ListenBucketNotification {
-  /**
-   * MinioClient.listenBucketNotification() example.
-   */
+  /** MinioClient.listenBucketNotification() example. */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.min.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-          "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
-      try (CloseableIterator<Result<NotificationInfo>> ci = minioClient
-        .listenBucketNotification("bcketName", "", "", events)) {
+      try (CloseableIterator<Result<NotificationInfo>> ci =
+          minioClient.listenBucketNotification("bcketName", "", "", events)) {
         while (ci.hasNext()) {
           NotificationInfo info = ci.next().get();
-          System.out.println(info.records[0].s3.bucket.name + "/"
-              + info.records[0].s3.object.key + " has been created");
+          System.out.println(
+              info.records[0].s3.bucket.name
+                  + "/"
+                  + info.records[0].s3.object.key
+                  + " has been created");
         }
       } catch (IOException e) {
         System.out.println("Error occurred: " + e);
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
-
     }
   }
 }

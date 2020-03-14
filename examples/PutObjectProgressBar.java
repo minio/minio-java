@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
+import io.minio.MinioClient;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidEndpointException;
+import io.minio.errors.InvalidPortException;
+import io.minio.errors.InvalidResponseException;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,31 +29,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-
+import me.tongfei.progressbar.ProgressBarStyle;
 import org.xmlpull.v1.XmlPullParserException;
 
-import io.minio.MinioClient;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidPortException;
-import me.tongfei.progressbar.ProgressBarStyle;
-
-
 public class PutObjectProgressBar {
-  /**
-   * MinioClient.putObjectProgressBar() example.
-   */
-  public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException,
-      InvalidEndpointException, InvalidPortException, InvalidBucketNameException,
-      InsufficientDataException, ErrorResponseException, InternalException,
-      IllegalArgumentException, IOException, XmlPullParserException, InvalidResponseException {
+  /** MinioClient.putObjectProgressBar() example. */
+  public static void main(String[] args)
+      throws InvalidKeyException, NoSuchAlgorithmException, InvalidEndpointException,
+          InvalidPortException, InvalidBucketNameException, InsufficientDataException,
+          ErrorResponseException, InternalException, IllegalArgumentException, IOException,
+          XmlPullParserException, InvalidResponseException {
     /* play.min.io for test and development. */
-    MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F",
-        "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+    MinioClient minioClient =
+        new MinioClient(
+            "https://play.min.io",
+            "Q3AM3UQ867SPQQA43P2F",
+            "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
     /* Amazon S3: */
     // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com",
     // "YOUR-ACCESSKEYID",
@@ -55,11 +54,17 @@ public class PutObjectProgressBar {
     String bucketName = "my-bucketname";
 
     File file = new File("my-filename");
-    InputStream pis = new BufferedInputStream(new ProgressStream("Uploading... ",
-                                                                 ProgressBarStyle.ASCII,
-                                                                 new FileInputStream(file)));
-    minioClient.putObject(bucketName, objectName, pis, Long.valueOf(pis.available()), null, null,
-            "application/octet-stream");
+    InputStream pis =
+        new BufferedInputStream(
+            new ProgressStream("Uploading... ", ProgressBarStyle.ASCII, new FileInputStream(file)));
+    minioClient.putObject(
+        bucketName,
+        objectName,
+        pis,
+        Long.valueOf(pis.available()),
+        null,
+        null,
+        "application/octet-stream");
     pis.close();
     System.out.println("my-objectname is uploaded successfully");
   }

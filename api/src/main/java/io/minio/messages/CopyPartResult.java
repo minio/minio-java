@@ -22,14 +22,12 @@ import io.minio.Time;
 import java.time.ZonedDateTime;
 import org.xmlpull.v1.XmlPullParserException;
 
-/**
- * Helper class to parse Amazon AWS S3 response XML containing
- * object item information.
- */
-@SuppressWarnings({ "SameParameterValue", "unused" })
+/** Helper class to parse Amazon AWS S3 response XML containing object item information. */
+@SuppressWarnings({"SameParameterValue", "unused"})
 public class CopyPartResult extends XmlEntity {
   @Key("ETag")
   private String etag;
+
   @Key("LastModified")
   private String lastModified;
 
@@ -38,18 +36,13 @@ public class CopyPartResult extends XmlEntity {
     super.name = "CopyPartResult";
   }
 
-  /**
-   * Returns last modified time of the object.
-   */
+  /** Returns last modified time of the object. */
   public ZonedDateTime lastModified() {
     return ZonedDateTime.parse(lastModified, Time.RESPONSE_DATE_FORMAT);
   }
 
-  /**
-   * Returns ETag of the object.
-   */
+  /** Returns ETag of the object. */
   public String etag() {
     return etag;
   }
 }
-

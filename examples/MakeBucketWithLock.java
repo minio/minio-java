@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
-import java.security.InvalidKeyException;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class MakeBucketWithLock {
-  /**
-   * MinioClient.makeBucket() example.
-   */
+  /** MinioClient.makeBucket() example. */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
 
       /* Amazon S3: */
-      MinioClient s3Client = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
-                                               "YOUR-SECRETACCESSKEY");
+      MinioClient s3Client =
+          new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
       // Create bucket if it doesn't exist.
       boolean found = s3Client.bucketExists("my-bucketname");
@@ -42,7 +38,8 @@ public class MakeBucketWithLock {
       } else {
         // Create bucket 'my-bucketname' with object lock functionality enabled
         s3Client.makeBucket("my-bucketname", null, true);
-        System.out.println("my-bucketname is created successfully with object lock functionality enabled.");
+        System.out.println(
+            "my-bucketname is created successfully with object lock functionality enabled.");
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

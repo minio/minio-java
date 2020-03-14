@@ -16,22 +16,18 @@
 
 package io.minio.errors;
 
-
-/**
- * Thrown to indicate that given expires value is out of range to set in presigned GET/PUT/POST.
- */
+/** Thrown to indicate that given expires value is out of range to set in presigned GET/PUT/POST. */
 public class InvalidExpiresRangeException extends MinioException {
   private final int expires;
 
-
   /**
-   * Constructs a new InvalidExpiresRangeException with expires value caused the error and error message.
+   * Constructs a new InvalidExpiresRangeException with expires value caused the error and error
+   * message.
    */
   public InvalidExpiresRangeException(int expires, String message) {
     super(message);
     this.expires = expires;
   }
-
 
   @Override
   public String toString() {

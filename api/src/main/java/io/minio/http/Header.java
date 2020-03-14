@@ -21,20 +21,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
-/**
- * HTTP header annotation interface.
- */
+/** HTTP header annotation interface. */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface Header {
-  /**
-   * HTTP header name.
-   */
+  /** HTTP header name. */
   String value();
 
-  /**
-   * Setter method name. 'setFieldName' is used if empty.
-   */
+  /** Setter method name. 'setFieldName' is used if empty. */
   String setter() default "";
 }

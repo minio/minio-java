@@ -16,78 +16,56 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing notification configuration.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing notification configuration. */
 public class NotificationConfiguration extends XmlEntity {
   @Key("CloudFunctionConfiguration")
   private List<CloudFunctionConfiguration> cloudFunctionConfigurationList = new LinkedList<>();
+
   @Key("QueueConfiguration")
   private List<QueueConfiguration> queueConfigurationList = new LinkedList<>();
+
   @Key("TopicConfiguration")
   private List<TopicConfiguration> topicConfigurationList = new LinkedList<>();
 
-  /**
-   * Constructs a new notification configuration with default namespace.
-   */
+  /** Constructs a new notification configuration with default namespace. */
   public NotificationConfiguration() throws XmlPullParserException {
     super();
     super.name = "NotificationConfiguration";
     super.namespaceDictionary.set("", "http://s3.amazonaws.com/doc/2006-03-01/");
   }
 
-
-  /**
-   * Returns cloud function configuration.
-   */
+  /** Returns cloud function configuration. */
   public List<CloudFunctionConfiguration> cloudFunctionConfigurationList() {
     return cloudFunctionConfigurationList;
   }
 
-
-  /**
-   * Sets cloud function configuration list.
-   */
-  public void setCloudFunctionConfigurationList(List<CloudFunctionConfiguration> cloudFunctionConfigurationList) {
+  /** Sets cloud function configuration list. */
+  public void setCloudFunctionConfigurationList(
+      List<CloudFunctionConfiguration> cloudFunctionConfigurationList) {
     this.cloudFunctionConfigurationList = cloudFunctionConfigurationList;
   }
 
-
-  /**
-   * Returns queue configuration list.
-   */
+  /** Returns queue configuration list. */
   public List<QueueConfiguration> queueConfigurationList() {
     return queueConfigurationList;
   }
 
-
-  /**
-   * Sets queue configuration list.
-   */
+  /** Sets queue configuration list. */
   public void setQueueConfigurationList(List<QueueConfiguration> queueConfigurationList) {
     this.queueConfigurationList = queueConfigurationList;
   }
 
-
-  /**
-   * Returns topic configuration list.
-   */
+  /** Returns topic configuration list. */
   public List<TopicConfiguration> topicConfigurationList() {
     return topicConfigurationList;
   }
 
-
-  /**
-   * Sets topic configuration list.
-   */
+  /** Sets topic configuration list. */
   public void setTopicConfigurationList(List<TopicConfiguration> topicConfigurationList) {
     this.topicConfigurationList = topicConfigurationList;
   }

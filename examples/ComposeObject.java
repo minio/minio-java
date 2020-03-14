@@ -14,35 +14,32 @@
  * limitations under the License.
  */
 
-import io.minio.MinioClient;
 import io.minio.ComposeSource;
+import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import org.xmlpull.v1.XmlPullParserException;
 
 public class ComposeObject {
-  /**
-   * MinioClient.composeObject() example.
-   */
+  /** MinioClient.composeObject() example. */
   public static void main(String[] args)
-    throws IOException, NoSuchAlgorithmException, InvalidKeyException,
-    XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.minio.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io:9000",
-          "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
-
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io:9000",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Create a ComposeSource to compose Object.
       ComposeSource s1 = new ComposeSource("my-bucketname-one", "my-objectname-one");
       ComposeSource s2 = new ComposeSource("my-bucketname-two", "my-objectname-two");
-      ComposeSource s3 = new ComposeSource("my-bucketname-three",
-          "my-objectname-three");
+      ComposeSource s3 = new ComposeSource("my-bucketname-three", "my-objectname-three");
 
       // Adding the ComposeSource to an ArrayList
       List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
@@ -50,8 +47,8 @@ public class ComposeObject {
       sourceObjectList.add(s2);
       sourceObjectList.add(s3);
 
-      minioClient.composeObject("my-destination-bucket", "my-destination-object",
-          sourceObjectList, null, null) ;
+      minioClient.composeObject(
+          "my-destination-bucket", "my-destination-object", sourceObjectList, null, null);
       System.out.println("Object Composed successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

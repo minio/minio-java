@@ -16,23 +16,17 @@
 
 package io.minio.http;
 
-
-/**
- * HTTP schemes.
- */
+/** HTTP schemes. */
 public enum Scheme {
-  HTTP("http"), HTTPS("https");
+  HTTP("http"),
+  HTTPS("https");
   private final String value;
-
 
   private Scheme(String value) {
     this.value = value;
   }
 
-
-  /**
-   * Returns Scheme enum of given string.
-   */
+  /** Returns Scheme enum of given string. */
   public static Scheme fromString(String scheme) {
     if (scheme == null) {
       throw new IllegalArgumentException("null scheme");

@@ -16,10 +16,9 @@
 
 package io.minio.messages;
 
-
-/**
- * Description the first line of input in CSV object.
- */
+/** Description the first line of input in CSV object. */
 public enum FileHeaderInfo {
-  USE, IGNORE, NONE;
+  USE,
+  IGNORE,
+  NONE;
 }

@@ -21,30 +21,26 @@ import io.minio.Time;
 import java.time.ZonedDateTime;
 import org.xmlpull.v1.XmlPullParserException;
 
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing Part information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing Part information. */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Part extends XmlEntity {
   @Key("PartNumber")
   private int partNumber;
+
   @Key("ETag")
   private String etag;
+
   @Key("LastModified")
   private String lastModified;
+
   @Key("Size")
   private Long size;
-
 
   public Part() throws XmlPullParserException {
     this(0, null);
   }
 
-
-  /**
-   * Constructs a new Part object with given part number and ETag.
-   */
+  /** Constructs a new Part object with given part number and ETag. */
   public Part(int partNumber, String etag) throws XmlPullParserException {
     super();
     super.name = "Part";
@@ -53,34 +49,22 @@ public class Part extends XmlEntity {
     this.etag = etag;
   }
 
-
-  /**
-   * Returns part number.
-   */
+  /** Returns part number. */
   public int partNumber() {
     return partNumber;
   }
 
-
-  /**
-   * Returns ETag.
-   */
+  /** Returns ETag. */
   public String etag() {
     return etag.replaceAll("\"", "");
   }
 
-
-  /**
-   * Returns last modified time.
-   */
+  /** Returns last modified time. */
   public ZonedDateTime lastModified() {
     return ZonedDateTime.parse(lastModified, Time.RESPONSE_DATE_FORMAT);
   }
 
-
-  /**
-   * Returns part size.
-   */
+  /** Returns part size. */
   public long partSize() {
     return size;
   }

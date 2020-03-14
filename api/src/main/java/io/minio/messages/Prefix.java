@@ -16,29 +16,21 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
-/**
- * Helper class to parse Amazon AWS S3 response XML containing Prefix information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing Prefix information. */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class Prefix extends XmlEntity {
   @Key("Prefix")
   private String prefix;
-
 
   public Prefix() throws XmlPullParserException {
     super();
     super.name = "Prefix";
   }
 
-
-  /**
-   * Returns prefix.
-   */
+  /** Returns prefix. */
   public String prefix() {
     return prefix;
   }

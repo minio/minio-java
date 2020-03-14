@@ -16,32 +16,27 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to create Amazon AWS S3 request XML containing information for Multiple object deletion.
+ * Helper class to create Amazon AWS S3 request XML containing information for Multiple object
+ * deletion.
  */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class DeleteRequest extends XmlEntity {
   @Key("Quiet")
   private boolean quiet;
+
   @Key("Object")
   private List<DeleteObject> objectList;
-
 
   public DeleteRequest(List<DeleteObject> objectList) throws XmlPullParserException {
     this(objectList, true);
   }
 
-
-  /**
-   * Constructs new delete request for given object list and quiet flag.
-   */
+  /** Constructs new delete request for given object list and quiet flag. */
   public DeleteRequest(List<DeleteObject> objectList, boolean quiet) throws XmlPullParserException {
     super();
     super.name = "Delete";

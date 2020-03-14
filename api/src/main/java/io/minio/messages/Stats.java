@@ -16,28 +16,24 @@
 
 package io.minio.messages;
 
-import java.io.IOException;
-import java.io.Reader;
-
-import org.xmlpull.v1.XmlPullParserException;
-
 import com.google.api.client.util.Key;
 import com.google.api.client.xml.XmlNamespaceDictionary;
+import java.io.IOException;
+import java.io.Reader;
+import org.xmlpull.v1.XmlPullParserException;
 
-/**
- * Helper class to parse Stats/Progress message in S3 select response message.
- */
+/** Helper class to parse Stats/Progress message in S3 select response message. */
 public class Stats extends XmlEntity {
   @Key("BytesScanned")
   private long bytesScanned = -1;
+
   @Key("BytesProcessed")
   private long bytesProcessed = -1;
+
   @Key("BytesReturned")
   private long bytesReturned = -1;
 
-  /**
-   * Constructs a new Stats object.
-   */
+  /** Constructs a new Stats object. */
   public Stats(String name) throws XmlPullParserException {
     super();
     super.name = name;
@@ -54,24 +50,17 @@ public class Stats extends XmlEntity {
     super.parseXml(reader, namespaceDictionary);
   }
 
-
-  /**
-   * Returns bytes scanned.
-   */
+  /** Returns bytes scanned. */
   public long bytesScanned() {
     return this.bytesScanned;
   }
 
-  /**
-   * Returns bytes processed.
-   */
+  /** Returns bytes processed. */
   public long bytesProcessed() {
     return this.bytesProcessed;
   }
 
-  /**
-   * Returns bytes returned.
-   */
+  /** Returns bytes returned. */
   public long bytesReturned() {
     return this.bytesReturned;
   }

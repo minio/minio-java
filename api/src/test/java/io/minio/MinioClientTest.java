@@ -22,18 +22,16 @@ import static org.junit.Assert.assertEquals;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InvalidResponseException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
+import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
 import io.minio.messages.Bucket;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.Item;
 import io.minio.messages.Owner;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -44,15 +42,12 @@ import java.text.ParseException;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Iterator;
-
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.xmlpull.v1.XmlPullParserException;
-
 
 @SuppressWarnings("unused")
 public class MinioClientTest {
@@ -111,7 +106,6 @@ public class MinioClientTest {
     throw new RuntimeException(EXPECTED_EXCEPTION_DID_NOT_FIRE);
   }
 
-
   @Test(expected = InvalidEndpointException.class)
   public void testIsValidEndpoint3() throws MinioException {
     new MinioClient("minio..example.com");
@@ -134,7 +128,8 @@ public class MinioClientTest {
 
   @Test(expected = ErrorResponseException.class)
   public void testForbidden()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(403));
 
@@ -148,7 +143,8 @@ public class MinioClientTest {
 
   @Test(expected = ErrorResponseException.class)
   public void getMissingObjectHeaders()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     server.enqueue(new MockResponse().setResponseCode(404));
 
@@ -162,7 +158,8 @@ public class MinioClientTest {
 
   @Test
   public void testGetObjectHeaders()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
     response.setResponseCode(200);
@@ -176,12 +173,16 @@ public class MinioClientTest {
     server.start();
 
     // build expected request
-    ZonedDateTime expectedDate = ZonedDateTime.parse(MON_04_MAY_2015_07_58_51_GMT, Time.HTTP_HEADER_DATE_FORMAT);
-    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key",
-                                                 expectedDate,
-                                                 5080,
-                                                 "a670520d9d36833b3e28d1e4b73cbe22",
-                                                 APPLICATION_OCTET_STREAM);
+    ZonedDateTime expectedDate =
+        ZonedDateTime.parse(MON_04_MAY_2015_07_58_51_GMT, Time.HTTP_HEADER_DATE_FORMAT);
+    ObjectStat expectedStatInfo =
+        new ObjectStat(
+            BUCKET,
+            "key",
+            expectedDate,
+            5080,
+            "a670520d9d36833b3e28d1e4b73cbe22",
+            APPLICATION_OCTET_STREAM);
 
     // get request
     MinioClient client = new MinioClient(server.url(""));
@@ -192,7 +193,8 @@ public class MinioClientTest {
 
   @Test(expected = InvalidExpiresRangeException.class)
   public void testPresignGetObjectFail()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     server.start();
 
@@ -203,7 +205,8 @@ public class MinioClientTest {
 
   @Test
   public void testPresignGetObject()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     server.start();
 
@@ -215,7 +218,8 @@ public class MinioClientTest {
 
   @Test
   public void testGetObjectUrl()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     server.start();
 
@@ -227,7 +231,8 @@ public class MinioClientTest {
 
   @Test
   public void testGetObject()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
     final String expectedObject = HELLO_WORLD;
@@ -254,7 +259,8 @@ public class MinioClientTest {
 
   @Test
   public void testPartialObject()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     final String expectedObject = HELLO;
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -282,7 +288,8 @@ public class MinioClientTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetObjectOffsetIsNegativeReturnsError()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     final String expectedObject = HELLO;
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -306,7 +313,8 @@ public class MinioClientTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void testGetObjectLengthIsZeroReturnsError()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     final String expectedObject = HELLO;
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -329,11 +337,10 @@ public class MinioClientTest {
     Assert.fail("Should of thrown an exception");
   }
 
-  /**
-   * test GetObjectWithOffset.
-   */
+  /** test GetObjectWithOffset. */
   public void testGetObjectWithOffset()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     final String expectedObject = "world";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -361,8 +368,10 @@ public class MinioClientTest {
 
   @Test
   public void testListObjects()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
-    final String body = "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>\"2a60eaffa7a82804bdc682ce1df6c2d4\"</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
+    final String body =
+        "<ListBucketResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Name>bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>1000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>key</Key><LastModified>2015-05-05T02:21:15.716Z</LastModified><ETag>\"5eb63bbbe01eeed093cb22bb8f5acdc3\"</ETag><Size>11</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents><Contents><Key>key2</Key><LastModified>2015-05-05T20:36:17.498Z</LastModified><ETag>\"2a60eaffa7a82804bdc682ce1df6c2d4\"</ETag><Size>1661</Size><StorageClass>STANDARD</StorageClass><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner></Contents></ListBucketResult>";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -391,9 +400,10 @@ public class MinioClientTest {
 
   @Test
   public void testListBuckets()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException,
-      ParseException {
-    final String body = "<ListAllMyBucketsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner><Buckets><Bucket><Name>bucket</Name><CreationDate>2015-05-05T20:35:51.410Z</CreationDate></Bucket><Bucket><Name>foo</Name><CreationDate>2015-05-05T20:35:47.170Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>";
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException, ParseException {
+    final String body =
+        "<ListAllMyBucketsResult xmlns=\"http://doc.s3.amazonaws.com/2006-03-01\"><Owner><ID>minio</ID><DisplayName>minio</DisplayName></Owner><Buckets><Bucket><Name>bucket</Name><CreationDate>2015-05-05T20:35:51.410Z</CreationDate></Bucket><Bucket><Name>foo</Name><CreationDate>2015-05-05T20:35:47.170Z</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>";
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -411,16 +421,19 @@ public class MinioClientTest {
 
     Bucket bucket = buckets.next();
     assertEquals(BUCKET, bucket.name());
-    assertEquals("2015-05-05T20:35:51.410Z", bucket.creationDate().format(Time.RESPONSE_DATE_FORMAT));
+    assertEquals(
+        "2015-05-05T20:35:51.410Z", bucket.creationDate().format(Time.RESPONSE_DATE_FORMAT));
 
     bucket = buckets.next();
     assertEquals("foo", bucket.name());
-    assertEquals("2015-05-05T20:35:47.170Z", bucket.creationDate().format(Time.RESPONSE_DATE_FORMAT));
+    assertEquals(
+        "2015-05-05T20:35:47.170Z", bucket.creationDate().format(Time.RESPONSE_DATE_FORMAT));
   }
 
   @Test
   public void testBucketExists()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -438,7 +451,8 @@ public class MinioClientTest {
 
   @Test
   public void testBucketExistsFails()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
@@ -456,7 +470,8 @@ public class MinioClientTest {
 
   @Test
   public void testMakeBucket()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response1 = new MockResponse();
     MockResponse response2 = new MockResponse();
@@ -475,15 +490,15 @@ public class MinioClientTest {
     client.makeBucket(BUCKET);
   }
 
-
   @Test(expected = InvalidResponseException.class)
   public void testMakeBucketFails()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
 
-    final ErrorResponse errResponse = new ErrorResponse(ErrorCode.BUCKET_ALREADY_EXISTS, null, null, "/bucket", "1",
-                                                        null);
+    final ErrorResponse errResponse =
+        new ErrorResponse(ErrorCode.BUCKET_ALREADY_EXISTS, null, null, "/bucket", "1", null);
 
     response.addHeader("Date", MON_29_JUN_2015_22_01_10_GMT);
     response.setResponseCode(409); // status conflict
@@ -500,7 +515,8 @@ public class MinioClientTest {
 
   @Test(expected = RegionConflictException.class)
   public void testMakeBucketRegionConflicts()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
     server.start();
 
@@ -512,13 +528,15 @@ public class MinioClientTest {
 
   @Test
   public void testSigningKey()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     MockWebServer server = new MockWebServer();
 
     MockResponse response1 = new MockResponse();
     response1.setResponseCode(200);
-    response1.setBody("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-        + "<LocationConstraint xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"></LocationConstraint>");
+    response1.setBody(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+            + "<LocationConstraint xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\"></LocationConstraint>");
     server.enqueue(response1);
 
     MockResponse response2 = new MockResponse();
@@ -533,10 +551,12 @@ public class MinioClientTest {
     server.start();
 
     // build expected request
-    ZonedDateTime expectedDate = ZonedDateTime.parse(MON_04_MAY_2015_07_58_51_GMT, Time.HTTP_HEADER_DATE_FORMAT);
+    ZonedDateTime expectedDate =
+        ZonedDateTime.parse(MON_04_MAY_2015_07_58_51_GMT, Time.HTTP_HEADER_DATE_FORMAT);
     String contentType = APPLICATION_OCTET_STREAM;
-    ObjectStat expectedStatInfo = new ObjectStat(BUCKET, "key", expectedDate, 5080,
-                                                 "a670520d9d36833b3e28d1e4b73cbe22", contentType);
+    ObjectStat expectedStatInfo =
+        new ObjectStat(
+            BUCKET, "key", expectedDate, 5080, "a670520d9d36833b3e28d1e4b73cbe22", contentType);
 
     // get request
     MinioClient client = new MinioClient(server.url(""), "foo", "bar");
@@ -547,7 +567,8 @@ public class MinioClientTest {
 
   @Test
   public void testSetBucketPolicy()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     // Create Mock web server and mocked responses
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();
@@ -566,7 +587,8 @@ public class MinioClientTest {
 
   @Test
   public void testGetBucketPolicy()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException, MinioException {
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException, XmlPullParserException,
+          MinioException {
     // Create Mock web server and mocked responses
     MockWebServer server = new MockWebServer();
     MockResponse response = new MockResponse();

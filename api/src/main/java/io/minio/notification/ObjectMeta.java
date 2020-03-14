@@ -29,4 +29,3 @@ public class ObjectMeta {
   public String versionId;
   public String sequencer;
 }
-

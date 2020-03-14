@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+import com.google.common.io.ByteStreams;
+import io.minio.MinioClient;
+import io.minio.ObjectStat;
+import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,26 +27,20 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-
+import me.tongfei.progressbar.ProgressBarStyle;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.common.io.ByteStreams;
-
-import io.minio.MinioClient;
-import io.minio.ObjectStat;
-import io.minio.errors.MinioException;
-import me.tongfei.progressbar.ProgressBarStyle;
-
 public class GetObjectProgressBar {
-  /**
-   * MinioClient.getObjectProgressBar() example.
-   */
+  /** MinioClient.getObjectProgressBar() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
     try {
       /* play.min.io for test and development. */
-      MinioClient minioClient = new MinioClient("https://play.min.io",
-          "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient =
+          new MinioClient(
+              "https://play.min.io",
+              "Q3AM3UQ867SPQQA43P2F",
+              "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       /* Amazon S3: */
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
@@ -56,8 +54,12 @@ public class GetObjectProgressBar {
       ObjectStat objectStat = minioClient.statObject("testbucket", "resumes/4.original.pdf");
 
       // Get input stream to have content of 'my-objectname' from 'my-bucketname'
-      InputStream is = new ProgressStream("Downloading .. ", ProgressBarStyle.ASCII,
-          objectStat.length(), minioClient.getObject("my-bucketname", "my-objectname"));
+      InputStream is =
+          new ProgressStream(
+              "Downloading .. ",
+              ProgressBarStyle.ASCII,
+              objectStat.length(),
+              minioClient.getObject("my-bucketname", "my-objectname"));
 
       Path path = Paths.get("my-filename");
       OutputStream os = Files.newOutputStream(path, StandardOpenOption.CREATE);
@@ -67,8 +69,12 @@ public class GetObjectProgressBar {
       os.close();
 
       if (bytesWritten != objectStat.length()) {
-        throw new IOException(path + ": unexpected data written.  expected = " + objectStat.length()
-            + ", written = " + bytesWritten);
+        throw new IOException(
+            path
+                + ": unexpected data written.  expected = "
+                + objectStat.length()
+                + ", written = "
+                + bytesWritten);
       }
 
     } catch (MinioException e) {

@@ -1,21 +1,22 @@
 /*
-  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2018 MinIO, Inc.
-  *
-  * Licensed under the Apache License, Version 2.0 (the "License");
-  * you may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at
-  *
-  *     http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
- 
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2018 MinIO, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.minio;
 
+import com.google.common.io.BaseEncoding;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -24,26 +25,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-
 import javax.crypto.SecretKey;
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
 
-import com.google.common.io.BaseEncoding;
-
-
-/**
-* ServerSideEncryption represents a form of server-side encryption.
-*/
+/** ServerSideEncryption represents a form of server-side encryption. */
 public abstract class ServerSideEncryption implements Destroyable {
-  /**
-   * The types of server-side encryption.
-   */
+  /** The types of server-side encryption. */
   public static enum Type {
-    SSE_C, SSE_S3, SSE_KMS;
+    SSE_C,
+    SSE_S3,
+    SSE_KMS;
 
     /**
      * Returns true if the server-side encryption requires a TLS connection.
+     *
      * @return true if the type of server-side encryption requires TLS.
      */
     public boolean requiresTls() {
@@ -52,8 +48,8 @@ public abstract class ServerSideEncryption implements Destroyable {
 
     /**
      * Returns true if the server-side encryption requires signature V4.
-     * @return true if the type of server-side encryption requires signature V4.
      *
+     * @return true if the type of server-side encryption requires signature V4.
      * @deprecated As of release 7.0
      */
     @Deprecated
@@ -64,27 +60,21 @@ public abstract class ServerSideEncryption implements Destroyable {
 
   protected boolean destroyed = false;
 
-  /**
-   * Returns server side encryption type.
-   */
+  /** Returns server side encryption type. */
   public abstract Type type();
 
-  /**
-   * Returns server side encryption headers.
-   */
+  /** Returns server side encryption headers. */
   public abstract Map<String, String> headers();
 
-  /**
-   * Returns server side encryption headers for source object in Put Object - Copy.
-   */
+  /** Returns server side encryption headers for source object in Put Object - Copy. */
   public Map<String, String> copySourceHeaders() throws IllegalArgumentException {
     throw new IllegalArgumentException(this.type().name() + " is not supported in copy source");
   }
 
   /**
    * Returns the type of server-side encryption.
-   * @return the type of server-side encryption.
    *
+   * @return the type of server-side encryption.
    * @deprecated As of release 7.0
    */
   @Deprecated
@@ -94,8 +84,8 @@ public abstract class ServerSideEncryption implements Destroyable {
 
   /**
    * Set the server-side-encryption headers of this specific encryption.
-   * @param headers The metadata key-value map.
    *
+   * @param headers The metadata key-value map.
    * @deprecated As of release 7.0
    */
   @Deprecated
@@ -126,7 +116,7 @@ public abstract class ServerSideEncryption implements Destroyable {
 
     @Override
     public final Type type() {
-      return Type.SSE_C; 
+      return Type.SSE_C;
     }
 
     @Override
@@ -141,8 +131,10 @@ public abstract class ServerSideEncryption implements Destroyable {
         md5.update(key);
 
         headers.put("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256");
-        headers.put("X-Amz-Server-Side-Encryption-Customer-Key",  BaseEncoding.base64().encode(key));
-        headers.put("X-Amz-Server-Side-Encryption-Customer-Key-Md5", BaseEncoding.base64().encode(md5.digest()));
+        headers.put("X-Amz-Server-Side-Encryption-Customer-Key", BaseEncoding.base64().encode(key));
+        headers.put(
+            "X-Amz-Server-Side-Encryption-Customer-Key-Md5",
+            BaseEncoding.base64().encode(md5.digest()));
       } finally {
         md5.reset();
       }
@@ -162,9 +154,12 @@ public abstract class ServerSideEncryption implements Destroyable {
         md5.update(key);
 
         headers.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Algorithm", "AES256");
-        headers.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key",  BaseEncoding.base64().encode(key));
-        headers.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key-Md5",
-                    BaseEncoding.base64().encode(md5.digest()));
+        headers.put(
+            "X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key",
+            BaseEncoding.base64().encode(key));
+        headers.put(
+            "X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key-Md5",
+            BaseEncoding.base64().encode(md5.digest()));
       } finally {
         md5.reset();
       }
@@ -180,8 +175,8 @@ public abstract class ServerSideEncryption implements Destroyable {
   }
 
   /**
-   * Create a new server-side-encryption object for encryption with customer
-   * provided keys (a.k.a. SSE-C).
+   * Create a new server-side-encryption object for encryption with customer provided keys (a.k.a.
+   * SSE-C).
    *
    * @param key The secret AES-256 key.
    * @return An instance of ServerSideEncryption implementing SSE-C.
@@ -189,37 +184,35 @@ public abstract class ServerSideEncryption implements Destroyable {
    * @throws NoSuchAlgorithmException if the crypto provider does not implement MD5.
    */
   public static ServerSideEncryption withCustomerKey(SecretKey key)
-    throws InvalidKeyException, NoSuchAlgorithmException {
+      throws InvalidKeyException, NoSuchAlgorithmException {
     if (!isCustomerKeyValid(key)) {
       throw new InvalidKeyException("The secret key is not a 256 bit AES key");
     }
     return new ServerSideEncryptionWithCustomerKey(key, MessageDigest.getInstance(("MD5")));
   }
 
-  /**
-   * @deprecated As of release 7.0
-   */
+  /** @deprecated As of release 7.0 */
   @Deprecated
-  static final class ServerSideEncryptionCopyWithCustomerKey extends ServerSideEncryptionWithCustomerKey {
+  static final class ServerSideEncryptionCopyWithCustomerKey
+      extends ServerSideEncryptionWithCustomerKey {
     public ServerSideEncryptionCopyWithCustomerKey(SecretKey key, MessageDigest md5) {
       super(key, md5);
     }
   }
 
   /**
-   * Create a new server-side-encryption object for encryption with customer
-   * provided keys (a.k.a. SSE-C).
+   * Create a new server-side-encryption object for encryption with customer provided keys (a.k.a.
+   * SSE-C).
    *
    * @param key The secret AES-256 key.
    * @return An instance of ServerSideEncryption implementing SSE-C.
    * @throws InvalidKeyException if the provided secret key is not a 256 bit AES key.
    * @throws NoSuchAlgorithmException if the crypto provider does not implement MD5.
-   *
    * @deprecated As of release 7.0
    */
   @Deprecated
   public static ServerSideEncryption copyWithCustomerKey(SecretKey key)
-    throws InvalidKeyException, NoSuchAlgorithmException {
+      throws InvalidKeyException, NoSuchAlgorithmException {
     if (!isCustomerKeyValid(key)) {
       throw new InvalidKeyException("The secret key is not a 256 bit AES key");
     }
@@ -265,7 +258,7 @@ public abstract class ServerSideEncryption implements Destroyable {
 
     @Override
     public final Type type() {
-      return Type.SSE_KMS; 
+      return Type.SSE_KMS;
     }
 
     @Override
@@ -293,13 +286,12 @@ public abstract class ServerSideEncryption implements Destroyable {
   /**
    * Create a new server-side-encryption object for encryption using a KMS (a.k.a. SSE-KMS).
    *
-   * @param keyId   specifies the customer-master-key (CMK) and must not be null.
+   * @param keyId specifies the customer-master-key (CMK) and must not be null.
    * @param context is the encryption context. If the context is null no context is used.
-   *
    * @return an instance of ServerSideEncryption implementing SSE-KMS.
    */
-  public static ServerSideEncryption withManagedKeys(String keyId, Map<String,String> context)
-    throws IllegalArgumentException, UnsupportedEncodingException {
+  public static ServerSideEncryption withManagedKeys(String keyId, Map<String, String> context)
+      throws IllegalArgumentException, UnsupportedEncodingException {
     if (keyId == null) {
       throw new IllegalArgumentException("The key-ID cannot be null");
     }
@@ -310,7 +302,7 @@ public abstract class ServerSideEncryption implements Destroyable {
     StringBuilder builder = new StringBuilder();
     int i = 0;
     builder.append('{');
-    for (Entry<String,String> entry : context.entrySet()) {
+    for (Entry<String, String> entry : context.entrySet()) {
       builder.append('"');
       builder.append(entry.getKey());
       builder.append('"');

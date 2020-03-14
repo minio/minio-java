@@ -16,30 +16,23 @@
 
 package io.minio.messages;
 
-import org.xmlpull.v1.XmlPullParserException;
 import com.google.api.client.util.Key;
+import org.xmlpull.v1.XmlPullParserException;
 
-
-/**
- * Helper class to construct create bucket configuration request XML for Amazon AWS S3.
- */
+/** Helper class to construct create bucket configuration request XML for Amazon AWS S3. */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class ObjectLockLegalHold extends XmlEntity{
+public class ObjectLockLegalHold extends XmlEntity {
   @Key("Status")
   private String status;
 
-  /**
-   * Constructs a new ObjectLockLegalHold object .
-   */
+  /** Constructs a new ObjectLockLegalHold object . */
   public ObjectLockLegalHold() throws XmlPullParserException {
     super();
     super.name = "LegalHold";
   }
 
-  /**
-   * Constructs a new ObjectLockLegalHold object with given status.
-   */
-  public ObjectLockLegalHold(boolean status) throws  XmlPullParserException {
+  /** Constructs a new ObjectLockLegalHold object with given status. */
+  public ObjectLockLegalHold(boolean status) throws XmlPullParserException {
     this();
     if (status) {
       this.status = "ON";
@@ -48,9 +41,7 @@ public class ObjectLockLegalHold extends XmlEntity{
     }
   }
 
-  /**
-   * Indicates whether the specified object has a Legal Hold in place or not.
-   */
+  /** Indicates whether the specified object has a Legal Hold in place or not. */
   public boolean status() {
     return status != null && status.equals("ON");
   }

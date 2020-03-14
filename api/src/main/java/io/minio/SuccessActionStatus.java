@@ -17,8 +17,9 @@
 package io.minio;
 
 public enum SuccessActionStatus {
-
-  SuccessActionStatus201(201), SuccessActionStatus200(200), SuccessActionStatus204(204);
+  SuccessActionStatus201(201),
+  SuccessActionStatus200(200),
+  SuccessActionStatus204(204);
 
   private final int value;
 
@@ -29,5 +30,4 @@ public enum SuccessActionStatus {
   public int getValue() {
     return value;
   }
-
 }

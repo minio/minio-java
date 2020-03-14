@@ -16,41 +16,35 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to create Amazon AWS S3 request XML containing information for Multiple object deletion.
+ * Helper class to create Amazon AWS S3 request XML containing information for Multiple object
+ * deletion.
  */
 @SuppressWarnings({"SameParameterValue", "unused"})
 public class DeleteResult extends XmlEntity {
   @Key("Deleted")
   private List<DeletedObject> objectList = new LinkedList<>();
+
   @Key("Error")
   private List<DeleteError> errorList = new LinkedList<>();
 
-
-  /**
-   * Constructs new delete result by parsing content on given reader.
-   */
+  /** Constructs new delete result by parsing content on given reader. */
   public DeleteResult(Reader reader) throws IOException, XmlPullParserException {
     super();
     super.name = "DeleteResult";
     this.parseXml(reader);
   }
 
-
   public List<DeletedObject> objectList() {
     return objectList;
   }
-
 
   public List<DeleteError> errorList() {
     return errorList;

@@ -27,11 +27,11 @@ jobs:
       - name: Gradle build on ${{ matrix.java-version }}
         if: matrix.os == 'ubuntu-latest'
         run: |
-          ./gradlew check
+          ./gradlew build
           ./gradlew runFunctionalTest
       - name: Gradle build on ${{ matrix.java-version }}
         if: matrix.os == 'windows-latest'
         run: |
           $Env:Path += ';.'
+          gradlew.bat build
           gradlew.bat runFunctionalTest
-

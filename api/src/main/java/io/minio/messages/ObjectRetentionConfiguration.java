@@ -21,30 +21,26 @@ import io.minio.Time;
 import java.time.ZonedDateTime;
 import org.xmlpull.v1.XmlPullParserException;
 
-/**
- * Helper class to parse Amazon AWS S3 response XML containing ObjectLockRetention information.
- */
+/** Helper class to parse Amazon AWS S3 response XML containing ObjectLockRetention information. */
 @SuppressWarnings("SameParameterValue")
 public class ObjectRetentionConfiguration extends XmlEntity {
   @Key("Mode")
   private String mode;
+
   @Key("RetainUntilDate")
   private String retainUntilDate;
 
- /**
-   * Constructs a new ObjectRetentionConfiguration object.
-   */
+  /** Constructs a new ObjectRetentionConfiguration object. */
   public ObjectRetentionConfiguration() throws XmlPullParserException {
     super();
     super.name = "Retention";
   }
 
   /**
-   * Constructs a new ObjectRetentionConfiguration object with given retention 
-   * until date and mode.
+   * Constructs a new ObjectRetentionConfiguration object with given retention until date and mode.
    */
-  public ObjectRetentionConfiguration(RetentionMode mode,  ZonedDateTime retainUntilDate)
-    throws XmlPullParserException, IllegalArgumentException {
+  public ObjectRetentionConfiguration(RetentionMode mode, ZonedDateTime retainUntilDate)
+      throws XmlPullParserException, IllegalArgumentException {
     this();
 
     if (mode == null) {
@@ -59,17 +55,15 @@ public class ObjectRetentionConfiguration extends XmlEntity {
     this.retainUntilDate = retainUntilDate.format(Time.EXPIRATION_DATE_FORMAT);
   }
 
-  /**
-   * Returns mode.
-   */
+  /** Returns mode. */
   public RetentionMode mode() {
     return this.mode == null ? null : RetentionMode.fromString(this.mode);
   }
 
-  /**
-   * Returns retain until date.
-   */
+  /** Returns retain until date. */
   public ZonedDateTime retainUntilDate() {
-    return retainUntilDate == null ? null : ZonedDateTime.parse(retainUntilDate, Time.EXPIRATION_DATE_FORMAT);
+    return retainUntilDate == null
+        ? null
+        : ZonedDateTime.parse(retainUntilDate, Time.EXPIRATION_DATE_FORMAT);
   }
 }

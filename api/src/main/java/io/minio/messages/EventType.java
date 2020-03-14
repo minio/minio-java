@@ -19,10 +19,7 @@ package io.minio.messages;
 import java.util.LinkedList;
 import java.util.List;
 
-
-/**
- * Amazon AWS S3 event types for notifications.
- */
+/** Amazon AWS S3 event types for notifications. */
 public enum EventType {
   OBJECT_CREATED_ANY("s3:ObjectCreated:*"),
   OBJECT_CREATED_PUT("s3:ObjectCreated:Put"),
@@ -39,20 +36,15 @@ public enum EventType {
 
   private final String value;
 
-
   private EventType(String value) {
     this.value = value;
   }
-
 
   public String toString() {
     return this.value;
   }
 
-
-  /**
-   * Returns EventType of given string.
-   */
+  /** Returns EventType of given string. */
   public static EventType fromString(String eventTypeString) throws IllegalArgumentException {
     for (EventType et : EventType.values()) {
       if (eventTypeString.equals(et.value)) {
@@ -60,30 +52,24 @@ public enum EventType {
       }
     }
 
-
     throw new IllegalArgumentException("unknown event '" + eventTypeString + "'");
   }
 
-
-  /**
-   * Returns List&lt;EventType&gt; of given List&lt;String&gt;.
-   */
-  public static List<EventType> fromStringList(List<String> eventList) throws IllegalArgumentException {
+  /** Returns List&lt;EventType&gt; of given List&lt;String&gt;. */
+  public static List<EventType> fromStringList(List<String> eventList)
+      throws IllegalArgumentException {
     List<EventType> eventTypeList = new LinkedList<EventType>();
-    for (String event: eventList) {
+    for (String event : eventList) {
       eventTypeList.add(EventType.fromString(event));
     }
 
     return eventTypeList;
   }
 
-
-  /**
-   * Returns List&lt;String&gt; of given List&lt;EventType&gt;.
-   */
+  /** Returns List&lt;String&gt; of given List&lt;EventType&gt;. */
   public static List<String> toStringList(List<EventType> eventTypeList) {
     List<String> events = new LinkedList<String>();
-    for (EventType eventType: eventTypeList) {
+    for (EventType eventType : eventTypeList) {
       events.add(eventType.toString());
     }
 

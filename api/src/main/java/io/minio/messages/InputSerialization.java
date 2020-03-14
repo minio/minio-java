@@ -16,53 +16,62 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest/InputSerialization information.
+ * Helper class to generate Amazon AWS S3 request XML for
+ * SelectObjectContentRequest/InputSerialization information.
  */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class InputSerialization extends XmlEntity {
   @Key("CompressionType")
   private String compressionType;
+
   @Key("CSV")
   private CsvInputSerialization csv;
+
   @Key("JSON")
   private JsonInputSerialization json;
+
   @Key("Parquet")
   private ParquetInputSerialization parquet;
 
-  
   public InputSerialization() throws XmlPullParserException {
     super();
     this.name = "InputSerialization";
   }
 
-  
-  /**
-   * Constructs a new InputSerialization object with CSV.
-   */
-  public static InputSerialization csv(CompressionType compressionType, boolean allowQuotedRecordDelimiter,
-                                       Character comments, Character fieldDelimiter, FileHeaderInfo fileHeaderInfo,
-                                       Character quoteCharacter, Character quoteEscapeCharacter,
-                                       Character recordDelimiter) throws XmlPullParserException {
+  /** Constructs a new InputSerialization object with CSV. */
+  public static InputSerialization csv(
+      CompressionType compressionType,
+      boolean allowQuotedRecordDelimiter,
+      Character comments,
+      Character fieldDelimiter,
+      FileHeaderInfo fileHeaderInfo,
+      Character quoteCharacter,
+      Character quoteEscapeCharacter,
+      Character recordDelimiter)
+      throws XmlPullParserException {
     InputSerialization is = new InputSerialization();
     if (compressionType != null) {
       is.compressionType = compressionType.toString();
     }
-    is.csv = new CsvInputSerialization(allowQuotedRecordDelimiter, comments, fieldDelimiter, fileHeaderInfo,
-                                       quoteCharacter, quoteEscapeCharacter, recordDelimiter);
+    is.csv =
+        new CsvInputSerialization(
+            allowQuotedRecordDelimiter,
+            comments,
+            fieldDelimiter,
+            fileHeaderInfo,
+            quoteCharacter,
+            quoteEscapeCharacter,
+            recordDelimiter);
     return is;
   }
 
-
-  /**
-   * Constructs a new InputSerialization object with JSON.
-   */
-  public static InputSerialization json(CompressionType compressionType, JsonType type) throws XmlPullParserException {
+  /** Constructs a new InputSerialization object with JSON. */
+  public static InputSerialization json(CompressionType compressionType, JsonType type)
+      throws XmlPullParserException {
     InputSerialization is = new InputSerialization();
     if (compressionType != null) {
       is.compressionType = compressionType.toString();
@@ -71,10 +80,7 @@ public class InputSerialization extends XmlEntity {
     return is;
   }
 
-
-  /**
-   * Constructs a new InputSerialization object with Parquet.
-   */
+  /** Constructs a new InputSerialization object with Parquet. */
   public static InputSerialization parquet() throws XmlPullParserException {
     InputSerialization is = new InputSerialization();
     is.parquet = new ParquetInputSerialization();

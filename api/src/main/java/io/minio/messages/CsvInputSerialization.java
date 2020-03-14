@@ -16,40 +16,46 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to generate Amazon AWS S3 request XML for SelectObjectContentRequest/InputSerialization/CSV
- * information.
+ * Helper class to generate Amazon AWS S3 request XML for
+ * SelectObjectContentRequest/InputSerialization/CSV information.
  */
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class CsvInputSerialization extends XmlEntity {
   @Key("AllowQuotedRecordDelimiter")
   private boolean allowQuotedRecordDelimiter;
+
   @Key("Comments")
   private Character comments;
+
   @Key("FieldDelimiter")
   private Character fieldDelimiter;
+
   @Key("FileHeaderInfo")
   private String fileHeaderInfo;
+
   @Key("QuoteCharacter")
   private Character quoteCharacter;
+
   @Key("QuoteEscapeCharacter")
   private Character quoteEscapeCharacter;
+
   @Key("RecordDelimiter")
   private Character recordDelimiter;
 
-
-  /**
-   * Constructs a new CsvInputSerialization object.
-   */
-  public CsvInputSerialization(boolean allowQuotedRecordDelimiter, Character comments, Character fieldDelimiter,
-                               FileHeaderInfo fileHeaderInfo, Character quoteCharacter, Character quoteEscapeCharacter,
-                               Character recordDelimiter)
-    throws XmlPullParserException {
+  /** Constructs a new CsvInputSerialization object. */
+  public CsvInputSerialization(
+      boolean allowQuotedRecordDelimiter,
+      Character comments,
+      Character fieldDelimiter,
+      FileHeaderInfo fileHeaderInfo,
+      Character quoteCharacter,
+      Character quoteEscapeCharacter,
+      Character recordDelimiter)
+      throws XmlPullParserException {
     super();
     this.name = "CSV";
 

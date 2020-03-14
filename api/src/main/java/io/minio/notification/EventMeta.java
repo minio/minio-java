@@ -28,5 +28,3 @@ public class EventMeta {
   public BucketMeta bucket;
   public ObjectMeta object;
 }
-
-

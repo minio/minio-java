@@ -27,14 +27,18 @@ import java.util.Arrays;
 public class NotificationInfo {
   @JsonProperty("Records")
   public NotificationEvent[] records;
+
   @JsonProperty("Err")
   public String err;
 
-
   @Override
   public String toString() {
-    return "NotificationInfo{" + "records=" + Arrays.toString(records)
-      + ", err='" + err + '\'' + '}';
+    return "NotificationInfo{"
+        + "records="
+        + Arrays.toString(records)
+        + ", err='"
+        + err
+        + '\''
+        + '}';
   }
 }
-

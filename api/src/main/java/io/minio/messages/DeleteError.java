@@ -18,27 +18,18 @@ package io.minio.messages;
 
 import java.io.IOException;
 import java.io.Reader;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-
-/**
- * Helper class to parse Amazon AWS S3 error response XML.
- */
+/** Helper class to parse Amazon AWS S3 error response XML. */
 @SuppressWarnings("unused")
 public class DeleteError extends ErrorResponse {
-  /**
-   * Constructs a new ErrorResponse object by reading given reader stream.
-   */
+  /** Constructs a new ErrorResponse object by reading given reader stream. */
   public DeleteError() throws XmlPullParserException {
     super();
     super.name = "Error";
   }
 
-
-  /**
-   * Constructs a new ErrorResponse object by reading given reader stream.
-   */
+  /** Constructs a new ErrorResponse object by reading given reader stream. */
   public DeleteError(Reader reader) throws IOException, XmlPullParserException {
     this();
     this.parseXml(reader);

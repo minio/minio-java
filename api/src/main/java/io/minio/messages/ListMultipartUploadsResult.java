@@ -16,102 +16,82 @@
 
 package io.minio.messages;
 
+import com.google.api.client.util.Key;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.google.api.client.util.Key;
-
-
 /**
- * Helper class to parse Amazon AWS S3 response XML containing ListMultipartUploadResult information.
+ * Helper class to parse Amazon AWS S3 response XML containing ListMultipartUploadResult
+ * information.
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ListMultipartUploadsResult extends XmlEntity {
   @Key("Upload")
   List<Upload> uploads;
+
   @Key("Bucket")
   private String bucketName;
+
   @Key("KeyMarker")
   private String keyMarker;
+
   @Key("UploadIdMarker")
   private String uploadIdMarker;
+
   @Key("NextKeyMarker")
   private String nextKeyMarker;
+
   @Key("NextUploadIdMarker")
   private String nextUploadIdMarker;
+
   @Key("MaxUploads")
   private int maxUploads;
+
   @Key("IsTruncated")
   private boolean isTruncated;
-
 
   public ListMultipartUploadsResult() throws XmlPullParserException {
     super();
     super.name = "ListMultipartUploadsResult";
   }
 
-
-  /**
-   * Returns whether the result is truncated or not.
-   */
+  /** Returns whether the result is truncated or not. */
   public boolean isTruncated() {
     return isTruncated;
   }
 
-
-  /**
-   * Returns bucket name.
-   */
+  /** Returns bucket name. */
   public String bucketName() {
     return bucketName;
   }
 
-
-  /**
-   * Returns key marker.
-   */
+  /** Returns key marker. */
   public String keyMarker() {
     return keyMarker;
   }
 
-
-  /**
-   * Returns upload ID marker.
-   */
+  /** Returns upload ID marker. */
   public String uploadIdMarker() {
     return uploadIdMarker;
   }
 
-
-  /**
-   * Returns next key marker.
-   */
+  /** Returns next key marker. */
   public String nextKeyMarker() {
     return nextKeyMarker;
   }
 
-
-  /**
-   * Returns next upload ID marker.
-   */
+  /** Returns next upload ID marker. */
   public String nextUploadIdMarker() {
     return nextUploadIdMarker;
   }
 
-
-  /**
-   * Returns max uploads received.
-   */
+  /** Returns max uploads received. */
   public int maxUploads() {
     return maxUploads;
   }
 
-
-  /**
-   * Returns List of Upload.
-   */
+  /** Returns List of Upload. */
   public List<Upload> uploads() {
     if (uploads == null) {
       return new ArrayList<>();

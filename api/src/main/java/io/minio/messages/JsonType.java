@@ -16,10 +16,8 @@
 
 package io.minio.messages;
 
-
-/**
- * The type of JSON.
- */
+/** The type of JSON. */
 public enum JsonType {
-  DOCUMENT, LINES;
+  DOCUMENT,
+  LINES;
 }
