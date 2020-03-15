@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.convert.Converter;
@@ -50,9 +51,11 @@ public enum EventType {
   }
 
   /** Returns EventType of given string. */
+  @JsonCreator
   public static EventType fromString(String eventTypeString) {
+    String s3EventTypeString = "s3:" + eventTypeString;
     for (EventType et : EventType.values()) {
-      if (eventTypeString.equals(et.value)) {
+      if (eventTypeString.equals(et.value) || s3EventTypeString.equals(et.value)) {
         return et;
       }
     }

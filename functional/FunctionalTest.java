@@ -21,7 +21,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.*;
-import io.minio.notification.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -3626,7 +3625,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String file = createFile1Kb();
     String bucketName = getRandomName();
-    CloseableIterator<Result<NotificationInfo>> ci = null;
+    CloseableIterator<Result<NotificationRecords>> ci = null;
     try {
       client.makeBucket(bucketName, region);
 
@@ -3636,14 +3635,14 @@ public class FunctionalTest {
       client.putObject(bucketName, "prefix-random-suffix", file, new PutObjectOptions(1 * KB, -1));
 
       while (ci.hasNext()) {
-        NotificationInfo info = ci.next().get();
-        if (info.records.length == 0) {
+        NotificationRecords records = ci.next().get();
+        if (records.events().size() == 0) {
           continue;
         }
 
         boolean found = false;
-        for (int i = 0; i < info.records.length; i++) {
-          if (info.records[i].s3.object.key.equals("prefix-random-suffix")) {
+        for (Event event : records.events()) {
+          if (event.objectName().equals("prefix-random-suffix")) {
             found = true;
             break;
           }
