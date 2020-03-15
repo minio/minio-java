@@ -45,17 +45,6 @@ public abstract class ServerSideEncryption implements Destroyable {
     public boolean requiresTls() {
       return this.equals(SSE_C) || this.equals(SSE_KMS);
     }
-
-    /**
-     * Returns true if the server-side encryption requires signature V4.
-     *
-     * @return true if the type of server-side encryption requires signature V4.
-     * @deprecated As of release 7.0
-     */
-    @Deprecated
-    public boolean requiresV4() {
-      return this.equals(SSE_KMS);
-    }
   }
 
   protected boolean destroyed = false;
@@ -69,28 +58,6 @@ public abstract class ServerSideEncryption implements Destroyable {
   /** Returns server side encryption headers for source object in Put Object - Copy. */
   public Map<String, String> copySourceHeaders() throws IllegalArgumentException {
     throw new IllegalArgumentException(this.type().name() + " is not supported in copy source");
-  }
-
-  /**
-   * Returns the type of server-side encryption.
-   *
-   * @return the type of server-side encryption.
-   * @deprecated As of release 7.0
-   */
-  @Deprecated
-  public Type getType() {
-    return this.type();
-  }
-
-  /**
-   * Set the server-side-encryption headers of this specific encryption.
-   *
-   * @param headers The metadata key-value map.
-   * @deprecated As of release 7.0
-   */
-  @Deprecated
-  public void marshal(Map<String, String> headers) {
-    headers.putAll(this.headers());
   }
 
   @Override
@@ -189,34 +156,6 @@ public abstract class ServerSideEncryption implements Destroyable {
       throw new InvalidKeyException("The secret key is not a 256 bit AES key");
     }
     return new ServerSideEncryptionWithCustomerKey(key, MessageDigest.getInstance(("MD5")));
-  }
-
-  /** @deprecated As of release 7.0 */
-  @Deprecated
-  static final class ServerSideEncryptionCopyWithCustomerKey
-      extends ServerSideEncryptionWithCustomerKey {
-    public ServerSideEncryptionCopyWithCustomerKey(SecretKey key, MessageDigest md5) {
-      super(key, md5);
-    }
-  }
-
-  /**
-   * Create a new server-side-encryption object for encryption with customer provided keys (a.k.a.
-   * SSE-C).
-   *
-   * @param key The secret AES-256 key.
-   * @return An instance of ServerSideEncryption implementing SSE-C.
-   * @throws InvalidKeyException if the provided secret key is not a 256 bit AES key.
-   * @throws NoSuchAlgorithmException if the crypto provider does not implement MD5.
-   * @deprecated As of release 7.0
-   */
-  @Deprecated
-  public static ServerSideEncryption copyWithCustomerKey(SecretKey key)
-      throws InvalidKeyException, NoSuchAlgorithmException {
-    if (!isCustomerKeyValid(key)) {
-      throw new InvalidKeyException("The secret key is not a 256 bit AES key");
-    }
-    return new ServerSideEncryptionCopyWithCustomerKey(key, MessageDigest.getInstance(("MD5")));
   }
 
   static final class ServerSideEncryptionS3 extends ServerSideEncryption {

@@ -1,4 +1,5 @@
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
@@ -60,8 +61,9 @@ public class PutObjectEncryptedKms {
       // To test SSE-KMS
       ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("Key-Id", myContext);
 
-      minioClient.putObject(
-          "my-bucketname", "my-objectname", bais, Long.valueOf(bais.available()), null, sse, null);
+      PutObjectOptions options = new PutObjectOptions(bais.available(), -1);
+      options.setSse(sse);
+      minioClient.putObject("my-bucketname", "my-objectname", bais, options);
 
       bais.close();
 

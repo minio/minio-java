@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -89,13 +90,7 @@ public class PutObjectUiProgressBar extends JFrame {
 
       pmis.getProgressMonitor().setMillisToPopup(10);
       minioClient.putObject(
-          "bank",
-          "my-objectname",
-          pmis,
-          Long.valueOf(pmis.available()),
-          null,
-          null,
-          "application/octet-stream");
+          "bank", "my-objectname", pmis, new PutObjectOptions(pmis.available(), -1));
       System.out.println("my-objectname is uploaded successfully");
     } catch (FileNotFoundException e) {
       // TODO Auto-generated catch block

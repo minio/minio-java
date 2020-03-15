@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -75,13 +76,7 @@ public class SetGetObjectLockRetentionConfig {
 
       // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
       minioClient.putObject(
-          "my-bucketname",
-          "my-objectname",
-          bais,
-          Long.valueOf(bais.available()),
-          null,
-          null,
-          "application/octet-stream");
+          "my-bucketname", "my-objectname", bais, new PutObjectOptions(bais.available(), -1));
       bais.close();
       System.out.println("my-objectname is uploaded successfully");
 

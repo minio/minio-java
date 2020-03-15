@@ -1,4 +1,5 @@
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -34,7 +35,9 @@ public class PutGetObjectEncryptedFile {
 
       // To test SSE-C
       ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-      minioClient.putObject(bucketName, objectName, inputfile, null, null, sse, null);
+      PutObjectOptions options = new PutObjectOptions(-1, 6000000);
+      options.setSse(sse);
+      minioClient.putObject(bucketName, objectName, inputfile, options);
       System.out.println("my-objectname is encrypted and uploaded successfully.");
 
       minioClient.getObject(bucketName, objectName, sse, outputfile);

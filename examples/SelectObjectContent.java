@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.PutObjectOptions;
 import io.minio.SelectResponseStream;
 import io.minio.errors.MinioException;
 import io.minio.messages.FileHeaderInfo;
@@ -55,7 +56,7 @@ public class SelectObjectContent {
               .getBytes(StandardCharsets.UTF_8);
       ByteArrayInputStream bais = new ByteArrayInputStream(data);
       minioClient.putObject(
-          "my-bucketname", "my-objectName", bais, Long.valueOf(data.length), null, null, null);
+          "my-bucketname", "my-objectname", bais, new PutObjectOptions(data.length, -1));
 
       String sqlExpression = "select * from S3Object";
       InputSerialization is =
