@@ -20,22 +20,4 @@ package io.minio.messages;
 public enum RetentionMode {
   GOVERNANCE,
   COMPLIANCE;
-
-  /** Returns ErrorCode of given code string. */
-  public static RetentionMode fromString(String modeString) {
-    if (modeString == null) {
-      return null;
-    }
-
-    if (modeString.equals(RetentionMode.GOVERNANCE.toString())) {
-      return RetentionMode.GOVERNANCE;
-    }
-
-    if (modeString.equals(RetentionMode.COMPLIANCE.toString())) {
-      return RetentionMode.COMPLIANCE;
-    }
-
-    // Unknown mode string.
-    return null;
-  }
 }

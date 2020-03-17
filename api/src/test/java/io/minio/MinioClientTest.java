@@ -389,7 +389,7 @@ public class MinioClientTest {
 
     Item item = objectsInBucket.next().get();
     assertEquals("key", item.objectName());
-    assertEquals(11, item.objectSize());
+    assertEquals(11, item.size());
     assertEquals("STANDARD", item.storageClass());
     assertEquals("2015-05-05T02:21:15.716Z", item.lastModified().format(Time.RESPONSE_DATE_FORMAT));
 

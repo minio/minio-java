@@ -16,45 +16,33 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/**
- * Helper class to generate Amazon AWS S3 request XML for
- * SelectObjectContentRequest/OutputSerialization information.
- */
+/** Helper class to denote Output Serialization information of SelectObjectContentRequest. */
+@Root(name = "OutputSerialization")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class OutputSerialization extends XmlEntity {
-  @Key("CSV")
+public class OutputSerialization {
+  @Element(name = "CSV", required = false)
   private CsvOutputSerialization csv;
 
-  @Key("JSON")
+  @Element(name = "JSON", required = false)
   private JsonOutputSerialization json;
 
-  public OutputSerialization() throws XmlPullParserException {
-    super();
-    this.name = "OutputSerialization";
-  }
-
   /** Constructs a new OutputSerialization object with CSV. */
-  public static OutputSerialization csv(
+  public OutputSerialization(
       Character fieldDelimiter,
       Character quoteCharacter,
       Character quoteEscapeCharacter,
       QuoteFields quoteFields,
-      Character recordDelimiter)
-      throws XmlPullParserException {
-    OutputSerialization os = new OutputSerialization();
-    os.csv =
+      Character recordDelimiter) {
+    this.csv =
         new CsvOutputSerialization(
             fieldDelimiter, quoteCharacter, quoteEscapeCharacter, quoteFields, recordDelimiter);
-    return os;
   }
 
   /** Constructs a new OutputSerialization object with JSON. */
-  public static OutputSerialization json(Character recordDelimiter) throws XmlPullParserException {
-    OutputSerialization os = new OutputSerialization();
-    os.json = new JsonOutputSerialization(recordDelimiter);
-    return os;
+  public OutputSerialization(Character recordDelimiter) {
+    this.json = new JsonOutputSerialization(recordDelimiter);
   }
 }

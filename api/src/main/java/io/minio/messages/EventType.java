@@ -16,10 +16,15 @@
 
 package io.minio.messages;
 
-import java.util.LinkedList;
-import java.util.List;
+import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
+import org.simpleframework.xml.convert.Converter;
+import org.simpleframework.xml.stream.InputNode;
+import org.simpleframework.xml.stream.OutputNode;
 
 /** Amazon AWS S3 event types for notifications. */
+@Root(name = "Event")
+@Convert(EventType.EventTypeConverter.class)
 public enum EventType {
   OBJECT_CREATED_ANY("s3:ObjectCreated:*"),
   OBJECT_CREATED_PUT("s3:ObjectCreated:Put"),
@@ -45,7 +50,7 @@ public enum EventType {
   }
 
   /** Returns EventType of given string. */
-  public static EventType fromString(String eventTypeString) throws IllegalArgumentException {
+  public static EventType fromString(String eventTypeString) {
     for (EventType et : EventType.values()) {
       if (eventTypeString.equals(et.value)) {
         return et;
@@ -55,24 +60,15 @@ public enum EventType {
     throw new IllegalArgumentException("unknown event '" + eventTypeString + "'");
   }
 
-  /** Returns List&lt;EventType&gt; of given List&lt;String&gt;. */
-  public static List<EventType> fromStringList(List<String> eventList)
-      throws IllegalArgumentException {
-    List<EventType> eventTypeList = new LinkedList<EventType>();
-    for (String event : eventList) {
-      eventTypeList.add(EventType.fromString(event));
+  public static class EventTypeConverter implements Converter<EventType> {
+    @Override
+    public EventType read(InputNode node) throws Exception {
+      return EventType.fromString(node.getValue());
     }
 
-    return eventTypeList;
-  }
-
-  /** Returns List&lt;String&gt; of given List&lt;EventType&gt;. */
-  public static List<String> toStringList(List<EventType> eventTypeList) {
-    List<String> events = new LinkedList<String>();
-    for (EventType eventType : eventTypeList) {
-      events.add(eventType.toString());
+    @Override
+    public void write(OutputNode node, EventType eventType) throws Exception {
+      node.setValue(eventType.toString());
     }
-
-    return events;
   }
 }

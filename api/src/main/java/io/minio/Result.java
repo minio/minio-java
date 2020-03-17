@@ -22,18 +22,23 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.XmlParserException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import org.xmlpull.v1.XmlPullParserException;
 
 /** A container class keeps any type and exception occured. */
 public class Result<T> {
   private final T type;
   private final Exception ex;
 
-  public Result(T type, Exception ex) {
+  public Result(T type) {
     this.type = type;
+    this.ex = null;
+  }
+
+  public Result(Exception ex) {
+    this.type = null;
     this.ex = ex;
   }
 
@@ -41,7 +46,7 @@ public class Result<T> {
   public T get()
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           JsonParseException, JsonMappingException, IOException, InvalidKeyException,
-          XmlPullParserException, ErrorResponseException, InternalException {
+          XmlParserException, ErrorResponseException, InternalException {
     if (ex == null) {
       return type;
     }
@@ -62,8 +67,8 @@ public class Result<T> {
       throw (InvalidKeyException) ex;
     }
 
-    if (ex instanceof XmlPullParserException) {
-      throw (XmlPullParserException) ex;
+    if (ex instanceof XmlParserException) {
+      throw (XmlParserException) ex;
     }
 
     if (ex instanceof ErrorResponseException) {

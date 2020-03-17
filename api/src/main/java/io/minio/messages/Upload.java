@@ -16,38 +16,39 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import io.minio.Time;
 import java.time.ZonedDateTime;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing Upload information. */
-@SuppressWarnings("unused")
-public class Upload extends XmlEntity {
-  @Key("Key")
+/**
+ * Helper class to denote Upload information of a multipart upload and used in
+ * ListMultipartUploadsResult.
+ */
+@Root(name = "Upload", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class Upload {
+  @Element(name = "Key")
   private String objectName;
 
-  @Key("UploadId")
+  @Element(name = "UploadId")
   private String uploadId;
 
-  @Key("Initiator")
+  @Element(name = "Initiator")
   private Initiator initiator;
 
-  @Key("Owner")
+  @Element(name = "Owner")
   private Owner owner;
 
-  @Key("StorageClass")
+  @Element(name = "StorageClass")
   private String storageClass;
 
-  @Key("Initiated")
-  private String initiated;
+  @Element(name = "Initiated")
+  private ResponseDate initiated;
 
   private long aggregatedPartSize;
 
-  public Upload() throws XmlPullParserException {
-    super();
-    super.name = "Upload";
-  }
+  public Upload() {}
 
   /** Returns object name. */
   public String objectName() {
@@ -76,7 +77,7 @@ public class Upload extends XmlEntity {
 
   /** Returns initated time. */
   public ZonedDateTime initiated() {
-    return ZonedDateTime.parse(initiated, Time.RESPONSE_DATE_FORMAT);
+    return initiated.zonedDateTime();
   }
 
   /** Returns aggregated part size. */

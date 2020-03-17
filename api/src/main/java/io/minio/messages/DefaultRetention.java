@@ -16,54 +16,34 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementUnion;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing DefaultRetention information. */
-@SuppressWarnings("SameParameterValue")
-public class DefaultRetention extends XmlEntity {
-  @Key("Mode")
-  private String mode;
+/** Helper class to denote DefaultRetention information for ObjectLockConfiguration. */
+@Root(name = "DefaultRetention", strict = false)
+public class DefaultRetention {
+  @Element(name = "Mode", required = false)
+  private RetentionMode mode;
 
-  @Key("Days")
-  private Integer days;
+  @ElementUnion({
+    @Element(name = "Days", type = RetentionDurationDays.class, required = false),
+    @Element(name = "Years", type = RetentionDurationYears.class, required = false)
+  })
+  private RetentionDuration duration;
 
-  @Key("Years")
-  private Integer years;
+  public DefaultRetention() {}
 
-  public DefaultRetention() throws XmlPullParserException {
-    super();
-    this.name = "DefaultRetention";
+  public DefaultRetention(RetentionMode mode, RetentionDuration duration) {
+    this.mode = mode;
+    this.duration = duration;
   }
 
-  /** Constructs a new DefaultRetention object with given retention. */
-  public DefaultRetention(RetentionMode mode, int duration, DurationUnit unit)
-      throws XmlPullParserException {
-    this();
-
-    if (mode != null) {
-      this.mode = mode.toString();
-    }
-
-    if (unit == DurationUnit.DAYS) {
-      this.days = duration;
-    } else {
-      this.years = duration;
-    }
-  }
-
-  /** Returns mode. */
   public RetentionMode mode() {
-    return RetentionMode.fromString(mode);
+    return mode;
   }
 
-  /** Returns days. */
-  public Integer days() {
-    return days;
-  }
-
-  /** Returns years. */
-  public Integer years() {
-    return years;
+  public RetentionDuration duration() {
+    return duration;
   }
 }

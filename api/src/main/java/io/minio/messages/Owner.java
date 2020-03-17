@@ -16,22 +16,22 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing Owner information. */
-@SuppressWarnings("SameParameterValue")
-public class Owner extends XmlEntity {
-  @Key("ID")
+/**
+ * Helper class to denote owner information for ListAllMyBucketsResult, ListBucketResult,
+ * ListBucketResultV1, ListMultipartUploadsResult and ListPartsResult.
+ */
+@Root(name = "Owner", strict = false)
+public class Owner {
+  @Element(name = "ID", required = false)
   private String id;
 
-  @Key("DisplayName")
+  @Element(name = "DisplayName", required = false)
   private String displayName;
 
-  public Owner() throws XmlPullParserException {
-    super();
-    this.name = "Owner";
-  }
+  public Owner() {}
 
   /** Returns owner ID. */
   public String id() {

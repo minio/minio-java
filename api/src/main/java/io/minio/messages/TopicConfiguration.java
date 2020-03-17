@@ -16,34 +16,17 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import java.util.LinkedList;
-import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing topic configuration. */
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class TopicConfiguration extends XmlEntity {
-  @Key("Id")
-  private String id;
-
-  @Key("Topic")
+/** Helper class to denote Topic configuration of NotificationConfiguration. */
+@Root(name = "TopicConfiguration", strict = false)
+public class TopicConfiguration extends NotificationCommonConfiguration {
+  @Element(name = "Topic")
   private String topic;
 
-  @Key("Event")
-  private List<String> events = new LinkedList<>();
-
-  @Key("Filter")
-  private Filter filter;
-
-  public TopicConfiguration() throws XmlPullParserException {
+  public TopicConfiguration() {
     super();
-    super.name = "TopicConfiguration";
-  }
-
-  /** Sets ID. This is used only in functional test. */
-  public void setId(String id) {
-    this.id = id;
   }
 
   /** Returns topic. */
@@ -54,25 +37,5 @@ public class TopicConfiguration extends XmlEntity {
   /** Sets topic. */
   public void setTopic(String topic) {
     this.topic = topic;
-  }
-
-  /** Returns events. */
-  public List<EventType> events() throws IllegalArgumentException {
-    return EventType.fromStringList(events);
-  }
-
-  /** Sets event. */
-  public void setEvents(List<EventType> events) {
-    this.events = EventType.toStringList(events);
-  }
-
-  /** Returns filter. */
-  public Filter filter() {
-    return filter;
-  }
-
-  /** Sets filter. */
-  public void setFilter(Filter filter) {
-    this.filter = filter;
   }
 }

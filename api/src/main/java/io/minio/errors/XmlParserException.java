@@ -14,32 +14,18 @@
  * limitations under the License.
  */
 
-package io.minio.messages;
+package io.minio.errors;
 
-import com.google.api.client.util.Key;
-import org.xmlpull.v1.XmlPullParserException;
+public class XmlParserException extends MinioException {
+  Exception exception;
 
-/** Helper class to parse Amazon AWS S3 response XML containing Grant information. */
-@SuppressWarnings({"SameParameterValue", "unused"})
-public class Grant extends XmlEntity {
-  @Key("Grantee")
-  private Grantee grantee;
-
-  @Key("Permission")
-  private String permission;
-
-  public Grant() throws XmlPullParserException {
+  public XmlParserException(Exception exception) {
     super();
-    this.name = "Grant";
+    this.exception = exception;
   }
 
-  /** Returns Grantee. */
-  public Grantee grantee() {
-    return grantee;
-  }
-
-  /** Returns permission. */
-  public String permission() {
-    return permission;
+  @Override
+  public String toString() {
+    return exception.toString();
   }
 }

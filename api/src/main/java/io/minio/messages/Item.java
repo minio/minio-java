@@ -16,49 +16,43 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import io.minio.Time;
 import java.time.ZonedDateTime;
 import java.util.Map;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing object item information. */
-@SuppressWarnings({"SameParameterValue", "unused"})
-public class Item extends XmlEntity {
-  @Key("Key")
+/** Helper class to denote Object information in ListBucketResult and ListBucketResultV1. */
+@Root(name = "Contents", strict = false)
+public class Item {
+  @Element(name = "Key")
   private String objectName;
 
-  @Key("LastModified")
-  private String lastModified;
+  @Element(name = "LastModified")
+  private ResponseDate lastModified;
 
-  @Key("ETag")
+  @Element(name = "ETag")
   private String etag;
 
-  @Key("Size")
+  @Element(name = "Size")
   private long size;
 
-  @Key("StorageClass")
+  @Element(name = "StorageClass")
   private String storageClass;
 
-  @Key("Owner")
+  @Element(name = "Owner")
   private Owner owner;
 
-  @Key("UserMetadata")
-  private Map<String, String> userMetadata;
+  @Element(name = "UserMetadata", required = false)
+  private Metadata userMetadata;
 
   private boolean isDir = false;
 
-  public Item() throws XmlPullParserException {
-    this(null, false);
-  }
+  public Item() {}
 
-  /** Constructs a new Item object with given object name and IsDir flag. */
-  public Item(String objectName, boolean isDir) throws XmlPullParserException {
-    super();
-    this.name = "Item";
-
-    this.objectName = objectName;
-    this.isDir = isDir;
+  /** Constructs a new Item for prefix i.e. directory. */
+  public Item(String prefix) {
+    this.objectName = prefix;
+    this.isDir = true;
   }
 
   /** Returns object name. */
@@ -68,7 +62,7 @@ public class Item extends XmlEntity {
 
   /** Returns last modified time of the object. */
   public ZonedDateTime lastModified() {
-    return ZonedDateTime.parse(lastModified, Time.RESPONSE_DATE_FORMAT);
+    return lastModified.zonedDateTime();
   }
 
   /** Returns ETag of the object. */
@@ -77,7 +71,7 @@ public class Item extends XmlEntity {
   }
 
   /** Returns object size. */
-  public long objectSize() {
+  public long size() {
     return size;
   }
 
@@ -93,7 +87,11 @@ public class Item extends XmlEntity {
 
   /** Returns user metadata. This is MinIO specific extension to ListObjectsV2. */
   public Map<String, String> userMetadata() {
-    return userMetadata;
+    if (userMetadata == null) {
+      return null;
+    }
+
+    return userMetadata.get();
   }
 
   /** Returns whether the object is a directory or not. */

@@ -16,48 +16,51 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
 import java.util.LinkedList;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing ListPartsResult information. */
-@SuppressWarnings("unused")
-public class ListPartsResult extends XmlEntity {
-  @Key("Bucket")
+/**
+ * Denotes list of parts of a upload response XML as per
+ * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html.
+ */
+@Root(name = "ListPartsResult", strict = false)
+@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+public class ListPartsResult {
+  @Element(name = "Bucket")
   private String bucketName;
 
-  @Key("Key")
+  @Element(name = "Key")
   private String objectName;
 
-  @Key("Initiator")
+  @Element(name = "Initiator")
   private Initiator initiator;
 
-  @Key("Owner")
+  @Element(name = "Owner")
   private Owner owner;
 
-  @Key("StorageClass")
+  @Element(name = "StorageClass")
   private String storageClass;
 
-  @Key("PartNumberMarker")
+  @Element(name = "PartNumberMarker")
   private int partNumberMarker;
 
-  @Key("NextPartNumberMarker")
+  @Element(name = "NextPartNumberMarker")
   private int nextPartNumberMarker;
 
-  @Key("MaxParts")
+  @Element(name = "MaxParts")
   private int maxParts;
 
-  @Key("IsTruncated")
+  @Element(name = "IsTruncated")
   private boolean isTruncated;
 
-  @Key("Part")
+  @ElementList(name = "Part", inline = true, required = false)
   private List<Part> partList;
 
-  public ListPartsResult() throws XmlPullParserException {
-    super();
-    this.name = "ListPartsResult";
-  }
+  public ListPartsResult() {}
 
   /** Returns bucket name. */
   public String bucketName() {

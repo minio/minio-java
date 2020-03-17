@@ -16,24 +16,20 @@
 
 package io.minio.messages;
 
-import com.google.api.client.util.Key;
-import io.minio.Time;
 import java.time.ZonedDateTime;
-import org.xmlpull.v1.XmlPullParserException;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
-/** Helper class to parse Amazon AWS S3 response XML containing bucket information. */
-@SuppressWarnings("SameParameterValue")
-public class Bucket extends XmlEntity {
-  @Key("Name")
+/** Helper class to denote bucket information for ListAllMyBucketsResult. */
+@Root(name = "Bucket", strict = false)
+public class Bucket {
+  @Element(name = "Name")
   private String name;
 
-  @Key("CreationDate")
-  private String creationDate;
+  @Element(name = "CreationDate")
+  private ResponseDate creationDate;
 
-  public Bucket() throws XmlPullParserException {
-    super();
-    super.name = "Bucket";
-  }
+  public Bucket() {}
 
   /** Returns bucket name. */
   public String name() {
@@ -42,6 +38,6 @@ public class Bucket extends XmlEntity {
 
   /** Returns creation date. */
   public ZonedDateTime creationDate() {
-    return ZonedDateTime.parse(creationDate, Time.RESPONSE_DATE_FORMAT);
+    return creationDate.zonedDateTime();
   }
 }

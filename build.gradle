@@ -48,7 +48,7 @@ subprojects {
     }
 
     dependencies {
-        compile "com.google.http-client:google-http-client-xml:1.24.1"
+        compile "org.simpleframework:simple-xml:2.7.1"
         compile "com.google.guava:guava:25.1-jre"
         compile "com.squareup.okhttp3:okhttp:3.13.1"
         compile "com.squareup.okio:okio:1.17.2"

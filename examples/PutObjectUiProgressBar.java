@@ -23,6 +23,7 @@ import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
+import io.minio.errors.XmlParserException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedInputStream;
@@ -36,7 +37,6 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.ProgressMonitorInputStream;
 import javax.swing.SwingWorker;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class PutObjectUiProgressBar extends JFrame {
 
@@ -67,7 +67,7 @@ public class PutObjectUiProgressBar extends JFrame {
    * on the UI
    */
   private void uploadFile(String fileName)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException,
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlParserException,
           InvalidEndpointException, InvalidPortException, InvalidBucketNameException,
           InsufficientDataException, ErrorResponseException, InternalException,
           IllegalArgumentException, InvalidResponseException {
