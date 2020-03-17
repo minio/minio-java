@@ -2,13 +2,13 @@
 
 MinIO Java Client SDK提供简单的API来访问任何与Amazon S3兼容的对象存储服务。
 
-本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](http://docs.min.io/docs/java-client-api-reference)文档。
+本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](https://docs.min.io/docs/java-client-api-reference)文档。
 
 ## 最低需求
 Java 1.8或更高版本:
 
-* [OracleJDK 8.0](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-* [OpenJDK8.0](http://openjdk.java.net/install/)
+* [OracleJDK 8.0](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+* [OpenJDK8.0](https://openjdk.java.net/install/)
 
 ## 使用maven
 ```xml
@@ -27,7 +27,7 @@ dependencies {
 ```
 
 ## 直接下载JAR
-你可以到maven仓库直接下载最新版的[JAR](http://repo1.maven.org/maven2/io/minio/minio/3.0.10/)。
+你可以到maven仓库直接下载最新版的[JAR](https://repo1.maven.org/maven2/io/minio/minio/3.0.10/)。
 
 ## 快速入门示例－文件上传
 本示例程序连接到一个对象存储服务，创建一个存储桶并上传一个文件到该桶中。
