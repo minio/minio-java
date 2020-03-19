@@ -43,7 +43,7 @@ public class UploadObject {
 
       // Upload 'my-filename' as object 'my-objectname' in 'my-bucketname'.
       minioClient.putObject(
-          "my-bucketname", "my-objectname", "my-filename", new PutObjectOptions(-1, 6000000));
+          "my-bucketname", "my-objectname", "my-filename", new PutObjectOptions(67108864, -1));
       System.out.println("my-filename is uploaded to my-objectname successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

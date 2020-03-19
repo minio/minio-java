@@ -25,11 +25,13 @@ class PutObjectRunnable implements Runnable {
   MinioClient client;
   String bucketName;
   String filename;
+  long size;
 
-  public PutObjectRunnable(MinioClient client, String bucketName, String filename) {
+  public PutObjectRunnable(MinioClient client, String bucketName, String filename, long size) {
     this.client = client;
     this.bucketName = bucketName;
     this.filename = filename;
+    this.size = size;
   }
 
   public void run() {
@@ -37,7 +39,7 @@ class PutObjectRunnable implements Runnable {
 
     try {
       traceBuffer.append("[" + filename + "]: threaded put object\n");
-      client.putObject(bucketName, filename, filename, new PutObjectOptions(-1, 6000000));
+      client.putObject(bucketName, filename, filename, new PutObjectOptions(size, -1));
       traceBuffer.append("[" + filename + "]: delete file\n");
       Files.delete(Paths.get(filename));
       traceBuffer.append("[" + filename + "]: delete object\n");

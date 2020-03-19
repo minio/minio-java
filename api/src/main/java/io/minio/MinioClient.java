@@ -3957,9 +3957,7 @@ public class MinioClient {
       headerMap.putAll(options.sse().headers());
     }
 
-    if (headerMap.get("Content-Type") == null) {
-      headerMap.put("Content-Type", options.contentType());
-    }
+    headerMap.put("Content-Type", options.contentType());
 
     // initiate new multipart upload.
     String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
@@ -3970,23 +3968,21 @@ public class MinioClient {
 
     try {
       for (int partNumber = 1; partNumber <= partCount || partCount < 0; partNumber++) {
-        long availableSize = (long) getAvailableSize(data, (int) options.partSize() + 1);
-
-        // If availableSize is less or equal to options.partSize(), then we have reached last part.
-        if (availableSize <= options.partSize()) {
-          if (partCount > 0) {
-            if (partNumber != partCount) {
-              throw new IOException("unexpected EOF");
-            }
-
-            if (availableSize + uploadedSize != options.objectSize()) {
-              throw new IOException("unexpected EOF");
-            }
-          } else {
-            partCount = partNumber;
+        long availableSize = options.partSize();
+        if (partCount > 0) {
+          if (partNumber == partCount) {
+            availableSize = options.objectSize() - uploadedSize;
           }
         } else {
-          availableSize = options.partSize();
+          availableSize = getAvailableSize(data, options.partSize() + 1);
+
+          // If availableSize is less or equal to options.partSize(), then we have reached last
+          // part.
+          if (availableSize <= options.partSize()) {
+            partCount = partNumber;
+          } else {
+            availableSize = options.partSize();
+          }
         }
 
         Map<String, String> ssecHeaders = null;
@@ -4064,10 +4060,11 @@ public class MinioClient {
       throw new IllegalArgumentException(filename + ": not a regular file");
     }
 
-    if (options.contentType().equals("application/octet-stream")
-        && options.headers() != null
-        && options.headers().get("Content-Type") == null) {
-      options.setContentType(Files.probeContentType(filePath));
+    if (options.contentType().equals("application/octet-stream")) {
+      String contentType = Files.probeContentType(filePath);
+      if (contentType != null && !contentType.equals("")) {
+        options.setContentType(contentType);
+      }
     }
 
     if (options.objectSize() != Files.size(filePath)) {
@@ -5087,63 +5084,34 @@ public class MinioClient {
     return new SelectResponseStream(response.body().byteStream());
   }
 
-  /**
-   * Return available size of given input stream up to given expected read size. If less data is
-   * available than expected read size, it returns how much data available to read.
-   */
-  private int getAvailableSize(Object inputStream, int expectedReadSize)
+  private long getAvailableSize(Object data, long expectedReadSize)
       throws IOException, InternalException {
-    RandomAccessFile file = null;
-    BufferedInputStream stream = null;
-    if (inputStream instanceof RandomAccessFile) {
-      file = (RandomAccessFile) inputStream;
-    } else if (inputStream instanceof BufferedInputStream) {
-      stream = (BufferedInputStream) inputStream;
-    } else {
+    if (!(data instanceof BufferedInputStream)) {
       throw new InternalException(
-          "Unknown input stream. This should not happen.  "
+          "data must be BufferedInputStream. This should not happen.  "
               + "Please report to https://github.com/minio/minio-java/issues/");
     }
 
-    // hold current position of file/stream to reset back to this position.
-    long pos = 0;
-    if (file != null) {
-      pos = file.getFilePointer();
-    } else {
-      stream.mark(expectedReadSize);
-    }
+    BufferedInputStream stream = (BufferedInputStream) data;
+    stream.mark((int) expectedReadSize);
 
-    // 16KiB buffer for optimization
-    byte[] buf = new byte[16384];
-    int bytesToRead = buf.length;
-    int bytesRead = 0;
-    int totalBytesRead = 0;
+    byte[] buf = new byte[16384]; // 16KiB buffer for optimization
+    long totalBytesRead = 0;
     while (totalBytesRead < expectedReadSize) {
-      if ((expectedReadSize - totalBytesRead) < bytesToRead) {
-        bytesToRead = expectedReadSize - totalBytesRead;
+      long bytesToRead = expectedReadSize - totalBytesRead;
+      if (bytesToRead > buf.length) {
+        bytesToRead = buf.length;
       }
 
-      if (file != null) {
-        bytesRead = file.read(buf, 0, bytesToRead);
-      } else {
-        bytesRead = stream.read(buf, 0, bytesToRead);
-      }
-
+      int bytesRead = stream.read(buf, 0, (int) bytesToRead);
       if (bytesRead < 0) {
-        // reached EOF
-        break;
+        break; // reached EOF
       }
 
       totalBytesRead += bytesRead;
     }
 
-    // reset back to saved position.
-    if (file != null) {
-      file.seek(pos);
-    } else {
-      stream.reset();
-    }
-
+    stream.reset();
     return totalBytesRead;
   }
 

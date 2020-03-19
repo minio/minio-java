@@ -56,10 +56,15 @@ public class ComposeObjectEncrypted {
       String bucketName = "my-bucketname";
       String inputfile1 = "my-inputfile";
       String inputfile2 = "my-inputfile";
+      long inputfile1Size = 100000L;
+      long inputfile2Size = 200000L;
 
-      PutObjectOptions options = new PutObjectOptions(-1, 6000000);
+      PutObjectOptions options = new PutObjectOptions(inputfile1Size, -1);
       options.setSse(ssePut);
       minioClient.putObject(bucketName, sourceObject1, inputfile1, options);
+
+      options = new PutObjectOptions(inputfile2Size, -1);
+      options.setSse(ssePut);
       minioClient.putObject(bucketName, sourceObject2, inputfile2, options);
 
       ComposeSource s1 =
