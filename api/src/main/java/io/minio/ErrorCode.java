@@ -30,6 +30,7 @@ public enum ErrorCode {
   NO_SUCH_OBJECT("NoSuchKey", "Object does not exist"),
   RESOURCE_NOT_FOUND("ResourceNotFound", "Request resource not found"),
   RESOURCE_CONFLICT("ResourceConflict", "Request resource conflicts"),
+  RETRY_HEAD_BUCKET("RetryHeadBucket", "Retry HEAD bucket request"),
 
   // S3 error codes
   ACCESS_DENIED("AccessDenied", "Access denied"),
