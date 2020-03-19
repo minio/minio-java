@@ -768,11 +768,7 @@ public class MinioClient {
     return true;
   }
 
-  /**
-   * Validates if given bucket name is DNS compatible.
-   *
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   */
+  /** Validates if given bucket name is DNS compatible. */
   private void checkBucketName(String name) throws InvalidBucketNameException {
     if (name == null) {
       throw new InvalidBucketNameException(NULL_STRING, "null bucket name");
@@ -870,19 +866,7 @@ public class MinioClient {
             .build();
   }
 
-  /**
-   * Creates Request object for given request parameters.
-   *
-   * @param method HTTP method.
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param region Amazon S3 region of the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param contentType Content type of the request body.
-   * @param body HTTP request body.
-   * @param length Length of HTTP request body.
-   */
+  /** Creates Request object for given request parameters. */
   private Request createRequest(
       Method method,
       String bucketName,
@@ -1058,26 +1042,13 @@ public class MinioClient {
    *
    * <p>HTTP Spec (rfc2616) defines that port should be omitted in Host header when port and service
    * matches (i.e HTTP -> 80, HTTPS -> 443)
-   *
-   * @param url Url object
    */
   private boolean shouldOmitPortInHostHeader(HttpUrl url) {
     return (url.scheme().equals("http") && url.port() == 80)
         || (url.scheme().equals("https") && url.port() == 443);
   }
 
-  /**
-   * Executes given request parameters.
-   *
-   * @param method HTTP method.
-   * @param region Amazon S3 region of the bucket.
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param body HTTP request body.
-   * @param length Length of HTTP request body.
-   */
+  /** Executes given request parameters. */
   private HttpResponse execute(
       Method method,
       String region,
@@ -1095,19 +1066,7 @@ public class MinioClient {
         method, region, bucketName, objectName, headerMap, queryParamMap, body, length, false);
   }
 
-  /**
-   * Executes given request parameters.
-   *
-   * @param method HTTP method.
-   * @param region Amazon S3 region of the bucket.
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param body HTTP request body.
-   * @param length Length of HTTP request body.
-   * @param md5Required Validates if md5 is required.
-   */
+  /** Executes given request parameters. */
   private HttpResponse execute(
       Method method,
       String region,
@@ -1356,10 +1315,7 @@ public class MinioClient {
     }
   }
 
-  /**
-   * Computes region of a given bucket name. If set, this.region is considered. Otherwise, resort to
-   * the server location API.
-   */
+  /** Returns region of given bucket either from region cache or set in constructor. */
   private String getRegion(String bucketName)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
@@ -1400,14 +1356,7 @@ public class MinioClient {
     }
   }
 
-  /**
-   * Executes GET method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   */
+  /** Executes GET method for given request parameters. */
   private HttpResponse executeGet(
       String bucketName,
       String objectName,
@@ -1427,12 +1376,7 @@ public class MinioClient {
         0);
   }
 
-  /**
-   * Executes HEAD method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   */
+  /** Executes HEAD method for given request parameters. */
   private HttpResponse executeHead(String bucketName, String objectName)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
@@ -1443,13 +1387,7 @@ public class MinioClient {
     return response;
   }
 
-  /**
-   * Executes HEAD method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of header parameters of the request.
-   */
+  /** Executes HEAD method for given request parameters. */
   private HttpResponse executeHead(
       String bucketName, String objectName, Map<String, String> headerMap)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -1463,13 +1401,7 @@ public class MinioClient {
     return response;
   }
 
-  /**
-   * Executes DELETE method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   */
+  /** Executes DELETE method for given request parameters. */
   private HttpResponse executeDelete(
       String bucketName, String objectName, Map<String, String> queryParamMap)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -1489,15 +1421,7 @@ public class MinioClient {
     return response;
   }
 
-  /**
-   * Executes POST method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param data HTTP request body data.
-   */
+  /** Executes POST method for given request parameters. */
   private HttpResponse executePost(
       String bucketName,
       String objectName,
@@ -1518,16 +1442,7 @@ public class MinioClient {
         0);
   }
 
-  /**
-   * Executes POST method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param data HTTP request body data.
-   * @param md5Required Is MD5 calculations required.
-   */
+  /** Executes POST method for given request parameters. */
   private HttpResponse executePost(
       String bucketName,
       String objectName,
@@ -1566,17 +1481,7 @@ public class MinioClient {
     return normHeaderMap;
   }
 
-  /**
-   * Executes PUT method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param region Amazon S3 region of the bucket.
-   * @param data HTTP request body data.
-   * @param length Length of HTTP request body data.
-   */
+  /** Executes PUT method for given request parameters. */
   private HttpResponse executePut(
       String bucketName,
       String objectName,
@@ -1593,18 +1498,7 @@ public class MinioClient {
     return response;
   }
 
-  /**
-   * Executes PUT method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param region Amazon S3 region of the bucket.
-   * @param data HTTP request body data.
-   * @param length Length of HTTP request body data.
-   * @param md5Required Is MD5 calculations required.
-   */
+  /** Executes PUT method for given request parameters. */
   private HttpResponse executePut(
       String bucketName,
       String objectName,
@@ -1631,16 +1525,7 @@ public class MinioClient {
     return response;
   }
 
-  /**
-   * Executes PUT method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param data HTTP request body data.
-   * @param length Length of HTTP request body data.
-   */
+  /** Executes PUT method for given request parameters. */
   private HttpResponse executePut(
       String bucketName,
       String objectName,
@@ -1662,17 +1547,7 @@ public class MinioClient {
         false);
   }
 
-  /**
-   * Executes PUT method for given request parameters.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Map of HTTP headers for the request.
-   * @param queryParamMap Map of HTTP query parameters of the request.
-   * @param data HTTP request body data.
-   * @param length Length of HTTP request body data.
-   * @param md5Required Is MD5 calculations required.
-   */
+  /** Executes PUT method for given request parameters. */
   private HttpResponse executePut(
       String bucketName,
       String objectName,
@@ -2521,6 +2396,10 @@ public class MinioClient {
     }
   }
 
+  /**
+   * Do UploadPartCopy as per
+   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html
+   */
   private String uploadPartCopy(
       String bucketName,
       String objectName,
@@ -2839,6 +2718,9 @@ public class MinioClient {
     executeDelete(bucketName, objectName, null);
   }
 
+  /**
+   * Do DeleteObjects as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
+   */
   private List<DeleteError> removeObject(String bucketName, List<DeleteObject> objectList)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
@@ -3262,12 +3144,7 @@ public class MinioClient {
   }
 
   /**
-   * Returns {@link ListBucketResult} of given bucket, marker, prefix and delimiter.
-   *
-   * @param bucketName Bucket name.
-   * @param continuationToken Marker string. List objects whose name is greater than `marker`.
-   * @param prefix Prefix string. List objects whose name starts with `prefix`.
-   * @param delimiter Delimiter string. Group objects whose name contains `delimiter`.
+   * Do ListObjectsV2 as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
    */
   private ListBucketResult listObjectsV2(
       String bucketName,
@@ -3441,14 +3318,7 @@ public class MinioClient {
     };
   }
 
-  /**
-   * Returns {@link ListBucketResultV1} of given bucket, marker, prefix and delimiter.
-   *
-   * @param bucketName Bucket name.
-   * @param marker Marker string. List objects whose name is greater than `marker`.
-   * @param prefix Prefix string. List objects whose name starts with `prefix`.
-   * @param delimiter delimiter string. Group objects whose name contains `delimiter`.
-   */
+  /** Do ListObjects as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html */
   private ListBucketResultV1 listObjectsV1(
       String bucketName, String marker, String prefix, String delimiter)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -4041,14 +3911,9 @@ public class MinioClient {
   }
 
   /**
-   * Executes put object and returns ETag of the object.
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name in the bucket.
-   * @param length Length of object data.
-   * @param data Object data.
-   * @param uploadId Upload ID of multipart put object.
-   * @param partNumber Part number of multipart put object.
+   * Do PutObject/UploadPart as per
+   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html
    */
   private String putObject(
       String bucketName,
@@ -4657,8 +4522,8 @@ public class MinioClient {
   }
 
   /**
-   * Returns {@code Iterable<Result<Upload>>} of given bucket name, prefix and recursive flag. All
-   * parts size are aggregated when aggregatePartSize is true.
+   * Returns Iterable<Result<Upload>> of given bucket name, prefix and recursive flag. All parts
+   * size are aggregated when aggregatePartSize is true.
    */
   private Iterable<Result<Upload>> listIncompleteUploads(
       final String bucketName,
@@ -4815,8 +4680,8 @@ public class MinioClient {
   }
 
   /**
-   * Executes List Incomplete uploads S3 call for given bucket name, key marker, upload id marker,
-   * prefix, delimiter and maxUploads and returns {@link ListMultipartUploadsResult}.
+   * Do ListMultipartUploads as per
+   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html
    */
   private ListMultipartUploadsResult listIncompleteUploads(
       String bucketName,
@@ -4863,7 +4728,10 @@ public class MinioClient {
     }
   }
 
-  /** Initializes new multipart upload for given bucket name, object name and content type. */
+  /**
+   * Do CreateMultipartUpload as per
+   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html
+   */
   private String initMultipartUpload(
       String bucketName, String objectName, Map<String, String> headerMap)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -4886,7 +4754,10 @@ public class MinioClient {
     }
   }
 
-  /** Executes complete multipart upload of given bucket name, object name, upload ID and parts. */
+  /**
+   * Do CompleteMultipartUpload as per
+   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
+   */
   private void completeMultipart(
       String bucketName, String objectName, String uploadId, Part[] parts)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -4929,7 +4800,7 @@ public class MinioClient {
 
   /**
    * Executes List object parts of multipart upload for given bucket name, object name and upload ID
-   * and returns {@code Iterable<Result<Part>>}.
+   * and returns Iterable<Result<Part>>.
    */
   private Iterable<Result<Part>> listObjectParts(
       final String bucketName, final String objectName, final String uploadId) {
@@ -5037,10 +4908,7 @@ public class MinioClient {
     };
   }
 
-  /**
-   * Executes list object parts for given bucket name, object name, upload ID and part number marker
-   * and returns {@link ListPartsResult}.
-   */
+  /** Do ListParts as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html */
   private ListPartsResult listObjectParts(
       String bucketName, String objectName, String uploadId, int partNumberMarker)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
@@ -5059,7 +4927,10 @@ public class MinioClient {
     }
   }
 
-  /** Aborts multipart upload of given bucket name, object name and upload ID. */
+  /**
+   * Do AbortMultipartUpload as per
+   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_AbortMultipartUpload.html
+   */
   private void abortMultipartUpload(String bucketName, String objectName, String uploadId)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
