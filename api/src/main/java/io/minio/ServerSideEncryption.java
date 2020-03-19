@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -106,7 +107,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         md5.reset();
       }
 
-      return headers;
+      return Collections.unmodifiableMap(headers);
     }
 
     @Override
@@ -131,7 +132,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         md5.reset();
       }
 
-      return headers;
+      return Collections.unmodifiableMap(headers);
     }
 
     @Override
@@ -168,7 +169,7 @@ public abstract class ServerSideEncryption implements Destroyable {
     public final Map<String, String> headers() {
       Map<String, String> headers = new HashMap<>();
       headers.put("X-Amz-Server-Side-Encryption", "AES256");
-      return headers;
+      return Collections.unmodifiableMap(headers);
     }
 
     @Override
@@ -213,7 +214,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         headers.put("X-Amz-Server-Side-Encryption-Context", context.get());
       }
 
-      return headers;
+      return Collections.unmodifiableMap(headers);
     }
 
     @Override

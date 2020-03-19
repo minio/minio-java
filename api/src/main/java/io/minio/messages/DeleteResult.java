@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.ElementList;
@@ -41,18 +42,18 @@ public class DeleteResult {
   /** Returns deleted object list. */
   public List<DeletedObject> objectList() {
     if (objectList == null) {
-      return new LinkedList<>();
+      return Collections.unmodifiableList(new LinkedList<>());
     }
 
-    return objectList;
+    return Collections.unmodifiableList(objectList);
   }
 
   /** Returns delete error list. */
   public List<DeleteError> errorList() {
     if (errorList == null) {
-      return new LinkedList<>();
+      return Collections.unmodifiableList(new LinkedList<>());
     }
 
-    return errorList;
+    return Collections.unmodifiableList(errorList);
   }
 }

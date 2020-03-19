@@ -24,6 +24,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
@@ -166,7 +167,7 @@ public class PostPolicy {
       throw new IllegalArgumentException("empty region");
     }
 
-    return makeFormData(accessKey, secretKey, region);
+    return Collections.unmodifiableMap(makeFormData(accessKey, secretKey, region));
   }
 
   protected Map<String, String> makeFormData(String accessKey, String secretKey, String region)

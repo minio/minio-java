@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
@@ -97,18 +98,18 @@ public class ListBucketResultV1 {
   /** Returns List of Items. */
   public List<Item> contents() {
     if (contents == null) {
-      return new LinkedList<>();
+      return Collections.unmodifiableList(new LinkedList<>());
     }
 
-    return contents;
+    return Collections.unmodifiableList(contents);
   }
 
   /** Returns List of Prefix. */
   public List<Prefix> commonPrefixes() {
     if (commonPrefixes == null) {
-      return new LinkedList<>();
+      return Collections.unmodifiableList(new LinkedList<>());
     }
 
-    return commonPrefixes;
+    return Collections.unmodifiableList(commonPrefixes);
   }
 }
