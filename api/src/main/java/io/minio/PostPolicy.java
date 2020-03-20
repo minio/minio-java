@@ -83,9 +83,7 @@ public class PostPolicy {
 
   /** Sets success action status. */
   public void setSuccessActionStatus(int successActionStatus) throws IllegalArgumentException {
-    if (!(successActionStatus == SuccessActionStatus.SuccessActionStatus200.getValue()
-        || successActionStatus == SuccessActionStatus.SuccessActionStatus201.getValue()
-        || successActionStatus == SuccessActionStatus.SuccessActionStatus204.getValue())) {
+    if (!(successActionStatus == 200 || successActionStatus == 201 || successActionStatus == 204)) {
       throw new IllegalArgumentException(
           "Invalid action status, acceptable values are 200, 201, or 204");
     }
