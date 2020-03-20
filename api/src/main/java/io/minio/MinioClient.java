@@ -1086,10 +1086,8 @@ public class MinioClient {
     }
 
     String errorXml = null;
-    try {
-      errorXml = new String(response.body().bytes(), StandardCharsets.UTF_8);
-    } finally {
-      response.close();
+    try (ResponseBody responseBody = response.body()) {
+      errorXml = new String(responseBody.bytes(), StandardCharsets.UTF_8);
     }
 
     if (this.traceStream != null && !("".equals(errorXml) && method.equals(Method.HEAD))) {
@@ -2542,10 +2540,8 @@ public class MinioClient {
     HttpResponse response = executePost(bucketName, null, null, queryParamMap, request);
 
     String bodyContent = "";
-    try {
-      bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
-    } finally {
-      response.body().close();
+    try (ResponseBody body = response.body()) {
+      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
     }
 
     List<DeleteError> errorList = null;
@@ -3883,12 +3879,8 @@ public class MinioClient {
               + " does not match");
     }
 
-    RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r");
-
-    try {
+    try (RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r")) {
       putObject(bucketName, objectName, options, file);
-    } finally {
-      file.close();
     }
   }
 
@@ -3979,8 +3971,7 @@ public class MinioClient {
       response = executeGet(bucketName, null, null, queryParamMap);
       bytesRead = response.body().byteStream().read(buf, 0, MAX_BUCKET_POLICY_SIZE);
       if (bytesRead < 0) {
-        // reached EOF
-        throw new IOException("reached EOF when reading bucket policy");
+        throw new IOException("unexpected EOF when reading bucket policy");
       }
 
       // Read one byte extra to ensure only MAX_BUCKET_POLICY_SIZE data is sent by the server.
@@ -3991,7 +3982,9 @@ public class MinioClient {
           if (byteRead < 0) {
             // reached EOF which is fine.
             break;
-          } else if (byteRead > 0) {
+          }
+
+          if (byteRead > 0) {
             throw new BucketPolicyTooLargeException(bucketName);
           }
         }
@@ -4001,7 +3994,7 @@ public class MinioClient {
         throw e;
       }
     } finally {
-      if (response != null && response.body() != null) {
+      if (response != null) {
         response.body().close();
       }
     }
@@ -4564,11 +4557,9 @@ public class MinioClient {
     HttpResponse response =
         executePost(bucketName, objectName, null, queryParamMap, completeManifest);
     String bodyContent = "";
-    try {
-      bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
+    try (ResponseBody body = response.body()) {
+      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
       bodyContent = bodyContent.trim();
-    } finally {
-      response.body().close();
     }
 
     // Handle if body contains error.
