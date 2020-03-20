@@ -17,6 +17,7 @@
 
 package io.minio;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class PutObjectOptions {
@@ -122,7 +123,11 @@ public class PutObjectOptions {
   }
 
   public void setHeaders(Map<String, String> headers) {
-    this.headers = headers;
+    if (headers != null) {
+      this.headers = Collections.unmodifiableMap(headers);
+    } else {
+      this.headers = null;
+    }
   }
 
   public void setSse(ServerSideEncryption sse) {

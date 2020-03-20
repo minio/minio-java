@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -38,7 +39,7 @@ public class DeleteRequest {
 
   /** Constructs new delete request for given object list and quiet flag. */
   public DeleteRequest(List<DeleteObject> objectList, boolean quiet) {
-    this.objectList = objectList;
+    this.objectList = Collections.unmodifiableList(objectList);
     this.quiet = quiet;
   }
 }

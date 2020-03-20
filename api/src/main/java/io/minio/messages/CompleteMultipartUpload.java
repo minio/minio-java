@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
@@ -39,6 +40,6 @@ public class CompleteMultipartUpload {
       throw new IllegalArgumentException("null or empty parts");
     }
 
-    this.partList = Arrays.asList(parts);
+    this.partList = Collections.unmodifiableList(Arrays.asList(parts));
   }
 }

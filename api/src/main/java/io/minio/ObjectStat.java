@@ -17,6 +17,7 @@
 package io.minio;
 
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +61,11 @@ public class ObjectStat {
       this.etag = "";
     }
 
-    this.httpHeaders = httpHeaders;
+    if (httpHeaders != null) {
+      this.httpHeaders = Collections.unmodifiableMap(httpHeaders);
+    } else {
+      this.httpHeaders = null;
+    }
   }
 
   /**

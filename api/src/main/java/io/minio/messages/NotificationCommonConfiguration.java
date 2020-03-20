@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -48,12 +49,16 @@ public class NotificationCommonConfiguration {
 
   /** Returns events. */
   public List<EventType> events() {
-    return events;
+    if (events == null) {
+      return null;
+    }
+
+    return Collections.unmodifiableList(events);
   }
 
   /** Sets event. */
   public void setEvents(List<EventType> events) {
-    this.events = events;
+    this.events = Collections.unmodifiableList(events);
   }
 
   /** sets filter prefix rule. */
@@ -76,10 +81,10 @@ public class NotificationCommonConfiguration {
 
   /** returns filter rule list. */
   public List<FilterRule> filterRuleList() {
-    if (filter != null) {
-      return filter.filterRuleList();
+    if (filter == null) {
+      return null;
     }
 
-    return null;
+    return filter.filterRuleList();
   }
 }

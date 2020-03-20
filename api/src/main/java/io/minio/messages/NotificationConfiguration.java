@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.List;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
@@ -48,7 +49,8 @@ public class NotificationConfiguration {
   /** Sets cloud function configuration list. */
   public void setCloudFunctionConfigurationList(
       List<CloudFunctionConfiguration> cloudFunctionConfigurationList) {
-    this.cloudFunctionConfigurationList = cloudFunctionConfigurationList;
+    this.cloudFunctionConfigurationList =
+        Collections.unmodifiableList(cloudFunctionConfigurationList);
   }
 
   /** Returns queue configuration list. */
@@ -58,7 +60,7 @@ public class NotificationConfiguration {
 
   /** Sets queue configuration list. */
   public void setQueueConfigurationList(List<QueueConfiguration> queueConfigurationList) {
-    this.queueConfigurationList = queueConfigurationList;
+    this.queueConfigurationList = Collections.unmodifiableList(queueConfigurationList);
   }
 
   /** Returns topic configuration list. */
@@ -68,6 +70,6 @@ public class NotificationConfiguration {
 
   /** Sets topic configuration list. */
   public void setTopicConfigurationList(List<TopicConfiguration> topicConfigurationList) {
-    this.topicConfigurationList = topicConfigurationList;
+    this.topicConfigurationList = Collections.unmodifiableList(topicConfigurationList);
   }
 }

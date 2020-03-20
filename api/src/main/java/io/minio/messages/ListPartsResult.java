@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
@@ -110,9 +111,9 @@ public class ListPartsResult {
   /** Returns List of Part. */
   public List<Part> partList() {
     if (partList == null) {
-      return new LinkedList<>();
+      return Collections.unmodifiableList(new LinkedList<>());
     }
 
-    return partList;
+    return Collections.unmodifiableList(partList);
   }
 }

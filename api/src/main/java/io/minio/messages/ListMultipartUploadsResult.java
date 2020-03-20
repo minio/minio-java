@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
@@ -94,9 +95,9 @@ public class ListMultipartUploadsResult {
   /** Returns List of Upload. */
   public List<Upload> uploads() {
     if (uploads == null) {
-      return new LinkedList<>();
+      return Collections.unmodifiableList(new LinkedList<>());
     }
 
-    return uploads;
+    return Collections.unmodifiableList(uploads);
   }
 }

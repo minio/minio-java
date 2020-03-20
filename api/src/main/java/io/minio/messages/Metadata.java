@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.simpleframework.xml.Root;
@@ -32,7 +33,7 @@ public class Metadata {
   public Metadata() {}
 
   public Metadata(Map<String, String> map) {
-    this.map = map;
+    this.map = Collections.unmodifiableMap(map);
   }
 
   public Map<String, String> get() {

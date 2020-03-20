@@ -2145,11 +2145,9 @@ public class MinioClient {
 
         if (size <= PutObjectOptions.MAX_PART_SIZE) {
           partNumber++;
-          Map<String, String> headers = null;
-          if (src.headers() == null) {
-            headers = new HashMap<>();
-          } else {
-            headers = src.headers();
+          Map<String, String> headers = new HashMap<>();
+          if (src.headers() != null) {
+            headers.putAll(src.headers());
           }
           if (src.length() != null) {
             headers.put(

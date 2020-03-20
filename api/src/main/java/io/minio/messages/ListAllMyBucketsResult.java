@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
@@ -46,9 +47,9 @@ public class ListAllMyBucketsResult {
   /** Returns List of buckets. */
   public List<Bucket> buckets() {
     if (buckets == null) {
-      return new LinkedList<>();
+      return Collections.unmodifiableList(new LinkedList<>());
     }
 
-    return buckets;
+    return Collections.unmodifiableList(buckets);
   }
 }

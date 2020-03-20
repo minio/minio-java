@@ -17,6 +17,7 @@
 
 package io.minio;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -103,7 +104,11 @@ public class ComposeSource {
     this.objectName = objectName;
     this.offset = offset;
     this.length = length;
-    this.headerMap = headerMap;
+    if (headerMap != null) {
+      this.headerMap = Collections.unmodifiableMap(headerMap);
+    } else {
+      this.headerMap = null;
+    }
     this.copyConditions = copyConditions;
     this.sse = sse;
   }
@@ -165,7 +170,7 @@ public class ComposeSource {
     }
 
     this.objectSize = objectSize;
-    this.headers = headers;
+    this.headers = Collections.unmodifiableMap(headers);
   }
 
   public String bucketName() {
@@ -192,15 +197,7 @@ public class ComposeSource {
     return sse;
   }
 
-  /** Returns header. */
   public Map<String, String> headers() {
-    Map<String, String> headers = null;
-
-    if (this.headers != null) {
-      headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-      headers.putAll(this.headers);
-    }
-
     return headers;
   }
 
