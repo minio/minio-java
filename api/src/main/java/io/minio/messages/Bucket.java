@@ -20,7 +20,7 @@ import java.time.ZonedDateTime;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote bucket information for ListAllMyBucketsResult. */
+/** Helper class to denote bucket information for {@link ListAllMyBucketsResult}. */
 @Root(name = "Bucket", strict = false)
 public class Bucket {
   @Element(name = "Name")

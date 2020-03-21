@@ -25,8 +25,9 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes list of multipart uploads response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html.
+ * Object representation of response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html">ListMultipartUploads
+ * API</a>.
  */
 @Root(name = "ListMultipartUploadsResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

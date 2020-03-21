@@ -118,38 +118,34 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * This class implements a simple cloud storage client. This client consists of a useful subset of
- * S3 compatible functionality.
+ * Simple Storage Service (aka S3) client to perform bucket and object operations.
  *
- * <h2>Service</h2>
- *
- * <ul>
- *   <li>Creating a bucket
- *   <li>Listing buckets
- * </ul>
- *
- * <h2>Bucket</h2>
+ * <h2>Bucket operations</h2>
  *
  * <ul>
- *   <li>Creating an object, including automatic multipart for large objects.
- *   <li>Listing objects in a bucket
- *   <li>Listing active multipart uploads
+ *   <li>Create, list and delete buckets.
+ *   <li>Put, get and delete bucket lifecycle configuration.
+ *   <li>Put, get and delete bucket policy configuration.
+ *   <li>Put, get and delete bucket encryption configuration.
+ *   <li>Put and get bucket default retention configuration.
+ *   <li>Put and get bucket notification configuration.
+ *   <li>Enable and disable bucket versioning.
  * </ul>
  *
- * <h2>Object</h2>
+ * <h2>Object operations</h2>
  *
  * <ul>
- *   <li>Removing an active multipart upload for a specific object and uploadId
- *   <li>Read object metadata
- *   <li>Reading an object
- *   <li>Reading a range of bytes of an object
- *   <li>Deleting an object
+ *   <li>Put, get, delete and list objects.
+ *   <li>Create objects by combining existing objects.
+ *   <li>Put and get object retention and legal hold.
+ *   <li>Filter object content by SQL statement.
  * </ul>
  *
- * <p>Optionally, users can also provide access/secret keys. If keys are provided, all requests by
- * the client will be signed using AWS Signature Version 4. For examples on using this library,
- * please see <a
- * href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples"></a>.
+ * <p>If access/secret keys are provided, all S3 operation requests are signed using AWS Signature
+ * Version 4; else they are performed anonymously.
+ *
+ * <p>Examples on using this library are available <a
+ * href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples">here</a>.
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class MinioClient {
@@ -4990,7 +4986,7 @@ public class MinioClient {
     this.traceStream = null;
   }
 
-  public static class NotificationInfoResult {
+  private static class NotificationInfoResult {
     HttpResponse response = null;
 
     public NotificationInfoResult(HttpResponse response) {

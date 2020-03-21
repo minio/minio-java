@@ -19,10 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
-/**
- * Denotes Error response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html.
- */
+/** Helper class to denote error for {@link DeleteResult}. */
 @Root(name = "Error", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 public class DeleteError extends ErrorResponse {

@@ -20,8 +20,8 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote FilterRule configuration of CloudFunctionConfiguration, QueueConfiguration
- * or TopicConfiguration.
+ * Helper class to denote FilterRule configuration of {@link CloudFunctionConfiguration}, {@link
+ * QueueConfiguration} or {@link TopicConfiguration}.
  */
 @Root(name = "FilterRule", strict = false)
 public class FilterRule {

@@ -19,7 +19,9 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote Output Serialization information of SelectObjectContentRequest. */
+/**
+ * Helper class to denote Output Serialization information of {@link SelectObjectContentRequest}.
+ */
 @Root(name = "OutputSerialization")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class OutputSerialization {

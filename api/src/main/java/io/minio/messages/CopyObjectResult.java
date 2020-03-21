@@ -23,8 +23,8 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes CopyObject response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html.
+ * Object representation of response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html">CopyObject API</a>.
  */
 @Root(name = "CopyObjectResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

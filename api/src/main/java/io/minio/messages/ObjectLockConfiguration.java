@@ -21,9 +21,11 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes object lock configuration request/response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectLockConfiguration.html and
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectLockConfiguration.html.
+ * Object representation of request XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectLockConfiguration.html">PutObjectLockConfiguration
+ * API</a> and response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectLockConfiguration.html">GetObjectLockConfiguration
+ * API</a>.
  */
 @Root(name = "ObjectLockConfiguration", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

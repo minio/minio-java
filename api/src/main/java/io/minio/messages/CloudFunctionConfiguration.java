@@ -19,7 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote CloudFunction configuration of NotificationConfiguration. */
+/** Helper class to denote CloudFunction configuration of {@link NotificationConfiguration}. */
 @Root(name = "CloudFunctionConfiguration", strict = false)
 public class CloudFunctionConfiguration extends NotificationCommonConfiguration {
   @Element(name = "CloudFunction")

@@ -60,6 +60,7 @@ public enum EventType {
     throw new IllegalArgumentException("unknown event '" + eventTypeString + "'");
   }
 
+  /** XML converter class. */
   public static class EventTypeConverter implements Converter<EventType> {
     @Override
     public EventType read(InputNode node) throws Exception {

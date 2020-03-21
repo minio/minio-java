@@ -25,8 +25,8 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes list of parts of a upload response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html.
+ * Object representation of response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html">ListParts API</a>.
  */
 @Root(name = "ListPartsResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

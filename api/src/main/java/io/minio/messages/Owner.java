@@ -20,8 +20,9 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote owner information for ListAllMyBucketsResult, ListBucketResult,
- * ListBucketResultV1, ListMultipartUploadsResult and ListPartsResult.
+ * Helper class to denote owner information for {@link ListAllMyBucketsResult}, {@link
+ * ListBucketResult}, {@link ListBucketResultV1}, {@link ListMultipartUploadsResult} and {@link
+ * ListPartsResult}.
  */
 @Root(name = "Owner", strict = false)
 public class Owner {

@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-/** A container class keeps any type and exception occured. */
+/** A container class keeps any type or an exception. */
 public class Result<T> {
   private final T type;
   private final Exception ex;

@@ -185,6 +185,7 @@ public enum ErrorCode {
     throw new IllegalArgumentException("unknown error code string '" + codeString + "'");
   }
 
+  /** XML converter class. */
   public static class ErrorCodeConverter implements Converter<ErrorCode> {
     @Override
     public ErrorCode read(InputNode node) throws Exception {

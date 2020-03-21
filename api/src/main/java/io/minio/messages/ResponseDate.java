@@ -24,6 +24,7 @@ import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
 
+/** S3 specified response time wrapping {@link ZonedDateTime}. */
 @Root
 @Convert(ResponseDate.ResponseDateConverter.class)
 public class ResponseDate {
@@ -39,6 +40,7 @@ public class ResponseDate {
     return zonedDateTime;
   }
 
+  /** XML converter class. */
   public static class ResponseDateConverter implements Converter<ResponseDate> {
     @Override
     public ResponseDate read(InputNode node) throws Exception {

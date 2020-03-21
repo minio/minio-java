@@ -20,8 +20,8 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote scan range in select object content request XML for
- * SelectObjectContentRequest.
+ * Helper class to denote scan range in select object content request XML for {@link
+ * SelectObjectContentRequest}.
  */
 @Root(name = "ScanRange")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")

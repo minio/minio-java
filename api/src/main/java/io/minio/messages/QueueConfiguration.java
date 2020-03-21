@@ -19,7 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote Queue configuration of NotificationConfiguration. */
+/** Helper class to denote Queue configuration of {@link NotificationConfiguration}. */
 @Root(name = "QueueConfiguration", strict = false)
 public class QueueConfiguration extends NotificationCommonConfiguration {
   @Element(name = "Queue")

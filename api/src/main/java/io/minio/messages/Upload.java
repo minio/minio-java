@@ -22,8 +22,8 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote Upload information of a multipart upload and used in
- * ListMultipartUploadsResult.
+ * Helper class to denote Upload information of a multipart upload and used in {@link
+ * ListMultipartUploadsResult}.
  */
 @Root(name = "Upload", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

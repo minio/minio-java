@@ -19,6 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Text;
 
+/** Days type retention duration of {@link ObjectLockConfiguration} */
 @Root(name = "Days")
 public class RetentionDurationDays implements RetentionDuration {
   @Text(required = false)

@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/** A container class to hold all the Conditions to be checked before copying an object. */
+/** Conditions to be used to do CopyObject. */
 public class CopyConditions {
   // Metadata directive "REPLACE" used to replace metadata on
   // destination object in copyObject().

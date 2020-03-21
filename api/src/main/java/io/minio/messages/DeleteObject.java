@@ -19,7 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote Object information for DeleteRequest. */
+/** Helper class to denote Object information for {@link DeleteRequest}. */
 @Root(name = "Object")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class DeleteObject {
