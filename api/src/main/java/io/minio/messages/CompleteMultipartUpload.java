@@ -24,8 +24,9 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes complete multipart upload request XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html.
+ * Object representation of request XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
+ * API</a>.
  */
 @Root(name = "CompleteMultipartUpload")
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

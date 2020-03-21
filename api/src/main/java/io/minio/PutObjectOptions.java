@@ -20,6 +20,7 @@ package io.minio;
 import java.util.Collections;
 import java.util.Map;
 
+/** Options to put object. */
 public class PutObjectOptions {
   // allowed maximum object size is 5TiB.
   public static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
@@ -38,10 +39,14 @@ public class PutObjectOptions {
 
   /**
    * Creates new PutObjectOptions object. Two ways to use PutObjectOptions when object size is
-   * concerned. * If object size is unknown, pass -1 to objectSize and pass valid partSize. * If
-   * object size is known, pass -1 to partSize for auto detect; else pass valid partSize to control
-   * memory usage and no. of parts in upload. * If partSize is greater than objectSize, objectSize
-   * is used as partSize.
+   * concerned.
+   *
+   * <ul>
+   *   <li>If object size is unknown, pass -1 to objectSize and pass valid partSize.
+   *   <li>If object size is known, pass -1 to partSize for auto detect; else pass valid partSize to
+   *       control memory usage and no. of parts in upload.
+   *   <li>If partSize is greater than objectSize, objectSize is used as partSize.
+   * </ul>
    *
    * <p>A valid part size is between 5MiB to 5GiB (both limits inclusive).
    */

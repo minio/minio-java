@@ -21,9 +21,11 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes legal hold configuration request/response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectLegalHold.html and
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectLegalHold.html.
+ * Object representation of request XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectLegalHold.html">PutObjectLegalHold
+ * API</a> and response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectLegalHold.html">GetObjectLegalHold
+ * API</a>.
  */
 @Root(name = "LegalHold", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

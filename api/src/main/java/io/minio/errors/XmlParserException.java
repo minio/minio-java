@@ -16,6 +16,7 @@
 
 package io.minio.errors;
 
+/** Thrown to indicate that error at XML marshalling or unmarshalling. */
 public class XmlParserException extends MinioException {
   Exception exception;
 

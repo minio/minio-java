@@ -22,8 +22,8 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
 /**
- * Helper class to denote common fields of CloudFunctionConfiguration, QueueConfiguration and
- * TopicConfiguration.
+ * Helper class to denote common fields of {@link CloudFunctionConfiguration}, {@link
+ * QueueConfiguration} and {@link TopicConfiguration}.
  */
 public class NotificationCommonConfiguration {
   @Element(name = "Id")

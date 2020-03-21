@@ -19,7 +19,10 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote Prefix information in ListBucketResult and ListBucketResultV1. */
+/**
+ * Helper class to denote Prefix information in {@link ListBucketResult} and {@link
+ * ListBucketResultV1}.
+ */
 @Root(name = "CommonPrefixes", strict = false)
 public class Prefix {
   @Element(name = "Prefix")

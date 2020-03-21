@@ -20,7 +20,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementUnion;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote DefaultRetention information for ObjectLockConfiguration. */
+/** Helper class to denote DefaultRetention information for {@link ObjectLockConfiguration}. */
 @Root(name = "DefaultRetention", strict = false)
 public class DefaultRetention {
   @Element(name = "Mode", required = false)

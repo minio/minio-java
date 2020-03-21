@@ -24,8 +24,9 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes delete (multiple) objects request XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html.
+ * Object representation of request XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html">DeleteObjects
+ * API</a>.
  */
 @Root(name = "Delete")
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

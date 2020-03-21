@@ -19,7 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote Rule information for ObjectLockConfiguration. */
+/** Helper class to denote Rule information for {@link ObjectLockConfiguration}. */
 @Root(name = "Rule", strict = false)
 public class Rule {
   @Element(name = "DefaultRetention", required = false)

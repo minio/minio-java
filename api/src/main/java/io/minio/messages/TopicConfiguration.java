@@ -19,7 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote Topic configuration of NotificationConfiguration. */
+/** Helper class to denote Topic configuration of {@link NotificationConfiguration}. */
 @Root(name = "TopicConfiguration", strict = false)
 public class TopicConfiguration extends NotificationCommonConfiguration {
   @Element(name = "Topic")

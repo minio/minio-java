@@ -19,7 +19,7 @@ package io.minio.messages;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote deleted object for DeleteResult. */
+/** Helper class to denote deleted object for {@link DeleteResult}. */
 @Root(name = "Deleted", strict = false)
 public class DeletedObject {
   @Element(name = "Key")

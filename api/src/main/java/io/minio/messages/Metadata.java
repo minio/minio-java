@@ -25,6 +25,7 @@ import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
 
+/** XML friendly map denotes metadata. */
 @Root(name = "Metadata")
 @Convert(Metadata.MetadataConverter.class)
 public class Metadata {
@@ -40,6 +41,7 @@ public class Metadata {
     return map;
   }
 
+  /** XML converter class. */
   public static class MetadataConverter implements Converter<Metadata> {
     @Override
     public Metadata read(InputNode node) throws Exception {

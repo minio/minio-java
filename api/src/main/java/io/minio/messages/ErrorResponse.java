@@ -22,7 +22,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
-/** Denotes Error response XML of any S3 REST APIs. */
+/** Object representation of error response XML of any S3 REST APIs. */
 @Root(name = "ErrorResponse", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 public class ErrorResponse implements Serializable {

@@ -21,8 +21,8 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote Part information of a multipart upload and used in CompleteMultipartUpload
- * and ListPartsResult.
+ * Helper class to denote Part information of a multipart upload and used in {@link
+ * CompleteMultipartUpload} and {@link ListPartsResult}.
  */
 @Root(name = "Part", strict = false)
 public class Part {

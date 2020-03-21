@@ -21,8 +21,9 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes create bucket configuration request XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html.
+ * Object representation of response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html">CreateBucket
+ * API</a>.
  */
 @Root(name = "CreateBucketConfiguration")
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

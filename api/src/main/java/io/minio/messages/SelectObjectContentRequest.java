@@ -21,8 +21,9 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes select object content request XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_SelectObjectContent.html.
+ * Object representation of request XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_SelectObjectContent.html">SelectObjectContent
+ * API</a>.
  */
 @Root(name = "SelectObjectContentRequest")
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

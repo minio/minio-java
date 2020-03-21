@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+/** Source information to compose object. */
 public class ComposeSource {
   private String bucketName;
   private String objectName;

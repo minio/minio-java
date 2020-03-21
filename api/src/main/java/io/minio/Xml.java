@@ -25,6 +25,7 @@ import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
 
+/** XML marshaller and unmarshaller. */
 public class Xml {
   /**
    * This marshal method will traverse the provided object checking for field annotations in order

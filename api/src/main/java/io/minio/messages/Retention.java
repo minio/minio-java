@@ -22,9 +22,11 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes retention configuration request/response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectRetention.html and
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectRetention.html.
+ * Object representation of request XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectRetention.html">PutObjectRetention
+ * API</a> and response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectRetention.html">GetObjectRetention
+ * API</a>.
  */
 @Root(name = "Retention", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

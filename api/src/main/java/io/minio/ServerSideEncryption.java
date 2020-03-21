@@ -30,7 +30,7 @@ import javax.crypto.SecretKey;
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Destroyable;
 
-/** ServerSideEncryption represents a form of server-side encryption. */
+/** Server-side encryption options. */
 public abstract class ServerSideEncryption implements Destroyable {
   /** The types of server-side encryption. */
   public static enum Type {

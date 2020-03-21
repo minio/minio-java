@@ -23,8 +23,8 @@ import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote Filter configuration of CloudFunctionConfiguration, QueueConfiguration or
- * TopicConfiguration.
+ * Helper class to denote Filter configuration of {@link CloudFunctionConfiguration}, {@link
+ * QueueConfiguration} or {@link TopicConfiguration}.
  */
 @Root(name = "Filter", strict = false)
 public class Filter {

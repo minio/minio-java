@@ -23,9 +23,11 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Denotes Notification configuration request/response XML as per
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotificationConfiguration.html and
- * https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketNotificationConfiguration.html.
+ * Object representation of request XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketNotificationConfiguration.html">PutBucketNotificationConfiguration
+ * API</a> and response XML of <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketNotificationConfiguration.html">GetBucketNotificationConfiguration
+ * API</a>.
  */
 @Root(name = "NotificationConfiguration", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")

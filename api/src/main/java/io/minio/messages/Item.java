@@ -21,7 +21,10 @@ import java.util.Map;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote Object information in ListBucketResult and ListBucketResultV1. */
+/**
+ * Helper class to denote Object information in {@link ListBucketResult} and {@link
+ * ListBucketResultV1}.
+ */
 @Root(name = "Contents", strict = false)
 public class Item {
   @Element(name = "Key")
