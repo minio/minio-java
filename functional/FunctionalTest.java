@@ -415,10 +415,16 @@ public class FunctionalTest {
     client.removeBucket(bucketName);
   }
 
-  /** Test: putObject(String bucketName, String objectName, String filename). */
+  /**
+   * Test: putObject(String bucketName, String objectName, String filename, PutObjectOptions
+   * options)
+   */
   public static void putObject_test1() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, String filename, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println("Test: putObject(String bucketName, String objectName, String filename)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -427,13 +433,10 @@ public class FunctionalTest {
       client.putObject(bucketName, filename, filename, new PutObjectOptions(1 * KB, -1));
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, String filename)",
-          "filename: 1KB",
-          startTime);
+      mintSuccessLog(methodName, "filename: 1KB", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, String filename)",
+          methodName,
           "filename: 1KB",
           startTime,
           null,
@@ -442,26 +445,28 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: multipart: putObject(String bucketName, String objectName, String filename). */
+  /**
+   * Test: multipart: putObject(String bucketName, String objectName, String filename,
+   * PutObjectOptions options)
+   */
   public static void putObject_test2() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, String filename, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: multipart: putObject(String bucketName, String objectName, String filename)");
+      System.out.println("Test: multipart: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String filename = createFile6Mb();
-      client.putObject(bucketName, filename, filename, new PutObjectOptions(6 * MB, -1));
+      client.putObject(bucketName, filename, filename, new PutObjectOptions(6 * MB, 5 * MB));
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, String filename)",
-          "filename: 6MB",
-          startTime);
+      mintSuccessLog(methodName, "filename: 6MB", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, String filename)",
+          methodName,
           "filename: 6MB",
           startTime,
           null,
@@ -471,14 +476,15 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: With content-type: putObject(String bucketName, String objectName, String filename,
-   * String contentType).
+   * Test: with content-type: putObject(String bucketName, String objectName, String filename,
+   * PutObjectOptions options)
    */
   public static void putObject_test3() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, String filename, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, String filename,"
-              + " String contentType)");
+      System.out.println("Test: with content-type: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -489,13 +495,10 @@ public class FunctionalTest {
       client.putObject(bucketName, filename, filename, options);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, String filename, String contentType)",
-          "contentType: " + customContentType,
-          startTime);
+      mintSuccessLog(methodName, "contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, String filename, String contentType)",
+          methodName,
           "contentType: " + customContentType,
           startTime,
           null,
@@ -505,14 +508,15 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream body, long size, String
-   * contentType).
+   * Test: putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions
+   * options)
    */
   public static void putObject_test4() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream body, "
-              + "long size, String contentType)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -525,14 +529,10 @@ public class FunctionalTest {
       }
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size,"
-              + " String contentType)",
-          "size: 1 KB, objectName: " + customContentType,
-          startTime);
+      mintSuccessLog(methodName, "size: 1 KB, objectName: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
+          methodName,
           "size: 1 KB, objectName: " + customContentType,
           startTime,
           null,
@@ -542,15 +542,15 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream body, long size, String
-   * contentType). where objectName has multiple path segments.
+   * Test: object name with multiple path segments: putObject(String bucketName, String objectName,
+   * InputStream stream, PutObjectOptions options)
    */
-  public static void putObject_test6() throws Exception {
+  public static void putObject_test5() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: objectName with path segments: "
-              + "putObject(String bucketName, String objectName, InputStream body, "
-              + "long size, String contentType)");
+      System.out.println("Test: object name with path segments: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -562,15 +562,10 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, options);
       }
       client.removeObject(bucketName, objectName);
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size,"
-              + " String contentType)",
-          "size: 1 KB, contentType: " + customContentType,
-          startTime);
+      mintSuccessLog(methodName, "size: 1 KB, contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size,"
-              + " String contentType)",
+          methodName,
           "size: 1 KB, contentType: " + customContentType,
           startTime,
           null,
@@ -579,33 +574,32 @@ public class FunctionalTest {
     }
   }
 
-  /** Test put object with unknown sized stream. */
-  public static void testPutObjectUnknownStreamSize(long size) throws Exception {
+  /**
+   * Test: unknown size stream: putObject(String bucketName, String objectName, InputStream stream,
+   * PutObjectOptions options)
+   */
+  public static void putObject_test6() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream body, "
-              + "String contentType)");
+      System.out.println("Test: unknown size stream: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(size)) {
+      try (final InputStream is = new ContentInputStream(3 * KB)) {
         PutObjectOptions options = new PutObjectOptions(is.available(), -1);
         options.setContentType(customContentType);
         client.putObject(bucketName, objectName, is, options);
       }
-
       client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream body, String contentType)",
-          "contentType: " + customContentType,
-          startTime);
+      mintSuccessLog(methodName, "size: -1, contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream body, long size, String contentType)",
-          "contentType: " + customContentType,
+          methodName,
+          "size: -1, contentType: " + customContentType,
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -614,54 +608,101 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream body, String contentType).
+   * Test: multipart unknown size stream: putObject(String bucketName, String objectName,
+   * InputStream stream, PutObjectOptions options)
    */
   public static void putObject_test7() throws Exception {
-    testPutObjectUnknownStreamSize(3 * KB);
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
+    if (!mintEnv) {
+      System.out.println("Test: multipart unknown size stream: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(11 * MB)) {
+        PutObjectOptions options = new PutObjectOptions(is.available(), -1);
+        options.setContentType(customContentType);
+        client.putObject(bucketName, objectName, is, options);
+      }
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog(methodName, "size: -1, contentType: " + customContentType, startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          methodName,
+          "size: -1, contentType: " + customContentType,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
   }
 
   /**
-   * Test: multipart: putObject(String bucketName, String objectName, InputStream body, String
-   * contentType).
+   * Test: with user metadata: putObject(String bucketName, String objectName, InputStream stream,
+   * PutObjectOptions options).
    */
   public static void putObject_test8() throws Exception {
-    testPutObjectUnknownStreamSize(10 * MB);
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
+    if (!mintEnv) {
+      System.out.println("Test: with user metadata: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      Map<String, String> headerMap = new HashMap<>();
+      headerMap.put("X-Amz-Meta-mykey", "myvalue");
+      try (final InputStream is = new ContentInputStream(1 * KB)) {
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setHeaders(headerMap);
+        client.putObject(bucketName, objectName, is, options);
+      }
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog(methodName, "X-Amz-Meta-mykey: myvalue", startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          methodName,
+          "X-Amz-Meta-mykey: myvalue",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * Map&lt;String, String&gt; headerMap).
+   * Test: with storage class REDUCED_REDUNDANCY: putObject(String bucketName, String objectName,
+   * InputStream stream, PutObjectOptions options).
    */
   public static void putObject_test9() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap).");
+      System.out.println("Test: with storage class REDUCED_REDUNDANCY: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
+      headerMap.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
       try (final InputStream is = new ContentInputStream(1 * KB)) {
         PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       }
-
       client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
-          startTime);
+      mintSuccessLog(methodName, "X-Amz-Storage-Class: REDUCED_REDUNDANCY", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
+          methodName,
+          "X-Amz-Storage-Class: REDUCED_REDUNDANCY",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -670,50 +711,33 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * Map&lt;String, String&gt; headerMap) with Storage Class REDUCED_REDUNDANCY.
+   * Test: with storage class STANDARD: putObject(String bucketName, String objectName, InputStream
+   * stream, PutObjectOptions options).
    */
-  @SuppressFBWarnings("UCF")
   public static void putObject_test10() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap). with Storage Class REDUCED_REDUNDANCY set");
+      System.out.println("Test: with storage class STANDARD: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      String storageClass = "REDUCED_REDUNDANCY";
       String objectName = getRandomName();
       Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      headerMap.put("X-Amz-Storage-Class", storageClass);
+      headerMap.put("X-Amz-Storage-Class", "STANDARD");
       try (final InputStream is = new ContentInputStream(1 * KB)) {
         PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       }
-
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
-      Map<String, List<String>> returnHeader = objectStat.httpHeaders();
-      List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
-
-      if ((returnStorageClass != null) && (!storageClass.equals(returnStorageClass.get(0)))) {
-        throw new Exception("Metadata mismatch");
-      }
-
       client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
-          startTime);
+      mintSuccessLog(methodName, "X-Amz-Storage-Class: STANDARD", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
+          methodName,
+          "X-Amz-Storage-Class: STANDARD",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -722,122 +746,66 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * Map&lt;String, String&gt; headerMap) with Storage Class STANDARD.
+   * Test: with storage class INVALID: putObject(String bucketName, String objectName, InputStream
+   * stream, PutObjectOptions options).
    */
   public static void putObject_test11() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap). with Storage Class STANDARD set");
+      System.out.println("Test: with storage class INVALID: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      String storageClass = "STANDARD";
       String objectName = getRandomName();
       Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      headerMap.put("X-Amz-Storage-Class", storageClass);
+      headerMap.put("X-Amz-Storage-Class", "INVALID");
       try (final InputStream is = new ContentInputStream(1 * KB)) {
         PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       }
-
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
-
-      Map<String, List<String>> returnHeader = objectStat.httpHeaders();
-      List<String> returnStorageClass = returnHeader.get("X-Amz-Storage-Class");
-
-      // Standard storage class shouldn't be present in metadata response
-      if (returnStorageClass != null) {
-        throw new Exception("Did not expect: " + storageClass + " in response metadata");
-      }
-
       client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
-          startTime);
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.INVALID_STORAGE_CLASS) {
+        mintFailedLog(
+            methodName,
+            "X-Amz-Storage-Class: INVALID",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
+          methodName,
+          "X-Amz-Storage-Class: INVALID",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     }
+    mintSuccessLog(methodName, "X-Amz-Storage-Class: INVALID", startTime);
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * Map&lt;String, String&gt; headerMap). with invalid Storage Class set
+   * Test: with SSE_C: putObject(String bucketName, String objectName, InputStream stream,
+   * PutObjectOptions options).
    */
   public static void putObject_test12() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap). with invalid Storage Class set");
+      System.out.println("Test: with SSE_C: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
-    try {
-      String storageClass = "INVALID";
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
-      headerMap.put("X-Amz-Storage-Class", storageClass);
 
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setHeaders(headerMap);
-        client.putObject(bucketName, objectName, is, options);
-      } catch (ErrorResponseException e) {
-        if (e.errorResponse().errorCode() != ErrorCode.INVALID_STORAGE_CLASS) {
-          throw e;
-        }
-      }
-
-      client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, Map<String, String> headerMap)",
-          "size: 1 KB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * ServerSideEncryption sse). To test SSE_C
-   */
-  public static void putObject_test13() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_C. ");
-    }
-    long startTime = System.currentTimeMillis();
-    // Generate a new 256 bit AES key - This key must be remembered by the client.
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
     ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -845,19 +813,12 @@ public class FunctionalTest {
         options.setSse(sse);
         client.putObject(bucketName, objectName, is, options);
       }
-
       client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_C.",
-          "size: 1 KB",
-          startTime);
+      mintSuccessLog(methodName, "Server-side encryption: SSE_C", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_C.",
-          "size: 1 KB",
+          methodName,
+          "Server-side encryption: SSE_C",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -866,19 +827,55 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * ServerSideEncryption sse). To test SSE_S3
+   * Test: multipart with SSE_C: putObject(String bucketName, String objectName, InputStream stream,
+   * PutObjectOptions options).
+   */
+  public static void putObject_test13() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+    if (!mintEnv) {
+      System.out.println("Test: multipart with SSE_C: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(11 * MB)) {
+        PutObjectOptions options = new PutObjectOptions(-1, 5 * MB);
+        options.setSse(sse);
+        client.putObject(bucketName, objectName, is, options);
+      }
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog(methodName, "Size: 11 MB, Server-side encryption: SSE_C", startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          methodName,
+          "Size: 11 MB, Server-side encryption: SSE_C",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: with SSE_S3: putObject(String bucketName, String objectName, InputStream stream,
+   * PutObjectOptions options).
    */
   public static void putObject_test14() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_S3.");
+      System.out.println("Test: with SSE_S3: " + methodName);
     }
+
     long startTime = System.currentTimeMillis();
 
     ServerSideEncryption sse = ServerSideEncryption.atRest();
-
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -886,19 +883,12 @@ public class FunctionalTest {
         options.setSse(sse);
         client.putObject(bucketName, objectName, is, options);
       }
-
       client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_S3.",
-          "size: 1 KB",
-          startTime);
+      mintSuccessLog(methodName, "Server-side encryption: SSE_S3", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_S3.",
-          "size: 1 KB",
+          methodName,
+          "Server-side encryption: SSE_S3",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -907,25 +897,24 @@ public class FunctionalTest {
   }
 
   /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * ServerSideEncryption sse). To test SSE_KMS
+   * Test: with SSE_KMS: putObject(String bucketName, String objectName, InputStream stream,
+   * PutObjectOptions options).
    */
   public static void putObject_test15() throws Exception {
+    String methodName =
+        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_KMS.");
+      System.out.println("Test: with SSE_KMS: " + methodName);
     }
+
     long startTime = System.currentTimeMillis();
+
+    if (System.getenv("MINT_KEY_ID").equals("")) {
+      mintIgnoredLog(methodName, "Server-side encryption: SSE_KMS", startTime);
+    }
 
     Map<String, String> myContext = new HashMap<>();
     myContext.put("key1", "value1");
-
-    String keyId = "";
-    keyId = System.getenv("MINT_KEY_ID");
-    if (keyId.equals("")) {
-      mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
-    }
     ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
 
     try {
@@ -935,103 +924,12 @@ public class FunctionalTest {
         options.setSse(sse);
         client.putObject(bucketName, objectName, is, options);
       }
-
       client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_KMS.",
-          "size: 1 KB",
-          startTime);
+      mintSuccessLog(methodName, "Server-side encryption: SSE_KMS", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_KMS.",
-          "size: 1 KB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, long size,
-   * ServerSideEncryption sse). To test SSE_C (multi-part upload).
-   */
-  public static void putObject_test16() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload). ");
-    }
-    long startTime = System.currentTimeMillis();
-    // Generate a new 256 bit AES key - This key must be remembered by the client.
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(6 * MB)) {
-        PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
-
-      client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).",
-          "size: 6 MB",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "putObject(String bucketName, String objectName, InputStream stream, "
-              + "long size, ServerSideEncryption sse) using SSE_C (Multi-part upload).",
-          "size: 6 MB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, ServerSideEncryption sse, String
-   * filename). To test SSE_C
-   */
-  public static void putObject_test17() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: putObject(String bucketName, String objectName, ServerSideEncryption sse, "
-              + "String filename). To test SSE_C. ");
-    }
-    long startTime = System.currentTimeMillis();
-    // Generate a new 256 bit AES key - This key must be remembered by the client.
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-    try {
-      String objectName = getRandomName();
-      String filename = createFile1Kb();
-      PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-      options.setSse(sse);
-      client.putObject(bucketName, objectName, filename, options);
-      Files.delete(Paths.get(filename));
-      client.removeObject(bucketName, objectName);
-
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, ServerSideEncryption sse, "
-              + "String filename). To test SSE_C",
-          "size: 1 KB",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "putObject(String bucketName, String objectName, ServerSideEncryption sse, "
-              + "String filename). To test SSE_C",
-          "size: 1 KB",
+          methodName,
+          "Server-side encryption: SSE_KMS",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -3897,13 +3795,13 @@ public class FunctionalTest {
     putObject_test2();
     putObject_test3();
     putObject_test4();
+    putObject_test5();
     putObject_test6();
     putObject_test7();
     putObject_test8();
     putObject_test9();
     putObject_test10();
     putObject_test11();
-    putObject_test12();
 
     statObject_test1();
 
@@ -3962,9 +3860,8 @@ public class FunctionalTest {
       statObject_test2();
       getObject_test7();
       getObject_test9();
+      putObject_test12();
       putObject_test13();
-      putObject_test16();
-      putObject_test17();
       copyObject_test10();
       composeObject_test4();
       composeObject_test5();
