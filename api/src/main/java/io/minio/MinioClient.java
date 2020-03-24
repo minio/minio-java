@@ -778,7 +778,7 @@ public class MinioClient {
       throw new InvalidBucketNameException(name, msg);
     }
     // Successive periods in bucket names are not allowed.
-    if (name.matches("\\.\\.")) {
+    if (name.contains("..")) {
       String msg =
           "bucket name cannot contain successive periods. For more information refer "
               + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
@@ -1502,6 +1502,7 @@ public class MinioClient {
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
           ErrorResponseException, InternalException, InvalidResponseException {
+    checkObjectName(objectName);
     HttpUrl url = buildUrl(Method.GET, bucketName, objectName, getRegion(bucketName), null);
     return url.toString();
   }

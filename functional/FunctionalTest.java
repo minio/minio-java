@@ -2111,7 +2111,9 @@ public class FunctionalTest {
       }
 
       Request.Builder requestBuilder = new Request.Builder();
-      String urlString = client.getObjectUrl(bucketName, "");
+      String urlString = client.getObjectUrl(bucketName, "x");
+      // remove last two characters to get clean url string of bucket.
+      urlString = urlString.substring(0, urlString.length() - 2);
       Request request = requestBuilder.url(urlString).post(multipartBuilder.build()).build();
       OkHttpClient transport =
           new OkHttpClient()
