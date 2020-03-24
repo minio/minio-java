@@ -18,6 +18,7 @@ package io.minio;
 
 import com.google.common.io.BaseEncoding;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -74,12 +75,31 @@ public abstract class ServerSideEncryption implements Destroyable {
   }
 
   static class ServerSideEncryptionWithCustomerKey extends ServerSideEncryption {
-    protected final SecretKey secretKey;
-    protected final MessageDigest md5;
+    final SecretKey secretKey;
+    final Map<String, String> headers;
+    final Map<String, String> copySourceHeaders;
 
-    public ServerSideEncryptionWithCustomerKey(SecretKey key, MessageDigest md5) {
+    public ServerSideEncryptionWithCustomerKey(SecretKey key)
+        throws InvalidKeyException, NoSuchAlgorithmException {
       this.secretKey = key;
-      this.md5 = md5;
+
+      byte[] keyBytes = key.getEncoded();
+      MessageDigest md5 = MessageDigest.getInstance("MD5");
+      md5.update(keyBytes);
+      String customerKey = BaseEncoding.base64().encode(keyBytes);
+      String customerKeyMd5 = BaseEncoding.base64().encode(md5.digest());
+
+      Map<String, String> map = new HashMap<>();
+      map.put("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256");
+      map.put("X-Amz-Server-Side-Encryption-Customer-Key", customerKey);
+      map.put("X-Amz-Server-Side-Encryption-Customer-Key-Md5", customerKeyMd5);
+      this.headers = Collections.unmodifiableMap(map);
+
+      map = new HashMap<>();
+      map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Algorithm", "AES256");
+      map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key", customerKey);
+      map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key-Md5", customerKeyMd5);
+      this.copySourceHeaders = Collections.unmodifiableMap(map);
     }
 
     @Override
@@ -93,21 +113,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         throw new IllegalStateException("object is already destroyed");
       }
 
-      Map<String, String> headers = new HashMap<>();
-      try {
-        final byte[] key = secretKey.getEncoded();
-        md5.update(key);
-
-        headers.put("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256");
-        headers.put("X-Amz-Server-Side-Encryption-Customer-Key", BaseEncoding.base64().encode(key));
-        headers.put(
-            "X-Amz-Server-Side-Encryption-Customer-Key-Md5",
-            BaseEncoding.base64().encode(md5.digest()));
-      } finally {
-        md5.reset();
-      }
-
-      return Collections.unmodifiableMap(headers);
+      return headers;
     }
 
     @Override
@@ -116,23 +122,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         throw new IllegalStateException("object is already destroyed");
       }
 
-      Map<String, String> headers = new HashMap<>();
-      try {
-        final byte[] key = secretKey.getEncoded();
-        md5.update(key);
-
-        headers.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Algorithm", "AES256");
-        headers.put(
-            "X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key",
-            BaseEncoding.base64().encode(key));
-        headers.put(
-            "X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key-Md5",
-            BaseEncoding.base64().encode(md5.digest()));
-      } finally {
-        md5.reset();
-      }
-
-      return Collections.unmodifiableMap(headers);
+      return copySourceHeaders;
     }
 
     @Override
@@ -156,10 +146,19 @@ public abstract class ServerSideEncryption implements Destroyable {
     if (!isCustomerKeyValid(key)) {
       throw new InvalidKeyException("The secret key is not a 256 bit AES key");
     }
-    return new ServerSideEncryptionWithCustomerKey(key, MessageDigest.getInstance(("MD5")));
+
+    return new ServerSideEncryptionWithCustomerKey(key);
   }
 
   static final class ServerSideEncryptionS3 extends ServerSideEncryption {
+    private static final Map<String, String> headers;
+
+    static {
+      Map<String, String> map = new HashMap<>();
+      map.put("X-Amz-Server-Side-Encryption", "AES256");
+      headers = Collections.unmodifiableMap(map);
+    }
+
     @Override
     public final Type type() {
       return Type.SSE_S3;
@@ -167,9 +166,7 @@ public abstract class ServerSideEncryption implements Destroyable {
 
     @Override
     public final Map<String, String> headers() {
-      Map<String, String> headers = new HashMap<>();
-      headers.put("X-Amz-Server-Side-Encryption", "AES256");
-      return Collections.unmodifiableMap(headers);
+      return headers;
     }
 
     @Override
@@ -188,12 +185,17 @@ public abstract class ServerSideEncryption implements Destroyable {
   }
 
   static final class ServerSideEncryptionKms extends ServerSideEncryption {
-    final String keyId;
-    final Optional<String> context;
+    final Map<String, String> headers;
 
     public ServerSideEncryptionKms(String keyId, Optional<String> context) {
-      this.keyId = keyId;
-      this.context = context;
+      Map<String, String> headers = new HashMap<>();
+      headers.put("X-Amz-Server-Side-Encryption", "aws:kms");
+      headers.put("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id", keyId);
+      if (context.isPresent()) {
+        headers.put("X-Amz-Server-Side-Encryption-Context", context.get());
+      }
+
+      this.headers = Collections.unmodifiableMap(headers);
     }
 
     @Override
@@ -207,14 +209,7 @@ public abstract class ServerSideEncryption implements Destroyable {
         throw new IllegalStateException("object is already destroyed");
       }
 
-      Map<String, String> headers = new HashMap<>();
-      headers.put("X-Amz-Server-Side-Encryption", "aws:kms");
-      headers.put("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id", keyId);
-      if (context.isPresent()) {
-        headers.put("X-Amz-Server-Side-Encryption-Context", context.get());
-      }
-
-      return Collections.unmodifiableMap(headers);
+      return headers;
     }
 
     @Override
@@ -255,7 +250,8 @@ public abstract class ServerSideEncryption implements Destroyable {
       }
     }
     builder.append('}');
-    String contextString = BaseEncoding.base64().encode(builder.toString().getBytes("UTF-8"));
+    String contextString =
+        BaseEncoding.base64().encode(builder.toString().getBytes(StandardCharsets.UTF_8));
     return new ServerSideEncryptionKms(keyId, Optional.of(contextString));
   }
 }
