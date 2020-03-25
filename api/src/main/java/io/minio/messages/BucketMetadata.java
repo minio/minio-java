@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2018 MinIO, Inc.
+ * (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,32 @@
  * limitations under the License.
  */
 
-package io.minio.notification;
+package io.minio.messages;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.Arrays;
 
-@SuppressFBWarnings("UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD")
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class NotificationInfo {
-  @JsonProperty("Records")
-  public NotificationEvent[] records;
+/** Helper class to denote bucket information for {@link EventMetadata}. */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "UwF",
+    justification = "Everything in this class is initialized by JSON unmarshalling.")
+public class BucketMetadata {
+  @JsonProperty private String name;
+  @JsonProperty private Identity ownerIdentity;
+  @JsonProperty private String arn;
 
-  @JsonProperty("Err")
-  public String err;
+  public String name() {
+    return name;
+  }
 
-  @Override
-  public String toString() {
-    return "NotificationInfo{"
-        + "records="
-        + Arrays.toString(records)
-        + ", err='"
-        + err
-        + '\''
-        + '}';
+  public String owner() {
+    if (ownerIdentity == null) {
+      return null;
+    }
+
+    return ownerIdentity.principalId();
+  }
+
+  public String arn() {
+    return arn;
   }
 }

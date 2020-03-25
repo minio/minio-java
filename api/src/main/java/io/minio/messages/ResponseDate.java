@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import io.minio.Time;
 import java.time.ZonedDateTime;
 import org.simpleframework.xml.Root;
@@ -40,16 +41,25 @@ public class ResponseDate {
     return zonedDateTime;
   }
 
+  public String toString() {
+    return zonedDateTime.format(Time.RESPONSE_DATE_FORMAT);
+  }
+
+  @JsonCreator
+  public static ResponseDate fromString(String responseDateString) {
+    return new ResponseDate(ZonedDateTime.parse(responseDateString, Time.RESPONSE_DATE_FORMAT));
+  }
+
   /** XML converter class. */
   public static class ResponseDateConverter implements Converter<ResponseDate> {
     @Override
     public ResponseDate read(InputNode node) throws Exception {
-      return new ResponseDate(ZonedDateTime.parse(node.getValue(), Time.RESPONSE_DATE_FORMAT));
+      return ResponseDate.fromString(node.getValue());
     }
 
     @Override
     public void write(OutputNode node, ResponseDate amzDate) throws Exception {
-      node.setValue(amzDate.zonedDateTime().format(Time.RESPONSE_DATE_FORMAT));
+      node.setValue(amzDate.toString());
     }
   }
 }

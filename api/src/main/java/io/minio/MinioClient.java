@@ -18,7 +18,9 @@
 package io.minio;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -60,6 +62,7 @@ import io.minio.messages.ListMultipartUploadsResult;
 import io.minio.messages.ListPartsResult;
 import io.minio.messages.LocationConstraint;
 import io.minio.messages.NotificationConfiguration;
+import io.minio.messages.NotificationRecords;
 import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.OutputSerialization;
 import io.minio.messages.Part;
@@ -67,7 +70,6 @@ import io.minio.messages.Prefix;
 import io.minio.messages.Retention;
 import io.minio.messages.SelectObjectContentRequest;
 import io.minio.messages.Upload;
-import io.minio.notification.NotificationInfo;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -4748,15 +4750,17 @@ public class MinioClient {
 
   /**
    * Listen to bucket notifications. As bucket notification are lazily executed, its required to
-   * iterate. The returned closeable iterator must be used with try with resource or else the stream
+   * iterate. The returned closeable iterator must be used with try with resource; else the stream
    * will not be closed. <b>Example:</b><br>
    *
    * <pre>{@code
-   *  try (CloseableIterator<Result<NotificationInfo>> ci = client
+   *  try (CloseableIterator<Result<NotificationRecords>> ci = client
    * .listenBucketNotification("my-bucket", "", "", events)) {
    *  while (ci.hasNext()) {
-   *    NotificationInfo info = ci.next().get();
-   *    System.out.println(info.toString());
+   *    NotificationRecords records = ci.next().get();
+   *    for (Event event : records.events()) {
+   *      System.out.println(event);
+   *    }
    *   }
    *  } catch (IOException e) {
    *    System.out.println("Error occurred: " + e);
@@ -4767,14 +4771,13 @@ public class MinioClient {
    * @param prefix Prefix of concerned objects events.
    * @param suffix Suffix of concerned objects events.
    * @param events List of events to watch.
-   * @return (lazy) CloseableIterator of the Result NotificationInfo.
+   * @return (lazy) CloseableIterator of event records.
    */
-  public CloseableIterator<Result<NotificationInfo>> listenBucketNotification(
+  public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(
       String bucketName, String prefix, String suffix, String[] events)
       throws IOException, InvalidKeyException, NoSuchAlgorithmException, InsufficientDataException,
           InvalidResponseException, InternalException, InvalidBucketNameException,
           XmlParserException, ErrorResponseException {
-
     Multimap<String, String> queryParamMap = HashMultimap.create();
     queryParamMap.put("prefix", prefix);
     queryParamMap.put("suffix", suffix);
@@ -4784,7 +4787,7 @@ public class MinioClient {
 
     HttpResponse response = executeGet(bucketName, "", queryParamMap);
 
-    NotificationInfoResult result = new NotificationInfoResult(response);
+    NotificationResultRecords result = new NotificationResultRecords(response);
     return result.closeableIterator();
   }
 
@@ -4986,20 +4989,24 @@ public class MinioClient {
     this.traceStream = null;
   }
 
-  private static class NotificationInfoResult {
+  private static class NotificationResultRecords {
     HttpResponse response = null;
+    Scanner scanner = null;
+    ObjectMapper mapper = null;
 
-    public NotificationInfoResult(HttpResponse response) {
+    public NotificationResultRecords(HttpResponse response) {
       this.response = response;
+      this.scanner = new Scanner(response.body().charStream()).useDelimiter("\n");
+      this.mapper = new ObjectMapper();
+      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
     }
 
-    /** returns closeable iterator of NotificationInfo result. */
-    public CloseableIterator<Result<NotificationInfo>> closeableIterator() {
-      return new CloseableIterator<Result<NotificationInfo>>() {
-        Scanner scanner = new Scanner(response.body().charStream()).useDelimiter("\n");
-        String notificationString = null;
-        ObjectMapper mapper = new ObjectMapper();
-        NotificationInfo notificationInfo = null;
+    /** returns closeable iterator of result of notification records. */
+    public CloseableIterator<Result<NotificationRecords>> closeableIterator() {
+      return new CloseableIterator<Result<NotificationRecords>>() {
+        String recordsString = null;
+        NotificationRecords records = null;
         boolean isClosed = false;
 
         @Override
@@ -5019,18 +5026,18 @@ public class MinioClient {
             return false;
           }
 
-          if (notificationString != null) {
+          if (recordsString != null) {
             return true;
           }
 
           while (scanner.hasNext()) {
-            notificationString = scanner.next().trim();
-            if (!notificationString.equals("")) {
+            recordsString = scanner.next().trim();
+            if (!recordsString.equals("")) {
               break;
             }
           }
 
-          if (notificationString == null || notificationString.equals("")) {
+          if (recordsString == null || recordsString.equals("")) {
             try {
               close();
             } catch (IOException e) {
@@ -5047,17 +5054,17 @@ public class MinioClient {
         }
 
         @Override
-        public Result<NotificationInfo> next() {
+        public Result<NotificationRecords> next() {
           if (isClosed) {
             throw new NoSuchElementException();
           }
-          if ((notificationString == null || notificationString.equals("")) && !populate()) {
+          if ((recordsString == null || recordsString.equals("")) && !populate()) {
             throw new NoSuchElementException();
           }
 
           try {
-            notificationInfo = mapper.readValue(notificationString, NotificationInfo.class);
-            return new Result<>(notificationInfo);
+            records = mapper.readValue(recordsString, NotificationRecords.class);
+            return new Result<>(records);
           } catch (JsonParseException e) {
             return new Result<>(e);
           } catch (JsonMappingException e) {
@@ -5065,8 +5072,8 @@ public class MinioClient {
           } catch (IOException e) {
             return new Result<>(e);
           } finally {
-            notificationString = null;
-            notificationInfo = null;
+            recordsString = null;
+            records = null;
           }
         }
       };

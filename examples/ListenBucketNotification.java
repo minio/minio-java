@@ -18,7 +18,8 @@ import io.minio.CloseableIterator;
 import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
-import io.minio.notification.NotificationInfo;
+import io.minio.messages.Event;
+import io.minio.messages.NotificationRecords;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -37,15 +38,12 @@ public class ListenBucketNotification {
               "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
-      try (CloseableIterator<Result<NotificationInfo>> ci =
+      try (CloseableIterator<Result<NotificationRecords>> ci =
           minioClient.listenBucketNotification("bcketName", "", "", events)) {
         while (ci.hasNext()) {
-          NotificationInfo info = ci.next().get();
-          System.out.println(
-              info.records[0].s3.bucket.name
-                  + "/"
-                  + info.records[0].s3.object.key
-                  + " has been created");
+          NotificationRecords records = ci.next().get();
+          Event event = records.events().get(0);
+          System.out.println(event.bucketName() + "/" + event.objectName() + " has been created");
         }
       } catch (IOException e) {
         System.out.println("Error occurred: " + e);

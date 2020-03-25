@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2018 MinIO, Inc.
+ * (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-package io.minio.notification;
+package io.minio.messages;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@SuppressFBWarnings("UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD")
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class EventMeta {
-  public String schemaVersion;
-  public String configurationId;
-  public BucketMeta bucket;
-  public ObjectMeta object;
+/** Helper class to denote user or owner identity for {@link Event} and {@link BucketMetadata}. */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "UwF",
+    justification = "Everything in this class is initialized by JSON unmarshalling.")
+public class Identity {
+  @JsonProperty private String principalId;
+
+  public String principalId() {
+    return principalId;
+  }
 }
