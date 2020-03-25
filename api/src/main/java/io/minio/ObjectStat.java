@@ -20,6 +20,7 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import okhttp3.Headers;
 
 /** Object stat information. */
 @SuppressWarnings("unused")
@@ -32,46 +33,33 @@ public class ObjectStat {
   private final String contentType;
   private final Map<String, List<String>> httpHeaders;
 
-  /**
-   * Creates ObjectStat with given bucket name, object name, and available response header
-   * information.
-   */
-  public ObjectStat(String bucketName, String name, ResponseHeader header) {
-    this(bucketName, name, header, null);
-  }
-
-  /**
-   * Creates ObjectStat with given bucket name, object name, available response header and HTTP
-   * Headers from response.
-   */
-  public ObjectStat(
-      String bucketName,
-      String name,
-      ResponseHeader header,
-      Map<String, List<String>> httpHeaders) {
+  /** Creates ObjectStat with given bucket name, object name and HTTP Headers from response. */
+  public ObjectStat(String bucketName, String name, Headers headers) {
     this.bucketName = bucketName;
     this.name = name;
-    this.contentType = header.contentType();
-    this.createdTime = header.lastModified();
-    this.length = header.contentLength();
+    this.contentType = headers.get("Content-Type");
 
-    if (header.etag() != null) {
-      this.etag = header.etag().replaceAll("\"", "");
+    String dateString = headers.get("Last-Modified");
+    this.createdTime = ZonedDateTime.parse(dateString, Time.HTTP_HEADER_DATE_FORMAT);
+
+    String lengthString = headers.get("Content-Length");
+    this.length = Long.parseLong(lengthString);
+
+    String etagString = headers.get("ETag");
+    if (etagString != null) {
+      this.etag = etagString.replaceAll("\"", "");
     } else {
       this.etag = "";
     }
 
-    if (httpHeaders != null) {
-      this.httpHeaders = Collections.unmodifiableMap(httpHeaders);
-    } else {
-      this.httpHeaders = null;
-    }
+    this.httpHeaders = Collections.unmodifiableMap(headers.toMultimap());
   }
 
   /**
    * Creates ObjectStat with given bucket name, object name, created time, object length, Etag and
    * content type.
    */
+  @Deprecated
   public ObjectStat(
       String bucketName,
       String name,
