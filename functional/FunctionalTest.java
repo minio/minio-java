@@ -37,11 +37,15 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okio.BufferedSink;
+import okio.Okio;
 
 @SuppressFBWarnings(
     value = "REC",
     justification = "Allow catching super class Exception since it's tests")
 public class FunctionalTest {
+  private static final String OS = System.getProperty("os.name").toLowerCase(Locale.US);
+  private static final String MINIO_BINARY;
   private static final String PASS = "PASS";
   private static final String FAILED = "FAIL";
   private static final String IGNORED = "NA";
@@ -59,6 +63,15 @@ public class FunctionalTest {
   private static String secretKey;
   private static String region;
   private static MinioClient client = null;
+
+  static {
+    String binaryName = "minio";
+    if (OS.contains("windows")) {
+      binaryName = "minio.exe";
+    }
+
+    MINIO_BINARY = binaryName;
+  }
 
   /** Do no-op. */
   public static void ignore(Object... args) {}
@@ -171,27 +184,17 @@ public class FunctionalTest {
             .build();
     Response response = transport.newCall(request).execute();
 
-    if (response == null) {
-      throw new Exception("empty response");
-    }
-
-    if (!response.isSuccessful()) {
-      String errorXml = "";
-
-      // read entire body stream to string.
-      Scanner scanner = new Scanner(response.body().charStream());
-      scanner.useDelimiter("\\A");
-      if (scanner.hasNext()) {
-        errorXml = scanner.next();
+    try {
+      if (response.isSuccessful()) {
+        return response.body().bytes();
       }
-      scanner.close();
-      response.body().close();
 
+      String errorXml = new String(response.body().bytes(), StandardCharsets.UTF_8);
       throw new Exception(
-          "failed to read object. Response: " + response + ", Response body: " + errorXml);
+          "failed to create object. Response: " + response + ", Response body: " + errorXml);
+    } finally {
+      response.close();
     }
-
-    return readAllBytes(response.body().byteStream());
   }
 
   /** Write data to given object url. */
@@ -214,24 +217,14 @@ public class FunctionalTest {
             .build();
     Response response = transport.newCall(request).execute();
 
-    if (response == null) {
-      throw new Exception("empty response");
-    }
-
-    if (!response.isSuccessful()) {
-      String errorXml = "";
-
-      // read entire body stream to string.
-      Scanner scanner = new Scanner(response.body().charStream());
-      scanner.useDelimiter("\\A");
-      if (scanner.hasNext()) {
-        errorXml = scanner.next();
+    try {
+      if (!response.isSuccessful()) {
+        String errorXml = new String(response.body().bytes(), StandardCharsets.UTF_8);
+        throw new Exception(
+            "failed to create object. Response: " + response + ", Response body: " + errorXml);
       }
-      scanner.close();
-      response.body().close();
-
-      throw new Exception(
-          "failed to create object. Response: " + response + ", Response body: " + errorXml);
+    } finally {
+      response.close();
     }
   }
 
@@ -2127,17 +2120,14 @@ public class FunctionalTest {
         throw new Exception("no response from server");
       }
 
-      if (!response.isSuccessful()) {
-        String errorXml = "";
-        // read entire body stream to string.
-        Scanner scanner = new Scanner(response.body().charStream());
-        scanner.useDelimiter("\\A");
-        if (scanner.hasNext()) {
-          errorXml = scanner.next();
+      try {
+        if (!response.isSuccessful()) {
+          String errorXml = new String(response.body().bytes(), StandardCharsets.UTF_8);
+          throw new Exception(
+              "failed to upload object. Response: " + response + ", Error: " + errorXml);
         }
-        scanner.close();
-        throw new Exception(
-            "failed to upload object. Response: " + response + ", Error: " + errorXml);
+      } finally {
+        response.close();
       }
 
       client.removeObject(bucketName, objectName);
@@ -3928,30 +3918,119 @@ public class FunctionalTest {
     teardown();
   }
 
+  public static boolean downloadMinio() throws IOException {
+    String url = "https://dl.min.io/server/minio/release/";
+    if (OS.contains("linux")) {
+      url += "linux-amd64/minio";
+    } else if (OS.contains("windows")) {
+      url += "windows-amd64/minio.exe";
+    } else if (OS.contains("mac")) {
+      url += "darwin-amd64/minio";
+    } else {
+      System.out.println("unknown operating system " + OS);
+      return false;
+    }
+
+    File file = new File(MINIO_BINARY);
+    if (file.exists()) {
+      return true;
+    }
+
+    System.out.println("downloading " + MINIO_BINARY + " binary");
+
+    Request.Builder requestBuilder = new Request.Builder();
+    Request request = requestBuilder.url(HttpUrl.parse(url)).method("GET", null).build();
+    OkHttpClient transport =
+        new OkHttpClient()
+            .newBuilder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build();
+    Response response = transport.newCall(request).execute();
+
+    try {
+      if (!response.isSuccessful()) {
+        System.out.println("failed to download binary " + MINIO_BINARY);
+        return false;
+      }
+
+      BufferedSink bufferedSink = Okio.buffer(Okio.sink(new File(MINIO_BINARY)));
+      bufferedSink.writeAll(response.body().source());
+      bufferedSink.flush();
+      bufferedSink.close();
+    } finally {
+      response.close();
+    }
+
+    if (!OS.contains("windows")) {
+      file.setExecutable(true);
+    }
+
+    return true;
+  }
+
+  public static Process runMinio() throws Exception {
+    File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
+    ProcessBuilder pb = new ProcessBuilder(binaryPath.getPath(), "server", "d1");
+
+    Map<String, String> env = pb.environment();
+    env.put("MINIO_ACCESS_KEY", "minio");
+    env.put("MINIO_SECRET_KEY", "minio123");
+
+    pb.redirectErrorStream(true);
+    pb.redirectOutput(ProcessBuilder.Redirect.to(new File(MINIO_BINARY + ".log")));
+
+    System.out.println("starting minio server");
+    Process p = pb.start();
+    Thread.sleep(10 * 1000); // wait for 10 seconds to do real start.
+    return p;
+  }
+
   /** main(). */
-  public static void main(String[] args) {
-    if (args.length != 4) {
-      System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
-      System.exit(-1);
-    }
-
-    String dataDir = System.getenv("MINT_DATA_DIR");
-    if (dataDir != null && !dataDir.equals("")) {
-      mintEnv = true;
-      dataFile1Kb = Paths.get(dataDir, "datafile-1-kB");
-      dataFile6Mb = Paths.get(dataDir, "datafile-6-MB");
-    }
-
+  public static void main(String[] args) throws Exception {
     String mintMode = null;
     if (mintEnv) {
       mintMode = System.getenv("MINT_MODE");
     }
 
-    endpoint = args[0];
-    accessKey = args[1];
-    secretKey = args[2];
-    region = args[3];
+    Process minioProcess = null;
 
+    if (args.length != 4) {
+      endpoint = "http://localhost:9000";
+      accessKey = "minio";
+      secretKey = "minio123";
+      region = "us-east-1";
+
+      if (!downloadMinio()) {
+        System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
+        System.exit(-1);
+      }
+
+      minioProcess = runMinio();
+      try {
+        int exitValue = minioProcess.exitValue();
+        System.out.println("minio server process exited with " + exitValue);
+        System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
+        System.exit(-1);
+      } catch (IllegalThreadStateException e) {
+        ignore();
+      }
+    } else {
+      String dataDir = System.getenv("MINT_DATA_DIR");
+      if (dataDir != null && !dataDir.equals("")) {
+        mintEnv = true;
+        dataFile1Kb = Paths.get(dataDir, "datafile-1-kB");
+        dataFile6Mb = Paths.get(dataDir, "datafile-6-MB");
+      }
+
+      endpoint = args[0];
+      accessKey = args[1];
+      secretKey = args[2];
+      region = args[3];
+    }
+
+    int exitValue = 0;
     try {
       client = new MinioClient(endpoint, accessKey, secretKey);
       // Enable trace for debugging.
@@ -3972,10 +4051,15 @@ public class FunctionalTest {
         client = new MinioClient(endpoint, accessKey, secretKey, region);
         FunctionalTest.runQuickTests();
       }
-
     } catch (Exception e) {
       e.printStackTrace();
-      System.exit(-1);
+      exitValue = -1;
+    } finally {
+      if (minioProcess != null) {
+        minioProcess.destroy();
+      }
     }
+
+    System.exit(exitValue);
   }
 }
