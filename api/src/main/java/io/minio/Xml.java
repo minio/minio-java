@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.stream.Format;
 
 /** XML marshaller and unmarshaller. */
 public class Xml {
@@ -33,7 +34,7 @@ public class Xml {
    */
   public static String marshal(Object source) throws XmlParserException {
     try {
-      Serializer serializer = new Persister(new AnnotationStrategy());
+      Serializer serializer = new Persister(new AnnotationStrategy(), new Format(0));
       StringWriter writer = new StringWriter();
       serializer.write(source, writer);
       return writer.toString();
