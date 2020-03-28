@@ -211,23 +211,24 @@ public class MinioClient {
   private OkHttpClient httpClient;
 
   /**
-   * Creates MinIO client object with given endpoint using anonymous access. <b>Example:</b><br>
+   * Creates MinIO client object with given endpoint using anonymous access.
    *
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io"); }</pre>
+   * <p><b>Example:</b>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io");}</pre>
+   *
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
    *
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -247,11 +248,13 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given URL object using anonymous access. <b>Example:</b><br>
+   * Creates MinIO client object with given URL object using anonymous access.
    *
-   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.min.io")); }</pre>
+   * <p><b>Example:</b>
    *
-   * @param url Endpoint URL object.
+   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.min.io"));}</pre>
+   *
+   * @param url Endpoint as {@link URL} object.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
@@ -270,14 +273,15 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given HttpUrl object using anonymous access. <b>Example:</b>
-   * <br>
+   * Creates MinIO client object with given HttpUrl object using anonymous access.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.min.io")); }
+   * {@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.min.io"));}
    * </pre>
    *
-   * @param url Endpoint HttpUrl object.
+   * @param url Endpoint as {@link HttpUrl} object.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -297,27 +301,28 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given endpoint, access key and secret key. <b>Example:</b><br>
+   * Creates MinIO client object with given endpoint, access key and secret key.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io",
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
    *
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
@@ -338,29 +343,29 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given endpoint, access key, secret key and region name
-   * <b>Example:</b><br>
+   * Creates MinIO client object with given endpoint, access key, secret key and region name.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io",
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1"); }</pre>
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", "us-west-1");}</pre>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
    *
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param region Region name to access service in endpoint.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @param region Region name of buckets in S3 service.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
@@ -387,15 +392,16 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given URL object, access key and secret key. <b>Example:</b>
-   * <br>
+   * Creates MinIO client object with given URL object, access key and secret key.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.min.io"),
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
    *
-   * @param url Endpoint URL object.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   * @param url Endpoint as {@link URL} object.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -415,15 +421,16 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given URL object, access key and secret key. <b>Example:</b>
-   * <br>
+   * Creates MinIO client object with given URL object, access key and secret key.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.min.io"),
-   *                            "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY"); }</pre>
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
    *
-   * @param url Endpoint HttpUrl object.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   * @param url Endpoint as {@link HttpUrl} object.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -444,30 +451,29 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given endpoint, port, access key and secret key using secure
-   * (HTTPS) connection. <b>Example:</b><br>
+   * Creates MinIO client object with given endpoint, port, access key and secret key.
    *
-   * <pre>{@code MinioClient minioClient =
-   *                  new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-   * }</pre>
+   * <p><b>Example:</b>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
    *
-   * @param port Valid port. It should be in between 1 and 65535. Unused if endpoint is an URL.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
+   *
+   * @param port TCP/IP port number between 1 and 65535. Unused if endpoint is an URL.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -492,30 +498,30 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object with given endpoint, access key and secret key using secure (HTTPS)
-   * connection. <b>Example:</b><br>
+   * Creates MinIO client object with given endpoint, access key and secret key using secure (TLS)
+   * connection.
    *
-   * <pre>{@code MinioClient minioClient =
-   *                      new MinioClient("play.min.io", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true);
-   * }</pre>
+   * <p><b>Example:</b>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io",
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);}</pre>
    *
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param secure If true, access endpoint using HTTPS else access it using HTTP.
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
+   *
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -535,31 +541,31 @@ public class MinioClient {
   }
 
   /**
-   * Creates MinIO client object using given endpoint, port, access key, secret key and secure
-   * option. <b>Example:</b><br>
+   * Creates MinIO client object using given endpoint, port, access key, secret key and secure (TLS)
+   * connection.
    *
-   * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false);
-   * }</pre>
+   * <p><b>Example:</b>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);}</pre>
    *
-   * @param port Valid port. It should be in between 1 and 65535. Unused if endpoint is an URL.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param secure If true, access endpoint using HTTPS else access it using HTTP.
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
+   *
+   * @param port TCP/IP port number between 1 and 65535. Unused if endpoint is an URL.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -579,31 +585,31 @@ public class MinioClient {
 
   /**
    * Creates MinIO client object using given endpoint, port, access key, secret key, region and
-   * secure option. <b>Example:</b><br>
+   * secure (TLS) connection.
    *
-   * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false);
-   * }</pre>
+   * <p><b>Example:</b>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);}</pre>
    *
-   * @param port Valid port. It should be in between 1 and 65535. Unused if endpoint is an URL.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param region Region name to access service in endpoint.
-   * @param secure If true, access endpoint using HTTPS else access it using HTTP.
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
+   *
+   * @param port TCP/IP port number between 1 and 65535. Unused if endpoint is an URL.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @param region Region name of buckets in S3 service.
+   * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -622,32 +628,32 @@ public class MinioClient {
 
   /**
    * Creates MinIO client object using given endpoint, port, access key, secret key, region and
-   * secure option. <b>Example:</b><br>
+   * secure (TLS) connection.
    *
-   * <pre>{@code MinioClient minioClient =
-   *          new MinioClient("play.min.io", 9000, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-east-1", false,
-   *          customHttpClient);
-   * }</pre>
+   * <p><b>Example:</b>
    *
-   * @param endpoint Request endpoint. Endpoint is an URL, domain name, IPv4 or IPv6 address.
-   *     <pre>
-   *              Valid endpoints:
-   *              * https://s3.amazonaws.com
-   *              * https://s3.amazonaws.com/
-   *              * https://play.min.io
-   *              * http://play.min.io:9010/
-   *              * localhost
-   *              * localhost.localdomain
-   *              * play.min.io
-   *              * 127.0.0.1
-   *              * 192.168.1.60
-   *              * ::1</pre>
+   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true,
+   *     customHttpClient);}</pre>
    *
-   * @param port Valid port. It should be in between 1 and 65535. Unused if endpoint is an URL.
-   * @param accessKey Access key to access service in endpoint.
-   * @param secretKey Secret key to access service in endpoint.
-   * @param region Region name to access service in endpoint.
-   * @param secure If true, access endpoint using HTTPS else access it using HTTP.
+   * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
+   *     <pre>           Examples:
+   *             * https://s3.amazonaws.com
+   *             * https://s3.amazonaws.com/
+   *             * https://play.min.io
+   *             * http://play.min.io:9010/
+   *             * localhost
+   *             * localhost.localdomain
+   *             * play.min.io
+   *             * 127.0.0.1
+   *             * 192.168.1.60
+   *             * ::1</pre>
+   *
+   * @param port TCP/IP port number between 1 and 65535. Unused if endpoint is an URL.
+   * @param accessKey Access key (aka user ID) of your account in S3 service.
+   * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @param region Region name of buckets in S3 service.
+   * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @param httpClient Customized HTTP client object.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
@@ -1397,14 +1403,16 @@ public class MinioClient {
   }
 
   /**
-   * Returns meta data information of given object in given bucket. <b>Example:</b><br>
+   * Returns meta data information of given object in given bucket.
    *
-   * <pre>{@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
-   * System.out.println(objectStat); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
-   * @return Populated object metadata.
+   * @return Populated object meta data.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -1426,16 +1434,18 @@ public class MinioClient {
   }
 
   /**
-   * Returns meta data information of given object in given bucket. <b>Example:</b><br>
+   * Returns meta data information of given object in given bucket.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", sse);
-   * System.out.println(objectStat); }</pre>
+   * {@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", sse);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
-   * @param sse Encryption metadata only required for SSE-C.
-   * @return Populated object metadata.
+   * @param sse SSE-C type of server-side encryption.
+   * @return Populated object meta data.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -1477,8 +1487,7 @@ public class MinioClient {
    *
    * <p><b>Example:</b>
    *
-   * <pre>{@code String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
-   * System.out.println(url); }</pre>
+   * <pre>{@code String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1510,13 +1519,8 @@ public class MinioClient {
    *
    * <p><b>Example:</b>
    *
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1547,13 +1551,8 @@ public class MinioClient {
    *
    * <p><b>Example:</b>
    *
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
+   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1581,16 +1580,13 @@ public class MinioClient {
 
   /**
    * Gets object's data starting from given offset as {@link InputStream} in the given bucket. The
-   * InputStream must be closed after use else the connection will remain open. <b>Example:</b><br>
+   * InputStream must be closed after use else the connection will remain open.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
+   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1618,16 +1614,13 @@ public class MinioClient {
 
   /**
    * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The
-   * InputStream must be closed after use else the connection will remain open. <b>Example:</b><br>
+   * InputStream must be closed after use else the connection will remain open.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
+   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1656,16 +1649,13 @@ public class MinioClient {
 
   /**
    * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The
-   * InputStream must be closed after use else the connection will remain open. <b>Example:</b><br>
+   * InputStream must be closed after use else the connection will remain open.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, sse);
-   * byte[] buf = new byte[16384];
-   * int bytesRead;
-   * while ((bytesRead = stream.read(buf, 0, buf.length)) >= 0) {
-   *   System.out.println(new String(buf, 0, bytesRead));
-   * }
-   * stream.close(); }</pre>
+   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, sse);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1731,9 +1721,11 @@ public class MinioClient {
   }
 
   /**
-   * Gets object's data in the given bucket and stores it to given file name. <b>Example:</b><br>
+   * Gets object's data in the given bucket and stores it to given file name.
    *
-   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg");}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1760,9 +1752,10 @@ public class MinioClient {
 
   /**
    * Gets encrypted object's data in the given bucket and stores it to given file name.
-   * <b>Example:</b><br>
    *
-   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", sse, "photo.jpg"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", sse, "photo.jpg");}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -1872,11 +1865,12 @@ public class MinioClient {
   /**
    * Copy a source object into a new object with the provided name in the provided bucket.
    * optionally can take a key value CopyConditions and server side encryption as well for
-   * conditionally attempting copyObject. <b>Example:</b><br>
+   * conditionally attempting copyObject.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code minioClient.copyObject("my-bucketname", "my-objectname", headers, sse, "my-srcbucketname",
-   * "my-srcobjname", srcSse, copyConditions);}
+   * {@code minioClient.copyObject("my-bucketname", "my-objectname", headers, sse, "my-srcbucketname","my-srcobjname", srcSse, copyConditions);}
    * </pre>
    *
    * @param bucketName Destination bucket name.
@@ -1959,13 +1953,11 @@ public class MinioClient {
 
   /**
    * Create an object by concatenating a list of source objects using server-side copying.
-   * <b>Example:</b><br>
-   * *
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code minioClient.composeObject(String bucketName, String objectName,
-   * List<ComposeSource> composeSource, Map<String,String> userMetaData,
-   * ServiceConfigurationError sse );}
+   * {@code minioClient.composeObject("my-bucketname", "my-objectname", composeSources, userMetaData, sse);}
    * </pre>
    *
    * @param bucketName Destination Bucket to be created upon compose.
@@ -2218,12 +2210,13 @@ public class MinioClient {
 
   /**
    * Returns a presigned URL string with given HTTP method, expiry time and custom request params
-   * for a specific object in the bucket. <b>Example:</b><br>
+   * for a specific object in the bucket.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname", "my-objectname",
-   * 60 * 60 * 24, reqParams);
-   * System.out.println(url); }</pre>
+   * {@code String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);}
+   * </pre>
    *
    * @param method HTTP {@link Method}.
    * @param bucketName Bucket name.
@@ -2284,11 +2277,13 @@ public class MinioClient {
 
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time with
-   * custom request params. <b>Example:</b><br>
+   * custom request params.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);
-   * System.out.println(url); }</pre>
+   * {@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -2321,11 +2316,12 @@ public class MinioClient {
 
   /**
    * Returns an presigned URL to download the object in the bucket with given expiry time.
-   * <b>Example:</b><br>
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-   * System.out.println(url); }</pre>
+   * {@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -2354,10 +2350,12 @@ public class MinioClient {
 
   /**
    * Returns an presigned URL to download the object in the bucket with default expiry time. Default
-   * expiry time is 7 days in seconds. <b>Example:</b><br>
+   * expiry time is 7 days in seconds.
    *
-   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");
-   * System.out.println(url); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -2385,11 +2383,12 @@ public class MinioClient {
 
   /**
    * Returns a presigned URL to upload an object in the bucket with given expiry time.
-   * <b>Example:</b><br>
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-   * System.out.println(url); }</pre>
+   * {@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);}
+   * </pre>
    *
    * @param bucketName Bucket name
    * @param objectName Object name in the bucket
@@ -2418,10 +2417,12 @@ public class MinioClient {
 
   /**
    * Returns a presigned URL to upload an object in the bucket with default expiry time. Default
-   * expiry time is 7 days in seconds. <b>Example:</b><br>
+   * expiry time is 7 days in seconds.
    *
-   * <pre>{@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");
-   * System.out.println(url); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -2449,20 +2450,27 @@ public class MinioClient {
 
   /**
    * Returns string map for given {@link PostPolicy} to upload object with various post policy
-   * conditions. <b>Example:</b><br>
+   * conditions.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code // Create new PostPolicy object for 'my-bucketname', 'my-objectname' and 7 days expire time from now.
-   * PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", DateTime.now().plusDays(7));
+   * {@code PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", ZonedDateTime.now().plusDays(7));
+   *
    * // 'my-objectname' should be 'image/png' content type
    * policy.setContentType("image/png");
+   *
+   * // set success action status to 201 to receive XML document
+   * policy.setSuccessActionStatus(201);
+   *
    * Map<String,String> formData = minioClient.presignedPostPolicy(policy);
-   * // Print a curl command that can be executable with the file /tmp/userpic.png and the file will be uploaded.
+   *
+   * // Print curl command to be executed by anonymous user to upload /tmp/userpic.png.
    * System.out.print("curl -X POST ");
    * for (Map.Entry<String,String> entry : formData.entrySet()) {
    *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
    * }
-   * System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname"); }</pre>
+   * System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname");}</pre>
    *
    * @param policy Post policy of an object.
    * @return Map of strings to construct form-data.
@@ -2488,9 +2496,11 @@ public class MinioClient {
   }
 
   /**
-   * Removes an object from a bucket. <b>Example:</b><br>
+   * Removes an object from a bucket.
    *
-   * <pre>{@code minioClient.removeObject("my-bucketname", "my-objectname"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.removeObject("my-bucketname", "my-objectname");}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -2558,17 +2568,19 @@ public class MinioClient {
 
   /**
    * Removes multiple objects from a bucket. As objects removal are lazily executed, its required to
-   * iterate the returned Iterable. <b>Example:</b><br>
+   * iterate the returned Iterable.
    *
-   * <pre>{@code // Create object list for removal.
-   * List<String> objectNames = new LinkedList<String>();
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code List<String> myObjectNames = new LinkedList<String>();
    * objectNames.add("my-objectname1");
    * objectNames.add("my-objectname2");
    * objectNames.add("my-objectname3");
-   * for (Result<DeleteError> errorResult: minioClient.removeObjects("my-bucketname", objectNames)) {
-   *     DeleteError error = errorResult.get();
-   *     System.out.println("Failed to remove '" + error.objectName() + "'. Error:" + error.message());
-   * } }</pre>
+   * Iterable<Result<DeleteError>> results = minioClient.removeObjects("my-bucketname", myObjectNames);
+   * for (Result<DeleteError> result : results) {
+   *   DeleteError error = errorResult.get();
+   *   System.out.println("Error in deleting object " + error.objectName() + "; " + error.message());
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectNames List of Object names in the bucket.
@@ -2683,9 +2695,17 @@ public class MinioClient {
   /**
    * Lists object information in given bucket.
    *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname");
+   * for (Result<Item> result : results) {
+   *   Item item = result.get();
+   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * }}</pre>
+   *
    * @param bucketName Bucket name.
    * @return an iterator of Result Items.
-   *     <p>* @throws XmlParserException upon parsing response xml
+   * @throws XmlParserException upon parsing response xml
    */
   public Iterable<Result<Item>> listObjects(final String bucketName) throws XmlParserException {
     return listObjects(bucketName, null);
@@ -2693,6 +2713,15 @@ public class MinioClient {
 
   /**
    * Lists object information in given bucket and prefix.
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj");
+   * for (Result<Item> result : results) {
+   *   Item item = result.get();
+   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param prefix Prefix string. List objects whose name starts with `prefix`.
@@ -2707,13 +2736,16 @@ public class MinioClient {
 
   /**
    * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix and
-   * recursive flag. <b>Example:</b><br>
+   * recursive flag.
    *
-   * <pre>{@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname");
-   * for (Result<Item> result : myObjects) {
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true);
+   * for (Result<Item> result : results) {
    *   Item item = result.get();
    *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * } }</pre>
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param prefix Prefix string. List objects whose name starts with `prefix`.
@@ -2732,15 +2764,16 @@ public class MinioClient {
 
   /**
    * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix, recursive
-   * flag and S3 API version to use. <b>Example:</b><br>
+   * flag and S3 API version to use.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname", "my-object-prefix", true,
-   *                                    false);
-   * for (Result<Item> result : myObjects) {
+   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true, true);
+   * for (Result<Item> result : results) {
    *   Item item = result.get();
    *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * } }</pre>
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param prefix Prefix string. List objects whose name starts with `prefix`.
@@ -2764,15 +2797,16 @@ public class MinioClient {
 
   /**
    * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix, recursive
-   * flag, user metadata flag and S3 API version to use. <b>Example:</b><br>
+   * flag, user metadata flag and S3 API version to use.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname", "my-object-prefix", true,
-   *                                    true, false);
-   * for (Result<Item> result : myObjects) {
+   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true, true, false);
+   * for (Result<Item> result : results) {
    *   Item item = result.get();
    *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * } }</pre>
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param prefix Prefix string. List objects whose name starts with `prefix`.
@@ -3146,12 +3180,14 @@ public class MinioClient {
   }
 
   /**
-   * Returns all bucket information owned by the current user. <b>Example:</b><br>
+   * Returns all bucket information owned by the current user.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>{@code List<Bucket> bucketList = minioClient.listBuckets();
    * for (Bucket bucket : bucketList) {
    *   System.out.println(bucket.creationDate() + ", " + bucket.name());
-   * } }</pre>
+   * }}</pre>
    *
    * @return List of bucket type.
    * @throws InvalidBucketNameException upon invalid bucket name is given
@@ -3178,14 +3214,16 @@ public class MinioClient {
   }
 
   /**
-   * Checks if given bucket exist and is having read access. <b>Example:</b><br>
+   * Checks if given bucket exist and is having read access.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>{@code boolean found = minioClient.bucketExists("my-bucketname");
    * if (found) {
    *   System.out.println("my-bucketname exists");
    * } else {
    *   System.out.println("my-bucketname does not exist");
-   * } }</pre>
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @return True if the bucket exists and the user has at least read access.
@@ -3219,6 +3257,10 @@ public class MinioClient {
   /**
    * Creates a bucket with default region.
    *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code boolean found = minioClient.makeBucket("my-bucketname");}</pre>
+   *
    * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws RegionConflictException upon passed region conflicts with the one previously specified
@@ -3241,10 +3283,11 @@ public class MinioClient {
   }
 
   /**
-   * Creates a bucket with given region. <b>Example:</b><br>
+   * Creates a bucket with given region.
    *
-   * <pre>{@code minioClient.makeBucket("my-bucketname");
-   * System.out.println("my-bucketname is created successfully"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code boolean found = minioClient.makeBucket("my-bucketname", "eu-west-1");}</pre>
    *
    * @param bucketName Bucket name.
    * @param region region in which the bucket will be created.
@@ -3268,10 +3311,11 @@ public class MinioClient {
   }
 
   /**
-   * Creates a bucket with given region and object lock option. <b>Example:</b><br>
+   * Creates a bucket with given region and object lock option.
    *
-   * <pre>{@code minioClient.makeBucket("my-bucketname", "us-east-1", true);
-   * System.out.println("my-bucketname is created successfully"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code boolean found = minioClient.makeBucket("my-bucketname", "eu-west-2", true);}</pre>
    *
    * @param bucketName Bucket name.
    * @param region region in which the bucket will be created.
@@ -3323,10 +3367,11 @@ public class MinioClient {
   }
 
   /**
-   * Enable object versioning in given bucket. <b>Example:</b><br>
+   * Enable object versioning in given bucket.
    *
-   * <pre>{@code minioClient.enableVersioning("my-bucketname");
-   * System.out.println("object versioning is enabled in my-bucketname"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.enableVersioning("my-bucketname");}</pre>
    *
    * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
@@ -3354,10 +3399,11 @@ public class MinioClient {
   }
 
   /**
-   * Disable object versioning in given bucket. <b>Example:</b><br>
+   * Disable object versioning in given bucket.
    *
-   * <pre>{@code minioClient.disableVersioning("my-bucketname");
-   * System.out.println("object versioning is disabled in my-bucketname"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.disableVersioning("my-bucketname");}</pre>
    *
    * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
@@ -3385,10 +3431,11 @@ public class MinioClient {
   }
 
   /**
-   * Sets default object retention in given bucket. <b>Example:</b><br>
+   * Sets default object retention in given bucket.
    *
-   * <pre>{@code minioClient.setDefaultRetention("my-bucketname", config);
-   * System.out.println("Default object retention is set successfully in my-bucketname"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.setDefaultRetention("my-bucketname", config);}</pre>
    *
    * @param bucketName Bucket name.
    * @param config Object lock configuration.
@@ -3416,10 +3463,12 @@ public class MinioClient {
   }
 
   /**
-   * Gets default object retention in given bucket. <b>Example:</b><br>
+   * Gets default object retention in given bucket.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname"); }
+   * {@code ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname");}
    * </pre>
    *
    * @param bucketName Bucket name.
@@ -3450,10 +3499,12 @@ public class MinioClient {
   }
 
   /**
-   * Applies object retention lock onto an object. <b>Example:</b><br>
+   * Applies object retention lock onto an object.
    *
-   * <pre>{@code minioClient.setObjectRetention("my-bucketname", "my-object", config, true );
-   * System.out.println("Set object retention on my-object successfully."); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.setObjectRetention("my-bucketname", "my-object", null, config, true);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
@@ -3507,14 +3558,14 @@ public class MinioClient {
   }
 
   /**
-   * Fetches object retention lock of an object. <b>Example:</b><br>
+   * Fetches object retention lock of an object.
    *
-   * <pre>{@code
-   * Retention retention = minioClient.getObjectRetention("my-bucketname",
-   * "my-object", "version-Id" );
-   * System.out.println("Mode " + retention.mode());
-   * System.out.println("Retanetion Until  " + retention.retainUntilDate());
-   * }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code Retention retention = s3Client.getObjectRetention("my-bucketname", "my-objectname", null);
+   * System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
@@ -3552,10 +3603,11 @@ public class MinioClient {
   }
 
   /**
-   * Enables object legal hold on an object. <b>Example:</b><br>
+   * Enables object legal hold on an object.
    *
-   * <pre>{@code minioClient.enableObjectLegalHold("my-bucketname", "my-object", "");
-   * System.out.println("Legal Hold enabled on my-object successfully."); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.enableObjectLegalHold("my-bucketname", "my-object", null);}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
@@ -3593,10 +3645,11 @@ public class MinioClient {
   }
 
   /**
-   * Disable object legal hold on an object. <b>Example:</b><br>
+   * Disable object legal hold on an object.
    *
-   * <pre>{@code minioClient.disableObjectLegalHold("my-bucketname", "my-object", "");
-   * System.out.println("Legal Hold disabled on my-object successfully."); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.disableObjectLegalHold("my-bucketname", "my-object", null);}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
@@ -3634,13 +3687,18 @@ public class MinioClient {
   }
 
   /**
-   * Returns true is the object legal hold is enabled. <b>Example:</b><br>
+   * Returns true if the object legal hold is enabled.
    *
-   * <pre>{@code
-   * boolean isObjectLegalHoldEnabled = minioClient.isObjectLegalHoldEnabled("my-bucketname",
-   *  "my-object", "" );
-   * System.out.println("Is Object Legal Hold enabled " + isObjectLegalHoldEnabled);
-   * }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code boolean status = s3Client.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", null);
+   * if (status) {
+   *   System.out.println("Legal hold is on");
+   * } else {
+   *   System.out.println("Legal hold is off");
+   * }}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
@@ -3679,13 +3737,11 @@ public class MinioClient {
   }
 
   /**
-   * Removes a bucket.
+   * Removes an empty bucket.
    *
-   * <p>NOTE: - All objects (including all object versions and delete markers) in the bucket must be
-   * deleted prior, this API will not recursively delete objects <b>Example:</b><br>
+   * <p><b>Example:</b>
    *
-   * <pre>{@code minioClient.removeBucket("my-bucketname");
-   * System.out.println("my-bucketname is removed successfully"); }</pre>
+   * <pre>{@code minioClient.removeBucket("my-bucketname");}</pre>
    *
    * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
@@ -3810,11 +3866,14 @@ public class MinioClient {
 
   /**
    * Uploads data from given file as object to given bucket using given PutObjectOptions. If any
-   * error occurs, partial uploads are aborted. <b>Example:</b><br>
+   * error occurs, partial uploads are aborted.
    *
-   * <pre>{@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
-   * minioClient.putObject("my-bucketname", "my-objectname", "trip.mp4", options);
-   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
+   * minioClient.putObject("my-bucketname", "my-objectname", "trip.mp4", options);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name to create in the bucket.
@@ -3877,11 +3936,14 @@ public class MinioClient {
 
   /**
    * Uploads data from given stream as object to given bucket using given PutObjectOptions. If any
-   * error occurs, partial uploads are aborted. <b>Example:</b><br>
+   * error occurs, partial uploads are aborted.
    *
-   * <pre>{@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
-   * minioClient.putObject("my-bucketname", "my-objectname", inputStream, options);
-   * System.out.println("my-objectname is uploaded successfully"); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
+   * minioClient.putObject("my-bucketname", "my-objectname", inputStream, options);}
+   * </pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name to create in the bucket.
@@ -3926,12 +3988,12 @@ public class MinioClient {
   /**
    * Get JSON string of bucket policy of the given bucket.
    *
-   * @param bucketName the name of the bucket for which policies are to be listed. <b>Example:</b>
-   *     <br>
-   *     <pre>{@code
-   * String policyString = minioClient.getBucketPolicy("my-bucketname");
-   * }</pre>
+   * <p><b>Example:</b>
    *
+   * <pre>{@code String config = minioClient.getBucketPolicy("my-bucketname");
+   * System.out.println("Bucket policy: " + config);}</pre>
+   *
+   * @param bucketName the name of the bucket for which policies are to be listed.
    * @return bucket policy JSON string.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
@@ -3996,31 +4058,34 @@ public class MinioClient {
   /**
    * Set JSON string of policy on given bucket.
    *
-   * @param bucketName Bucket name.
-   * @param policy Bucket policy JSON string. <b>Example:</b><br>
-   *     <pre>{@code StringBuilder builder = new StringBuilder();
-   * builder.append("{\n");
-   * builder.append("    \"Statement\": [\n");
-   * builder.append("        {\n");
-   * builder.append("            \"Action\": [\n");
-   * builder.append("                \"s3:GetBucketLocation\",\n");
-   * builder.append("                \"s3:ListBucket\"\n");
-   * builder.append("            ],\n");
-   * builder.append("            \"Effect\": \"Allow\",\n");
-   * builder.append("            \"Principal\": \"*\",\n");
-   * builder.append("            \"Resource\": \"arn:aws:s3:::my-bucketname\"\n");
-   * builder.append("        },\n");
-   * builder.append("        {\n");
-   * builder.append("            \"Action\": \"s3:GetObject\",\n");
-   * builder.append("            \"Effect\": \"Allow\",\n");
-   * builder.append("            \"Principal\": \"*\",\n");
-   * builder.append("            \"Resource\": \"arn:aws:s3:::my-bucketname/myobject*\"\n");
-   * builder.append("        }\n");
-   * builder.append("    ],\n");
-   * builder.append("    \"Version\": \"2012-10-17\"\n");
-   * builder.append("}\n");
-   * setBucketPolicy("my-bucketname", builder.toString()); }</pre>
+   * <p><b>Example:</b>
    *
+   * <pre>{@code // Assume policyJson contains below JSON string;
+   * // {
+   * //     "Statement": [
+   * //         {
+   * //             "Action": [
+   * //                 "s3:GetBucketLocation",
+   * //                 "s3:ListBucket"
+   * //             ],
+   * //             "Effect": "Allow",
+   * //             "Principal": "*",
+   * //             "Resource": "arn:aws:s3:::my-bucketname"
+   * //         },
+   * //         {
+   * //             "Action": "s3:GetObject",
+   * //             "Effect": "Allow",
+   * //             "Principal": "*",
+   * //             "Resource": "arn:aws:s3:::my-bucketname/myobject*"
+   * //         }
+   * //     ],
+   * //     "Version": "2012-10-17"
+   * // }
+   * //
+   * minioClient.setBucketPolicy("my-bucketname", policyJson);}</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param policy Bucket policy JSON string.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -4051,14 +4116,24 @@ public class MinioClient {
    * Set XML string of LifeCycle on a given bucket. Delete the lifecycle of bucket in case a null is
    * passed as lifeCycle.
    *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code // Lets consider variable 'lifeCycleXml' contains below XML String;
+   * // <LifecycleConfiguration>
+   * //   <Rule>
+   * //     <ID>expire-bucket</ID>
+   * //     <Prefix></Prefix>
+   * //     <Status>Enabled</Status>
+   * //     <Expiration>
+   * //       <Days>365</Days>
+   * //     </Expiration>
+   * //   </Rule>
+   * // </LifecycleConfiguration>
+   * //
+   * minioClient.setBucketLifecycle("my-bucketname", lifeCycleXml);}</pre>
+   *
    * @param bucketName Bucket name.
-   * @param lifeCycle Bucket policy XML string. <b>Example:</b><br>
-   *     <pre>
-   *     {@code String lifecycle  = "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
-   * + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration></Rule></LifecycleConfiguration>";
-   *
-   * setBucketLifecycle("my-bucketname", lifecycle); }</pre>
-   *
+   * @param lifeCycle Bucket policy XML string.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -4088,9 +4163,11 @@ public class MinioClient {
   /**
    * Delete the LifeCycle of bucket.
    *
-   * @param bucketName Bucket name. <b>Example:</b><br>
-   *     <pre>{@code  deleteBucketLifeCycle("my-bucketname"); }</pre>
+   * <p><b>Example:</b>
    *
+   * <pre>{@code deleteBucketLifeCycle("my-bucketname");}</pre>
+   *
+   * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -4116,10 +4193,12 @@ public class MinioClient {
   /**
    * Get bucket life cycle configuration.
    *
-   * @param bucketName Bucket name. <b>Example:</b><br>
-   *     <pre>{@code String bucketLifeCycle = minioClient.getBucketLifecycle("my-bucketname");
-   * }</pre>
+   * <p><b>Example:</b>
    *
+   * <pre>{@code String lifecycle = minioClient.getBucketLifecycle("my-bucketname");
+   * System.out.println("Life cycle settings: " + lifecycle);}</pre>
+   *
+   * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -4159,11 +4238,13 @@ public class MinioClient {
   /**
    * Get bucket notification configuration
    *
-   * @param bucketName Bucket name. <b>Example:</b><br>
-   *     <pre>
-   *     {@code NotificationConfiguration notificationConfig = minioClient.getBucketNotification("my-bucketname");
-   * }</pre>
+   * <p><b>Example:</b>
    *
+   * <pre>
+   * {@code NotificationConfiguration config = minioClient.getBucketNotification("my-bucketname");
+   * System.out.println(config);}</pre>
+   *
+   * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -4192,11 +4273,28 @@ public class MinioClient {
   /**
    * Set bucket notification configuration
    *
-   * @param bucketName Bucket name.
-   * @param notificationConfiguration Notification configuration to be set. <b>Example:</b><br>
-   *     <pre>{@code minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
-   * }</pre>
+   * <p><b>Example:</b>
    *
+   * <pre>{@code List<EventType> eventList = new LinkedList<>();
+   * eventList.add(EventType.OBJECT_CREATED_PUT);
+   * eventList.add(EventType.OBJECT_CREATED_COPY);
+   *
+   * QueueConfiguration queueConfiguration = new QueueConfiguration();
+   * queueConfiguration.setQueue("arn:minio:sqs::1:webhook");
+   * queueConfiguration.setEvents(eventList);
+   * queueConfiguration.setPrefixRule("images");
+   * queueConfiguration.setSuffixRule("pg");
+   *
+   * List<QueueConfiguration> queueConfigurationList = new LinkedList<>();
+   * queueConfigurationList.add(queueConfiguration);
+   *
+   * NotificationConfiguration config = new NotificationConfiguration();
+   * config.setQueueConfigurationList(queueConfigurationList);
+   *
+   * minioClient.setBucketNotification("my-bucketname", config);}</pre>
+   *
+   * @param bucketName Bucket name.
+   * @param notificationConfiguration Notification configuration to be set.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -4224,10 +4322,11 @@ public class MinioClient {
   /**
    * Remove all bucket notification.
    *
-   * @param bucketName Bucket name. <b>Example:</b><br>
-   *     <pre>{@code minioClient.removeAllBucketNotification("my-bucketname");
-   * }</pre>
+   * <p><b>Example:</b>
    *
+   * <pre>{@code minioClient.removeAllBucketNotification("my-bucketname");}</pre>
+   *
+   * @param bucketName Bucket name.
    * @throws InvalidBucketNameException upon invalid bucket name is given
    * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
    *     calculation
@@ -4251,6 +4350,15 @@ public class MinioClient {
   /**
    * Lists incomplete uploads of objects in given bucket.
    *
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code Iterable<Result<Upload>> results = minioClient.listIncompleteUploads("my-bucketname");
+   * for (Result<Upload> result : results) {
+   *   Upload upload = result.get();
+   *   System.out.println(upload.uploadId() + ", " + upload.objectName());
+   * }}</pre>
+   *
    * @param bucketName Bucket name.
    * @return an iterator of Upload.
    * @see #listIncompleteUploads(String, String, boolean)
@@ -4262,6 +4370,15 @@ public class MinioClient {
 
   /**
    * Lists incomplete uploads of objects in given bucket and prefix.
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>
+   * {@code Iterable<Result<Upload>> results = minioClient.listIncompleteUploads("my-bucketname", "my-obj");
+   * for (Result<Upload> result : results) {
+   *   Upload upload = result.get();
+   *   System.out.println(upload.uploadId() + ", " + upload.objectName());
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param prefix filters the list of uploads to include only those that start with prefix.
@@ -4275,15 +4392,16 @@ public class MinioClient {
   }
 
   /**
-   * Lists incomplete uploads of objects in given bucket, prefix and recursive flag. <b>Example:</b>
-   * <br>
+   * Lists incomplete uploads of objects in given bucket, prefix and recursive flag.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname");
-   * for (Result<Upload> result : myObjects) {
+   * {@code Iterable<Result<Upload>> results = minioClient.listIncompleteUploads("my-bucketname", "my-obj", true);
+   * for (Result<Upload> result : results) {
    *   Upload upload = result.get();
    *   System.out.println(upload.uploadId() + ", " + upload.objectName());
-   * } }</pre>
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param prefix Prefix string. List objects whose name starts with `prefix`.
@@ -4709,11 +4827,11 @@ public class MinioClient {
   }
 
   /**
-   * Removes incomplete multipart upload of given object. <b>Example:</b><br>
+   * Removes incomplete multipart upload of given object.
    *
-   * <pre>{@code minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
-   * System.out.println("successfully removed all incomplete upload session of my-bucketname/my-objectname"); }
-   * </pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name in the bucket.
@@ -4745,21 +4863,21 @@ public class MinioClient {
   /**
    * Listen to bucket notifications. As bucket notification are lazily executed, its required to
    * iterate. The returned closeable iterator must be used with try with resource; else the stream
-   * will not be closed. <b>Example:</b><br>
+   * will not be closed.
    *
-   * <pre>{@code
-   *  try (CloseableIterator<Result<NotificationRecords>> ci = client
-   * .listenBucketNotification("my-bucket", "", "", events)) {
-   *  while (ci.hasNext()) {
-   *    NotificationRecords records = ci.next().get();
-   *    for (Event event : records.events()) {
-   *      System.out.println(event);
-   *    }
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+   * try (CloseableIterator<Result<NotificationInfo>> ci =
+   *     minioClient.listenBucketNotification("bcketName", "", "", events)) {
+   *   while (ci.hasNext()) {
+   *     NotificationRecords records = ci.next().get();
+   *     for (Event event : records.events()) {
+   *       System.out.println("Event " + event.eventType() + " occurred at " + event.eventTime()
+   *           + " for " + event.bucketName() + "/" + event.objectName());
+   *     }
    *   }
-   *  } catch (IOException e) {
-   *    System.out.println("Error occurred: " + e);
-   *  }
-   * }</pre>
+   * }}</pre>
    *
    * @param bucketName Bucket name.
    * @param prefix Prefix of concerned objects events.
@@ -4787,6 +4905,25 @@ public class MinioClient {
 
   /**
    * Select object content using SQL expression.
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code String sqlExpression = "select * from S3Object";
+   * InputSerialization is = new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
+   * OutputSerialization os = new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
+   * SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression,
+   *     is, os, true, null, null, null);
+   *
+   * byte[] buf = new byte[512];
+   * int bytesRead = stream.read(buf, 0, buf.length);
+   * System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+   *
+   * Stats stats = stream.stats();
+   * System.out.println("bytes scanned: " + stats.bytesScanned());
+   * System.out.println("bytes processed: " + stats.bytesProcessed());
+   * System.out.println("bytes returned: " + stats.bytesReturned());
+   *
+   * stream.close();}</pre>
    *
    * @param bucketName Bucket name.
    * @param objectName Object name.
@@ -4878,11 +5015,13 @@ public class MinioClient {
 
   /**
    * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values
-   * must be between 1 and Integer.MAX_VALUE when converted to milliseconds. <b>Example:</b><br>
+   * must be between 1 and Integer.MAX_VALUE when converted to milliseconds.
+   *
+   * <p><b>Example:</b>
    *
    * <pre>
-   * {@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10),
-   *                            TimeUnit.SECONDS.toMillis(30)); }</pre>
+   * {@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(30));}
+   * </pre>
    *
    * @param connectTimeout HTTP connect timeout in milliseconds.
    * @param writeTimeout HTTP write timeout in milliseconds.
@@ -4899,9 +5038,11 @@ public class MinioClient {
   }
 
   /**
-   * Ignores check on server certificate for HTTPS connection. <b>Example:</b><br>
+   * Ignores check on server certificate for HTTPS connection.
    *
-   * <pre>{@code minioClient.ignoreCertCheck(); }</pre>
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code minioClient.ignoreCertCheck();}</pre>
    */
   @SuppressFBWarnings(value = "SIC", justification = "Should not be used in production anyways.")
   public void ignoreCertCheck() throws NoSuchAlgorithmException, KeyManagementException {
