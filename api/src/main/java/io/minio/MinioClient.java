@@ -150,6 +150,7 @@ import okhttp3.ResponseBody;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class MinioClient {
+  private static final byte[] EMPTY_BODY = new byte[] {};
   private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // default network I/O timeout is 15 minutes
   private static final long DEFAULT_CONNECTION_TIMEOUT = 15 * 60;
@@ -1037,6 +1038,10 @@ public class MinioClient {
       traceRequestBody = true;
     }
 
+    if (body == null && (method == Method.PUT || method == Method.POST)) {
+      body = EMPTY_BODY;
+    }
+
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
     Request request = createRequest(url, method, headerMap, body, length);
 
@@ -1060,7 +1065,6 @@ public class MinioClient {
               .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
       this.traceStream.println(headers);
       if (traceRequestBody) {
-        this.traceStream.println();
         this.traceStream.println(new String((byte[]) body, StandardCharsets.UTF_8));
       }
     }
@@ -3296,20 +3300,20 @@ public class MinioClient {
     if (region == null) {
       region = this.region;
     }
+
     // If constructor already sets a region, check if it is equal to region param if provided
     if (this.region != null && !this.region.equals(region)) {
       throw new RegionConflictException(
           "passed region conflicts with the one previously specified");
     }
-    String configString;
-    if (region == null || US_EAST_1.equals(region)) {
-      // for 'us-east-1', location constraint is not required.  for more info
-      // http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region
+
+    if (region == null) {
       region = US_EAST_1;
-      configString = "";
-    } else {
-      CreateBucketConfiguration config = new CreateBucketConfiguration(region);
-      configString = config.toString();
+    }
+
+    CreateBucketConfiguration config = null;
+    if (!region.equals(US_EAST_1)) {
+      config = new CreateBucketConfiguration(region);
     }
 
     Map<String, String> headerMap = null;
@@ -3318,7 +3322,7 @@ public class MinioClient {
       headerMap.put("x-amz-bucket-object-lock-enabled", "true");
     }
 
-    Response response = executePut(bucketName, null, region, headerMap, null, configString, 0);
+    Response response = executePut(bucketName, null, region, headerMap, null, config, 0);
     response.body().close();
   }
 
@@ -4217,7 +4221,7 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
     Response response =
-        executePut(bucketName, null, null, queryParamMap, notificationConfiguration.toString(), 0);
+        executePut(bucketName, null, null, queryParamMap, notificationConfiguration, 0);
     response.body().close();
   }
 
