@@ -429,7 +429,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String filename = createFile1Kb();
-      client.putObject(bucketName, filename, filename, new PutObjectOptions(1 * KB, -1));
+      client.putObject(bucketName, filename, filename, null);
       Files.delete(Paths.get(filename));
       client.removeObject(bucketName, filename);
       mintSuccessLog(methodName, "filename: 1KB", startTime);
