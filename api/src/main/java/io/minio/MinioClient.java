@@ -3908,13 +3908,21 @@ public class MinioClient {
       throw new IllegalArgumentException("empty filename is not allowed");
     }
 
-    if (options == null) {
-      throw new IllegalArgumentException("PutObjectOptions must be provided");
-    }
-
     Path filePath = Paths.get(filename);
     if (!Files.isRegularFile(filePath)) {
-      throw new IllegalArgumentException(filename + ": not a regular file");
+      throw new IllegalArgumentException(filename + " not a regular file");
+    }
+
+    long fileSize = Files.size(filePath);
+    if (options == null) {
+      options = new PutObjectOptions(fileSize, -1);
+    } else if (options.objectSize() != fileSize) {
+      throw new IllegalArgumentException(
+          "file size "
+              + fileSize
+              + " and object size in options "
+              + options.objectSize()
+              + " do not match");
     }
 
     if (options.contentType().equals("application/octet-stream")) {
@@ -3922,15 +3930,6 @@ public class MinioClient {
       if (contentType != null && !contentType.equals("")) {
         options.setContentType(contentType);
       }
-    }
-
-    if (options.objectSize() != Files.size(filePath)) {
-      throw new IllegalArgumentException(
-          "file size "
-              + Files.size(filePath)
-              + " and object size in options "
-              + options.objectSize()
-              + " does not match");
     }
 
     try (RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r")) {
