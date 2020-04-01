@@ -22,6 +22,7 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidResponseException;
 import io.minio.errors.XmlParserException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -46,7 +47,8 @@ public class Result<T> {
   public T get()
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, JsonParseException, JsonMappingException, IOException,
-          InvalidKeyException, XmlParserException, ErrorResponseException, InternalException {
+          InvalidKeyException, XmlParserException, ErrorResponseException, InternalException,
+          InvalidResponseException {
     if (ex == null) {
       return type;
     }
@@ -89,6 +91,10 @@ public class Result<T> {
 
     if (ex instanceof IOException) {
       throw (IOException) ex;
+    }
+
+    if (ex instanceof InvalidResponseException) {
+      throw (InvalidResponseException) ex;
     }
 
     throw (InternalException) ex;

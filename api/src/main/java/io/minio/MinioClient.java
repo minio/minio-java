@@ -4475,7 +4475,7 @@ public class MinioClient {
           private synchronized long getAggregatedPartSize(String objectName, String uploadId)
               throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
                   InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-                  ErrorResponseException, InternalException {
+                  ErrorResponseException, InternalException, InvalidResponseException {
             long aggregatedPartSize = 0;
 
             for (Result<Part> result : listObjectParts(bucketName, objectName, uploadId)) {
@@ -4555,7 +4555,8 @@ public class MinioClient {
                     | XmlParserException
                     | ErrorResponseException
                     | InternalException
-                    | IllegalArgumentException e) {
+                    | IllegalArgumentException
+                    | InvalidResponseException e) {
                   // special case: ignore the error as we can't propagate the exception in next()
                   aggregatedPartSize = -1;
                 }
