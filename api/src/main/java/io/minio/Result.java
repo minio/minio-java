@@ -22,6 +22,7 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidResponseException;
 import io.minio.errors.XmlParserException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -44,39 +45,44 @@ public class Result<T> {
 
   /** Returns given Type if exception is null, else respective exception is thrown. */
   public T get()
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, JsonParseException, JsonMappingException, IOException,
-          InvalidKeyException, XmlParserException, ErrorResponseException, InternalException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, JsonParseException, JsonMappingException,
+          NoSuchAlgorithmException, XmlParserException {
     if (ex == null) {
       return type;
     }
 
-    if (ex instanceof InvalidBucketNameException) {
-      throw (InvalidBucketNameException) ex;
+    if (ex instanceof ErrorResponseException) {
+      throw (ErrorResponseException) ex;
     }
 
     if (ex instanceof IllegalArgumentException) {
       throw (IllegalArgumentException) ex;
     }
 
-    if (ex instanceof NoSuchAlgorithmException) {
-      throw (NoSuchAlgorithmException) ex;
-    }
-
     if (ex instanceof InsufficientDataException) {
       throw (InsufficientDataException) ex;
+    }
+
+    if (ex instanceof InternalException) {
+      throw (InternalException) ex;
+    }
+
+    if (ex instanceof InvalidBucketNameException) {
+      throw (InvalidBucketNameException) ex;
     }
 
     if (ex instanceof InvalidKeyException) {
       throw (InvalidKeyException) ex;
     }
 
-    if (ex instanceof XmlParserException) {
-      throw (XmlParserException) ex;
+    if (ex instanceof InvalidResponseException) {
+      throw (InvalidResponseException) ex;
     }
 
-    if (ex instanceof ErrorResponseException) {
-      throw (ErrorResponseException) ex;
+    if (ex instanceof IOException) {
+      throw (IOException) ex;
     }
 
     if (ex instanceof JsonParseException) {
@@ -87,10 +93,14 @@ public class Result<T> {
       throw (JsonMappingException) ex;
     }
 
-    if (ex instanceof IOException) {
-      throw (IOException) ex;
+    if (ex instanceof NoSuchAlgorithmException) {
+      throw (NoSuchAlgorithmException) ex;
     }
 
-    throw (InternalException) ex;
+    if (ex instanceof XmlParserException) {
+      throw (XmlParserException) ex;
+    }
+
+    throw new RuntimeException("Exception not handled", ex);
   }
 }
