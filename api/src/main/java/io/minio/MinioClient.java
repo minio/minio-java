@@ -2161,7 +2161,7 @@ public class MinioClient {
       headerMap.putAll(sseHeaders);
     }
 
-    String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
+    String uploadId = createMultipartUpload(bucketName, objectName, headerMap);
 
     int partNumber = 0;
     Part[] totalParts = new Part[partsCount];
@@ -2224,36 +2224,13 @@ public class MinioClient {
         }
       }
 
-      completeMultipart(bucketName, objectName, uploadId, totalParts);
+      completeMultipartUpload(bucketName, objectName, uploadId, totalParts);
     } catch (RuntimeException e) {
       abortMultipartUpload(bucketName, objectName, uploadId);
       throw e;
     } catch (Exception e) {
       abortMultipartUpload(bucketName, objectName, uploadId);
       throw e;
-    }
-  }
-
-  /**
-   * Do UploadPartCopy as per
-   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html
-   */
-  private String uploadPartCopy(
-      String bucketName,
-      String objectName,
-      String uploadId,
-      int partNumber,
-      Map<String, String> headerMap)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("partNumber", Integer.toString(partNumber));
-    queryParamMap.put("uploadId", uploadId);
-    Response response = executePut(bucketName, objectName, headerMap, queryParamMap, "", 0);
-    try (ResponseBody body = response.body()) {
-      CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
-      return result.etag();
     }
   }
 
@@ -2571,42 +2548,6 @@ public class MinioClient {
   }
 
   /**
-   * Do DeleteObjects as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
-   */
-  private List<DeleteError> removeObject(String bucketName, List<DeleteObject> objectList)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("delete", "");
-
-    DeleteRequest request = new DeleteRequest(objectList, true);
-    Response response = executePost(bucketName, null, null, queryParamMap, request);
-
-    String bodyContent = "";
-    try (ResponseBody body = response.body()) {
-      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
-    }
-
-    List<DeleteError> errorList = null;
-
-    try {
-      if (Xml.validate(DeleteError.class, bodyContent)) {
-        DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
-        errorList = new LinkedList<DeleteError>();
-        errorList.add(error);
-        return errorList;
-      }
-    } catch (XmlParserException e) {
-      // As it is not <Error> message, parse it as <DeleteResult> message.
-      // Ignore this exception
-    }
-
-    DeleteResult result = Xml.unmarshal(DeleteResult.class, bodyContent);
-    return result.errorList();
-  }
-
-  /**
    * Removes multiple objects lazily. Its required to iterate the returned Iterable to perform
    * removal.
    *
@@ -2650,7 +2591,8 @@ public class MinioClient {
               }
 
               if (i > 0) {
-                errorList = removeObject(bucketName, objectList);
+                DeleteResult result = deleteObjects(bucketName, objectList, true);
+                errorList = result.errorList();
               }
             } catch (ErrorResponseException
                 | IllegalArgumentException
@@ -2909,7 +2851,14 @@ public class MinioClient {
             try {
               this.listBucketResult =
                   listObjectsV2(
-                      bucketName, continuationToken, prefix, delimiter, includeUserMetadata);
+                      bucketName,
+                      continuationToken,
+                      delimiter,
+                      false,
+                      null,
+                      prefix,
+                      null,
+                      includeUserMetadata);
             } catch (ErrorResponseException
                 | IllegalArgumentException
                 | InsufficientDataException
@@ -3009,48 +2958,6 @@ public class MinioClient {
     };
   }
 
-  /**
-   * Do ListObjectsV2 as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
-   */
-  private ListBucketResult listObjectsV2(
-      String bucketName,
-      String continuationToken,
-      String prefix,
-      String delimiter,
-      boolean includeUserMetadata)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("list-type", "2");
-
-    if (continuationToken != null) {
-      queryParamMap.put("continuation-token", continuationToken);
-    }
-
-    if (prefix != null) {
-      queryParamMap.put("prefix", prefix);
-    } else {
-      queryParamMap.put("prefix", "");
-    }
-
-    if (delimiter != null) {
-      queryParamMap.put("delimiter", delimiter);
-    } else {
-      queryParamMap.put("delimiter", "");
-    }
-
-    if (includeUserMetadata) {
-      queryParamMap.put("metadata", "true");
-    }
-
-    Response response = executeGet(bucketName, null, null, queryParamMap);
-
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(ListBucketResult.class, body.charStream());
-    }
-  }
-
   private Iterable<Result<Item>> listObjectsV1(
       final String bucketName, final String prefix, final boolean recursive) {
     return new Iterable<Result<Item>>() {
@@ -3084,7 +2991,7 @@ public class MinioClient {
             this.prefixIterator = null;
 
             try {
-              this.listBucketResult = listObjectsV1(bucketName, marker, prefix, delimiter);
+              this.listBucketResult = listObjectsV1(bucketName, delimiter, marker, null, prefix);
             } catch (ErrorResponseException
                 | IllegalArgumentException
                 | InsufficientDataException
@@ -3183,37 +3090,6 @@ public class MinioClient {
         };
       }
     };
-  }
-
-  /** Do ListObjects as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html */
-  private ListBucketResultV1 listObjectsV1(
-      String bucketName, String marker, String prefix, String delimiter)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-
-    if (marker != null) {
-      queryParamMap.put("marker", marker);
-    }
-
-    if (prefix != null) {
-      queryParamMap.put("prefix", prefix);
-    } else {
-      queryParamMap.put("prefix", "");
-    }
-
-    if (delimiter != null) {
-      queryParamMap.put("delimiter", delimiter);
-    } else {
-      queryParamMap.put("delimiter", "");
-    }
-
-    Response response = executeGet(bucketName, null, null, queryParamMap);
-
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(ListBucketResultV1.class, body.charStream());
-    }
   }
 
   /**
@@ -3811,34 +3687,6 @@ public class MinioClient {
     executeDelete(bucketName, null, null);
   }
 
-  /**
-   * Do PutObject/UploadPart as per
-   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
-   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html
-   */
-  private String putObject(
-      String bucketName,
-      String objectName,
-      Object data,
-      int length,
-      Map<String, String> headerMap,
-      String uploadId,
-      int partNumber)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = null;
-    if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
-      queryParamMap = new HashMap<>();
-      queryParamMap.put("partNumber", Integer.toString(partNumber));
-      queryParamMap.put(UPLOAD_ID, uploadId);
-    }
-
-    Response response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
-    response.close();
-    return response.header("ETag").replaceAll("\"", "");
-  }
-
   private void putObject(
       String bucketName, String objectName, PutObjectOptions options, Object data)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
@@ -3858,7 +3706,7 @@ public class MinioClient {
     headerMap.put("Content-Type", options.contentType());
 
     // initiate new multipart upload.
-    String uploadId = initMultipartUpload(bucketName, objectName, headerMap);
+    String uploadId = createMultipartUpload(bucketName, objectName, headerMap);
 
     long uploadedSize = 0L;
     int partCount = options.partCount();
@@ -3890,19 +3738,19 @@ public class MinioClient {
         }
 
         String etag =
-            putObject(
+            uploadPart(
                 bucketName,
                 objectName,
                 data,
                 (int) availableSize,
-                ssecHeaders,
                 uploadId,
-                partNumber);
+                partNumber,
+                ssecHeaders);
         totalParts[partNumber - 1] = new Part(partNumber, etag);
         uploadedSize += availableSize;
       }
 
-      completeMultipart(bucketName, objectName, uploadId, totalParts);
+      completeMultipartUpload(bucketName, objectName, uploadId, totalParts);
     } catch (RuntimeException e) {
       abortMultipartUpload(bucketName, objectName, uploadId);
       throw e;
@@ -4481,8 +4329,8 @@ public class MinioClient {
 
             try {
               this.listMultipartUploadsResult =
-                  listIncompleteUploads(
-                      bucketName, nextKeyMarker, nextUploadIdMarker, prefix, delimiter, 1000);
+                  listMultipartUploads(
+                      bucketName, delimiter, nextKeyMarker, null, prefix, nextUploadIdMarker);
             } catch (ErrorResponseException
                 | IllegalArgumentException
                 | InsufficientDataException
@@ -4613,113 +4461,6 @@ public class MinioClient {
   }
 
   /**
-   * Do ListMultipartUploads as per
-   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html
-   */
-  private ListMultipartUploadsResult listIncompleteUploads(
-      String bucketName,
-      String keyMarker,
-      String uploadIdMarker,
-      String prefix,
-      String delimiter,
-      int maxUploads)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (maxUploads < 0 || maxUploads > 1000) {
-      maxUploads = 1000;
-    }
-
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("uploads", "");
-    queryParamMap.put("max-uploads", Integer.toString(maxUploads));
-
-    if (prefix != null) {
-      queryParamMap.put("prefix", prefix);
-    } else {
-      queryParamMap.put("prefix", "");
-    }
-
-    if (delimiter != null) {
-      queryParamMap.put("delimiter", delimiter);
-    } else {
-      queryParamMap.put("delimiter", "");
-    }
-
-    if (keyMarker != null) {
-      queryParamMap.put("key-marker", keyMarker);
-    }
-
-    if (uploadIdMarker != null) {
-      queryParamMap.put("upload-id-marker", uploadIdMarker);
-    }
-
-    Response response = executeGet(bucketName, null, null, queryParamMap);
-
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(ListMultipartUploadsResult.class, body.charStream());
-    }
-  }
-
-  /**
-   * Do CreateMultipartUpload as per
-   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html
-   */
-  private String initMultipartUpload(
-      String bucketName, String objectName, Map<String, String> headerMap)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    // set content type if not set already
-    if ((headerMap != null) && (headerMap.get("Content-Type") == null)) {
-      headerMap.put("Content-Type", "application/octet-stream");
-    }
-
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("uploads", "");
-
-    Response response = executePost(bucketName, objectName, headerMap, queryParamMap, "");
-
-    try (ResponseBody body = response.body()) {
-      InitiateMultipartUploadResult result =
-          Xml.unmarshal(InitiateMultipartUploadResult.class, body.charStream());
-      return result.uploadId();
-    }
-  }
-
-  /**
-   * Do CompleteMultipartUpload as per
-   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html
-   */
-  private void completeMultipart(
-      String bucketName, String objectName, String uploadId, Part[] parts)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put(UPLOAD_ID, uploadId);
-    CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
-    Response response = executePost(bucketName, objectName, null, queryParamMap, completeManifest);
-    String bodyContent = "";
-    try (ResponseBody body = response.body()) {
-      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
-      bodyContent = bodyContent.trim();
-    }
-
-    // Handle if body contains error.
-    if (!bodyContent.isEmpty()) {
-      try {
-        if (Xml.validate(ErrorResponse.class, bodyContent)) {
-          ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
-          throw new ErrorResponseException(errorResponse, response);
-        }
-      } catch (XmlParserException e) {
-        // As it is not <ResponseError> message, ignore this exception
-      }
-    }
-  }
-
-  /**
    * Executes List object parts of multipart upload for given bucket name, object name and upload ID
    * and returns Iterable<Result<Part>>.
    */
@@ -4741,7 +4482,7 @@ public class MinioClient {
 
             try {
               this.listPartsResult =
-                  listObjectParts(bucketName, objectName, uploadId, nextPartNumberMarker);
+                  listParts(bucketName, objectName, null, nextPartNumberMarker, uploadId);
             } catch (ErrorResponseException
                 | IllegalArgumentException
                 | InsufficientDataException
@@ -4828,38 +4569,6 @@ public class MinioClient {
         };
       }
     };
-  }
-
-  /** Do ListParts as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html */
-  private ListPartsResult listObjectParts(
-      String bucketName, String objectName, String uploadId, int partNumberMarker)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put(UPLOAD_ID, uploadId);
-    if (partNumberMarker > 0) {
-      queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
-    }
-
-    Response response = executeGet(bucketName, objectName, null, queryParamMap);
-
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(ListPartsResult.class, body.charStream());
-    }
-  }
-
-  /**
-   * Do AbortMultipartUpload as per
-   * https://docs.aws.amazon.com/AmazonS3/latest/API/API_AbortMultipartUpload.html
-   */
-  private void abortMultipartUpload(String bucketName, String objectName, String uploadId)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put(UPLOAD_ID, uploadId);
-    executeDelete(bucketName, objectName, queryParamMap);
   }
 
   /**
@@ -5267,6 +4976,564 @@ public class MinioClient {
           }
         }
       };
+    }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_AbortMultipartUpload.html">AbortMultipartUpload
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param uploadId Upload ID.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected void abortMultipartUpload(String bucketName, String objectName, String uploadId)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put(UPLOAD_ID, uploadId);
+    executeDelete(bucketName, objectName, queryParamMap);
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param parts List of parts.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected void completeMultipartUpload(
+      String bucketName, String objectName, String uploadId, Part[] parts)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put(UPLOAD_ID, uploadId);
+    CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
+    Response response = executePost(bucketName, objectName, null, queryParamMap, completeManifest);
+    String bodyContent = "";
+    try (ResponseBody body = response.body()) {
+      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
+      bodyContent = bodyContent.trim();
+    }
+
+    // Handle if body contains error.
+    if (!bodyContent.isEmpty()) {
+      try {
+        if (Xml.validate(ErrorResponse.class, bodyContent)) {
+          ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
+          throw new ErrorResponseException(errorResponse, response);
+        }
+      } catch (XmlParserException e) {
+        // As it is not <ResponseError> message, ignore this exception
+      }
+    }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html">CreateMultipartUpload
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param headerMap Additional headers.
+   * @return String - Contains upload ID.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected String createMultipartUpload(
+      String bucketName, String objectName, Map<String, String> headerMap)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    // set content type if not set already
+    if ((headerMap != null) && (headerMap.get("Content-Type") == null)) {
+      headerMap.put("Content-Type", "application/octet-stream");
+    }
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("uploads", "");
+
+    Response response = executePost(bucketName, objectName, headerMap, queryParamMap, "");
+
+    try (ResponseBody body = response.body()) {
+      InitiateMultipartUploadResult result =
+          Xml.unmarshal(InitiateMultipartUploadResult.class, body.charStream());
+      return result.uploadId();
+    }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html">DeleteObjects S3
+   * API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectList List of object names.
+   * @param quiet Quiet flag.
+   * @return {@link DeleteResult} - Contains delete result.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected DeleteResult deleteObjects(
+      String bucketName, List<DeleteObject> objectList, boolean quiet)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
+          InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("delete", "");
+
+    DeleteRequest request = new DeleteRequest(objectList, quiet);
+    Response response = executePost(bucketName, null, null, queryParamMap, request);
+
+    String bodyContent = "";
+    try (ResponseBody body = response.body()) {
+      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
+    }
+
+    try {
+      if (Xml.validate(DeleteError.class, bodyContent)) {
+        DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
+        return new DeleteResult(error);
+      }
+    } catch (XmlParserException e) {
+      // As it is not <Error> message, parse it as <DeleteResult> message.
+      // Ignore this exception
+    }
+
+    return Xml.unmarshal(DeleteResult.class, bodyContent);
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">ListObjects
+   * version 2 S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param continuationToken Continuation token.
+   * @param delimiter Delimiter.
+   * @param fetchOwner Flage to fetch owner information of objects.
+   * @param maxKeys Maximum object information to fetch.
+   * @param prefix Prefix.
+   * @param startAfter Fetch object information after this entry.
+   * @param includeUserMetadata Flag to include user metadata in object information. This is MinIO
+   *     extension works with MinIO server only.
+   * @return {@link ListBucketResultV1} - Contains object information.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ListBucketResult listObjectsV2(
+      String bucketName,
+      String continuationToken,
+      String delimiter,
+      boolean fetchOwner,
+      Integer maxKeys,
+      String prefix,
+      String startAfter,
+      boolean includeUserMetadata)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("list-type", "2");
+
+    if (continuationToken != null) {
+      queryParamMap.put("continuation-token", continuationToken);
+    }
+
+    if (delimiter != null) {
+      queryParamMap.put("delimiter", delimiter);
+    } else {
+      queryParamMap.put("delimiter", "");
+    }
+
+    if (fetchOwner) {
+      queryParamMap.put("fetch-owner", "true");
+    }
+
+    if (maxKeys != null) {
+      queryParamMap.put("max-keys", maxKeys.toString());
+    }
+
+    if (prefix != null) {
+      queryParamMap.put("prefix", prefix);
+    } else {
+      queryParamMap.put("prefix", "");
+    }
+
+    if (startAfter != null) {
+      queryParamMap.put("start-after", startAfter);
+    }
+
+    if (includeUserMetadata) {
+      queryParamMap.put("metadata", "true");
+    }
+
+    Response response = executeGet(bucketName, null, null, queryParamMap);
+
+    try (ResponseBody body = response.body()) {
+      return Xml.unmarshal(ListBucketResult.class, body.charStream());
+    }
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">ListObjects
+   * version 1 S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param delimiter Delimiter.
+   * @param marker Marker.
+   * @param maxKeys Maximum object information to fetch.
+   * @param prefix Prefix.
+   * @return {@link ListBucketResultV1} - Contains object information.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ListBucketResultV1 listObjectsV1(
+      String bucketName, String delimiter, String marker, Integer maxKeys, String prefix)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+
+    if (delimiter != null) {
+      queryParamMap.put("delimiter", delimiter);
+    } else {
+      queryParamMap.put("delimiter", "");
+    }
+
+    if (marker != null) {
+      queryParamMap.put("marker", marker);
+    }
+
+    if (maxKeys != null) {
+      queryParamMap.put("max-keys", maxKeys.toString());
+    }
+
+    if (prefix != null) {
+      queryParamMap.put("prefix", prefix);
+    } else {
+      queryParamMap.put("prefix", "");
+    }
+
+    Response response = executeGet(bucketName, null, null, queryParamMap);
+
+    try (ResponseBody body = response.body()) {
+      return Xml.unmarshal(ListBucketResultV1.class, body.charStream());
+    }
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">PutObject S3
+   * API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
+   * @param length Length of object data.
+   * @param headerMap Additional headers.
+   * @return String - Contains ETag.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected String putObject(
+      String bucketName, String objectName, Object data, int length, Map<String, String> headerMap)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    if (!(data instanceof BufferedInputStream
+        || data instanceof RandomAccessFile
+        || data instanceof byte[]
+        || data instanceof CharSequence)) {
+      throw new IllegalArgumentException(
+          "data must be BufferedInputStream, RandomAccessFile, byte[] or String");
+    }
+
+    Response response = executePut(bucketName, objectName, headerMap, null, data, length);
+    response.close();
+    return response.header("ETag").replaceAll("\"", "");
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html">ListMultipartUploads
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param delimiter Delimiter.
+   * @param keyMarker Key marker.
+   * @param maxUploads Maximum upload information to fetch.
+   * @param prefix Prefix.
+   * @param uploadIdMarker Upload ID marker.
+   * @return {@link ListMultipartUploadsResult} - Contains uploads information.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ListMultipartUploadsResult listMultipartUploads(
+      String bucketName,
+      String delimiter,
+      String keyMarker,
+      Integer maxUploads,
+      String prefix,
+      String uploadIdMarker)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("uploads", "");
+
+    if (delimiter != null) {
+      queryParamMap.put("delimiter", delimiter);
+    } else {
+      queryParamMap.put("delimiter", "");
+    }
+
+    if (keyMarker != null) {
+      queryParamMap.put("key-marker", keyMarker);
+    }
+
+    if (maxUploads != null) {
+      queryParamMap.put("max-uploads", Integer.toString(maxUploads));
+    }
+
+    if (prefix != null) {
+      queryParamMap.put("prefix", prefix);
+    } else {
+      queryParamMap.put("prefix", "");
+    }
+
+    if (uploadIdMarker != null) {
+      queryParamMap.put("upload-id-marker", uploadIdMarker);
+    }
+
+    Response response = executeGet(bucketName, null, null, queryParamMap);
+
+    try (ResponseBody body = response.body()) {
+      return Xml.unmarshal(ListMultipartUploadsResult.class, body.charStream());
+    }
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html">ListParts S3
+   * API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param maxParts Maximum parts information to fetch.
+   * @param partNumberMarker Part number marker.
+   * @param uploadId Upload ID.
+   * @return {@link ListPartsResult} - Contains parts information.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ListPartsResult listParts(
+      String bucketName,
+      String objectName,
+      Integer maxParts,
+      Integer partNumberMarker,
+      String uploadId)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+
+    if (maxParts != null) {
+      queryParamMap.put("max-parts", Integer.toString(maxParts));
+    }
+
+    if (partNumberMarker != null) {
+      queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
+    }
+
+    queryParamMap.put(UPLOAD_ID, uploadId);
+
+    Response response = executeGet(bucketName, objectName, null, queryParamMap);
+
+    try (ResponseBody body = response.body()) {
+      return Xml.unmarshal(ListPartsResult.class, body.charStream());
+    }
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html">UploadPart S3
+   * API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
+   * @param length Length of object data.
+   * @param uploadId Upload ID.
+   * @param partNumber Part number.
+   * @param headerMap Additional headers.
+   * @return String - Contains ETag.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected String uploadPart(
+      String bucketName,
+      String objectName,
+      Object data,
+      int length,
+      String uploadId,
+      int partNumber,
+      Map<String, String> headerMap)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    if (!(data instanceof BufferedInputStream
+        || data instanceof RandomAccessFile
+        || data instanceof byte[]
+        || data instanceof CharSequence)) {
+      throw new IllegalArgumentException(
+          "data must be BufferedInputStream, RandomAccessFile, byte[] or String");
+    }
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("partNumber", Integer.toString(partNumber));
+    queryParamMap.put(UPLOAD_ID, uploadId);
+
+    Response response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
+    response.close();
+    return response.header("ETag").replaceAll("\"", "");
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html">UploadPartCopy
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param uploadId Upload ID.
+   * @param partNumber Part number.
+   * @param headerMap Source object definitions.
+   * @return String - Contains ETag.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected String uploadPartCopy(
+      String bucketName,
+      String objectName,
+      String uploadId,
+      int partNumber,
+      Map<String, String> headerMap)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
+          ErrorResponseException, InternalException, InvalidResponseException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("partNumber", Integer.toString(partNumber));
+    queryParamMap.put("uploadId", uploadId);
+    Response response = executePut(bucketName, objectName, headerMap, queryParamMap, "", 0);
+    try (ResponseBody body = response.body()) {
+      CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
+      return result.etag();
     }
   }
 }

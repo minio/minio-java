@@ -40,6 +40,12 @@ public class DeleteResult {
   /** Constructs new delete result by parsing content on given reader. */
   public DeleteResult() {}
 
+  /** Constructs new delete result with an error. */
+  public DeleteResult(DeleteError error) {
+    this.errorList = new LinkedList<DeleteError>();
+    this.errorList.add(error);
+  }
+
   /** Returns deleted object list. */
   public List<DeletedObject> objectList() {
     if (objectList == null) {
