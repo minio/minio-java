@@ -102,7 +102,6 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -151,7 +150,6 @@ import okhttp3.ResponseBody;
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class MinioClient {
   private static final byte[] EMPTY_BODY = new byte[] {};
-  private static final Logger LOGGER = Logger.getLogger(MinioClient.class.getName());
   // default network I/O timeout is 15 minutes
   private static final long DEFAULT_CONNECTION_TIMEOUT = 15 * 60;
   // maximum allowed bucket policy size is 12KiB
@@ -214,9 +212,9 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given endpoint using anonymous access.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io");}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("https://play.min.io");
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -231,6 +229,8 @@ public class MinioClient {
    *             * 192.168.1.60
    *             * ::1</pre>
    *
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
@@ -251,11 +251,13 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given URL object using anonymous access.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.min.io"));}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient(new URL("https://play.min.io"));
+   * }</pre>
    *
    * @param url Endpoint as {@link URL} object.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
@@ -276,13 +278,13 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given HttpUrl object using anonymous access.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.min.io"));}
-   * </pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.min.io"));
+   * }</pre>
    *
    * @param url Endpoint as {@link HttpUrl} object.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -304,10 +306,10 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given endpoint, access key and secret key.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io",
-   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("https://play.min.io",
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -324,6 +326,8 @@ public class MinioClient {
    *
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
@@ -346,10 +350,10 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given endpoint, access key, secret key and region name.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("https://play.min.io",
-   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", "us-west-1");}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("https://play.min.io",
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", "us-west-1");
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -367,6 +371,8 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param region Region name of buckets in S3 service.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
@@ -395,14 +401,14 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given URL object, access key and secret key.
    *
-   * <p><b>Example:</b>
-   *
    * <pre>{@code MinioClient minioClient = new MinioClient(new URL("https://play.min.io"),
    *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
    *
    * @param url Endpoint as {@link URL} object.
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -424,14 +430,16 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given URL object, access key and secret key.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.min.io"),
-   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.min.io"),
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+   * }</pre>
    *
    * @param url Endpoint as {@link HttpUrl} object.
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -454,10 +462,10 @@ public class MinioClient {
   /**
    * Creates MinIO client object with given endpoint, port, access key and secret key.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
-   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -475,6 +483,8 @@ public class MinioClient {
    * @param port TCP/IP port number between 1 and 65535. Unused if endpoint is an URL.
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -502,10 +512,10 @@ public class MinioClient {
    * Creates MinIO client object with given endpoint, access key and secret key using secure (TLS)
    * connection.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io",
-   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("play.min.io",
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -523,6 +533,8 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -545,10 +557,10 @@ public class MinioClient {
    * Creates MinIO client object using given endpoint, port, access key, secret key and secure (TLS)
    * connection.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
-   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -567,6 +579,8 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -588,10 +602,10 @@ public class MinioClient {
    * Creates MinIO client object using given endpoint, port, access key, secret key, region and
    * secure (TLS) connection.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
-   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);}</pre>
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -611,6 +625,8 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param region Region name of buckets in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -631,11 +647,11 @@ public class MinioClient {
    * Creates MinIO client object using given endpoint, port, access key, secret key, region and
    * secure (TLS) connection.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code MinioClient minioClient = new MinioClient("play.min.io", 9000,
+   * <pre>Example:{@code
+   * MinioClient minioClient = new MinioClient("play.min.io", 9000,
    *     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true,
-   *     customHttpClient);}</pre>
+   *     customHttpClient);
+   * }</pre>
    *
    * @param endpoint Endpoint is an URL, domain name, IPv4 or IPv6 address of S3 service.
    *     <pre>           Examples:
@@ -656,6 +672,8 @@ public class MinioClient {
    * @param region Region name of buckets in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @param httpClient Customized HTTP client object.
+   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
+   * @throws InvalidPortException thrown to indicate invalid port passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -853,7 +871,7 @@ public class MinioClient {
       String objectName,
       String region,
       Multimap<String, String> queryParamMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException {
+      throws IllegalArgumentException, InvalidBucketNameException, NoSuchAlgorithmException {
     if (bucketName == null && objectName != null) {
       throw new InvalidBucketNameException(
           NULL_STRING, "null bucket name for object '" + objectName + "'");
@@ -928,8 +946,8 @@ public class MinioClient {
 
   private Request createRequest(
       HttpUrl url, Method method, Multimap<String, String> headerMap, Object body, int length)
-      throws NoSuchAlgorithmException, IllegalArgumentException, IOException,
-          InsufficientDataException, InternalException {
+      throws IllegalArgumentException, InsufficientDataException, InternalException, IOException,
+          NoSuchAlgorithmException {
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
 
@@ -1024,9 +1042,9 @@ public class MinioClient {
       Multimap<String, String> queryParamMap,
       Object body,
       int length)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     boolean traceRequestBody = false;
     if (body != null
         && !(body instanceof InputStream
@@ -1201,9 +1219,9 @@ public class MinioClient {
       Map<String, String> queryParamMap,
       Object body,
       int length)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Multimap<String, String> headerMultiMap = null;
     if (headerMap != null) {
       headerMultiMap = Multimaps.forMap(normalizeHeaders(headerMap));
@@ -1220,9 +1238,9 @@ public class MinioClient {
 
   /** Updates Region cache for given bucket. */
   private void updateRegionCache(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if (bucketName != null
         && this.accessKey != null
         && this.secretKey != null
@@ -1252,9 +1270,9 @@ public class MinioClient {
 
   /** Returns region of given bucket either from region cache or set in constructor. */
   private String getRegion(String bucketName)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IllegalArgumentException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     String region;
     if (this.region == null || "".equals(this.region)) {
       updateRegionCache(bucketName);
@@ -1270,9 +1288,9 @@ public class MinioClient {
       String objectName,
       Map<String, String> headerMap,
       Map<String, String> queryParamMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return execute(
         Method.GET,
         bucketName,
@@ -1286,9 +1304,9 @@ public class MinioClient {
 
   private Response executeGet(
       String bucketName, String objectName, Multimap<String, String> queryParamMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return execute(
         Method.GET, bucketName, objectName, getRegion(bucketName), null, queryParamMap, null, 0);
   }
@@ -1298,9 +1316,9 @@ public class MinioClient {
       String objectName,
       Map<String, String> headerMap,
       Map<String, String> queryParamMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Response response =
         execute(
             Method.HEAD,
@@ -1316,9 +1334,9 @@ public class MinioClient {
   }
 
   private Response executeHead(String bucketName, String objectName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     try {
       return executeHead(bucketName, objectName, null, null);
     } catch (ErrorResponseException e) {
@@ -1332,17 +1350,17 @@ public class MinioClient {
   }
 
   private Response executeHead(String bucketName, String objectName, Map<String, String> headerMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return executeHead(bucketName, objectName, headerMap, null);
   }
 
   private Response executeDelete(
       String bucketName, String objectName, Map<String, String> queryParamMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Response response =
         execute(
             Method.DELETE,
@@ -1363,9 +1381,9 @@ public class MinioClient {
       Map<String, String> headerMap,
       Map<String, String> queryParamMap,
       Object data)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return execute(
         Method.POST,
         bucketName,
@@ -1385,9 +1403,9 @@ public class MinioClient {
       Map<String, String> queryParamMap,
       Object data,
       int length)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return execute(
         Method.PUT, bucketName, objectName, region, headerMap, queryParamMap, data, length);
   }
@@ -1399,75 +1417,72 @@ public class MinioClient {
       Map<String, String> queryParamMap,
       Object data,
       int length)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return executePut(
         bucketName, objectName, getRegion(bucketName), headerMap, queryParamMap, data, length);
   }
 
   /**
-   * Returns meta data information of given object in given bucket.
+   * Gets object information and metadata of an object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
+   * }</pre>
    *
-   * <pre>{@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @return Populated object meta data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    * @see ObjectStat
    */
   public ObjectStat statObject(String bucketName, String objectName)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, InvalidResponseException, IllegalArgumentException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return statObject(bucketName, objectName, null);
   }
 
   /**
-   * Returns meta data information of given object in given bucket.
+   * Gets object information and metadata of a SSE-C encrypted object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * ObjectStat objectStat =
+   *     minioClient.statObject("my-bucketname", "my-objectname", ssec);
+   * }</pre>
    *
-   * <pre>
-   * {@code ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", sse);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param sse SSE-C type of server-side encryption.
-   * @return Populated object meta data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param sse SSE-C type server-side encryption.
+   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    * @see ObjectStat
    */
   public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     checkReadRequestSse(sse);
     checkBucketName(bucketName);
     checkObjectName(objectName);
@@ -1486,205 +1501,206 @@ public class MinioClient {
   }
 
   /**
-   * Gets object's URL in given bucket. The URL is ONLY useful to retrieve the object's data if the
-   * object has public read permissions.
+   * Gets URL of an object useful when this object has public read access.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
+   * }</pre>
    *
-   * <pre>{@code String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");}</pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @return string contains URL to download the object.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @return String - URL string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String getObjectUrl(String bucketName, String objectName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     checkObjectName(objectName);
     HttpUrl url = buildUrl(Method.GET, bucketName, objectName, getRegion(bucketName), null);
     return url.toString();
   }
 
   /**
-   * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be
-   * closed after use else the connection will remain open.
+   * Gets data of an object. Returned {@link InputStream} must be closed after use to release
+   * network resources.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * try (InputStream stream =
+   *     minioClient.getObject("my-bucketname", "my-objectname")) {
+   *   // Read data from stream
+   * }
+   * }</pre>
    *
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @return {@link InputStream} containing the object data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @return {@link InputStream} - Contains object data.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public InputStream getObject(String bucketName, String objectName)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return getObject(bucketName, objectName, null, null, null);
   }
 
   /**
-   * Gets entire object's data as {@link InputStream} in given bucket. The InputStream must be
-   * closed after use else the connection will remain open.
+   * Gets data of a SSE-C encrypted object. Returned {@link InputStream} must be closed after use to
+   * release network resources.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * try (InputStream stream =
+   *     minioClient.getObject("my-bucketname", "my-objectname", ssec)) {
+   *   // Read data from stream
+   * }
+   * }</pre>
    *
-   * <pre>{@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param sse Encryption metadata only required for SSE-C.
-   * @return {@link InputStream} containing the object data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param sse SSE-C type server-side encryption.
+   * @return {@link InputStream} - Contains object data.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return getObject(bucketName, objectName, null, null, sse);
   }
 
   /**
-   * Gets object's data starting from given offset as {@link InputStream} in the given bucket. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets data from offset of an object. Returned {@link InputStream} must be closed after use to
+   * release network resources.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * try (InputStream stream =
+   *     minioClient.getObject("my-bucketname", "my-objectname", 1024L)) {
+   *   // Read data from stream
+   * }
+   * }</pre>
    *
-   * <pre>
-   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param offset Offset to read at.
-   * @return {@link InputStream} containing the object's data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param offset Start byte position of object data.
+   * @return {@link InputStream} - Contains object data.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public InputStream getObject(String bucketName, String objectName, long offset)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return getObject(bucketName, objectName, offset, null, null);
   }
 
   /**
-   * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets data from offset to length of an object. Returned {@link InputStream} must be closed after
+   * use to release network resources.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * try (InputStream stream =
+   *     minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L)) {
+   *   // Read data from stream
+   * }
+   * }</pre>
    *
-   * <pre>
-   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param offset Offset to read at.
-   * @param length Length to read.
-   * @return {@link InputStream} containing the object's data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param offset Start byte position of object data.
+   * @param length Number of bytes of object data from offset.
+   * @return {@link InputStream} - Contains object data.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public InputStream getObject(String bucketName, String objectName, long offset, Long length)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return getObject(bucketName, objectName, offset, length, null);
   }
 
   /**
-   * Gets object's data of given offset and length as {@link InputStream} in the given bucket. The
-   * InputStream must be closed after use else the connection will remain open.
+   * Gets data from offset to length of a SSE-C encrypted object. Returned {@link InputStream} must
+   * be closed after use to release network resources.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * try (InputStream stream =
+   *     minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, ssec)) {
+   *   // Read data from stream
+   * }
+   * }</pre>
    *
-   * <pre>
-   * {@code InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, sse);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param offset Offset to read at.
-   * @param length Length to read.
-   * @param sse Server side encryption.
-   * @return {@link InputStream} containing the object's data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param offset Start byte position of object data.
+   * @param length Number of bytes of object data from offset.
+   * @param sse SSE-C type server-side encryption.
+   * @return {@link InputStream} - Contains object data.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public InputStream getObject(
       String bucketName, String objectName, Long offset, Long length, ServerSideEncryption sse)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new IllegalArgumentException("bucket name cannot be empty");
     }
@@ -1725,64 +1741,62 @@ public class MinioClient {
   }
 
   /**
-   * Gets object's data in the given bucket and stores it to given file name.
+   * Downloads data of an object to file.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.getObject("my-bucketname", "my-objectname", "my-object-file");
+   * }</pre>
    *
-   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", "photo.jpg");}</pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param fileName file name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param fileName Name of the file.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void getObject(String bucketName, String objectName, String fileName)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     getObject(bucketName, objectName, null, fileName);
   }
 
   /**
-   * Gets encrypted object's data in the given bucket and stores it to given file name.
+   * Downloads data of a SSE-C encrypted object to file.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.getObject("my-bucketname", "my-objectname", ssec, "my-object-file");
+   * }</pre>
    *
-   * <pre>{@code minioClient.getObject("my-bucketname", "my-objectname", sse, "photo.jpg");}</pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param sse encryption metadata.
-   * @param fileName file name to download into.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param sse SSE-C type server-side encryption.
+   * @param fileName Name of the file.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void getObject(
       String bucketName, String objectName, ServerSideEncryption sse, String fileName)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     checkReadRequestSse(sse);
 
     Path filePath = Paths.get(fileName);
@@ -1867,36 +1881,53 @@ public class MinioClient {
   }
 
   /**
-   * Copy a source object into a new object with the provided name in the provided bucket.
-   * optionally can take a key value CopyConditions and server side encryption as well for
-   * conditionally attempting copyObject.
+   * Creates an object by server-side copying data from another object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * // Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname.
+   * minioClient.copyObject("my-bucketname", "my-objectname", null, null,
+   *     "my-source-bucketname", null, null, null);
    *
-   * <pre>
-   * {@code minioClient.copyObject("my-bucketname", "my-objectname", headers, sse, "my-srcbucketname","my-srcobjname", srcSse, copyConditions);}
-   * </pre>
+   * // Copy data from my-source-bucketname/my-source-objectname to
+   * // my-bucketname/my-objectname.
+   * minioClient.copyObject("my-bucketname", "my-objectname", null, null,
+   *     "my-source-bucketname", "my-source-objectname", null, null);
    *
-   * @param bucketName Destination bucket name.
-   * @param objectName Destination object name.
-   * @param headerMap Destination object custom metadata.
-   * @param sse Server side encryption of destination object.
+   * // Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname
+   * // by server-side encryption.
+   * minioClient.copyObject("my-bucketname", "my-objectname", null, sse,
+   *     "my-source-bucketname", null, null, null);
+   *
+   * // Copy data from SSE-C encrypted my-source-bucketname/my-objectname to
+   * // my-bucketname/my-objectname.
+   * minioClient.copyObject("my-bucketname", "my-objectname", null, null,
+   *     "my-source-bucketname", null, srcSsec, null);
+   *
+   * // Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname
+   * // with user metadata and copy conditions.
+   * minioClient.copyObject("my-bucketname", "my-objectname", headers, null,
+   *     "my-source-bucketname", null, null, conditions);
+   * }</pre>
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name to be created.
+   * @param headerMap (Optional) User metadata.
+   * @param sse (Optional) Server-side encryption.
    * @param srcBucketName Source bucket name.
-   * @param srcObjectName Source object name.
-   * @param srcSse Server side encryption of source object.
-   * @param copyConditions CopyConditions object with collection of supported CopyObject conditions.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param srcObjectName (Optional) Source object name.
+   * @param srcSse (Optional) SSE-C type server-side encryption of source object.
+   * @param copyConditions (Optional) Conditiions to be used in copy operation.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void copyObject(
       String bucketName,
@@ -1907,9 +1938,9 @@ public class MinioClient {
       String srcObjectName,
       ServerSideEncryption srcSse,
       CopyConditions copyConditions)
-      throws InvalidKeyException, InvalidBucketNameException, NoSuchAlgorithmException,
-          InsufficientDataException, ErrorResponseException, InternalException, IOException,
-          XmlParserException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new IllegalArgumentException("bucket name cannot be empty");
     }
@@ -1956,31 +1987,45 @@ public class MinioClient {
   }
 
   /**
-   * Create an object by concatenating a list of source objects using server-side copying.
+   * Creates an object by combining data from different source objects using server-side copy.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
+   * sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-one"));
+   * sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-two"));
+   * sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-three"));
    *
-   * <pre>
-   * {@code minioClient.composeObject("my-bucketname", "my-objectname", composeSources, userMetaData, sse);}
-   * </pre>
+   * // Create my-bucketname/my-objectname by combining source object list.
+   * minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList,
+   *     null, null);
+   *
+   * // Create my-bucketname/my-objectname with user metadata by combining source object
+   * // list.
+   * minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList,
+   *     userMetadata, null);
+   *
+   * // Create my-bucketname/my-objectname with user metadata and server-side encryption
+   * // by combining source object list.
+   * minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList,
+   *     userMetadata, sse);
+   * }</pre>
    *
    * @param bucketName Destination Bucket to be created upon compose.
    * @param objectName Destination Object to be created upon compose.
    * @param sources List of Source Objects used to compose Object.
    * @param headerMap User Meta data.
    * @param sse Server Side Encryption.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void composeObject(
       String bucketName,
@@ -1988,9 +2033,9 @@ public class MinioClient {
       List<ComposeSource> sources,
       Map<String, String> headerMap,
       ServerSideEncryption sse)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new IllegalArgumentException("bucket name cannot be empty");
     }
@@ -2199,9 +2244,9 @@ public class MinioClient {
       String uploadId,
       int partNumber,
       Map<String, String> headerMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("partNumber", Integer.toString(partNumber));
     queryParamMap.put("uploadId", uploadId);
@@ -2213,35 +2258,32 @@ public class MinioClient {
   }
 
   /**
-   * Returns a presigned URL string with given HTTP method, expiry time and custom request params
-   * for a specific object in the bucket.
+   * Gets presigned URL of an object for HTTP method, expiry time and custom request parameters.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname",
+   *     "my-objectname", 24 * 60 * 60, reqParams);
+   * }</pre>
    *
-   * <pre>
-   * {@code String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);}
-   * </pre>
-   *
-   * @param method HTTP {@link Method}.
-   * @param bucketName Bucket name.
+   * @param method HTTP {@link Method} to generate presigned URL.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param expires Expiration time in seconds of presigned URL.
-   * @param reqParams Override values for set of response headers. Currently supported request
-   *     parameters are [response-expires, response-content-type, response-cache-control,
-   *     response-content-disposition]
-   * @return string contains URL to download the object.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidExpiresRangeException upon input expires is out of range
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param expires Expiry in seconds; defaults to 7 days.
+   * @param reqParams Request parameters to override. Supported headers are response-expires,
+   *     response-content-type, response-cache-control and response-content-disposition.
+   * @return String - URL string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String getPresignedObjectUrl(
       Method method,
@@ -2249,10 +2291,10 @@ public class MinioClient {
       String objectName,
       Integer expires,
       Map<String, String> reqParams)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidExpiresRangeException,
-          InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     // Validate input.
     if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
       throw new InvalidExpiresRangeException(
@@ -2280,186 +2322,179 @@ public class MinioClient {
   }
 
   /**
-   * Returns an presigned URL to download the object in the bucket with given expiry time with
-   * custom request params.
+   * Gets presigned URL of an object to download its data for expiry time and request parameters.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * // Get presigned URL to download my-objectname data with one day expiry and request
+   * // parameters.
+   * String url = minioClient.presignedGetObject("my-bucketname", "my-objectname",
+   *     24 * 60 * 60, reqParams);
+   * }</pre>
    *
-   * <pre>
-   * {@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param expires Expiration time in seconds of presigned URL.
-   * @param reqParams Override values for set of response headers. Currently supported request
-   *     parameters are [response-expires, response-content-type, response-cache-control,
-   *     response-content-disposition]
-   * @return string contains URL to download the object.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidExpiresRangeException upon input expires is out of range
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param expires Expiry in seconds; defaults to 7 days.
+   * @param reqParams Request parameters to override. Supported headers are response-expires,
+   *     response-content-type, response-cache-control and response-content-disposition.
+   * @return String - URL string to download the object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String presignedGetObject(
       String bucketName, String objectName, Integer expires, Map<String, String> reqParams)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidExpiresRangeException,
-          InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     return getPresignedObjectUrl(Method.GET, bucketName, objectName, expires, reqParams);
   }
 
   /**
-   * Returns an presigned URL to download the object in the bucket with given expiry time.
+   * Gets presigned URL of an object to download its data for expiry time.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * // Get presigned URL to download my-objectname data with one day expiry.
+   * String url = minioClient.presignedGetObject("my-bucketname", "my-objectname",
+   *     24 * 60 * 60);
+   * }</pre>
    *
-   * <pre>
-   * {@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param expires Expiration time in seconds of presigned URL.
-   * @return string contains URL to download the object.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidExpiresRangeException upon input expires is out of range
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param expires Expiry in seconds; defaults to 7 days.
+   * @return String - URL string to download the object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidExpiresRangeException,
-          InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     return presignedGetObject(bucketName, objectName, expires, null);
   }
 
   /**
-   * Returns an presigned URL to download the object in the bucket with default expiry time. Default
-   * expiry time is 7 days in seconds.
+   * Gets presigned URL of an object to download its data for 7 days.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");
+   * }</pre>
    *
-   * <pre>{@code String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @return string contains URL to download the object
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidExpiresRangeException upon input expires is out of range
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @return String - URL string to download the object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String presignedGetObject(String bucketName, String objectName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidExpiresRangeException,
-          InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME, null);
   }
 
   /**
-   * Returns a presigned URL to upload an object in the bucket with given expiry time.
+   * Gets presigned URL of an object to upload data for expiry time.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * // Get presigned URL to upload data to my-objectname with one day expiry.
+   * String url =
+   *     minioClient.presignedPutObject("my-bucketname", "my-objectname", 24 * 60 * 60);
+   * }</pre>
    *
-   * <pre>
-   * {@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);}
-   * </pre>
-   *
-   * @param bucketName Bucket name
-   * @param objectName Object name in the bucket
-   * @param expires Expiration time in seconds to presigned URL.
-   * @return string contains URL to upload the object.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidExpiresRangeException upon input expires is out of range
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param expires Expiry in seconds; defaults to 7 days.
+   * @return String - URL string to upload an object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String presignedPutObject(String bucketName, String objectName, Integer expires)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidExpiresRangeException,
-          InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     return getPresignedObjectUrl(Method.PUT, bucketName, objectName, expires, null);
   }
 
   /**
-   * Returns a presigned URL to upload an object in the bucket with default expiry time. Default
-   * expiry time is 7 days in seconds.
+   * Gets presigned URL of an object to upload data for 7 days.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");
+   * }</pre>
    *
-   * <pre>{@code String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @return string contains URL to upload the object.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidExpiresRangeException upon input expires is out of range
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @return String - URL string to upload an object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String presignedPutObject(String bucketName, String objectName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidExpiresRangeException,
-          InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     return presignedPutObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
   }
 
   /**
-   * Returns string map for given {@link PostPolicy} to upload object with various post policy
-   * conditions.
+   * Gets form-data of {@link PostPolicy} of an object to upload its data using POST method.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", ZonedDateTime.now().plusDays(7));
+   * <pre>Example:{@code
+   * PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname",
+   *     ZonedDateTime.now().plusDays(7));
    *
    * // 'my-objectname' should be 'image/png' content type
    * policy.setContentType("image/png");
@@ -2474,57 +2509,58 @@ public class MinioClient {
    * for (Map.Entry<String,String> entry : formData.entrySet()) {
    *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
    * }
-   * System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname");}</pre>
+   * System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname");
+   * }</pre>
    *
    * @param policy Post policy of an object.
-   * @return Map of strings to construct form-data.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @return Map&ltString, String&gt - Contains form-data to upload an object using POST method.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    * @see PostPolicy
    */
   public Map<String, String> presignedPostPolicy(PostPolicy policy)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName()));
   }
 
   /**
-   * Removes an object from a bucket.
+   * Removes an object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.removeObject("my-bucketname", "my-objectname");
+   * }</pre>
    *
-   * <pre>{@code minioClient.removeObject("my-bucketname", "my-objectname");}</pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void removeObject(String bucketName, String objectName)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new IllegalArgumentException("bucket name cannot be empty");
     }
@@ -2538,9 +2574,9 @@ public class MinioClient {
    * Do DeleteObjects as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html
    */
   private List<DeleteError> removeObject(String bucketName, List<DeleteObject> objectList)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("delete", "");
 
@@ -2571,24 +2607,26 @@ public class MinioClient {
   }
 
   /**
-   * Removes multiple objects from a bucket. As objects removal are lazily executed, its required to
-   * iterate the returned Iterable.
+   * Removes multiple objects lazily. Its required to iterate the returned Iterable to perform
+   * removal.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code List<String> myObjectNames = new LinkedList<String>();
+   * <pre>Example:{@code
+   * List<String> myObjectNames = new LinkedList<String>();
    * objectNames.add("my-objectname1");
    * objectNames.add("my-objectname2");
    * objectNames.add("my-objectname3");
-   * Iterable<Result<DeleteError>> results = minioClient.removeObjects("my-bucketname", myObjectNames);
+   * Iterable<Result<DeleteError>> results =
+   *     minioClient.removeObjects("my-bucketname", myObjectNames);
    * for (Result<DeleteError> result : results) {
    *   DeleteError error = errorResult.get();
-   *   System.out.println("Error in deleting object " + error.objectName() + "; " + error.message());
-   * }}</pre>
+   *   System.out.println(
+   *       "Error in deleting object " + error.objectName() + "; " + error.message());
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectNames List of Object names in the bucket.
-   * @return (lazy) Iterable of the Result DeleteErrors.
+   * @return Iterable&ltResult&ltDeleteError&gt&gt - Lazy iterator contains object removal status.
    */
   public Iterable<Result<DeleteError>> removeObjects(
       final String bucketName, final Iterable<String> objectNames) {
@@ -2614,16 +2652,16 @@ public class MinioClient {
               if (i > 0) {
                 errorList = removeObject(bucketName, objectList);
               }
-            } catch (InvalidBucketNameException
-                | NoSuchAlgorithmException
+            } catch (ErrorResponseException
+                | IllegalArgumentException
                 | InsufficientDataException
-                | IOException
-                | InvalidKeyException
-                | XmlParserException
-                | ErrorResponseException
                 | InternalException
+                | InvalidBucketNameException
+                | InvalidKeyException
                 | InvalidResponseException
-                | IllegalArgumentException e) {
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException e) {
               this.error = new Result<>(e);
             } finally {
               if (errorList != null) {
@@ -2697,18 +2735,19 @@ public class MinioClient {
   }
 
   /**
-   * Lists object information in given bucket.
+   * Lists object information of a bucket.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname");
+   * <pre>Example:{@code
+   * Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname");
    * for (Result<Item> result : results) {
    *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * }}</pre>
+   *   System.out.println(
+   *       item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @return an iterator of Result Items.
+   * @param bucketName Name of the bucket.
+   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
    * @throws XmlParserException upon parsing response xml
    */
   public Iterable<Result<Item>> listObjects(final String bucketName) throws XmlParserException {
@@ -2716,20 +2755,20 @@ public class MinioClient {
   }
 
   /**
-   * Lists object information in given bucket and prefix.
+   * Lists object information of a bucket for prefix.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj");
+   * <pre>Example:{@code
+   * Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj");
    * for (Result<Item> result : results) {
    *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * }}</pre>
+   *   System.out.println(
+   *       item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix Prefix string. List objects whose name starts with `prefix`.
-   * @return an iterator of Result Items.
+   * @param bucketName Name of the bucket.
+   * @param prefix Object name starts with prefix.
+   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
    * @throws XmlParserException upon parsing response xml
    */
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix)
@@ -2739,24 +2778,22 @@ public class MinioClient {
   }
 
   /**
-   * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix and
-   * recursive flag.
+   * Lists object information of a bucket for prefix recursively.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true);
+   * <pre>Example:{@code
+   * Iterable<Result<Item>> results =
+   *     minioClient.listObjects("my-bucketname", "my-obj", true);
    * for (Result<Item> result : results) {
    *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * }}</pre>
+   *   System.out.println(
+   *       item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix Prefix string. List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is
-   *     either a full object or part of the object's key up to the first '/'. All objects wit the
-   *     same prefix up to the first '/' will be merged into one entry.
-   * @return an iterator of Result Items.
+   * @param bucketName Name of the bucket.
+   * @param prefix Object name starts with prefix.
+   * @param recursive List recursively than directory structure emulation.
+   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
    * @see #listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
@@ -2767,26 +2804,23 @@ public class MinioClient {
   }
 
   /**
-   * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix, recursive
-   * flag and S3 API version to use.
+   * Lists object information of a bucket for prefix recursively using S3 API version 1.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true, true);
+   * <pre>Example:{@code
+   * Iterable<Result<Item>> results =
+   *     minioClient.listObjects("my-bucketname", "my-obj", true, true);
    * for (Result<Item> result : results) {
    *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * }}</pre>
+   *   System.out.println(
+   *       item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix Prefix string. List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is
-   *     either a full object or part of the object's key up to the first '/'. All objects wit the
-   *     same prefix up to the first '/' will be merged into one entry.
-   * @param useVersion1 If set, Amazon AWS S3 List Object V1 is used, else List Object V2 is used as
-   *     default.
-   * @return an iterator of Result Items.
+   * @param bucketName Name of the bucket.
+   * @param prefix Object name starts with prefix.
+   * @param recursive List recursively than directory structure emulation.
+   * @param useVersion1 when true, version 1 of REST API is used.
+   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
    * @see #listObjects(String bucketName, String prefix, boolean recursive)
@@ -2800,28 +2834,26 @@ public class MinioClient {
   }
 
   /**
-   * Lists object information as {@code Iterable<Result><Item>} in given bucket, prefix, recursive
-   * flag, user metadata flag and S3 API version to use.
+   * Lists object information with user metadata of a bucket for prefix recursively using S3 API
+   * version 1.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true, true, false);
+   * <pre>Example:{@code
+   * Iterable<Result<Item>> results =
+   *     minioClient.listObjects("my-bucketname", "my-obj", true, true, false);
    * for (Result<Item> result : results) {
    *   Item item = result.get();
-   *   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * }}</pre>
+   *   System.out.println(
+   *       item.lastModified() + ", " + item.size() + ", " + item.objectName());
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix Prefix string. List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is
-   *     either a full object or part of the object's key up to the first '/'. All objects wit the
-   *     same prefix up to the first '/' will be merged into one entry.
+   * @param bucketName Name of the bucket.
+   * @param prefix Object name starts with prefix.
+   * @param recursive List recursively than directory structure emulation.
    * @param includeUserMetadata include user metadata of each object. This is MinIO specific
    *     extension to ListObjectsV2.
-   * @param useVersion1 If set, Amazon AWS S3 List Object V1 is used, else List Object V2 is used as
-   *     default.
-   * @return an iterator of Result Items.
+   * @param useVersion1 when true, version 1 of REST API is used.
+   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
    * @see #listObjects(String bucketName, String prefix, boolean recursive)
@@ -2878,16 +2910,16 @@ public class MinioClient {
               this.listBucketResult =
                   listObjectsV2(
                       bucketName, continuationToken, prefix, delimiter, includeUserMetadata);
-            } catch (InvalidBucketNameException
-                | NoSuchAlgorithmException
+            } catch (ErrorResponseException
+                | IllegalArgumentException
                 | InsufficientDataException
-                | IOException
-                | InvalidKeyException
-                | XmlParserException
-                | ErrorResponseException
                 | InternalException
+                | InvalidBucketNameException
+                | InvalidKeyException
                 | InvalidResponseException
-                | IllegalArgumentException e) {
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException e) {
               this.error = new Result<>(e);
             } finally {
               if (this.listBucketResult != null) {
@@ -2986,9 +3018,9 @@ public class MinioClient {
       String prefix,
       String delimiter,
       boolean includeUserMetadata)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("list-type", "2");
 
@@ -3053,15 +3085,16 @@ public class MinioClient {
 
             try {
               this.listBucketResult = listObjectsV1(bucketName, marker, prefix, delimiter);
-            } catch (InvalidBucketNameException
-                | NoSuchAlgorithmException
+            } catch (ErrorResponseException
+                | IllegalArgumentException
                 | InsufficientDataException
-                | IOException
-                | InvalidKeyException
-                | XmlParserException
-                | ErrorResponseException
                 | InternalException
-                | InvalidResponseException e) {
+                | InvalidBucketNameException
+                | InvalidKeyException
+                | InvalidResponseException
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException e) {
               this.error = new Result<>(e);
             } finally {
               if (this.listBucketResult != null) {
@@ -3155,9 +3188,9 @@ public class MinioClient {
   /** Do ListObjects as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html */
   private ListBucketResultV1 listObjectsV1(
       String bucketName, String marker, String prefix, String delimiter)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
 
     if (marker != null) {
@@ -3184,31 +3217,32 @@ public class MinioClient {
   }
 
   /**
-   * Returns all bucket information owned by the current user.
+   * Lists bucket information of all buckets.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code List<Bucket> bucketList = minioClient.listBuckets();
+   * <pre>Example:{@code
+   * List<Bucket> bucketList = minioClient.listBuckets();
    * for (Bucket bucket : bucketList) {
    *   System.out.println(bucket.creationDate() + ", " + bucket.name());
-   * }}</pre>
+   * }
+   * }</pre>
    *
-   * @return List of bucket type.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @return List&ltBucket&gt - List of bucket information.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public List<Bucket> listBuckets()
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Response response = executeGet(null, null, (Multimap<String, String>) null);
     try (ResponseBody body = response.body()) {
       ListAllMyBucketsResult result =
@@ -3218,34 +3252,35 @@ public class MinioClient {
   }
 
   /**
-   * Checks if given bucket exist and is having read access.
+   * Checks if a bucket exists.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code boolean found = minioClient.bucketExists("my-bucketname");
+   * <pre>Example:{@code
+   * boolean found = minioClient.bucketExists("my-bucketname");
    * if (found) {
    *   System.out.println("my-bucketname exists");
    * } else {
    *   System.out.println("my-bucketname does not exist");
-   * }}</pre>
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @return True if the bucket exists and the user has at least read access.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @return boolean - True if the bucket exists.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public boolean bucketExists(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     try {
       executeHead(bucketName, null);
       return true;
@@ -3261,85 +3296,90 @@ public class MinioClient {
   /**
    * Creates a bucket with default region.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.makeBucket("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code boolean found = minioClient.makeBucket("my-bucketname");}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws RegionConflictException upon passed region conflicts with the one previously specified
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution.
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws RegionConflictException thrown to indicate passed region conflict with default region.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void makeBucket(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, RegionConflictException,
-          NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
-          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
+          XmlParserException {
     this.makeBucket(bucketName, null, false);
   }
 
   /**
    * Creates a bucket with given region.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.makeBucket("my-bucketname", "eu-west-1");
+   * }</pre>
    *
-   * <pre>{@code boolean found = minioClient.makeBucket("my-bucketname", "eu-west-1");}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param region region in which the bucket will be created.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws RegionConflictException upon passed region conflicts with the one previously specified.
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param region Region in which the bucket will be created.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws RegionConflictException thrown to indicate passed region conflict with default region.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void makeBucket(String bucketName, String region)
-      throws InvalidBucketNameException, IllegalArgumentException, RegionConflictException,
-          NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
-          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
+          XmlParserException {
     this.makeBucket(bucketName, region, false);
   }
 
   /**
-   * Creates a bucket with given region and object lock option.
+   * Creates a bucket with object lock feature enabled.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.makeBucket("my-bucketname", "eu-west-2", true);
+   * }</pre>
    *
-   * <pre>{@code boolean found = minioClient.makeBucket("my-bucketname", "eu-west-2", true);}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param region region in which the bucket will be created.
-   * @param objectLock enable object lock support.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws RegionConflictException upon passed region conflicts with the one previously specified.
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param region Region in which the bucket will be created.
+   * @param objectLock Flag to enable object lock feature.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws RegionConflictException thrown to indicate passed region conflict with default region.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void makeBucket(String bucketName, String region, boolean objectLock)
-      throws InvalidBucketNameException, IllegalArgumentException, RegionConflictException,
-          NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
-          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
+          XmlParserException {
     // If region param is not provided, set it with the one provided by constructor
     if (region == null) {
       region = this.region;
@@ -3371,28 +3411,29 @@ public class MinioClient {
   }
 
   /**
-   * Enable object versioning in given bucket.
+   * Enables object versioning feature in a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.enableVersioning("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code minioClient.enableVersioning("my-bucketname");}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void enableVersioning(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
     String config =
@@ -3403,28 +3444,29 @@ public class MinioClient {
   }
 
   /**
-   * Disable object versioning in given bucket.
+   * Disables object versioning feature in a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.disableVersioning("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code minioClient.disableVersioning("my-bucketname");}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void disableVersioning(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
     String config =
@@ -3435,30 +3477,32 @@ public class MinioClient {
   }
 
   /**
-   * Sets default object retention in given bucket.
+   * Sets default object retention in a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * ObjectLockConfiguration config = new ObjectLockConfiguration(
+   *     RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
+   * minioClient.setDefaultRetention("my-bucketname", config);
+   * }</pre>
    *
-   * <pre>{@code minioClient.setDefaultRetention("my-bucketname", config);}</pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param config Object lock configuration.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("object-lock", "");
 
@@ -3467,31 +3511,35 @@ public class MinioClient {
   }
 
   /**
-   * Gets default object retention in given bucket.
+   * Gets default object retention in a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * // bucket must be created with object lock enabled.
+   * minioClient.makeBucket("my-bucketname", null, true);
+   * ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname");
+   * System.out.println("Mode: " + config.mode());
+   * System.out.println(
+   *     "Duration: " + config.duration().duration() + " " + config.duration().unit());
+   * }</pre>
    *
-   * <pre>
-   * {@code ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname");}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @return {@link ObjectLockConfiguration} - Default retention configuration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public ObjectLockConfiguration getDefaultRetention(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("object-lock", "");
 
@@ -3503,30 +3551,31 @@ public class MinioClient {
   }
 
   /**
-   * Applies object retention lock onto an object.
+   * Sets retention configuration to an object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * Retention retention =
+   *     new Retention(RetentionMode.COMPLIANCE, ZonedDateTime.now().plusYears(1));
+   * minioClient.setObjectRetention(
+   *     "my-bucketname", "my-objectname", null, retention, true);
+   * }</pre>
    *
-   * <pre>{@code minioClient.setObjectRetention("my-bucketname", "my-object", null, config, true);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name.
-   * @param versionId Object versio id.
-   * @param config Object lock configuration.
-   * @param bypassGovernanceRetention By pass governance retention.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param versionId Version ID of the object.
+   * @param config Object retention configuration.
+   * @param bypassGovernanceRetention Bypass Governance retention.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void setObjectRetention(
       String bucketName,
@@ -3534,11 +3583,9 @@ public class MinioClient {
       String versionId,
       Retention config,
       boolean bypassGovernanceRetention)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException,
-          IllegalArgumentException {
-
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if (config == null) {
       throw new IllegalArgumentException("null value is not allowed in config.");
     }
@@ -3562,35 +3609,35 @@ public class MinioClient {
   }
 
   /**
-   * Fetches object retention lock of an object.
+   * Gets retention configuration of an object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * Retention retention =
+   *     minioClient.getObjectRetention("my-bucketname", "my-objectname", null);
+   * System.out.println(
+   *     "mode: " + retention.mode() + "until: " + retention.retainUntilDate());
+   * }</pre>
    *
-   * <pre>
-   * {@code Retention retention = s3Client.getObjectRetention("my-bucketname", "my-objectname", null);
-   * System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name.
-   * @param versionId Version Id.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param versionId Version ID of the object.
+   * @return {@link Retention} - Object retention configuration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public Retention getObjectRetention(String bucketName, String objectName, String versionId)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
-
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
@@ -3607,32 +3654,31 @@ public class MinioClient {
   }
 
   /**
-   * Enables object legal hold on an object.
+   * Enables legal hold on an object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.enableObjectLegalHold("my-bucketname", "my-object", null);
+   * }</pre>
    *
-   * <pre>{@code minioClient.enableObjectLegalHold("my-bucketname", "my-object", null);}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name.
-   * @param versionId Object version id.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param versionId Version ID of the object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void enableObjectLegalHold(String bucketName, String objectName, String versionId)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
-
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
@@ -3649,32 +3695,31 @@ public class MinioClient {
   }
 
   /**
-   * Disable object legal hold on an object.
+   * Disables legal hold on an object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.disableObjectLegalHold("my-bucketname", "my-object", null);
+   * }</pre>
    *
-   * <pre>{@code minioClient.disableObjectLegalHold("my-bucketname", "my-object", null);}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name.
-   * @param versionId Object version id.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param versionId Version ID of the object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void disableObjectLegalHold(String bucketName, String objectName, String versionId)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
-
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
@@ -3691,39 +3736,38 @@ public class MinioClient {
   }
 
   /**
-   * Returns true if the object legal hold is enabled.
+   * Returns true if legal hold is enabled on an object.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code boolean status = s3Client.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", null);
+   * <pre>Example:{@code
+   * boolean status =
+   *     s3Client.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", null);
    * if (status) {
    *   System.out.println("Legal hold is on");
    * } else {
    *   System.out.println("Legal hold is off");
-   * }}
-   * </pre>
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectName Object name.
-   * @param versionId Object version id.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param versionId Version ID of the object.
+   * @return boolean - True if legal hold is enabled.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
-
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
@@ -3743,27 +3787,27 @@ public class MinioClient {
   /**
    * Removes an empty bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.removeBucket("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code minioClient.removeBucket("my-bucketname");}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InsufficientDataException upon getting EOFException while reading given
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void removeBucket(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     executeDelete(bucketName, null, null);
   }
 
@@ -3780,9 +3824,9 @@ public class MinioClient {
       Map<String, String> headerMap,
       String uploadId,
       int partNumber)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = null;
     if (partNumber > 0 && uploadId != null && !"".equals(uploadId)) {
       queryParamMap = new HashMap<>();
@@ -3797,9 +3841,9 @@ public class MinioClient {
 
   private void putObject(
       String bucketName, String objectName, PutObjectOptions options, Object data)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, IOException, InvalidKeyException,
-          XmlParserException, ErrorResponseException, InternalException, IllegalArgumentException,
-          InsufficientDataException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> headerMap = new HashMap<>();
 
     if (options.headers() != null) {
@@ -3869,38 +3913,33 @@ public class MinioClient {
   }
 
   /**
-   * Uploads data from given file as object to given bucket using given PutObjectOptions. If any
-   * error occurs, partial uploads are aborted.
+   * Uploads data from a file to an object using {@link PutObjectOptions}.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.putObject("my-bucketname", "my-objectname", "my-filename", null);
+   * }</pre>
    *
-   * <pre>
-   * {@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
-   * minioClient.putObject("my-bucketname", "my-objectname", "trip.mp4", options);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name to create in the bucket.
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
    * @param filename Name of file to upload.
-   * @param options Options to be used during object upload.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param options {@link PutObjectOptions} to be used during upload.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void putObject(
       String bucketName, String objectName, String filename, PutObjectOptions options)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, IOException, InvalidKeyException,
-          XmlParserException, ErrorResponseException, InternalException, IllegalArgumentException,
-          InsufficientDataException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     checkBucketName(bucketName);
     checkObjectName(objectName);
 
@@ -3938,38 +3977,34 @@ public class MinioClient {
   }
 
   /**
-   * Uploads data from given stream as object to given bucket using given PutObjectOptions. If any
-   * error occurs, partial uploads are aborted.
+   * Uploads data from a stream to an object using {@link PutObjectOptions}.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * PutObjectOptions options = new PutObjectOptions(7003256, -1);
+   * minioClient.putObject("my-bucketname", "my-objectname", stream, options);
+   * }</pre>
    *
-   * <pre>
-   * {@code PutObjectOptions options = new PutObjectOptions(7003256, -1);
-   * minioClient.putObject("my-bucketname", "my-objectname", inputStream, options);}
-   * </pre>
-   *
-   * @param bucketName Bucket name.
-   * @param objectName Object name to create in the bucket.
-   * @param stream Stream to upload.
-   * @param options Options to be used during object upload.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param stream Stream contains object data.
+   * @param options {@link PutObjectOptions} to be used during upload.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void putObject(
       String bucketName, String objectName, InputStream stream, PutObjectOptions options)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, IOException, InvalidKeyException,
-          XmlParserException, ErrorResponseException, InternalException, IllegalArgumentException,
-          InsufficientDataException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     checkBucketName(bucketName);
     checkObjectName(objectName);
 
@@ -3989,33 +4024,32 @@ public class MinioClient {
   }
 
   /**
-   * Get JSON string of bucket policy of the given bucket.
+   * Gets bucket policy configuration of a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * String config = minioClient.getBucketPolicy("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code String config = minioClient.getBucketPolicy("my-bucketname");
-   * System.out.println("Bucket policy: " + config);}</pre>
-   *
-   * @param bucketName the name of the bucket for which policies are to be listed.
-   * @return bucket policy JSON string.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws BucketPolicyTooLargeException upon bucket policy too large in size
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @return String - Bucket policy configuration as JSON string.
+   * @throws BucketPolicyTooLargeException thrown to indicate returned bucket policy is too large.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String getBucketPolicy(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, BucketPolicyTooLargeException,
-          InvalidResponseException {
+      throws BucketPolicyTooLargeException, ErrorResponseException, IllegalArgumentException,
+          InsufficientDataException, InternalException, InvalidBucketNameException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
@@ -4059,11 +4093,10 @@ public class MinioClient {
   }
 
   /**
-   * Set JSON string of policy on given bucket.
+   * Sets bucket policy configuration to a bucket.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code // Assume policyJson contains below JSON string;
+   * <pre>Example:{@code
+   * // Assume policyJson contains below JSON string;
    * // {
    * //     "Statement": [
    * //         {
@@ -4085,26 +4118,27 @@ public class MinioClient {
    * //     "Version": "2012-10-17"
    * // }
    * //
-   * minioClient.setBucketPolicy("my-bucketname", policyJson);}</pre>
+   * minioClient.setBucketPolicy("my-bucketname", policyJson);
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param policy Bucket policy JSON string.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param policy Bucket policy configuration as JSON string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void setBucketPolicy(String bucketName, String policy)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> headerMap = new HashMap<>();
     headerMap.put("Content-Type", "application/json");
 
@@ -4116,12 +4150,10 @@ public class MinioClient {
   }
 
   /**
-   * Set XML string of LifeCycle on a given bucket. Delete the lifecycle of bucket in case a null is
-   * passed as lifeCycle.
+   * Sets life cycle configuration to a bucket.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code // Lets consider variable 'lifeCycleXml' contains below XML String;
+   * <pre>Example:{@code
+   * // Lets consider variable 'lifeCycleXml' contains below XML String;
    * // <LifecycleConfiguration>
    * //   <Rule>
    * //     <ID>expire-bucket</ID>
@@ -4133,27 +4165,27 @@ public class MinioClient {
    * //   </Rule>
    * // </LifecycleConfiguration>
    * //
-   * minioClient.setBucketLifecycle("my-bucketname", lifeCycleXml);}</pre>
+   * minioClient.setBucketLifecycle("my-bucketname", lifeCycleXml);
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param lifeCycle Bucket policy XML string.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param lifeCycle Life cycle configuraion as XML string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void setBucketLifeCycle(String bucketName, String lifeCycle)
-      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
-          IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
-          InternalException, IllegalArgumentException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if ((lifeCycle == null) || "".equals(lifeCycle)) {
       throw new IllegalArgumentException("life cycle cannot be empty");
     }
@@ -4164,29 +4196,29 @@ public class MinioClient {
   }
 
   /**
-   * Delete the LifeCycle of bucket.
+   * Deletes life cycle configuration of a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * deleteBucketLifeCycle("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code deleteBucketLifeCycle("my-bucketname");}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void deleteBucketLifeCycle(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
     Response response = executeDelete(bucketName, "", queryParamMap);
@@ -4194,30 +4226,30 @@ public class MinioClient {
   }
 
   /**
-   * Get bucket life cycle configuration.
+   * Gets life cycle configuration of a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * String lifecycle = minioClient.getBucketLifecycle("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code String lifecycle = minioClient.getBucketLifecycle("my-bucketname");
-   * System.out.println("Life cycle settings: " + lifecycle);}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @return String - Life cycle configuration as XML string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public String getBucketLifeCycle(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
     String bodyContent = "";
@@ -4239,31 +4271,31 @@ public class MinioClient {
   }
 
   /**
-   * Get bucket notification configuration
+   * Gets notification configuration of a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * NotificationConfiguration config =
+   *     minioClient.getBucketNotification("my-bucketname");
+   * }</pre>
    *
-   * <pre>
-   * {@code NotificationConfiguration config = minioClient.getBucketNotification("my-bucketname");
-   * System.out.println(config);}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @return {@link NotificationConfiguration} - Notification configuration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public NotificationConfiguration getBucketNotification(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
 
@@ -4274,11 +4306,10 @@ public class MinioClient {
   }
 
   /**
-   * Set bucket notification configuration
+   * Sets notification configuration to a bucket.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code List<EventType> eventList = new LinkedList<>();
+   * <pre>Example:{@code
+   * List<EventType> eventList = new LinkedList<>();
    * eventList.add(EventType.OBJECT_CREATED_PUT);
    * eventList.add(EventType.OBJECT_CREATED_COPY);
    *
@@ -4294,27 +4325,28 @@ public class MinioClient {
    * NotificationConfiguration config = new NotificationConfiguration();
    * config.setQueueConfigurationList(queueConfigurationList);
    *
-   * minioClient.setBucketNotification("my-bucketname", config);}</pre>
+   * minioClient.setBucketNotification("my-bucketname", config);
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param notificationConfiguration Notification configuration to be set.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @param notificationConfiguration {@link NotificationConfiguration} to be set.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void setBucketNotification(
       String bucketName, NotificationConfiguration notificationConfiguration)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
     Response response =
@@ -4323,47 +4355,47 @@ public class MinioClient {
   }
 
   /**
-   * Remove all bucket notification.
+   * Removes notification configuration of a bucket.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.removeAllBucketNotification("my-bucketname");
+   * }</pre>
    *
-   * <pre>{@code minioClient.removeAllBucketNotification("my-bucketname");}</pre>
-   *
-   * @param bucketName Bucket name.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param bucketName Name of the bucket.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void removeAllBucketNotification(String bucketName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
     setBucketNotification(bucketName, notificationConfiguration);
   }
 
   /**
-   * Lists incomplete uploads of objects in given bucket.
+   * Lists incomplete object upload information of a bucket.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code Iterable<Result<Upload>> results = minioClient.listIncompleteUploads("my-bucketname");
+   * <pre>Example:{@code
+   * Iterable<Result<Upload>> results =
+   *     minioClient.listIncompleteUploads("my-bucketname");
    * for (Result<Upload> result : results) {
    *   Upload upload = result.get();
    *   System.out.println(upload.uploadId() + ", " + upload.objectName());
-   * }}</pre>
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @return an iterator of Upload.
+   * @param bucketName Name of the bucket.
+   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
    * @see #listIncompleteUploads(String, String, boolean)
    */
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName)
@@ -4372,20 +4404,20 @@ public class MinioClient {
   }
 
   /**
-   * Lists incomplete uploads of objects in given bucket and prefix.
+   * Lists incomplete object upload information of a bucket for prefix.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code Iterable<Result<Upload>> results = minioClient.listIncompleteUploads("my-bucketname", "my-obj");
+   * <pre>Example:{@code
+   * Iterable<Result<Upload>> results =
+   *     minioClient.listIncompleteUploads("my-bucketname", "my-obj");
    * for (Result<Upload> result : results) {
    *   Upload upload = result.get();
    *   System.out.println(upload.uploadId() + ", " + upload.objectName());
-   * }}</pre>
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix filters the list of uploads to include only those that start with prefix.
-   * @return an iterator of Upload.
+   * @param bucketName Name of the bucket.
+   * @param prefix Object name starts with prefix.
+   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
    * @throws XmlParserException upon parsing response xml
    * @see #listIncompleteUploads(String, String, boolean)
    */
@@ -4395,23 +4427,21 @@ public class MinioClient {
   }
 
   /**
-   * Lists incomplete uploads of objects in given bucket, prefix and recursive flag.
+   * Lists incomplete object upload information of a bucket for prefix recursively.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code Iterable<Result<Upload>> results = minioClient.listIncompleteUploads("my-bucketname", "my-obj", true);
+   * <pre>Example:{@code
+   * Iterable<Result<Upload>> results =
+   *     minioClient.listIncompleteUploads("my-bucketname", "my-obj", true);
    * for (Result<Upload> result : results) {
    *   Upload upload = result.get();
    *   System.out.println(upload.uploadId() + ", " + upload.objectName());
-   * }}</pre>
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix Prefix string. List objects whose name starts with `prefix`.
-   * @param recursive when false, emulates a directory structure where each listing returned is
-   *     either a full object or part of the object's key up to the first '/'. All uploads with the
-   *     same prefix up to the first '/' will be merged into one entry.
-   * @return an iterator of Upload.
+   * @param bucketName Name of the bucket.
+   * @param prefix Object name starts with prefix.
+   * @param recursive List recursively than directory structure emulation.
+   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
    * @see #listIncompleteUploads(String bucketName)
    * @see #listIncompleteUploads(String bucketName, String prefix)
    */
@@ -4453,15 +4483,16 @@ public class MinioClient {
               this.listMultipartUploadsResult =
                   listIncompleteUploads(
                       bucketName, nextKeyMarker, nextUploadIdMarker, prefix, delimiter, 1000);
-            } catch (InvalidBucketNameException
-                | NoSuchAlgorithmException
+            } catch (ErrorResponseException
+                | IllegalArgumentException
                 | InsufficientDataException
-                | IOException
-                | InvalidKeyException
-                | XmlParserException
-                | ErrorResponseException
                 | InternalException
-                | InvalidResponseException e) {
+                | InvalidBucketNameException
+                | InvalidKeyException
+                | InvalidResponseException
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException e) {
               this.error = new Result<>(e);
             } finally {
               if (this.listMultipartUploadsResult != null) {
@@ -4473,9 +4504,10 @@ public class MinioClient {
           }
 
           private synchronized long getAggregatedPartSize(String objectName, String uploadId)
-              throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-                  InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-                  ErrorResponseException, InternalException {
+              throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+                  InternalException, InvalidBucketNameException, InvalidKeyException,
+                  InvalidResponseException, IOException, NoSuchAlgorithmException,
+                  XmlParserException {
             long aggregatedPartSize = 0;
 
             for (Result<Part> result : listObjectParts(bucketName, objectName, uploadId)) {
@@ -4547,15 +4579,16 @@ public class MinioClient {
                 try {
                   aggregatedPartSize =
                       getAggregatedPartSize(upload.objectName(), upload.uploadId());
-                } catch (InvalidBucketNameException
-                    | NoSuchAlgorithmException
+                } catch (ErrorResponseException
+                    | IllegalArgumentException
                     | InsufficientDataException
-                    | IOException
-                    | InvalidKeyException
-                    | XmlParserException
-                    | ErrorResponseException
                     | InternalException
-                    | IllegalArgumentException e) {
+                    | InvalidBucketNameException
+                    | InvalidKeyException
+                    | InvalidResponseException
+                    | IOException
+                    | NoSuchAlgorithmException
+                    | XmlParserException e) {
                   // special case: ignore the error as we can't propagate the exception in next()
                   aggregatedPartSize = -1;
                 }
@@ -4590,9 +4623,9 @@ public class MinioClient {
       String prefix,
       String delimiter,
       int maxUploads)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if (maxUploads < 0 || maxUploads > 1000) {
       maxUploads = 1000;
     }
@@ -4634,9 +4667,9 @@ public class MinioClient {
    */
   private String initMultipartUpload(
       String bucketName, String objectName, Map<String, String> headerMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     // set content type if not set already
     if ((headerMap != null) && (headerMap.get("Content-Type") == null)) {
       headerMap.put("Content-Type", "application/octet-stream");
@@ -4660,9 +4693,9 @@ public class MinioClient {
    */
   private void completeMultipart(
       String bucketName, String objectName, String uploadId, Part[] parts)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
     CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
@@ -4709,16 +4742,16 @@ public class MinioClient {
             try {
               this.listPartsResult =
                   listObjectParts(bucketName, objectName, uploadId, nextPartNumberMarker);
-            } catch (InvalidBucketNameException
-                | NoSuchAlgorithmException
+            } catch (ErrorResponseException
+                | IllegalArgumentException
                 | InsufficientDataException
-                | IOException
-                | InvalidKeyException
-                | XmlParserException
-                | ErrorResponseException
                 | InternalException
+                | InvalidBucketNameException
+                | InvalidKeyException
                 | InvalidResponseException
-                | IllegalArgumentException e) {
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException e) {
               this.error = new Result<>(e);
             } finally {
               if (this.listPartsResult != null) {
@@ -4800,9 +4833,9 @@ public class MinioClient {
   /** Do ListParts as per https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html */
   private ListPartsResult listObjectParts(
       String bucketName, String objectName, String uploadId, int partNumberMarker)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
     if (partNumberMarker > 0) {
@@ -4821,39 +4854,39 @@ public class MinioClient {
    * https://docs.aws.amazon.com/AmazonS3/latest/API/API_AbortMultipartUpload.html
    */
   private void abortMultipartUpload(String bucketName, String objectName, String uploadId)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put(UPLOAD_ID, uploadId);
     executeDelete(bucketName, objectName, queryParamMap);
   }
 
   /**
-   * Removes incomplete multipart upload of given object.
+   * Removes incomplete uploads of an object.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
+   * }</pre>
    *
-   * <pre>{@code minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");}</pre>
-   *
-   * @param bucketName Bucket name.
+   * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public void removeIncompleteUpload(String bucketName, String objectName)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     for (Result<Upload> r : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = r.get();
       if (objectName.equals(upload.objectName())) {
@@ -4864,35 +4897,48 @@ public class MinioClient {
   }
 
   /**
-   * Listen to bucket notifications. As bucket notification are lazily executed, its required to
-   * iterate. The returned closeable iterator must be used with try with resource; else the stream
-   * will not be closed.
+   * Listens events of object prefix and suffix of a bucket. The returned closable iterator is
+   * lazily evaluated hence its required to iterate to get new records and must be used with
+   * try-with-resource to release underneath network resources.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+   * <pre>Example:{@code
+   * String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
    * try (CloseableIterator<Result<NotificationInfo>> ci =
    *     minioClient.listenBucketNotification("bcketName", "", "", events)) {
    *   while (ci.hasNext()) {
    *     NotificationRecords records = ci.next().get();
    *     for (Event event : records.events()) {
-   *       System.out.println("Event " + event.eventType() + " occurred at " + event.eventTime()
-   *           + " for " + event.bucketName() + "/" + event.objectName());
+   *       System.out.println("Event " + event.eventType() + " occurred at "
+   *           + event.eventTime() + " for " + event.bucketName() + "/"
+   *           + event.objectName());
    *     }
    *   }
-   * }}</pre>
+   * }
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param prefix Prefix of concerned objects events.
-   * @param suffix Suffix of concerned objects events.
-   * @param events List of events to watch.
-   * @return (lazy) CloseableIterator of event records.
+   * @param bucketName Name of the bucket.
+   * @param prefix Listen events of object starts with prefix.
+   * @param suffix Listen events of object ends with suffix.
+   * @param events Events to listen.
+   * @return CloseableIterator&ltResult&ltNotificationRecords&gt&gt - Lazy closable iterator
+   *     contains event records.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(
       String bucketName, String prefix, String suffix, String[] events)
-      throws IOException, InvalidKeyException, NoSuchAlgorithmException, InsufficientDataException,
-          InvalidResponseException, InternalException, InvalidBucketNameException,
-          XmlParserException, ErrorResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Multimap<String, String> queryParamMap = HashMultimap.create();
     queryParamMap.put("prefix", prefix);
     queryParamMap.put("suffix", suffix);
@@ -4907,15 +4953,18 @@ public class MinioClient {
   }
 
   /**
-   * Select object content using SQL expression.
+   * Selects content of a object by SQL expression.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>{@code String sqlExpression = "select * from S3Object";
-   * InputSerialization is = new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
-   * OutputSerialization os = new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
-   * SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression,
-   *     is, os, true, null, null, null);
+   * <pre>Example:{@code
+   * String sqlExpression = "select * from S3Object";
+   * InputSerialization is =
+   *     new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null,
+   *         null);
+   * OutputSerialization os =
+   *     new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
+   * SelectResponseStream stream =
+   *     minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression,
+   *         is, os, true, null, null, null);
    *
    * byte[] buf = new byte[512];
    * int bytesRead = stream.read(buf, 0, buf.length);
@@ -4926,29 +4975,30 @@ public class MinioClient {
    * System.out.println("bytes processed: " + stats.bytesProcessed());
    * System.out.println("bytes returned: " + stats.bytesReturned());
    *
-   * stream.close();}</pre>
+   * stream.close();
+   * }</pre>
    *
-   * @param bucketName Bucket name.
-   * @param objectName Object name.
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
    * @param sqlExpression SQL expression.
-   * @param is Input serialization.
-   * @param os Output serialization.
-   * @param requestProgress Request progress in response.
-   * @param scanStartRange scan start range.
-   * @param scanEndRange scan end range.
-   * @param sse Server side encryption.
-   * @throws InvalidBucketNameException upon invalid bucket name is given
-   * @throws IllegalArgumentException upon empty object name is given
-   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
-   *     calculation
-   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
-   *     even before reading given length
-   * @throws IOException upon connection error
-   * @throws InvalidKeyException upon an invalid access key or secret key
-   * @throws XmlParserException upon parsing response xml
-   * @throws ErrorResponseException upon unsuccessful execution
-   * @throws InternalException upon internal library error
-   * @throws InvalidResponseException upon a non-xml response from server
+   * @param is Input specification of object data.
+   * @param os Output specification of result.
+   * @param requestProgress Flag to request progress information.
+   * @param scanStartRange scan start range of the object.
+   * @param scanEndRange scan end range of the object.
+   * @param sse SSE-C type server-side encryption.
+   * @return {@link SelectResponseStream} - Contains filtered records and progress.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public SelectResponseStream selectObjectContent(
       String bucketName,
@@ -4960,9 +5010,9 @@ public class MinioClient {
       Long scanStartRange,
       Long scanEndRange,
       ServerSideEncryption sse)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, XmlParserException,
-          ErrorResponseException, InternalException, InvalidResponseException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     if ((bucketName == null) || (bucketName.isEmpty())) {
       throw new IllegalArgumentException("bucket name cannot be empty");
     }
@@ -5020,11 +5070,10 @@ public class MinioClient {
    * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values
    * must be between 1 and Integer.MAX_VALUE when converted to milliseconds.
    *
-   * <p><b>Example:</b>
-   *
-   * <pre>
-   * {@code minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(30));}
-   * </pre>
+   * <pre>Example:{@code
+   * minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10),
+   *     TimeUnit.SECONDS.toMillis(30));
+   * }</pre>
    *
    * @param connectTimeout HTTP connect timeout in milliseconds.
    * @param writeTimeout HTTP write timeout in milliseconds.
@@ -5043,12 +5092,15 @@ public class MinioClient {
   /**
    * Ignores check on server certificate for HTTPS connection.
    *
-   * <p><b>Example:</b>
+   * <pre>Example:{@code
+   * minioClient.ignoreCertCheck();
+   * }</pre>
    *
-   * <pre>{@code minioClient.ignoreCertCheck();}</pre>
+   * @throws KeyManagementException thrown to indicate key management error.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of SSL library.
    */
   @SuppressFBWarnings(value = "SIC", justification = "Should not be used in production anyways.")
-  public void ignoreCertCheck() throws NoSuchAlgorithmException, KeyManagementException {
+  public void ignoreCertCheck() throws KeyManagementException, NoSuchAlgorithmException {
     final TrustManager[] trustAllCerts =
         new TrustManager[] {
           new X509TrustManager() {

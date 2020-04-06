@@ -243,10 +243,10 @@ All APIs throw below exceptions in addition to specific to API.
 | Exception                  | Cause                                                                |
 |:---------------------------|:---------------------------------------------------------------------|
 | ErrorResponseException     | Thrown to indicate S3 service returned an error response.            |
-| IllegalArgumentException   | Throws to indicate invalid argument is passed.                       |
+| IllegalArgumentException   | Throws to indicate invalid argument passed.                          |
 | InsufficientDataException  | Thrown to indicate not enough data available in InputStream.         |
 | InternalException          | Thrown to indicate internal library error.                           |
-| InvalidBucketNameException | Thrown to indicate invalid bucket name is passed.                    |
+| InvalidBucketNameException | Thrown to indicate invalid bucket name passed.                       |
 | InvalidKeyException        | Thrown to indicate missing of HMAC SHA-256 library.                  |
 | InvalidResponseException   | Thrown to indicate S3 service returned invalid or no error response. |
 | IOException                | Thrown to indicate I/O error on S3 operation.                        |
@@ -266,18 +266,18 @@ __Parameters__
 |:---------------|:---------|:--------------------|
 | ``bucketName`` | _String_ | Name of the bucket. |
 
-| Returns                               |
-|:--------------------------------------|
-| _boolean_: true if the bucket exists. |
+| Returns                                |
+|:---------------------------------------|
+| _boolean_ - True if the bucket exists. |
 
 __Example__
 ```java
 // Check whether 'my-bucketname' exists or not.
-boolean found = minioClient.bucketExists("mybucket");
+boolean found = minioClient.bucketExists("my-bucketname");
 if (found) {
-  System.out.println("mybucket exists");
+  System.out.println("my-bucketname exists");
 } else {
-  System.out.println("mybucket does not exist");
+  System.out.println("my-bucketname does not exist");
 }
 ```
 
@@ -285,7 +285,7 @@ if (found) {
 ### deleteBucketLifeCycle(String bucketName)
 `private void deleteBucketLifeCycle(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketLifeCycle-java.lang.String-)_
 
-Delete the lifecycle of the bucket.
+Deletes life cycle configuration of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
@@ -301,7 +301,7 @@ minioClient.deleteBucketLifeCycle("my-bucketname");
 ### disableVersioning(String bucketName)
 `public void disableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-java.lang.String-)_
 
-Object versioning is disabled in bucketName.
+Disables object versioning feature in a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
@@ -317,7 +317,7 @@ minioClient.disableVersioning("my-bucketname");
 ### enableVersioning(String bucketName)
 `public void enableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-java.lang.String-)_
 
-Object versioning is enabled in bucketName.
+Enables object versioning feature in a bucket.
 
 __Parameters__
 
@@ -334,16 +334,16 @@ minioClient.enableVersioning("my-bucketname");
 ### getBucketLifeCycle(String bucketName)
 `public String getBucketLifeCycle(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketLifeCycle-java.lang.String-)_
 
-Get the lifecycle of the bucket.
+Gets life cycle configuration of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
 |:---------------|:---------|:--------------------|
 | ``bucketName`` | _String_ | Name of the bucket. |
 
-| Returns                                     |
-|:--------------------------------------------|
-| _String_: contains lifecycle configuration. |
+| Returns                                            |
+|:---------------------------------------------------|
+| _String_ - Life cycle configuration as XML string. |
 
 __Example__
 ```java
@@ -355,28 +355,27 @@ System.out.println("Life cycle settings: " + lifecycle);
 ### getBucketNotification(String bucketName)
 `public NotificationConfiguration getBucketNotification(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketNotification-java.lang.String-)_
 
-Get bucket notification configuration.
+Gets notification configuration of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
 |:---------------|:---------|:--------------------|
 | ``bucketName`` | _String_ | Name of the bucket. |
 
-| Returns                                                          |
-|:-----------------------------------------------------------------|
-| _[NotificationConfiguration]_: NotificationConfiguration object. |
+| Returns                                                     |
+|:------------------------------------------------------------|
+| _[NotificationConfiguration]_ - Notification configuration. |
 
 __Example__
 ```java
 NotificationConfiguration config = minioClient.getBucketNotification("my-bucketname");
-System.out.println(config);
 ```
 
 <a name="getBucketPolicy"></a>
 ### getBucketPolicy(String bucketName)
 `public String getBucketPolicy(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketPolicy-java.lang.String-)_
 
-Get bucket policy for a bucket.
+Gets bucket policy configuration of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
@@ -384,21 +383,20 @@ __Parameters__
 | ``bucketName`` | _String_ | Name of the bucket. |
 
 
-| Returns                              |
-|:-------------------------------------|
-| _String_: Bucket policy JSON string. |
+| Returns                                                |
+|:-------------------------------------------------------|
+| _String_ - Bucket policy configuration as JSON string. |
 
 __Example__
 ```java
-String config = minioClient.getBucketPolicy("myBucket");
-System.out.println("Bucket policy: " + config);
+String config = minioClient.getBucketPolicy("my-bucketname");
 ```
 
 <a name="getDefaultRetention"></a>
 ### getDefaultRetention(String bucketName)
 `public ObjectLockConfiguration getDefaultRetention(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getDefaultRetention-java.lang.String-)_
 
-Get default retention of bucket.
+Gets default object retention in a bucket.
 
 __Parameters__
 
@@ -406,15 +404,15 @@ __Parameters__
 |:---------------|:---------|:--------------------|
 | ``bucketName`` | _String_ | Name of the bucket. |
 
-| Returns                                                      |
-|:-------------------------------------------------------------|
-| _[ObjectLockConfiguration]_: ObjectLockConfiguration object. |
+| Returns                                                        |
+|:---------------------------------------------------------------|
+| _[ObjectLockConfiguration]_ - Default retention configuration. |
 
 __Example__
 ```java
 // bucket must be created with object lock enabled.
-s3Client.makeBucket("my-bucketname", null, true);
-ObjectLockConfiguration config = s3Client.getDefaultRetention("my-bucketname");
+minioClient.makeBucket("my-bucketname", null, true);
+ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname");
 System.out.println("Mode: " + config.mode());
 System.out.println("Duration: " + config.duration().duration() + " " + config.duration().unit());
 ```
@@ -423,11 +421,11 @@ System.out.println("Duration: " + config.duration().duration() + " " + config.du
 ### listBuckets()
 `public List<Bucket> listBuckets()` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listBuckets--)_
 
-Lists all buckets.
+Lists bucket information of all buckets.
 
-| Returns                                   |
-|:------------------------------------------|
-| _List<[Bucket]>_ : List of Bucket object. |
+| Returns                                        |
+|:-----------------------------------------------|
+| _List<[Bucket]>_ - List of bucket information. |
 
 __Example__
 ```java
@@ -441,7 +439,7 @@ for (Bucket bucket : bucketList) {
 ### listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)
 `public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String-java.lang.String:A-)_
 
-Listen events of object prefix and suffix in bucket.
+Listens events of object prefix and suffix of a bucket. The returned closable iterator is lazily evaluated hence its required to iterate to get new records and must be used with try-with-resource to release underneath network resources.
 
 __Parameters__
 | Parameter      | Type       | Description                                 |
@@ -451,9 +449,9 @@ __Parameters__
 | ``suffix``     | _String_   | Listen events of object ends with suffix.   |
 | ``events``     | _String[]_ | Events to listen.                           |
 
-| Returns                                                                                                  |
-|:---------------------------------------------------------------------------------------------------------|
-| _[CloseableIterator]<[Result]<[NotificationRecords]>>_: closable iterator of Result NotificationRecords. |
+| Returns                                                                                                 |
+|:--------------------------------------------------------------------------------------------------------|
+| _[CloseableIterator]<[Result]<[NotificationRecords]>>_ - Lazy closable iterator contains event records. |
 
 __Example__
 ```java
@@ -474,16 +472,16 @@ try (CloseableIterator<Result<NotificationInfo>> ci =
 ### listIncompleteUploads(String bucketName)
 `public Iterable<Result<Upload>> listIncompleteUploads(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-java.lang.String-)_
 
-Lists partially uploaded objects in a bucket.
+Lists incomplete object upload information of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
 |:---------------|:---------|:--------------------|
 | ``bucketName`` | _String_ | Name of the bucket. |
 
-| Returns                                                |
-|:-------------------------------------------------------|
-| _Iterable<[Result]<[Upload]>>_: an iterator of Upload. |
+| Returns                                                                            |
+|:-----------------------------------------------------------------------------------|
+| _Iterable<[Result]<[Upload]>>_ - Lazy iterator contains object upload information. |
 
 __Example__
 ```java
@@ -498,17 +496,17 @@ for (Result<Upload> result : results) {
 ### listIncompleteUploads(String bucketName, String prefix)
 `public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-java.lang.String-java.lang.String-)_
 
-Lists incomplete uploads of objects in given bucket and prefix.
+Lists incomplete object upload information of a bucket for prefix.
 
 __Parameters__
-| Parameter      | Type     | Description                      |
-|:---------------|:---------|:---------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.              |
-| ``prefix``     | _String_ | List objects starts with prefix. |
+| Parameter      | Type     | Description                     |
+|:---------------|:---------|:--------------------------------|
+| ``bucketName`` | _String_ | Name of the bucket.             |
+| ``prefix``     | _String_ | Object name starts with prefix. |
 
-| Returns                                                |
-|:-------------------------------------------------------|
-| _Iterable<[Result]<[Upload]>>_: an iterator of Upload. |
+| Returns                                                                            |
+|:-----------------------------------------------------------------------------------|
+| _Iterable<[Result]<[Upload]>>_ - Lazy iterator contains object upload information. |
 
 __Example__
 ```java
@@ -523,18 +521,18 @@ for (Result<Upload> result : results) {
 ### listIncompleteUploads(String bucketName, String prefix, boolean recursive)
 `public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-java.lang.String-java.lang.String-boolean-)_
 
-Lists partially uploaded objects in a bucket.
+Lists incomplete object upload information of a bucket for prefix recursively.
 
 __Parameters__
-| Param          | Type      | Description                                                    |
-|:---------------|:----------|:---------------------------------------------------------------|
-| ``bucketName`` | _String_  | Name of the bucket.                                            |
-| ``prefix``     | _String_  | List objects starts with prefix.                               |
-| ``recursive``  | _boolean_ | List objects recursively; else emulates a directory structure. |
+| Param          | Type      | Description                                          |
+|:---------------|:----------|:-----------------------------------------------------|
+| ``bucketName`` | _String_  | Name of the bucket.                                  |
+| ``prefix``     | _String_  | Object name starts with prefix.                      |
+| ``recursive``  | _boolean_ | List recursively than directory structure emulation. |
 
-| Returns                                                |
-|:-------------------------------------------------------|
-| _Iterable<[Result]<[Upload]>>_: an iterator of Upload. |
+| Returns                                                                            |
+|:-----------------------------------------------------------------------------------|
+| _Iterable<[Result]<[Upload]>>_ - Lazy iterator contains object upload information. |
 
 __Example__
 ```java
@@ -549,16 +547,16 @@ for (Result<Upload> result : results) {
 ### listObjects(String bucketName)
 `public Iterable<Result<Item>> listObjects(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-)_
 
-Lists object information in given bucket.
+Lists object information of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
 |:---------------|:---------|:--------------------|
 | ``bucketName`` | _String_ | Name of the bucket. |
 
-| Returns                                                    |
-|:-----------------------------------------------------------|
-| _Iterable<[Result]<[Item]>>_: an iterator of Result Items. |
+| Returns                                                                   |
+|:--------------------------------------------------------------------------|
+| _Iterable<[Result]<[Item]>>_ - Lazy iterator contains object information. |
 
 __Example__
 ```java
@@ -573,17 +571,17 @@ for (Result<Item> result : results) {
 ### listObjects(String bucketName, String prefix)
 `public Iterable<Result<Item>> listObjects(String bucketName, String prefix))` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-java.lang.String-)_
 
-Lists object information in given bucket and prefix.
+Lists object information of a bucket for prefix.
 
 __Parameters__
-| Parameter      | Type     | Description                      |
-|:---------------|:---------|:---------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.              |
-| ``prefix``     | _String_ | List objects starts with prefix. |
+| Parameter      | Type     | Description                     |
+|:---------------|:---------|:--------------------------------|
+| ``bucketName`` | _String_ | Name of the bucket.             |
+| ``prefix``     | _String_ | Object name starts with prefix. |
 
-| Returns                                                    |
-|:-----------------------------------------------------------|
-| _Iterable<[Result]<[Item]>>_: an iterator of Result Items. |
+| Returns                                                                   |
+|:--------------------------------------------------------------------------|
+| _Iterable<[Result]<[Item]>>_ - Lazy iterator contains object information. |
 
 __Example__
 ```java
@@ -598,18 +596,18 @@ for (Result<Item> result : results) {
 ### listObjects(String bucketName, String prefix, boolean recursive)
 `public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-java.lang.String-boolean-)_
 
-Lists object information as Iterable<Result><Item> in given bucket, prefix and recursive flag.
+Lists object information of a bucket for prefix recursively.
 
 __Parameters__
-| Parameter      | Type      | Description                                                    |
-|:---------------|:----------|:---------------------------------------------------------------|
-| ``bucketName`` | _String_  | Name of the bucket.                                            |
-| ``prefix``     | _String_  | List objects starts with prefix.                               |
-| ``recursive``  | _boolean_ | List objects recursively; else emulates a directory structure. |
+| Parameter      | Type      | Description                                          |
+|:---------------|:----------|:-----------------------------------------------------|
+| ``bucketName`` | _String_  | Name of the bucket.                                  |
+| ``prefix``     | _String_  | Object name starts with prefix.                      |
+| ``recursive``  | _boolean_ | List recursively than directory structure emulation. |
 
-| Returns                                                    |
-|:-----------------------------------------------------------|
-| _Iterable<[Result]<[Item]>>_: an iterator of Result Items. |
+| Returns                                                                   |
+|:--------------------------------------------------------------------------|
+| _Iterable<[Result]<[Item]>>_ - Lazy iterator contains object information. |
 
 __Example__
 ```java
@@ -624,19 +622,19 @@ for (Result<Item> result : results) {
 ### listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
 `public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-java.lang.String-boolean-boolean-)_
 
-Lists all objects in a bucket.
+Lists object information of a bucket for prefix recursively using S3 API version 1.
 
 __Parameters__
-| Parameter       | Type      | Description                                                    |
-|:----------------|:----------|:---------------------------------------------------------------|
-| ``bucketName``  | _String_  | Name of the bucket.                                            |
-| ``prefix``      | _String_  | List objects starts with prefix.                               |
-| ``recursive``   | _boolean_ | List objects recursively; else emulates a directory structure. |
-| ``useVersion1`` | _boolean_ | when true, version 1 of REST API is used.                      |
+| Parameter       | Type      | Description                                          |
+|:----------------|:----------|:-----------------------------------------------------|
+| ``bucketName``  | _String_  | Name of the bucket.                                  |
+| ``prefix``      | _String_  | Object name starts with prefix.                      |
+| ``recursive``   | _boolean_ | List recursively than directory structure emulation. |
+| ``useVersion1`` | _boolean_ | when true, version 1 of REST API is used.            |
 
-| Returns                                                    |
-|:-----------------------------------------------------------|
-| _Iterable<[Result]<[Item]>>_: an iterator of Result Items. |
+| Returns                                                                   |
+|:--------------------------------------------------------------------------|
+| _Iterable<[Result]<[Item]>>_ - Lazy iterator contains object information. |
 
 __Example__
 ```java
@@ -651,7 +649,7 @@ for (Result<Item> result : results) {
 ### makeBucket(String bucketName)
 `public void makeBucket(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#makeBucket-java.lang.String-)_
 
-Creates a new bucket with default region.
+Creates a bucket with default region.
 
 __Parameters__
 | Parameter      | Type     | Description         |
@@ -667,7 +665,7 @@ minioClient.makeBucket("my-bucketname");
 ### makeBucket(String bucketName, String region)
 `public void makeBucket(String bucketName, String region)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#makeBucket-java.lang.String-java.lang.String-)_
 
-Creates a new bucket with given region.
+Creates a bucket with given region.
 
 __Parameters__
 | Parameter      | Type     | Description                                 |
@@ -684,14 +682,14 @@ minioClient.makeBucket("my-bucketname", "eu-west-1");
 ### makeBucket(String bucketName, String region, boolean objectLock)
 `public void makeBucket(String bucketName, String region, boolean objectLock)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#makeBucket-java.lang.String-java.lang.String-boolean-)_
 
-Creates a new bucket with object lock functionality enabled.
+Creates a bucket with object lock feature enabled.
 
 __Parameters__
-| Parameter      | Type      | Description                                    |
-|:---------------|:----------|:-----------------------------------------------|
-| ``bucketName`` | _String_  | Name of the bucket.                            |
-| ``region``     | _String_  | Region in which the bucket will be created.    |
-| ``objectLock`` | _boolean_ | Create bucket with object lock feature or not. |
+| Parameter      | Type      | Description                                            |
+|:---------------|:----------|:-------------------------------------------------------|
+| ``bucketName`` | _String_  | Name of the bucket.                                    |
+| ``region``     | _String_  | (Optional) Region in which the bucket will be created. |
+| ``objectLock`` | _boolean_ | Flag to enable object lock feature.                    |
 
 __Example__
 ```java
@@ -702,9 +700,7 @@ minioClient.makeBucket("my-bucketname", "us-west-2", true);
 ### removeAllBucketNotification(String bucketName)
 `public void removeAllBucketNotification(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeAllBucketNotification-java.lang.String-)_
 
-Remove all notification configuration from a bucket.
-
-[View Javadoc](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeAllBucketNotification-java.lang.String)
+Removes notification configuration of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
@@ -736,7 +732,7 @@ minioClient.removeBucket("my-bucketname");
 ### removeIncompleteUpload(String bucketName, String objectName)
 `public void removeIncompleteUpload(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeIncompleteUpload-java.lang.String-java.lang.String-)_
 
-Removes a partially uploaded object.
+Removes incomplete uploads of an object.
 
 __Parameters__
 | Parameter      | Type     | Description                |
@@ -753,7 +749,7 @@ minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
 ### setBucketLifeCycle(String bucketName, String lifeCycle)
 `public void setBucketLifeCycle(String bucketName, String lifeCycle)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketLifeCycle-java.lang.String-java.lang.String-)_
 
-Set a life cycle on bucket.
+Sets life cycle configuration to a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description                            |
@@ -782,7 +778,7 @@ minioClient.setBucketLifecycle("my-bucketname", lifeCycleXml);
 ### setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)
 `public void setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketNotification-java.lang.String-io.minio.messages.NotificationConfiguration-)_
 
-Set bucket notification configuration.
+Sets notification configuration to a bucket.
 
 __Parameters__
 
@@ -816,14 +812,14 @@ minioClient.setBucketNotification("my-bucketname", config);
 ### setBucketPolicy(String bucketName, String policy)
 `public void setBucketPolicy(String bucketName, String policy)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketPolicy-java.lang.String-java.lang.String-)_
 
-Set a policy on bucket.
+Sets bucket policy configuration to a bucket.
 
 __Parameters__
 
-| Parameter      | Type     | Description                   |
-|:---------------|:---------|:------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.           |
-| ``policy``     | _String_ | Bucket policy as JSON string. |
+| Parameter      | Type     | Description                                 |
+|:---------------|:---------|:--------------------------------------------|
+| ``bucketName`` | _String_ | Name of the bucket.                         |
+| ``policy``     | _String_ | Bucket policy configuration as JSON string. |
 
 __Example__
 ```java
@@ -856,7 +852,7 @@ minioClient.setBucketPolicy("my-bucketname", policyJson);
 ### setDefaultRetention(String bucketName, ObjectLockConfiguration config)
 `public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setDefaultRetention-java.lang.String-io.minio.messages.ObjectLockConfiguration-)_
 
-Set default retention on bucket.
+Sets default object retention in a bucket.
 
 __Parameters__
 | Parameter      | Type                        | Description                |
@@ -877,7 +873,7 @@ minioClient.setDefaultRetention("my-bucketname", config);
 ### composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)
 `public void composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-java.lang.String-java.lang.String-java.util.List-java.util.Map-io.minio.ServerSideEncryption-)_
 
- Creates a new Object by combining different source objects.
+Creates an object by combining data from different source objects using server-side copy.
 
  __Parameters__
 | Param          | Type                     | Description                        |
@@ -894,31 +890,58 @@ List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
 sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-one"));
 sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-two"));
 sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-three"));
+
+// Create my-bucketname/my-objectname by combining source object list.
 minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, null, null);
+
+// Create my-bucketname/my-objectname with user metadata by combining source object list.
+minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, userMetadata, null);
+
+// Create my-bucketname/my-objectname with user metadata and server-side encryption by combining
+// source object list.
+minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, userMetadata, sse);
 ```
 
 <a name="copyObject"></a>
 ### copyObject(String bucketName, String objectName, Map<String,String> headerMap, ServerSideEncryption sse, String srcBucketName, String srcObjectName, ServerSideEncryption srcSse, CopyConditions copyConditions)
 `public void copyObject(String bucketName, String objectName, Map<String,String> headerMap, ServerSideEncryption sse, String srcBucketName, String srcObjectName, ServerSideEncryption srcSse, CopyConditions copyConditions)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-java.lang.String-java.lang.String-java.util.Map-io.minio.ServerSideEncryption-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-io.minio.CopyConditions-)_
 
-Create object by copying from source object in source bucket.
+Creates an object by server-side copying data from another object.
 
 __Parameters__
-| Parameter          | Type                     | Description                                |
-|:-------------------|:-------------------------|:-------------------------------------------|
-| ``bucketName``     | _String_                 | Bucket name.                               |
-| ``objectName``     | _String_                 | Object name to be created.                 |
-| ``headerMap``      | _Map<String,String>_     | (Optional) User metadata.                  |
-| ``sse``            | _[ServerSideEncryption]_ | (Optional) Server-side encryption.         |
-| ``srcBucketName``  | _String_                 | Source bucket name.                        |
-| ``srcObjectName``  | _String_                 | (Optional) Source object name.             |
-| ``srcSse``         | _[ServerSideEncryption]_ | (Optional) Source Server-side encryption.  |
-| ``copyConditions`` | _[CopyConditions]_       | (Optional) Conditiions to be used to copy. |
+| Parameter          | Type                     | Description                                                    |
+|:-------------------|:-------------------------|:---------------------------------------------------------------|
+| ``bucketName``     | _String_                 | Name of the bucket.                                            |
+| ``objectName``     | _String_                 | Object name to be created.                                     |
+| ``headerMap``      | _Map<String,String>_     | (Optional) User metadata.                                      |
+| ``sse``            | _[ServerSideEncryption]_ | (Optional) Server-side encryption.                             |
+| ``srcBucketName``  | _String_                 | Source bucket name.                                            |
+| ``srcObjectName``  | _String_                 | (Optional) Source object name.                                 |
+| ``srcSse``         | _[ServerSideEncryption]_ | (Optional) SSE-C type server-side encryption of source object. |
+| ``copyConditions`` | _[CopyConditions]_       | (Optional) Conditiions to be used in copy operation.           |
 
 __Example__
 
 ```java
-minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-bucketname", null, null, null);
+// Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname.
+minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-bucketname", null, null,
+    null);
+
+// Copy data from my-source-bucketname/my-source-objectname to my-bucketname/my-objectname.
+minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-bucketname",
+    "my-source-objectname", null, null);
+
+// Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname by server-side encryption.
+minioClient.copyObject("my-bucketname", "my-objectname", null, sse, "my-source-bucketname", null, null, null);
+
+// Copy data from SSE-C encrypted my-source-bucketname/my-objectname to my-bucketname/my-objectname.
+minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-bucketname", null, srcSsec,
+    null);
+
+// Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname with user metadata and
+// copy conditions.
+minioClient.copyObject("my-bucketname", "my-objectname", headers, null, "my-source-bucketname", null, null,
+    conditions);
 ```
 
 <a name="disableObjectLegalHold"></a>
@@ -949,7 +972,7 @@ Enables legal hold on an object.
 | Parameter      | Type     | Description                |
 |:---------------|:---------|:---------------------------|
 | ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name to be created. |
+| ``objectName`` | _String_ | Object name in the bucket. |
 | ``versionId``  | _String_ | Version ID of the object.  |
 
  __Example__
@@ -961,7 +984,7 @@ minioClient.enableObjectLegalHold("my-bucketname", "my-objectname", null);
 ### getObject(String bucketName, String objectName)
 `public InputStream getObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-)_
 
-Downloads an object as a stream.
+Gets data of an object. Returned `InputStream` must be closed after use to release network resources.
 
 __Parameters__
 | Parameter      | Type     | Description                |
@@ -969,20 +992,22 @@ __Parameters__
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
 
-| Returns                                            |
-|:---------------------------------------------------|
-| _InputStream_: InputStream containing object data. |
+| Returns                               |
+|:--------------------------------------|
+| _InputStream_ - Contains object data. |
 
 __Example__
 ```java
-InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");
+try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname")) {
+  // Read data from stream
+}
 ```
 
 <a name="getObject"></a>
 ### getObject(String bucketName, String objectName, long offset)
 `public InputStream getObject(String bucketName, String objectName, long offset)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-long-)_
 
-Gets object's data starting from given offset as InputStream in the given bucket. The InputStream must be closed after use else the connection will remain open.
+Gets data from offset of an object. Returned `InputStream` must be closed after use to release network resources.
 
 __Parameters__
 | Parameter      | Type     | Description                         |
@@ -991,20 +1016,22 @@ __Parameters__
 | ``objectName`` | _String_ | Object name in the bucket.          |
 | ``offset``     | _long_   | Start byte position of object data. |
 
-| Returns                                            |
-|:---------------------------------------------------|
-| _InputStream_: InputStream containing object data. |
+| Returns                               |
+|:--------------------------------------|
+| _InputStream_ - Contains object data. |
 
 __Example__
 ```java
-InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L);
+try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L)) {
+  // Read data from stream
+}
 ```
 
 <a name="getObject"></a>
 ### getObject(String bucketName, String objectName, long offset, Long length)
 `public InputStream getObject(String bucketName,  String objectName, long offset, Long length)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-long-java.lang.Long-)_
 
-Downloads the specified range bytes of an object as a stream.
+Gets data from offset to length of an object. Returned {@link InputStream} must be closed after use to release network resources.
 
 __Parameters__
 | Parameter      | Type     | Description                                            |
@@ -1014,73 +1041,79 @@ __Parameters__
 | ``offset``     | _long_   | Start byte position of object data.                    |
 | ``length``     | _Long_   | (Optional) Number of bytes of object data from offset. |
 
-| Returns                                            |
-|:---------------------------------------------------|
-| _InputStream_: InputStream containing object data. |
+| Returns                               |
+|:--------------------------------------|
+| _InputStream_ - Contains object data. |
 
 __Example__
 ```java
-InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
+try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L)) {
+  // Read data from stream
+}
 ```
 
 <a name="getObject"></a>
 ### getObject(String bucketName, String objectName, ServerSideEncryption sse)
 `public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-)_
 
-Gets entire server-side encrypted object's data as InputStream in given bucket. The InputStream must be closed after use else the connection will remain open.
+Gets data of a SSE-C encrypted object. Returned {@link InputStream} must be closed after use to release network resources.
 
 __Parameters__
-| Parameter      | Type                     | Description                |
-|:---------------|:-------------------------|:---------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.        |
-| ``objectName`` | _String_                 | Object name in the bucket. |
-| ``sse``        | _[ServerSideEncryption]_ | Server-side encryption.    |
+| Parameter      | Type                     | Description                        |
+|:---------------|:-------------------------|:-----------------------------------|
+| ``bucketName`` | _String_                 | Name of the bucket.                |
+| ``objectName`` | _String_                 | Object name in the bucket.         |
+| ``sse``        | _[ServerSideEncryption]_ | SSE-C type server-side encryption. |
 
-| Returns                                            |
-|:---------------------------------------------------|
-| _InputStream_: InputStream containing object data. |
+| Returns                               |
+|:--------------------------------------|
+| _InputStream_ - Contains object data. |
 
 __Example__
 ```java
-InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);
+try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", ssec)) {
+  // Read data from stream
+}
 ```
 
 <a name="getObject"></a>
 ### getObject(String bucketName, String objectName, Long offset, Long length, ServerSideEncryption sse)
 `public InputStream getObject(String bucketName, String objectName, Long offset, Long length, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-java.lang.Long-java.lang.Long-io.minio.ServerSideEncryption-)_
 
-Gets specified range bytes of server-side encrypted object's data as InputStream in given bucket. The InputStream must be closed after use else the connection will remain open.
+Gets data from offset to length of a SSE-C encrypted object. Returned {@link InputStream} must be closed after use to release network resources.
 
 __Parameters__
 | Parameter      | Type                     | Description                                            |
 |:---------------|:-------------------------|:-------------------------------------------------------|
 | ``bucketName`` | _String_                 | Name of the bucket.                                    |
 | ``objectName`` | _String_                 | Object name in the bucket.                             |
-| ``offset``     | _long_                   | Start byte position of object data.                    |
+| ``offset``     | _Long_                   | (Optional) Start byte position of object data.         |
 | ``length``     | _Long_                   | (Optional) Number of bytes of object data from offset. |
 | ``sse``        | _[ServerSideEncryption]_ | (Optional) Server-side encryption.                     |
 
-| Returns                                            |
-|:---------------------------------------------------|
-| _InputStream_: InputStream containing object data. |
+| Returns                               |
+|:--------------------------------------|
+| _InputStream_ - Contains object data. |
 
 __Example__
 ```java
-InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, sse);
+try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, ssec)) {
+  // Read data from stream
+}
 ```
 
 <a name="getObject"></a>
 ### getObject(String bucketName, String objectName, String fileName)
 `public void getObject(String bucketName, String objectName, String fileName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-java.lang.String-)_
 
-Downloads object in bucket to given file name.
+Downloads data of an object to file.
 
 __Parameters__
 | Parameter      | Type     | Description                |
 |:---------------|:---------|:---------------------------|
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
-| ``fileName``   | _String_ | File name.                 |
+| ``fileName``   | _String_ | Name of the file.          |
 
 __Example__
 ```java
@@ -1094,38 +1127,38 @@ minioClient.getObject("my-bucketname", "my-objectname", "my-object-file");
 Downloads server-side encrypted object in bucket to given file name.
 
 __Parameters__
-| Parameter      | Type                     | Description                |
-|:---------------|:-------------------------|:---------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.        |
-| ``objectName`` | _String_                 | Object name in the bucket. |
-| ``sse``        | _[ServerSideEncryption]_ | Server-side encryption.    |
-| ``fileName``   | _String_                 | File name.                 |
+| Parameter      | Type                     | Description                        |
+|:---------------|:-------------------------|:-----------------------------------|
+| ``bucketName`` | _String_                 | Name of the bucket.                |
+| ``objectName`` | _String_                 | Object name in the bucket.         |
+| ``sse``        | _[ServerSideEncryption]_ | SSE-C type server-side encryption. |
+| ``fileName``   | _String_                 | Name of the file.                  |
 
 __Example__
 ```java
-minioClient.getObject("my-bucketname", "my-objectname", sse, "my-object-file");
+minioClient.getObject("my-bucketname", "my-objectname", ssec, "my-object-file");
 ```
 
  <a name="getObjectRetention"></a>
 ### getObjectRetention(String bucketName, String objectName, String versionId)
 `public Retention getObjectRetention(String bucketName, String objectName, String versionId)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectRetention-java.lang.String-java.lang.String-java.lang.String-)_
 
-Returns retention set on a given object.
+Gets retention configuration of an object.
 
  __Parameters__
 | Parameter      | Type     | Description                |
 |:---------------|:---------|:---------------------------|
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
-| ``versionId``  | _String_ | Object Version.            |
+| ``versionId``  | _String_ | Version ID of the object.  |
 
-| Returns                         |
-|:--------------------------------|
-| _[Retention]_: Retention object |
+| Returns                                         |
+|:------------------------------------------------|
+| _[Retention]_ - Object retention configuration. |
 
  __Example__
  ```java
-Retention retention = s3Client.getObjectRetention("my-bucketname", "my-objectname", null);
+Retention retention = minioClient.getObjectRetention("my-bucketname", "my-objectname", null);
 System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());
 ```
 
@@ -1133,7 +1166,7 @@ System.out.println("mode: " + retention.mode() + "until: " + retention.retainUnt
 ### getObjectUrl(String bucketName, String objectName)
 `public String getObjectUrl(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectUrl-java.lang.String-java.lang.String-)_
 
-Gets object's URL in given bucket.
+Gets URL of an object useful when this object has public read access.
 
  __Parameters__
 | Parameter      | Type     | Description                |
@@ -1141,13 +1174,13 @@ Gets object's URL in given bucket.
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
 
-| Returns               |
-|:----------------------|
-| _String_: URL string. |
+| Returns                |
+|:-----------------------|
+| _String_ - URL string. |
 
  __Example__
  ```java
-String url = client.getObjectUrl("my-bucketname", "my-objectname");
+String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
 System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ```
 
@@ -1155,46 +1188,47 @@ System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ### getPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires, Map<String,String> reqParams)
 `public String getPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires, Map<String,String> reqParams)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getPresignedObjectUrl-io.minio.http.Method-java.lang.String-java.lang.String-java.lang.Integer-java.util.Map-)_
 
-Returns a presigned URL string with given HTTP method, expiry time and custom request params for a specific object in the bucket.
+Gets presigned URL of an object for HTTP method, expiry time and custom request parameters.
 
  __Parameters__
 | Parameter      | Type                 | Description                            |
 |:---------------|:---------------------|:---------------------------------------|
-| ``method``     | _Method_             | HTTP method to generate presigned URL. |
+| ``method``     | _[Method]_           | HTTP method to generate presigned URL. |
 | ``bucketName`` | _String_             | Name of the bucket.                    |
 | ``objectName`` | _String_             | Object name in the bucket.             |
-| ``expiry``     | _Integer_            | Expiry in seconds; defaults to 7 days. |
+| ``expires``    | _Integer_            | Expiry in seconds; defaults to 7 days. |
 | ``reqParams``  | _Map<String,String>_ | Request parameters to override.        |
 
-| Returns               |
-|:----------------------|
-| _String_: URL string. |
+| Returns                |
+|:-----------------------|
+| _String_ - URL string. |
 
  __Example__
  ```java
-String url = getPresignedObjectUrl(Method.PUT, "my-bucketname", null, null, null);
-System.out.println("my-bucketname can be created by " + url);
+String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname", "my-objectname", 24 * 60 * 60,
+    reqParams);
 ```
+
  <a name="isObjectLegalHoldEnabled"></a>
 ### isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
 `public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#isObjectLegalHoldEnabled-java.lang.String-java.lang.String-java.lang.String-)_
 
-Returns true if object legal hold is enabled.
+Returns true if legal hold is enabled on an object.
 
  __Parameters__
 | Parameter      | Type     | Description                |
 |:---------------|:---------|:---------------------------|
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
-| ``versionId``  | _String_ | Object Version.            |
+| ``versionId``  | _String_ | Version ID of the object.  |
 
-| Returns                                   |
-|:------------------------------------------|
-| _boolean_: true if legal hold is enabled. |
+| Returns                                    |
+|:-------------------------------------------|
+| _boolean_ - True if legal hold is enabled. |
 
  __Example__
 ```java
-boolean status = s3Client.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", null);
+boolean status = minioClient.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", null);
 if (status) {
   System.out.println("Legal hold is on");
 else {
@@ -1206,7 +1240,7 @@ else {
 ### presignedGetObject(String bucketName, String objectName)
 `public String presignedGetObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-)_
 
-Returns an presigned URL to download the object in the bucket with default expiry time. Default expiry time is 7 days in seconds.
+Gets presigned URL of an object to download its data for 7 days.
 
 __Parameters__
 | Parameter      | Type     | Description                |
@@ -1214,14 +1248,13 @@ __Parameters__
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
 
-| Returns                                      |
-|:---------------------------------------------|
-| _String_: URL string to download the object. |
+| Returns                                       |
+|:----------------------------------------------|
+| _String_ - URL string to download the object. |
 
 __Example__
 ```java
 String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");
-System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ```
 
 
@@ -1229,54 +1262,54 @@ System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ### presignedGetObject(String bucketName, String objectName, Integer expires)
 `public String presignedGetObject(String bucketName, String objectName, Integer expires)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-java.lang.Integer-)_
 
-Generates a presigned URL for HTTP GET operations. Browsers/Mobile clients may point to this URL to directly download objects even if the bucket is private. This presigned URL can have an associated expiration time in seconds after which it is no longer operational. The default expiry is set to 7 days.
+Gets presigned URL of an object to download its data for expiry time.
 
 __Parameters__
 | Parameter      | Type      | Description                                         |
 |:---------------|:----------|:----------------------------------------------------|
 | ``bucketName`` | _String_  | Name of the bucket.                                 |
 | ``objectName`` | _String_  | Object name in the bucket.                          |
-| ``expiry``     | _Integer_ | Expiry in seconds. Default expiry is set to 7 days. |
+| ``expires``    | _Integer_ | Expiry in seconds. Default expiry is set to 7 days. |
 
-| Returns                                      |
-|:---------------------------------------------|
-| _String_: URL string to download the object. |
+| Returns                                       |
+|:----------------------------------------------|
+| _String_ - URL string to download the object. |
 
 __Example__
 ```java
-String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
+// Get presigned URL to download my-objectname data with one day expiry.
+String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 24 * 60 * 60);
 ```
 
 <a name="presignedGetObject"></a>
 ### presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,String> reqParams)
 `public String presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,String> reqParams)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-java.lang.Integer-java.util.Map-)_
 
-Returns an presigned URL to download the object in the bucket with given expiry time with custom request params.
+Gets presigned URL of an object to download its data for expiry time and request parameters.
 
 __Parameters__
 | Parameter      | Type                 | Description                            |
 |:---------------|:---------------------|:---------------------------------------|
 | ``bucketName`` | _String_             | Name of the bucket.                    |
 | ``objectName`` | _String_             | Object name in the bucket.             |
-| ``expiry``     | _Integer_            | Expiry in seconds; defaults to 7 days. |
+| ``expires``    | _Integer_            | Expiry in seconds; defaults to 7 days. |
 | ``reqParams``  | _Map<String,String>_ | Request parameters to override.        |
 
-| Returns                                      |
-|:---------------------------------------------|
-| _String_: URL string to download the object. |
+| Returns                                       |
+|:----------------------------------------------|
+| _String_ - URL string to download the object. |
 
 __Example__
 ```java
-String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 60 * 60 * 24, reqParams);
-System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
+// Get presigned URL to download my-objectname data with one day expiry and request parameters.
+String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 24 * 60 * 60, reqParams);
 ```
 
 <a name="presignedPostPolicy"></a>
 ### presignedPostPolicy(PostPolicy policy)
 `public Map<String,String> presignedPostPolicy(PostPolicy policy)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPostPolicy-io.minio.PostPolicy-)_
 
-Allows setting policy conditions to a presigned URL for POST operations. Policies such as bucket name to receive object uploads, key name prefixes, expiry policy may be set. The client receives HTTP status code under key success_action_status, when the file is uploaded successfully. If its value is set to 201, the client notifies with a XML document containing the key where the file was uploaded to.
+Gets form-data of [PostPolicy] of an object to upload its data using POST method.
 
 __Parameters__
 | Parameter  | Type           | Description               |
@@ -1284,9 +1317,9 @@ __Parameters__
 | ``policy`` | _[PostPolicy]_ | Post policy of an object. |
 
 
-| Returns                                                         |
-|:----------------------------------------------------------------|
-| _Map<String, String>_: key/value pairs to construct form-data. |
+| Returns                                                                           |
+|:----------------------------------------------------------------------------------|
+| _Map<String, String>_ - Contains form-data to upload an object using POST method. |
 
 __Example__
 ```java
@@ -1312,7 +1345,7 @@ System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname
 ### presignedPutObject(String bucketName, String objectName)
 `public String presignedPutObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPutObject-java.lang.String-java.lang.String-)_
 
-Returns a presigned URL to upload an object in the bucket with default expiry time. Default expiry time is 7 days in seconds.
+Gets presigned URL of an object to upload data for 7 days.
 
 __Parameters__
 | Parameter      | Type     | Description                |
@@ -1320,37 +1353,36 @@ __Parameters__
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
 
-| Returns                                   |
-|:------------------------------------------|
-| _String_: URL string to upload an object. |
+| Returns                                    |
+|:-------------------------------------------|
+| _String_ - URL string to upload an object. |
 
 __Example__
 ```java
 String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");
-System.out.println("my-bucketname/my-objectname can be uploaded by " + url);
 ```
 
 <a name="presignedPutObject"></a>
 ### presignedPutObject(String bucketName, String objectName, Integer expires)
 `public String presignedPutObject(String bucketName, String objectName, Integer expires)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPutObject-java.lang.String-java.lang.String-java.lang.Integer-)_
 
-Generates a presigned URL for HTTP PUT operations. Browsers/Mobile clients may point to this URL to upload objects directly to a bucket even if it is private. This presigned URL can have an associated expiration time in seconds after which it is no longer operational. The default expiry is set to 7 days.
+Gets presigned URL of an object to upload data for expiry time.
 
 __Parameters__
 | Parameter      | Type      | Description                            |
 |:---------------|:----------|:---------------------------------------|
 | ``bucketName`` | _String_  | Name of the bucket.                    |
 | ``objectName`` | _String_  | Object name in the bucket.             |
-| ``expiry``     | _Integer_ | Expiry in seconds; defaults to 7 days. |
+| ``expires``    | _Integer_ | Expiry in seconds; defaults to 7 days. |
 
-| Returns                                   |
-|:------------------------------------------|
-| _String_: URL string to upload an object. |
+| Returns                                    |
+|:-------------------------------------------|
+| _String_ - URL string to upload an object. |
 
 __Example__
 ```java
-String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
-System.out.println("my-bucketname/my-objectname can be uploaded by " + url);
+// Get presigned URL to upload data to my-objectname with one day expiry.
+String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 24 * 60 * 60);
 ```
 
 <a name="putObject"></a>
@@ -1360,16 +1392,17 @@ System.out.println("my-bucketname/my-objectname can be uploaded by " + url);
 Uploads given stream as object in bucket by using given options.
 
 __Parameters__
-| Parameter      | Type                 | Description                    |
-|:---------------|:---------------------|:-------------------------------|
-| ``bucketName`` | _String_             | Name of the bucket.            |
-| ``objectName`` | _String_             | Object name in the bucket.     |
-| ``stream``     | _InputStream_        | Stream contains object data.   |
-| ``options``    | _[PutObjectOptions]_ | Options to be used for upload. |
+| Parameter      | Type                 | Description                       |
+|:---------------|:---------------------|:----------------------------------|
+| ``bucketName`` | _String_             | Name of the bucket.               |
+| ``objectName`` | _String_             | Object name in the bucket.        |
+| ``stream``     | _InputStream_        | Stream contains object data.      |
+| ``options``    | _[PutObjectOptions]_ | Options to be used during upload. |
 
 __Example__
 ```java
-minioClient.putObject("my-bucketname", "my-objectname", stream, new PutObjectOptions(-1, 5 * MB));
+PutObjectOptions options = new PutObjectOptions(7003256, -1);
+minioClient.putObject("my-bucketname", "my-objectname", stream, options);
 ```
 
 <a name="putObject"></a>
@@ -1379,16 +1412,16 @@ minioClient.putObject("my-bucketname", "my-objectname", stream, new PutObjectOpt
 Uploads contents from a file as object in bucket using options.
 
 __Parameters__
-| Parameter      | Type                 | Description                    |
-|:---------------|:---------------------|:-------------------------------|
-| ``bucketName`` | _String_             | Name of the bucket.            |
-| ``objectName`` | _String_             | Object name in the bucket.     |
-| ``fileName``   | _String_             | File name.                     |
-| ``options``    | _[PutObjectOptions]_ | Options to be used for upload. |
+| Parameter      | Type                 | Description                                  |
+|:---------------|:---------------------|:---------------------------------------------|
+| ``bucketName`` | _String_             | Name of the bucket.                          |
+| ``objectName`` | _String_             | Object name in the bucket.                   |
+| ``fileName``   | _String_             | Name of file to upload.                      |
+| ``options``    | _[PutObjectOptions]_ | (Optional) Options to be used during upload. |
 
 __Example__
 ```java
-minioClient.putObject("my-bucketname", "my-objectname", "/mnt/photos/island,jpg", new PutObjectOptions(11 * MB, -1));
+minioClient.putObject("my-bucketname", "my-objectname", "my-filename", null);
 ```
 
 <a name="removeObject"></a>
@@ -1412,17 +1445,17 @@ minioClient.removeObject("my-bucketname", "my-objectname");
 ### removeObjects(String bucketName, Iterable<String> objectNames)
 `public Iterable<Result<DeleteError>> removeObjects(String bucketName, Iterable<String> objectNames)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObjects-java.lang.String-java.lang.Iterable-)_
 
-Removes multiple objects.
+Removes multiple objects lazily. Its required to iterate the returned Iterable to perform removal.
 
 __Parameters__
-| Parameter       | Type               | Description         |
-|:----------------|:-------------------|:--------------------|
-| ``bucketName``  | _String_           | Name of the bucket. |
-| ``objectNames`` | _Iterable<String>_ | List of objects.    |
+| Parameter       | Type               | Description                    |
+|:----------------|:-------------------|:-------------------------------|
+| ``bucketName``  | _String_           | Name of the bucket.            |
+| ``objectNames`` | _Iterable<String>_ | List of objects in the bucket. |
 
-| Returns                                                                           |
-|:----------------------------------------------------------------------------------|
-| _Iterable<[Result]<[DeleteError]>>_: an iterator contains errors on object removal. |
+| Returns                                                                             |
+|:------------------------------------------------------------------------------------|
+| _Iterable<[Result]<[DeleteError]>>_ - Lazy iterator contains object removal status. |
 
 __Example__
 ```java
@@ -1441,7 +1474,7 @@ for (Result<DeleteError> result : results) {
 ### selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)
 `public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-java.lang.String-java.lang.String-java.lang.String-io.minio.messages.InputSerialization-io.minio.messages.OutputSerialization-boolean-java.lang.Long-java.lang.Long-io.minio.ServerSideEncryption-)_
 
-Select object content using SQL expression.
+Selects content of a object by SQL expression.
 
 __Parameters__
 
@@ -1450,23 +1483,24 @@ __Parameters__
 | ``bucketName``      | _String_                 | Name of the bucket.                   |
 | ``objectName``      | _String_                 | Object name in the bucket.            |
 | ``sqlExpression``   | _String_                 | SQL expression.                       |
-| ``is``              | _[InputSerialization]_   | Object's input specification.         |
-| ``os``              | _[OutputSerialization]_  | Object's output specification.        |
+| ``is``              | _[InputSerialization]_   | Input specification of object data.   |
+| ``os``              | _[OutputSerialization]_  | Output specification of result.       |
 | ``requestProgress`` | _boolean_                | Flag to request progress information. |
 | ``scanStartRange``  | _Long_                   | scan start range of the object.       |
 | ``scanEndRange``    | _Long_                   | scan end range of the object.         |
-| ``sse``             | _[ServerSideEncryption]_ | Server-side encryptio.n               |
+| ``sse``             | _[ServerSideEncryption]_ | SSE-C type server-side encryption.    |
 
-| Returns                                                           |
-|:------------------------------------------------------------------|
-| _[SelectResponseStream]_: contains filtered records and progress. |
+| Returns                                                            |
+|:-------------------------------------------------------------------|
+| _[SelectResponseStream]_ - Contains filtered records and progress. |
 
 __Example__
 ```java
 String sqlExpression = "select * from S3Object";
 InputSerialization is = new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
 OutputSerialization os = new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
-SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression, is, os, true, null, null, null);
+SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression,
+    is, os, true, null, null, null);
 
 byte[] buf = new byte[512];
 int bytesRead = stream.read(buf, 0, buf.length);
@@ -1481,19 +1515,19 @@ stream.close();
 ```
 
 <a name="setObjectRetention"></a>
-### setObjectRetention(String bucketName, String objectName, String versionId, boolean bypassGovernanceRetention, Retention retention)
-`public void setObjectLockRetention(String bucketName, String objectName, String versionId, boolean bypassGovernanceRetention, Retention retention)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectRetention-java.lang.String-java.lang.String-java.lang.String-io.minio.messages.Retention-boolean-)_
+### setObjectRetention(String bucketName, String objectName, String versionId, Retention retention, boolean bypassGovernanceRetention)
+`public void setObjectLockRetention(String bucketName, String objectName, String versionId, Retention retention, boolean bypassGovernanceRetention)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectRetention-java.lang.String-java.lang.String-java.lang.String-io.minio.messages.Retention-boolean-)_
 
-Applies object retention lock onto an object.
+Sets retention configuration to an object.
 
  __Parameters__
 | Parameter                     | Type          | Description                     |
 |:------------------------------|:--------------|:--------------------------------|
 | ``bucketName``                | _String_      | Name of the bucket.             |
 | ``objectName``                | _String_      | Object name in the bucket.      |
-| ``versionId``                 | _String_      | Object version.                 |
-| ``bypassGovernanceRetention`` | _bool_        | By pass Governance Retention.   |
+| ``versionId``                 | _String_      | Version ID of the object.       |
 | ``config``                    | _[Retention]_ | Object retention configuration. |
+| ``bypassGovernanceRetention`` | _boolean_     | Bypass Governance retention.    |
 
  __Example__
 ```java
@@ -1505,7 +1539,7 @@ minioClient.setObjectRetention("my-bucketname", "my-objectname", null, true, ret
 ### statObject(String bucketName, String objectName)
 `public ObjectStat statObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-java.lang.String-java.lang.String-)_
 
-Gets metadata of an object.
+Gets object information and metadata of an object.
 
 __Parameters__
 | Parameter      | Type     | Description                |
@@ -1513,9 +1547,9 @@ __Parameters__
 | ``bucketName`` | _String_ | Name of the bucket.        |
 | ``objectName`` | _String_ | Object name in the bucket. |
 
-| Returns                          |
-|:---------------------------------|
-| _[ObjectStat]_: object metadata. |
+| Returns                                                     |
+|:------------------------------------------------------------|
+| _[ObjectStat]_ - Populated object information and metadata. |
 
 __Example__
 ```java
@@ -1526,22 +1560,22 @@ ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname")
 ### statObject(String bucketName, String objectName, ServerSideEncryption sse)
 `public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-)_
 
-Returns meta data information of given object in given bucket.
+Gets object information and metadata of a SSE-C encrypted object.
 
 __Parameters__
 | Parameter      | Type                     | Description                        |
 |:---------------|:-------------------------|:-----------------------------------|
 | ``bucketName`` | _String_                 | Name of the bucket.                |
 | ``objectName`` | _String_                 | Object name in the bucket.         |
-| ``sse``        | _[ServerSideEncryption]_ | SSE-C type Server-side encryption. |
+| ``sse``        | _[ServerSideEncryption]_ | SSE-C type server-side encryption. |
 
-| Returns                          |
-|:---------------------------------|
-| _[ObjectStat]_: object metadata. |
+| Returns                                                     |
+|:------------------------------------------------------------|
+| _[ObjectStat]_ - Populated object information and metadata. |
 
 __Example__
 ```java
-ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", sse);
+ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", ssec);
 ```
 
 ## 5. Explore Further
@@ -1579,3 +1613,4 @@ ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname",
 [ObjectStat]: http://minio.github.io/minio-java/io/minio/ObjectStat.html
 [DeleteError]: http://minio.github.io/minio-java/io/minio/messages/DeleteError.html
 [SelectResponseStream]: http://minio.github.io/minio-java/io/minio/SelectResponseStream.html
+[Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
