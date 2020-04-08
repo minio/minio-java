@@ -47,7 +47,7 @@ public class Result<T> {
   public T get()
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, JsonParseException, JsonMappingException,
+          InvalidResponseException, IOException, JsonMappingException, JsonParseException,
           NoSuchAlgorithmException, XmlParserException {
     if (ex == null) {
       return type;
@@ -85,12 +85,12 @@ public class Result<T> {
       throw (IOException) ex;
     }
 
-    if (ex instanceof JsonParseException) {
-      throw (JsonParseException) ex;
-    }
-
     if (ex instanceof JsonMappingException) {
       throw (JsonMappingException) ex;
+    }
+
+    if (ex instanceof JsonParseException) {
+      throw (JsonParseException) ex;
     }
 
     if (ex instanceof NoSuchAlgorithmException) {
