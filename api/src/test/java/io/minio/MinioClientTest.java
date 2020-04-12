@@ -18,9 +18,7 @@
 package io.minio;
 
 import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEndpointException;
 import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidPortException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
@@ -43,55 +41,186 @@ public class MinioClientTest {
   private static final String CONTENT_TYPE = "Content-Type";
   private static final String CONTENT_LENGTH = "Content-Length";
 
-  @Test(expected = InvalidEndpointException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testEndpoint1() throws MinioException {
     new MinioClient((String) null);
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidEndpointException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testEndpoint2() throws MinioException {
     new MinioClient("http://play.min.io/mybucket");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidEndpointException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testEndpoint3() throws MinioException {
     new MinioClient("minio-.example.com");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidEndpointException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testEndpoint4() throws MinioException {
     new MinioClient("-minio.example.com");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidEndpointException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testEndpoint5() throws MinioException {
     new MinioClient("minio..example.com");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidEndpointException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testEndpoint6() throws MinioException {
     new MinioClient("minio._.com");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidPortException.class)
-  public void testPort1() throws MinioException {
-    new MinioClient("play.min.io", -1, "", "", false);
+  @Test(expected = IllegalArgumentException.class)
+  public void testEndpoint7() throws MinioException {
+    new MinioClient("https://s3.amazonaws.com.cn");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidPortException.class)
+  @Test(expected = IllegalArgumentException.class)
+  public void testPort1() throws MinioException {
+    new MinioClient("play.min.io", 0, "", "", false);
+    Assert.fail("exception should be thrown");
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void testPort2() throws MinioException {
     new MinioClient("play.min.io", 70000, "", "", false);
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test
+  public void testAwsEndpoints()
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
+    MinioClient client = null;
+    String url = null;
+
+    // virtual-style checks.
+    client = new MinioClient("https://s3.amazonaws.com");
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3.us-east-1.amazonaws.com/myobject", url);
+
+    client = new MinioClient("https://s3.us-east-2.amazonaws.com", "myaccesskey", "mysecretkey");
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3.us-east-2.amazonaws.com/myobject", url);
+
+    client = new MinioClient("https://s3-accelerate.amazonaws.com");
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3-accelerate.amazonaws.com/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3.dualstack.ca-central-1.amazonaws.com", "myaccesskey", "mysecretkey");
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3.dualstack.ca-central-1.amazonaws.com/myobject", url);
+
+    client = new MinioClient("https://s3-accelerate.dualstack.amazonaws.com");
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3-accelerate.dualstack.amazonaws.com/myobject", url);
+
+    // path-style checks.
+    client = new MinioClient("https://s3.amazonaws.com");
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3.us-east-1.amazonaws.com/mybucket/myobject", url);
+
+    client = new MinioClient("https://s3.us-east-2.amazonaws.com", "myaccesskey", "mysecretkey");
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3.us-east-2.amazonaws.com/mybucket/myobject", url);
+
+    client = new MinioClient("https://s3-accelerate.amazonaws.com");
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3-accelerate.amazonaws.com/mybucket/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3.dualstack.ca-central-1.amazonaws.com", "myaccesskey", "mysecretkey");
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3.dualstack.ca-central-1.amazonaws.com/mybucket/myobject", url);
+
+    client = new MinioClient("https://s3-accelerate.dualstack.amazonaws.com");
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3-accelerate.dualstack.amazonaws.com/mybucket/myobject", url);
+
+    // China region.
+    // virtual-style checks.
+    client =
+        new MinioClient("https://s3.cn-north-1.amazonaws.com.cn", "myaccesskey", "mysecretkey");
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3.cn-north-1.amazonaws.com.cn/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3-accelerate.amazonaws.com.cn", null, null, null, "cn-north-1", null, null);
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3-accelerate.amazonaws.com.cn/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3.dualstack.cn-northwest-1.amazonaws.com.cn", "myaccesskey", "mysecretkey");
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals(
+        "https://mybucket.s3.dualstack.cn-northwest-1.amazonaws.com.cn/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3-accelerate.dualstack.amazonaws.com.cn",
+            null,
+            null,
+            null,
+            "cn-north-1",
+            null,
+            null);
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://mybucket.s3-accelerate.dualstack.amazonaws.com.cn/myobject", url);
+
+    // path-style checks.
+    client =
+        new MinioClient("https://s3.cn-north-1.amazonaws.com.cn", "myaccesskey", "mysecretkey");
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3.cn-north-1.amazonaws.com.cn/mybucket/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3-accelerate.amazonaws.com.cn", null, null, null, "cn-north-1", null, null);
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3-accelerate.amazonaws.com.cn/mybucket/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3.dualstack.cn-northwest-1.amazonaws.com.cn", "myaccesskey", "mysecretkey");
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals(
+        "https://s3.dualstack.cn-northwest-1.amazonaws.com.cn/mybucket/myobject", url);
+
+    client =
+        new MinioClient(
+            "https://s3-accelerate.dualstack.amazonaws.com.cn",
+            null,
+            null,
+            null,
+            "cn-north-1",
+            null,
+            null);
+    client.disableVirtualStyleEndpoint();
+    url = client.getObjectUrl("mybucket", "myobject");
+    Assert.assertEquals("https://s3-accelerate.dualstack.amazonaws.com.cn/mybucket/myobject", url);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
@@ -103,7 +232,7 @@ public class MinioClientTest {
   public void testBucketName2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl(null, "myobject");
+    client.getObjectUrl("", "myobject");
     Assert.fail("exception should be thrown");
   }
 
@@ -111,20 +240,12 @@ public class MinioClientTest {
   public void testBucketName3()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("", "myobject");
-    Assert.fail("exception should be thrown");
-  }
-
-  @Test(expected = InvalidBucketNameException.class)
-  public void testBucketName4()
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = new MinioClient("https://play.min.io:9000");
     client.getObjectUrl("a", "myobject");
     Assert.fail("exception should be thrown");
   }
 
   @Test(expected = InvalidBucketNameException.class)
-  public void testBucketName5()
+  public void testBucketName4()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
     client.getObjectUrl(
@@ -133,7 +254,7 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidBucketNameException.class)
-  public void testBucketName6()
+  public void testBucketName5()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
     client.getObjectUrl("a..b", "myobject");
@@ -141,7 +262,7 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidBucketNameException.class)
-  public void testBucketName7()
+  public void testBucketName6()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
     client.getObjectUrl("a_b", "myobject");
@@ -149,7 +270,7 @@ public class MinioClientTest {
   }
 
   @Test(expected = InvalidBucketNameException.class)
-  public void testBucketName8()
+  public void testBucketName7()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
     client.getObjectUrl("a#b", "myobject");

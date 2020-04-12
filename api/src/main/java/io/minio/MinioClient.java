@@ -40,7 +40,6 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.RegionConflictException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
-import io.minio.http.Scheme;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CopyObjectResult;
@@ -161,8 +160,8 @@ import okhttp3.ResponseBody;
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class MinioClient {
   private static final byte[] EMPTY_BODY = new byte[] {};
-  // default network I/O timeout is 15 minutes
-  private static final long DEFAULT_CONNECTION_TIMEOUT = 15 * 60;
+  // default network I/O timeout is 5 minutes
+  private static final long DEFAULT_CONNECTION_TIMEOUT = 5;
   // maximum allowed bucket policy size is 12KiB
   private static final int MAX_BUCKET_POLICY_SIZE = 12 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
@@ -174,8 +173,6 @@ public class MinioClient {
           + System.getProperty("os.arch")
           + ") minio-java/"
           + MinioProperties.INSTANCE.getVersion();
-  private static final String NULL_STRING = "(null)";
-  private static final String S3_AMAZONAWS_COM = "s3.amazonaws.com";
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String US_EAST_1 = "us-east-1";
   private static final String UPLOAD_ID = "uploadId";
@@ -220,6 +217,11 @@ public class MinioClient {
 
   private OkHttpClient httpClient;
 
+  private boolean isAwsHost = false;
+  private boolean isAcceleratedHost = false;
+  private boolean isDualStackHost = false;
+  private boolean useVirtualStyle = false;
+
   /**
    * Creates MinIO client object with given endpoint using anonymous access.
    *
@@ -240,8 +242,7 @@ public class MinioClient {
    *             * 192.168.1.60
    *             * ::1</pre>
    *
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
@@ -252,11 +253,11 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
-  public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, null, null);
+  public MinioClient(String endpoint) throws IllegalArgumentException {
+    this(endpoint, null, null, null, null, null, null);
   }
 
   /**
@@ -267,8 +268,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param url Endpoint as {@link URL} object.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
@@ -279,11 +279,11 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(URL url) throws InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null);
+    this(url.toString(), null, null, null, null, null, null);
   }
 
   /**
@@ -294,8 +294,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param url Endpoint as {@link HttpUrl} object.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -307,11 +306,11 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
-  public MinioClient(HttpUrl url) throws InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, null, null);
+  public MinioClient(HttpUrl url) throws IllegalArgumentException {
+    this(url.toString(), null, null, null, null, null, null);
   }
 
   /**
@@ -337,8 +336,7 @@ public class MinioClient {
    *
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
@@ -350,12 +348,12 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey)
-      throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, accessKey, secretKey);
+      throws IllegalArgumentException {
+    this(endpoint, null, accessKey, secretKey, null, null, null);
   }
 
   /**
@@ -382,8 +380,7 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param region Region name of buckets in S3 service.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(URL url, String accessKey, String secretKey)
@@ -395,18 +392,12 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey, String region)
-      throws InvalidEndpointException, InvalidPortException {
-    this(
-        endpoint,
-        0,
-        accessKey,
-        secretKey,
-        region,
-        !(endpoint != null && endpoint.startsWith("http://")));
+      throws IllegalArgumentException {
+    this(endpoint, null, accessKey, secretKey, region, null, null);
   }
 
   /**
@@ -418,8 +409,7 @@ public class MinioClient {
    * @param url Endpoint as {@link URL} object.
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -430,12 +420,11 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
-  public MinioClient(URL url, String accessKey, String secretKey)
-      throws InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey);
+  public MinioClient(URL url, String accessKey, String secretKey) throws IllegalArgumentException {
+    this(url.toString(), null, accessKey, secretKey, null, null, null);
   }
 
   /**
@@ -449,8 +438,7 @@ public class MinioClient {
    * @param url Endpoint as {@link HttpUrl} object.
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -462,12 +450,12 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
-      throws InvalidEndpointException, InvalidPortException {
-    this(url.toString(), 0, accessKey, secretKey);
+      throws IllegalArgumentException {
+    this(url.toString(), null, accessKey, secretKey, null, null, null);
   }
 
   /**
@@ -494,8 +482,7 @@ public class MinioClient {
    * @param port TCP/IP port number between 1 and 65535. Unused if endpoint is an URL.
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -506,17 +493,12 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
-      throws InvalidEndpointException, InvalidPortException {
-    this(
-        endpoint,
-        port,
-        accessKey,
-        secretKey,
-        !(endpoint != null && endpoint.startsWith("http://")));
+      throws IllegalArgumentException {
+    this(endpoint, port, accessKey, secretKey, null, null, null);
   }
 
   /**
@@ -544,8 +526,7 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -556,12 +537,12 @@ public class MinioClient {
    *     secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-      throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, 0, accessKey, secretKey, secure);
+      throws IllegalArgumentException {
+    this(endpoint, null, accessKey, secretKey, null, secure, null);
   }
 
   /**
@@ -590,8 +571,7 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -601,12 +581,12 @@ public class MinioClient {
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
    *     boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
-      throws InvalidEndpointException, InvalidPortException {
-    this(endpoint, port, accessKey, secretKey, null, secure);
+      throws IllegalArgumentException {
+    this(endpoint, port, accessKey, secretKey, null, secure, null);
   }
 
   /**
@@ -636,8 +616,7 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param region Region name of buckets in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -645,12 +624,12 @@ public class MinioClient {
    * @see #MinioClient(URL url, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure, OkHttpClient httpClient)
+   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
+   *     region, Boolean secure, OkHttpClient httpClient)
    */
   public MinioClient(
       String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
-      throws InvalidEndpointException, InvalidPortException {
+      throws IllegalArgumentException {
     this(endpoint, port, accessKey, secretKey, region, secure, null);
   }
 
@@ -677,14 +656,14 @@ public class MinioClient {
    *             * 192.168.1.60
    *             * ::1</pre>
    *
-   * @param port TCP/IP port number between 1 and 65535. Unused if endpoint is an URL.
+   * @param port TCP/IP port number between 1 and 65535. Overrides if it is non-null.
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param region Region name of buckets in S3 service.
-   * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
+   * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not. Overrides
+   *     if it is non-null.
    * @param httpClient Customized HTTP client object.
-   * @throws InvalidEndpointException thrown to indicate invalid endpoint passed.
-   * @throws InvalidPortException thrown to indicate invalid port passed.
+   * @throws IllegalArgumentException Throws to indicate invalid argument passed.
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -697,34 +676,100 @@ public class MinioClient {
    */
   public MinioClient(
       String endpoint,
-      int port,
+      Integer port,
       String accessKey,
       String secretKey,
       String region,
-      boolean secure,
+      Boolean secure,
       OkHttpClient httpClient)
-      throws InvalidEndpointException, InvalidPortException {
+      throws IllegalArgumentException {
     if (endpoint == null) {
-      throw new InvalidEndpointException(NULL_STRING, "null endpoint");
+      throw new IllegalArgumentException("null endpoint");
     }
 
-    if (port < 0 || port > 65535) {
-      throw new InvalidPortException(port, "port must be in range of 1 to 65535");
+    if (region != null && region.equals("")) {
+      region = null;
     }
 
-    if (httpClient != null) {
-      this.httpClient = httpClient;
+    HttpUrl.Builder urlBuilder = null;
+    HttpUrl url = HttpUrl.parse(endpoint);
+    if (url != null) {
+      if (!"/".equals(url.encodedPath())) {
+        throw new IllegalArgumentException("no path allowed in endpoint '" + endpoint + "'");
+      }
+
+      urlBuilder = url.newBuilder();
     } else {
-      List<Protocol> protocol = new LinkedList<>();
-      protocol.add(Protocol.HTTP_1_1);
-      this.httpClient = new OkHttpClient();
+      // endpoint may be a valid hostname, IPv4 or IPv6 address
+      if (!isValidEndpoint(endpoint)) {
+        throw new IllegalArgumentException("invalid host '" + endpoint + "'");
+      }
+
+      urlBuilder = new HttpUrl.Builder().host(endpoint);
+
+      if (secure == null) {
+        secure = Boolean.TRUE;
+      }
+    }
+
+    if (secure != null) {
+      if (secure) {
+        urlBuilder.scheme("https");
+      } else {
+        urlBuilder.scheme("http");
+      }
+    }
+
+    if (port != null) {
+      if (port < 1 || port > 65535) {
+        throw new IllegalArgumentException("port " + port + " must be in range of 1 to 65535");
+      }
+
+      urlBuilder.port(port);
+    }
+
+    url = urlBuilder.build();
+
+    String host = url.host();
+    this.isAwsHost = isAwsEndpoint(host);
+    boolean isAwsChinaHost = false;
+    if (this.isAwsHost) {
+      isAwsChinaHost = host.endsWith(".cn");
+      if (isAwsChinaHost) {
+        urlBuilder.host("amazonaws.com.cn");
+      } else {
+        urlBuilder.host("amazonaws.com");
+      }
+      url = urlBuilder.build();
+
+      this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
+      this.isDualStackHost = isAwsDualStackEndpoint(host);
+      if (region == null) {
+        region = extractRegion(host);
+      }
+      this.useVirtualStyle = true;
+    } else {
+      this.useVirtualStyle = host.endsWith("aliyuncs.com");
+    }
+
+    if (isAwsChinaHost && region == null) {
+      throw new IllegalArgumentException(
+          "Region missing in Amazon S3 China endpoint '" + endpoint + "'");
+    }
+
+    this.region = region;
+    this.baseUrl = url;
+    this.accessKey = accessKey;
+    this.secretKey = secretKey;
+
+    if (httpClient == null) {
       this.httpClient =
-          this.httpClient
+          new OkHttpClient()
               .newBuilder()
-              .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
-              .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
-              .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
-              .protocols(protocol)
+              .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+              .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+              .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+              .protocols(Arrays.asList(Protocol.HTTP_1_1))
               .build();
       String filename = System.getenv("SSL_CERT_FILE");
       if (filename != null && !filename.equals("")) {
@@ -734,60 +779,58 @@ public class MinioClient {
           throw new RuntimeException(e);
         }
       }
-    }
-
-    HttpUrl url = HttpUrl.parse(endpoint);
-    if (url != null) {
-      if (!"/".equals(url.encodedPath())) {
-        throw new InvalidEndpointException(endpoint, "no path allowed in endpoint");
-      }
-
-      HttpUrl.Builder urlBuilder = url.newBuilder();
-      Scheme scheme = Scheme.HTTP;
-      if (secure) {
-        scheme = Scheme.HTTPS;
-      }
-
-      urlBuilder.scheme(scheme.toString());
-
-      if (port > 0) {
-        urlBuilder.port(port);
-      }
-
-      this.baseUrl = urlBuilder.build();
-      this.accessKey = accessKey;
-      this.secretKey = secretKey;
-      this.region = region;
-
-      return;
-    }
-
-    // endpoint may be a valid hostname, IPv4 or IPv6 address
-    if (!this.isValidEndpoint(endpoint)) {
-      throw new InvalidEndpointException(endpoint, "invalid host");
-    }
-
-    Scheme scheme = Scheme.HTTP;
-    if (secure) {
-      scheme = Scheme.HTTPS;
-    }
-
-    if (port == 0) {
-      this.baseUrl = new HttpUrl.Builder().scheme(scheme.toString()).host(endpoint).build();
     } else {
-      this.baseUrl =
-          new HttpUrl.Builder().scheme(scheme.toString()).host(endpoint).port(port).build();
+      this.httpClient = httpClient;
     }
-    this.accessKey = accessKey;
-    this.secretKey = secretKey;
-    this.region = region;
+  }
+
+  private boolean isAwsEndpoint(String endpoint) {
+    return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
+        && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
+  }
+
+  private boolean isAwsAccelerateEndpoint(String endpoint) {
+    return endpoint.startsWith("s3-accelerate.");
+  }
+
+  private boolean isAwsDualStackEndpoint(String endpoint) {
+    return endpoint.contains(".dualstack.");
+  }
+
+  /**
+   * Extracts region from AWS endpoint if available. Region is placed at second token normal
+   * endpoints and third token for dualstack endpoints.
+   *
+   * <p>Region is marked in square brackets in below examples.
+   * <pre>
+   * https://s3.[us-east-2].amazonaws.com
+   * https://s3.dualstack.[ca-central-1].amazonaws.com
+   * https://s3.[cn-north-1].amazonaws.com.cn
+   * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
+   */
+  private String extractRegion(String endpoint) {
+    String[] tokens = endpoint.split("\\.");
+    String token = tokens[1];
+
+    // If token is "dualstack", then region might be in next token.
+    if (token.equals("dualstack")) {
+      token = tokens[2];
+    }
+
+    // If token is equal to "amazonaws", region is not passed in the endpoint.
+    if (token.equals("amazonaws")) {
+      return null;
+    }
+
+    // Return token as region.
+    return token;
   }
 
   /**
    * copied logic from
    * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
    */
-  private static OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
+  private OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
       throws GeneralSecurityException, IOException {
     Collection<? extends Certificate> certificates = null;
     FileInputStream fis = null;
@@ -867,7 +910,7 @@ public class MinioClient {
   /** Validates if given bucket name is DNS compatible. */
   private void checkBucketName(String name) throws InvalidBucketNameException {
     if (name == null) {
-      throw new InvalidBucketNameException(NULL_STRING, "null bucket name");
+      throw new InvalidBucketNameException("(null)", "null bucket name");
     }
 
     // Bucket names cannot be no less than 3 and no more than 63 characters long.
@@ -947,55 +990,77 @@ public class MinioClient {
       Multimap<String, String> queryParamMap)
       throws IllegalArgumentException, InvalidBucketNameException, NoSuchAlgorithmException {
     if (bucketName == null && objectName != null) {
-      throw new InvalidBucketNameException(
-          NULL_STRING, "null bucket name for object '" + objectName + "'");
+      throw new IllegalArgumentException("null bucket name for object '" + objectName + "'");
     }
 
     HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
+    String host = this.baseUrl.host();
     if (bucketName != null) {
       checkBucketName(bucketName);
 
-      String host = this.baseUrl.host();
-      if (host.equals(S3_AMAZONAWS_COM)) {
-        // special case: handle s3.amazonaws.com separately
-        if (region != null) {
-          host = AwsS3Endpoints.INSTANCE.endpoint(region);
+      boolean enforcePathStyle = false;
+      if (method == Method.PUT && objectName == null && queryParamMap == null) {
+        // use path style for make bucket to workaround "AuthorizationHeaderMalformed" error from
+        // s3.amazonaws.com
+        enforcePathStyle = true;
+      } else if (queryParamMap != null && queryParamMap.containsKey("location")) {
+        // use path style for location query
+        enforcePathStyle = true;
+      } else if (bucketName.contains(".") && this.baseUrl.isHttps()) {
+        // use path style where '.' in bucketName causes SSL certificate validation error
+        enforcePathStyle = true;
+      }
+
+      if (isAwsHost) {
+        String s3Domain = "s3.";
+        if (isAcceleratedHost) {
+          if (bucketName.contains(".")) {
+            throw new IllegalArgumentException(
+                "bucket name '"
+                    + bucketName
+                    + "' with '.' is not allowed for accelerated endpoint");
+          }
+
+          if (!enforcePathStyle) {
+            s3Domain = "s3-accelerate.";
+          }
         }
 
-        boolean usePathStyle = false;
-        if (method == Method.PUT && objectName == null && queryParamMap == null) {
-          // use path style for make bucket to workaround "AuthorizationHeaderMalformed" error from
-          // s3.amazonaws.com
-          usePathStyle = true;
-        } else if (queryParamMap != null && queryParamMap.containsKey("location")) {
-          // use path style for location query
-          usePathStyle = true;
-        } else if (bucketName.contains(".") && this.baseUrl.isHttps()) {
-          // use path style where '.' in bucketName causes SSL certificate validation error
-          usePathStyle = true;
+        String dualStack = "";
+        if (isDualStackHost) {
+          dualStack = "dualstack.";
         }
 
-        if (usePathStyle) {
-          urlBuilder.host(host);
-          urlBuilder.addEncodedPathSegment(S3Escaper.encode(bucketName));
-        } else {
-          urlBuilder.host(bucketName + "." + host);
+        String endpoint = s3Domain + dualStack;
+        if (enforcePathStyle || !isAcceleratedHost) {
+          endpoint += region + ".";
         }
-      } else {
+
+        host = endpoint + host;
+      }
+
+      if (enforcePathStyle || !useVirtualStyle) {
+        urlBuilder.host(host);
         urlBuilder.addEncodedPathSegment(S3Escaper.encode(bucketName));
+      } else {
+        urlBuilder.host(bucketName + "." + host);
       }
-    }
 
-    if (objectName != null) {
-      // Limitation: OkHttp does not allow to add '.' and '..' as path segment.
-      for (String token : objectName.split("/")) {
-        if (token.equals(".") || token.equals("..")) {
-          throw new IllegalArgumentException(
-              "object name with '.' or '..' path segment is not supported");
+      if (objectName != null) {
+        // Limitation: OkHttp does not allow to add '.' and '..' as path segment.
+        for (String token : objectName.split("/")) {
+          if (token.equals(".") || token.equals("..")) {
+            throw new IllegalArgumentException(
+                "object name with '.' or '..' path segment is not supported");
+          }
         }
-      }
 
-      urlBuilder.addEncodedPathSegments(S3Escaper.encodePath(objectName));
+        urlBuilder.addEncodedPathSegments(S3Escaper.encodePath(objectName));
+      }
+    } else {
+      if (isAwsHost) {
+        urlBuilder.host("s3." + region + "." + host);
+      }
     }
 
     if (queryParamMap != null) {
@@ -1234,7 +1299,8 @@ public class MinioClient {
           if (method.equals(Method.HEAD)
               && bucketName != null
               && objectName == null
-              && BucketRegionCache.INSTANCE.exists(bucketName)) {
+              && isAwsHost
+              && AwsRegionCache.INSTANCE.get(bucketName) != null) {
             ec = ErrorCode.RETRY_HEAD_BUCKET;
           } else {
             ec = ErrorCode.INVALID_URI;
@@ -1284,7 +1350,10 @@ public class MinioClient {
     // invalidate region cache if needed
     if (errorResponse.errorCode() == ErrorCode.NO_SUCH_BUCKET
         || errorResponse.errorCode() == ErrorCode.RETRY_HEAD_BUCKET) {
-      BucketRegionCache.INSTANCE.remove(bucketName);
+      if (isAwsHost) {
+        AwsRegionCache.INSTANCE.remove(bucketName);
+      }
+
       // TODO: handle for other cases as well
     }
 
@@ -1317,50 +1386,43 @@ public class MinioClient {
         method, bucketName, objectName, region, headerMultiMap, queryParamMultiMap, body, length);
   }
 
-  /** Updates Region cache for given bucket. */
-  private void updateRegionCache(String bucketName)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (bucketName != null
-        && this.accessKey != null
-        && this.secretKey != null
-        && !BucketRegionCache.INSTANCE.exists(bucketName)) {
-      Map<String, String> queryParamMap = new HashMap<>();
-      queryParamMap.put("location", null);
-
-      Response response =
-          execute(Method.GET, bucketName, null, US_EAST_1, null, queryParamMap, null, 0);
-
-      String region;
-      try (ResponseBody body = response.body()) {
-        LocationConstraint lc = Xml.unmarshal(LocationConstraint.class, body.charStream());
-        if (lc.location() == null || lc.location().equals("")) {
-          region = US_EAST_1; // default region
-        } else if (lc.location().equals("EU")) {
-          region = "eu-west-1"; // eu-west-1 can be sometimes 'EU'.
-        } else {
-          region = lc.location();
-        }
-      }
-
-      // Add the new location.
-      BucketRegionCache.INSTANCE.set(bucketName, region);
-    }
-  }
-
   /** Returns region of given bucket either from region cache or set in constructor. */
   private String getRegion(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    String region;
-    if (this.region == null || "".equals(this.region)) {
-      updateRegionCache(bucketName);
-      region = BucketRegionCache.INSTANCE.region(bucketName);
-    } else {
-      region = this.region;
+    if (this.region != null && !this.region.equals("")) {
+      return this.region;
     }
+
+    if (!isAwsHost || bucketName == null || this.accessKey == null) {
+      return US_EAST_1;
+    }
+
+    String region = AwsRegionCache.INSTANCE.get(bucketName);
+    if (region != null) {
+      return region;
+    }
+
+    // Execute GetBucketLocation REST API to get region of the bucket.
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("location", null);
+
+    Response response =
+        execute(Method.GET, bucketName, null, US_EAST_1, null, queryParamMap, null, 0);
+
+    try (ResponseBody body = response.body()) {
+      LocationConstraint lc = Xml.unmarshal(LocationConstraint.class, body.charStream());
+      if (lc.location() == null || lc.location().equals("")) {
+        region = US_EAST_1;
+      } else if (lc.location().equals("EU")) {
+        region = "eu-west-1"; // eu-west-1 is also referred as 'EU'.
+      } else {
+        region = lc.location();
+      }
+    }
+
+    AwsRegionCache.INSTANCE.set(bucketName, region);
     return region;
   }
 
@@ -3445,7 +3507,10 @@ public class MinioClient {
     }
 
     Response response = executePut(args.bucket(), null, region, headerMap, null, config, 0);
-    response.body().close();
+    if (isAwsHost) {
+      AwsRegionCache.INSTANCE.set(args.bucket(), region);
+    }
+    response.close();
   }
 
   /**
@@ -5143,6 +5208,36 @@ public class MinioClient {
    */
   public void traceOff() throws IOException {
     this.traceStream = null;
+  }
+
+  /** Enables accelerate endpoint for Amazon S3 endpoint. */
+  public void enableAccelerateEndpoint() {
+    this.isAcceleratedHost = true;
+  }
+
+  /** Disables accelerate endpoint for Amazon S3 endpoint. */
+  public void disableAccelerateEndpoint() {
+    this.isAcceleratedHost = false;
+  }
+
+  /** Enables dual-stack endpoint for Amazon S3 endpoint. */
+  public void enableDualStackEndpoint() {
+    this.isDualStackHost = true;
+  }
+
+  /** Disables dual-stack endpoint for Amazon S3 endpoint. */
+  public void disableDualStackEndpoint() {
+    this.isDualStackHost = false;
+  }
+
+  /** Enables virtual-style endpoint. */
+  public void enableVirtualStyleEndpoint() {
+    this.useVirtualStyle = true;
+  }
+
+  /** Disables virtual-style endpoint. */
+  public void disableVirtualStyleEndpoint() {
+    this.useVirtualStyle = false;
   }
 
   private static class NotificationResultRecords {

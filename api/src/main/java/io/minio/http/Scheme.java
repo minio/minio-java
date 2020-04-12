@@ -17,6 +17,7 @@
 package io.minio.http;
 
 /** HTTP schemes. */
+@Deprecated
 public enum Scheme {
   HTTP("http"),
   HTTPS("https");

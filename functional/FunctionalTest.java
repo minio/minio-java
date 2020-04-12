@@ -4343,9 +4343,9 @@ public class FunctionalTest {
       composeObject_test6();
     }
 
-    // SSE_S3 and SSE_KMS only work with endpoint="s3.amazonaws.com"
+    // SSE_S3 and SSE_KMS only work with Amazon AWS endpoint.
     String requestUrl = endpoint;
-    if (requestUrl.equals("s3.amazonaws.com")) {
+    if (requestUrl.contains(".amazonaws.com")) {
       putObject_test14();
       putObject_test15();
       copyObject_test11();
