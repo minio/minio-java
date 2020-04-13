@@ -4964,9 +4964,9 @@ public class MinioClient {
           try {
             records = mapper.readValue(recordsString, NotificationRecords.class);
             return new Result<>(records);
-          } catch (JsonParseException e) {
-            return new Result<>(e);
           } catch (JsonMappingException e) {
+            return new Result<>(e);
+          } catch (JsonParseException e) {
             return new Result<>(e);
           } catch (IOException e) {
             return new Result<>(e);

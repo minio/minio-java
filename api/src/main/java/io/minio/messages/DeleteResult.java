@@ -37,7 +37,6 @@ public class DeleteResult {
   @ElementList(name = "Error", inline = true, required = false)
   private List<DeleteError> errorList;
 
-  /** Constructs new delete result by parsing content on given reader. */
   public DeleteResult() {}
 
   /** Constructs new delete result with an error. */
