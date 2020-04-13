@@ -117,6 +117,9 @@ public enum ErrorCode {
   NO_LOGGING_STATUS_FOR_KEY(
       "NoLoggingStatusForKey", "There is no such thing as a logging status subresource for a key"),
   NO_SUCH_BUCKET("NoSuchBucket", "Bucket does not exist"),
+  NO_SERVER_SIDE_ENCRYPTION_CONFIGURATION(
+      "ServerSideEncryptionConfigurationNotFoundError",
+      "The server side encryption configuration was not found"),
   NO_SUCH_KEY("NoSuchKey", "Object does not exist"),
   NO_SUCH_LIFECYCLE_CONFIGURATION(
       "NoSuchLifecycleConfiguration", "The lifecycle configuration does not exist"),

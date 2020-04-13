@@ -104,6 +104,9 @@ The full API Reference is available here.
 * [`removeBucket`](https://docs.min.io/docs/java-client-api-reference#removeBucket)
 * [`listObjects`](https://docs.min.io/docs/java-client-api-reference#listObjects)
 * [`listIncompleteUploads`](https://docs.min.io/docs/java-client-api-reference#listIncompleteUploads)
+* [`setBucketEncryption`](https://docs.min.io/docs/java-client-api-reference#setBucketEncryption)
+* [`getBucketEncryption`](https://docs.min.io/docs/java-client-api-reference#getBucketEncryption)
+* [`deleteBucketEncryption`](https://docs.min.io/docs/java-client-api-reference#deleteBucketEncryption)
 
 ### API Reference: Object Operations
 * [`getObject`](https://docs.min.io/docs/java-client-api-reference#getObject)

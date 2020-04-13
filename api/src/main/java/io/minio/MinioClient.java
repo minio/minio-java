@@ -68,6 +68,7 @@ import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Retention;
 import io.minio.messages.SelectObjectContentRequest;
+import io.minio.messages.ServerSideEncryptionConfiguration;
 import io.minio.messages.Upload;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
@@ -116,6 +117,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * Simple Storage Service (aka S3) client to perform bucket and object operations.
@@ -3527,6 +3529,75 @@ public class MinioClient {
     try (ResponseBody body = response.body()) {
       return Xml.unmarshal(Retention.class, body.charStream());
     }
+  }
+
+  /**
+   * Fetches bucket encryption configuration. <b>Example:</b><br>
+   *
+   * <pre>{@code
+   * ServerSideEncryptionConfiguration sseConfiguration = minioClient.getBucketEncryption("my-bucketname");
+   * System.out.println("Bucket Encryption" + sseConfiguration);
+   * }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @throws InvalidBucketNameException upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
+   *     calculation
+   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
+   *     even before reading given length
+   * @throws IOException upon connection error
+   * @throws InvalidKeyException upon an invalid access key or secret key
+   * @throws XmlPullParserException upon parsing response xml
+   * @throws ErrorResponseException upon unsuccessful execution
+   * @throws InternalException upon internal library error
+   * @throws InvalidResponseException upon a non-xml response from server
+   */
+  public ServerSideEncryptionConfiguration getBucketEncryption(String bucketName)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+          IOException, InvalidKeyException, ErrorResponseException, InternalException,
+          InvalidResponseException, XmlParserException, XmlPullParserException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("encryption", "");
+
+    Response response = executeGet(bucketName, null, null, queryParamMap);
+
+    try (ResponseBody body = response.body()) {
+      return Xml.unmarshal(ServerSideEncryptionConfiguration.class, body.charStream());
+    }
+  }
+
+  /**
+   * Fetches bucket encryption configuration. <b>Example:</b><br>
+   *
+   * <pre>{@code
+   *  minioClient.deleteBucketEncryption("my-bucketname");
+   * System.out.println("Bucket Encryption " + serverSideEncryptionConfiguration);
+   * }</pre>
+   *
+   * @param bucketName Bucket name.
+   * @throws InvalidBucketNameException upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException upon requested algorithm was not found during signature
+   *     calculation
+   * @throws InsufficientDataException upon getting EOFException while reading given InputStream
+   *     even before reading given length
+   * @throws IOException upon connection error
+   * @throws InvalidKeyException upon an invalid access key or secret key
+   * @throws XmlPullParserException upon parsing response xml
+   * @throws ErrorResponseException upon unsuccessful execution
+   * @throws InternalException upon internal library error
+   * @throws InvalidResponseException upon a non-xml response from server
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketEncryption(String bucketName)
+      throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
+          IOException, InvalidKeyException, ErrorResponseException, InternalException,
+          InvalidResponseException, XmlParserException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("encryption", "");
+
+    executeDelete(bucketName, null, queryParamMap);
   }
 
   /**
