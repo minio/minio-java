@@ -148,6 +148,9 @@ public enum ErrorCode {
   REQUEST_TORRENT_OF_BUCKET_ERROR(
       "RequestTorrentOfBucketError", "Requesting the torrent file of a bucket is not permitted"),
   SIGNATURE_DOES_NOT_MATCH("SignatureDoesNotMatch", "The request signature does not match"),
+  SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR(
+      "ServerSideEncryptionConfigurationNotFoundError",
+      "The server side encryption configuration was not found"),
   SERVICE_UNAVAILABLE("ServiceUnavailable", "Service unavailable.  Retry again"),
   SLOW_DOWN("SlowDown", "Reduce request rate"),
   TEMPORARY_REDIRECT("TemporaryRedirect", "Temporary redirect due to DNS updates in progress"),
