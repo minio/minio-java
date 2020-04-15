@@ -25,6 +25,8 @@ public class RetentionDurationDays implements RetentionDuration {
   @Text(required = false)
   private Integer days;
 
+  public RetentionDurationDays() {}
+
   public RetentionDurationDays(int days) {
     this.days = Integer.valueOf(days);
   }

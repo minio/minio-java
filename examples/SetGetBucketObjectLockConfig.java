@@ -56,7 +56,8 @@ public class SetGetBucketObjectLockConfig {
 
       System.out.println("Default retention configuration of bucket");
       System.out.println("Mode: " + bucketConfig.mode());
-      System.out.println("Duration: " + bucketConfig.duration());
+      System.out.println(
+          "Duration: " + bucketConfig.duration().duration() + " " + bucketConfig.duration().unit());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

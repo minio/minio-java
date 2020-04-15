@@ -3284,6 +3284,196 @@ public class FunctionalTest {
     }
   }
 
+  /**
+   * Test: enableObjectLegalHold(String bucketName, String objectName, String versionId)
+   * disableObjectLegalHold(String bucketName, String objectName, String versionId)
+   */
+  public static void enableDisableObjectLegalHold_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: enableObjectLegalHold(String bucketName, String objectName, String versionId)");
+      System.out.println(
+          "Test: disableObjectLegalHold(String bucketName, String objectName, String versionId)");
+    }
+    long startTime = System.currentTimeMillis();
+    String bucketNameLegalHold = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(bucketNameLegalHold, null, true);
+      StringBuilder builder = new StringBuilder();
+      for (int i = 0; i < 10; i++) {
+        builder.append(
+            "Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
+        builder.append("(29 letters)\n");
+        builder.append(
+            "Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
+        builder.append("---\n");
+      }
+      // Create a InputStream for object upload.
+      ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+      client.putObject(
+          bucketNameLegalHold, objectName, bais, new PutObjectOptions(bais.available(), -1));
+      bais.close();
+
+      // Enable object legal hold.
+      client.enableObjectLegalHold(bucketNameLegalHold, objectName, "");
+
+      if (!client.isObjectLegalHoldEnabled(bucketNameLegalHold, objectName, "")) {
+        System.out.println(
+            "FAILED. expected Object Legal Hold Enabled to be : "
+                + "True"
+                + ", got: "
+                + client.isObjectLegalHoldEnabled(bucketNameLegalHold, objectName, ""));
+      }
+      // Enable object legal hold.
+      client.disableObjectLegalHold(bucketNameLegalHold, objectName, "");
+
+      if (client.isObjectLegalHoldEnabled(bucketNameLegalHold, objectName, "")) {
+        System.out.println(
+            "FAILED. expected Object Legal Hold Enabled to be : "
+                + "False"
+                + ", got: "
+                + client.isObjectLegalHoldEnabled(bucketNameLegalHold, objectName, ""));
+      }
+
+      client.removeObject(bucketNameLegalHold, objectName);
+      client.removeBucket(bucketNameLegalHold);
+      mintSuccessLog(
+          "enableObjectLegalHold(String bucketName, String objectName, String versionId)"
+              + "\n disableObjectLegalHold(String bucketName, String objectName, String versionId)",
+          null,
+          startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog(
+            "enableObjectLegalHold(String bucketName, String objectName, String versionId)"
+                + "\n disableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime);
+      } else {
+        mintFailedLog(
+            "enableObjectLegalHold(String bucketName, String objectName, String versionId)"
+                + "\n disableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /** Test: setDefaultRetention(String bucketName). */
+  public static void setDefaultObjectLock_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: setDefaultRetention(String bucketName)");
+    }
+
+    long startTime = System.currentTimeMillis();
+
+    try {
+
+      String bucketNameWithLock = getRandomName();
+      // Create bucket with object lock functionality enabled
+      client.makeBucket(bucketNameWithLock, null, true);
+      // Declaring config with Retention mode as Compliance and duration as 10 day
+      ObjectLockConfiguration config =
+          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+
+      // Set object lock configuration
+      client.setDefaultRetention(bucketNameWithLock, config);
+      client.removeBucket(bucketNameWithLock);
+      mintSuccessLog("setDefaultRetention (String bucketName)", null, startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("setDefaultRetention (String bucketName)", null, startTime);
+      } else {
+        mintFailedLog(
+            "setDefaultRetention (String bucketName)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /** Test: getDefaultRetention(String bucketName). */
+  public static void getDefaultObjectLock_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getDefaultRetention(String bucketName)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketNameWithLock = getRandomName();
+    try {
+      // Create bucket with object lock functionality enabled
+      client.makeBucket(bucketNameWithLock, null, true);
+      // Declaring config with Retention mode as Compliance and duration as 10 day
+      ObjectLockConfiguration config =
+          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+      // Set object lock configuration
+      client.setDefaultRetention(bucketNameWithLock, config);
+      // Get object lock configuration
+      ObjectLockConfiguration bucketConfig = client.getDefaultRetention(bucketNameWithLock);
+
+      if (!bucketConfig.mode().equals(RetentionMode.COMPLIANCE)) {
+        System.out.println(
+            "FAILED. expected mode : "
+                + RetentionMode.COMPLIANCE
+                + ", got: "
+                + bucketConfig.mode());
+      }
+
+      if (!(bucketConfig.duration().duration() + " " + bucketConfig.duration().unit())
+          .equals("10 DAYS")) {
+        System.out.println(
+            "FAILED. expected duration : "
+                + "10 DAYS"
+                + ", got: "
+                + (bucketConfig.duration().duration() + " " + bucketConfig.duration().unit()));
+      }
+
+      client.removeBucket(bucketNameWithLock);
+
+      mintSuccessLog("getDefaultRetention (String bucketName)", null, startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("getDefaultRetention (String bucketName)", null, startTime);
+      } else {
+        mintFailedLog(
+            "getDefaultRetention (String bucketName)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
   /** Test: getBucketPolicy(String bucketName). */
   public static void getBucketPolicy_test1() throws Exception {
     if (!mintEnv) {
@@ -3851,6 +4041,10 @@ public class FunctionalTest {
     composeObject_test1();
     composeObject_test2();
     composeObject_test3();
+
+    setDefaultObjectLock_test();
+    getDefaultObjectLock_test();
+    enableDisableObjectLegalHold_test();
 
     selectObjectContent_test1();
 
