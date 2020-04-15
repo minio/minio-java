@@ -43,9 +43,7 @@ public class ObjectLockConfiguration {
       throws IllegalArgumentException {
     if (mode != null && duration != null) {
       this.rule = new Rule(mode, duration);
-    }
-
-    if (mode == null || duration == null) {
+    } else if (mode != null || duration != null) {
       throw new IllegalArgumentException("mode or duration is null");
     }
   }
