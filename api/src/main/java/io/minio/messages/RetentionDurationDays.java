@@ -42,6 +42,9 @@ public class RetentionDurationDays implements RetentionDuration {
   /** Returns RetentionDurationDays as string. */
   @Override
   public String toString() {
-    return (days == 1) ? days + " day" : days + " days";
+    if (days == null) {
+      return "";
+    }
+    return days.toString() + ((days == 1) ? " day" : " days");
   }
 }

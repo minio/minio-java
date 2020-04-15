@@ -54,8 +54,9 @@ public class SetGetBucketObjectLockConfig {
       // Get object lock configuration
       ObjectLockConfiguration bucketConfig = s3Client.getDefaultRetention("my-bucketname");
 
-      System.out.print("Default retention configuration of bucket is ");
-      System.out.println(bucketConfig.mode() + " mode for " + bucketConfig.duration().toString());
+      System.out.println("Default retention configuration of bucket");
+      System.out.println("Mode: " + bucketConfig.mode());
+      System.out.println("Duration: " + bucketConfig.duration());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

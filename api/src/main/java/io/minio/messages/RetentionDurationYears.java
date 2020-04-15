@@ -42,6 +42,9 @@ public class RetentionDurationYears implements RetentionDuration {
   /** Returns RetentionDurationYears as string. */
   @Override
   public String toString() {
-    return (years == 1) ? years + " year" : years + " years";
+    if (years == null) {
+      return "";
+    }
+    return years.toString() + ((years == 1) ? " year" : " years");
   }
 }
