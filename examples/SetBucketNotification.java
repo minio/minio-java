@@ -24,12 +24,11 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class SetBucketNotification {
   /** MinioClient.setBucketNotification() example. */
   public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
       /* Local MinIO for test and development. */
       MinioClient minioClient =

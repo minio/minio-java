@@ -19,12 +19,11 @@ import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class SetBucketLifeCycle {
   /** MinioClient.SetBucketLifeCycle() example. */
   public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
       /* Amazon S3: */
       MinioClient minioClient =

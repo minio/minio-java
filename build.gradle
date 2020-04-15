@@ -32,7 +32,7 @@ apply plugin: 'io.codearte.nexus-staging'
 
 allprojects {
     group = 'io.minio'
-    version = '7.0.3'
+    version = '7.1.0'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
@@ -48,7 +48,7 @@ subprojects {
     }
 
     dependencies {
-        compile "org.simpleframework:simple-xml:2.7.1"
+        compile "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
         compile "com.google.guava:guava:25.1-jre"
         compile "com.squareup.okhttp3:okhttp:3.13.1"
         compile "com.squareup.okio:okio:1.17.2"

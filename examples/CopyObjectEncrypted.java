@@ -7,12 +7,11 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.spec.SecretKeySpec;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class CopyObjectEncrypted {
   /** MinioClient.copyObject() example using SSE_C. */
   public static void main(String[] args)
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException {
     try {
       /* play.min.io for test and development. */
       MinioClient minioClient =
