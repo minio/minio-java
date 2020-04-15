@@ -38,4 +38,10 @@ public class RetentionDurationDays implements RetentionDuration {
   public int duration() {
     return days;
   }
+
+  /** Returns RetentionDurationDays as string. */
+  @Override
+  public String toString() {
+    return (days == 1) ? days + " day" : days + " days";
+  }
 }
