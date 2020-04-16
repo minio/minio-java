@@ -156,7 +156,10 @@ public enum ErrorCode {
   USER_KEY_MUST_BE_SPECIFIED(
       "UserKeyMustBeSpecified",
       "The bucket POST must contain the specified field name or check the order of the fields"),
-  X_AMZ_CONTENT_SHA256_MISMATCH("XAmzContentSHA256Mismatch", "content SHA256 mismatch");
+  X_AMZ_CONTENT_SHA256_MISMATCH("XAmzContentSHA256Mismatch", "content SHA256 mismatch"),
+  NO_SUCH_OBJECT_LOCK_CONFIGURATION(
+      "NoSuchObjectLockConfiguration",
+      "The specified object does not have a ObjectLock configuration");
 
   private final String code;
   private final String message;
