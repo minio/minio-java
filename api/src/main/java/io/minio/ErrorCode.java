@@ -126,6 +126,9 @@ public enum ErrorCode {
       "NotImplemented", "A header you provided implies functionality that is not implemented."),
   NOT_SIGNED_UP("NotSignedUp", "Account is not signed up"),
   NO_SUCH_BUCKET_POLICY("NoSuchBucketPolicy", "Bucket does not have a bucket policy"),
+  NO_SUCH_OBJECT_LOCK_CONFIGURATION(
+      "NoSuchObjectLockConfiguration",
+      "The specified object does not have a ObjectLock configuration"),
   OPERATION_ABORTED(
       "OperationAborted",
       "A conflicting conditional operation is currently in progress "
@@ -156,10 +159,7 @@ public enum ErrorCode {
   USER_KEY_MUST_BE_SPECIFIED(
       "UserKeyMustBeSpecified",
       "The bucket POST must contain the specified field name or check the order of the fields"),
-  X_AMZ_CONTENT_SHA256_MISMATCH("XAmzContentSHA256Mismatch", "content SHA256 mismatch"),
-  NO_SUCH_OBJECT_LOCK_CONFIGURATION(
-      "NoSuchObjectLockConfiguration",
-      "The specified object does not have a ObjectLock configuration");
+  X_AMZ_CONTENT_SHA256_MISMATCH("XAmzContentSHA256Mismatch", "content SHA256 mismatch");
 
   private final String code;
   private final String message;

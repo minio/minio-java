@@ -3295,30 +3295,31 @@ public class FunctionalTest {
     String objectName = getRandomName();
     try {
       client.makeBucket(bucketName, null, true);
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
+      try {
+        try (final InputStream is = new ContentInputStream(1 * KB)) {
+          client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
+        }
+        // Enable object legal hold.
+        boolean expectedStatus = true;
+        client.enableObjectLegalHold(bucketName, objectName, null);
+
+        boolean isObjectLockEnabled = client.isObjectLegalHoldEnabled(bucketName, objectName, null);
+        if (!isObjectLockEnabled) {
+          throw new Exception(
+              "[FAILED] Expected: Is Object Legal Hold Enabled to be "
+                  + expectedStatus
+                  + ", Got: "
+                  + isObjectLockEnabled);
+        }
+        client.disableObjectLegalHold(bucketName, objectName, null);
+        mintSuccessLog(
+            "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime);
+      } finally {
+        client.removeObject(bucketName, objectName);
+        client.removeBucket(bucketName);
       }
-
-      // Enable object legal hold.
-      client.enableObjectLegalHold(bucketName, objectName, "");
-
-      if (!client.isObjectLegalHoldEnabled(bucketName, objectName, "")) {
-        System.out.println(
-            "FAILED. expected Object Legal Hold Enabled to be : " + "True" + ", got: False ");
-
-        mintFailedLog(
-            "enableObjectLegalHold",
-            "(String bucketName, String objectName, String versionId)",
-            startTime,
-            "FAILED" + " >>> ",
-            " expected Object Legal Hold Enabled to be : " + "True" + ", got: False");
-      }
-
-      client.disableObjectLegalHold(bucketName, objectName, "");
-      mintSuccessLog(
-          "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
-          null,
-          startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -3341,9 +3342,6 @@ public class FunctionalTest {
             e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
-    } finally {
-      client.removeObject(bucketName, objectName);
-      client.removeBucket(bucketName);
     }
   }
 
@@ -3358,33 +3356,31 @@ public class FunctionalTest {
     String objectName = getRandomName();
     try {
       client.makeBucket(bucketName, null, true);
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      // Enable object legal hold.
-      client.enableObjectLegalHold(bucketName, objectName, "");
-
-      // Enable object legal hold.
-      client.disableObjectLegalHold(bucketName, objectName, "");
-
-      if (client.isObjectLegalHoldEnabled(bucketName, objectName, "")) {
-        if (client.isObjectLegalHoldEnabled(bucketName, objectName, "")) {
-          System.out.println(
-              "FAILED. expected Object Legal Hold Enabled to be : " + "False" + ", got: True");
+      try {
+        try (final InputStream is = new ContentInputStream(1 * KB)) {
+          client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
         }
 
-        mintFailedLog(
-            "disableObjectLegalHold",
-            "(String bucketName, String objectName, String versionId)",
-            startTime,
-            "FAILED" + " >>> ",
-            " expected Object Legal Hold Enabled to be : " + "False" + ", got: True");
-      }
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
+        // Enable object legal hold.
+        client.enableObjectLegalHold(bucketName, objectName, null);
 
+        // Enable object legal hold.
+        boolean expectedStatus = false;
+        client.disableObjectLegalHold(bucketName, objectName, null);
+
+        boolean isObjectLockEnabled = client.isObjectLegalHoldEnabled(bucketName, objectName, null);
+
+        if (isObjectLockEnabled) {
+          throw new Exception(
+              "[FAILED] Expected: Is Object Legal Hold Enabled to be "
+                  + expectedStatus
+                  + ", Got: "
+                  + isObjectLockEnabled);
+        }
+      } finally {
+        client.removeObject(bucketName, objectName);
+        client.removeBucket(bucketName);
+      }
       mintSuccessLog(
           "disableObjectLegalHold(String bucketName, String objectName, String versionId)",
           null,
@@ -3411,9 +3407,6 @@ public class FunctionalTest {
             e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
-    } finally {
-      client.removeObject(bucketName, objectName);
-      client.removeBucket(bucketName);
     }
   }
 
@@ -3429,12 +3422,16 @@ public class FunctionalTest {
     try {
       // Create bucket with object lock functionality enabled
       client.makeBucket(bucketName, null, true);
-      // Declaring config with Retention mode as Compliance and duration as 10 day
-      ObjectLockConfiguration config =
-          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+      try {
+        // Declaring config with Retention mode as Compliance and duration as 10 day
+        ObjectLockConfiguration config =
+            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
 
-      // Set object lock configuration
-      client.setDefaultRetention(bucketName, config);
+        // Set object lock configuration
+        client.setDefaultRetention(bucketName, config);
+      } finally {
+        client.removeBucket(bucketName);
+      }
       mintSuccessLog("setDefaultRetention (String bucketName)", null, startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
@@ -3455,8 +3452,6 @@ public class FunctionalTest {
             e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
-    } finally {
-      client.removeBucket(bucketName);
     }
   }
 
@@ -3471,39 +3466,33 @@ public class FunctionalTest {
     try {
       // Create bucket with object lock functionality enabled
       client.makeBucket(bucketName, null, true);
-      // Declaring config with Retention mode as Compliance and duration as 10 day
-      ObjectLockConfiguration expectedConfig =
-          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-      // Set object lock configuration
-      client.setDefaultRetention(bucketName, expectedConfig);
-      // Get object lock configuration
-      ObjectLockConfiguration config = client.getDefaultRetention(bucketName);
+      try {
+        // Declaring config with Retention mode as Compliance and duration as 10 day
+        ObjectLockConfiguration expectedConfig =
+            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+        // Set object lock configuration
+        client.setDefaultRetention(bucketName, expectedConfig);
+        // Get object lock configuration
+        ObjectLockConfiguration config = client.getDefaultRetention(bucketName);
 
-      if (!(config.duration().unit() == expectedConfig.duration().unit()
-          && config.duration().duration() == expectedConfig.duration().duration())) {
-        System.out.println(
-            "FAILED. expected mode : "
-                + RetentionMode.COMPLIANCE
-                + ", got: "
-                + config.mode()
-                + " expected duration : "
-                + expectedConfig.duration()
-                + ", got: "
-                + config.duration());
+        if (!(config.duration().unit() == expectedConfig.duration().unit()
+            && config.duration().duration() == expectedConfig.duration().duration())) {
+          throw new Exception(
+              "[FAILED] Expected: expected duration : "
+                  + expectedConfig.duration()
+                  + ", got: "
+                  + config.duration());
+        }
 
-        mintFailedLog(
-            "getDefaultRetention",
-            "(String bucketName)",
-            startTime,
-            "FAILED" + " >>> ",
-            "expected mode : "
-                + RetentionMode.COMPLIANCE
-                + ", got: "
-                + config.mode()
-                + " expected duration : "
-                + expectedConfig.duration()
-                + ", got: "
-                + config.duration());
+        if (config.mode() != expectedConfig.mode()) {
+          throw new Exception(
+              "[FAILED] Expected: expected mode : "
+                  + expectedConfig.mode()
+                  + ", got: "
+                  + config.mode());
+        }
+      } finally {
+        client.removeBucket(bucketName);
       }
 
       mintSuccessLog("getDefaultRetention (String bucketName)", null, startTime);
@@ -3527,8 +3516,6 @@ public class FunctionalTest {
             e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
         throw e;
       }
-    } finally {
-      client.removeBucket(bucketName);
     }
   }
 

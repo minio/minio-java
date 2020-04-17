@@ -3519,23 +3519,16 @@ public class MinioClient {
       queryParamMap.put("versionId", versionId);
     }
 
-    Response response = null;
-    Retention retention = new Retention();
-    try {
-      response = executeGet(bucketName, objectName, null, queryParamMap);
+    try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
       ResponseBody body = response.body();
-      retention = Xml.unmarshal(Retention.class, body.charStream());
-
+      Retention retention = Xml.unmarshal(Retention.class, body.charStream());
+      return retention;
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() == ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
         throw e;
       }
-    } finally {
-      if (response != null) {
-        response.body().close();
-      }
     }
-    return retention;
+    return null;
   }
 
   /**
@@ -3646,28 +3639,23 @@ public class MinioClient {
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
   public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
-      throws IllegalArgumentException, InsufficientDataException, InternalException,
-          InvalidBucketNameException, InvalidKeyException, InvalidResponseException, IOException,
-          NoSuchAlgorithmException, XmlParserException {
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
     if (versionId != null && !versionId.isEmpty()) {
       queryParamMap.put("versionId", versionId);
     }
-    Response response = null;
-    try {
-      response = executeGet(bucketName, objectName, null, queryParamMap);
+
+    try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
       ResponseBody body = response.body();
       LegalHold result = Xml.unmarshal(LegalHold.class, body.charStream());
       return result.status();
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() == ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
-        return false;
-      }
-    } finally {
-      if (response != null) {
-        response.body().close();
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
+        throw e;
       }
     }
     return false;
