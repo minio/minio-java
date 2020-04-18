@@ -3520,11 +3520,10 @@ public class MinioClient {
     }
 
     try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
-      ResponseBody body = response.body();
-      Retention retention = Xml.unmarshal(Retention.class, body.charStream());
+      Retention retention = Xml.unmarshal(Retention.class, response.body().charStream());
       return retention;
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() == ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
         throw e;
       }
     }
@@ -3565,7 +3564,6 @@ public class MinioClient {
     }
 
     LegalHold legalHold = new LegalHold(true);
-
     Response response = executePut(bucketName, objectName, null, queryParamMap, legalHold, 0);
     response.body().close();
   }
@@ -3650,8 +3648,7 @@ public class MinioClient {
     }
 
     try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
-      ResponseBody body = response.body();
-      LegalHold result = Xml.unmarshal(LegalHold.class, body.charStream());
+      LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
       return result.status();
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {

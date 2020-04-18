@@ -3299,17 +3299,10 @@ public class FunctionalTest {
         try (final InputStream is = new ContentInputStream(1 * KB)) {
           client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
         }
-        // Enable object legal hold.
-        boolean expectedStatus = true;
-        client.enableObjectLegalHold(bucketName, objectName, null);
 
-        boolean isObjectLockEnabled = client.isObjectLegalHoldEnabled(bucketName, objectName, null);
-        if (!isObjectLockEnabled) {
-          throw new Exception(
-              "[FAILED] Expected: Is Object Legal Hold Enabled to be "
-                  + expectedStatus
-                  + ", Got: "
-                  + isObjectLockEnabled);
+        client.enableObjectLegalHold(bucketName, objectName, null);
+        if (!client.isObjectLegalHoldEnabled(bucketName, objectName, null)) {
+          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: true, got: false");
         }
         client.disableObjectLegalHold(bucketName, objectName, null);
         mintSuccessLog(
@@ -3360,22 +3353,10 @@ public class FunctionalTest {
         try (final InputStream is = new ContentInputStream(1 * KB)) {
           client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
         }
-
-        // Enable object legal hold.
         client.enableObjectLegalHold(bucketName, objectName, null);
-
-        // Enable object legal hold.
-        boolean expectedStatus = false;
         client.disableObjectLegalHold(bucketName, objectName, null);
-
-        boolean isObjectLockEnabled = client.isObjectLegalHoldEnabled(bucketName, objectName, null);
-
-        if (isObjectLockEnabled) {
-          throw new Exception(
-              "[FAILED] Expected: Is Object Legal Hold Enabled to be "
-                  + expectedStatus
-                  + ", Got: "
-                  + isObjectLockEnabled);
+        if (client.isObjectLegalHoldEnabled(bucketName, objectName, null)) {
+          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
         }
       } finally {
         client.removeObject(bucketName, objectName);
@@ -3420,14 +3401,10 @@ public class FunctionalTest {
     String bucketName = getRandomName();
 
     try {
-      // Create bucket with object lock functionality enabled
       client.makeBucket(bucketName, null, true);
       try {
-        // Declaring config with Retention mode as Compliance and duration as 10 day
         ObjectLockConfiguration config =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-
-        // Set object lock configuration
         client.setDefaultRetention(bucketName, config);
       } finally {
         client.removeBucket(bucketName);
@@ -3464,29 +3441,41 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     try {
-      // Create bucket with object lock functionality enabled
       client.makeBucket(bucketName, null, true);
       try {
-        // Declaring config with Retention mode as Compliance and duration as 10 day
         ObjectLockConfiguration expectedConfig =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        // Set object lock configuration
         client.setDefaultRetention(bucketName, expectedConfig);
-        // Get object lock configuration
         ObjectLockConfiguration config = client.getDefaultRetention(bucketName);
 
-        if (!(config.duration().unit() == expectedConfig.duration().unit()
-            && config.duration().duration() == expectedConfig.duration().duration())) {
+        if ((!(config.duration().unit() == expectedConfig.duration().unit()
+                && config.duration().duration() == expectedConfig.duration().duration()))
+            || (config.mode() != expectedConfig.mode())) {
           throw new Exception(
               "[FAILED] Expected: expected duration : "
                   + expectedConfig.duration()
                   + ", got: "
-                  + config.duration());
+                  + config.duration()
+                  + " expected mode :"
+                  + expectedConfig.mode()
+                  + ", got: "
+                  + config.mode());
         }
 
-        if (config.mode() != expectedConfig.mode()) {
+        expectedConfig =
+            new ObjectLockConfiguration(RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
+        client.setDefaultRetention(bucketName, expectedConfig);
+        config = client.getDefaultRetention(bucketName);
+
+        if ((!(config.duration().unit() == expectedConfig.duration().unit()
+                && config.duration().duration() == expectedConfig.duration().duration()))
+            || (config.mode() != expectedConfig.mode())) {
           throw new Exception(
-              "[FAILED] Expected: expected mode : "
+              "[FAILED] Expected: expected duration : "
+                  + expectedConfig.duration()
+                  + ", got: "
+                  + config.duration()
+                  + " expected mode :"
                   + expectedConfig.mode()
                   + ", got: "
                   + config.mode());
