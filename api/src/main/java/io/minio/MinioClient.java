@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -970,7 +971,7 @@ public class MinioClient {
       }
     }
 
-    if (contentEncoding != null) {
+    if (!Strings.isNullOrEmpty(contentEncoding)) {
       requestBuilder.header("Content-Encoding", contentEncoding);
     }
 
