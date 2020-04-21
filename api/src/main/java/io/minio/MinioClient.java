@@ -3469,9 +3469,7 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if (versionId == null) {
-      queryParamMap.put("versionId", "");
-    } else {
+    if (versionId != null && !versionId.isEmpty()) {
       queryParamMap.put("versionId", versionId);
     }
 
@@ -3517,16 +3515,19 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if (versionId == null) {
-      queryParamMap.put("versionId", "");
-    } else {
+    if (versionId != null && !versionId.isEmpty()) {
       queryParamMap.put("versionId", versionId);
     }
 
-    Response response = executeGet(bucketName, objectName, null, queryParamMap);
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(Retention.class, body.charStream());
+    try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
+      Retention retention = Xml.unmarshal(Retention.class, response.body().charStream());
+      return retention;
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
+        throw e;
+      }
     }
+    return null;
   }
 
   /**
@@ -3558,14 +3559,11 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (versionId == null) {
-      queryParamMap.put("versionId", "");
-    } else {
+    if (versionId != null && !versionId.isEmpty()) {
       queryParamMap.put("versionId", versionId);
     }
 
     LegalHold legalHold = new LegalHold(true);
-
     Response response = executePut(bucketName, objectName, null, queryParamMap, legalHold, 0);
     response.body().close();
   }
@@ -3599,9 +3597,7 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (versionId == null) {
-      queryParamMap.put("versionId", "");
-    } else {
+    if (versionId != null && !versionId.isEmpty()) {
       queryParamMap.put("versionId", versionId);
     }
 
@@ -3647,17 +3643,19 @@ public class MinioClient {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (versionId == null) {
-      queryParamMap.put("versionId", "");
-    } else {
+    if (versionId != null && !versionId.isEmpty()) {
       queryParamMap.put("versionId", versionId);
     }
-    Response response = executeGet(bucketName, objectName, null, queryParamMap);
 
-    try (ResponseBody body = response.body()) {
-      LegalHold result = Xml.unmarshal(LegalHold.class, body.charStream());
+    try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
+      LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
       return result.status();
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
+        throw e;
+      }
     }
+    return false;
   }
 
   /**

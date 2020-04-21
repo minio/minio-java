@@ -3284,6 +3284,230 @@ public class FunctionalTest {
     }
   }
 
+  /** Test: enableObjectLegalHold(String bucketName, String objectName, String versionId) */
+  public static void enableObjectLegalHold_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: enableObjectLegalHold(String bucketName, String objectName, String versionId)");
+    }
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(bucketName, null, true);
+      try {
+        try (final InputStream is = new ContentInputStream(1 * KB)) {
+          client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
+        }
+
+        client.enableObjectLegalHold(bucketName, objectName, null);
+        if (!client.isObjectLegalHoldEnabled(bucketName, objectName, null)) {
+          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: true, got: false");
+        }
+        client.disableObjectLegalHold(bucketName, objectName, null);
+        mintSuccessLog(
+            "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime);
+      } finally {
+        client.removeObject(bucketName, objectName);
+        client.removeBucket(bucketName);
+      }
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog(
+            "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime);
+      } else {
+        mintFailedLog(
+            "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /** Test: disableObjectLegalHold(String bucketName, String objectName, String versionId) */
+  public static void disableObjectLegalHold_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: disableObjectLegalHold(String bucketName, String objectName, String versionId)");
+    }
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(bucketName, null, true);
+      try {
+        try (final InputStream is = new ContentInputStream(1 * KB)) {
+          client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
+        }
+        client.enableObjectLegalHold(bucketName, objectName, null);
+        client.disableObjectLegalHold(bucketName, objectName, null);
+        if (client.isObjectLegalHoldEnabled(bucketName, objectName, null)) {
+          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
+        }
+      } finally {
+        client.removeObject(bucketName, objectName);
+        client.removeBucket(bucketName);
+      }
+      mintSuccessLog(
+          "disableObjectLegalHold(String bucketName, String objectName, String versionId)",
+          null,
+          startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog(
+            "disableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime);
+      } else {
+        mintFailedLog(
+            "disableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /** Test: setDefaultRetention(String bucketName). */
+  public static void setDefaultRetention_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: setDefaultRetention(String bucketName)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+
+    try {
+      client.makeBucket(bucketName, null, true);
+      try {
+        ObjectLockConfiguration config =
+            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+        client.setDefaultRetention(bucketName, config);
+      } finally {
+        client.removeBucket(bucketName);
+      }
+      mintSuccessLog("setDefaultRetention (String bucketName)", null, startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("setDefaultRetention (String bucketName)", null, startTime);
+      } else {
+        mintFailedLog(
+            "setDefaultRetention (String bucketName)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /** Test: getDefaultRetention(String bucketName). */
+  public static void getDefaultRetention_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getDefaultRetention(String bucketName)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(bucketName, null, true);
+      try {
+        ObjectLockConfiguration expectedConfig =
+            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+        client.setDefaultRetention(bucketName, expectedConfig);
+        ObjectLockConfiguration config = client.getDefaultRetention(bucketName);
+
+        if ((!(config.duration().unit() == expectedConfig.duration().unit()
+                && config.duration().duration() == expectedConfig.duration().duration()))
+            || (config.mode() != expectedConfig.mode())) {
+          throw new Exception(
+              "[FAILED] Expected: expected duration : "
+                  + expectedConfig.duration()
+                  + ", got: "
+                  + config.duration()
+                  + " expected mode :"
+                  + expectedConfig.mode()
+                  + ", got: "
+                  + config.mode());
+        }
+
+        expectedConfig =
+            new ObjectLockConfiguration(RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
+        client.setDefaultRetention(bucketName, expectedConfig);
+        config = client.getDefaultRetention(bucketName);
+
+        if ((!(config.duration().unit() == expectedConfig.duration().unit()
+                && config.duration().duration() == expectedConfig.duration().duration()))
+            || (config.mode() != expectedConfig.mode())) {
+          throw new Exception(
+              "[FAILED] Expected: expected duration : "
+                  + expectedConfig.duration()
+                  + ", got: "
+                  + config.duration()
+                  + " expected mode :"
+                  + expectedConfig.mode()
+                  + ", got: "
+                  + config.mode());
+        }
+      } finally {
+        client.removeBucket(bucketName);
+      }
+
+      mintSuccessLog("getDefaultRetention (String bucketName)", null, startTime);
+
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("getDefaultRetention (String bucketName)", null, startTime);
+      } else {
+        mintFailedLog(
+            "getDefaultRetention (String bucketName)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
   /** Test: getBucketPolicy(String bucketName). */
   public static void getBucketPolicy_test1() throws Exception {
     if (!mintEnv) {
@@ -3851,6 +4075,11 @@ public class FunctionalTest {
     composeObject_test1();
     composeObject_test2();
     composeObject_test3();
+
+    enableObjectLegalHold_test();
+    disableObjectLegalHold_test();
+    setDefaultRetention_test();
+    getDefaultRetention_test();
 
     selectObjectContent_test1();
 
