@@ -72,6 +72,7 @@ import io.minio.messages.SelectObjectContentRequest;
 import io.minio.messages.Upload;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -85,13 +86,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -105,10 +111,13 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -716,6 +725,14 @@ public class MinioClient {
               .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.SECONDS)
               .protocols(protocol)
               .build();
+      String filename = System.getenv("SSL_CERT_FILE");
+      if (filename != null && !filename.equals("")) {
+        try {
+          this.httpClient = enableExternalCertificates(this.httpClient, filename);
+        } catch (GeneralSecurityException | IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
     }
 
     HttpUrl url = HttpUrl.parse(endpoint);
@@ -763,6 +780,61 @@ public class MinioClient {
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.region = region;
+  }
+
+  /**
+   * copied logic from
+   * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
+   */
+  private static OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
+      throws GeneralSecurityException, IOException {
+    Collection<? extends Certificate> certificates = null;
+    FileInputStream fis = null;
+    try {
+      fis = new FileInputStream(filename);
+      certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
+    } finally {
+      if (fis != null) {
+        fis.close();
+      }
+    }
+
+    if (certificates == null || certificates.isEmpty()) {
+      throw new IllegalArgumentException("expected non-empty set of trusted certificates");
+    }
+
+    char[] password = "password".toCharArray(); // Any password will work.
+
+    // Put the certificates a key store.
+    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    // By convention, 'null' creates an empty key store.
+    keyStore.load(null, password);
+
+    int index = 0;
+    for (Certificate certificate : certificates) {
+      String certificateAlias = Integer.toString(index++);
+      keyStore.setCertificateEntry(certificateAlias, certificate);
+    }
+
+    // Use it to build an X509 trust manager.
+    KeyManagerFactory keyManagerFactory =
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    keyManagerFactory.init(keyStore, password);
+    TrustManagerFactory trustManagerFactory =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    trustManagerFactory.init(keyStore);
+
+    final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+    final TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(keyManagers, trustManagers, null);
+    SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+    return httpClient
+        .newBuilder()
+        .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
+        .build();
   }
 
   /** Returns true if given endpoint is valid else false. */
