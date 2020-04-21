@@ -39,3 +39,7 @@ functional/.classpath
 functional/.project
 functional/.settings/
 functional/bin/
+functional/d1/
+minio
+minio.exe
+minio.*log

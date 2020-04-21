@@ -239,6 +239,8 @@ project(':examples') {
     }
 }
 
+import org.gradle.internal.os.OperatingSystem;
+
 project(':functional') {
     dependencies {
         compile project(':api')
@@ -278,6 +280,8 @@ project(':functional') {
 
         maxHeapSize = "4096m"
         jvmArgs "-Xms256m"
-        args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
+        if (rootProject.hasProperty('endpoint') || OperatingSystem.current().isWindows()) {
+            args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
+	}
     }
 }
