@@ -19,6 +19,9 @@ package io.minio.messages;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import io.minio.Time;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Locale;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.convert.Converter;
@@ -29,6 +32,9 @@ import org.simpleframework.xml.stream.OutputNode;
 @Root
 @Convert(ResponseDate.ResponseDateConverter.class)
 public class ResponseDate {
+  public static final DateTimeFormatter MINIO_RESPONSE_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH':'mm':'ss'Z'", Locale.US).withZone(Time.UTC);
+
   private ZonedDateTime zonedDateTime;
 
   public ResponseDate() {}
@@ -47,7 +53,11 @@ public class ResponseDate {
 
   @JsonCreator
   public static ResponseDate fromString(String responseDateString) {
-    return new ResponseDate(ZonedDateTime.parse(responseDateString, Time.RESPONSE_DATE_FORMAT));
+    try {
+      return new ResponseDate(ZonedDateTime.parse(responseDateString, Time.RESPONSE_DATE_FORMAT));
+    } catch (DateTimeParseException e) {
+      return new ResponseDate(ZonedDateTime.parse(responseDateString, MINIO_RESPONSE_DATE_FORMAT));
+    }
   }
 
   /** XML converter class. */

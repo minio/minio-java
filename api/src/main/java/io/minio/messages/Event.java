@@ -18,11 +18,7 @@
 package io.minio.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.minio.Time;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Locale;
 import java.util.Map;
 
 /** Helper class to denote single event record for {@link NotificationRecords}. */
@@ -30,9 +26,6 @@ import java.util.Map;
     value = "UuF",
     justification = "eventVersion and eventSource are available for completeness")
 public class Event {
-  public static final DateTimeFormatter MINIO_RESPONSE_DATE_FORMAT =
-      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH':'mm':'ss'Z'", Locale.US).withZone(Time.UTC);
-
   @JsonProperty private String eventVersion;
   @JsonProperty private String eventSource;
   @JsonProperty private String awsRegion;
@@ -42,16 +35,7 @@ public class Event {
   @JsonProperty private Map<String, String> responseElements;
   @JsonProperty private EventMetadata s3;
   @JsonProperty private Source source;
-  private ResponseDate eventTime = null;
-
-  @JsonProperty("eventTime")
-  public void setEventTime(String name) {
-    try {
-      this.eventTime = ResponseDate.fromString(name);
-    } catch (DateTimeParseException e) {
-      this.eventTime = new ResponseDate(ZonedDateTime.parse(name, MINIO_RESPONSE_DATE_FORMAT));
-    }
-  }
+  @JsonProperty private ResponseDate eventTime;
 
   public String region() {
     return awsRegion;

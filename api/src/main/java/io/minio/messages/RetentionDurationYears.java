@@ -25,6 +25,8 @@ public class RetentionDurationYears implements RetentionDuration {
   @Text(required = false)
   private Integer years;
 
+  public RetentionDurationYears() {}
+
   public RetentionDurationYears(int years) {
     this.years = Integer.valueOf(years);
   }
@@ -35,5 +37,14 @@ public class RetentionDurationYears implements RetentionDuration {
 
   public int duration() {
     return years;
+  }
+
+  /** Returns RetentionDurationYears as string. */
+  @Override
+  public String toString() {
+    if (years == null) {
+      return "";
+    }
+    return years.toString() + ((years == 1) ? " year" : " years");
   }
 }

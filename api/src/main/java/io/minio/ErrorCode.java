@@ -126,6 +126,9 @@ public enum ErrorCode {
       "NotImplemented", "A header you provided implies functionality that is not implemented."),
   NOT_SIGNED_UP("NotSignedUp", "Account is not signed up"),
   NO_SUCH_BUCKET_POLICY("NoSuchBucketPolicy", "Bucket does not have a bucket policy"),
+  NO_SUCH_OBJECT_LOCK_CONFIGURATION(
+      "NoSuchObjectLockConfiguration",
+      "The specified object does not have a ObjectLock configuration"),
   OPERATION_ABORTED(
       "OperationAborted",
       "A conflicting conditional operation is currently in progress "
