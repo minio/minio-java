@@ -1441,6 +1441,24 @@ __Example__
 minioClient.removeObject("my-bucketname", "my-objectname");
 ```
 
+<a name="removeObject"></a>
+### removeObject(String bucketName, DeleteObject deleteObject, boolean bypassGovernanceRetention)
+`public void removeObject(String bucketName, DeleteObject deleteObject, boolean bypassGovernanceRetention)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-java.lang.String-io.minio.messages.DeleteObject-boolean-)_
+
+Removes an object. The bypassGovernanceRetention specifies whether you want to
+ delete this object even if it has a Governance-type Object Lock in place.
+
+__Parameters__
+| Parameter       | Type          | Description                |
+|:----------------|:--------------|:---------------------------|
+| ``bucketName``  | _String_      | Name of the bucket.        |
+| ``deletObject`` | _DeletObject_ | Delete Object              |
+
+__Example__
+```java
+minioClient.removeObject("my-bucketname", deleteObject, true);
+```
+
 <a name="removeObjects"></a>
 ### removeObjects(String bucketName, Iterable<String> objectNames)
 `public Iterable<Result<DeleteError>> removeObjects(String bucketName, Iterable<String> objectNames)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObjects-java.lang.String-java.lang.Iterable-)_
@@ -1464,6 +1482,39 @@ objectNames.add("my-objectname1");
 objectNames.add("my-objectname2");
 objectNames.add("my-objectname3");
 Iterable<Result<DeleteError>> results = minioClient.removeObjects("my-bucketname", myObjectNames);
+for (Result<DeleteError> result : results) {
+  DeleteError error = errorResult.get();
+  System.out.println("Error in deleting object " + error.objectName() + "; " + error.message());
+}
+```
+
+<a name="removeObjects"></a>
+### removeObjects(String bucketName, Iterable<DeletObject> deleteObjects, boolean bypassGovernanceRetention )
+`public Iterable<Result<DeleteError>> removeObjects(String bucketName, Iterable<DeleteObject> deleteObjects, boolean bypassGovernanceRetention)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObjects-java.lang.String-io.minio.messages.DeleteObject-boolean-java.lang.Iterable-)_
+
+Removes multiple objects lazily. Its required to iterate the returned Iterable to perform removal.
+The bypassGovernanceRetention specifies whether you want to delete this object even if it
+has a Governance-type Object Lock in place.
+
+__Parameters__
+| Parameter       | Type                     | Description                    |
+|:----------------|:-------------------------|:-------------------------------|
+| ``bucketName``  | _String_                 | Name of the bucket.            |
+| ``deletObjects``| _Iterable<DeleteObject>_ | List of objects in the bucket. |
+
+| Returns                                                                             |
+|:------------------------------------------------------------------------------------|
+| _Iterable<[Result]<[DeleteError]>>_ - Lazy iterator contains object removal status. |
+
+__Example__
+```java
+List<DeletObject> deleteObjects = new LinkedList<DeletObject>();
+deleteObjects.add(new DeletObject("my-objectname1",null));
+deleteObjects.add(new DeletObject("my-objectname2",null));
+deleteObjects.add(new DeletObject("my-objectname3",null));
+
+
+Iterable<Result<DeleteError>> results = minioClient.removeObjects("my-bucketname", deleteObjects);
 for (Result<DeleteError> result : results) {
   DeleteError error = errorResult.get();
   System.out.println("Error in deleting object " + error.objectName() + "; " + error.message());

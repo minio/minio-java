@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015-2019 MinIO, Inc.
+ * (C) 2015-2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1722,6 +1722,129 @@ public class FunctionalTest {
     } catch (Exception e) {
       mintFailedLog(
           "removeObjects(final String bucketName, final Iterable<String> objectNames)",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: removeObject(String bucketName, DeleteObject deleteObject, boolean
+   * bypassGovernanceRetention).
+   */
+  public static void removeObject_test3() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: removeObject(String bucketName, DeleteObject deleteObject, boolean bypassGovernanceRetention)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      String objectName = getRandomName();
+      client.makeBucket(bucketName, null, true);
+      try {
+        try (final InputStream is = new ContentInputStream(1)) {
+          client.putObject(bucketName, objectName, is, new PutObjectOptions(1, -1));
+        }
+        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(1);
+        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
+
+        client.setObjectRetention(bucketName, objectName, null, expectedConfig, true);
+        try {
+          client.removeObject(bucketName, new DeleteObject(objectName, null), false);
+        } catch (Exception e) {
+          ErrorResponse errorResponse = null;
+          if (e instanceof ErrorResponseException) {
+            ErrorResponseException exp = (ErrorResponseException) e;
+            errorResponse = exp.errorResponse();
+          }
+          if (errorResponse != null
+              && !errorResponse
+                  .message()
+                  .equals("Object is WORM protected and cannot be overwritten")) {
+            throw new Exception(
+                "[FAILED] Expected: Object should be deleted as this object has "
+                    + " a Governance-type Object Lock in place and bypassGovernanceRetention is  false"
+                    + ", got : Object still exist ");
+          }
+        }
+        client.removeObject(bucketName, new DeleteObject(objectName, null), true);
+
+      } finally {
+        client.removeBucket(bucketName);
+      }
+      mintSuccessLog(
+          "removeObject(String bucketName, DeleteObject deleteObject, boolean bypassGovernanceRetention)",
+          null,
+          startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog(
+            "removeObject(String bucketName, DeleteObject deleteObject, boolean bypassGovernanceRetention)",
+            null,
+            startTime);
+      } else {
+        mintFailedLog(
+            "removeObject(String bucketName, DeleteObject deleteObject, boolean bypassGovernanceRetention)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /**
+   * Test: removeObjects(String bucketName, final Iterable&lt;DeleteObject&gt; deleteObjects,
+   * boolean bypassGovernanceRetention ).
+   */
+  public static void removeObject_test4() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: removeObjects(String bucketName, Iterable<DeleteObject> deleteObjects, boolean bypassGovernanceRetention)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(bucketName, null, true);
+      try {
+        String[] objectNames = new String[3];
+        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(1);
+        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
+        List<DeleteObject> deleteObjects = new LinkedList<DeleteObject>();
+        for (int i = 0; i < 3; i++) {
+          objectNames[i] = getRandomName();
+          try (final InputStream is = new ContentInputStream(1)) {
+            client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
+          }
+          client.setObjectRetention(bucketName, objectNames[i], null, expectedConfig, true);
+          deleteObjects.add(new DeleteObject(objectNames[i], null));
+        }
+        for (Result<?> r : client.removeObjects(bucketName, deleteObjects, true)) {
+          ignore(r.get());
+        }
+      } finally {
+        client.removeBucket(bucketName);
+      }
+      mintSuccessLog(
+          "removeObjects( String bucketName,  Iterable<DeleteObject> deleteObjects, boolean  bypassGovernanceRetention)",
+          null,
+          startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          "removeObjects( String bucketName, Iterable<DeleteObject> deleteObjects, boolean bypassGovernanceRetention)",
           null,
           startTime,
           null,
@@ -4037,6 +4160,8 @@ public class FunctionalTest {
 
     removeObject_test1();
     removeObject_test2();
+    removeObject_test3();
+    removeObject_test4();
 
     listIncompleteUploads_test1();
     listIncompleteUploads_test2();

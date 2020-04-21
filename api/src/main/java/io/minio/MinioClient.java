@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -1448,6 +1449,28 @@ public class MinioClient {
     return response;
   }
 
+  private Response executeDelete(
+      String bucketName,
+      String objectName,
+      Map<String, String> headerMap,
+      Map<String, String> queryParamMap)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    Response response =
+        execute(
+            Method.DELETE,
+            bucketName,
+            objectName,
+            getRegion(bucketName),
+            headerMap,
+            queryParamMap,
+            null,
+            0);
+    response.body().close();
+    return response;
+  }
+
   private Response executePost(
       String bucketName,
       String objectName,
@@ -2621,6 +2644,52 @@ public class MinioClient {
   }
 
   /**
+   * Removes an object if object is locked by Governance Mode
+   *
+   * <pre>Example:{@code
+   * minioClient.removeObject("my-bucketname", deleteobject, true);
+   * }</pre>
+   *
+   * @param bucketName Name of the bucket.
+   * @param deleteObject DeleteObject consisting of name and versionId.
+   * @param bypassGovernanceRetention Specifies whether you want to delete this object even if it
+   *     has a Governance-type Object Lock in place.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void removeObject(
+      String bucketName, DeleteObject deleteObject, boolean bypassGovernanceRetention)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new IllegalArgumentException("bucket name cannot be empty");
+    }
+
+    checkObjectName(deleteObject.name());
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    if (deleteObject.versionId() != null && !deleteObject.versionId().isEmpty()) {
+      queryParamMap.put("versionId", deleteObject.versionId());
+    }
+
+    Map<String, String> headerMap = new HashMap<>();
+    if (bypassGovernanceRetention) {
+      headerMap.put("x-amz-bypass-governance-retention", "True");
+    }
+    executeDelete(bucketName, deleteObject.name(), headerMap, queryParamMap);
+  }
+
+  /**
    * Removes multiple objects lazily. Its required to iterate the returned Iterable to perform
    * removal.
    *
@@ -2664,7 +2733,136 @@ public class MinioClient {
               }
 
               if (i > 0) {
-                DeleteResult result = deleteObjects(bucketName, objectList, true);
+                DeleteResult result = deleteObjects(bucketName, objectList, true, false);
+                errorList = result.errorList();
+              }
+            } catch (ErrorResponseException
+                | IllegalArgumentException
+                | InsufficientDataException
+                | InternalException
+                | InvalidBucketNameException
+                | InvalidKeyException
+                | InvalidResponseException
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException e) {
+              this.error = new Result<>(e);
+            } finally {
+              if (errorList != null) {
+                this.errorIterator = errorList.iterator();
+              } else {
+                this.errorIterator = new LinkedList<DeleteError>().iterator();
+              }
+            }
+          }
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) {
+              return false;
+            }
+
+            if (this.error == null && this.errorIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              return true;
+            }
+
+            if (this.errorIterator.hasNext()) {
+              return true;
+            }
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<DeleteError> next() {
+            if (this.completed) {
+              throw new NoSuchElementException();
+            }
+
+            if (this.error == null && this.errorIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            if (this.errorIterator.hasNext()) {
+              return new Result<>(this.errorIterator.next());
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
+  }
+
+  /**
+   * Removes multiple objects lazily. Its required to iterate the returned Iterable to perform
+   * removal.
+   *
+   * <pre>Example:{@code
+   * List<DeletObject> deletObjects = new LinkedList<DeleteObject>();
+   * deletObjects.add(new DeleteObject("my-objectname1", null));
+   * deletObjects.add(new DeleteObject("my-objectname2", null));
+   * deletObjects.add(new DeleteObject("my-objectname3", null));
+   * Iterable<Result<DeleteError>> results =
+   *     minioClient.removeObjects("my-bucketname", deletObjects, true);
+   * for (Result<DeleteError> result : results) {
+   *   DeleteError error = errorResult.get();
+   *   System.out.println(
+   *       "Error in deleting object " + error.objectName() + "; " + error.message());
+   * }
+   * }</pre>
+   *
+   * @param bucketName Name of the bucket.
+   * @param deleteObjects DeleteObject consisting of name and versionId.
+   * @param bypassGovernanceRetention Specifies whether you want to delete this object even if it
+   *     has a Governance-type Object Lock in place.
+   * @return Iterable&ltResult&ltDeleteError&gt&gt - Lazy iterator contains object removal status.
+   */
+  public Iterable<Result<DeleteError>> removeObjects(
+      final String bucketName,
+      final Iterable<DeleteObject> deleteObjects,
+      boolean bypassGovernanceRetention) {
+    return new Iterable<Result<DeleteError>>() {
+      @Override
+      public Iterator<Result<DeleteError>> iterator() {
+        return new Iterator<Result<DeleteError>>() {
+          private Result<DeleteError> error;
+          private Iterator<DeleteError> errorIterator;
+          private boolean completed = false;
+
+          private synchronized void populate() {
+            List<DeleteError> errorList = null;
+            try {
+              List<DeleteObject> objectList =
+                  FluentIterable.from(deleteObjects).limit(1000).toList();
+
+              if (objectList.size() > 0) {
+                DeleteResult result =
+                    deleteObjects(bucketName, objectList, true, bypassGovernanceRetention);
                 errorList = result.errorList();
               }
             } catch (ErrorResponseException
@@ -5178,6 +5376,8 @@ public class MinioClient {
    * @param bucketName Name of the bucket.
    * @param objectList List of object names.
    * @param quiet Quiet flag.
+   * @param bypassGovernanceRetention Specifies whether you want to delete this object even if it
+   *     has a Governance-type Object Lock in place.
    * @return {@link DeleteResult} - Contains delete result.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -5192,15 +5392,24 @@ public class MinioClient {
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
   protected DeleteResult deleteObjects(
-      String bucketName, List<DeleteObject> objectList, boolean quiet)
+      String bucketName,
+      List<DeleteObject> objectList,
+      boolean quiet,
+      boolean bypassGovernanceRetention)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, XmlParserException, ErrorResponseException,
           InternalException, InvalidResponseException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("delete", "");
 
+    Map<String, String> headerMap = null;
+    if (bypassGovernanceRetention) {
+      headerMap = new HashMap<>();
+      headerMap.put("x-amz-bypass-governance-retention", "True");
+    }
+
     DeleteRequest request = new DeleteRequest(objectList, quiet);
-    Response response = executePost(bucketName, null, null, queryParamMap, request);
+    Response response = executePost(bucketName, null, headerMap, queryParamMap, request);
 
     String bodyContent = "";
     try (ResponseBody body = response.body()) {

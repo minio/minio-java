@@ -37,4 +37,14 @@ public class DeleteObject {
     this.name = name;
     this.versionId = versionId;
   }
+
+  /** Returns Object name. */
+  public String name() {
+    return name;
+  }
+
+  /** Returns VersionId. */
+  public String versionId() {
+    return versionId;
+  }
 }
