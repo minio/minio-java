@@ -54,6 +54,7 @@ import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
 import io.minio.messages.InputSerialization;
 import io.minio.messages.Item;
+import io.minio.messages.KeyVersion;
 import io.minio.messages.LegalHold;
 import io.minio.messages.ListAllMyBucketsResult;
 import io.minio.messages.ListBucketResult;
@@ -2621,6 +2622,53 @@ public class MinioClient {
   }
 
   /**
+   * Removes an object.
+   *
+   * <pre>Example:{@code
+   * minioClient.removeObjectWithVersion("my-bucketname", deleteObject);
+   * }</pre>
+   *
+   * @param bucketName Name of the bucket.
+   * @param deleteObject Object to be deleted containing name and versionId.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void removeObjectWithVersion(String bucketName, KeyVersion deleteObject)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if ((bucketName == null) || (bucketName.isEmpty())) {
+      throw new IllegalArgumentException("bucket name cannot be empty");
+    }
+
+    checkObjectName(deleteObject.name());
+
+    HashMap<String, String> queryParamMap = new HashMap<String, String>();
+    if (deleteObject.versionId() != null && !deleteObject.versionId().isEmpty()) {
+      queryParamMap.put("versionId", deleteObject.versionId());
+    }
+
+    execute(
+        Method.DELETE,
+        bucketName,
+        deleteObject.name(),
+        getRegion(bucketName),
+        null,
+        queryParamMap,
+        null,
+        0);
+  }
+
+  /**
    * Removes multiple objects lazily. Its required to iterate the returned Iterable to perform
    * removal.
    *
@@ -2660,6 +2708,141 @@ public class MinioClient {
               int i = 0;
               while (objectNameIter.hasNext() && i < 1000) {
                 objectList.add(new DeleteObject(objectNameIter.next()));
+                i++;
+              }
+
+              if (i > 0) {
+                DeleteResult result = deleteObjects(bucketName, objectList, true);
+                errorList = result.errorList();
+              }
+            } catch (ErrorResponseException
+                | IllegalArgumentException
+                | InsufficientDataException
+                | InternalException
+                | InvalidBucketNameException
+                | InvalidKeyException
+                | InvalidResponseException
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException e) {
+              this.error = new Result<>(e);
+            } finally {
+              if (errorList != null) {
+                this.errorIterator = errorList.iterator();
+              } else {
+                this.errorIterator = new LinkedList<DeleteError>().iterator();
+              }
+            }
+          }
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) {
+              return false;
+            }
+
+            if (this.error == null && this.errorIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              return true;
+            }
+
+            if (this.errorIterator.hasNext()) {
+              return true;
+            }
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<DeleteError> next() {
+            if (this.completed) {
+              throw new NoSuchElementException();
+            }
+
+            if (this.error == null && this.errorIterator == null) {
+              populate();
+            }
+
+            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            if (this.errorIterator.hasNext()) {
+              return new Result<>(this.errorIterator.next());
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
+  }
+
+  /**
+   * Removes multiple objects lazily. Its required to iterate the returned Iterable to perform
+   * removal.
+   *
+   * <pre>Example:{@code
+   * List<KeyVersion> deleteObjects = new LinkedList<KeyVersion>();
+   * deleteObjects.add(new KeyVersion("my-objectname1",null));
+   * deleteObjects.add(new KeyVersion("my-objectname2",null));
+   * deleteObjects.add(new KeyVersion("my-objectname3",null));
+   * Iterable<Result<DeleteError>> results =
+   *     minioClient.removeObjectsWithVersion("my-bucketname", deleteObjects);
+   * for (Result<DeleteError> result : results) {
+   *   DeleteError error = errorResult.get();
+   *   System.out.println(
+   *       "Error in deleting object " + error.objectName() + "; " + error.message());
+   * }
+   * }</pre>
+   *
+   * @param bucketName Name of the bucket.
+   * @param deleteObjects List of KeyVersion Objects in the bucket.
+   * @return Iterable&ltResult&ltDeleteError&gt&gt - Lazy iterator contains object removal status.
+   */
+  public Iterable<Result<DeleteError>> removeObjectsWithVersion(
+      final String bucketName, final Iterable<KeyVersion> deleteObjects) {
+    return new Iterable<Result<DeleteError>>() {
+      @Override
+      public Iterator<Result<DeleteError>> iterator() {
+        return new Iterator<Result<DeleteError>>() {
+          private Result<DeleteError> error;
+          private Iterator<DeleteError> errorIterator;
+          private boolean completed = false;
+          private Iterator<KeyVersion> objectIter = deleteObjects.iterator();
+
+          private synchronized void populate() {
+            List<DeleteError> errorList = null;
+            try {
+              List<DeleteObject> objectList = new LinkedList<DeleteObject>();
+              int i = 0;
+              while (objectIter.hasNext() && i < 1000) {
+                KeyVersion keyVersion = objectIter.next();
+                String versionId = null;
+                if (keyVersion.versionId() != null && !keyVersion.versionId().isEmpty()) {
+                  versionId = keyVersion.versionId();
+                }
+                DeleteObject deleteObject = new DeleteObject(keyVersion.name(), versionId);
+                objectList.add(deleteObject);
                 i++;
               }
 

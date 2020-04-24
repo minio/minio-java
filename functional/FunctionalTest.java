@@ -1730,6 +1730,74 @@ public class FunctionalTest {
     }
   }
 
+  /** Test: removeObjectWithVersion(String bucketName, KeyVersion deleteObject). */
+  public static void removeObject_test3() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: removeObjectWithVersion(String bucketName, KeyVersion deleteObject)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(1)) {
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1, -1));
+      }
+
+      client.removeObjectWithVersion(bucketName, new KeyVersion(objectName, null));
+      mintSuccessLog(
+          "removeObjectWithVersion(String bucketName, KeyVersion deleteObject)", null, startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          "removeObjectWithVersion(String bucketName, KeyVersion deleteObject)",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /**
+   * Test: removeObjectsWithVersion(final String bucketName, final Iterable&lt;KeyVersion&gt;
+   * deleteObjects).
+   */
+  public static void removeObject_test4() throws Exception {
+    if (!mintEnv) {
+      System.out.println(
+          "Test: removeObjectsWithVersion(final String bucketName, final Iterable<KeyVersion> deleteObjects)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String[] objectNames = new String[3];
+      List<KeyVersion> deletObjects = new LinkedList<KeyVersion>();
+      for (int i = 0; i < 3; i++) {
+        objectNames[i] = getRandomName();
+        try (final InputStream is = new ContentInputStream(1)) {
+          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
+        }
+        deletObjects.add(new KeyVersion(objectNames[i], null));
+      }
+
+      for (Result<?> r : client.removeObjectsWithVersion(bucketName, deletObjects)) {
+        ignore(r.get());
+      }
+      mintSuccessLog(
+          "removeObjectsWithVersion(final String bucketName, final Iterable<KeyVersion> deleteObjects)",
+          null,
+          startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          "removeObjectsWithVersion(final String bucketName, final Iterable<KeyVersion> deleteObjects)",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
   /** Test: listIncompleteUploads(String bucketName). */
   public static void listIncompleteUploads_test1() throws Exception {
     if (!mintEnv) {
@@ -4037,6 +4105,8 @@ public class FunctionalTest {
 
     removeObject_test1();
     removeObject_test2();
+    removeObject_test3();
+    removeObject_test4();
 
     listIncompleteUploads_test1();
     listIncompleteUploads_test2();

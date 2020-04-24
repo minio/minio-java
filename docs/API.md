@@ -34,9 +34,11 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`removeBucket`](#removeBucket)                               | [`putObject`](#putObject)                               |
 | [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`removeObject`](#removeObject)                         |
 | [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`removeObjects`](#removeObjects)                       |
-| [`setBucketNotification`](#setBucketNotification)             | [`selectObjectContent`](#selectObjectContent)           |
-| [`setBucketPolicy`](#setBucketPolicy)                         | [`setObjectRetention`](#setObjectRetention)             |
-| [`setDefaultRetention`](#setDefaultRetention)                 | [`statObject`](#statObject)                             |
+| [`setBucketNotification`](#setBucketNotification)             | [`removeObjectWithVersion`](#removeObjectWithVersion)   |
+| [`setBucketPolicy`](#setBucketPolicy)                         | [`removeObjectsWithVersion`](#removeObjectsWithVersion) 
+| [`setDefaultRetention`](#setDefaultRetention)                 | [`selectObjectContent`](#selectObjectContent)           |
+|                                                               | [`setObjectRetention`](#setObjectRetention)             |
+|                                                               | [`statObject`](#statObject)                             |
 
 ## 1. Constructors
 |                                                                                                                          |
@@ -1469,6 +1471,54 @@ for (Result<DeleteError> result : results) {
   System.out.println("Error in deleting object " + error.objectName() + "; " + error.message());
 }
 ```
+
+<a name="removeObjectWithVersion"></a>
+### removeObjectWithVersion(String bucketName, KeyVersion deleteObject)
+`public void removeObjectWithVersion(String bucketName, KeyVersion deleteObject)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObjectWithVersion-java.lang.String-io.minio.messages.KeyVersion-)_
+
+
+Removes an object.
+
+__Parameters__
+| Parameter        | Type         | Description                                  |
+|:-----------------|:-------------|:---------------------------------------------|
+| ``bucketName``   | _String_     | Name of the bucket.                          |
+| ``deleteObject`` | _KeyVersion_ | Object to delete with versionId as optional. |
+
+__Example__
+```java
+minioClient.removeObjectWithVersion("my-bucketname", deleteObject);
+```
+
+<a name="removeObjectsWithVersion"></a>
+### removeObjectsWithVersion(String bucketName, Iterable<KeyVersion> deleteObjects)
+`public Iterable<Result<DeleteError>> removeObjectsWithVerion(String bucketName, Iterable<KeyVersion> deleteObjects)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObjects-java.lang.String-java.lang.Iterable-)_
+
+Removes multiple objects lazily. Its required to iterate the returned Iterable to perform removal.
+
+__Parameters__
+| Parameter        | Type                  | Description                    |
+|:-----------------|:----------------------|:-------------------------------|
+| ``bucketName``   | _String_              | Name of the bucket.            |
+| ``deleteObjects``| _Iterable<KeyVersion>_| List of Objects to be deleted  |
+
+| Returns                                                                             |
+|:------------------------------------------------------------------------------------|
+| _Iterable<[Result]<[DeleteError]>>_ - Lazy iterator contains object removal status. |
+
+__Example__
+```java
+List<KeyVersion> deleteObjects = new LinkedList<KeyVersion>();
+deleteObjects.add(new KeyVersion("my-objectname1", null));
+deleteObjects.add(new KeyVersion("my-objectname2", null));
+deleteObjects.add(new KeyVersion("my-objectname3", null));
+Iterable<Result<DeleteError>> results = minioClient.removeObjectsWithVersion("my-bucketname", deleteObjects);
+for (Result<DeleteError> result : results) {
+  DeleteError error = errorResult.get();
+  System.out.println("Error in deleting object " + error.objectName() + "; " + error.message());
+}
+```
+
 
  <a name="selectObjectContent"></a>
 ### selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)
