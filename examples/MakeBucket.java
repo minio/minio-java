@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -41,8 +42,11 @@ public class MakeBucket {
       if (found) {
         System.out.println("my-bucketname already exists");
       } else {
+        MakeBucketArgs.Builder makeBucketArgs =
+            new MakeBucketArgs.Builder().bucket("my-bucketname");
+        MakeBucketArgs arg = makeBucketArgs.build();
         // Create bucket 'my-bucketname'.
-        minioClient.makeBucket("my-bucketname");
+        minioClient.makeBucket(arg);
         System.out.println("my-bucketname is created successfully");
       }
     } catch (MinioException e) {
