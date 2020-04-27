@@ -9,12 +9,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class PutGetObjectEncrypted {
   /** MinioClient.putObject() and MinioClient.getObject() example for SSE_C. */
   public static void main(String[] args)
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException {
     try {
       /* play.min.io for test and development. */
       MinioClient minioClient =

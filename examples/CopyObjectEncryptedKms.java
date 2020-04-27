@@ -8,12 +8,11 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class CopyObjectEncryptedKms {
   /** MinioClient.copyObject() example using SSE_KMS. */
   public static void main(String[] args)
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException {
     try {
       /* play.min.io for test and development. */
       MinioClient minioClient =

@@ -29,7 +29,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import org.xmlpull.v1.XmlPullParserException;
 
 public class EnableDisableObjectLegalHold {
   /**
@@ -37,10 +36,10 @@ public class EnableDisableObjectLegalHold {
    * MinioClient.isObjectLegalHoldEnabled() example.
    */
   public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlPullParserException,
-          InvalidResponseException, InsufficientDataException, InternalException,
-          ErrorResponseException, InvalidBucketNameException, InvalidPortException,
-          InvalidEndpointException, RegionConflictException, IllegalArgumentException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
+          InsufficientDataException, InternalException, ErrorResponseException,
+          InvalidBucketNameException, InvalidPortException, InvalidEndpointException,
+          RegionConflictException, IllegalArgumentException {
     try {
 
       /* play.min.io for test and development. */

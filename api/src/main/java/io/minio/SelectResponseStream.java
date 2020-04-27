@@ -31,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.CRC32;
-import org.xmlpull.v1.XmlPullParserException;
 
 /** Select object content response stream. */
 public class SelectResponseStream extends InputStream {
@@ -85,8 +84,7 @@ public class SelectResponseStream extends InputStream {
     return headerMap;
   }
 
-  private boolean populate()
-      throws EOFException, IOException, InternalException, MinioException, XmlPullParserException {
+  private boolean populate() throws EOFException, IOException, InternalException, MinioException {
     ByteStreams.readFully(inputStream, prelude);
     ByteStreams.readFully(inputStream, preludeCrc);
     crcHasher.reset();
@@ -173,7 +171,7 @@ public class SelectResponseStream extends InputStream {
         ;
       } catch (EOFException e) {
         return -1;
-      } catch (MinioException | XmlPullParserException e) {
+      } catch (MinioException e) {
         throw new IOException(e);
       }
     }
