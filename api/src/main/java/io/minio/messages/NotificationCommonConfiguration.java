@@ -26,7 +26,7 @@ import org.simpleframework.xml.ElementList;
  * QueueConfiguration} and {@link TopicConfiguration}.
  */
 public class NotificationCommonConfiguration {
-  @Element(name = "Id")
+  @Element(name = "Id", required = false)
   private String id;
 
   @ElementList(name = "Event", inline = true, required = false)
