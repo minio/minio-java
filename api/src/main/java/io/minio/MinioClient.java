@@ -126,6 +126,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.Headers;
 
 /**
  * Simple Storage Service (aka S3) client to perform bucket and object operations.
@@ -2607,6 +2608,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void removeObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
@@ -2617,7 +2619,69 @@ public class MinioClient {
 
     checkObjectName(objectName);
 
-    executeDelete(bucketName, objectName, null);
+    RemoveObjectArgs args =
+        RemoveObjectArgs.newBuilder().bucket(bucketName).objectName(objectName).build();
+
+    removeObject(args);
+    // executeDelete(bucketName, objectName, null);
+  }
+
+  /**
+   * Removes an object.
+   *
+   * <pre>Example:{@code
+   * minioClient.removeObject(RemoveObjectArgs args);
+   * }</pre>
+   *
+   * @param args RemoveObject arguments.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void removeObject(RemoveObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if ((args.bucketName() == null) || (args.bucketName().isEmpty())) {
+      throw new IllegalArgumentException("bucket name cannot be empty");
+    }
+
+    if ((args.objectName() == null) || (args.objectName().isEmpty())) {
+      throw new IllegalArgumentException("object name cannot be empty");
+    }
+
+    HashMap<String, String> headerMap = null;
+    HashMap<String, String> queryParamMap = null;
+
+    if (args.versionId() != null && !args.versionId().isEmpty()) {
+      queryParamMap = new HashMap<>();
+      queryParamMap.put("versionId", args.versionId());
+    }
+
+    if (args.bypassGovernanceRetention()) {
+      headerMap = new HashMap<>();
+      headerMap.put("x-amz-bucket-object-lock-enabled", "true");
+    }
+
+    Response response =
+        execute(
+            Method.DELETE,
+            args.bucketName(),
+            args.objectName(),
+            getRegion(args.bucketName()),
+            headerMap,
+            queryParamMap,
+            null,
+            0);
+    response.body().close();
   }
 
   /**
