@@ -70,6 +70,7 @@ import io.minio.messages.Prefix;
 import io.minio.messages.Retention;
 import io.minio.messages.SelectObjectContentRequest;
 import io.minio.messages.SseConfiguration;
+import io.minio.messages.Tags;
 import io.minio.messages.Upload;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
@@ -908,6 +909,12 @@ public class MinioClient {
     return true;
   }
 
+  private void checkArgs(BaseArgs args) {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+  }
+
   /** Validates if given bucket name is DNS compatible. */
   private void checkBucketName(String name) throws InvalidBucketNameException {
     if (name == null) {
@@ -1705,10 +1712,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
-
+    checkArgs(args);
     checkReadRequestSse(args.ssec());
 
     Multimap<String, String> headers = HashMultimap.create();
@@ -2813,9 +2817,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Multimap<String, String> headers = HashMultimap.create();
     headers.putAll(args.extraHeaders());
@@ -3557,10 +3559,7 @@ public class MinioClient {
       throws InvalidBucketNameException, RegionConflictException, InsufficientDataException,
           InternalException, InvalidResponseException, InvalidKeyException,
           NoSuchAlgorithmException, XmlParserException, ErrorResponseException, IOException {
-
-    if (args == null) {
-      throw new IllegalArgumentException("null value is not allowed in arguments");
-    }
+    checkArgs(args);
 
     String region = US_EAST_1;
     if (args.region() != null && !args.region().isEmpty()) {
@@ -3645,9 +3644,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
@@ -3711,9 +3708,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
@@ -4082,9 +4077,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     executeDelete(args.bucket(), null, null);
   }
@@ -5266,6 +5259,227 @@ public class MinioClient {
         throw e;
       }
     }
+  }
+
+  /**
+   * Gets tags of a bucket.
+   *
+   * <pre>Example:{@code
+   * Tags tags =
+   *     minioClient.getBucketTags(GetBucketTagsArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketTagsArgs} object.
+   * @return {@link Tags} - Tags.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public Tags getBucketTags(GetBucketTagsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("tagging", "");
+
+    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+      return Xml.unmarshal(Tags.class, response.body().charStream());
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_TAG_SET) {
+        throw e;
+      }
+    }
+
+    return new Tags();
+  }
+
+  /**
+   * Sets tags to a bucket.
+   *
+   * <pre>Example:{@code
+   * Map<String, String> map = new HashMap<>();
+   * map.put("Project", "Project One");
+   * map.put("User", "jsmith");
+   * minioClient.setBucketTags(
+   *     SetBucketTagsArgs.builder().bucket("my-bucketname").tags(map).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketTagsArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketTags(SetBucketTagsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("tagging", "");
+    Response response = executePut(args.bucket(), null, null, queryParamMap, args.tags(), 0);
+    response.close();
+  }
+
+  /**
+   * Deletes tags of a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketTagsArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketTags(DeleteBucketTagsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("tagging", "");
+    Response response = executeDelete(args.bucket(), null, queryParamMap);
+    response.close();
+  }
+
+  /**
+   * Gets tags of an object.
+   *
+   * <pre>Example:{@code
+   * Tags tags =
+   *     minioClient.getObjectTags(
+   *         GetObjectTagsArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+   * }</pre>
+   *
+   * @param args {@link GetObjectTagsArgs} object.
+   * @return {@link Tags} - Tags.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public Tags getObjectTags(GetObjectTagsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("tagging", "");
+
+    try (Response response = executeGet(args.bucket(), args.object(), null, queryParamMap)) {
+      return Xml.unmarshal(Tags.class, response.body().charStream());
+    }
+  }
+
+  /**
+   * Sets tags to an object.
+   *
+   * <pre>Example:{@code
+   * Map<String, String> map = new HashMap<>();
+   * map.put("Project", "Project One");
+   * map.put("User", "jsmith");
+   * minioClient.setObjectTags(
+   *     SetObjectTagsArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .tags((map)
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link SetObjectTagsArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setObjectTags(SetObjectTagsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("tagging", "");
+    Response response =
+        executePut(args.bucket(), args.object(), null, queryParamMap, args.tags(), 0);
+    response.close();
+  }
+
+  /**
+   * Deletes tags of an object.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteObjectTags(
+   *     DeleteObjectTags.builder().bucket("my-bucketname").object("my-objectname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteObjectTagsArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteObjectTags(DeleteObjectTagsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("tagging", "");
+    Response response = executeDelete(args.bucket(), args.object(), queryParamMap);
+    response.close();
   }
 
   private long getAvailableSize(Object data, long expectedReadSize)

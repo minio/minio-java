@@ -129,6 +129,7 @@ public enum ErrorCode {
   NO_SUCH_OBJECT_LOCK_CONFIGURATION(
       "NoSuchObjectLockConfiguration",
       "The specified object does not have a ObjectLock configuration"),
+  NO_SUCH_TAG_SET("NoSuchTagSet", "The TagSet does not exist"),
   OPERATION_ABORTED(
       "OperationAborted",
       "A conflicting conditional operation is currently in progress "
