@@ -16,45 +16,43 @@
 
 package io.minio;
 
-public class BucketTemplate {
+public class Bucket {
   private String name;
 
   public String name() {
     return name;
   }
 
-  public BucketTemplate(String bucketName) {
+  public Bucket(String name) {
 
-    if (bucketName == null) {
+    if (name == null) {
       throw new IllegalArgumentException("null bucket name");
     }
 
     // Bucket names cannot be no less than 3 and no more than 63 characters long.
-    if (bucketName.length() < 3 || bucketName.length() > 63) {
+    if (name.length() < 3 || name.length() > 63) {
       throw new IllegalArgumentException(
-          bucketName
-              + " : "
-              + "bucket name must be at least 3 and no more than 63 characters long");
+          name + " : " + "bucket name must be at least 3 and no more than 63 characters long");
     }
     // Successive periods in bucket names are not allowed.
-    if (bucketName.contains("..")) {
+    if (name.contains("..")) {
       String msg =
           "bucket name cannot contain successive periods. For more information refer "
               + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-      throw new IllegalArgumentException(bucketName + " : " + msg);
+      throw new IllegalArgumentException(name + " : " + msg);
     }
     // Bucket names should be dns compatible.
-    if (!bucketName.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
+    if (!name.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
       String msg =
           "bucket name does not follow Amazon S3 standards. For more information refer "
               + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-      throw new IllegalArgumentException(bucketName + " : " + msg);
+      throw new IllegalArgumentException(name + " : " + msg);
     }
-    this.name = bucketName;
+    this.name = name;
   }
 
   @Override
   public String toString() {
-    return "BucketTemplate{" + "name='" + name + '\'' + '}';
+    return this.name;
   }
 }

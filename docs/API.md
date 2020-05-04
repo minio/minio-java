@@ -658,20 +658,20 @@ __Parameters__
 
 __Example__
 ```java
-  // Create bucket with default region.
-    minioClient.makeBucket(MakeBucketArgs.newBuilder().bucket("my-bucketname").build());
+// Create bucket with default region.
+minioClient.makeBucket(MakeBucketArgs.newBuilder().bucket("my-bucketname").build());
 
-    // Create bucket with specific region.
-    minioClient.makeBucket(
-        MakeBucketArgs.newBuilder().bucket("my-bucketname").region("us-east-1").build());
+// Create bucket with specific region.
+minioClient.makeBucket(
+    MakeBucketArgs.newBuilder().bucket("my-bucketname").region("us-east-1").build());
 
-    // Create object-lock enabled bucket with specific region.
-    minioClient.makeBucket(
-        MakeBucketArgs.newBuilder()
-            .bucket("my-bucketname")
-            .region("us-east-1")
-            .objectLock(true)
-            .build());
+// Create object-lock enabled bucket with specific region.
+minioClient.makeBucket(
+    MakeBucketArgs.newBuilder()
+        .bucket("my-bucketname")
+        .region("us-east-1")
+        .objectLock(true)
+        .build());
 ```
 
 

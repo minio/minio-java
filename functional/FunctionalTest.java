@@ -313,7 +313,7 @@ public class FunctionalTest {
       String bucketName = getRandomName();
       boolean found = false;
       client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).build());
-      for (Bucket bucket : client.listBuckets()) {
+      for (io.minio.messages.Bucket bucket : client.listBuckets()) {
         if (bucket.name().equals(bucketName)) {
           if (found) {
             throw new Exception(

@@ -3245,10 +3245,6 @@ public class MinioClient {
   /**
    * Creates a bucket with default region.
    *
-   * <pre>Example:{@code
-   * minioClient.makeBucket("my-bucketname");
-   * }</pre>
-   *
    * @param bucketName Name of the bucket.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -3275,10 +3271,6 @@ public class MinioClient {
 
   /**
    * Creates a bucket with given region.
-   *
-   * <pre>Example:{@code
-   * minioClient.makeBucket("my-bucketname", "eu-west-1");
-   * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param region Region in which the bucket will be created.
@@ -3322,10 +3314,6 @@ public class MinioClient {
 
   /**
    * Creates a bucket with object lock feature enabled.
-   *
-   * <pre>Example:{@code
-   * minioClient.makeBucket("my-bucketname", "eu-west-2", true);
-   * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param region Region in which the bucket will be created.
@@ -3384,7 +3372,7 @@ public class MinioClient {
           InternalException, InvalidResponseException, InvalidKeyException,
           NoSuchAlgorithmException, XmlParserException, ErrorResponseException, IOException {
 
-    if ((args == null)) {
+    if (args == null) {
       throw new IllegalArgumentException("null value is not allowed in arguments");
     }
 
@@ -3412,8 +3400,7 @@ public class MinioClient {
       headerMap.put("x-amz-bucket-object-lock-enabled", "true");
     }
 
-    Response response =
-        executePut(args.bucket().name(), null, region, headerMap, null, config, 0);
+    Response response = executePut(args.bucket().name(), null, region, headerMap, null, config, 0);
     response.body().close();
   }
 
