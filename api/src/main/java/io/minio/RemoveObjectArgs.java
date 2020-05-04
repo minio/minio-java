@@ -17,29 +17,22 @@
 package io.minio;
 
 public class RemoveObjectArgs {
-  private final String bucketName;
-  private final String objectName;
-  private final String versionId;
+  private final Bucket bucket;
+  private final ObjectWithVersion object;
   private final boolean bypassGovernanceRetention;
-  private static final String NULL_STRING = "(null)";
 
   private RemoveObjectArgs(Builder builder) {
-    this.bucketName = builder.bucketName;
-    this.objectName = builder.objectName;
-    this.versionId = builder.versionId;
+    this.bucket = builder.bucket;
+    this.object = builder.object;
     this.bypassGovernanceRetention = builder.bypassGovernanceRetention;
   }
 
-  public String bucketName() {
-    return bucketName;
+  public Bucket bucket() {
+    return bucket;
   }
 
-  public String objectName() {
-    return objectName;
-  }
-
-  public String versionId() {
-    return versionId;
+  public ObjectWithVersion object() {
+    return object;
   }
 
   public boolean bypassGovernanceRetention() {
@@ -51,62 +44,50 @@ public class RemoveObjectArgs {
   }
 
   public static final class Builder {
-    private String bucketName;
-    private String objectName;
-    private String versionId;
+    private Bucket bucket;
+    private ObjectWithVersion object;
     private boolean bypassGovernanceRetention;
 
     public Builder bucket(String bucketName) throws IllegalArgumentException {
-
-      if (bucketName == null) {
-        throw new IllegalArgumentException(NULL_STRING + "null bucket name");
-      }
-
-      // Bucket names cannot be no less than 3 and no more than 63 characters long.
-      if (bucketName.length() < 3 || bucketName.length() > 63) {
-        throw new IllegalArgumentException(
-            bucketName
-                + " : "
-                + "bucket name must be at least 3 and no more than 63 characters long");
-      }
-      // Successive periods in bucket names are not allowed.
-      if (bucketName.contains("..")) {
-        String msg =
-            "bucket name cannot contain successive periods. For more information refer "
-                + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-        throw new IllegalArgumentException(bucketName + " : " + msg);
-      }
-      // Bucket names should be dns compatible.
-      if (!bucketName.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
-        String msg =
-            "bucket name does not follow Amazon S3 standards. For more information refer "
-                + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-        throw new IllegalArgumentException(bucketName + " : " + msg);
-      }
-
-      this.bucketName = bucketName;
+      this.bucket = new Bucket(bucketName);
       return this;
     }
 
-    public Builder objectName(String objectName) {
-      if ((objectName == null) || (objectName.isEmpty())) {
-        throw new IllegalArgumentException("object name cannot be empty");
+    public Builder bucket(Bucket bucket) throws IllegalArgumentException {
+      if (bucket == null) {
+        throw new IllegalArgumentException("null value is not allowed for Bucket");
       }
-      this.objectName = objectName;
+      this.bucket = bucket;
       return this;
     }
 
-    public Builder versionId(String versionId) {
-      this.versionId = versionId;
+    public Builder object(String objectName) {
+      this.object = new ObjectWithVersion(objectName);
       return this;
     }
 
-    public Builder objectLock(boolean bypassGovernanceRetention) {
+    public Builder object(String objectName, String versionId) {
+      this.object = new ObjectWithVersion(objectName, versionId);
+      return this;
+    }
+
+    public Builder object(ObjectWithVersion object) {
+      if (object == null) {
+        throw new IllegalArgumentException("null Object");
+      }
+      this.object = object;
+      return this;
+    }
+
+    public Builder bypassGvernanceRetention(boolean bypassGovernanceRetention) {
       this.bypassGovernanceRetention = bypassGovernanceRetention;
       return this;
     }
 
     public RemoveObjectArgs build() {
+      if (bucket == null || object == null) {
+        throw new IllegalArgumentException("null Bucket or Object");
+      }
       return new RemoveObjectArgs(this);
     }
   }

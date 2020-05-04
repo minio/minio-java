@@ -126,7 +126,6 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import okhttp3.Headers;
 
 /**
  * Simple Storage Service (aka S3) client to perform bucket and object operations.
@@ -2613,17 +2612,8 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new IllegalArgumentException("bucket name cannot be empty");
-    }
 
-    checkObjectName(objectName);
-
-    RemoveObjectArgs args =
-        RemoveObjectArgs.newBuilder().bucket(bucketName).objectName(objectName).build();
-
-    removeObject(args);
-    // executeDelete(bucketName, objectName, null);
+    removeObject(RemoveObjectArgs.newBuilder().bucket(bucketName).object(objectName).build());
   }
 
   /**
@@ -2650,33 +2640,26 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if ((args.bucketName() == null) || (args.bucketName().isEmpty())) {
-      throw new IllegalArgumentException("bucket name cannot be empty");
-    }
-
-    if ((args.objectName() == null) || (args.objectName().isEmpty())) {
-      throw new IllegalArgumentException("object name cannot be empty");
-    }
 
     HashMap<String, String> headerMap = null;
     HashMap<String, String> queryParamMap = null;
 
-    if (args.versionId() != null && !args.versionId().isEmpty()) {
+    if (args.object().versionId() != null && !args.object().versionId().isEmpty()) {
       queryParamMap = new HashMap<>();
-      queryParamMap.put("versionId", args.versionId());
+      queryParamMap.put("versionId", args.object().versionId());
     }
 
     if (args.bypassGovernanceRetention()) {
       headerMap = new HashMap<>();
-      headerMap.put("x-amz-bucket-object-lock-enabled", "true");
+      headerMap.put("x-amz-bypass-governance-retention", "true");
     }
 
     Response response =
         execute(
             Method.DELETE,
-            args.bucketName(),
-            args.objectName(),
-            getRegion(args.bucketName()),
+            args.bucket().name(),
+            args.object().name(),
+            getRegion(args.bucket().name()),
             headerMap,
             queryParamMap,
             null,

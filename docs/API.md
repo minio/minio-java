@@ -1425,21 +1425,37 @@ minioClient.putObject("my-bucketname", "my-objectname", "my-filename", null);
 ```
 
 <a name="removeObject"></a>
-### removeObject(String bucketName, String objectName)
-`public void removeObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-java.lang.String-java.lang.String-)_
+### removeObject(RemoveObjectArgs args)
+`public void removeObject(RemoveObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-io.minio.RemoveObjectArgs-)_
 
 Removes an object.
 
 __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
+| Parameter      | Type               | Description                  |
+|:---------------|:-------------------|:-----------------------------|
+| ``args``       | _RemoveObjectArgs_ | Arguments for Object removal.|
 
 __Example__
 ```java
-minioClient.removeObject("my-bucketname", "my-objectname");
-```
+    // Removes the latest object
+    minioClient.removeObject(
+        RemoveObjectArgs.newBuilder().bucket("my-bucketname").object("my-objectname").build());
+
+    // Removes the latest object with versionId
+    minioClient.removeObject(
+        RemoveObjectArgs.newBuilder()
+            .bucket("my-bucketname")
+            .object("my-objectname", "versionId")
+            .build());
+
+    // Removes the latest object with versionId and bypass governance retention
+    minioClient.removeObject(
+        RemoveObjectArgs.newBuilder()
+            .bucket("my-bucketname")
+            .object("my-objectname", "versionId")
+            .bypassGvernanceRetention(true)
+            .build());
+ ```
 
 <a name="removeObjects"></a>
 ### removeObjects(String bucketName, Iterable<String> objectNames)

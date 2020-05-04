@@ -43,7 +43,8 @@ class PutObjectRunnable implements Runnable {
       traceBuffer.append("[" + filename + "]: delete file\n");
       Files.delete(Paths.get(filename));
       traceBuffer.append("[" + filename + "]: delete object\n");
-      client.removeObject(bucketName, filename);
+      client.removeObject(
+          RemoveObjectArgs.newBuilder().bucket(bucketName).object(filename).build());
     } catch (Exception e) {
       System.err.print(traceBuffer.toString());
       e.printStackTrace();

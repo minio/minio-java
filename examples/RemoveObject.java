@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -37,7 +38,8 @@ public class RemoveObject {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Remove object 'my-objectname' in 'my-bucketname'.
-      minioClient.removeObject("my-bucketname", "my-objectname");
+      minioClient.removeObject(
+          RemoveObjectArgs.newBuilder().bucket("my-bucketname").object("my-objectname").build());
       System.out.println("successfully removed my-bucketname/my-objectname");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
