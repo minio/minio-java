@@ -16,20 +16,17 @@
 
 package io.minio;
 
-public class BucketName {
-  private String bucketName;
-  private static final String NULL_STRING = "(null)";
+public class BucketTemplate {
+  private String name;
 
-  public BucketName() {}
-
-  public String bucketName() {
-    return bucketName;
+  public String name() {
+    return name;
   }
 
-  public BucketName(String bucketName) {
+  public BucketTemplate(String bucketName) {
 
     if (bucketName == null) {
-      throw new IllegalArgumentException(NULL_STRING + "null bucket name");
+      throw new IllegalArgumentException("null bucket name");
     }
 
     // Bucket names cannot be no less than 3 and no more than 63 characters long.
@@ -53,6 +50,11 @@ public class BucketName {
               + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
       throw new IllegalArgumentException(bucketName + " : " + msg);
     }
-    this.bucketName = bucketName;
+    this.name = bucketName;
+  }
+
+  @Override
+  public String toString() {
+    return "BucketTemplate{" + "name='" + name + '\'' + '}';
   }
 }

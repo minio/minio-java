@@ -17,28 +17,21 @@
 package io.minio;
 
 public final class MakeBucketArgs {
-  private final String bucketName;
+  private final BucketTemplate bucket;
   private final String region;
   private final boolean objectLock;
-  private final BucketName bucket;
-  private static final String NULL_STRING = "(null)";
 
   MakeBucketArgs(Builder builder) {
-    this.bucket = new BucketName(builder.bucketName);
-    this.bucketName = builder.bucketName;
+    this.bucket = builder.bucket;
     this.region = builder.region;
     this.objectLock = builder.objectLock;
-  }
-
-  public String bucketName() {
-    return bucketName;
   }
 
   public String region() {
     return region;
   }
 
-  public BucketName bucket() {
+  public BucketTemplate bucket() {
     return this.bucket;
   }
 
@@ -46,13 +39,27 @@ public final class MakeBucketArgs {
     return objectLock;
   }
 
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
   public static final class Builder {
-    private String bucketName;
+    private BucketTemplate bucket;
     private String region;
     private boolean objectLock;
 
+    public Builder() {}
+
     public Builder bucket(String bucketName) throws IllegalArgumentException {
-      this.bucketName = bucketName;
+      this.bucket = new BucketTemplate(bucketName);
+      return this;
+    }
+
+    public Builder bucket(BucketTemplate bucket) throws IllegalArgumentException {
+      if (bucket == null) {
+        throw new IllegalArgumentException("null value is not allowed for Bucket");
+      }
+      this.bucket = bucket;
       return this;
     }
 
@@ -66,7 +73,10 @@ public final class MakeBucketArgs {
       return this;
     }
 
-    public MakeBucketArgs build() {
+    public MakeBucketArgs build() throws IllegalArgumentException {
+      if (this.bucket == null) {
+        throw new IllegalArgumentException("null value is not allowed for Bucket");
+      }
       return new MakeBucketArgs(this);
     }
   }

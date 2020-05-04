@@ -3270,10 +3270,7 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
 
-    MakeBucketArgs.Builder makeBucketArgs = new MakeBucketArgs.Builder();
-    makeBucketArgs.bucket(bucketName);
-    MakeBucketArgs args = makeBucketArgs.build();
-    this.makeBucket(args);
+    this.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).build());
   }
 
   /**
@@ -3304,10 +3301,23 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
-    MakeBucketArgs.Builder makeBucketArgs = new MakeBucketArgs.Builder();
-    makeBucketArgs.bucket(bucketName).region(region);
-    MakeBucketArgs args = makeBucketArgs.build();
-    this.makeBucket(args);
+
+    // Create bucket with default region.
+    this.makeBucket(MakeBucketArgs.newBuilder().bucket("my-bucketname").build());
+
+    // Create bucket with specific region.
+    this.makeBucket(
+        MakeBucketArgs.newBuilder().bucket("my-bucketname").region("us-east-1").build());
+
+    // Create object-lock enabled bucket with specific region.
+    this.makeBucket(
+        MakeBucketArgs.newBuilder()
+            .bucket("my-bucketname")
+            .region("us-east-1")
+            .objectLock(true)
+            .build());
+
+    this.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).region(region).build());
   }
 
   /**
@@ -3340,10 +3350,12 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
 
-    MakeBucketArgs.Builder makeBucketArgs = new MakeBucketArgs.Builder();
-    makeBucketArgs.bucket(bucketName).region(region).objectLock(objectLock);
-    MakeBucketArgs args = makeBucketArgs.build();
-    this.makeBucket(args);
+    this.makeBucket(
+        MakeBucketArgs.newBuilder()
+            .bucket(bucketName)
+            .region(region)
+            .objectLock(objectLock)
+            .build());
   }
 
   /**
@@ -3376,13 +3388,11 @@ public class MinioClient {
       throw new IllegalArgumentException("null value is not allowed in arguments");
     }
 
-    String region = null;
+    String region = US_EAST_1;
     if (args.region() != null && !args.region().isEmpty()) {
       region = args.region();
     } else if (this.region != null && !this.region.isEmpty()) {
       region = this.region;
-    } else {
-      region = US_EAST_1;
     }
 
     // If constructor already sets a region, check if it is equal to region param if provided
@@ -3402,7 +3412,8 @@ public class MinioClient {
       headerMap.put("x-amz-bucket-object-lock-enabled", "true");
     }
 
-    Response response = executePut(args.bucketName(), null, region, headerMap, null, config, 0);
+    Response response =
+        executePut(args.bucket().name(), null, region, headerMap, null, config, 0);
     response.body().close();
   }
 

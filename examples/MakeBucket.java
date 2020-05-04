@@ -42,11 +42,8 @@ public class MakeBucket {
       if (found) {
         System.out.println("my-bucketname already exists");
       } else {
-        MakeBucketArgs.Builder makeBucketArgs =
-            new MakeBucketArgs.Builder().bucket("my-bucketname");
-        MakeBucketArgs arg = makeBucketArgs.build();
         // Create bucket 'my-bucketname'.
-        minioClient.makeBucket(arg);
+        minioClient.makeBucket(MakeBucketArgs.newBuilder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is created successfully");
       }
     } catch (MinioException e) {
