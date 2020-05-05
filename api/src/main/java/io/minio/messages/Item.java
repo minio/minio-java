@@ -42,7 +42,7 @@ public class Item {
   @Element(name = "StorageClass")
   private String storageClass;
 
-  @Element(name = "Owner")
+  @Element(name = "Owner", required = false)
   private Owner owner;
 
   @Element(name = "UserMetadata", required = false)
