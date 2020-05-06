@@ -18,17 +18,11 @@ package io.minio;
 
 public final class MakeBucketArgs {
   private final Bucket bucket;
-  private final String region;
   private final boolean objectLock;
 
   MakeBucketArgs(Builder builder) {
     this.bucket = builder.bucket;
-    this.region = builder.region;
     this.objectLock = builder.objectLock;
-  }
-
-  public String region() {
-    return region;
   }
 
   public Bucket bucket() {
@@ -48,10 +42,21 @@ public final class MakeBucketArgs {
     private String region;
     private boolean objectLock;
 
-    public Builder() {}
+    public Builder bucket(String name) {
+      if (this.bucket == null) {
+        this.bucket = new Bucket(name, this.region);
+      } else {
+        this.bucket = new Bucket(name, this.bucket.region());
+      }
+      return this;
+    }
 
-    public Builder bucket(String bucketName) throws IllegalArgumentException {
-      this.bucket = new Bucket(bucketName);
+    public Builder region(String region) {
+      if (this.bucket == null) {
+        this.region = region;
+      } else {
+        this.bucket = new Bucket(this.bucket.name(), region);
+      }
       return this;
     }
 
@@ -60,11 +65,6 @@ public final class MakeBucketArgs {
         throw new IllegalArgumentException("null value is not allowed for Bucket");
       }
       this.bucket = bucket;
-      return this;
-    }
-
-    public Builder region(String region) {
-      this.region = region;
       return this;
     }
 

@@ -3245,6 +3245,10 @@ public class MinioClient {
   /**
    * Creates a bucket with default region.
    *
+   * <pre>Example:{@code
+   * minioClient.makeBucket("my-bucketname");
+   * }</pre>
+   *
    * @param bucketName Name of the bucket.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -3271,6 +3275,10 @@ public class MinioClient {
 
   /**
    * Creates a bucket with given region.
+   *
+   * <pre>Example:{@code
+   * minioClient.makeBucket("my-bucketname", "eu-west-1");
+   * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param region Region in which the bucket will be created.
@@ -3315,6 +3323,10 @@ public class MinioClient {
   /**
    * Creates a bucket with object lock feature enabled.
    *
+   * <pre>Example:{@code
+   * minioClient.makeBucket("my-bucketname", "eu-west-2", true);
+   * }</pre>
+   *
    * @param bucketName Name of the bucket.
    * @param region Region in which the bucket will be created.
    * @param objectLock Flag to enable object lock feature.
@@ -3347,10 +3359,10 @@ public class MinioClient {
   }
 
   /**
-   * Creates a bucket makeBucketArgs.
+   * Creates a bucket with make bucket arguments.
    *
    * <pre>Example:{@code
-   * minioClient.makeBucket(MakeBucketArgs makebucketArgs);
+   * minioClient.makeBucket(MakeBucketArgs args);
    * }</pre>
    *
    * @param args Object with bucket name, region and lock functionality
@@ -3377,8 +3389,8 @@ public class MinioClient {
     }
 
     String region = US_EAST_1;
-    if (args.region() != null && !args.region().isEmpty()) {
-      region = args.region();
+    if (args.bucket().region() != null && !args.bucket().region().isEmpty()) {
+      region = args.bucket().region();
     } else if (this.region != null && !this.region.isEmpty()) {
       region = this.region;
     }

@@ -647,14 +647,14 @@ for (Result<Item> result : results) {
 
 <a name="makeBucket"></a>
 ### makeBucket(MakeBucketArgs args)
-`public void makeBucket(MakeBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#makeBucket-io.minio.messages.MakeBucketArgs-)_
+`public void makeBucket(MakeBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#makeBucket-io.minio.MakeBucketArgs-)_
 
 Creates a bucket with given region and object lock feature enabled.
 
 __Parameters__
 | Parameter      | Type             | Description                |
 |:---------------|:-----------------|:---------------------------|
-| ``args      `` | _MakeBucketArgs_ | Arguments to create bucket |
+| ``args``       | _MakeBucketArgs_ | Arguments to create bucket |
 
 __Example__
 ```java
@@ -663,13 +663,13 @@ minioClient.makeBucket(MakeBucketArgs.newBuilder().bucket("my-bucketname").build
 
 // Create bucket with specific region.
 minioClient.makeBucket(
-    MakeBucketArgs.newBuilder().bucket("my-bucketname").region("us-east-1").build());
+    MakeBucketArgs.newBuilder().bucket("my-bucketname").region("us-west-1").build());
 
 // Create object-lock enabled bucket with specific region.
 minioClient.makeBucket(
     MakeBucketArgs.newBuilder()
         .bucket("my-bucketname")
-        .region("us-east-1")
+        .region("us-west-1")
         .objectLock(true)
         .build());
 ```

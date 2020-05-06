@@ -18,13 +18,21 @@ package io.minio;
 
 public class Bucket {
   private String name;
+  private String region;
 
   public String name() {
     return name;
   }
 
-  public Bucket(String name) {
+  public String region() {
+    return region;
+  }
 
+  public Bucket(String name) {
+    this(name, null);
+  }
+
+  public Bucket(String name, String region) {
     if (name == null) {
       throw new IllegalArgumentException("null bucket name");
     }
@@ -49,10 +57,11 @@ public class Bucket {
       throw new IllegalArgumentException(name + " : " + msg);
     }
     this.name = name;
+    this.region = region;
   }
 
   @Override
   public String toString() {
-    return this.name;
+    return "name='" + name + '\'' + ", region='" + region;
   }
 }
