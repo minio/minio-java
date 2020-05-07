@@ -16,17 +16,17 @@
 
 package io.minio;
 
-public final class MakeBucketArgs extends BucketArgs {
-  private final boolean objectLock;
+public final class VersionBucketArgs extends BucketArgs {
+  private final boolean bucketVersion;
 
-  MakeBucketArgs(Builder builder) {
+  VersionBucketArgs(Builder builder) {
     this.name = builder.name;
     this.region = builder.region;
-    this.objectLock = builder.objectLock;
+    this.bucketVersion = builder.bucketVersion;
   }
 
-  public boolean objectLock() {
-    return objectLock;
+  public boolean bucketVersion() {
+    return bucketVersion;
   }
 
   public static Builder newBuilder() {
@@ -34,7 +34,7 @@ public final class MakeBucketArgs extends BucketArgs {
   }
 
   public static final class Builder extends BucketArgs.BucketArgsBuilder {
-    private boolean objectLock;
+    private boolean bucketVersion;
 
     public Builder bucket(String name) {
       this.name = name;
@@ -46,13 +46,13 @@ public final class MakeBucketArgs extends BucketArgs {
       return this;
     }
 
-    public Builder objectLock(boolean objectLock) {
-      this.objectLock = objectLock;
+    public Builder bucketVersion(boolean bucketVersion) {
+      this.bucketVersion = bucketVersion;
       return this;
     }
 
-    public MakeBucketArgs build() throws IllegalArgumentException {
-      return new MakeBucketArgs(this);
+    public VersionBucketArgs build() throws IllegalArgumentException {
+      return new VersionBucketArgs(this);
     }
   }
 }

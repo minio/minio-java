@@ -3389,8 +3389,8 @@ public class MinioClient {
     }
 
     String region = US_EAST_1;
-    if (args.bucket().region() != null && !args.bucket().region().isEmpty()) {
-      region = args.bucket().region();
+    if (args.region() != null && !args.region().isEmpty()) {
+      region = args.region();
     } else if (this.region != null && !this.region.isEmpty()) {
       region = this.region;
     }
@@ -3412,7 +3412,7 @@ public class MinioClient {
       headerMap.put("x-amz-bucket-object-lock-enabled", "true");
     }
 
-    Response response = executePut(args.bucket().name(), null, region, headerMap, null, config, 0);
+    Response response = executePut(args.name(), null, region, headerMap, null, config, 0);
     response.body().close();
   }
 
@@ -3440,13 +3440,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("versioning", "");
-    String config =
-        "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
-            + "<Status>Enabled</Status></VersioningConfiguration>";
-    Response response = executePut(bucketName, null, null, queryParamMap, config, 0);
-    response.body().close();
+    versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(true).build());
   }
 
   /**
@@ -3473,12 +3467,46 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(false).build());
+  }
+
+  /**
+   * Enables object versioning feature in a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.versioning("VersionBucketArgs args);
+   * }</pre>
+   *
+   * @param args Arguments for bucket versioning.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void versioning(VersionBucketArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
+
+    String status = "Suspended";
+    if (args.bucketVersion()) {
+      status = "Enabled";
+    }
     String config =
         "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
-            + "<Status>Suspended</Status></VersioningConfiguration>";
-    Response response = executePut(bucketName, null, null, queryParamMap, config, 0);
+            + "<Status>"
+            + status
+            + "</Status></VersioningConfiguration>";
+    Response response = executePut(args.name(), null, null, queryParamMap, config, 0);
     response.body().close();
   }
 

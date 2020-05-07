@@ -330,6 +330,28 @@ __Example__
 minioClient.enableVersioning("my-bucketname");
 ```
 
+### versioning(VersionBucketArgs args)
+`public void versioning(VersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#versioning-io.minio-VersionBucketArgs-)_
+
+Enables/Disables  object versioning feature in a bucket.
+
+__Parameters__
+
+| Parameter      | Type     | Description         |
+|:---------------|:---------|:--------------------|
+| ``args`` | _[VersionBucketArgs]_ | Name of the bucket. |
+
+__Example__
+```java
+ // Enable bucket versioning
+minioClient.versioning(
+    VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(true).build());
+
+// Disable bucket versioning
+minioClient.versioning(
+    VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(false).build());
+```
+
 <a name="getBucketLifeCycle"></a>
 ### getBucketLifeCycle(String bucketName)
 `public String getBucketLifeCycle(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketLifeCycle-java.lang.String-)_
@@ -654,7 +676,7 @@ Creates a bucket with given region and object lock feature enabled.
 __Parameters__
 | Parameter      | Type             | Description                |
 |:---------------|:-----------------|:---------------------------|
-| ``args``       | _MakeBucketArgs_ | Arguments to create bucket |
+| ``args``       | _[MakeBucketArgs]_ | Arguments to create bucket |
 
 __Example__
 ```java
