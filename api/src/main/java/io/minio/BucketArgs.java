@@ -17,10 +17,36 @@
 package io.minio;
 
 public class BucketArgs {
-  public String name;
-  public String region;
+  protected String name;
+  protected String region;
 
-  public BucketArgs() {}
+  public BucketArgs(String name, String region) {
+    if (name == null) {
+      throw new IllegalArgumentException("null bucket name");
+    }
+
+    // Bucket names cannot be no less than 3 and no more than 63 characters long.
+    if (name.length() < 3 || name.length() > 63) {
+      throw new IllegalArgumentException(
+          name + " : " + "bucket name must be at least 3 and no more than 63 characters long");
+    }
+    // Successive periods in bucket names are not allowed.
+    if (name.contains("..")) {
+      String msg =
+          "bucket name cannot contain successive periods. For more information refer "
+              + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
+      throw new IllegalArgumentException(name + " : " + msg);
+    }
+    // Bucket names should be dns compatible.
+    if (!name.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
+      String msg =
+          "bucket name does not follow Amazon S3 standards. For more information refer "
+              + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
+      throw new IllegalArgumentException(name + " : " + msg);
+    }
+    this.name = name;
+    this.region = region;
+  }
 
   public String name() {
     return name;
@@ -30,92 +56,8 @@ public class BucketArgs {
     return region;
   }
 
-  BucketArgs(BucketArgsBuilder builder) {
-    this.name = builder.name;
-    this.region = builder.region;
-  }
-
-  public static class BucketArgsBuilder {
-    public String name;
-    public String region;
-
-    public BucketArgsBuilder name(String name) {
-      if (name == null) {
-        throw new IllegalArgumentException("null bucket name");
-      }
-
-      // Bucket names cannot be no less than 3 and no more than 63 characters long.
-      if (name.length() < 3 || name.length() > 63) {
-        throw new IllegalArgumentException(
-            name + " : " + "bucket name must be at least 3 and no more than 63 characters long");
-      }
-      // Successive periods in bucket names are not allowed.
-      if (name.contains("..")) {
-        String msg =
-            "bucket name cannot contain successive periods. For more information refer "
-                + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-        throw new IllegalArgumentException(name + " : " + msg);
-      }
-      // Bucket names should be dns compatible.
-      if (!name.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
-        String msg =
-            "bucket name does not follow Amazon S3 standards. For more information refer "
-                + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-        throw new IllegalArgumentException(name + " : " + msg);
-      }
-      this.name = name;
-      return this;
-    }
-
-    public BucketArgsBuilder region(String region) {
-      this.region = region;
-      return this;
-    }
-
-    public BucketArgs build() throws IllegalArgumentException {
-      if (this.name == null || this.name.isEmpty()) {
-        throw new IllegalArgumentException("name is null or empty");
-      }
-      return new BucketArgs(this);
-    }
+  @Override
+  public String toString() {
+    return "name='" + name + '\'' + ", region='" + region;
   }
 }
-
-//  public Bucket(String name) {
-//    this(name, null);
-//  }
-//
-//  public Bucket(String name, String region) {
-//      if (name == null) {
-//        throw new IllegalArgumentException("null bucket name");
-//      }
-//
-//      // Bucket names cannot be no less than 3 and no more than 63 characters long.
-//      if (name.length() < 3 || name.length() > 63) {
-//        throw new IllegalArgumentException(
-//            name + " : " + "bucket name must be at least 3 and no more than 63 characters long");
-//      }
-//      // Successive periods in bucket names are not allowed.
-//      if (name.contains("..")) {
-//        String msg =
-//            "bucket name cannot contain successive periods. For more information refer "
-//                + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-//        throw new IllegalArgumentException(name + " : " + msg);
-//      }
-//      // Bucket names should be dns compatible.
-//      if (!name.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
-//        String msg =
-//            "bucket name does not follow Amazon S3 standards. For more information refer "
-//                + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-//        throw new IllegalArgumentException(name + " : " + msg);
-//      }
-//      this.name = name;
-//      this.region = region;
-//    }
-//
-//  @Override
-//  public String toString() {
-//    return
-//      "name='" + name + '\'' +
-//      ", region='" + region ;
-//  }
