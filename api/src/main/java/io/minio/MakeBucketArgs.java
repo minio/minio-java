@@ -16,11 +16,11 @@
 
 package io.minio;
 
-public final class MakeBucketArgs extends BucketArgs {
+public class MakeBucketArgs extends BucketArgs {
   private final boolean objectLock;
 
   MakeBucketArgs(Builder builder) {
-    super(builder.bucket, builder.region);
+    super(builder);
     this.objectLock = builder.objectLock;
   }
 
@@ -28,24 +28,8 @@ public final class MakeBucketArgs extends BucketArgs {
     return objectLock;
   }
 
-  public static Builder newBuilder() {
-    return new Builder();
-  }
-
-  public static final class Builder {
-    public String bucket;
-    public String region;
+  public static final class Builder extends BucketArgs.Builder<Builder> {
     private boolean objectLock;
-
-    public Builder bucket(String name) {
-      this.bucket = name;
-      return this;
-    }
-
-    public Builder region(String region) {
-      this.region = region;
-      return this;
-    }
 
     public Builder objectLock(boolean objectLock) {
       this.objectLock = objectLock;

@@ -237,7 +237,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(name).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(name).build());
       client.removeBucket(name);
       mintSuccessLog("makeBucket(MakeBucketArgs args)", null, startTime);
     } catch (Exception e) {
@@ -260,7 +260,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(name).region("eu-west-1").build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(name).region("eu-west-1").build());
       client.removeBucket(name);
       mintSuccessLog("makeBucket(MakeBucketArgs args)", "region: eu-west-1", startTime);
     } catch (Exception e) {
@@ -285,7 +285,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String name = getRandomName() + ".withperiod";
     try {
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(name).region("eu-central-1").build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(name).region("eu-central-1").build());
 
       client.removeBucket(name);
       mintSuccessLog(
@@ -312,7 +312,7 @@ public class FunctionalTest {
       long nowSeconds = ZonedDateTime.now().toEpochSecond();
       String bucketName = getRandomName();
       boolean found = false;
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).build());
       for (io.minio.messages.Bucket bucket : client.listBuckets()) {
         if (bucket.name().equals(bucketName)) {
           if (found) {
@@ -355,7 +355,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(name).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(name).build());
 
       if (!client.bucketExists(name)) {
         throw new Exception("[FAILED] bucket does not exist");
@@ -382,7 +382,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(name).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(name).build());
 
       client.removeBucket(name);
       mintSuccessLog("removeBucket(String bucketName)", null, startTime);
@@ -399,7 +399,7 @@ public class FunctionalTest {
 
   /** Tear down test setup. */
   public static void setup() throws Exception {
-    client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).build());
+    client.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).build());
   }
 
   /** Tear down test setup. */
@@ -2197,7 +2197,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
       client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, null);
       client.getObject(destBucketName, objectName).close();
 
@@ -2238,7 +2238,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
 
       CopyConditions invalidETag = new CopyConditions();
       invalidETag.setMatchETag("TestETag");
@@ -2291,7 +2291,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
 
       ObjectStat stat = client.statObject(bucketName, objectName);
       CopyConditions copyConditions = new CopyConditions();
@@ -2342,7 +2342,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
 
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setMatchETagNone("TestETag");
@@ -2394,7 +2394,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
 
       ObjectStat stat = client.statObject(bucketName, objectName);
       CopyConditions matchingETagNone = new CopyConditions();
@@ -2451,7 +2451,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
 
       CopyConditions modifiedDateCondition = new CopyConditions();
       modifiedDateCondition.setModified(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
@@ -2501,7 +2501,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
 
       CopyConditions invalidUnmodifiedCondition = new CopyConditions();
       invalidUnmodifiedCondition.setUnmodified(
@@ -2566,7 +2566,7 @@ public class FunctionalTest {
       }
 
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).build());
 
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setReplaceMetadataDirective();
@@ -3284,7 +3284,7 @@ public class FunctionalTest {
     String bucketName = getRandomName();
     String objectName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).objectLock(true).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).objectLock(true).build());
       try {
         try (final InputStream is = new ContentInputStream(1 * KB)) {
           client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
@@ -3338,7 +3338,7 @@ public class FunctionalTest {
     String bucketName = getRandomName();
     String objectName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).objectLock(true).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).objectLock(true).build());
       try {
         try (final InputStream is = new ContentInputStream(1 * KB)) {
           client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
@@ -3391,7 +3391,7 @@ public class FunctionalTest {
     String bucketName = getRandomName();
 
     try {
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).objectLock(true).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).objectLock(true).build());
       try {
         ObjectLockConfiguration config =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
@@ -3431,7 +3431,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).objectLock(true).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).objectLock(true).build());
       try {
         ObjectLockConfiguration expectedConfig =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
@@ -3666,7 +3666,8 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).region(region).build());
+
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).region(region).build());
 
       NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
 
@@ -3722,7 +3723,8 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).region(region).build());
+
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).region(region).build());
 
       NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
 
@@ -3784,7 +3786,8 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(destBucketName).region(region).build());
+
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(destBucketName).region(region).build());
 
       NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
 
@@ -3843,7 +3846,7 @@ public class FunctionalTest {
     String bucketName = getRandomName();
     CloseableIterator<Result<NotificationRecords>> ci = null;
     try {
-      client.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).region(region).build());
+      client.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).region(region).build());
       String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
       ci = client.listenBucketNotification(bucketName, "prefix", "suffix", events);
 

@@ -38,7 +38,7 @@ public class MakeBucketWithLock {
       } else {
         // Create bucket 'my-bucketname' with object lock functionality enabled
         s3Client.makeBucket(
-            MakeBucketArgs.newBuilder().bucket("my-bucketname").objectLock(true).build());
+            new MakeBucketArgs.Builder().bucket("my-bucketname").objectLock(true).build());
         System.out.println(
             "my-bucketname is created successfully with object lock functionality enabled.");
       }

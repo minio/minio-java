@@ -3270,7 +3270,7 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
 
-    this.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).build());
+    this.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).build());
   }
 
   /**
@@ -3302,22 +3302,7 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
 
-    // Create bucket with default region.
-    this.makeBucket(MakeBucketArgs.newBuilder().bucket("my-bucketname").build());
-
-    // Create bucket with specific region.
-    this.makeBucket(
-        MakeBucketArgs.newBuilder().bucket("my-bucketname").region("us-east-1").build());
-
-    // Create object-lock enabled bucket with specific region.
-    this.makeBucket(
-        MakeBucketArgs.newBuilder()
-            .bucket("my-bucketname")
-            .region("us-east-1")
-            .objectLock(true)
-            .build());
-
-    this.makeBucket(MakeBucketArgs.newBuilder().bucket(bucketName).region(region).build());
+    this.makeBucket(new MakeBucketArgs.Builder().bucket(bucketName).region(region).build());
   }
 
   /**
@@ -3351,7 +3336,7 @@ public class MinioClient {
           XmlParserException {
 
     this.makeBucket(
-        MakeBucketArgs.newBuilder()
+        new MakeBucketArgs.Builder()
             .bucket(bucketName)
             .region(region)
             .objectLock(objectLock)
@@ -3412,7 +3397,7 @@ public class MinioClient {
       headerMap.put("x-amz-bucket-object-lock-enabled", "true");
     }
 
-    Response response = executePut(args.name(), null, region, headerMap, null, config, 0);
+    Response response = executePut(args.bucketName(), null, region, headerMap, null, config, 0);
     response.body().close();
   }
 
@@ -3440,7 +3425,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(true).build());
+    // versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(true).build());
   }
 
   /**
@@ -3467,7 +3452,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(false).build());
+    // versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(false).build());
   }
 
   /**
@@ -3490,25 +3475,25 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void versioning(VersionBucketArgs args)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("versioning", "");
-
-    String status = "Suspended";
-    if (args.bucketVersion()) {
-      status = "Enabled";
-    }
-    String config =
-        "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
-            + "<Status>"
-            + status
-            + "</Status></VersioningConfiguration>";
-    Response response = executePut(args.name(), null, null, queryParamMap, config, 0);
-    response.body().close();
-  }
+  //  public void versioning(VersionBucketArgs args)
+  //      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+  //          InternalException, InvalidBucketNameException, InvalidKeyException,
+  //          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+  //    Map<String, String> queryParamMap = new HashMap<>();
+  //    queryParamMap.put("versioning", "");
+  //
+  //    String status = "Suspended";
+  //    if (args.bucketVersion()) {
+  //      status = "Enabled";
+  //    }
+  //    String config =
+  //        "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+  //            + "<Status>"
+  //            + status
+  //            + "</Status></VersioningConfiguration>";
+  //    Response response = executePut(args.name(), null, null, queryParamMap, config, 0);
+  //    response.body().close();
+  //  }
 
   /**
    * Sets default object retention in a bucket.

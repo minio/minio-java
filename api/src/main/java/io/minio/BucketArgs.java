@@ -16,39 +16,41 @@
 
 package io.minio;
 
-public class BucketArgs {
-  protected String name;
-  protected String region;
+abstract class BucketArgs {
+  private String name;
+  private String region;
 
-  public BucketArgs(String name, String region) {
-    if (name == null) {
+  BucketArgs(Builder<?> builder) {
+    if (builder.name == null) {
       throw new IllegalArgumentException("null bucket name");
     }
 
     // Bucket names cannot be no less than 3 and no more than 63 characters long.
-    if (name.length() < 3 || name.length() > 63) {
+    if (builder.name.length() < 3 || builder.name.length() > 63) {
       throw new IllegalArgumentException(
-          name + " : " + "bucket name must be at least 3 and no more than 63 characters long");
+          builder.name
+              + " : "
+              + "bucket name must be at least 3 and no more than 63 characters long");
     }
     // Successive periods in bucket names are not allowed.
-    if (name.contains("..")) {
+    if (builder.name.contains("..")) {
       String msg =
           "bucket name cannot contain successive periods. For more information refer "
               + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-      throw new IllegalArgumentException(name + " : " + msg);
+      throw new IllegalArgumentException(builder.name + " : " + msg);
     }
     // Bucket names should be dns compatible.
-    if (!name.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
+    if (!builder.name.matches("^[a-z0-9][a-z0-9\\.\\-]+[a-z0-9]$")) {
       String msg =
           "bucket name does not follow Amazon S3 standards. For more information refer "
               + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
-      throw new IllegalArgumentException(name + " : " + msg);
+      throw new IllegalArgumentException(builder.name + " : " + msg);
     }
-    this.name = name;
-    this.region = region;
+    this.name = builder.name;
+    this.region = builder.region;
   }
 
-  public String name() {
+  public String bucketName() {
     return name;
   }
 
@@ -56,8 +58,21 @@ public class BucketArgs {
     return region;
   }
 
-  @Override
-  public String toString() {
-    return "name='" + name + '\'' + ", region='" + region;
+  public abstract static class Builder<T extends Builder<T>> {
+    public String name;
+    public String region;
+
+    @SuppressWarnings("unchecked")
+    public T bucket(String name) {
+      this.name = name;
+
+      return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public T region(String region) {
+      this.region = region;
+      return (T) this;
+    }
   }
 }
