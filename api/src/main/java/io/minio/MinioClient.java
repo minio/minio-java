@@ -3421,11 +3421,12 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void enableVersioning(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    // versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(true).build());
+    versioning(new VersionBucketArgs.Builder().bucket(bucketName).bucketVersion(true).build());
   }
 
   /**
@@ -3448,11 +3449,12 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void disableVersioning(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    // versioning(VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(false).build());
+    versioning(new VersionBucketArgs.Builder().bucket(bucketName).bucketVersion(false).build());
   }
 
   /**
@@ -3475,25 +3477,25 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  //  public void versioning(VersionBucketArgs args)
-  //      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-  //          InternalException, InvalidBucketNameException, InvalidKeyException,
-  //          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-  //    Map<String, String> queryParamMap = new HashMap<>();
-  //    queryParamMap.put("versioning", "");
-  //
-  //    String status = "Suspended";
-  //    if (args.bucketVersion()) {
-  //      status = "Enabled";
-  //    }
-  //    String config =
-  //        "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
-  //            + "<Status>"
-  //            + status
-  //            + "</Status></VersioningConfiguration>";
-  //    Response response = executePut(args.name(), null, null, queryParamMap, config, 0);
-  //    response.body().close();
-  //  }
+  public void versioning(VersionBucketArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("versioning", "");
+
+    String status = "Suspended";
+    if (args.bucketVersion()) {
+      status = "Enabled";
+    }
+    String config =
+        "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+            + "<Status>"
+            + status
+            + "</Status></VersioningConfiguration>";
+    Response response = executePut(args.bucketName(), null, null, queryParamMap, config, 0);
+    response.body().close();
+  }
 
   /**
    * Sets default object retention in a bucket.
@@ -3821,11 +3823,40 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void removeBucket(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    executeDelete(bucketName, null, null);
+    removeBucket(new RemoveBucketArgs.Builder().bucket(bucketName).build());
+    // executeDelete(bucketName, null, null);
+  }
+
+  /**
+   * Removes an empty bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.removeBucket(RemoveBucketArgs args);
+   * }</pre>
+   *
+   * @param args Arguments for remove bucket.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void removeBucket(RemoveBucketArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    executeDelete(args.bucketName(), null, null);
   }
 
   private void putObject(

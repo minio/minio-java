@@ -20,23 +20,23 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 |---------------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                               | [`composeObject`](#composeObject)                       |
 | [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`copyObject`](#copyObject)                             |
-| [`disableVersioning`](#disableVersioning)                     | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
-| [`enableVersioning`](#enableVersioning)                       | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObject`](#getObject)                               |
-| [`getBucketNotification`](#getBucketNotification)             | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketPolicy`](#getBucketPolicy)                         | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getDefaultRetention`](#getDefaultRetention)                 | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`listBuckets`](#listBuckets)                                 | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`listenBucketNotification`](#listenBucketNotification)       | [`listObjects`](#listObjects)                           |
-| [`listIncompleteUploads`](#listIncompleteUploads)             | [`presignedGetObject`](#presignedGetObject)             |
-| [`makeBucket`](#makeBucket)                                   | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`presignedPutObject`](#presignedPutObject)             |
-| [`removeBucket`](#removeBucket)                               | [`putObject`](#putObject)                               |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`removeObject`](#removeObject)                         |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`removeObjects`](#removeObjects)                       |
-| [`setBucketNotification`](#setBucketNotification)             | [`selectObjectContent`](#selectObjectContent)           |
-| [`setBucketPolicy`](#setBucketPolicy)                         | [`setObjectRetention`](#setObjectRetention)             |
-| [`setDefaultRetention`](#setDefaultRetention)                 | [`statObject`](#statObject)                             |
+| [`versioning`](#versioning)                                   | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
+| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
+| [`getBucketNotification`](#getBucketNotification)             | [`getObject`](#getObject)                               |
+| [`getBucketPolicy`](#getBucketPolicy)                         | [`getObjectRetention`](#getObjectRetention)             |
+| [`getDefaultRetention`](#getDefaultRetention)                 | [`getObjectUrl`](#getObjectUrl)                         |
+| [`listBuckets`](#listBuckets)                                 | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`listenBucketNotification`](#listenBucketNotification)       | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`listIncompleteUploads`](#listIncompleteUploads)             | [`listObjects`](#listObjects)                           |
+| [`makeBucket`](#makeBucket)                                   | [`presignedGetObject`](#presignedGetObject)             |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`removeBucket`](#removeBucket)                               | [`presignedPutObject`](#presignedPutObject)             |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`putObject`](#putObject)                               |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`removeObject`](#removeObject)                         |
+| [`setBucketNotification`](#setBucketNotification)             | [`removeObjects`](#removeObjects)                       |
+| [`setBucketPolicy`](#setBucketPolicy)                         | [`selectObjectContent`](#selectObjectContent)           |
+| [`setDefaultRetention`](#setDefaultRetention)                 | [`setObjectRetention`](#setObjectRetention)             |
+|                                                               | [`statObject`](#statObject)                             |
 
 ## 1. Constructors
 |                                                                                                                          |
@@ -297,38 +297,6 @@ __Example__
 minioClient.deleteBucketLifeCycle("my-bucketname");
 ```
 
-<a name="disableVersioning"></a>
-### disableVersioning(String bucketName)
-`public void disableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-java.lang.String-)_
-
-Disables object versioning feature in a bucket.
-
-__Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
-
-__Example__
-```java
-minioClient.disableVersioning("my-bucketname");
-```
-
-<a name="enableVersioning"></a>
-### enableVersioning(String bucketName)
-`public void enableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-java.lang.String-)_
-
-Enables object versioning feature in a bucket.
-
-__Parameters__
-
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
-
-__Example__
-```java
-minioClient.enableVersioning("my-bucketname");
-```
 
 ### versioning(VersionBucketArgs args)
 `public void versioning(VersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#versioning-io.minio-VersionBucketArgs-)_
@@ -337,19 +305,19 @@ Enables/Disables  object versioning feature in a bucket.
 
 __Parameters__
 
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``args`` | _[VersionBucketArgs]_ | Name of the bucket. |
+| Parameter      | Type            | Description                      |
+|:---------------|:----------------|:---------------------------------|
+| ``args`` | _[VersionBucketArgs]_ | Arguments for bucket versioning. |
 
 __Example__
 ```java
  // Enable bucket versioning
 minioClient.versioning(
-    VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(true).build());
+    new VersionBucketArgs.Builder().bucket(bucketName).bucketVersion(true).build());
 
 // Disable bucket versioning
 minioClient.versioning(
-    VersionBucketArgs.newBuilder().bucket(bucketName).bucketVersion(false).build());
+    new VersionBucketArgs.Builder().bucket(bucketName).bucketVersion(false).build());
 ```
 
 <a name="getBucketLifeCycle"></a>
@@ -681,15 +649,15 @@ __Parameters__
 __Example__
 ```java
 // Create bucket with default region.
-minioClient.makeBucket(MakeBucketArgs.newBuilder().bucket("my-bucketname").build());
+minioClient.makeBucket(new MakeBucketArgs.Builder().bucket("my-bucketname").build());
 
 // Create bucket with specific region.
 minioClient.makeBucket(
-    MakeBucketArgs.newBuilder().bucket("my-bucketname").region("us-west-1").build());
+    new MakeBucketArgs.Builder().bucket("my-bucketname").region("us-west-1").build());
 
 // Create object-lock enabled bucket with specific region.
 minioClient.makeBucket(
-    MakeBucketArgs.newBuilder()
+    new MakeBucketArgs.Builder()
         .bucket("my-bucketname")
         .region("us-west-1")
         .objectLock(true)
@@ -714,19 +682,19 @@ minioClient.removeAllBucketNotification("my-bucketname");
 ```
 
 <a name="removeBucket"></a>
-### removeBucket(String bucketName)
-`public void removeBucket(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeBucket-java.lang.String-)_
+### removeBucket(RemoveBucketArgs args)
+`public void removeBucket(RemoveBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeBucket-io.minio.RemoveBucketArgs-)_
 
 Removes an empty bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| Parameter      | Type                 | Description                 |
+|:---------------|:---------------------|:----------------------------|
+| ``args``       | _[RemoveBucketArgs]_ | Arguments to remove Bucket. |
 
 __Example__
 ```java
-minioClient.removeBucket("my-bucketname");
+minioClient.removeBucket(new RemoveBucketArgs.Builder().bucket(name).build());
 ```
 
 <a name="removeIncompleteUpload"></a>

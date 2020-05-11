@@ -13,31 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.minio;
 
-public class VersionBucketArgs extends BucketArgs {
-  private final boolean bucketVersion;
-
-  VersionBucketArgs(Builder builder) {
-    super(builder);
-    this.bucketVersion = builder.bucketVersion;
-  }
-
-  public boolean bucketVersion() {
-    return bucketVersion;
+public class RemoveBucketArgs extends BucketArgs {
+  private RemoveBucketArgs(Builder b) {
+    super(b);
   }
 
   public static final class Builder extends BucketArgs.Builder<Builder> {
-    private boolean bucketVersion;
-
-    public Builder bucketVersion(boolean bucketVersion) {
-      this.bucketVersion = bucketVersion;
-      return this;
-    }
-
-    public VersionBucketArgs build() throws IllegalArgumentException {
-      return new VersionBucketArgs(this);
+    public RemoveBucketArgs build() {
+      return new RemoveBucketArgs(this);
     }
   }
 }

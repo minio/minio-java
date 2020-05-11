@@ -16,7 +16,7 @@
 
 package io.minio;
 
-abstract class BucketArgs {
+public abstract class BucketArgs {
   private String name;
   private String region;
 
