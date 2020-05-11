@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import io.minio.messages.ObjectLockConfiguration;
@@ -38,7 +39,8 @@ public class SetGetBucketObjectLockConfig {
         System.out.println("my-bucketname already exists");
       } else {
         // Create bucket 'my-bucketname' with object lock functionality enabled
-        s3Client.makeBucket("my-bucketname", null, true);
+        s3Client.makeBucket(
+            new MakeBucketArgs.Builder().bucket("my-bucketname").objectLock(true).build());
         System.out.println(
             "my-bucketname is created successfully with object lock functionality enabled.");
       }

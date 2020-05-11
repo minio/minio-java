@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class MakeBucket {
         System.out.println("my-bucketname already exists");
       } else {
         // Create bucket 'my-bucketname'.
-        minioClient.makeBucket("my-bucketname");
+        minioClient.makeBucket(new MakeBucketArgs.Builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is created successfully");
       }
     } catch (MinioException e) {
