@@ -16,8 +16,6 @@
 
 package io.minio;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 /** Base argument class holds bucket name and region */
 public abstract class BucketArgs {
   private final String name;
@@ -45,18 +43,14 @@ public abstract class BucketArgs {
 
     public Builder() {}
 
-    @SuppressFBWarnings(
-        value = "GC",
-        justification = "Its safe to type cast to T as T is inherited by this class")
+    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
     public T bucket(String name) {
       validateName(name);
       this.name = name;
       return (T) this;
     }
 
-    @SuppressFBWarnings(
-        value = "GC",
-        justification = "Its safe to type cast to T as T is inherited by this class")
+    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
     public T region(String region) {
       this.region = region;
       return (T) this;
