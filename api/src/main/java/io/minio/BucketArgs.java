@@ -16,7 +16,9 @@
 
 package io.minio;
 
-/** Bucket Arguments to hold base bucket properties */
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+/** Base argument class holds bucket name and region */
 public abstract class BucketArgs {
   private final String name;
   private final String region;
@@ -26,45 +28,42 @@ public abstract class BucketArgs {
     this.region = builder.region;
   }
 
-  /** Returns the name of bucket */
+  /** Returns bucket name */
   public String bucketName() {
     return name;
   }
 
-  /** Returns the region of bucket */
+  /** Returns region */
   public String region() {
     return region;
   }
 
-  /** Builder class to create base bucket object */
+  /** Base argument builder class. */
   public abstract static class Builder<T extends Builder<T>> {
     public String name;
     public String region;
 
     public Builder() {}
 
-    public Builder(BucketArgs args) {
-      this.name = args.bucketName();
-      this.region = args.region();
-    }
-
-    @SuppressWarnings("unchecked")
-    /** Its safe to type cast to T as T is inherited this class. */
+    @SuppressFBWarnings(
+        value = "GC",
+        justification = "Its safe to type cast to T as T is inherited by this class")
     public T bucket(String name) {
       validateName(name);
       this.name = name;
       return (T) this;
     }
 
-    @SuppressWarnings("unchecked")
-    /** Its safe to type cast to T as T is inherited this class. */
+    @SuppressFBWarnings(
+        value = "GC",
+        justification = "Its safe to type cast to T as T is inherited by this class")
     public T region(String region) {
       this.region = region;
       return (T) this;
     }
 
     /** Validate the name of the bucket */
-    public void validateName(String name) {
+    public static void validateName(String name) {
       if (name == null) {
         throw new IllegalArgumentException("null bucket name");
       }

@@ -252,9 +252,35 @@ public class FunctionalTest {
   }
 
   /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucketwithRegion_test() throws Exception {
+  public static void makeBucket_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: makeBucket(MakeBucketArgs args) with region");
+      System.out.println(
+          "Test: with region and object lock functionality : makeBucket(MakeBucketArgs args)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String name = getRandomName();
+      client.makeBucket(
+          MakeBucketArgs.builder().bucket(name).region("eu-west-1").objectLock(true).build());
+      client.removeBucket(name);
+      mintSuccessLog(
+          "makeBucket(MakeBucketArgs args)", "region: eu-west-1, objectLock: true", startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          "makeBucket(MakeBucketArgs args)",
+          "region: eu-west-1, objectLock: true",
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
+  }
+
+  /** Test: makeBucket(MakeBucketArgs args). */
+  public static void makeBucket_test3() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: with region: makeBucket(MakeBucketArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -262,10 +288,10 @@ public class FunctionalTest {
       String name = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(name).region("eu-west-1").build());
       client.removeBucket(name);
-      mintSuccessLog("makeBucket(MakeBucketArgs args) with region", "region: eu-west-1", startTime);
+      mintSuccessLog("makeBucket(MakeBucketArgs args) ", "region: eu-west-1", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "makeBucket(MakeBucketArgs args) with region",
+          "makeBucket(MakeBucketArgs args) ",
           "region: eu-west-1",
           startTime,
           null,
@@ -275,10 +301,10 @@ public class FunctionalTest {
   }
 
   /** Test: makeBucket(MakeBucketArgs args) where bucketName has periods in its name. */
-  public static void makeBucketWithPeriod_test() throws Exception {
+  public static void makeBucket_test4() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: makeBucket(MakeBucketArgs args) with bucketname having periods in its name ");
+          "Test: with bucket name having periods in its name:  makeBucket(MakeBucketArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -294,33 +320,6 @@ public class FunctionalTest {
       mintFailedLog(
           "makeBucket(MakeBucketArgs args) bucketname having periods in its name",
           "name: " + name + ", region: eu-central-1",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucketwithRegioAndObjectLock() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: makeBucket(MakeBucketArgs args) with region and object lock");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(
-          MakeBucketArgs.builder().bucket(name).region("eu-west-1").objectLock(true).build());
-      client.removeBucket(name);
-      mintSuccessLog(
-          "makeBucket(MakeBucketArgs args) with region and objectllock",
-          "region: eu-west-1",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args) with region and objectlock",
-          "region: eu-west-1",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -4019,10 +4018,10 @@ public class FunctionalTest {
   /** runTests: runs as much as possible of test combinations. */
   public static void runTests() throws Exception {
     makeBucket_test1();
-    makeBucketwithRegioAndObjectLock();
+    makeBucket_test2();
     if (endpoint.toLowerCase(Locale.US).contains("s3")) {
-      makeBucketwithRegion_test();
-      makeBucketWithPeriod_test();
+      makeBucket_test3();
+      makeBucket_test4();
     }
 
     listBuckets_test();

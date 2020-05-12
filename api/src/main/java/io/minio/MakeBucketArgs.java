@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Bucket Arguments to be used to create Bukcet. */
+/** Argument class of @see #makeBucket(MakeBucketArgs args). */
 public class MakeBucketArgs extends BucketArgs {
   private final boolean objectLock;
 
@@ -25,25 +25,20 @@ public class MakeBucketArgs extends BucketArgs {
     this.objectLock = builder.objectLock;
   }
 
-  /** Return true if object lock functionality is enabled */
+  /** Returns object lock flag. */
   public boolean objectLock() {
     return objectLock;
   }
 
-  /** Return new Builder */
   public static Builder builder() {
     return new Builder();
   }
 
+  /** Argument builder of @see #makeBucket(MakeBucketArgs args). */
   public static final class Builder extends BucketArgs.Builder<Builder> {
     private boolean objectLock;
 
     public Builder() {}
-
-    public Builder(MakeBucketArgs args) {
-      super(args);
-      this.objectLock = args.objectLock();
-    }
 
     public Builder objectLock(boolean objectLock) {
       this.objectLock = objectLock;

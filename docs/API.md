@@ -654,7 +654,7 @@ __Parameters__
 
 | Parameter      | Type               | Description                |
 |:---------------|:-------------------|:---------------------------|
-| ``args``       | _[MakeBucketArgs](#https://minio.github.io/minio-java/io/minio/MakeBucketArgs.html)_ | Arguments to create bucket |
+| ``args``       | _[MakeBucketArgs]_ | Arguments to create bucket |
 
 __Example__
 
@@ -1598,4 +1598,5 @@ ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname",
 [ObjectStat]: http://minio.github.io/minio-java/io/minio/ObjectStat.html
 [DeleteError]: http://minio.github.io/minio-java/io/minio/messages/DeleteError.html
 [SelectResponseStream]: http://minio.github.io/minio-java/io/minio/SelectResponseStream.html
+[MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
