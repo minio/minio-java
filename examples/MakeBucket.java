@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -36,14 +37,29 @@ public class MakeBucket {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Create bucket if it doesn't exist.
-      boolean found = minioClient.bucketExists("my-bucketname");
-      if (found) {
-        System.out.println("my-bucketname already exists");
-      } else {
-        // Create bucket 'my-bucketname'.
-        minioClient.makeBucket("my-bucketname");
+      // Create bucket 'my-bucketname' if it doesn`t exist.
+      if (!minioClient.bucketExists("my-bucketname")) {
+        minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is created successfully");
+      }
+
+      // Create bucket 'my-bucketname-in-eu' in 'eu-west-1' region if it doesn't exist.
+      if (!minioClient.bucketExists("my-bucketname-in-eu")) {
+        minioClient.makeBucket(
+            MakeBucketArgs.builder().bucket("my-bucketname-in-eu").region("eu-west-1").build());
+        System.out.println("my-bucketname-in-eu is created successfully");
+      }
+
+      // Create bucket 'my-bucketname-in-eu-with-object-lock' in 'eu-west-1' with object lock
+      // functionality enabled.
+      if (!minioClient.bucketExists("my-bucketname-in-eu-with-object-lock")) {
+        minioClient.makeBucket(
+            MakeBucketArgs.builder()
+                .bucket("my-bucketname-in-eu-with-object-lock")
+                .region("eu-west-1")
+                .objectLock(true)
+                .build());
+        System.out.println("my-bucketname-in-eu-with-object-lock is created successfully");
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

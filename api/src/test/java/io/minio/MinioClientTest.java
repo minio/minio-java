@@ -302,7 +302,7 @@ public class MinioClientTest {
   public void testMakeBucketRegionConflicts()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("http://play.min.io:9000", "foo", "bar", "us-east-1");
-    client.makeBucket("mybucket", "us-west-2");
+    client.makeBucket(MakeBucketArgs.builder().bucket("mybucket").region("us-west-2").build());
     Assert.fail("exception should be thrown");
   }
 
