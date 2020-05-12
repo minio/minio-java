@@ -16,24 +16,23 @@
 
 package io.minio;
 
+/** Bucket Arguments to be used to create Bukcet. */
 public class MakeBucketArgs extends BucketArgs {
   private final boolean objectLock;
 
-  MakeBucketArgs(Builder builder) {
+  private MakeBucketArgs(Builder builder) {
     super(builder);
     this.objectLock = builder.objectLock;
   }
 
+  /** Return true if object lock functionality is enabled */
   public boolean objectLock() {
     return objectLock;
   }
 
-  public MakeBucketArgs() {
-    this(new Builder());
-  }
-
-  public Builder builder() {
-    return new Builder(this);
+  /** Return new Builder */
+  public static Builder builder() {
+    return new Builder();
   }
 
   public static final class Builder extends BucketArgs.Builder<Builder> {
@@ -42,8 +41,7 @@ public class MakeBucketArgs extends BucketArgs {
     public Builder() {}
 
     public Builder(MakeBucketArgs args) {
-      this.name = args.bucketName();
-      this.region = args.region();
+      super(args);
       this.objectLock = args.objectLock();
     }
 

@@ -38,13 +38,35 @@ public class MakeBucket {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Create bucket if it doesn't exist.
-      boolean found = minioClient.bucketExists("my-bucketname");
-      if (found) {
+      if (minioClient.bucketExists("my-bucketname")) {
         System.out.println("my-bucketname already exists");
       } else {
         // Create bucket 'my-bucketname'.
-        minioClient.makeBucket(new MakeBucketArgs.Builder().bucket("my-bucketname").build());
+        minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is created successfully");
+      }
+      // Create bucket if it doesn't exist.
+      if (minioClient.bucketExists("my-bucketname2")) {
+        System.out.println("my-bucketname2 already exists");
+      } else {
+        // Create bucket 'my-bucketname2' and region.
+        minioClient.makeBucket(
+            MakeBucketArgs.builder().bucket("my-bucketname2").region("us-west-1").build());
+        System.out.println("my-bucketname2 is created successfully");
+      }
+      // Create bucket if it doesn't exist.
+      if (minioClient.bucketExists("my-bucketname3")) {
+        System.out.println("my-bucketname3 already exists");
+      } else {
+
+        // Create bucket 'my-bucketname3' , egion and object lock functionality enabled.
+        minioClient.makeBucket(
+            MakeBucketArgs.builder()
+                .bucket("my-bucketname3")
+                .region("us-west-1")
+                .objectLock(true)
+                .build());
+        System.out.println("my-bucketname3 is created successfully");
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

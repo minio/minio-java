@@ -16,30 +16,55 @@
 
 package io.minio;
 
+/** Bucket Arguments to hold base bucket properties */
 public abstract class BucketArgs {
-  private String name;
-  private String region;
+  private final String name;
+  private final String region;
 
   BucketArgs(Builder<?> builder) {
-
     this.name = builder.name;
     this.region = builder.region;
   }
 
+  /** Returns the name of bucket */
   public String bucketName() {
     return name;
   }
 
+  /** Returns the region of bucket */
   public String region() {
     return region;
   }
 
+  /** Builder class to create base bucket object */
   public abstract static class Builder<T extends Builder<T>> {
     public String name;
     public String region;
 
+    public Builder() {}
+
+    public Builder(BucketArgs args) {
+      this.name = args.bucketName();
+      this.region = args.region();
+    }
+
     @SuppressWarnings("unchecked")
+    /** Its safe to type cast to T as T is inherited this class. */
     public T bucket(String name) {
+      validateName(name);
+      this.name = name;
+      return (T) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    /** Its safe to type cast to T as T is inherited this class. */
+    public T region(String region) {
+      this.region = region;
+      return (T) this;
+    }
+
+    /** Validate the name of the bucket */
+    public void validateName(String name) {
       if (name == null) {
         throw new IllegalArgumentException("null bucket name");
       }
@@ -63,15 +88,6 @@ public abstract class BucketArgs {
                 + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
         throw new IllegalArgumentException(name + " : " + msg);
       }
-      this.name = name;
-
-      return (T) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public T region(String region) {
-      this.region = region;
-      return (T) this;
     }
   }
 }

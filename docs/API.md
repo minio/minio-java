@@ -651,20 +651,30 @@ for (Result<Item> result : results) {
 Creates a bucket with given region and object lock feature enabled.
 
 __Parameters__
-| Parameter      | Type             | Description                |
-|:---------------|:-----------------|:---------------------------|
-| ``args``       | _[MakeBucketArgs]_ | Arguments to create bucket |
+
+| Parameter      | Type               | Description                |
+|:---------------|:-------------------|:---------------------------|
+| ``args``       | _[MakeBucketArgs](#https://minio.github.io/minio-java/io/minio/MakeBucketArgs.html)_ | Arguments to create bucket |
 
 __Example__
+
 ```java
 // Create bucket with default region.
-minioClient.makeBucket(new MakeBucketArgs.Builder().bucket("my-bucketname").build());
+minioClient.makeBucket(
+    MakeBucketArgs.builder()
+        .bucket("my-bucketname")
+        .build());
+
 // Create bucket with specific region.
 minioClient.makeBucket(
-    new MakeBucketArgs.Builder().bucket("my-bucketname").region("us-west-1").build());
+    MakeBucketArgs.builder()
+        .bucket("my-bucketname")
+        .region("us-west-1")
+        .build());
+
 // Create object-lock enabled bucket with specific region.
 minioClient.makeBucket(
-    new MakeBucketArgs.Builder()
+    MakeBucketArgs.builder()
         .bucket("my-bucketname")
         .region("us-west-1")
         .objectLock(true)

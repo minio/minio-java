@@ -1957,27 +1957,27 @@ public class MinioClient {
    * Creates an object by server-side copying data from another object.
    *
    * <pre>Example:{@code
-   *  Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname.
+   * // Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname.
    * minioClient.copyObject("my-bucketname", "my-objectname", null, null,
    *     "my-source-bucketname", null, null, null);
    *
-   *  Copy data from my-source-bucketname/my-source-objectname to
-   *  my-bucketname/my-objectname.
+   * // Copy data from my-source-bucketname/my-source-objectname to
+   * // my-bucketname/my-objectname.
    * minioClient.copyObject("my-bucketname", "my-objectname", null, null,
    *     "my-source-bucketname", "my-source-objectname", null, null);
    *
-   * Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname
-   *  by server-side encryption.
+   * // Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname
+   * // by server-side encryption.
    * minioClient.copyObject("my-bucketname", "my-objectname", null, sse,
    *     "my-source-bucketname", null, null, null);
    *
-   * Copy data from SSE-C encrypted my-source-bucketname/my-objectname to
-   *  my-bucketname/my-objectname.
+   * // Copy data from SSE-C encrypted my-source-bucketname/my-objectname to
+   * // my-bucketname/my-objectname.
    * minioClient.copyObject("my-bucketname", "my-objectname", null, null,
    *     "my-source-bucketname", null, srcSsec, null);
    *
-   * Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname
-   *  with user metadata and copy conditions.
+   * // Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname
+   * // with user metadata and copy conditions.
    * minioClient.copyObject("my-bucketname", "my-objectname", headers, null,
    *     "my-source-bucketname", null, null, conditions);
    * }</pre>
@@ -3269,7 +3269,7 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
-    this.makeBucket(new MakeBucketArgs().builder().bucket(bucketName).build());
+    this.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
   }
 
   /**
@@ -3300,7 +3300,7 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
-    this.makeBucket(new MakeBucketArgs().builder().bucket(bucketName).region(region).build());
+    this.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
   }
 
   /**
@@ -3333,19 +3333,33 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, RegionConflictException,
           XmlParserException {
     this.makeBucket(
-        new MakeBucketArgs()
-            .builder()
-            .bucket(bucketName)
-            .region(region)
-            .objectLock(objectLock)
-            .build());
+        MakeBucketArgs.builder().bucket(bucketName).region(region).objectLock(objectLock).build());
   }
 
   /**
-   * Creates a bucket with make bucket arguments.
+   * Creates a bucket with region and object lock.
    *
    * <pre>Example:{@code
-   * minioClient.makeBucket(MakeBucketArgs args);
+   * // Create bucket with default region.
+   * minioClient.makeBucket(
+   *     MakeBucketArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .build());
+   *
+   * // Create bucket with specific region.
+   * minioClient.makeBucket(
+   *     MakeBucketArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .region("us-west-1")
+   *         .build());
+   *
+   * // Create object-lock enabled bucket with specific region.
+   * minioClient.makeBucket(
+   *     MakeBucketArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .region("us-west-1")
+   *         .objectLock(true)
+   *         .build());
    * }</pre>
    *
    * @param args Object with bucket name, region and lock functionality
