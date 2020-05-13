@@ -18,12 +18,7 @@ package io.minio;
 
 /** Argument class of @see #makeBucket(MakeBucketArgs args). */
 public class MakeBucketArgs extends BucketArgs {
-  private final boolean objectLock;
-
-  private MakeBucketArgs(Builder builder) {
-    super(builder);
-    this.objectLock = builder.objectLock;
-  }
+  private boolean objectLock;
 
   /** Returns object lock flag. */
   public boolean objectLock() {
@@ -35,18 +30,14 @@ public class MakeBucketArgs extends BucketArgs {
   }
 
   /** Argument builder of @see #makeBucket(MakeBucketArgs args). */
-  public static final class Builder extends BucketArgs.Builder<Builder> {
-    private boolean objectLock;
-
-    public Builder() {}
-
+  public static final class Builder extends BucketArgs.Builder<Builder, MakeBucketArgs> {
     public Builder objectLock(boolean objectLock) {
-      this.objectLock = objectLock;
+      operations.add(args -> args.objectLock = objectLock);
       return this;
     }
 
     public MakeBucketArgs build() throws IllegalArgumentException {
-      return new MakeBucketArgs(this);
+      return build(MakeBucketArgs.class);
     }
   }
 }

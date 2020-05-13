@@ -17,14 +17,9 @@
 package io.minio;
 
 /** Base argument class holds bucket name and region */
-public abstract class BucketArgs {
-  private final String name;
-  private final String region;
-
-  BucketArgs(Builder<?> builder) {
-    this.name = builder.name;
-    this.region = builder.region;
-  }
+public abstract class BucketArgs extends BaseArgs {
+  protected String name;
+  protected String region;
 
   /** Returns bucket name */
   public String bucketName() {
@@ -37,27 +32,9 @@ public abstract class BucketArgs {
   }
 
   /** Base argument builder class. */
-  public abstract static class Builder<T extends Builder<T>> {
-    public String name;
-    public String region;
-
-    public Builder() {}
-
-    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
-    public T bucket(String name) {
-      validateName(name);
-      this.name = name;
-      return (T) this;
-    }
-
-    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
-    public T region(String region) {
-      this.region = region;
-      return (T) this;
-    }
-
-    /** Validate the name of the bucket */
-    public static void validateName(String name) {
+  public abstract static class Builder<T extends Builder<T, B>, B extends BucketArgs>
+      extends BaseArgs.BaseBuilder<Builder<T, B>, B> {
+    protected void validateName(String name) {
       if (name == null) {
         throw new IllegalArgumentException("null bucket name");
       }
@@ -81,6 +58,19 @@ public abstract class BucketArgs {
                 + "http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html";
         throw new IllegalArgumentException(name + " : " + msg);
       }
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
+    public T bucket(String name) {
+      validateName(name);
+      operations.add(args -> args.name = name);
+      return (T) this;
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
+    public T region(String region) {
+      operations.add(args -> args.region = region);
+      return (T) this;
     }
   }
 }
