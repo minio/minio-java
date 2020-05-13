@@ -298,36 +298,37 @@ minioClient.deleteBucketLifeCycle("my-bucketname");
 ```
 
 <a name="disableVersioning"></a>
-### disableVersioning(String bucketName)
-`public void disableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-java.lang.String-)_
+### disableVersioning(VersionBucketArgs args)
+`public void disableVersioning(VersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.VersionBucketArgs-)_
 
 Disables object versioning feature in a bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+
+| Parameter      | Type                  | Description                                                    |
+|:---------------|:----------------------|:---------------------------------------------------------------|
+| ``args``       | _[VersionBucketArgs]_ | Arguments for enabling/disabling versioning feature in bucket. |
 
 __Example__
 ```java
-minioClient.disableVersioning("my-bucketname");
+minioClient.disableVersioning(VersionBucketArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="enableVersioning"></a>
-### enableVersioning(String bucketName)
-`public void enableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-java.lang.String-)_
+### enableVersioning(VersionBucketArgs args)
+`public void enableVersioning(VersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-io.minio.VersionBucketArgs-)_
 
 Enables object versioning feature in a bucket.
 
 __Parameters__
 
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| Parameter      | Type                  | Description                                                    |
+|:---------------|:----------------------|:---------------------------------------------------------------|
+| ``args``       | _[VersionBucketArgs]_ | Arguments for enabling/disabling versioning feature in bucket. |
 
 __Example__
 ```java
-minioClient.enableVersioning("my-bucketname");
+minioClient.enableVersioning(VersionBucketArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="getBucketLifeCycle"></a>
@@ -628,19 +629,19 @@ minioClient.removeAllBucketNotification("my-bucketname");
 ```
 
 <a name="removeBucket"></a>
-### removeBucket(String bucketName)
-`public void removeBucket(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeBucket-java.lang.String-)_
+### removeBucket(RemoveBucketArgs args)
+`public void removeBucket(RemoveBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeBucket-io.minio.RemoveBucketArgs-)_
 
 Removes an empty bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| Parameter      | Type                 | Description                 |
+|:---------------|:---------------------|:----------------------------|
+| ``args``       | _[RemoveBucketArgs]_ | Arguments to remove bucket. |
 
 __Example__
 ```java
-minioClient.removeBucket("my-bucketname");
+minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
 ```
 
 <a name="removeIncompleteUpload"></a>
@@ -1538,5 +1539,7 @@ ObjectStat objectStat =
 [SelectResponseStream]: http://minio.github.io/minio-java/io/minio/SelectResponseStream.html
 [MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html
 [ListObjectsArgs]: http://minio.github.io/minio-java/io/minio/ListObjectsArgs.html
+[RemoveBucketArgs]: http://minio.github.io/minio-java/io/minio/RemoveBucketArgs.html
+[VersionBucketArgs]: http://minio.github.io/minio-java/io/minio/VersionBucketArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
 [StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html
