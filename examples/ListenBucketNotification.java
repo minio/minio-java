@@ -15,6 +15,7 @@
  */
 
 import io.minio.CloseableIterator;
+import io.minio.ListenBucketNotificationArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
@@ -38,7 +39,13 @@ public class ListenBucketNotification {
 
       String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
       try (CloseableIterator<Result<NotificationRecords>> ci =
-          minioClient.listenBucketNotification("bcketName", "", "", events)) {
+          minioClient.listenBucketNotification(
+              ListenBucketNotificationArgs.builder()
+                  .bucket("bucketName")
+                  .prefix("")
+                  .suffix("")
+                  .events(events)
+                  .build())) {
         while (ci.hasNext()) {
           NotificationRecords records = ci.next().get();
           Event event = records.events().get(0);

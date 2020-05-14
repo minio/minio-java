@@ -46,6 +46,7 @@ import io.minio.GetObjectTagsArgs;
 import io.minio.IsObjectLegalHoldEnabledArgs;
 import io.minio.IsVersioningEnabledArgs;
 import io.minio.ListObjectsArgs;
+import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
@@ -4117,12 +4118,11 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: listenBucketNotification(String bucketName). */
+  /** Test: listenBucketNotification(ListenBucketNotificationArgs args). */
   public static void listenBucketNotification_test1() throws Exception {
+    String methodName = "listenBucketNotification(ListenBucketNotificationArgs args)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: listenBucketNotification(String bucketName, String prefix, "
-              + "String suffix, String[] events)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -4133,7 +4133,14 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
 
       String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
-      ci = client.listenBucketNotification(bucketName, "prefix", "suffix", events);
+      ci =
+          client.listenBucketNotification(
+              ListenBucketNotificationArgs.builder()
+                  .bucket(bucketName)
+                  .prefix("prefix")
+                  .suffix("suffix")
+                  .events(events)
+                  .build());
 
       client.putObject(bucketName, "prefix-random-suffix", file, new PutObjectOptions(1 * KB, -1));
 
@@ -4156,33 +4163,9 @@ public class FunctionalTest {
         }
       }
 
-      mintSuccessLog(
-          "listenBucketNotification(String bucketName, String prefix, "
-              + "String suffix, String[] events)",
-          null,
-          startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        ErrorResponse errorResponse = exp.errorResponse();
-        if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-          mintIgnoredLog(
-              "listenBucketNotification(String bucketName, String prefix, "
-                  + "String suffix, String[] events)",
-              null,
-              startTime);
-          return;
-        }
-      }
-
-      mintFailedLog(
-          "listenBucketNotification(String bucketName, String prefix, "
-              + "String suffix, String[] events)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     } finally {
       if (ci != null) {
         ci.close();
