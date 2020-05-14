@@ -21,25 +21,26 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`bucketExists`](#bucketExists)                               | [`composeObject`](#composeObject)                       |
 | [`deleteBucketEncryption`](#deleteBucketEncryption)           | [`copyObject`](#copyObject)                             |
 | [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`deleteObjectTags`](#deleteObjectTags)                 |
-| [`deleteBucketTags`](#deleteBucketTags)                       | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
-| [`disableVersioning`](#disableVersioning)                     | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`enableVersioning`](#enableVersioning)                       | [`getObject`](#getObject)                               |
-| [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectTags`](#getObjectTags)                       |
-| [`getBucketNotification`](#getBucketNotification)             | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getBucketPolicy`](#getBucketPolicy)                         | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketTags`](#getBucketTags)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`getDefaultRetention`](#getDefaultRetention)                 | [`listObjects`](#listObjects)                           |
-| [`listBuckets`](#listBuckets)                                 | [`presignedGetObject`](#presignedGetObject)             |
-| [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`listIncompleteUploads`](#listIncompleteUploads)             | [`presignedPutObject`](#presignedPutObject)             |
-| [`makeBucket`](#makeBucket)                                   | [`putObject`](#putObject)                               |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`removeObject`](#removeObject)                         |
-| [`removeBucket`](#removeBucket)                               | [`removeObjects`](#removeObjects)                       |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`selectObjectContent`](#selectObjectContent)           |
-| [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectRetention`](#setObjectRetention)             |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketNotification`](#setBucketNotification)             | [`statObject`](#statObject)                             |
+| [`deleteBucketPolicy`](#deleteBucketPolicy)                   | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
+| [`deleteBucketTags`](#deleteBucketTags)                       | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
+| [`disableVersioning`](#disableVersioning)                     | [`getObject`](#getObject)                               |
+| [`enableVersioning`](#enableVersioning)                       | [`getObjectRetention`](#getObjectRetention)             |
+| [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectTags`](#getObjectTags)                       |
+| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectUrl`](#getObjectUrl)                         |
+| [`getBucketNotification`](#getBucketNotification)             | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketPolicy`](#getBucketPolicy)                         | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getBucketTags`](#getBucketTags)                             | [`listObjects`](#listObjects)                           |
+| [`getDefaultRetention`](#getDefaultRetention)                 | [`presignedGetObject`](#presignedGetObject)             |
+| [`listBuckets`](#listBuckets)                                 | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPutObject`](#presignedPutObject)             |
+| [`listIncompleteUploads`](#listIncompleteUploads)             | [`putObject`](#putObject)                               |
+| [`makeBucket`](#makeBucket)                                   | [`removeObject`](#removeObject)                         |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`removeObjects`](#removeObjects)                       |
+| [`removeBucket`](#removeBucket)                               | [`selectObjectContent`](#selectObjectContent)           |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`setObjectRetention`](#setObjectRetention)             |
+| [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`statObject`](#statObject)                             |
+| [`setBucketNotification`](#setBucketNotification)             |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                         |                                                         |
 | [`setBucketTags`](#setBucketTags)                             |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
@@ -337,6 +338,22 @@ __Example__
 minioClient.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket("my-bucketname").build());
 ```
 
+<a name="deleteBucketPolicy"></a>
+### deleteBucketPolicy(DeleteBucketPolicyArgs args)
+`private void deleteBucketPolicy(DeleteBucketPolicyArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketPolicy-io.minio.DeleteBucketPolicyArgs-)_
+
+Deletes bucket policy configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                       | Description |
+|:----------|:---------------------------|:------------|
+| ``args``  | _[DeleteBucketPolicyArgs]_ | Argumnets.  |
+
+__Example__
+```java
+minioClient.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket("my-bucketname").build());
+```
+
 <a name="disableVersioning"></a>
 ### disableVersioning(DisableVersioningArgs args)
 `public void disableVersioning(DisableVersioningArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.DisableVersioningArgs-)_
@@ -437,15 +454,15 @@ NotificationConfiguration config = minioClient.getBucketNotification("my-bucketn
 ```
 
 <a name="getBucketPolicy"></a>
-### getBucketPolicy(String bucketName)
-`public String getBucketPolicy(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketPolicy-java.lang.String-)_
+### getBucketPolicy(GetBucketPolicyArgs args)
+`public String getBucketPolicy(GetBucketPolicyArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketPolicy-io.minio.GetBucketPolicyArgs-)_
 
 Gets bucket policy configuration of a bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| Parameter | Type                    | Description |
+|:----------|:------------------------|:------------|
+| ``args``  | _[GetBucketPolicyArgs]_ | Arguments.  |
 
 
 | Returns                                                |
@@ -454,7 +471,8 @@ __Parameters__
 
 __Example__
 ```java
-String config = minioClient.getBucketPolicy("my-bucketname");
+String config =
+    minioClient.getBucketPolicy(GetBucketPolicyArgs.builder().bucket("my-bucketname").build());
 ```
 
 <a name="getBucketTags"></a>
@@ -828,17 +846,16 @@ minioClient.setBucketNotification("my-bucketname", config);
 ```
 
 <a name="setBucketPolicy"></a>
-### setBucketPolicy(String bucketName, String policy)
-`public void setBucketPolicy(String bucketName, String policy)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketPolicy-java.lang.String-java.lang.String-)_
+### setBucketPolicy(SetBucketPolicyArgs args)
+`public void setBucketPolicy(SetBucketPolicyArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketPolicy-io.minio.SetBucketPolicyArgs-)_
 
 Sets bucket policy configuration to a bucket.
 
 __Parameters__
 
-| Parameter      | Type     | Description                                 |
-|:---------------|:---------|:--------------------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.                         |
-| ``policy``     | _String_ | Bucket policy configuration as JSON string. |
+| Parameter | Type                    | Description |
+|:----------|:------------------------|:------------|
+| ``args``  | _[SetBucketPolicyArgs]_ | Arguments.  |
 
 __Example__
 ```java
@@ -864,7 +881,8 @@ __Example__
 //     "Version": "2012-10-17"
 // }
 //
-minioClient.setBucketPolicy("my-bucketname", policyJson);
+minioClient.setBucketPolicy(
+    SetBucketPolicyArgs.builder().bucket("my-bucketname").config(policyJson).build());
 ```
 
 <a name="setBucketTags"></a>
@@ -1771,3 +1789,6 @@ ObjectStat objectStat =
 [DeleteBucketLifeCycleArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketLifeCycleArgs.html
 [GetBucketLifeCycleArgs]: http://minio.github.io/minio-java/io/minio/GetBucketLifeCycleArgs.html
 [SetBucketLifeCycleArgs]: http://minio.github.io/minio-java/io/minio/SetBucketLifeCycleArgs.html
+[GetBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/GetBucketPolicyArgs.html
+[SetBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/SetBucketPolicyArgs.html
+[DeleteBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketPolicyArgs.html

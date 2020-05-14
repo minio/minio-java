@@ -24,6 +24,7 @@ import io.minio.ComposeSource;
 import io.minio.CopyConditions;
 import io.minio.DeleteBucketEncryptionArgs;
 import io.minio.DeleteBucketLifeCycleArgs;
+import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketTagsArgs;
 import io.minio.DeleteObjectTagsArgs;
 import io.minio.DisableVersioningArgs;
@@ -31,6 +32,7 @@ import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.GetBucketLifeCycleArgs;
+import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketTagsArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
@@ -47,6 +49,7 @@ import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.SetBucketLifeCycleArgs;
+import io.minio.SetBucketPolicyArgs;
 import io.minio.SetBucketTagsArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
@@ -3091,11 +3094,11 @@ public class FunctionalTest {
    * SSE_KMS.
    */
   public static void copyObject_test12() throws Exception {
+    String methodName =
+        "SSE-KMS: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
+            + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_KMS. ");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3108,7 +3111,7 @@ public class FunctionalTest {
       String keyId = "";
       keyId = System.getenv("MINT_KEY_ID");
       if (keyId.equals("")) {
-        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
+        mintIgnoredLog(methodName, null, startTime);
       }
       ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
 
@@ -3131,17 +3134,10 @@ public class FunctionalTest {
       }
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_KMS.",
-          null,
-          startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_KMS.",
+          methodName,
           null,
           startTime,
           null,
@@ -3952,10 +3948,11 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getBucketPolicy(String bucketName). */
+  /** Test: getBucketPolicy(GetBucketPolicyArgs args). */
   public static void getBucketPolicy_test1() throws Exception {
+    String methodName = "getBucketPolicy(GetBucketPolicyArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: getBucketPolicy(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3965,35 +3962,20 @@ public class FunctionalTest {
               + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::"
               + bucketName
               + "/myobject*\"],\"Sid\":\"\"}]}";
-      client.setBucketPolicy(bucketName, policy);
-      client.getBucketPolicy(bucketName);
-      mintSuccessLog("getBucketPolicy(String bucketName)", null, startTime);
+      client.setBucketPolicy(
+          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+      client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("getBucketPolicy(String bucketName)", null, startTime);
-      } else {
-        mintFailedLog(
-            "getBucketPolicy(String bucketName)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: setBucketPolicy(String bucketName, String policy). */
+  /** Test: setBucketPolicy(SetBucketPolicyArgs args). */
   public static void setBucketPolicy_test1() throws Exception {
+    String methodName = "setBucketPolicy(SetBucketPolicyArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: setBucketPolicy(String bucketName, String policy)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -4003,30 +3985,34 @@ public class FunctionalTest {
               + "\"*\",\"Resource\":\"arn:aws:s3:::"
               + bucketName
               + "/myobject*\"}],\"Version\": \"2012-10-17\"}";
-      client.setBucketPolicy(bucketName, policy);
-      mintSuccessLog("setBucketPolicy(String bucketName, String policy)", null, startTime);
+      client.setBucketPolicy(
+          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
+      handleException(methodName, null, startTime, e);
+    }
+  }
 
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "setBucketPolicy(String bucketName, String objectPrefix, " + "PolicyType policyType)",
-            null,
-            startTime);
-      } else {
-        mintFailedLog(
-            "setBucketPolicy(String bucketName, String objectPrefix, " + "PolicyType policyType)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+  /** Test: deleteBucketPolicy(deleteBucketPolicyArgs args). */
+  public static void deleteBucketPolicy_test1() throws Exception {
+    String methodName = "deleteBucketPolicy(DeleteBucketPolicyArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String policy =
+          "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
+              + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::"
+              + bucketName
+              + "/myobject*\"],\"Sid\":\"\"}]}";
+      client.setBucketPolicy(
+          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+      client.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket(bucketName).build());
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4892,6 +4878,7 @@ public class FunctionalTest {
 
     getBucketPolicy_test1();
     setBucketPolicy_test1();
+    deleteBucketPolicy_test1();
 
     listenBucketNotification_test1();
 
@@ -4929,6 +4916,7 @@ public class FunctionalTest {
     copyObject_test1();
     getBucketPolicy_test1();
     setBucketPolicy_test1();
+    deleteBucketPolicy_test1();
     selectObjectContent_test1();
     listenBucketNotification_test1();
     setBucketTags_test();

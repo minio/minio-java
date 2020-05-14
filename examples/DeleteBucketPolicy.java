@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import io.minio.GetBucketPolicyArgs;
+import io.minio.DeleteBucketPolicyArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetBucketPolicy {
-  /** MinioClient.getBucketPolicy() example. */
+public class DeleteBucketPolicy {
+  /** MinioClient.deleteBucketPolicy() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -37,10 +37,9 @@ public class GetBucketPolicy {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      String policy =
-          minioClient.getBucketPolicy(
-              GetBucketPolicyArgs.builder().bucket("my-bucketname").build());
-      System.out.println("Current policy: " + policy);
+      minioClient.deleteBucketPolicy(
+          DeleteBucketPolicyArgs.builder().bucket("my-bucketname").build());
+      System.out.println("Bucket policy is deleted successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
