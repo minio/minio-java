@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
+import io.minio.SetDefaultRetentionArgs;
 import io.minio.errors.MinioException;
 import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.RetentionDurationDays;
@@ -25,8 +24,8 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class SetGetBucketObjectLockConfig {
-  /** Set/Get Bucket Object Lock configuration example. */
+public class SetDefaultRetention {
+  /** MinioClient.setDefaultRetention() exanple. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -34,32 +33,17 @@ public class SetGetBucketObjectLockConfig {
       MinioClient s3Client =
           new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
-      // Create bucket if it doesn't exist.
-      boolean found =
-          s3Client.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
-      if (found) {
-        System.out.println("my-bucketname already exists");
-      } else {
-        // Create bucket 'my-bucketname' with object lock functionality enabled
-        s3Client.makeBucket(
-            MakeBucketArgs.builder().bucket("my-bucketname").objectLock(true).build());
-        System.out.println(
-            "my-bucketname is created successfully with object lock functionality enabled.");
-      }
-
       // Declaring config with Retention mode as Compliance and duration as 100 days
       ObjectLockConfiguration config =
           new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
 
-      // Set object lock configuration
-      s3Client.setDefaultRetention("my-bucketname", config);
+      s3Client.setDefaultRetention(
+          SetDefaultRetentionArgs.builder()
+              .bucket("my-lock-enabled-bucketname")
+              .config(config)
+              .build());
 
-      // Get object lock configuration
-      ObjectLockConfiguration bucketConfig = s3Client.getDefaultRetention("my-bucketname");
-
-      System.out.println("Default retention configuration of bucket");
-      System.out.println("Mode: " + bucketConfig.mode());
-      System.out.println("Duration: " + bucketConfig.duration());
+      System.out.println("Default retention configuration is set successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

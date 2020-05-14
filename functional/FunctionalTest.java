@@ -40,6 +40,7 @@ import io.minio.GetBucketLifeCycleArgs;
 import io.minio.GetBucketNotificationArgs;
 import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketTagsArgs;
+import io.minio.GetDefaultRetentionArgs;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
@@ -64,6 +65,7 @@ import io.minio.SetBucketLifeCycleArgs;
 import io.minio.SetBucketNotificationArgs;
 import io.minio.SetBucketPolicyArgs;
 import io.minio.SetBucketTagsArgs;
+import io.minio.SetDefaultRetentionArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
@@ -3581,10 +3583,11 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setDefaultRetention(String bucketName). */
+  /** Test: setDefaultRetention(SetDefaultRetentionArgs args). */
   public static void setDefaultRetention_test() throws Exception {
+    String methodName = "setDefaultRetention(SetDefaultRetentionArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: setDefaultRetention(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3595,37 +3598,22 @@ public class FunctionalTest {
       try {
         ObjectLockConfiguration config =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        client.setDefaultRetention(bucketName, config);
+        client.setDefaultRetention(
+            SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog("setDefaultRetention (String bucketName)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("setDefaultRetention (String bucketName)", null, startTime);
-      } else {
-        mintFailedLog(
-            "setDefaultRetention (String bucketName)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: getDefaultRetention(String bucketName). */
+  /** Test: getDefaultRetention(GetDefaultRetentionArgs args). */
   public static void getDefaultRetention_test() throws Exception {
+    String methodName = "getDefaultRetention(GetDefaultRetentionArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: getDefaultRetention(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3635,66 +3623,49 @@ public class FunctionalTest {
       try {
         ObjectLockConfiguration expectedConfig =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        client.setDefaultRetention(bucketName, expectedConfig);
-        ObjectLockConfiguration config = client.getDefaultRetention(bucketName);
+        client.setDefaultRetention(
+            SetDefaultRetentionArgs.builder().bucket(bucketName).config(expectedConfig).build());
+        ObjectLockConfiguration config =
+            client.getDefaultRetention(
+                GetDefaultRetentionArgs.builder().bucket(bucketName).build());
 
-        if ((!(config.duration().unit() == expectedConfig.duration().unit()
-                && config.duration().duration() == expectedConfig.duration().duration()))
-            || (config.mode() != expectedConfig.mode())) {
+        if (config.mode() != expectedConfig.mode()) {
           throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.duration()
-                  + ", got: "
-                  + config.duration()
-                  + " expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
+              "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
+        }
+
+        if (config.duration().unit() != expectedConfig.duration().unit()
+            || config.duration().duration() != expectedConfig.duration().duration()) {
+          throw new Exception(
+              "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
         }
 
         expectedConfig =
             new ObjectLockConfiguration(RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
-        client.setDefaultRetention(bucketName, expectedConfig);
-        config = client.getDefaultRetention(bucketName);
+        client.setDefaultRetention(
+            SetDefaultRetentionArgs.builder().bucket(bucketName).config(expectedConfig).build());
+        config =
+            client.getDefaultRetention(
+                GetDefaultRetentionArgs.builder().bucket(bucketName).build());
 
-        if ((!(config.duration().unit() == expectedConfig.duration().unit()
-                && config.duration().duration() == expectedConfig.duration().duration()))
-            || (config.mode() != expectedConfig.mode())) {
+        if (config.mode() != expectedConfig.mode()) {
           throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.duration()
-                  + ", got: "
-                  + config.duration()
-                  + " expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
+              "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
         }
+
+        if (config.duration().unit() != expectedConfig.duration().unit()
+            || config.duration().duration() != expectedConfig.duration().duration()) {
+          throw new Exception(
+              "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
+        }
+
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
 
-      mintSuccessLog("getDefaultRetention (String bucketName)", null, startTime);
-
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("getDefaultRetention (String bucketName)", null, startTime);
-      } else {
-        mintFailedLog(
-            "getDefaultRetention (String bucketName)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
