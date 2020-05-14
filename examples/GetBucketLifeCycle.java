@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.GetBucketLifeCycleArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -28,7 +29,9 @@ public class GetBucketLifeCycle {
       /* Amazon S3: */
       MinioClient minioClient =
           new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-      String lifecycle = minioClient.getBucketLifeCycle("my-bucketName");
+      String lifecycle =
+          minioClient.getBucketLifeCycle(
+              GetBucketLifeCycleArgs.builder().bucket("my-bucketName").build());
       System.out.println(" Life Cycle is : " + lifecycle);
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

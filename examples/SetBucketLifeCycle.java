@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.SetBucketLifeCycleArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -33,7 +34,8 @@ public class SetBucketLifeCycle {
               + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
               + "</Rule></LifecycleConfiguration>";
 
-      minioClient.setBucketLifeCycle("my-bucketName", lifeCycle);
+      minioClient.setBucketLifeCycle(
+          SetBucketLifeCycleArgs.builder().bucket("my-bucketName").config(lifeCycle).build());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

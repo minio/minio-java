@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.DeleteBucketLifeCycleArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -29,7 +30,8 @@ public class DeleteBucketLifeCycle {
       MinioClient minioClient =
           new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
       // Pass blank as life cycle in setBucketLifeCycle method.
-      minioClient.deleteBucketLifeCycle("my-bucketName");
+      minioClient.deleteBucketLifeCycle(
+          DeleteBucketLifeCycleArgs.builder().bucket("my-bucketName").build());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
