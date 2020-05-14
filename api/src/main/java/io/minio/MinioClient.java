@@ -5239,18 +5239,52 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getBucketNotification(GetBucketNotificationArgs)}
    */
+  @Deprecated
   public NotificationConfiguration getBucketNotification(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
+    return getBucketNotification(GetBucketNotificationArgs.builder().bucket(bucketName).build());
+  }
+
+  /**
+   * Gets notification configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * NotificationConfiguration config =
+   *     minioClient.getBucketNotification(
+   *         GetBucketNotificationArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketNotificationArgs} object.
+   * @return {@link NotificationConfiguration} - Notification configuration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public NotificationConfiguration getBucketNotification(GetBucketNotificationArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
 
-    Response response = executeGet(bucketName, null, null, queryParamMap);
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(NotificationConfiguration.class, body.charStream());
+    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+      return Xml.unmarshal(NotificationConfiguration.class, response.body().charStream());
     }
   }
 
@@ -5290,18 +5324,70 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #setBucketNotification(SetBucketNotificationArgs)}
    */
+  @Deprecated
   public void setBucketNotification(
       String bucketName, NotificationConfiguration notificationConfiguration)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
+    setBucketNotification(
+        SetBucketNotificationArgs.builder()
+            .bucket(bucketName)
+            .config(notificationConfiguration)
+            .build());
+  }
+
+  /**
+   * Sets notification configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * List<EventType> eventList = new LinkedList<>();
+   * eventList.add(EventType.OBJECT_CREATED_PUT);
+   * eventList.add(EventType.OBJECT_CREATED_COPY);
+   *
+   * QueueConfiguration queueConfiguration = new QueueConfiguration();
+   * queueConfiguration.setQueue("arn:minio:sqs::1:webhook");
+   * queueConfiguration.setEvents(eventList);
+   * queueConfiguration.setPrefixRule("images");
+   * queueConfiguration.setSuffixRule("pg");
+   *
+   * List<QueueConfiguration> queueConfigurationList = new LinkedList<>();
+   * queueConfigurationList.add(queueConfiguration);
+   *
+   * NotificationConfiguration config = new NotificationConfiguration();
+   * config.setQueueConfigurationList(queueConfigurationList);
+   *
+   * minioClient.setBucketNotification(
+   *     SetBucketNotificationArgs.builder().bucket("my-bucketname").config(config).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketNotificationArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketNotification(SetBucketNotificationArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("notification", "");
-    Response response =
-        executePut(bucketName, null, null, queryParamMap, notificationConfiguration, 0);
-    response.body().close();
+    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    response.close();
   }
 
   /**
@@ -5323,14 +5409,50 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #deleteBucketNotification(DeleteBucketNotificationArgs)}
    */
+  @Deprecated
   public void removeAllBucketNotification(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
-    setBucketNotification(bucketName, notificationConfiguration);
+    deleteBucketNotification(DeleteBucketNotificationArgs.builder().bucket(bucketName).build());
+  }
+
+  /**
+   * Deletes notification configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteBucketNotification(
+   *     DeleteBucketNotificationArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketNotificationArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketNotification(DeleteBucketNotificationArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+
+    setBucketNotification(
+        SetBucketNotificationArgs.builder()
+            .bucket(args.bucket())
+            .config(new NotificationConfiguration())
+            .build());
   }
 
   /**

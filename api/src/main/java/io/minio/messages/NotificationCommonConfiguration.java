@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -25,14 +26,14 @@ import org.simpleframework.xml.ElementList;
  * Helper class to denote common fields of {@link CloudFunctionConfiguration}, {@link
  * QueueConfiguration} and {@link TopicConfiguration}.
  */
-public class NotificationCommonConfiguration {
+public abstract class NotificationCommonConfiguration {
   @Element(name = "Id", required = false)
   private String id;
 
-  @ElementList(name = "Event", inline = true, required = false)
+  @ElementList(name = "Event", inline = true)
   private List<EventType> events;
 
-  @Element(name = "Filter")
+  @Element(name = "Filter", required = false)
   private Filter filter;
 
   public NotificationCommonConfiguration() {}
@@ -49,11 +50,7 @@ public class NotificationCommonConfiguration {
 
   /** Returns events. */
   public List<EventType> events() {
-    if (events == null) {
-      return null;
-    }
-
-    return Collections.unmodifiableList(events);
+    return Collections.unmodifiableList(events == null ? new LinkedList<>() : events);
   }
 
   /** Sets event. */
@@ -81,10 +78,7 @@ public class NotificationCommonConfiguration {
 
   /** returns filter rule list. */
   public List<FilterRule> filterRuleList() {
-    if (filter == null) {
-      return null;
-    }
-
-    return filter.filterRuleList();
+    return Collections.unmodifiableList(
+        filter == null ? new LinkedList<>() : filter.filterRuleList());
   }
 }

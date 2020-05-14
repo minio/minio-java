@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.GetBucketNotificationArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import io.minio.messages.NotificationConfiguration;
@@ -37,9 +38,10 @@ public class GetBucketNotification {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      NotificationConfiguration notificationConfiguration =
-          minioClient.getBucketNotification("my-bucketname");
-      System.out.println(notificationConfiguration);
+      NotificationConfiguration config =
+          minioClient.getBucketNotification(
+              GetBucketNotificationArgs.builder().bucket("my-bucketname").build());
+      System.out.println(config);
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

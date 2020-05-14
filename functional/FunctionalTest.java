@@ -25,6 +25,7 @@ import io.minio.ComposeSource;
 import io.minio.CopyConditions;
 import io.minio.DeleteBucketEncryptionArgs;
 import io.minio.DeleteBucketLifeCycleArgs;
+import io.minio.DeleteBucketNotificationArgs;
 import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketTagsArgs;
 import io.minio.DeleteObjectTagsArgs;
@@ -36,6 +37,7 @@ import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.GetBucketLifeCycleArgs;
+import io.minio.GetBucketNotificationArgs;
 import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketTagsArgs;
 import io.minio.GetObjectArgs;
@@ -57,12 +59,14 @@ import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.SetBucketLifeCycleArgs;
+import io.minio.SetBucketNotificationArgs;
 import io.minio.SetBucketPolicyArgs;
 import io.minio.SetBucketTagsArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
 import io.minio.Time;
+import io.minio.Xml;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.messages.Bucket;
@@ -75,6 +79,7 @@ import io.minio.messages.NotificationConfiguration;
 import io.minio.messages.NotificationRecords;
 import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.OutputSerialization;
+import io.minio.messages.QueueConfiguration;
 import io.minio.messages.QuoteFields;
 import io.minio.messages.Retention;
 import io.minio.messages.RetentionDurationDays;
@@ -85,7 +90,6 @@ import io.minio.messages.SseConfiguration;
 import io.minio.messages.SseConfigurationRule;
 import io.minio.messages.Stats;
 import io.minio.messages.Tags;
-import io.minio.messages.TopicConfiguration;
 import io.minio.messages.Upload;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -142,6 +146,7 @@ public class FunctionalTest {
   private static String accessKey;
   private static String secretKey;
   private static String region;
+  private static String sqsArn = null;
   private static MinioClient client = null;
 
   static {
@@ -3956,190 +3961,149 @@ public class FunctionalTest {
     }
   }
 
-  /**
-   * Test: setBucketNotification(String bucketName, NotificationConfiguration
-   * notificationConfiguration).
-   */
+  /** Test: setBucketNotification(SetBucketNotificationArgs args). */
   public static void setBucketNotification_test1() throws Exception {
-    // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION'
-    // environment variables.
-    String topic = System.getenv("MINIO_JAVA_TEST_TOPIC");
-    String region = System.getenv("MINIO_JAVA_TEST_REGION");
-    if (topic == null || topic.equals("") || region == null || region.equals("")) {
-      // do not run functional test as required environment variables are missing.
+    String methodName = "setBucketNotification(SetBucketNotificationArgs args)";
+    long startTime = System.currentTimeMillis();
+    if (sqsArn == null) {
+      mintIgnoredLog(methodName, null, startTime);
       return;
     }
 
     if (!mintEnv) {
-      System.out.println(
-          "Test: setBucketNotification(String bucketName, "
-              + "NotificationConfiguration notificationConfiguration)");
+      System.out.println("Test: " + methodName);
     }
 
-    long startTime = System.currentTimeMillis();
     try {
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).region(region).build());
-
-      NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
-
-      // Add a new topic configuration.
-      List<TopicConfiguration> topicConfigurationList =
-          notificationConfiguration.topicConfigurationList();
-      TopicConfiguration topicConfiguration = new TopicConfiguration();
-      topicConfiguration.setTopic(topic);
+      String bucketName = getRandomName();
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
 
       List<EventType> eventList = new LinkedList<>();
       eventList.add(EventType.OBJECT_CREATED_PUT);
       eventList.add(EventType.OBJECT_CREATED_COPY);
-      topicConfiguration.setEvents(eventList);
-      topicConfiguration.setPrefixRule("images");
-      topicConfiguration.setSuffixRule("pg");
+      QueueConfiguration queueConfig = new QueueConfiguration();
+      queueConfig.setQueue(sqsArn);
+      queueConfig.setEvents(eventList);
+      queueConfig.setPrefixRule("images");
+      queueConfig.setSuffixRule("pg");
 
-      topicConfigurationList.add(topicConfiguration);
-      notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+      List<QueueConfiguration> queueConfigList = new LinkedList<>();
+      queueConfigList.add(queueConfig);
 
-      client.setBucketNotification(destBucketName, notificationConfiguration);
+      NotificationConfiguration config = new NotificationConfiguration();
+      config.setQueueConfigurationList(queueConfigList);
 
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(
-          "setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)",
-          null,
-          startTime);
+      client.setBucketNotification(
+          SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
+
+      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "setBucketNotification(String bucketName, NotificationConfiguration notificationConfiguration)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: getBucketNotification(String bucketName). */
+  /** Test: getBucketNotification(GetBucketNotificationArgs args). */
   public static void getBucketNotification_test1() throws Exception {
-    // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION'
-    // environment variables.
-    String topic = System.getenv("MINIO_JAVA_TEST_TOPIC");
-    String region = System.getenv("MINIO_JAVA_TEST_REGION");
-    if (topic == null || topic.equals("") || region == null || region.equals("")) {
-      // do not run functional test as required environment variables are missing.
+    String methodName = "getBucketNotification(GetBucketNotificationArgs args)";
+    long startTime = System.currentTimeMillis();
+    if (sqsArn == null) {
+      mintIgnoredLog(methodName, null, startTime);
       return;
     }
 
     if (!mintEnv) {
-      System.out.println("Test: getBucketNotification(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
-    long startTime = System.currentTimeMillis();
     try {
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).region(region).build());
-
-      NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
-
-      // Add a new topic configuration.
-      List<TopicConfiguration> topicConfigurationList =
-          notificationConfiguration.topicConfigurationList();
-      TopicConfiguration topicConfiguration = new TopicConfiguration();
-      topicConfiguration.setTopic(topic);
+      String bucketName = getRandomName();
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
 
       List<EventType> eventList = new LinkedList<>();
       eventList.add(EventType.OBJECT_CREATED_PUT);
-      topicConfiguration.setEvents(eventList);
+      QueueConfiguration queueConfig = new QueueConfiguration();
+      queueConfig.setQueue(sqsArn);
+      queueConfig.setEvents(eventList);
 
-      topicConfigurationList.add(topicConfiguration);
-      notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+      List<QueueConfiguration> queueConfigList = new LinkedList<>();
+      queueConfigList.add(queueConfig);
 
-      client.setBucketNotification(destBucketName, notificationConfiguration);
-      String expectedResult = notificationConfiguration.toString();
+      NotificationConfiguration expectedConfig = new NotificationConfiguration();
+      expectedConfig.setQueueConfigurationList(queueConfigList);
 
-      notificationConfiguration = client.getBucketNotification(destBucketName);
+      client.setBucketNotification(
+          SetBucketNotificationArgs.builder().bucket(bucketName).config(expectedConfig).build());
 
-      topicConfigurationList = notificationConfiguration.topicConfigurationList();
-      topicConfiguration = topicConfigurationList.get(0);
-      topicConfiguration.setId(null);
-      String result = notificationConfiguration.toString();
+      NotificationConfiguration config =
+          client.getBucketNotification(
+              GetBucketNotificationArgs.builder().bucket(bucketName).build());
 
-      if (!result.equals(expectedResult)) {
-        System.out.println("FAILED. expected: " + expectedResult + ", got: " + result);
+      if (config.queueConfigurationList().size() != 1
+          || !sqsArn.equals(config.queueConfigurationList().get(0).queue())
+          || config.queueConfigurationList().get(0).events().size() != 1
+          || config.queueConfigurationList().get(0).events().get(0)
+              != EventType.OBJECT_CREATED_PUT) {
+        System.out.println(
+            "FAILED. expected: " + Xml.marshal(expectedConfig) + ", got: " + Xml.marshal(config));
       }
 
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog("getBucketNotification(String bucketName)", null, startTime);
+      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getBucketNotification(String bucketName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: removeAllBucketNotification(String bucketName). */
-  public static void removeAllBucketNotification_test1() throws Exception {
-    // This test requires 'MINIO_JAVA_TEST_TOPIC' and 'MINIO_JAVA_TEST_REGION'
-    // environment variables.
-    String topic = System.getenv("MINIO_JAVA_TEST_TOPIC");
-    String region = System.getenv("MINIO_JAVA_TEST_REGION");
-    if (topic == null || topic.equals("") || region == null || region.equals("")) {
-      // do not run functional test as required environment variables are missing.
+  /** Test: deleteBucketNotification(DeleteBucketNotificationArgs args). */
+  public static void deleteBucketNotification_test1() throws Exception {
+    String methodName = "deleteBucketNotification(DeleteBucketNotificationArgs args)";
+    long startTime = System.currentTimeMillis();
+    if (sqsArn == null) {
+      mintIgnoredLog(methodName, null, startTime);
       return;
     }
 
     if (!mintEnv) {
-      System.out.println("Test: removeAllBucketNotification(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
-    long startTime = System.currentTimeMillis();
     try {
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).region(region).build());
-
-      NotificationConfiguration notificationConfiguration = new NotificationConfiguration();
-
-      // Add a new topic configuration.
-      List<TopicConfiguration> topicConfigurationList =
-          notificationConfiguration.topicConfigurationList();
-      TopicConfiguration topicConfiguration = new TopicConfiguration();
-      topicConfiguration.setTopic(topic);
+      String bucketName = getRandomName();
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
 
       List<EventType> eventList = new LinkedList<>();
       eventList.add(EventType.OBJECT_CREATED_PUT);
       eventList.add(EventType.OBJECT_CREATED_COPY);
-      topicConfiguration.setEvents(eventList);
-      topicConfiguration.setPrefixRule("images");
-      topicConfiguration.setSuffixRule("pg");
+      QueueConfiguration queueConfig = new QueueConfiguration();
+      queueConfig.setQueue(sqsArn);
+      queueConfig.setEvents(eventList);
+      queueConfig.setPrefixRule("images");
+      queueConfig.setSuffixRule("pg");
 
-      topicConfigurationList.add(topicConfiguration);
-      notificationConfiguration.setTopicConfigurationList(topicConfigurationList);
+      List<QueueConfiguration> queueConfigList = new LinkedList<>();
+      queueConfigList.add(queueConfig);
 
-      client.setBucketNotification(destBucketName, notificationConfiguration);
+      NotificationConfiguration config = new NotificationConfiguration();
+      config.setQueueConfigurationList(queueConfigList);
 
-      notificationConfiguration = new NotificationConfiguration();
-      String expectedResult = notificationConfiguration.toString();
+      client.setBucketNotification(
+          SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
 
-      client.removeAllBucketNotification(destBucketName);
+      client.deleteBucketNotification(
+          DeleteBucketNotificationArgs.builder().bucket(bucketName).build());
 
-      notificationConfiguration = client.getBucketNotification(destBucketName);
-      String result = notificationConfiguration.toString();
-      if (!result.equals(expectedResult)) {
-        throw new Exception("[FAILED] Expected: " + expectedResult + ", Got: " + result);
+      config =
+          client.getBucketNotification(
+              GetBucketNotificationArgs.builder().bucket(bucketName).build());
+      if (config.queueConfigurationList().size() != 0) {
+        System.out.println("FAILED. expected: <empty>, got: " + Xml.marshal(config));
       }
 
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog("removeAllBucketNotification(String bucketName)", null, startTime);
+      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "removeAllBucketNotification(String bucketName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4773,12 +4737,9 @@ public class FunctionalTest {
 
     teardown();
 
-    // notification tests requires 'MINIO_JAVA_TEST_TOPIC' and
-    // 'MINIO_JAVA_TEST_REGION' environment variables
-    // to be set appropriately.
     setBucketNotification_test1();
     getBucketNotification_test1();
-    removeAllBucketNotification_test1();
+    deleteBucketNotification_test1();
   }
 
   /** runQuickTests: runs tests those completely quicker. */
@@ -4879,6 +4840,9 @@ public class FunctionalTest {
     env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
     env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
     env.put("MINIO_KMS_KES_KEY_NAME", "my-minio-key");
+    env.put("MINIO_NOTIFY_WEBHOOK_ENABLE_miniojavatest", "on");
+    env.put("MINIO_NOTIFY_WEBHOOK_ENDPOINT_miniojavatest", "http://example.org/");
+    sqsArn = "arn:minio:sqs::miniojavatest:webhook";
 
     pb.redirectErrorStream(true);
     pb.redirectOutput(ProcessBuilder.Redirect.to(new File(MINIO_BINARY + ".log")));
@@ -4903,6 +4867,7 @@ public class FunctionalTest {
       accessKey = "minio";
       secretKey = "minio123";
       region = "us-east-1";
+      sqsArn = System.getenv("MINIO_JAVA_TEST_SQS_ARN");
 
       if (!downloadMinio()) {
         System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
