@@ -65,7 +65,7 @@ public class FileUploader {
         System.out.println("Bucket already exists.");
       } else {
         // Make a new bucket called asiatrip to hold a zip file of photos.
-        minioClient.makeBucket("asiatrip");
+        minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
       }
 
       // Upload the zip file to the bucket with putObject

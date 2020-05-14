@@ -298,37 +298,37 @@ minioClient.deleteBucketLifeCycle("my-bucketname");
 ```
 
 <a name="disableVersioning"></a>
-### disableVersioning(VersionBucketArgs args)
-`public void disableVersioning(VersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.VersionBucketArgs-)_
+### disableVersioning(DisableVersionBucketArgs args)
+`public void disableVersioning(DisableVersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.DisableVersionBucketArgs-)_
 
 Disables object versioning feature in a bucket.
 
 __Parameters__
 
-| Parameter      | Type                  | Description                                                    |
-|:---------------|:----------------------|:---------------------------------------------------------------|
-| ``args``       | _[VersionBucketArgs]_ | Arguments for enabling/disabling versioning feature in bucket. |
+| Parameter      | Type                         | Description                                           |
+|:---------------|:-----------------------------|:------------------------------------------------------|
+| ``args``       | _[DisableVersionBucketArgs]_ | Arguments for disabling versioning feature in bucket. |
 
 __Example__
 ```java
-minioClient.disableVersioning(VersionBucketArgs.builder().bucket("my-bucket").build());
+minioClient.disableVersioning(DisableVersionBucketArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="enableVersioning"></a>
-### enableVersioning(VersionBucketArgs args)
-`public void enableVersioning(VersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-io.minio.VersionBucketArgs-)_
+### enableVersioning(EnableVersionBucketArgs args)
+`public void enableVersioning(EnableVersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-io.minio.EnableVersionBucketArgs-)_
 
 Enables object versioning feature in a bucket.
 
 __Parameters__
 
-| Parameter      | Type                  | Description                                                    |
-|:---------------|:----------------------|:---------------------------------------------------------------|
-| ``args``       | _[VersionBucketArgs]_ | Arguments for enabling/disabling versioning feature in bucket. |
+| Parameter      | Type                        | Description                                          |
+|:---------------|:----------------------------|:-----------------------------------------------------|
+| ``args``       | _[EnableVersionBucketArgs]_ | Arguments for enabling versioning feature in bucket. |
 
 __Example__
 ```java
-minioClient.enableVersioning(VersionBucketArgs.builder().bucket("my-bucket").build());
+minioClient.enableVersioning(EnableVersionBucketArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="getBucketLifeCycle"></a>
@@ -1540,6 +1540,7 @@ ObjectStat objectStat =
 [MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html
 [ListObjectsArgs]: http://minio.github.io/minio-java/io/minio/ListObjectsArgs.html
 [RemoveBucketArgs]: http://minio.github.io/minio-java/io/minio/RemoveBucketArgs.html
-[VersionBucketArgs]: http://minio.github.io/minio-java/io/minio/VersionBucketArgs.html
+[EnableVersionBucketArgs]: http://minio.github.io/minio-java/io/minio/EnableVersionBucketArgs.html
+[DisableVersionBucketArgs]: http://minio.github.io/minio-java/io/minio/DisableVersionBucketArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
 [StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html
