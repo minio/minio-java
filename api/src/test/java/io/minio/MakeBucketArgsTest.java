@@ -50,4 +50,18 @@ public class MakeBucketArgsTest {
     MakeBucketArgs.builder().region("").build();
     Assert.fail("exception should be thrown");
   }
+
+  @Test
+  public void testBuild() {
+    MakeBucketArgs args =
+        MakeBucketArgs.builder().objectLock(true).bucket("mybucket").region("myregion").build();
+    Assert.assertEquals("mybucket", args.bucket());
+    Assert.assertEquals("myregion", args.region());
+    Assert.assertEquals(true, args.objectLock());
+
+    args = MakeBucketArgs.builder().bucket("mybucket").build();
+    Assert.assertEquals("mybucket", args.bucket());
+    Assert.assertEquals(null, args.region());
+    Assert.assertEquals(false, args.objectLock());
+  }
 }

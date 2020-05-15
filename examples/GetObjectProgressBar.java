@@ -17,6 +17,7 @@
 import com.google.common.io.ByteStreams;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
+import io.minio.StatObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +51,12 @@ public class GetObjectProgressBar {
       // execution is successful.
 
       // Get object stat information.
-      ObjectStat objectStat = minioClient.statObject("testbucket", "resumes/4.original.pdf");
+      ObjectStat objectStat =
+          minioClient.statObject(
+              StatObjectArgs.builder()
+                  .bucket("testbucket")
+                  .object("resumes/4.original.pdf")
+                  .build());
 
       // Get input stream to have content of 'my-objectname' from 'my-bucketname'
       InputStream is =

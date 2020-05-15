@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Base argument class holds bucket name and region */
+/** Base argument class holds bucket name and region. */
 public abstract class BucketArgs extends BaseArgs {
   protected String bucketName;
   protected String region;
@@ -29,7 +29,7 @@ public abstract class BucketArgs extends BaseArgs {
     return region;
   }
 
-  /** Base argument builder class. */
+  /** Base argument builder class for {@link BucketArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends BucketArgs>
       extends BaseArgs.Builder<B, A> {
     private void validateName(String name) {

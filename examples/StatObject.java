@@ -16,10 +16,14 @@
 
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
+import io.minio.ServerSideEncryption;
+import io.minio.StatObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import javax.crypto.KeyGenerator;
 
 public class StatObject {
   /** MinioClient.statObject() example. */
@@ -37,9 +41,73 @@ public class StatObject {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Get object stat information.
-      ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
-      System.out.println(objectStat);
+      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(256);
+      ServerSideEncryption ssec = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+      String versionId = "ac38316c-fe14-4f96-9f76-8f675ae5a79e";
+
+      {
+        // Get information of an object.
+        ObjectStat objectStat =
+            minioClient.statObject(
+                StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+        System.out.println(objectStat);
+      }
+
+      {
+        // Get information of SSE-C encrypted object.
+        ObjectStat objectStat =
+            minioClient.statObject(
+                StatObjectArgs.builder()
+                    .bucket("my-bucketname")
+                    .object("my-encrypted-objectname")
+                    .ssec(ssec) // Replace with actual key.
+                    .build());
+        System.out.println(objectStat);
+      }
+
+      {
+        // Get information of a versioned object.
+        ObjectStat objectStat =
+            minioClient.statObject(
+                StatObjectArgs.builder()
+                    .bucket("my-bucketname")
+                    .object("my-versioned-objectname")
+                    .versionId(versionId) // Replace with actual version ID.
+                    .build());
+        System.out.println(objectStat);
+      }
+
+      {
+        // Get information of a SSE-C encrypted versioned object.
+        ObjectStat objectStat =
+            minioClient.statObject(
+                StatObjectArgs.builder()
+                    .bucket("my-bucketname")
+                    .object("my-encrypted-versioned-objectname")
+                    .versionId(versionId) // Replace with actual version ID.
+                    .ssec(ssec) // Replace with actual key.
+                    .build());
+        System.out.println(objectStat);
+      }
+
+      {
+        // Get information of an object with extra headers and query parameters.
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put("x-amz-request-payer", "requester");
+        HashMap<String, String> queryParams = new HashMap<>();
+        queryParams.put("partNumber", "1");
+
+        ObjectStat objectStat =
+            minioClient.statObject(
+                StatObjectArgs.builder()
+                    .bucket("my-bucketname")
+                    .object("my-objectname")
+                    .extraHeaders(headers) // Replace with actual headers.
+                    .extraQueryParams(queryParams) // Replace with actual query parameters.
+                    .build());
+        System.out.println(objectStat);
+      }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

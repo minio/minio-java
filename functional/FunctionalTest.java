@@ -965,10 +965,10 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: statObject(String bucketName, String objectName). */
+  /** Test: statObject(StatObjectArgs args). */
   public static void statObject_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: statObject(String bucketName, String objectName)");
+      System.out.println("Test: statObject(StatObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -984,7 +984,8 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, options);
       }
 
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      ObjectStat objectStat =
+          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
       if (!(objectName.equals(objectStat.name())
           && (objectStat.length() == 1)
@@ -1006,10 +1007,10 @@ public class FunctionalTest {
       }
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog("statObject(String bucketName, String objectName)", null, startTime);
+      mintSuccessLog("statObject(StatObjectArgs args)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "statObject(String bucketName, String objectName)",
+          "statObject(StatObjectArgs args)",
           null,
           startTime,
           null,
@@ -1018,15 +1019,10 @@ public class FunctionalTest {
     }
   }
 
-  /**
-   * Test: statObject(String bucketName, String objectName, ServerSideEncryption sse). To test
-   * statObject using SSE_C.
-   */
+  /** Test: with SSE-C: statObject(StatObjectArgs args). */
   public static void statObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: statObject(String bucketName, String objectName, ServerSideEncryption sse)"
-              + " using SSE_C.");
+      System.out.println("Test: with SSE-C: statObject(StatObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1043,7 +1039,9 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, options);
       }
 
-      ObjectStat objectStat = client.statObject(bucketName, objectName, sse);
+      ObjectStat objectStat =
+          client.statObject(
+              StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(sse).build());
 
       if (!(objectName.equals(objectStat.name())
           && (objectStat.length() == 1)
@@ -1065,15 +1063,10 @@ public class FunctionalTest {
       }
 
       client.removeObject(bucketName, objectName);
-      mintSuccessLog(
-          "statObject(String bucketName, String objectName, ServerSideEncryption sse)"
-              + " using SSE_C.",
-          null,
-          startTime);
+      mintSuccessLog("statObject(StatObjectArgs args) using SSE_C.", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "statObject(String bucketName, String objectName, ServerSideEncryption sse)"
-              + " using SSE_C.",
+          "statObject(StatObjectArgs args) using SSE_C.",
           null,
           startTime,
           null,
@@ -1082,19 +1075,20 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: statObject(String bucketName, "randomName/"). */
+  /** Test: wtth non-existing objecth: statObject(StatObjectArgs args). */
   public static void statObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: statObject(String bucketName, \"randomName/\")");
+      System.out.println("Test: with non-existing object: statObject(StatObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      client.statObject(bucketName, getRandomName() + "/");
+      client.statObject(
+          StatObjectArgs.builder().bucket(bucketName).object(getRandomName() + "/").build());
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_KEY) {
         mintFailedLog(
-            "statObject(String bucketName, \"randomName/\")",
+            "statObject(StatObjectArgs args) with non-existing object",
             null,
             startTime,
             null,
@@ -1103,14 +1097,79 @@ public class FunctionalTest {
       }
     } catch (Exception e) {
       mintFailedLog(
-          "statObject(String bucketName, \"randomName/\")",
+          "statObject(StatObjectArgs args) with non-existing object",
           null,
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
     } finally {
-      mintSuccessLog("statObject(String bucketName, \"randomName/\"`)", null, startTime);
+      mintSuccessLog("statObject(StatObjectArgs args) with non-existing object", null, startTime);
+    }
+  }
+
+  /** Test: with extra headers/query params: statObject(StatObjectArgs args). */
+  public static void statObject_test4() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: with extra headers/query params: statObject(StatObjectArgs args)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String objectName = getRandomName();
+      Map<String, String> headerMap = new HashMap<>();
+      headerMap.put("Content-Type", customContentType);
+      headerMap.put("my-custom-data", "foo");
+      try (final InputStream is = new ContentInputStream(1)) {
+        PutObjectOptions options = new PutObjectOptions(1, -1);
+        options.setHeaders(headerMap);
+        options.setContentType(customContentType);
+        client.putObject(bucketName, objectName, is, options);
+      }
+
+      HashMap<String, String> headers = new HashMap<>();
+      headers.put("x-amz-request-payer", "requester");
+      HashMap<String, String> queryParams = new HashMap<>();
+      queryParams.put("partNumber", "1");
+      ObjectStat objectStat =
+          client.statObject(
+              StatObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .extraHeaders(headers)
+                  .extraQueryParams(queryParams)
+                  .build());
+
+      if (!(objectName.equals(objectStat.name())
+          && (objectStat.length() == 1)
+          && bucketName.equals(objectStat.bucketName())
+          && objectStat.contentType().equals(customContentType))) {
+        throw new Exception("[FAILED] object stat differs");
+      }
+
+      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
+      if (!httpHeaders.containsKey("x-amz-meta-my-custom-data")) {
+        throw new Exception("[FAILED] metadata not found in object stat");
+      }
+      List<String> values = httpHeaders.get("x-amz-meta-my-custom-data");
+      if (values.size() != 1) {
+        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
+      }
+      if (!values.get(0).equals("foo")) {
+        throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
+      }
+
+      client.removeObject(bucketName, objectName);
+      mintSuccessLog(
+          "statObject(StatObjectArgs args) with extra headers/query params", null, startTime);
+    } catch (Exception e) {
+      mintFailedLog(
+          "statObject(StatObjectArgs args) with extra headers/query params",
+          null,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      throw e;
     }
   }
 
@@ -2329,7 +2388,8 @@ public class FunctionalTest {
       String destBucketName = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
 
-      ObjectStat stat = client.statObject(bucketName, objectName);
+      ObjectStat stat =
+          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
       CopyConditions copyConditions = new CopyConditions();
       copyConditions.setMatchETag(stat.etag());
 
@@ -2432,7 +2492,8 @@ public class FunctionalTest {
       String destBucketName = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
 
-      ObjectStat stat = client.statObject(bucketName, objectName);
+      ObjectStat stat =
+          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
       CopyConditions matchingETagNone = new CopyConditions();
       matchingETagNone.setMatchETagNone(stat.etag());
 
@@ -2613,7 +2674,9 @@ public class FunctionalTest {
       client.copyObject(
           destBucketName, objectName, metadata, null, bucketName, objectName, null, copyConditions);
 
-      ObjectStat objectStat = client.statObject(destBucketName, objectName);
+      ObjectStat objectStat =
+          client.statObject(
+              StatObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       if (!customContentType.equals(objectStat.contentType())) {
         throw new Exception(
             "content type differs. expected: "
@@ -2679,7 +2742,8 @@ public class FunctionalTest {
           objectName,
           null,
           copyConditions);
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      ObjectStat objectStat =
+          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
       }
@@ -2750,7 +2814,13 @@ public class FunctionalTest {
           objectName,
           sseSource,
           copyConditions);
-      client.statObject(bucketName, objectName, sseTarget); // Check for object existence.
+
+      client.statObject(
+          StatObjectArgs.builder()
+              .bucket(bucketName)
+              .object(objectName)
+              .ssec(sseTarget)
+              .build()); // Check for object existence.
 
       client.removeObject(bucketName, objectName);
       mintSuccessLog(
@@ -2803,7 +2873,8 @@ public class FunctionalTest {
 
       client.copyObject(
           bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      ObjectStat objectStat =
+          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
       }
@@ -2867,7 +2938,8 @@ public class FunctionalTest {
 
       client.copyObject(
           bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
-      ObjectStat objectStat = client.statObject(bucketName, objectName);
+      ObjectStat objectStat =
+          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
       if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
         throw new Exception("expected user-defined metadata has been removed");
       }
@@ -4057,6 +4129,9 @@ public class FunctionalTest {
     putObject_test11();
 
     statObject_test1();
+    if (endpoint.toLowerCase(Locale.US).contains("https://")) statObject_test2();
+    statObject_test3();
+    statObject_test4();
 
     getObject_test1();
     getObject_test2();
@@ -4112,10 +4187,7 @@ public class FunctionalTest {
     selectObjectContent_test1();
 
     // SSE_C tests will only work over TLS connection
-    Locale locale = Locale.ENGLISH;
-    boolean tlsEnabled = endpoint.toLowerCase(locale).contains("https://");
-    if (tlsEnabled) {
-      statObject_test2();
+    if (endpoint.toLowerCase(Locale.US).contains("https://")) {
       getObject_test7();
       getObject_test9();
       putObject_test12();
@@ -4125,8 +4197,6 @@ public class FunctionalTest {
       composeObject_test5();
       composeObject_test6();
     }
-
-    statObject_test3();
 
     // SSE_S3 and SSE_KMS only work with endpoint="s3.amazonaws.com"
     String requestUrl = endpoint;
