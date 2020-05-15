@@ -15,19 +15,64 @@
  * limitations under the License.
  */
 
-import static java.nio.file.StandardOpenOption.*;
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.CREATE;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.minio.*;
-import io.minio.errors.*;
-import io.minio.messages.*;
-import java.io.*;
+import io.minio.CloseableIterator;
+import io.minio.ComposeSource;
+import io.minio.CopyConditions;
+import io.minio.ErrorCode;
+import io.minio.ListObjectsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.ObjectStat;
+import io.minio.PostPolicy;
+import io.minio.PutObjectOptions;
+import io.minio.Result;
+import io.minio.SelectResponseStream;
+import io.minio.ServerSideEncryption;
+import io.minio.Time;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.messages.Bucket;
+import io.minio.messages.ErrorResponse;
+import io.minio.messages.Event;
+import io.minio.messages.EventType;
+import io.minio.messages.FileHeaderInfo;
+import io.minio.messages.InputSerialization;
+import io.minio.messages.NotificationConfiguration;
+import io.minio.messages.NotificationRecords;
+import io.minio.messages.ObjectLockConfiguration;
+import io.minio.messages.OutputSerialization;
+import io.minio.messages.QuoteFields;
+import io.minio.messages.RetentionDurationDays;
+import io.minio.messages.RetentionDurationYears;
+import io.minio.messages.RetentionMode;
+import io.minio.messages.Stats;
+import io.minio.messages.TopicConfiguration;
+import io.minio.messages.Upload;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
-import java.security.*;
-import java.time.*;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.SecureRandom;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
@@ -1447,7 +1492,7 @@ public class FunctionalTest {
   /** Test: listObjects(final String bucketName). */
   public static void listObject_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listObjects(final String bucketName)");
+      System.out.println("Test: listObjects(ListObjectsArgs args) [bucket]");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1462,7 +1507,7 @@ public class FunctionalTest {
       }
 
       i = 0;
-      for (Result<?> r : client.listObjects(bucketName)) {
+      for (Result<?> r : client.listObjects(ListObjectsArgs.builder().bucket(bucketName).build())) {
         ignore(i++, r.get());
         if (i == 3) {
           break;
@@ -1473,10 +1518,10 @@ public class FunctionalTest {
         ignore(r.get());
       }
 
-      mintSuccessLog("listObjects(final String bucketName)", null, startTime);
+      mintSuccessLog("listObjects(ListObjectsArgs args) [bucket]", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listObjects(final String bucketName)",
+          "listObjects(ListObjectsArgs args)",
           null,
           startTime,
           null,
@@ -1488,7 +1533,7 @@ public class FunctionalTest {
   /** Test: listObjects(bucketName, final String prefix). */
   public static void listObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listObjects(final String bucketName, final String prefix)");
+      System.out.println("Test: listObjects(ListObjectsArgs args) [bucket, prefix]");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1503,7 +1548,9 @@ public class FunctionalTest {
       }
 
       i = 0;
-      for (Result<?> r : client.listObjects(bucketName, "minio")) {
+      for (Result<?> r :
+          client.listObjects(
+              ListObjectsArgs.builder().bucket(bucketName).prefix("minio").build())) {
         ignore(i++, r.get());
         if (i == 3) {
           break;
@@ -1515,10 +1562,10 @@ public class FunctionalTest {
       }
 
       mintSuccessLog(
-          "listObjects(final String bucketName, final String prefix)", "prefix :minio", startTime);
+          "listObjects(ListObjectsArgs args) [bucket, prefix]", "prefix :minio", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listObjects(final String bucketName, final String prefix)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix]",
           "prefix :minio",
           startTime,
           null,
@@ -1530,8 +1577,7 @@ public class FunctionalTest {
   /** Test: listObjects(bucketName, final String prefix, final boolean recursive). */
   public static void listObject_test3() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: listObjects(final String bucketName, final String prefix, final boolean recursive)");
+      System.out.println("Test: listObjects(ListObjectsArgs args) [bucket, prefix, recursive]");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1546,7 +1592,13 @@ public class FunctionalTest {
       }
 
       i = 0;
-      for (Result<?> r : client.listObjects(bucketName, "minio", true)) {
+      for (Result<?> r :
+          client.listObjects(
+              ListObjectsArgs.builder()
+                  .bucket(bucketName)
+                  .prefix("minio")
+                  .recursive(true)
+                  .build())) {
         ignore(i++, r.get());
         if (i == 3) {
           break;
@@ -1558,12 +1610,12 @@ public class FunctionalTest {
       }
 
       mintSuccessLog(
-          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
           "prefix :minio, recursive: true",
           startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "listObjects with args [bucket, prefix, recursive]",
           "prefix :minio, recursive: true",
           startTime,
           null,
@@ -1576,26 +1628,32 @@ public class FunctionalTest {
   public static void listObject_test4() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: empty bucket: listObjects(final String bucketName, final String prefix,"
+          "Test: empty bucket: listObjects(ListObjectsArgs args) [bucket, prefix, recursive]"
               + " final boolean recursive)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       int i = 0;
-      for (Result<?> r : client.listObjects(bucketName, "minioemptybucket", true)) {
+      for (Result<?> r :
+          client.listObjects(
+              ListObjectsArgs.builder()
+                  .bucket(bucketName)
+                  .prefix("minioemptybucket")
+                  .recursive(true)
+                  .build())) {
         ignore(i++, r.get());
         if (i == 3) {
           break;
         }
       }
       mintSuccessLog(
-          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
           "prefix :minioemptybucket, recursive: true",
           startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
           "prefix :minioemptybucket, recursive: true",
           startTime,
           null,
@@ -1608,7 +1666,7 @@ public class FunctionalTest {
   public static void listObject_test5() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: recursive: listObjects(final String bucketName, final String prefix, "
+          "Test: recursive: listObjects(ListObjectsArgs args) [bucket, prefix, recursive]"
               + "final boolean recursive)");
     }
 
@@ -1625,7 +1683,13 @@ public class FunctionalTest {
       }
 
       i = 0;
-      for (Result<?> r : client.listObjects(bucketName, "minio", true)) {
+      for (Result<?> r :
+          client.listObjects(
+              ListObjectsArgs.builder()
+                  .bucket(bucketName)
+                  .prefix("minio")
+                  .recursive(true)
+                  .build())) {
         ignore(i++, r.get());
       }
 
@@ -1639,12 +1703,12 @@ public class FunctionalTest {
       }
 
       mintSuccessLog(
-          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
           "prefix :minio, recursive: true",
           startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listObjects(final String bucketName, final String prefix, final boolean recursive)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
           "prefix :minio, recursive: true",
           startTime,
           null,
@@ -1660,7 +1724,7 @@ public class FunctionalTest {
   public static void listObject_test6() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: listObjects(final String bucketName, final String prefix, final boolean recursive, "
+          "Test: listObjects(ListObjectsArgs args) [bucket, prefix, recursive, useVersion1]"
               + "final boolean useVersion1)");
     }
 
@@ -1676,7 +1740,14 @@ public class FunctionalTest {
       }
 
       i = 0;
-      for (Result<?> r : client.listObjects(bucketName, "minio", true, true)) {
+      for (Result<?> r :
+          client.listObjects(
+              ListObjectsArgs.builder()
+                  .bucket(bucketName)
+                  .prefix("minio")
+                  .recursive(true)
+                  .useVersion1(true)
+                  .build())) {
         ignore(i++, r.get());
         if (i == 3) {
           break;
@@ -1688,14 +1759,12 @@ public class FunctionalTest {
       }
 
       mintSuccessLog(
-          "listObjects(final String bucketName, final String prefix, "
-              + "final boolean recursive, final boolean useVersion1)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive, useVersion1]",
           "prefix :minio, recursive: true, useVersion1: true",
           startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listObjects(final String bucketName, final String prefix, "
-              + "final boolean recursive, final boolean useVersion1)",
+          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive, useVersion1]",
           "prefix :minio, recursive: true, useVersion1: true",
           startTime,
           null,

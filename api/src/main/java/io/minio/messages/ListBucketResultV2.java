@@ -22,26 +22,27 @@ import org.simpleframework.xml.Root;
 
 /**
  * Object representation of response XML of <a
- * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">ListObjects API</a>.
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">ListObjectsV2
+ * API</a>.
  */
 @Root(name = "ListBucketResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class ListBucketResultV1 extends ListBucketResult {
-  @Element(name = "Marker", required = false)
-  private String marker;
+public class ListBucketResultV2 extends ListBucketResult {
+  @Element(name = "ContinuationToken", required = false)
+  private String continuationToken;
 
-  @Element(name = "NextMarker", required = false)
-  private String nextMarker;
+  @Element(name = "NextContinuationToken", required = false)
+  private String nextContinuationToken;
 
   /** Returns continuation token. */
   @Override
   public String continuationToken() {
-    return marker;
+    return continuationToken;
   }
 
   /** Returns next continuation token. */
   @Override
   public String nextContinuationToken() {
-    return nextMarker;
+    return nextContinuationToken;
   }
 }

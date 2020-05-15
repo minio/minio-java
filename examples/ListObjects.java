@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
@@ -42,7 +43,8 @@ public class ListObjects {
       boolean found = minioClient.bucketExists("my-bucketname");
       if (found) {
         // List objects from 'my-bucketname'
-        Iterable<Result<Item>> myObjects = minioClient.listObjects("my-bucketname");
+        Iterable<Result<Item>> myObjects =
+            minioClient.listObjects(ListObjectsArgs.builder().bucket("my-bucketname").build());
         for (Result<Item> result : myObjects) {
           Item item = result.get();
           System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
