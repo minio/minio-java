@@ -1,7 +1,7 @@
 package io.minio;
 
-/** Argument class of @see #listIncompleteUploads(ListIncompleteUploadsBucketArgs args). */
-public class ListIncompleteUploadsBucketArgs extends BucketArgs {
+/** Argument class of @see #listIncompleteUploads(ListIncompleteUploadsArgs args). */
+public class ListIncompleteUploadsArgs extends BucketArgs {
   private String prefix;
   private boolean recursive;
 
@@ -19,9 +19,8 @@ public class ListIncompleteUploadsBucketArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of @see #listIncompleteUploads(ListIncompleteUploadsBucketArgs args). */
-  public static final class Builder
-      extends BucketArgs.Builder<Builder, ListIncompleteUploadsBucketArgs> {
+  /** Argument builder of @see #listIncompleteUploads(ListIncompleteUploadsArgs args). */
+  public static final class Builder extends BucketArgs.Builder<Builder, ListIncompleteUploadsArgs> {
     public Builder prefix(String prefix) {
       operations.add(args -> args.prefix = prefix);
       return this;
@@ -32,8 +31,8 @@ public class ListIncompleteUploadsBucketArgs extends BucketArgs {
       return this;
     }
 
-    public ListIncompleteUploadsBucketArgs build() throws IllegalArgumentException {
-      return build(ListIncompleteUploadsBucketArgs.class);
+    public ListIncompleteUploadsArgs build() throws IllegalArgumentException {
+      return build(ListIncompleteUploadsArgs.class);
     }
   }
 }

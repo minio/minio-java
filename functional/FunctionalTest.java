@@ -1828,10 +1828,10 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: listIncompleteUploads(ListIncompleteUploadsBucketArgs args). */
+  /** Test: listIncompleteUploads(ListIncompleteUploadsArgs args). */
   public static void listIncompleteUploads_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listIncompleteUploads(ListIncompleteUploadsBucketArgs args)");
+      System.out.println("Test: listIncompleteUploads(ListIncompleteUploadsArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1850,19 +1850,18 @@ public class FunctionalTest {
       int i = 0;
       for (Result<Upload> r :
           client.listIncompleteUploads(
-              ListIncompleteUploadsBucketArgs.builder().bucket(bucketName).build())) {
+              ListIncompleteUploadsArgs.builder().bucket(bucketName).build())) {
         ignore(i++, r.get());
         if (i == 10) {
           break;
         }
       }
 
-      client.removeIncompleteUpload(
-          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("listIncompleteUploads(String bucketName)", null, startTime);
+      client.removeIncompleteUpload(bucketName, objectName);
+      mintSuccessLog("listIncompleteUploads(ListIncompleteUploadsArgs args)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listIncompleteUploads(ListIncompleteUploadsBucketArgs args)",
+          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
           null,
           startTime,
           null,
@@ -1871,11 +1870,10 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: listIncompleteUploads(ListIncompleteUploadsBucketArgs args). */
+  /** Test: listIncompleteUploads(ListIncompleteUploadsArgs args). */
   public static void listIncompleteUploads_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: with Prefix listIncompleteUploads(ListIncompleteUploadsBucketArgs args)");
+      System.out.println("Test: with Prefix listIncompleteUploads(ListIncompleteUploadsArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1894,22 +1892,19 @@ public class FunctionalTest {
       int i = 0;
       for (Result<Upload> r :
           client.listIncompleteUploads(
-              ListIncompleteUploadsBucketArgs.builder()
-                  .bucket(bucketName)
-                  .prefix("minio")
-                  .build())) {
+              ListIncompleteUploadsArgs.builder().bucket(bucketName).prefix("minio").build())) {
         ignore(i++, r.get());
         if (i == 10) {
           break;
         }
       }
 
-      client.removeIncompleteUpload(
-          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("listIncompleteUploads(String bucketName, String prefix)", null, startTime);
+      client.removeIncompleteUpload(bucketName, objectName);
+      mintSuccessLog(
+          "listIncompleteUploads(ListIncompleteUploadsArgs args)", "prefix :minio", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listIncompleteUploads(ListIncompleteUploadsBucketArgs args)",
+          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
           "prefix :minio",
           startTime,
           null,
@@ -1925,7 +1920,7 @@ public class FunctionalTest {
   public static void listIncompleteUploads_test3() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: with prefix and recursive as true listIncompleteUploads(ListIncompleteUploadsBucketArgs args)");
+          "Test: with prefix and recursive as true listIncompleteUploads(ListIncompleteUploadsArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -1944,7 +1939,7 @@ public class FunctionalTest {
       int i = 0;
       for (Result<Upload> r :
           client.listIncompleteUploads(
-              ListIncompleteUploadsBucketArgs.builder()
+              ListIncompleteUploadsArgs.builder()
                   .bucket(bucketName)
                   .prefix("minio")
                   .recursive(true)
@@ -1958,12 +1953,12 @@ public class FunctionalTest {
       client.removeIncompleteUpload(
           RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
-          "listIncompleteUploads(ListIncompleteUploadsBucketArgs args)",
+          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
           "prefix: minio, recursive: true",
           startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "listIncompleteUploads(ListIncompleteUploadsBucketArgs args)",
+          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
           "prefix: minio, recursive: true",
           startTime,
           null,
@@ -1995,7 +1990,7 @@ public class FunctionalTest {
       int i = 0;
       for (Result<Upload> r :
           client.listIncompleteUploads(
-              ListIncompleteUploadsBucketArgs.builder().bucket(bucketName).build())) {
+              ListIncompleteUploadsArgs.builder().bucket(bucketName).build())) {
         ignore(i++, r.get());
         if (i == 10) {
           break;

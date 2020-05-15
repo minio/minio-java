@@ -15,7 +15,7 @@
  */
 
 import io.minio.BucketExistsArgs;
-import io.minio.ListIncompleteUploadsBucketArgs;
+import io.minio.ListIncompleteUploadsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
@@ -47,7 +47,7 @@ public class ListIncompleteUploads {
         // List all incomplete multipart upload of objects in 'my-bucketname'
         Iterable<Result<Upload>> myObjects =
             minioClient.listIncompleteUploads(
-                ListIncompleteUploadsBucketArgs.builder().bucket("my-bucketname").build());
+                ListIncompleteUploadsArgs.builder().bucket("my-bucketname").build());
         for (Result<Upload> result : myObjects) {
           Upload upload = result.get();
           System.out.println(upload.uploadId() + ", " + upload.objectName());
