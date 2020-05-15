@@ -1196,17 +1196,16 @@ minioClient.getObject("my-bucketname", "my-objectname", ssec, "my-object-file");
 ```
 
  <a name="getObjectRetention"></a>
-### getObjectRetention(String bucketName, String objectName, String versionId)
-`public Retention getObjectRetention(String bucketName, String objectName, String versionId)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectRetention-java.lang.String-java.lang.String-java.lang.String-)_
+### getObjectRetention(GetObjectRetentionArgs args)
+`public Retention getObjectRetention(GetObjectRetentionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectRetention-io.minio.GetObjectRetentionArgs-)_
 
 Gets retention configuration of an object.
 
  __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
-| ``versionId``  | _String_ | Version ID of the object.  |
+ 
+| Parameter      | Type                       | Description                |
+|:---------------|:---------------------------|:---------------------------|
+| ``args``       | _[GetObjectRetentionArgs]_ | Object retention arguments |
 
 | Returns                                         |
 |:------------------------------------------------|
@@ -1214,8 +1213,25 @@ Gets retention configuration of an object.
 
  __Example__
  ```java
-Retention retention = minioClient.getObjectRetention("my-bucketname", "my-objectname", null);
+// Object without version
+Retention retention =
+    minioClient.getObjectRetention(
+        GetObjectRetentionArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .build());
 System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());
+
+// Object with version
+Retention retention =
+    minioClient.getObjectRetention(
+        GetObjectRetentionArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .versionId("object-version-id")
+            .build());
+System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());
+
 ```
 
 <a name="getObjectTags"></a>
@@ -1611,24 +1627,27 @@ stream.close();
 ```
 
 <a name="setObjectRetention"></a>
-### setObjectRetention(String bucketName, String objectName, String versionId, Retention retention, boolean bypassGovernanceRetention)
-`public void setObjectLockRetention(String bucketName, String objectName, String versionId, Retention retention, boolean bypassGovernanceRetention)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectRetention-java.lang.String-java.lang.String-java.lang.String-io.minio.messages.Retention-boolean-)_
+### setObjectRetention(SetObjectRetentionArgs args)
+`public void setObjectLockRetention(SetObjectRetentionArgs)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectRetention-io.minio.SetObjectRetentionArgs-)_
 
 Sets retention configuration to an object.
 
  __Parameters__
-| Parameter                     | Type          | Description                     |
-|:------------------------------|:--------------|:--------------------------------|
-| ``bucketName``                | _String_      | Name of the bucket.             |
-| ``objectName``                | _String_      | Object name in the bucket.      |
-| ``versionId``                 | _String_      | Version ID of the object.       |
-| ``config``                    | _[Retention]_ | Object retention configuration. |
-| ``bypassGovernanceRetention`` | _boolean_     | Bypass Governance retention.    |
+ 
+| Parameter        | Type                       | Description                        |
+|:-----------------|:---------------------------|:-----------------------------------|
+| ``args``         | _[SetObjectRetentionArgs]_ | Arguments to set object retention. |
 
  __Example__
 ```java
 Retention retention = new Retention(RetentionMode.COMPLIANCE, ZonedDateTime.now().plusYears(1));
-minioClient.setObjectRetention("my-bucketname", "my-objectname", null, true, retention);
+minioClient.setObjectRetention(
+    SetObjectRetentionArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .config(retention)
+        .bypassGovernanceRetention(true)
+        .build());
 ```
 
 <a name="setObjectTags"></a>
@@ -1743,6 +1762,8 @@ ObjectStat objectStat =
 [RemoveBucketArgs]: http://minio.github.io/minio-java/io/minio/RemoveBucketArgs.html
 [EnableVersioningArgs]: http://minio.github.io/minio-java/io/minio/EnableVersioningArgs.html
 [DisableVersioningArgs]: http://minio.github.io/minio-java/io/minio/DisableVersioningArgs.html
+[SetObjectRetentionArgs]: http://minio.github.io/minio-java/io/minio/SetObjectRetentionArgs.html
+[GetObjectRetentionArgs]: http://minio.github.io/minio-java/io/minio/GetObjectRetentionArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
 [StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html
 [RemoveObjectArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectArgs.html

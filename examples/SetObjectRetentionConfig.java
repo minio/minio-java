@@ -17,6 +17,7 @@
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
+import io.minio.SetObjectRetentionArgs;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -34,8 +35,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 
-public class SetGetObjectLockRetentionConfig {
-  /** MinioClient.setObjectRetention() example. MinioClient.getObjectRetention() example. */
+public class SetObjectRetentionConfig {
+  /** MinioClient.setObjectRetention() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException,
           InsufficientDataException, InternalException, ErrorResponseException,
@@ -87,7 +88,13 @@ public class SetGetObjectLockRetentionConfig {
       Retention config = new Retention(RetentionMode.COMPLIANCE, retentionUntil);
 
       // Set object lock configuration
-      minioClient.setObjectRetention("my-bucketname", "my-objectname", "", config, true);
+      minioClient.setObjectRetention(
+          SetObjectRetentionArgs.builder()
+              .bucket("my-bucketname")
+              .object("my-objectname")
+              .config(config)
+              .bypassGovernanceRetention(true)
+              .build());
 
       // Get object lock retention
       Retention retention = minioClient.getObjectRetention("my-bucketname", "my-objectname", "");

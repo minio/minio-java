@@ -3820,6 +3820,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void setObjectRetention(
       String bucketName,
       String objectName,
@@ -3829,23 +3830,61 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (config == null) {
+
+    this.setObjectRetention(
+        SetObjectRetentionArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .versionId(versionId)
+            .config(config)
+            .bypassGovernanceRetention(bypassGovernanceRetention)
+            .build());
+  }
+
+  /**
+   * Sets retention configuration to an object.
+   *
+   * <pre>Example:{@code
+   * Retention retention =
+   *     new Retention(RetentionMode.COMPLIANCE, ZonedDateTime.now().plusYears(1));
+   * minioClient.setObjectRetention(SetObjectRetentionArgs args);
+   * }</pre>
+   *
+   * @param args {@link SetObjectRetentionArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setObjectRetention(SetObjectRetentionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args.config() == null) {
       throw new IllegalArgumentException("null value is not allowed in config.");
     }
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if (versionId != null && !versionId.isEmpty()) {
-      queryParamMap.put("versionId", versionId);
+    if (args.versionId() != null && !args.versionId().isEmpty()) {
+      queryParamMap.put("versionId", args.versionId());
     }
 
     Map<String, String> headerMap = new HashMap<>();
-    if (bypassGovernanceRetention) {
+    if (args.bypassGovernanceRetention()) {
       headerMap.put("x-amz-bypass-governance-retention", "True");
     }
 
-    Response response = executePut(bucketName, objectName, headerMap, queryParamMap, config, 0);
+    Response response =
+        executePut(args.bucket(), args.objectName(), headerMap, queryParamMap, args.config(), 0);
     response.body().close();
   }
 
@@ -3879,14 +3918,50 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    return this.getObjectRetention(
+        GetObjectRetentionArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .versionId(versionId)
+            .build());
+  }
+
+  /**
+   * Gets retention configuration of an object.
+   *
+   * <pre>Example:{@code
+   * Retention retention =
+   *     minioClient.getObjectRetention(GetObjectRetentionArgs args);
+   * System.out.println(
+   *     "mode: " + retention.mode() + "until: " + retention.retainUntilDate());
+   * }</pre>
+   *
+   * @param args {@link GetObjectRetentionArgs} object.
+   * @return {@link Retention} - Object retention configuration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public Retention getObjectRetention(GetObjectRetentionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if (versionId != null && !versionId.isEmpty()) {
-      queryParamMap.put("versionId", versionId);
+    if (args.versionId() != null && !args.versionId().isEmpty()) {
+      queryParamMap.put("versionId", args.versionId());
     }
 
-    try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
+    try (Response response = executeGet(args.bucket(), args.objectName(), null, queryParamMap)) {
       Retention retention = Xml.unmarshal(Retention.class, response.body().charStream());
       return retention;
     } catch (ErrorResponseException e) {
