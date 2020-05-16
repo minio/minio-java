@@ -29,9 +29,11 @@ import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PostPolicy;
 import io.minio.PutObjectOptions;
+import io.minio.RemoveBucketArgs;
 import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
+import io.minio.StatObjectArgs;
 import io.minio.Time;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -299,8 +301,7 @@ public class FunctionalTest {
   /** Test: makeBucket(MakeBucketArgs args). */
   public static void makeBucket_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: with region and object lock functionality : makeBucket(MakeBucketArgs args)");
+      System.out.println("Test: with region and object lock : makeBucket(MakeBucketArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -317,7 +318,6 @@ public class FunctionalTest {
         ErrorResponseException exp = (ErrorResponseException) e;
         errorResponse = exp.errorResponse();
       }
-
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
         mintIgnoredLog(

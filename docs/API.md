@@ -298,37 +298,37 @@ minioClient.deleteBucketLifeCycle("my-bucketname");
 ```
 
 <a name="disableVersioning"></a>
-### disableVersioning(DisableVersionBucketArgs args)
-`public void disableVersioning(DisableVersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.DisableVersionBucketArgs-)_
+### disableVersioning(DisableVersioningArgs args)
+`public void disableVersioning(DisableVersioningArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.DisableVersioningArgs-)_
 
 Disables object versioning feature in a bucket.
 
 __Parameters__
 
-| Parameter      | Type                         | Description                                           |
-|:---------------|:-----------------------------|:------------------------------------------------------|
-| ``args``       | _[DisableVersionBucketArgs]_ | Arguments for disabling versioning feature in bucket. |
+| Parameter  | Type                       | Description      |
+|:-----------|:---------------------------|:-----------------|
+| ``args``   | _[DisableVersioningArgs]_  | Arguments.       |
 
 __Example__
 ```java
-minioClient.disableVersioning(DisableVersionBucketArgs.builder().bucket("my-bucket").build());
+minioClient.disableVersioning(DisableVersioningArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="enableVersioning"></a>
-### enableVersioning(EnableVersionBucketArgs args)
-`public void enableVersioning(EnableVersionBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-io.minio.EnableVersionBucketArgs-)_
+### enableVersioning(EnableVersioningArgs args)
+`public void enableVersioning(EnableVersioningArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-io.minio.EnableVersioningArgs-)_
 
 Enables object versioning feature in a bucket.
 
 __Parameters__
 
-| Parameter      | Type                        | Description                                          |
-|:---------------|:----------------------------|:-----------------------------------------------------|
-| ``args``       | _[EnableVersionBucketArgs]_ | Arguments for enabling versioning feature in bucket. |
+| Parameter  | Type                      | Description      |
+|:-----------|:--------------------------|:-----------------|
+| ``args``   | _[EnableVersioningArgs]_  | Arguments.       |
 
 __Example__
 ```java
-minioClient.enableVersioning(EnableVersionBucketArgs.builder().bucket("my-bucket").build());
+minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="getBucketLifeCycle"></a>
@@ -635,9 +635,10 @@ minioClient.removeAllBucketNotification("my-bucketname");
 Removes an empty bucket.
 
 __Parameters__
-| Parameter      | Type                 | Description                 |
-|:---------------|:---------------------|:----------------------------|
-| ``args``       | _[RemoveBucketArgs]_ | Arguments to remove bucket. |
+
+| Parameter    | Type                 | Description     |
+|:-------------|:---------------------|:----------------|
+| ``args``     | _[RemoveBucketArgs]_ | Arguments.      |
 
 __Example__
 ```java
@@ -1540,7 +1541,7 @@ ObjectStat objectStat =
 [MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html
 [ListObjectsArgs]: http://minio.github.io/minio-java/io/minio/ListObjectsArgs.html
 [RemoveBucketArgs]: http://minio.github.io/minio-java/io/minio/RemoveBucketArgs.html
-[EnableVersionBucketArgs]: http://minio.github.io/minio-java/io/minio/EnableVersionBucketArgs.html
-[DisableVersionBucketArgs]: http://minio.github.io/minio-java/io/minio/DisableVersionBucketArgs.html
+[EnableVersioningArgs]: http://minio.github.io/minio-java/io/minio/EnableVersioningArgs.html
+[DisableVersioningArgs]: http://minio.github.io/minio-java/io/minio/DisableVersioningArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
 [StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html

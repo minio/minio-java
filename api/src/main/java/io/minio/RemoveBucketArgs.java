@@ -16,17 +16,13 @@
 
 package io.minio;
 
-/** Argument class of @see #removeBucket(RemoveBucketArgs args). */
+/** Argument class of MinioClient.removeBucket(). */
 public class RemoveBucketArgs extends BucketArgs {
 
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of @see #removeBucket(RemoveBucketArgs args). */
-  public static final class Builder extends BucketArgs.Builder<Builder, RemoveBucketArgs> {
-    public RemoveBucketArgs build() throws IllegalArgumentException {
-      return build(RemoveBucketArgs.class);
-    }
-  }
+  /** Argument builder of {@link RemoveBucketArgs}. */
+  public static final class Builder extends BucketArgs.Builder<Builder, RemoveBucketArgs> {}
 }

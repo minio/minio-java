@@ -16,16 +16,12 @@
 
 package io.minio;
 
-/** Argument class of @see #disableVersioning(DisableVersionBucketArgs args). */
-public class DisableVersionBucketArgs extends BucketArgs {
+/** Argument class of MinioClient.enableVersioning(). */
+public class EnableVersioningArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of @see #disbleVersioning(DisableVersionBucketArgs args). */
-  public static final class Builder extends BucketArgs.Builder<Builder, DisableVersionBucketArgs> {
-    public DisableVersionBucketArgs build() throws IllegalArgumentException {
-      return build(DisableVersionBucketArgs.class);
-    }
-  }
+  /** Argument builder of {@link EnableVersioningArgs}. */
+  public static final class Builder extends BucketArgs.Builder<Builder, EnableVersioningArgs> {}
 }

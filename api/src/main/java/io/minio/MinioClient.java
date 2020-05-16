@@ -3473,17 +3473,17 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    this.enableVersioning(EnableVersionBucketArgs.builder().bucket(bucketName).build());
+    this.enableVersioning(EnableVersioningArgs.builder().bucket(bucketName).build());
   }
 
   /**
    * Enables object versioning feature in a bucket.
    *
    * <pre>Example:{@code
-   * minioClient.enableVersioning(EnableVersionBucketArgs args);
+   * minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
-   * @param args Arguments for enabling versioning feature in bucket.
+   * @param args {@link EnableVersioningArgs} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3496,16 +3496,20 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void enableVersioning(EnableVersionBucketArgs args)
+  public void enableVersioning(EnableVersioningArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
     String config =
         "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
             + "<Status>Enabled</Status></VersioningConfiguration>";
-    Response response = executePut(args.bucketName(), null, null, queryParamMap, config, 0);
+    Response response = executePut(args.bucket(), null, null, queryParamMap, config, 0);
     response.body().close();
   }
 
@@ -3534,17 +3538,17 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    this.disableVersioning(DisableVersionBucketArgs.builder().bucket(bucketName).build());
+    this.disableVersioning(DisableVersioningArgs.builder().bucket(bucketName).build());
   }
 
   /**
    * Disables object versioning feature in a bucket.
    *
    * <pre>Example:{@code
-   * minioClient.disableVersioning(DisableVersionBucketArgs args);
+   * minioClient.disableVersioning(DisableVersioningArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
-   * @param args Arguments for disabling versioning feature in bucket.
+   * @param args {@link DisableVersioningArgs} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3557,16 +3561,20 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void disableVersioning(DisableVersionBucketArgs args)
+  public void disableVersioning(DisableVersioningArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
     String config =
         "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
             + "<Status>Suspended</Status></VersioningConfiguration>";
-    Response response = executePut(args.bucketName(), null, null, queryParamMap, config, 0);
+    Response response = executePut(args.bucket(), null, null, queryParamMap, config, 0);
     response.body().close();
   }
 
@@ -3908,10 +3916,10 @@ public class MinioClient {
    * Removes an empty bucket using arguments
    *
    * <pre>Example:{@code
-   * minioClient.removeBucket(RemoveBucketArgs args);
+   * minioClient.removeBucket(RemoveBucketArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
-   * @param args Arguments to remove bucket.
+   * @param args {@link RemoveBucketArgs} bucket.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3928,8 +3936,11 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
 
-    executeDelete(args.bucketName(), null, null);
+    executeDelete(args.bucket(), null, null);
   }
 
   private void putObject(
