@@ -1274,16 +1274,16 @@ Tags tags = minioClient.getObjectTags(
 ```
 
  <a name="getObjectUrl"></a>
-### getObjectUrl(String bucketName, String objectName)
-`public String getObjectUrl(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectUrl-java.lang.String-java.lang.String-)_
+### getObjectUrl(GetObjectUrlArgs args)
+`public String getObjectUrl(GetObjectUrlArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectUrl-io.minio.GetObjectUrlArgs-)_
 
 Gets URL of an object useful when this object has public read access.
 
  __Parameters__
 | Parameter      | Type     | Description                |
 |:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
+| ``args``       | _[GetObjectUrlArgs]_ | Argument.        |
+
 
 | Returns                |
 |:-----------------------|
@@ -1291,24 +1291,25 @@ Gets URL of an object useful when this object has public read access.
 
  __Example__
  ```java
-String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
+// Get URL of an object useful when this object has public read access.
+String url =
+    minioClient.getObjectUrl(
+        GetObjectUrlArgs.builder().bucket("my-bucketname").object("my-objectname").build());
 System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ```
 
  <a name="getPresignedObjectUrl"></a>
-### getPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires, Map<String,String> reqParams)
-`public String getPresignedObjectUrl(Method method, String bucketName, String objectName, Integer expires, Map<String,String> reqParams)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getPresignedObjectUrl-io.minio.http.Method-java.lang.String-java.lang.String-java.lang.Integer-java.util.Map-)_
+### getPresignedObjectUrl(GetPresignedObjectUrlArgs args)
+`public String getPresignedObjectUrl(GetPresignedObjectUrlArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getPresignedObjectUrl-io.minio.GetPresignedObjectUrlArgs-)_
 
 Gets presigned URL of an object for HTTP method, expiry time and custom request parameters.
 
  __Parameters__
-| Parameter      | Type                 | Description                            |
-|:---------------|:---------------------|:---------------------------------------|
-| ``method``     | _[Method]_           | HTTP method to generate presigned URL. |
-| ``bucketName`` | _String_             | Name of the bucket.                    |
-| ``objectName`` | _String_             | Object name in the bucket.             |
-| ``expires``    | _Integer_            | Expiry in seconds; defaults to 7 days. |
-| ``reqParams``  | _Map<String,String>_ | Request parameters to override.        |
+ 
+| Parameter   | Type                           | Description  |
+|:------------|:-------------------------------|:-------------|
+| ``args``    | _[GetPresignedObjectUrlArgs]_  | Arguments.   |
+
 
 | Returns                |
 |:-----------------------|
@@ -1316,8 +1317,17 @@ Gets presigned URL of an object for HTTP method, expiry time and custom request 
 
  __Example__
  ```java
-String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname", "my-objectname", 24 * 60 * 60,
-    reqParams);
+// Get presigned URL of an object for HTTP method, expiry time and custom request parameters.
+String url =
+    minioClient.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.DELETE)
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .expires(24 * 60 * 60)
+            .params(reqParams)
+            .build());
+System.out.println(url);
 ```
 
  <a name="isObjectLegalHoldEnabled"></a>
@@ -1355,72 +1365,47 @@ else {
 ```
 
 <a name="presignedGetObject"></a>
-### presignedGetObject(String bucketName, String objectName)
-`public String presignedGetObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-)_
-
-Gets presigned URL of an object to download its data for 7 days.
-
-__Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
-
-| Returns                                       |
-|:----------------------------------------------|
-| _String_ - URL string to download the object. |
-
-__Example__
-```java
-String url = minioClient.presignedGetObject("my-bucketname", "my-objectname");
-```
-
-
-<a name="presignedGetObject"></a>
-### presignedGetObject(String bucketName, String objectName, Integer expires)
-`public String presignedGetObject(String bucketName, String objectName, Integer expires)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-java.lang.Integer-)_
-
-Gets presigned URL of an object to download its data for expiry time.
-
-__Parameters__
-| Parameter      | Type      | Description                                         |
-|:---------------|:----------|:----------------------------------------------------|
-| ``bucketName`` | _String_  | Name of the bucket.                                 |
-| ``objectName`` | _String_  | Object name in the bucket.                          |
-| ``expires``    | _Integer_ | Expiry in seconds. Default expiry is set to 7 days. |
-
-| Returns                                       |
-|:----------------------------------------------|
-| _String_ - URL string to download the object. |
-
-__Example__
-```java
-// Get presigned URL to download my-objectname data with one day expiry.
-String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 24 * 60 * 60);
-```
-
-<a name="presignedGetObject"></a>
-### presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,String> reqParams)
-`public String presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,String> reqParams)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-java.lang.String-java.lang.String-java.lang.Integer-java.util.Map-)_
+### presignedGetObject(PresignedGetObjectArgs args)
+`public String presignedGetObject(PresignedGetObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-io.minio.PresignedGetObjectArgs-)_
 
 Gets presigned URL of an object to download its data for expiry time and request parameters.
 
 __Parameters__
-| Parameter      | Type                 | Description                            |
-|:---------------|:---------------------|:---------------------------------------|
-| ``bucketName`` | _String_             | Name of the bucket.                    |
-| ``objectName`` | _String_             | Object name in the bucket.             |
-| ``expires``    | _Integer_            | Expiry in seconds; defaults to 7 days. |
-| ``reqParams``  | _Map<String,String>_ | Request parameters to override.        |
+
+| Parameter      | Type                        | Description    |
+|:---------------|:----------------------------|:---------------|
+| ``args``       | _[PresignedGetObjectArgs]_  | Arguments.     |
 
 | Returns                                       |
 |:----------------------------------------------|
 | _String_ - URL string to download the object. |
 
 __Example__
+
 ```java
+// Gets presigned URL of an object to download its data for 7 days.
+String url =
+    minioClient.presignedGetObject(
+        PresignedGetObject.builder().bucket("my-bucketname").object("my-objectname").build());
+
+// Get presigned URL to download my-objectname data with one day expiry.
+String url =
+    minioClient.presignedGetObject(
+        PresignedGetObject.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .expires(24 * 60 * 60)
+            .build());
+
 // Get presigned URL to download my-objectname data with one day expiry and request parameters.
-String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 24 * 60 * 60, reqParams);
+String url =
+    minioClient.presignedGetObject(
+        PresignedGetObject.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .expires(24 * 60 * 60)
+            .params(reqParams)
+            .build());
 ```
 
 <a name="presignedPostPolicy"></a>
@@ -1430,6 +1415,7 @@ String url = minioClient.presignedGetObject("my-bucketname", "my-objectname", 24
 Gets form-data of [PostPolicy] of an object to upload its data using POST method.
 
 __Parameters__
+
 | Parameter  | Type           | Description               |
 |:-----------|:---------------|:--------------------------|
 | ``policy`` | _[PostPolicy]_ | Post policy of an object. |
@@ -1460,48 +1446,44 @@ System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname
 ```
 
 <a name="presignedPutObject"></a>
-### presignedPutObject(String bucketName, String objectName)
-`public String presignedPutObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPutObject-java.lang.String-java.lang.String-)_
+### presignedPutObject(PresignedPutObjectArgs args)
+`public String presignedPutObject(PresignedPutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPutObject-io.minio.PresignedPutObjectArgs-)_
 
-Gets presigned URL of an object to upload data for 7 days.
+Gets presigned URL of an object.
 
 __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
+
+| Parameter      | Type                       | Description       |
+|:---------------|:---------------------------|:------------------|
+| ``args ``      | _[PresignedPutObjectArgs]_ | Arguments.        |
+
 
 | Returns                                    |
 |:-------------------------------------------|
 | _String_ - URL string to upload an object. |
 
 __Example__
+
 ```java
-String url = minioClient.presignedPutObject("my-bucketname", "my-objectname");
-```
+// Gets presigned URL of an object to upload data for 7 days.
+String url =
+    minioClient.presignedPutObject(
+        PresignedPutObjectArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .build());
 
-<a name="presignedPutObject"></a>
-### presignedPutObject(String bucketName, String objectName, Integer expires)
-`public String presignedPutObject(String bucketName, String objectName, Integer expires)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPutObject-java.lang.String-java.lang.String-java.lang.Integer-)_
-
-Gets presigned URL of an object to upload data for expiry time.
-
-__Parameters__
-| Parameter      | Type      | Description                            |
-|:---------------|:----------|:---------------------------------------|
-| ``bucketName`` | _String_  | Name of the bucket.                    |
-| ``objectName`` | _String_  | Object name in the bucket.             |
-| ``expires``    | _Integer_ | Expiry in seconds; defaults to 7 days. |
-
-| Returns                                    |
-|:-------------------------------------------|
-| _String_ - URL string to upload an object. |
-
-__Example__
-```java
 // Get presigned URL to upload data to my-objectname with one day expiry.
-String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 24 * 60 * 60);
+String url =
+    minioClient.presignedPutObject(
+        PresignedPutObjectArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .expires(24 * 60 * 60)
+            .build());
+
 ```
+
 
 <a name="putObject"></a>
 ### putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)
@@ -1825,3 +1807,4 @@ ObjectStat objectStat =
 [SetDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/SetDefaultRetentionArgs.html
 [DeleteDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html
 [RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html
+[GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html

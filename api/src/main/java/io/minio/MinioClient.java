@@ -1779,10 +1779,48 @@ public class MinioClient {
   public String getObjectUrl(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    checkObjectName(objectName);
-    HttpUrl url = buildUrl(Method.GET, bucketName, objectName, getRegion(bucketName), null);
+          InvalidResponseException, IOException, NoSuchAlgorithmException, 
+          ServerException, XmlParserException {
+
+    return this.getObjectUrl(
+        GetObjectUrlArgs.builder().bucket(bucketName).object(objectName).build());
+  }
+
+  /**
+   * Gets URL of an object useful when this object has public read access.
+   *
+   * <pre>Example:{@code
+   * // Get URL of an object useful when this object has public read access.
+   * String url =
+   *     minioClient.getObjectUrl(
+   *         GetObjectUrlArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+   * System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
+   * }</pre>
+   *
+   * @param args {@link GetObjectUrlArgs} object.
+   * @return String - URL string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public String getObjectUrl(GetObjectUrlArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    HttpUrl url =
+        buildUrl(Method.GET, args.bucket(), args.object(), getRegion(args.bucket()), null);
     return url.toString();
   }
 
@@ -2641,6 +2679,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public String getPresignedObjectUrl(
       Method method,
       String bucketName,
@@ -2651,30 +2690,140 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    // Validate input.
-    if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-      throw new InvalidExpiresRangeException(
-          expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
+
+    return this.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .method(method)
+            .expires(expires)
+            .params(reqParams)
+            .build());
+  }
+
+  /**
+   * Gets presigned URL of an object for HTTP method, expiry time and custom request parameters.
+   *
+   * <pre>Example:{@code
+   * // Get presigned URL of an object for HTTP method, expiry time and custom request parameters.
+   * String url =
+   *     minioClient.getPresignedObjectUrl(
+   *         GetPresignedObjectUrlArgs.builder()
+   *             .method(Method.DELETE)
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .expires(24 * 60 * 60)
+   *             .params(reqParams)
+   *             .build());
+   * System.out.println(url);
+   * }</pre>
+   *
+   * @param args {@link GetPresignedObjectUrlArgs} object.
+   * @return String - URL string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public String getPresignedObjectUrl(GetPresignedObjectUrlArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
     }
 
     byte[] body = null;
-    if (method == Method.PUT || method == Method.POST) {
+    if (args.method() == Method.PUT || args.method() == Method.POST) {
       body = new byte[0];
     }
 
     Multimap<String, String> queryParamMap = null;
-    if (reqParams != null) {
+    if (args.params() != null) {
       queryParamMap = HashMultimap.create();
-      for (Map.Entry<String, String> m : reqParams.entrySet()) {
+      for (Map.Entry<String, String> m : args.params().entrySet()) {
         queryParamMap.put(m.getKey(), m.getValue());
       }
     }
 
-    String region = getRegion(bucketName);
-    HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
-    Request request = createRequest(url, method, null, body, 0);
-    url = Signer.presignV4(request, region, accessKey, secretKey, expires);
+    String region = getRegion(args.bucket());
+    HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParamMap);
+    Request request = createRequest(url, args.method(), null, body, 0);
+    url = Signer.presignV4(request, region, accessKey, secretKey, args.expires());
     return url.toString();
+  }
+
+  /**
+   * Gets presigned URL of an object to download its data for expiry time and request parameters.
+   *
+   * <pre>Example:{@code
+   * // Gets presigned URL of an object to download its data for 7 days.
+   * String url =
+   *     minioClient.presignedGetObject(
+   *         PresignedGetObject.builder().bucket("my-bucketname").object("my-objectname").build());
+   *
+   * // Get presigned URL to download my-objectname data with one day expiry.
+   * String url =
+   *     minioClient.presignedGetObject(
+   *         PresignedGetObject.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .expires(24 * 60 * 60)
+   *             .build());
+   *
+   * // Get presigned URL to download my-objectname data with one day expiry and request parameters.
+   * String url =
+   *     minioClient.presignedGetObject(
+   *        PresignedGetObject.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .expires(24 * 60 * 60)
+   *             .params(reqParams)
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link PresignedGetObjectArgs} object.
+   * @return String - URL string to download the object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public String presignedGetObject(PresignedGetObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    Integer expires = args.expires() == null ? (Integer) DEFAULT_EXPIRY_TIME : args.expires();
+    return getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.GET)
+            .bucket(args.bucket())
+            .object(args.object())
+            .expires(expires)
+            .params(args.params())
+            .build());
   }
 
   /**
@@ -2706,13 +2855,20 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public String presignedGetObject(
       String bucketName, String objectName, Integer expires, Map<String, String> reqParams)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return getPresignedObjectUrl(Method.GET, bucketName, objectName, expires, reqParams);
+    return this.presignedGetObject(
+        PresignedGetObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .expires(expires)
+            .params(reqParams)
+            .build());
   }
 
   /**
@@ -2741,12 +2897,18 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return presignedGetObject(bucketName, objectName, expires, null);
+    return this.presignedGetObject(
+        PresignedGetObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .expires(expires)
+            .build());
   }
 
   /**
@@ -2772,12 +2934,71 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public String presignedGetObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return presignedGetObject(bucketName, objectName, DEFAULT_EXPIRY_TIME, null);
+    return this.presignedGetObject(
+        PresignedGetObjectArgs.builder().bucket(bucketName).object(objectName).build());
+  }
+
+  /**
+   * Gets presigned URL of an object to upload data for expiry time.
+   *
+   * <pre>Example:{@code
+   *
+   * // Gets presigned URL of an object to upload data for 7 days.
+   * String url =
+   *     minioClient.presignedPutObject(
+   *         PresignedPutObjectArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .build());
+   *
+   * // Get presigned URL to upload data to my-objectname with one day expiry.
+   * String url =
+   *     minioClient.presignedPutObject(
+   *         PresignedPutObjectArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .expires(24 * 60 * 60)
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link PresignedPutObjectArgs} object.
+   * @return String - URL string to upload an object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidExpiresRangeException thrown to indicate invalid expiry duration passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public String presignedPutObject(PresignedPutObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    Integer expires = args.expires() == null ? (Integer) DEFAULT_EXPIRY_TIME : args.expires();
+    return getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.PUT)
+            .bucket(args.bucket())
+            .object(args.object())
+            .expires(expires)
+            .build());
   }
 
   /**
@@ -2806,12 +3027,18 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public String presignedPutObject(String bucketName, String objectName, Integer expires)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return getPresignedObjectUrl(Method.PUT, bucketName, objectName, expires, null);
+    return this.presignedPutObject(
+        PresignedPutObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .expires(expires)
+            .build());
   }
 
   /**
@@ -2837,12 +3064,18 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public String presignedPutObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return presignedPutObject(bucketName, objectName, DEFAULT_EXPIRY_TIME);
+    return this.presignedPutObject(
+        PresignedPutObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .expires(DEFAULT_EXPIRY_TIME)
+            .build());
   }
 
   /**

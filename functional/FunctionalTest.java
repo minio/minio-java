@@ -53,6 +53,8 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PostPolicy;
+import io.minio.PresignedGetObjectArgs;
+import io.minio.PresignedPutObjectArgs;
 import io.minio.PutObjectOptions;
 import io.minio.RemoveBucketArgs;
 import io.minio.RemoveIncompleteUploadArgs;
@@ -2154,10 +2156,10 @@ public class FunctionalTest {
     }
   }
 
-  /** public String presignedGetObject(String bucketName, String objectName). */
+  /** public String presignedGetObject(PresignedGetObjectArgs args). */
   public static void presignedGetObject_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: presignedGetObject(String bucketName, String objectName)");
+      System.out.println("Test: presignedGetObject(PresignedGetObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2172,7 +2174,9 @@ public class FunctionalTest {
         inBytes = readAllBytes(is);
       }
 
-      String urlString = client.presignedGetObject(bucketName, objectName);
+      String urlString =
+          client.presignedGetObject(
+              PresignedGetObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
       byte[] outBytes = readObject(urlString);
       if (!Arrays.equals(inBytes, outBytes)) {
@@ -2183,7 +2187,7 @@ public class FunctionalTest {
       mintSuccessLog("presignedGetObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "presignedGetObject(String bucketName, String objectName)",
+          "presignedGetObject(PresignedGetObjectArgs args)",
           null,
           startTime,
           null,
@@ -2192,11 +2196,10 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: presignedGetObject(String bucketName, String objectName, Integer expires). */
+  /** Test: presignedGetObject(PresignedGetObjectArgs args). */
   public static void presignedGetObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: presignedGetObject(String bucketName, String objectName, Integer expires)");
+      System.out.println("Test: with expiry: presignedGetObject(PresignedGetObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2211,20 +2214,24 @@ public class FunctionalTest {
         inBytes = readAllBytes(is);
       }
 
-      String urlString = client.presignedGetObject(bucketName, objectName, 3600);
+      String urlString =
+          client.presignedGetObject(
+              PresignedGetObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .expires(3600)
+                  .build());
       byte[] outBytes = readObject(urlString);
       if (!Arrays.equals(inBytes, outBytes)) {
         throw new Exception("object content differs");
       }
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
-          "presignedGetObject(String bucketName, String objectName, Integer expires)",
-          null,
-          startTime);
+          "presignedGetObject(PresignedGetObjectArgs args)", "expiry :3600 sec ", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "presignedGetObject(String bucketName, String objectName, Integer expires)",
-          null,
+          "presignedGetObject(PresignedGetObjectArgs args)",
+          "expiry : 3600 sec",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -2232,15 +2239,11 @@ public class FunctionalTest {
     }
   }
 
-  /**
-   * public String presignedGetObject(String bucketName, String objectName, Integer expires, Map
-   * reqParams).
-   */
+  /** public String presignedGetObject(PresignedGetObjectArgs args). */
   public static void presignedGetObject_test3() throws Exception {
     if (!mintEnv) {
       System.out.println(
-          "Test: presignedGetObject(String bucketName, String objectName, Integer expires, "
-              + "Map<String, String> reqParams)");
+          "Test: with expiry and request params: presignedGetObject(PresignedGetObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2258,22 +2261,27 @@ public class FunctionalTest {
       Map<String, String> reqParams = new HashMap<>();
       reqParams.put("response-content-type", "application/json");
 
-      String urlString = client.presignedGetObject(bucketName, objectName, 3600, reqParams);
+      String urlString =
+          client.presignedGetObject(
+              PresignedGetObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .expires(3600)
+                  .params(reqParams)
+                  .build());
       byte[] outBytes = readObject(urlString);
       if (!Arrays.equals(inBytes, outBytes)) {
         throw new Exception("object content differs");
       }
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
-          "presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,"
-              + " String> reqParams)",
-          null,
+          "presignedGetObject(PresignedGetObjectArgs args",
+          "expiry : 3600 sec, reqParams : response-content-type as application/json",
           startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,"
-              + " String> reqParams)",
-          null,
+          "presignedGetObject(PresignedGetObjectArgs args)",
+          "expiry : 3600 sec, reqParams : response-content-type as application/json",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -2281,23 +2289,25 @@ public class FunctionalTest {
     }
   }
 
-  /** public String presignedPutObject(String bucketName, String objectName). */
+  /** public String presignedPutObject(PresignedPutObjectArgs). */
   public static void presignedPutObject_test1() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: presignedPutObject(String bucketName, String objectName)");
+      System.out.println("Test: presignedPutObject(PresignedPutObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      String urlString = client.presignedPutObject(bucketName, objectName);
+      String urlString =
+          client.presignedPutObject(
+              PresignedPutObjectArgs.builder().bucket(bucketName).object(objectName).build());
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("presignedPutObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "presignedPutObject(String bucketName, String objectName)",
+          "presignedPutObject(PresignedPutObjectArgs args)",
           null,
           startTime,
           null,
@@ -2306,28 +2316,31 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: presignedPutObject(String bucketName, String objectName, Integer expires). */
+  /** Test: presignedPutObject(PresignedPutObjectArgs args)). */
   public static void presignedPutObject_test2() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: presignedPutObject(String bucketName, String objectName, Integer expires)");
+      System.out.println("Test: with expiry presignedPutObject(PresignedPutObjectArgs args)");
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      String urlString = client.presignedPutObject(bucketName, objectName, 3600);
+      String urlString =
+          client.presignedPutObject(
+              PresignedPutObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .expires(3600)
+                  .build());
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
-          "presignedPutObject(String bucketName, String objectName, Integer expires)",
-          null,
-          startTime);
+          "presignedPutObject(PresignedPutObjectArgs args)", "expiry :3600 sec", startTime);
     } catch (Exception e) {
       mintFailedLog(
-          "presignedPutObject(String bucketName, String objectName, Integer expires)",
-          null,
+          "presignedPutObject(PresignedPutObjectArgs args)",
+          "expiry :3600 sec",
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));

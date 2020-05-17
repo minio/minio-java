@@ -17,7 +17,6 @@
 
 package io.minio;
 
-import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
@@ -224,56 +223,59 @@ public class MinioClientTest {
   public void testBucketName1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl(null, "myobject");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket(null).object("myobject").build());
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("", "myobject");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("").object("myobject").build());
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName3()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("a", "myobject");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("a").object("myobject").build());
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName4()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
     client.getObjectUrl(
-        "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789", "myobject");
+        GetObjectUrlArgs.builder()
+            .bucket("abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789")
+            .object("myobject")
+            .build());
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName5()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("a..b", "myobject");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("a..b").object("myobject").build());
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName6()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("a_b", "myobject");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("a_b").object("myobject").build());
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName7()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("a#b", "myobject");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("a#b").object("myobject").build());
     Assert.fail("exception should be thrown");
   }
 
@@ -281,7 +283,7 @@ public class MinioClientTest {
   public void testObjectName1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("abc", null);
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("abc").object(null).build());
     Assert.fail("exception should be thrown");
   }
 
@@ -289,7 +291,7 @@ public class MinioClientTest {
   public void testObjectName2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("abc", "");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("abc").object("").build());
     Assert.fail("exception should be thrown");
   }
 
@@ -297,7 +299,7 @@ public class MinioClientTest {
   public void testObjectName3()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("abc", "a/./b");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("abc").object("a/./b").build());
     Assert.fail("exception should be thrown");
   }
 
@@ -305,7 +307,7 @@ public class MinioClientTest {
   public void testObjectName4()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObjectUrl("abc", "a/../b");
+    client.getObjectUrl(GetObjectUrlArgs.builder().bucket("abc").object("a/../b").build());
     Assert.fail("exception should be thrown");
   }
 
@@ -427,14 +429,26 @@ public class MinioClientTest {
   public void testInvalidExpiresRange1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getPresignedObjectUrl(Method.GET, "mybucket", "myobject", 0, null);
+    client.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.GET)
+            .bucket("mybucket")
+            .object("myobject")
+            .expires(0)
+            .build());
   }
 
   @Test(expected = InvalidExpiresRangeException.class)
   public void testInvalidExpiresRange2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getPresignedObjectUrl(Method.GET, "mybucket", "myobject", 8 * 24 * 3600, null);
+    client.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.GET)
+            .bucket("mybucket")
+            .object("myobject")
+            .expires(8 * 24 * 3600)
+            .build());
   }
 
   @Test(expected = IllegalArgumentException.class)

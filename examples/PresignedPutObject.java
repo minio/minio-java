@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.PresignedPutObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -38,7 +39,14 @@ public class PresignedPutObject {
 
       // Get presigned URL string to upload 'my-objectname' in 'my-bucketname' and its life time is
       // one day.
-      String url = minioClient.presignedPutObject("my-bucketname", "my-objectname", 60 * 60 * 24);
+
+      String url =
+          minioClient.presignedPutObject(
+              PresignedPutObjectArgs.builder()
+                  .bucket("my-bucketname")
+                  .object("my-objectname")
+                  .expires(60 * 60 * 24)
+                  .build());
       System.out.println(url);
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
