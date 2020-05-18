@@ -34,7 +34,7 @@ public abstract class BucketArgs extends BaseArgs {
   /** Base argument builder class. */
   public abstract static class Builder<B extends Builder<B, A>, A extends BucketArgs>
       extends BaseArgs.Builder<B, A> {
-    protected void validateName(String name) {
+    private void validateName(String name) {
       if (name == null) {
         throw new IllegalArgumentException("null bucket name");
       }
@@ -60,15 +60,28 @@ public abstract class BucketArgs extends BaseArgs {
       }
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
+    private void validateRegion(String region) {
+      if (region != null && region.isEmpty()) {
+        throw new IllegalArgumentException("region cannot be empty");
+      }
+    }
+
+    @Override
+    protected void validate(BucketArgs args) {
+      validateName(args.name);
+      validateRegion(args.region);
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B bucket(String name) {
       validateName(name);
       operations.add(args -> args.name = name);
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to T as T is inherited by this class
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B region(String region) {
+      validateRegion(region);
       operations.add(args -> args.region = region);
       return (B) this;
     }

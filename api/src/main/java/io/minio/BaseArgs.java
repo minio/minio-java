@@ -25,6 +25,8 @@ public abstract class BaseArgs {
   public abstract static class Builder<B extends Builder<B, A>, A extends BaseArgs> {
     protected List<Consumer<A>> operations;
 
+    protected abstract void validate(A args);
+
     public Builder() {
       this.operations = new ArrayList<>();
     }
@@ -34,6 +36,7 @@ public abstract class BaseArgs {
       try {
         A args = (A) this.getClass().getEnclosingClass().getDeclaredConstructor().newInstance();
         operations.forEach(operation -> operation.accept(args));
+        validate(args);
         return args;
       } catch (InstantiationException
           | IllegalAccessException
