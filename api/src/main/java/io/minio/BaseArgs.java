@@ -22,16 +22,17 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class BaseArgs {
-  public abstract static class BaseBuilder<T extends BaseBuilder<T, B>, B extends BaseArgs> {
-    protected List<Consumer<B>> operations;
+  public abstract static class Builder<B extends Builder<B, A>, A extends BaseArgs> {
+    protected List<Consumer<A>> operations;
 
-    public BaseBuilder() {
+    public Builder() {
       this.operations = new ArrayList<>();
     }
 
-    protected B build(Class<B> clazz) throws IllegalArgumentException {
+    @SuppressWarnings("unchecked") // safe as B will always be the builder of the current args class
+    public A build() throws IllegalArgumentException {
       try {
-        B args = clazz.getDeclaredConstructor().newInstance();
+        A args = (A) this.getClass().getEnclosingClass().getDeclaredConstructor().newInstance();
         operations.forEach(operation -> operation.accept(args));
         return args;
       } catch (InstantiationException
@@ -39,8 +40,8 @@ public abstract class BaseArgs {
           | InvocationTargetException
           | NoSuchMethodException
           | SecurityException e) {
-        // This should never happen as we'll always be
-        // sending a proper class as argument to build()
+        // This should never happen as we'll always have the
+        // Builder class as an enclosed class of the args class
         e.printStackTrace();
         return null;
       }

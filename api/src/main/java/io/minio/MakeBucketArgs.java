@@ -35,9 +35,5 @@ public class MakeBucketArgs extends BucketArgs {
       operations.add(args -> args.objectLock = objectLock);
       return this;
     }
-
-    public MakeBucketArgs build() throws IllegalArgumentException {
-      return build(MakeBucketArgs.class);
-    }
   }
 }
