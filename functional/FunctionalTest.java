@@ -267,13 +267,25 @@ public class FunctionalTest {
       mintSuccessLog(
           "makeBucket(MakeBucketArgs args)", "region: eu-west-1, objectLock: true", startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args)",
-          "region: eu-west-1, objectLock: true",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog(
+            "makeBucket(MakeBucketArgs args)", "region: eu-west-1, objectLock: true", startTime);
+      } else {
+        mintFailedLog(
+            "makeBucket(MakeBucketArgs args)",
+            "region: eu-west-1, objectLock: true",
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
