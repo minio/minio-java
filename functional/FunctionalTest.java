@@ -49,6 +49,7 @@ import io.minio.GetObjectTagsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.IsObjectLegalHoldEnabledArgs;
 import io.minio.IsVersioningEnabledArgs;
+import io.minio.ListIncompleteUploadsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
@@ -64,6 +65,7 @@ import io.minio.Result;
 import io.minio.SelectObjectContentArgs;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
+<<<<<<< HEAD
 import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.SetBucketLifeCycleArgs;
@@ -73,6 +75,8 @@ import io.minio.SetBucketTagsArgs;
 import io.minio.SetDefaultRetentionArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
+=======
+>>>>>>> Add arg builder to listIncompleteUpload API
 import io.minio.StatObjectArgs;
 import io.minio.Time;
 import io.minio.Xml;

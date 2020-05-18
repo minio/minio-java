@@ -649,6 +649,7 @@ try (CloseableIterator<Result<NotificationRecords>> ci =
 Lists incomplete object upload information of a bucket.
 
 __Parameters__
+
 | Parameter      | Type                           | Description    |
 |:---------------|:-------------------------------|:---------------|
 | ``args``       | _[ListIncompleteUploadsArgs]_  | Arguments.     |
@@ -692,7 +693,6 @@ for (Result<Upload> result : results) {
   Upload upload = result.get();
   System.out.println(upload.uploadId() + ", " + upload.objectName());
 }
-
 ```
 
 <a name="listObjects"></a>
@@ -1751,7 +1751,11 @@ ObjectStat objectStat =
 [GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html
 [RemoveObjectsArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectsArgs.html
 <<<<<<< HEAD
+<<<<<<< HEAD
 [CopyObjectArgs]: http://minio.github.io/minio-java/io/minio/CopyObjectArgs.html
 =======
 [ListIncompleteUploadsBucketArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsBucketArgs.html
 >>>>>>> ListIncompleteUpload using builder
+=======
+[ListIncompleteUploadsArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsArgs.html
+>>>>>>> Add arg builder to listIncompleteUpload API

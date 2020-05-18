@@ -30,9 +30,5 @@ public class ListIncompleteUploadsArgs extends BucketArgs {
       operations.add(args -> args.recursive = recursive);
       return this;
     }
-
-    public ListIncompleteUploadsArgs build() throws IllegalArgumentException {
-      return build(ListIncompleteUploadsArgs.class);
-    }
   }
 }
