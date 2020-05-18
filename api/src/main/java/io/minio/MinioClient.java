@@ -3409,7 +3409,7 @@ public class MinioClient {
       headerMap.put("x-amz-bucket-object-lock-enabled", "true");
     }
 
-    Response response = executePut(args.bucketName(), null, region, headerMap, null, config, 0);
+    Response response = executePut(args.bucket(), null, region, headerMap, null, config, 0);
     response.body().close();
   }
 

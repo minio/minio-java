@@ -18,15 +18,13 @@ package io.minio;
 
 /** Base argument class holds bucket name and region */
 public abstract class BucketArgs extends BaseArgs {
-  protected String name;
+  protected String bucketName;
   protected String region;
 
-  /** Returns bucket name */
-  public String bucketName() {
-    return name;
+  public String bucket() {
+    return bucketName;
   }
 
-  /** Returns region */
   public String region() {
     return region;
   }
@@ -68,14 +66,14 @@ public abstract class BucketArgs extends BaseArgs {
 
     @Override
     protected void validate(BucketArgs args) {
-      validateName(args.name);
+      validateName(args.bucketName);
       validateRegion(args.region);
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B bucket(String name) {
       validateName(name);
-      operations.add(args -> args.name = name);
+      operations.add(args -> args.bucketName = name);
       return (B) this;
     }
 
