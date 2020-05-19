@@ -544,15 +544,15 @@ for (Result<Upload> result : results) {
 ```
 
 <a name="listObjects"></a>
-### listObjects(String bucketName)
-`public Iterable<Result<Item>> listObjects(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-)_
+### listObjects(ListObjectsArgs args)
+`public Iterable<Result<Item>> listObjects(ListObjectsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-io.minio.ListObjectsArgs-)_
 
 Lists object information of a bucket.
 
 __Parameters__
 | Parameter      | Type     | Description         |
 |:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| ``args`` | _[ListObjectsArgs]_ | Arguments to list objects |
 
 | Returns                                                                   |
 |:--------------------------------------------------------------------------|
@@ -560,85 +560,15 @@ __Parameters__
 
 __Example__
 ```java
-Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname");
-for (Result<Item> result : results) {
-  Item item = result.get();
-  System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-}
-```
-
-<a name="listObjects"></a>
-### listObjects(String bucketName, String prefix)
-`public Iterable<Result<Item>> listObjects(String bucketName, String prefix))` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-java.lang.String-)_
-
-Lists object information of a bucket for prefix.
-
-__Parameters__
-| Parameter      | Type     | Description                     |
-|:---------------|:---------|:--------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.             |
-| ``prefix``     | _String_ | Object name starts with prefix. |
-
-| Returns                                                                   |
-|:--------------------------------------------------------------------------|
-| _Iterable<[Result]<[Item]>>_ - Lazy iterator contains object information. |
-
-__Example__
-```java
-Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj");
-for (Result<Item> result : results) {
-  Item item = result.get();
-  System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-}
-```
-
-<a name="listObjects"></a>
-### listObjects(String bucketName, String prefix, boolean recursive)
-`public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-java.lang.String-boolean-)_
-
-Lists object information of a bucket for prefix recursively.
-
-__Parameters__
-| Parameter      | Type      | Description                                          |
-|:---------------|:----------|:-----------------------------------------------------|
-| ``bucketName`` | _String_  | Name of the bucket.                                  |
-| ``prefix``     | _String_  | Object name starts with prefix.                      |
-| ``recursive``  | _boolean_ | List recursively than directory structure emulation. |
-
-| Returns                                                                   |
-|:--------------------------------------------------------------------------|
-| _Iterable<[Result]<[Item]>>_ - Lazy iterator contains object information. |
-
-__Example__
-```java
-Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true);
-for (Result<Item> result : results) {
-  Item item = result.get();
-  System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-}
-```
-
-<a name="listObjects"></a>
-### listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
-`public Iterable<Result<Item>> listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-java.lang.String-java.lang.String-boolean-boolean-)_
-
-Lists object information of a bucket for prefix recursively using S3 API version 1.
-
-__Parameters__
-| Parameter       | Type      | Description                                          |
-|:----------------|:----------|:-----------------------------------------------------|
-| ``bucketName``  | _String_  | Name of the bucket.                                  |
-| ``prefix``      | _String_  | Object name starts with prefix.                      |
-| ``recursive``   | _boolean_ | List recursively than directory structure emulation. |
-| ``useVersion1`` | _boolean_ | when true, version 1 of REST API is used.            |
-
-| Returns                                                                   |
-|:--------------------------------------------------------------------------|
-| _Iterable<[Result]<[Item]>>_ - Lazy iterator contains object information. |
-
-__Example__
-```java
-Iterable<Result<Item>> results = minioClient.listObjects("my-bucketname", "my-obj", true, true);
+Iterable<Result<Item>> results = minioClient.listObjects(
+  ListObjectsArgs.builder()
+    .bucket("my-bucketname")
+    .includeUserMetadata(true)
+    .startAfter("start-after-entry")
+    .prefix("my-obj")
+    .maxKeys(100)
+    .fetchOwner(true)
+);
 for (Result<Item> result : results) {
   Item item = result.get();
   System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
@@ -1599,4 +1529,5 @@ ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname",
 [DeleteError]: http://minio.github.io/minio-java/io/minio/messages/DeleteError.html
 [SelectResponseStream]: http://minio.github.io/minio-java/io/minio/SelectResponseStream.html
 [MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html
+[ListObjectsArgs]: http://minio.github.io/minio-java/io/minio/ListObjectsArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html

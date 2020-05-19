@@ -2899,27 +2899,28 @@ public class MinioClient {
    * default, the <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">
    * version 2</a> API is used. <br>
    * <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">version 1</a>
-   * can be used by passing the optional argument `useVersion1` as `true`.
+   * can be used by passing the optional argument {@code useVersion1} as {@code true}.
    *
-   * <pre>Example:{@code
-   * Iterable<Result<Item>> results = minioClient.listObjects(
-   *   ListObjectsArgs.builder().
-   *   bucket("my-bucketname").
-   *   includeUserMetadata(true).
-   *   startAfter("start-after-entry").
-   *   prefix("my-obj").
-   *   maxKeys(100).
-   *   fetchOwner(true)
-   * );
-   * for (Result<Item> result : results) {
-   *   Item item = result.get();
-   *   System.out.println(
+   * <pre>Example:
+   * {@code
+   *   Iterable<Result<Item>> results = minioClient.listObjects(
+   *     ListObjectsArgs.builder()
+   *       .bucket("my-bucketname")
+   *       .includeUserMetadata(true)
+   *       .startAfter("start-after-entry")
+   *       .prefix("my-obj")
+   *       .maxKeys(100)
+   *       .fetchOwner(true)
+   *   );
+   *   for (Result<Item> result : results) {
+   *     Item item = result.get();
+   *     System.out.println(
    *       item.lastModified() + ", " + item.size() + ", " + item.objectName());
-   * }
+   *   }
    * }</pre>
    *
    * @param args Instance of {@link ListObjectsArgs} built using the builder
-   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
+   * @return Iterable&lt;Result&lt;Item&gt;&gt; - Lazy iterator contains object information.
    * @throws XmlParserException upon parsing response xml
    */
   public Iterable<Result<Item>> listObjects(ListObjectsArgs args) {
@@ -2941,6 +2942,17 @@ public class MinioClient {
     protected boolean completed = false;
     protected ListBucketResult listBucketResult;
     protected String lastObjectName;
+
+    protected String getDelimiter(ListObjectsArgs args) {
+      if (args.recursive()) {
+        return null;
+      }
+      String delimiter = args.delimiter();
+      if (delimiter == null) {
+        return "/";
+      }
+      return delimiter;
+    }
 
     protected abstract void populateResult()
         throws InvalidKeyException, InvalidBucketNameException, IllegalArgumentException,
@@ -3055,11 +3067,7 @@ public class MinioClient {
               throws InvalidKeyException, InvalidBucketNameException, IllegalArgumentException,
                   NoSuchAlgorithmException, InsufficientDataException, XmlParserException,
                   ErrorResponseException, InternalException, InvalidResponseException, IOException {
-            String delimiter = "/";
-            if (args.recursive()) {
-              delimiter = null;
-            }
-
+            String delimiter = getDelimiter(args);
             String continuationToken = null;
             if (this.listBucketResult != null) {
               continuationToken = listBucketResult.nextContinuationToken();
@@ -3072,7 +3080,7 @@ public class MinioClient {
             this.listBucketResult =
                 invokeListObjectsV2(
                     ListObjectsArgs.builder()
-                        .bucket(args.bucketName())
+                        .bucket(args.bucket())
                         .continuationToken(continuationToken)
                         .delimiter(delimiter)
                         .fetchOwner(args.fetchOwner())
@@ -3095,11 +3103,7 @@ public class MinioClient {
               throws InvalidKeyException, InvalidBucketNameException, IllegalArgumentException,
                   NoSuchAlgorithmException, InsufficientDataException, XmlParserException,
                   ErrorResponseException, InternalException, InvalidResponseException, IOException {
-            String delimiter = "/";
-            if (args.recursive()) {
-              delimiter = null;
-            }
-
+            String delimiter = getDelimiter(args);
             String continuationToken = null;
             if (this.listBucketResult != null) {
               if (delimiter != null) {
@@ -3116,9 +3120,9 @@ public class MinioClient {
             this.listBucketResult =
                 invokeListObjectsV1(
                     ListObjectsArgs.builder()
-                        .bucket(args.bucketName())
+                        .bucket(args.bucket())
                         .delimiter(args.delimiter())
-                        .marker(continuationToken)
+                        .startAfter(continuationToken)
                         .prefix(args.prefix())
                         .build());
           }
@@ -5281,7 +5285,7 @@ public class MinioClient {
       queryParamMap.put("metadata", "true");
     }
 
-    Response response = executeGet(args.bucketName(), null, null, queryParamMap);
+    Response response = executeGet(args.bucket(), null, null, queryParamMap);
 
     try (ResponseBody body = response.body()) {
       return Xml.unmarshal(ListBucketResultV2.class, body.charStream());
@@ -5294,11 +5298,11 @@ public class MinioClient {
           ErrorResponseException, InternalException, InvalidResponseException {
     Map<String, String> queryParamMap = getCommonListObjectsQueryParams(args);
 
-    if (args.marker() != null) {
-      queryParamMap.put("marker", args.marker());
+    if (args.startAfter() != null) {
+      queryParamMap.put("marker", args.startAfter());
     }
 
-    Response response = executeGet(args.bucketName(), null, null, queryParamMap);
+    Response response = executeGet(args.bucket(), null, null, queryParamMap);
 
     try (ResponseBody body = response.body()) {
       return Xml.unmarshal(ListBucketResultV1.class, body.charStream());

@@ -25,7 +25,6 @@ public class ListObjectsArgs extends BucketArgs {
   private String prefix;
   private String startAfter;
   private boolean includeUserMetadata;
-  private String marker;
   private boolean recursive;
   private boolean useVersion1;
 
@@ -55,10 +54,6 @@ public class ListObjectsArgs extends BucketArgs {
 
   public String delimiter() {
     return delimiter;
-  }
-
-  public String marker() {
-    return marker;
   }
 
   public boolean recursive() {
@@ -107,11 +102,6 @@ public class ListObjectsArgs extends BucketArgs {
 
     public Builder delimiter(String delimiter) {
       operations.add(args -> args.delimiter = delimiter);
-      return this;
-    }
-
-    public Builder marker(String marker) {
-      operations.add(args -> args.marker = marker);
       return this;
     }
 
