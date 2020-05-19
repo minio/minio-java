@@ -21,28 +21,13 @@ import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
 
-/**
- * Object representation of response XML of <a
- * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">ListObjectsV2
- * API</a>.
- */
-@Root(name = "ListBucketResult", strict = false)
-@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class ListBucketResult {
+public abstract class ListBucketResult {
   @Element(name = "Name")
   private String name;
 
   @Element(name = "Prefix", required = false)
   private String prefix;
-
-  @Element(name = "ContinuationToken", required = false)
-  private String continuationToken;
-
-  @Element(name = "NextContinuationToken", required = false)
-  private String nextContinuationToken;
 
   @Element(name = "StartAfter", required = false)
   private String startAfter;
@@ -75,16 +60,6 @@ public class ListBucketResult {
   /** Returns prefix. */
   public String prefix() {
     return prefix;
-  }
-
-  /** Returns continuation token. */
-  public String continuationToken() {
-    return continuationToken;
-  }
-
-  /** Returns next continuation token. */
-  public String nextContinuationToken() {
-    return nextContinuationToken;
   }
 
   /** Returns start after. */
@@ -129,4 +104,9 @@ public class ListBucketResult {
 
     return Collections.unmodifiableList(commonPrefixes);
   }
+
+  /** Returns continuation token. */
+  public abstract String continuationToken();
+
+  public abstract String nextContinuationToken();
 }
