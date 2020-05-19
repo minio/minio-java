@@ -3807,7 +3807,7 @@ public class MinioClient {
    * @param objectName Object name in the bucket.
    * @param versionId Version ID of the object.
    * @param config Object retention configuration.
-   * @param bypassGovernanceRetention Bypass Governance retention.
+   * @param bypassGovernanceMode Bypass Governance retention.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3826,7 +3826,7 @@ public class MinioClient {
       String objectName,
       String versionId,
       Retention config,
-      boolean bypassGovernanceRetention)
+      boolean bypassGovernanceMode)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
@@ -3837,7 +3837,7 @@ public class MinioClient {
             .object(objectName)
             .versionId(versionId)
             .config(config)
-            .bypassGovernanceRetention(bypassGovernanceRetention)
+            .bypassGovernanceMode(bypassGovernanceMode)
             .build());
   }
 
@@ -3845,9 +3845,15 @@ public class MinioClient {
    * Sets retention configuration to an object.
    *
    * <pre>Example:{@code
-   * Retention retention =
-   *     new Retention(RetentionMode.COMPLIANCE, ZonedDateTime.now().plusYears(1));
-   * minioClient.setObjectRetention(SetObjectRetentionArgs args);
+   *  Retention retention = new Retention(
+   *       RetentionMode.COMPLIANCE, ZonedDateTime.now().plusYears(1));
+   *  minioClient.setObjectRetention(
+   *      SetObjectRetentionArgs.builder()
+   *          .bucket("my-bucketname")
+   *          .object("my-objectname")
+   *          .config(config)
+   *          .bypassGovernanceMode(true)
+   *          .build());
    * }</pre>
    *
    * @param args {@link SetObjectRetentionArgs} object.
@@ -3867,24 +3873,24 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args.config() == null) {
-      throw new IllegalArgumentException("null value is not allowed in config.");
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
     }
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if (args.versionId() != null && !args.versionId().isEmpty()) {
+    if (args.versionId() != null) {
       queryParamMap.put("versionId", args.versionId());
     }
 
     Map<String, String> headerMap = new HashMap<>();
-    if (args.bypassGovernanceRetention()) {
+    if (args.bypassGovernanceMode()) {
       headerMap.put("x-amz-bypass-governance-retention", "True");
     }
 
     Response response =
-        executePut(args.bucket(), args.objectName(), headerMap, queryParamMap, args.config(), 0);
+        executePut(args.bucket(), args.object(), headerMap, queryParamMap, args.config(), 0);
     response.body().close();
   }
 
@@ -3914,6 +3920,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public Retention getObjectRetention(String bucketName, String objectName, String versionId)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
@@ -3931,7 +3938,11 @@ public class MinioClient {
    *
    * <pre>Example:{@code
    * Retention retention =
-   *     minioClient.getObjectRetention(GetObjectRetentionArgs args);
+   *     minioClient.getObjectRetention(GetObjectRetentionArgs.builder()
+   *        .bucket(bucketName)
+   *        .object(objectName)
+   *        .versionId(versionId)
+   *        .build()););
    * System.out.println(
    *     "mode: " + retention.mode() + "until: " + retention.retainUntilDate());
    * }</pre>
@@ -3954,14 +3965,18 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
 
-    if (args.versionId() != null && !args.versionId().isEmpty()) {
+    if (args.versionId() != null) {
       queryParamMap.put("versionId", args.versionId());
     }
 
-    try (Response response = executeGet(args.bucket(), args.objectName(), null, queryParamMap)) {
+    try (Response response = executeGet(args.bucket(), args.object(), null, queryParamMap)) {
       Retention retention = Xml.unmarshal(Retention.class, response.body().charStream());
       return retention;
     } catch (ErrorResponseException e) {

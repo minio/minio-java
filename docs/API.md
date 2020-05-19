@@ -1203,9 +1203,9 @@ Gets retention configuration of an object.
 
  __Parameters__
  
-| Parameter      | Type                       | Description                |
-|:---------------|:---------------------------|:---------------------------|
-| ``args``       | _[GetObjectRetentionArgs]_ | Object retention arguments |
+| Parameter      | Type                       | Description   |
+|:---------------|:---------------------------|:--------------|
+| ``args``       | _[GetObjectRetentionArgs]_ | Arguments.    |
 
 | Returns                                         |
 |:------------------------------------------------|
@@ -1213,16 +1213,8 @@ Gets retention configuration of an object.
 
  __Example__
  ```java
-// Object without version
-Retention retention =
-    minioClient.getObjectRetention(
-        GetObjectRetentionArgs.builder()
-            .bucket("my-bucketname")
-            .object("my-objectname")
-            .build());
-System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());
 
-// Object with version
+// Object with version id.
 Retention retention =
     minioClient.getObjectRetention(
         GetObjectRetentionArgs.builder()
@@ -1634,9 +1626,9 @@ Sets retention configuration to an object.
 
  __Parameters__
  
-| Parameter        | Type                       | Description                        |
-|:-----------------|:---------------------------|:-----------------------------------|
-| ``args``         | _[SetObjectRetentionArgs]_ | Arguments to set object retention. |
+| Parameter        | Type                       | Description  |
+|:-----------------|:---------------------------|:-------------|
+| ``args``         | _[SetObjectRetentionArgs]_ | Arguments.   |
 
  __Example__
 ```java
@@ -1646,7 +1638,7 @@ minioClient.setObjectRetention(
         .bucket("my-bucketname")
         .object("my-objectname")
         .config(retention)
-        .bypassGovernanceRetention(true)
+        .bypassGovernanceMode(true)
         .build());
 ```
 

@@ -32,6 +32,7 @@ import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.GetBucketLifeCycleArgs;
 import io.minio.GetBucketTagsArgs;
+import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
@@ -45,9 +46,13 @@ import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
 import io.minio.SetBucketEncryptionArgs;
+<<<<<<< HEAD
 import io.minio.SetBucketLifeCycleArgs;
 import io.minio.SetBucketTagsArgs;
 import io.minio.SetObjectTagsArgs;
+=======
+import io.minio.SetObjectRetentionArgs;
+>>>>>>> add arg builder to objectRetention API
 import io.minio.StatObjectArgs;
 import io.minio.Time;
 import io.minio.errors.ErrorResponseException;
@@ -63,6 +68,7 @@ import io.minio.messages.NotificationRecords;
 import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.OutputSerialization;
 import io.minio.messages.QuoteFields;
+import io.minio.messages.Retention;
 import io.minio.messages.RetentionDurationDays;
 import io.minio.messages.RetentionDurationYears;
 import io.minio.messages.RetentionMode;
@@ -294,18 +300,18 @@ public class FunctionalTest {
     }
   }
 
-  private static void handleException(String methodName, long startTime, Exception e)
+  private static void handleException(String methodName, String args, long startTime, Exception e)
       throws Exception {
     if (e instanceof ErrorResponseException) {
       if (((ErrorResponseException) e).errorResponse().errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(methodName, null, startTime);
+        mintIgnoredLog(methodName, args, startTime);
         return;
       }
     }
 
     mintFailedLog(
         methodName,
-        null,
+        args,
         startTime,
         null,
         e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
@@ -3795,6 +3801,248 @@ public class FunctionalTest {
     }
   }
 
+  /** Test: setObjectRetention(SetObjectRetentionArgs args). */
+  public static void setObjectRetention_test1() throws Exception {
+    String methodName = "setObjectRetention(SetObjectRetentionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+      try {
+        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(1);
+        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
+
+        try (final InputStream is = new ContentInputStream(1 * KB)) {
+          PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+          options.setContentType(customContentType);
+          client.putObject(bucketName, objectName, is, options);
+        }
+
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .config(expectedConfig)
+                .build());
+        // Set empty object lock configuration by setting bypassGovernanceMode as true
+        Retention emptyConfig = new Retention();
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .config(emptyConfig)
+                .bypassGovernanceMode(true)
+                .build());
+
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  /** Test: getObjectRetention(GetObjectRetentionArgs args). */
+  public static void getObjectRetention_test1() throws Exception {
+    String methodName = "getObjectRetention(GetObjectRetentionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+      try {
+        try (final InputStream is = new ContentInputStream(1 * KB)) {
+          PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+          options.setContentType(customContentType);
+          client.putObject(bucketName, objectName, is, options);
+        }
+
+        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(3);
+        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .config(expectedConfig)
+                .build());
+
+        Retention config =
+            client.getObjectRetention(
+                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
+
+        if ((!(config
+                .retainUntilDate()
+                .toString()
+                .substring(0, config.retainUntilDate().toString().indexOf("T"))
+                .equals(
+                    expectedConfig
+                        .retainUntilDate()
+                        .toString()
+                        .substring(0, expectedConfig.retainUntilDate().toString().indexOf("T")))))
+            || (config.mode() != expectedConfig.mode())) {
+          throw new Exception(
+              "[FAILED] Expected: expected duration : "
+                  + expectedConfig.retainUntilDate()
+                  + ", got: "
+                  + config.retainUntilDate()
+                  + " expected mode :"
+                  + expectedConfig.mode()
+                  + ", got: "
+                  + config.mode());
+        }
+
+        // Set empty object lock configuration by setting bypassGovernanceMode as true
+        Retention emptyConfig = new Retention();
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .config(emptyConfig)
+                .bypassGovernanceMode(true)
+                .build());
+
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  /** Test: getObjectRetention(GetObjectRetentionArgs args). */
+  public static void getObjectRetention_test2() throws Exception {
+    String methodName = "getObjectRetention(GetObjectRetentionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: with shortened retention period: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+      try {
+        try (final InputStream is = new ContentInputStream(1 * KB)) {
+          PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+          options.setContentType(customContentType);
+          client.putObject(bucketName, objectName, is, options);
+        }
+
+        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(3);
+        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .config(expectedConfig)
+                .build());
+
+        Retention config =
+            client.getObjectRetention(
+                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
+
+        if ((!(config
+                .retainUntilDate()
+                .toString()
+                .substring(0, config.retainUntilDate().toString().indexOf("T"))
+                .equals(
+                    expectedConfig
+                        .retainUntilDate()
+                        .toString()
+                        .substring(0, expectedConfig.retainUntilDate().toString().indexOf("T")))))
+            || (config.mode() != expectedConfig.mode())) {
+          throw new Exception(
+              "[FAILED] Expected: expected duration : "
+                  + expectedConfig.retainUntilDate()
+                  + ", got: "
+                  + config.retainUntilDate()
+                  + " expected mode :"
+                  + expectedConfig.mode()
+                  + ", got: "
+                  + config.mode());
+        }
+
+        // You can perform operations on object versions that are locked in governance mode as if
+        // they were unprotected if you have the s3:bypassGovernanceMode permission. These
+        // operations include deleting an object version, shortening the retention period, or
+        // removing the Object Lock by placing a new lock with empty parameters.
+        ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now().plusDays(1);
+        Retention expectedConfigWithShortenedPeriod =
+            new Retention(RetentionMode.GOVERNANCE, shortenedRetentionUntil);
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .config(expectedConfigWithShortenedPeriod)
+                .bypassGovernanceMode(true)
+                .build());
+
+        Retention updatedConfig =
+            client.getObjectRetention(
+                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
+
+        if ((!(updatedConfig
+                .retainUntilDate()
+                .toString()
+                .substring(0, updatedConfig.retainUntilDate().toString().indexOf("T"))
+                .equals(
+                    expectedConfigWithShortenedPeriod
+                        .retainUntilDate()
+                        .toString()
+                        .substring(
+                            0,
+                            expectedConfigWithShortenedPeriod
+                                .retainUntilDate()
+                                .toString()
+                                .indexOf("T")))))
+            || (updatedConfig.mode() != expectedConfigWithShortenedPeriod.mode())) {
+          throw new Exception(
+              "[FAILED] Expected: expected duration : "
+                  + expectedConfigWithShortenedPeriod.retainUntilDate()
+                  + ", got: "
+                  + updatedConfig.retainUntilDate()
+                  + " expected mode :"
+                  + expectedConfigWithShortenedPeriod.mode()
+                  + ", got: "
+                  + updatedConfig.mode());
+        }
+
+        // Set empty object lock configuration by setting bypassGovernanceMode as true
+        Retention emptyConfig = new Retention();
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .config(emptyConfig)
+                .bypassGovernanceMode(true)
+                .build());
+
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+      mintSuccessLog(methodName, "shortening the retention period", startTime);
+    } catch (Exception e) {
+      handleException(methodName, "shortening the retention period", startTime, e);
+    }
+  }
+
   /** Test: getBucketPolicy(String bucketName). */
   public static void getBucketPolicy_test1() throws Exception {
     if (!mintEnv) {
@@ -4296,7 +4544,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4342,7 +4590,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4380,7 +4628,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4622,6 +4870,10 @@ public class FunctionalTest {
 
     setup();
 
+    setObjectRetention_test1();
+    getObjectRetention_test1();
+    getObjectRetention_test2();
+
     putObject_test1();
     putObject_test2();
     putObject_test3();
@@ -4689,6 +4941,10 @@ public class FunctionalTest {
     disableObjectLegalHold_test();
     setDefaultRetention_test();
     getDefaultRetention_test();
+
+    setObjectRetention_test1();
+    getObjectRetention_test1();
+    getObjectRetention_test2();
 
     selectObjectContent_test1();
 

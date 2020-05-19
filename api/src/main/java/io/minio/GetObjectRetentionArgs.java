@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getDefaultRetention(). */
+/** Argument class of MinioClient.getObjectRetention(). */
 public class GetObjectRetentionArgs extends ObjectArgs {
   public static Builder builder() {
     return new Builder();
