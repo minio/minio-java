@@ -1167,7 +1167,14 @@ public class MinioClient {
       }
     }
 
-    Response response = this.httpClient.newCall(request).execute();
+    OkHttpClient httpClient = this.httpClient;
+    if (method == Method.PUT || method == Method.POST) {
+      // Issue #924: disable connection retry for PUT and POST methods. Its safe to do
+      // retry for other methods.
+      httpClient = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
+    }
+
+    Response response = httpClient.newCall(request).execute();
     if (this.traceStream != null) {
       this.traceStream.println(
           response.protocol().toString().toUpperCase(Locale.US) + " " + response.code());
