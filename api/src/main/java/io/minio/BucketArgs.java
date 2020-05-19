@@ -65,7 +65,7 @@ public abstract class BucketArgs extends BaseArgs {
     }
 
     @Override
-    protected void validate(BucketArgs args) {
+    protected void validate(A args) {
       validateName(args.bucketName);
       validateRegion(args.region);
     }
