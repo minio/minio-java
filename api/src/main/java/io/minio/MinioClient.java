@@ -1395,8 +1395,8 @@ public class MinioClient {
   private Response executeHead(
       String bucketName,
       String objectName,
-      Map<String, String> headerMap,
-      Map<String, String> queryParamMap)
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
@@ -1406,8 +1406,8 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName),
-            headerMap,
-            queryParamMap,
+            headers,
+            queryParams,
             null,
             0);
     response.body().close();
@@ -1428,13 +1428,6 @@ public class MinioClient {
 
     // Retry once for RETRY_HEAD_BUCKET error.
     return executeHead(bucketName, objectName, null, null);
-  }
-
-  private Response executeHead(String bucketName, String objectName, Map<String, String> headerMap)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    return executeHead(bucketName, objectName, headerMap, null);
   }
 
   private Response executeDelete(
@@ -1528,11 +1521,12 @@ public class MinioClient {
    * @throws XmlParserException thrown to indicate XML parsing error.
    * @see ObjectStat
    */
+  @Deprecated
   public ObjectStat statObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    return statObject(bucketName, objectName, null);
+    return statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
   }
 
   /**
@@ -1560,24 +1554,92 @@ public class MinioClient {
    * @throws XmlParserException thrown to indicate XML parsing error.
    * @see ObjectStat
    */
+  @Deprecated
   public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    checkReadRequestSse(sse);
-    checkBucketName(bucketName);
-    checkObjectName(objectName);
+    return statObject(
+        StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(sse).build());
+  }
 
-    Map<String, String> headers = null;
-    if (sse != null) {
-      headers = sse.headers();
+  /**
+   * Gets information of an object.
+   *
+   * <pre>Example:{@code
+   * // Get information of an object.
+   * ObjectStat objectStat =
+   *     minioClient.statObject(
+   *         StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+   *
+   * // Get information of SSE-C encrypted object.
+   * ObjectStat objectStat =
+   *     minioClient.statObject(
+   *         StatObjectArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .ssec(ssec)
+   *             .build());
+   *
+   * // Get information of a versioned object.
+   * ObjectStat objectStat =
+   *     minioClient.statObject(
+   *         StatObjectArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .versionId("version-id")
+   *             .build());
+   *
+   * // Get information of a SSE-C encrypted versioned object.
+   * ObjectStat objectStat =
+   *     minioClient.statObject(
+   *         StatObjectArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .versionId("version-id")
+   *             .ssec(ssec)
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link StatObjectArgs} object.
+   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   * @see ObjectStat
+   */
+  public ObjectStat statObject(StatObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
     }
 
-    Response response = executeHead(bucketName, objectName, headers);
-    try {
-      return new ObjectStat(bucketName, objectName, response.headers());
-    } finally {
-      response.close();
+    checkReadRequestSse(args.ssec());
+
+    Multimap<String, String> headers = HashMultimap.create();
+    headers.putAll(args.extraHeaders());
+    if (args.ssec() != null) {
+      headers.putAll(Multimaps.forMap(args.ssec().headers()));
+    }
+
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.putAll(args.extraQueryParams());
+    if (args.versionId() != null) {
+      queryParams.put("versionId", args.versionId());
+    }
+
+    try (Response response = executeHead(args.bucket(), args.object(), headers, queryParams)) {
+      return new ObjectStat(args.bucket(), args.object(), response.headers());
     }
   }
 

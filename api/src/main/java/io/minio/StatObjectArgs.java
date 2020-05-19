@@ -16,22 +16,26 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.makeBucket(). */
-public class MakeBucketArgs extends BucketArgs {
-  private boolean objectLock;
+/** Argument class of MinioClient.statObject(). */
+public class StatObjectArgs extends ObjectArgs {
+  private ServerSideEncryption ssec;
 
-  public boolean objectLock() {
-    return objectLock;
+  public ServerSideEncryption ssec() {
+    return ssec;
   }
 
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link MakeBucketArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, MakeBucketArgs> {
-    public Builder objectLock(boolean objectLock) {
-      operations.add(args -> args.objectLock = objectLock);
+  /** Argument builder of {@link StatObjectArgs}. */
+  public static final class Builder extends ObjectArgs.Builder<Builder, StatObjectArgs> {
+    public Builder ssec(ServerSideEncryption ssec) {
+      if (ssec != null && ssec.type() != ServerSideEncryption.Type.SSE_C) {
+        throw new IllegalArgumentException("only SSE-C type server-side encryption is allowed");
+      }
+
+      operations.add(args -> args.ssec = ssec);
       return this;
     }
   }

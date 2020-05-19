@@ -36,11 +36,6 @@ public class DownloadObject {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Check whether the object exists using statObject().  If the object is not found,
-      // statObject() throws an exception.  It means that the object exists when statObject()
-      // execution is successful.
-      minioClient.statObject("my-bucketname", "my-objectname");
-
       // Download 'my-objectname' from 'my-bucketname' to 'my-filename'
       minioClient.getObject("my-bucketname", "my-objectname", "my-filename");
       System.out.println("my-objectname is successfully downloaded to my-filename");

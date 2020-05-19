@@ -1451,16 +1451,15 @@ minioClient.setObjectRetention("my-bucketname", "my-objectname", null, true, ret
 ```
 
 <a name="statObject"></a>
-### statObject(String bucketName, String objectName)
-`public ObjectStat statObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-java.lang.String-java.lang.String-)_
+### statObject(StatObjectArgs args)
+`public ObjectStat statObject(StatObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-io.minio.StatObjectArgs-)_
 
 Gets object information and metadata of an object.
 
 __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
+| Parameter | Type               | Description |
+|:----------|:-------------------|:------------|
+| ``args``  | _[StatObjectArgs]_ | Arguments.  |
 
 | Returns                                                     |
 |:------------------------------------------------------------|
@@ -1468,29 +1467,38 @@ __Parameters__
 
 __Example__
 ```java
-ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
-```
+// Get information of an object.
+ObjectStat objectStat =
+    minioClient.statObject(
+        StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
 
-<a name="statObject"></a>
-### statObject(String bucketName, String objectName, ServerSideEncryption sse)
-`public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-)_
+// Get information of SSE-C encrypted object.
+ObjectStat objectStat =
+    minioClient.statObject(
+        StatObjectArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .ssec(ssec)
+            .build());
 
-Gets object information and metadata of a SSE-C encrypted object.
+// Get information of a versioned object.
+ObjectStat objectStat =
+    minioClient.statObject(
+        StatObjectArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .versionId("version-id")
+            .build());
 
-__Parameters__
-| Parameter      | Type                     | Description                        |
-|:---------------|:-------------------------|:-----------------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.                |
-| ``objectName`` | _String_                 | Object name in the bucket.         |
-| ``sse``        | _[ServerSideEncryption]_ | SSE-C type server-side encryption. |
-
-| Returns                                                     |
-|:------------------------------------------------------------|
-| _[ObjectStat]_ - Populated object information and metadata. |
-
-__Example__
-```java
-ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname", ssec);
+// Get information of a SSE-C encrypted versioned object.
+ObjectStat objectStat =
+    minioClient.statObject(
+        StatObjectArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .versionId("version-id")
+            .ssec(ssec)
+            .build());
 ```
 
 ## 5. Explore Further
@@ -1531,3 +1539,4 @@ ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname",
 [MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html
 [ListObjectsArgs]: http://minio.github.io/minio-java/io/minio/ListObjectsArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
+[StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html

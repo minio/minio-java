@@ -192,7 +192,12 @@ public class MinioClientTest {
   public void testReadSse1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.statObject("mybucket", "myobject", ServerSideEncryption.atRest());
+    client.statObject(
+        StatObjectArgs.builder()
+            .bucket("mybucket")
+            .object("myobject")
+            .ssec(ServerSideEncryption.atRest())
+            .build());
     Assert.fail("exception should be thrown");
   }
 
@@ -203,7 +208,11 @@ public class MinioClientTest {
     keyGen.init(256);
     MinioClient client = new MinioClient("http://play.min.io:9000");
     client.statObject(
-        "mybucket", "myobject", ServerSideEncryption.withCustomerKey(keyGen.generateKey()));
+        StatObjectArgs.builder()
+            .bucket("mybucket")
+            .object("myobject")
+            .ssec(ServerSideEncryption.withCustomerKey(keyGen.generateKey()))
+            .build());
     Assert.fail("exception should be thrown");
   }
 

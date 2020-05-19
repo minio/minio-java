@@ -38,11 +38,6 @@ public class GetPartialObject {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Check whether the object exists using statObject().  If the object is not found,
-      // statObject() throws an exception.  It means that the object exists when statObject()
-      // execution is successful.
-      minioClient.statObject("my-bucketname", "my-objectname");
-
       // Get input stream to have content of 'my-objectname' from 'my-bucketname' starts from
       // byte position 1024 and length 4096.
       InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);

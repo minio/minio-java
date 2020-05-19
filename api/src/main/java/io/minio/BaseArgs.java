@@ -16,12 +16,31 @@
 
 package io.minio;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
+/** Base argument class. */
 public abstract class BaseArgs {
+  protected Multimap<String, String> extraHeaders =
+      Multimaps.unmodifiableMultimap(HashMultimap.create());
+  protected Multimap<String, String> extraQueryParams =
+      Multimaps.unmodifiableMultimap(HashMultimap.create());
+
+  public Multimap<String, String> extraHeaders() {
+    return extraHeaders;
+  }
+
+  public Multimap<String, String> extraQueryParams() {
+    return extraQueryParams;
+  }
+
+  /** Base builder which builds arguments. */
   public abstract static class Builder<B extends Builder<B, A>, A extends BaseArgs> {
     protected List<Consumer<A>> operations;
 
@@ -31,6 +50,51 @@ public abstract class BaseArgs {
       this.operations = new ArrayList<>();
     }
 
+    private Multimap<String, String> copyMultimap(Multimap<String, String> multimap) {
+      Multimap<String, String> multimapCopy = HashMultimap.create();
+      if (multimap != null) {
+        multimapCopy.putAll(multimap);
+      }
+      return Multimaps.unmodifiableMultimap(multimapCopy);
+    }
+
+    private Multimap<String, String> toMultimap(Map<String, String> map) {
+      Multimap<String, String> multimap = HashMultimap.create();
+      if (map != null) {
+        multimap.putAll(Multimaps.forMap(map));
+      }
+      return Multimaps.unmodifiableMultimap(multimap);
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
+    public B extraHeaders(Multimap<String, String> headers) {
+      final Multimap<String, String> extraHeaders = copyMultimap(headers);
+      operations.add(args -> args.extraHeaders = extraHeaders);
+      return (B) this;
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
+    public B extraQueryParams(Multimap<String, String> queryParams) {
+      final Multimap<String, String> extraQueryParams = copyMultimap(queryParams);
+      operations.add(args -> args.extraQueryParams = extraQueryParams);
+      return (B) this;
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
+    public B extraHeaders(Map<String, String> headers) {
+      final Multimap<String, String> extraHeaders = toMultimap(headers);
+      operations.add(args -> args.extraHeaders = extraHeaders);
+      return (B) this;
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
+    public B extraQueryParams(Map<String, String> queryParams) {
+      final Multimap<String, String> extraQueryParams = toMultimap(queryParams);
+      operations.add(args -> args.extraQueryParams = extraQueryParams);
+      return (B) this;
+    }
+
+    /** Creates derived Args class with each attribute populated. */
     @SuppressWarnings("unchecked") // safe as B will always be the builder of the current args class
     public A build() throws IllegalArgumentException {
       try {
