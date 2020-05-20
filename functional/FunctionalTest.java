@@ -22,6 +22,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.CloseableIterator;
 import io.minio.ComposeSource;
 import io.minio.CopyConditions;
+import io.minio.DisableVersioningArgs;
+import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
 import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
@@ -381,6 +383,78 @@ public class FunctionalTest {
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
       throw e;
+    }
+  }
+
+  /** Test: enableVersioning(EnableVersioningArgs args). */
+  public static void enableVersioning_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: enableVersioning(EnableVersioningArgs args)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String name = getRandomName();
+      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
+      client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
+      mintSuccessLog("enableVersioning(EnableVersioningArgs args)", null, startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("enableVersioning(EnableVersioningArgs args)", null, startTime);
+      } else {
+        mintFailedLog(
+            "enableVersioning(EnableVersioningArgs args)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
+    }
+  }
+
+  /** Test: disableVersioning(DisableVersioningArgs args). */
+  public static void disableVersioning_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: disableVersioning(DisableVersioningArgs args)");
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      String name = getRandomName();
+      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
+      client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+
+      client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+      client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+
+      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
+      mintSuccessLog("disableVersioning(DisableVersioningArgs args)", null, startTime);
+    } catch (Exception e) {
+      ErrorResponse errorResponse = null;
+      if (e instanceof ErrorResponseException) {
+        ErrorResponseException exp = (ErrorResponseException) e;
+        errorResponse = exp.errorResponse();
+      }
+      // Ignore NotImplemented error
+      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog("disableVersioning(DisableVersioningArgs args)", null, startTime);
+      } else {
+        mintFailedLog(
+            "disableVersioning(DisableVersioningArgs args)",
+            null,
+            startTime,
+            null,
+            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+        throw e;
+      }
     }
   }
 
@@ -4180,6 +4254,8 @@ public class FunctionalTest {
     listBuckets_test();
 
     bucketExists_test();
+    enableVersioning_test();
+    disableVersioning_test();
 
     removeBucket_test();
 

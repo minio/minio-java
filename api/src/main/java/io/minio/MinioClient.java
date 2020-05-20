@@ -3545,7 +3545,8 @@ public class MinioClient {
    * Disables object versioning feature in a bucket.
    *
    * <pre>Example:{@code
-   * minioClient.disableVersioning(DisableVersioningArgs.builder().bucket("my-bucketname").build());
+   * minioClient.disableVersioning(
+   *     DisableVersioningArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
    * @param args {@link DisableVersioningArgs} object.
