@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.RemoveBucketArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -40,7 +41,7 @@ public class RemoveBucket {
       // This operation will only work if your bucket is empty.
       boolean found = minioClient.bucketExists("my-bucketname");
       if (found) {
-        minioClient.removeBucket("my-bucketname");
+        minioClient.removeBucket(RemoveBucketArgs.builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is removed successfully");
       } else {
         System.out.println("my-bucketname does not exist");

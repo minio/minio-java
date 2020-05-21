@@ -298,36 +298,37 @@ minioClient.deleteBucketLifeCycle("my-bucketname");
 ```
 
 <a name="disableVersioning"></a>
-### disableVersioning(String bucketName)
-`public void disableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-java.lang.String-)_
+### disableVersioning(DisableVersioningArgs args)
+`public void disableVersioning(DisableVersioningArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.DisableVersioningArgs-)_
 
 Disables object versioning feature in a bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+
+| Parameter  | Type                       | Description      |
+|:-----------|:---------------------------|:-----------------|
+| ``args``   | _[DisableVersioningArgs]_  | Arguments.       |
 
 __Example__
 ```java
-minioClient.disableVersioning("my-bucketname");
+minioClient.disableVersioning(DisableVersioningArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="enableVersioning"></a>
-### enableVersioning(String bucketName)
-`public void enableVersioning(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-java.lang.String-)_
+### enableVersioning(EnableVersioningArgs args)
+`public void enableVersioning(EnableVersioningArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableVersioning-io.minio.EnableVersioningArgs-)_
 
 Enables object versioning feature in a bucket.
 
 __Parameters__
 
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| Parameter  | Type                      | Description      |
+|:-----------|:--------------------------|:-----------------|
+| ``args``   | _[EnableVersioningArgs]_  | Arguments.       |
 
 __Example__
 ```java
-minioClient.enableVersioning("my-bucketname");
+minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucket").build());
 ```
 
 <a name="getBucketLifeCycle"></a>
@@ -628,19 +629,20 @@ minioClient.removeAllBucketNotification("my-bucketname");
 ```
 
 <a name="removeBucket"></a>
-### removeBucket(String bucketName)
-`public void removeBucket(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeBucket-java.lang.String-)_
+### removeBucket(RemoveBucketArgs args)
+`public void removeBucket(RemoveBucketArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeBucket-io.minio.RemoveBucketArgs-)_
 
 Removes an empty bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+
+| Parameter    | Type                 | Description     |
+|:-------------|:---------------------|:----------------|
+| ``args``     | _[RemoveBucketArgs]_ | Arguments.      |
 
 __Example__
 ```java
-minioClient.removeBucket("my-bucketname");
+minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
 ```
 
 <a name="removeIncompleteUpload"></a>
@@ -1538,5 +1540,8 @@ ObjectStat objectStat =
 [SelectResponseStream]: http://minio.github.io/minio-java/io/minio/SelectResponseStream.html
 [MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html
 [ListObjectsArgs]: http://minio.github.io/minio-java/io/minio/ListObjectsArgs.html
+[RemoveBucketArgs]: http://minio.github.io/minio-java/io/minio/RemoveBucketArgs.html
+[EnableVersioningArgs]: http://minio.github.io/minio-java/io/minio/EnableVersioningArgs.html
+[DisableVersioningArgs]: http://minio.github.io/minio-java/io/minio/DisableVersioningArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
 [StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html
