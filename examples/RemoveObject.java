@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -36,9 +37,26 @@ public class RemoveObject {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Remove object 'my-objectname' in 'my-bucketname'.
-      minioClient.removeObject("my-bucketname", "my-objectname");
-      System.out.println("successfully removed my-bucketname/my-objectname");
+      // Remove object.
+      minioClient.removeObject(
+          RemoveObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+
+      // Remove versioned object.
+      minioClient.removeObject(
+          RemoveObjectArgs.builder()
+              .bucket("my-bucketname")
+              .object("my-versioned-objectname")
+              .versionId("my-versionid")
+              .build());
+
+      // Remove versioned object bypassing Governance mode.
+      minioClient.removeObject(
+          RemoveObjectArgs.builder()
+              .bucket("my-bucketname")
+              .object("my-versioned-objectname")
+              .versionId("my-versionid")
+              .bypassGovernanceMode(true)
+              .build());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

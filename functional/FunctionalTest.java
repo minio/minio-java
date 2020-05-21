@@ -32,6 +32,7 @@ import io.minio.ObjectStat;
 import io.minio.PostPolicy;
 import io.minio.PutObjectOptions;
 import io.minio.RemoveBucketArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
@@ -579,7 +580,7 @@ public class FunctionalTest {
       String filename = createFile1Kb();
       client.putObject(bucketName, filename, filename, null);
       Files.delete(Paths.get(filename));
-      client.removeObject(bucketName, filename);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
       mintSuccessLog(methodName, "filename: 1KB", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -609,7 +610,7 @@ public class FunctionalTest {
       String filename = createFile6Mb();
       client.putObject(bucketName, filename, filename, new PutObjectOptions(6 * MB, 5 * MB));
       Files.delete(Paths.get(filename));
-      client.removeObject(bucketName, filename);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
       mintSuccessLog(methodName, "filename: 6MB", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -641,7 +642,7 @@ public class FunctionalTest {
       options.setContentType(customContentType);
       client.putObject(bucketName, filename, filename, options);
       Files.delete(Paths.get(filename));
-      client.removeObject(bucketName, filename);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
       mintSuccessLog(methodName, "contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -675,7 +676,7 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, options);
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "size: 1 KB, objectName: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -708,7 +709,7 @@ public class FunctionalTest {
         options.setContentType(customContentType);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "size: 1 KB, contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -741,7 +742,7 @@ public class FunctionalTest {
         options.setContentType(customContentType);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "size: -1, contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -774,7 +775,7 @@ public class FunctionalTest {
         options.setContentType(customContentType);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "size: -1, contentType: " + customContentType, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -809,7 +810,7 @@ public class FunctionalTest {
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "X-Amz-Meta-mykey: myvalue", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -844,7 +845,7 @@ public class FunctionalTest {
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "X-Amz-Storage-Class: REDUCED_REDUNDANCY", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -879,7 +880,7 @@ public class FunctionalTest {
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "X-Amz-Storage-Class: STANDARD", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -914,7 +915,7 @@ public class FunctionalTest {
         options.setHeaders(headerMap);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.INVALID_STORAGE_CLASS) {
         mintFailedLog(
@@ -960,7 +961,7 @@ public class FunctionalTest {
         options.setSse(sse);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "Server-side encryption: SSE_C", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -996,7 +997,7 @@ public class FunctionalTest {
         options.setSse(sse);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "Size: 11 MB, Server-side encryption: SSE_C", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -1030,7 +1031,7 @@ public class FunctionalTest {
         options.setSse(sse);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "Server-side encryption: SSE_S3", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -1071,7 +1072,7 @@ public class FunctionalTest {
         options.setSse(sse);
         client.putObject(bucketName, objectName, is, options);
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, "Server-side encryption: SSE_KMS", startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -1125,7 +1126,7 @@ public class FunctionalTest {
         throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("statObject(StatObjectArgs args)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -1181,7 +1182,7 @@ public class FunctionalTest {
             "[FAILED] wrong metadata value. expected: AES256, got: " + values.get(0));
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("statObject(StatObjectArgs args) using SSE_C.", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -1278,7 +1279,7 @@ public class FunctionalTest {
         throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "statObject(StatObjectArgs args) with extra headers/query params", null, startTime);
     } catch (Exception e) {
@@ -1307,7 +1308,7 @@ public class FunctionalTest {
 
       client.getObject(bucketName, objectName).close();
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -1334,7 +1335,7 @@ public class FunctionalTest {
       }
 
       client.getObject(bucketName, objectName, 1000L).close();
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "getObject(String bucketName, String objectName, long offset)",
           "offset: 1000",
@@ -1365,7 +1366,7 @@ public class FunctionalTest {
       }
 
       client.getObject(bucketName, objectName, 1000L, 64 * 1024L).close();
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "getObject(String bucketName, String objectName, long offset, Long length)",
           "offset: 1000, length: 64 KB",
@@ -1396,7 +1397,7 @@ public class FunctionalTest {
 
       client.getObject(bucketName, objectName, objectName + ".downloaded");
       Files.delete(Paths.get(objectName + ".downloaded"));
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
       mintSuccessLog(
           "getObject(String bucketName, String objectName, String filename)", null, startTime);
@@ -1432,7 +1433,7 @@ public class FunctionalTest {
 
       client.getObject(bucketName, objectName, baseObjectName + ".downloaded");
       Files.delete(Paths.get(baseObjectName + ".downloaded"));
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
       mintSuccessLog(
           "getObject(String bucketName, String objectName, String filename)",
@@ -1463,7 +1464,7 @@ public class FunctionalTest {
       }
 
       client.getObject(bucketName, objectName).close();
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -1515,7 +1516,7 @@ public class FunctionalTest {
       if ((!putString.equals(getString)) || (bytes_read_put != bytes_read_get)) {
         throw new Exception("Contents received from getObject doesn't match initial contents.");
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "getObject(String bucketName, String objectName, ServerSideEncryption sse)"
               + " using SSE_C.",
@@ -1564,7 +1565,7 @@ public class FunctionalTest {
                   partialLength, read));
         }
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
           String.format("offset: %d, length: %d bytes", offset, partialLength),
@@ -1603,7 +1604,7 @@ public class FunctionalTest {
       client.putObject(bucketName, objectName, filename, options);
       client.getObject(bucketName, objectName, sse, objectName + ".downloaded");
       Files.delete(Paths.get(objectName + ".downloaded"));
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
       mintSuccessLog(
           "getObject(String bucketName, String objectName, ServerSideEncryption sse, "
@@ -1919,7 +1920,7 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(1, -1));
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("removeObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -2162,7 +2163,7 @@ public class FunctionalTest {
         throw new Exception("object content differs");
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("presignedGetObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -2199,7 +2200,7 @@ public class FunctionalTest {
       if (!Arrays.equals(inBytes, outBytes)) {
         throw new Exception("object content differs");
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "presignedGetObject(String bucketName, String objectName, Integer expires)",
           null,
@@ -2246,7 +2247,7 @@ public class FunctionalTest {
       if (!Arrays.equals(inBytes, outBytes)) {
         throw new Exception("object content differs");
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "presignedGetObject(String bucketName, String objectName, Integer expires, Map<String,"
               + " String> reqParams)",
@@ -2276,7 +2277,7 @@ public class FunctionalTest {
       String urlString = client.presignedPutObject(bucketName, objectName);
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("presignedPutObject(String bucketName, String objectName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -2302,7 +2303,7 @@ public class FunctionalTest {
       String urlString = client.presignedPutObject(bucketName, objectName, 3600);
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "presignedPutObject(String bucketName, String objectName, Integer expires)",
           null,
@@ -2368,7 +2369,7 @@ public class FunctionalTest {
         response.close();
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("presignedPostPolicy(PostPolicy policy)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -2439,8 +2440,9 @@ public class FunctionalTest {
       client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, null);
       client.getObject(destBucketName, objectName).close();
 
-      client.removeObject(bucketName, objectName);
-      client.removeObject(destBucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, String destBucketName)",
@@ -2490,7 +2492,7 @@ public class FunctionalTest {
         }
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
 
       mintSuccessLog(
@@ -2541,8 +2543,9 @@ public class FunctionalTest {
           destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
       client.getObject(destBucketName, objectName).close();
 
-      client.removeObject(bucketName, objectName);
-      client.removeObject(destBucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, String destBucketName,"
@@ -2592,8 +2595,9 @@ public class FunctionalTest {
           destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
       client.getObject(destBucketName, objectName).close();
 
-      client.removeObject(bucketName, objectName);
-      client.removeObject(destBucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
 
       mintSuccessLog(
@@ -2651,7 +2655,7 @@ public class FunctionalTest {
         }
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
 
       mintSuccessLog(
@@ -2701,8 +2705,9 @@ public class FunctionalTest {
           destBucketName, objectName, null, null, bucketName, null, null, modifiedDateCondition);
       client.getObject(destBucketName, objectName).close();
 
-      client.removeObject(bucketName, objectName);
-      client.removeObject(destBucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, String destBucketName, "
@@ -2765,7 +2770,7 @@ public class FunctionalTest {
         }
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       // Destination bucket is expected to be empty, otherwise it will trigger an
       // exception.
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
@@ -2828,8 +2833,9 @@ public class FunctionalTest {
                 + objectStat.contentType());
       }
 
-      client.removeObject(bucketName, objectName);
-      client.removeObject(destBucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, String destBucketName, "
@@ -2891,7 +2897,7 @@ public class FunctionalTest {
         throw new Exception("expected user-defined metadata has been removed");
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, String destBucketName, "
               + "CopyConditions copyConditions, Map<String, String> metadata)",
@@ -2965,7 +2971,7 @@ public class FunctionalTest {
               .ssec(sseTarget)
               .build()); // Check for object existence.
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
               + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
@@ -3022,7 +3028,7 @@ public class FunctionalTest {
         throw new Exception("expected user-defined metadata has been removed");
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
               + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
@@ -3087,7 +3093,7 @@ public class FunctionalTest {
         throw new Exception("expected user-defined metadata has been removed");
       }
 
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
               + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
@@ -3137,9 +3143,10 @@ public class FunctionalTest {
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
-      client.removeObject(bucketName, filename1);
-      client.removeObject(bucketName, filename2);
-      client.removeObject(bucketName, destinationObjectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
 
       mintSuccessLog(
           "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
@@ -3203,9 +3210,10 @@ public class FunctionalTest {
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
-      client.removeObject(bucketName, filename1);
-      client.removeObject(bucketName, filename2);
-      client.removeObject(bucketName, destinationObjectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
 
       mintSuccessLog(
           "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
@@ -3265,8 +3273,9 @@ public class FunctionalTest {
       client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
       Files.delete(Paths.get(filename1));
 
-      client.removeObject(bucketName, filename1);
-      client.removeObject(bucketName, destinationObjectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
 
       mintSuccessLog(
           "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
@@ -3345,9 +3354,9 @@ public class FunctionalTest {
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
-      client.removeObject(bucketName, filename1);
-      client.removeObject(bucketName, filename2);
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
               + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
@@ -3419,9 +3428,9 @@ public class FunctionalTest {
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
-      client.removeObject(bucketName, filename1);
-      client.removeObject(bucketName, filename2);
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
               + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
@@ -3490,9 +3499,9 @@ public class FunctionalTest {
       Files.delete(Paths.get(filename1));
       Files.delete(Paths.get(filename2));
 
-      client.removeObject(bucketName, filename1);
-      client.removeObject(bucketName, filename2);
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
               + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
@@ -3552,7 +3561,8 @@ public class FunctionalTest {
             null,
             startTime);
       } finally {
-        client.removeObject(bucketName, objectName);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
@@ -3601,7 +3611,8 @@ public class FunctionalTest {
           throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
         }
       } finally {
-        client.removeObject(bucketName, objectName);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(
@@ -4154,7 +4165,8 @@ public class FunctionalTest {
       }
 
       Files.delete(Paths.get(file));
-      client.removeObject(bucketName, "prefix-random-suffix");
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(bucketName).object("prefix-random-suffix").build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
     }
   }
@@ -4238,7 +4250,7 @@ public class FunctionalTest {
       if (responseStream != null) {
         responseStream.close();
       }
-      client.removeObject(bucketName, objectName);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
     }
   }
 

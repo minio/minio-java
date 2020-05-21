@@ -1431,6 +1431,28 @@ public class MinioClient {
   }
 
   private Response executeDelete(
+      String bucketName,
+      String objectName,
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    Response response =
+        execute(
+            Method.DELETE,
+            bucketName,
+            objectName,
+            getRegion(bucketName),
+            headers,
+            queryParams,
+            null,
+            0);
+    response.body().close();
+    return response;
+  }
+
+  private Response executeDelete(
       String bucketName, String objectName, Map<String, String> queryParamMap)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
@@ -2677,17 +2699,74 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void removeObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new IllegalArgumentException("bucket name cannot be empty");
+    removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+  }
+
+  /**
+   * Removes an object.
+   *
+   * <pre>Example:{@code
+   * // Remove object.
+   * minioClient.removeObject(
+   *     RemoveObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+   *
+   * // Remove versioned object.
+   * minioClient.removeObject(
+   *     RemoveObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-versioned-objectname")
+   *         .versionId("my-versionid")
+   *         .build());
+   *
+   * // Remove versioned object bypassing Governance mode.
+   * minioClient.removeObject(
+   *     RemoveObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-versioned-objectname")
+   *         .versionId("my-versionid")
+   *         .bypassRetentionMode(true)
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link RemoveObjectArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void removeObject(RemoveObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
     }
 
-    checkObjectName(objectName);
+    Multimap<String, String> headers = HashMultimap.create();
+    headers.putAll(args.extraHeaders());
+    if (args.bypassGovernanceMode()) {
+      headers.put("x-amz-bypass-governance-retention", "true");
+    }
 
-    executeDelete(bucketName, objectName, null);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.putAll(args.extraQueryParams());
+    if (args.versionId() != null) {
+      queryParams.put("versionId", args.versionId());
+    }
+
+    executeDelete(args.bucket(), args.object(), headers, queryParams);
   }
 
   /**
