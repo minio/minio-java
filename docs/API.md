@@ -1342,20 +1342,38 @@ minioClient.putObject("my-bucketname", "my-objectname", "my-filename", null);
 ```
 
 <a name="removeObject"></a>
-### removeObject(String bucketName, String objectName)
-`public void removeObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-java.lang.String-java.lang.String-)_
+### removeObject(RemoveObjectArgs args)
+`public void removeObject(RemoveObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-io.minio.RemoveObjectArgs-)_
 
 Removes an object.
 
 __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
+| Parameter | Type                 | Description |
+|:----------|:---------------------|:------------|
+| ``args``  | _[RemoveObjectArgs]_ | Arguments.  |
 
 __Example__
 ```java
-minioClient.removeObject("my-bucketname", "my-objectname");
+// Remove object.
+minioClient.removeObject(
+    RemoveObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+
+// Remove versioned object.
+minioClient.removeObject(
+    RemoveObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-versioned-objectname")
+        .versionId("my-versionid")
+        .build());
+
+// Remove versioned object bypassing Governance mode.
+minioClient.removeObject(
+    RemoveObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-versioned-objectname")
+        .versionId("my-versionid")
+        .bypassRetentionMode(true)
+        .build());
 ```
 
 <a name="removeObjects"></a>
@@ -1545,3 +1563,4 @@ ObjectStat objectStat =
 [DisableVersioningArgs]: http://minio.github.io/minio-java/io/minio/DisableVersioningArgs.html
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
 [StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html
+[RemoveObjectArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectArgs.html
