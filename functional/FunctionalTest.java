@@ -28,8 +28,10 @@ import io.minio.DeleteBucketLifeCycleArgs;
 import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketTagsArgs;
 import io.minio.DeleteObjectTagsArgs;
+import io.minio.DisableObjectLegalHoldArgs;
 import io.minio.DisableVersioningArgs;
 import io.minio.DownloadObjectArgs;
+import io.minio.EnableObjectLegalHoldArgs;
 import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
@@ -40,6 +42,7 @@ import io.minio.GetObjectArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.IsVersioningEnabledArgs;
+import io.minio.IsObjectLegalHoldEnabledArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -3491,11 +3494,10 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: enableObjectLegalHold(String bucketName, String objectName, String versionId) */
+  /** Test: enableObjectLegalHold(EnableObjectLegalHoldArgs args) */
   public static void enableObjectLegalHold_test() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: enableObjectLegalHold(String bucketName, String objectName, String versionId)");
+      System.out.println("Test: enableObjectLegalHold(EnableObjectLegalHoldArgs args)");
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
@@ -3508,15 +3510,15 @@ public class FunctionalTest {
           client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
         }
 
-        client.enableObjectLegalHold(bucketName, objectName, null);
-        if (!client.isObjectLegalHoldEnabled(bucketName, objectName, null)) {
+        client.enableObjectLegalHold(
+            EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+        if (!client.isObjectLegalHoldEnabled(
+            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build())) {
           throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: true, got: false");
         }
-        client.disableObjectLegalHold(bucketName, objectName, null);
-        mintSuccessLog(
-            "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
-            null,
-            startTime);
+        client.disableObjectLegalHold(
+            DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+        mintSuccessLog("enableObjectLegalHold(EnableObjectLegalHoldArgs args)", null, startTime);
       } finally {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
@@ -3531,13 +3533,10 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
-            null,
-            startTime);
+        mintIgnoredLog("enableObjectLegalHold(EnableObjectLegalHoldArgs args)", null, startTime);
       } else {
         mintFailedLog(
-            "enableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            "enableObjectLegalHold(EnableObjectLegalHoldArgs args)",
             null,
             startTime,
             null,
@@ -3547,11 +3546,10 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: disableObjectLegalHold(String bucketName, String objectName, String versionId) */
+  /** Test: disableObjectLegalHold(DisableObjectLegalHoldArgs args) */
   public static void disableObjectLegalHold_test() throws Exception {
     if (!mintEnv) {
-      System.out.println(
-          "Test: disableObjectLegalHold(String bucketName, String objectName, String versionId)");
+      System.out.println("Test: disableObjectLegalHold(DisableObjectLegalHoldArgs args)");
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
@@ -3562,9 +3560,12 @@ public class FunctionalTest {
         try (final InputStream is = new ContentInputStream(1 * KB)) {
           client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
         }
-        client.enableObjectLegalHold(bucketName, objectName, null);
-        client.disableObjectLegalHold(bucketName, objectName, null);
-        if (client.isObjectLegalHoldEnabled(bucketName, objectName, null)) {
+        client.enableObjectLegalHold(
+            EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+        client.disableObjectLegalHold(
+            DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+        if (client.isObjectLegalHoldEnabled(
+            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build())) {
           throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
         }
       } finally {
@@ -3572,10 +3573,7 @@ public class FunctionalTest {
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog(
-          "disableObjectLegalHold(String bucketName, String objectName, String versionId)",
-          null,
-          startTime);
+      mintSuccessLog("disableObjectLegalHold(DisableObjectLegalHoldArgs args)", null, startTime);
     } catch (Exception e) {
       ErrorResponse errorResponse = null;
       if (e instanceof ErrorResponseException) {
@@ -3585,13 +3583,10 @@ public class FunctionalTest {
 
       // Ignore NotImplemented error
       if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "disableObjectLegalHold(String bucketName, String objectName, String versionId)",
-            null,
-            startTime);
+        mintIgnoredLog("disableObjectLegalHold(DisableObjectLegalHoldArgs args)", null, startTime);
       } else {
         mintFailedLog(
-            "disableObjectLegalHold(String bucketName, String objectName, String versionId)",
+            "disableObjectLegalHold(DisableObjectLegalHoldArgs args)",
             null,
             startTime,
             null,

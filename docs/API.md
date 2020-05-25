@@ -1049,39 +1049,49 @@ minioClient.deleteObjectTags(
 ```
 
 <a name="disableObjectLegalHold"></a>
-### disableObjectLegalHold(String bucketName, String objectName, String versionId)
-`public void disableObjectLegalHold(String bucketName, String objectName, String versionId)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-)_
+### disableObjectLegalHold(DisableObjectLegalHoldArgs args)
+`public void disableObjectLegalHold(DisableObjectLegalHoldArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableObjectLegalHold-io.minio.DisableObjectLegalHoldArgs-)_
 
 Disables legal hold on an object.
 
  __Parameters__
-| Parameter      | Type     | Description               |
-|:---------------|:---------|:--------------------------|
-| ``bucketName`` | _String_ | Bucket name.              |
-| ``objectName`` | _String_ | Object name.              |
-| ``versionId``  | _String_ | Version ID of the object. |
+
+| Parameter      | Type                           | Description  |
+|:---------------|:-------------------------------|:-------------|
+| ``args``       | _[DisableObjectLegalHoldArgs]_ | Arguments.   |
 
  __Example__
+
 ```java
-minioClient.disableObjectLegalHold("my-bucketname", "my-objectName", null);
+// Disables legal hold on an object.
+minioClient.disableObjectLegalHold(
+    DisableObjectLegalHoldArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .build());
 ```
 
 <a name="enableObjectLegalHold"></a>
-### enableObjectLegalHold(String bucketName, String objectName, String versionId)
-`public void enableObjectLegalHold(String bucketName, String objectName, String versionId)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableObjectLegalHold-java.lang.String-java.lang.String-java.lang.String-)_
+### enableObjectLegalHold(EnableObjectLegalHoldArgs args)
+`public void enableObjectLegalHold(EnableObjectLegalHoldArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#enableObjectLegalHold-io.minio.EnableObjectLegalHoldArgs-)_
 
 Enables legal hold on an object.
 
  __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
-| ``versionId``  | _String_ | Version ID of the object.  |
+ 
+| Parameter      | Type                          | Description  |
+|:---------------|:------------------------------|:-------------|
+| ``args``       | _[EnableObjectLegalHoldArgs]_ | Argumments.  |
 
  __Example__
  ```java
-minioClient.enableObjectLegalHold("my-bucketname", "my-objectname", null);
+
+ // Disables legal hold on an object.
+minioClient.enableObjectLegalHold(
+    EnableObjectLegalHoldArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .build());
 ```
 
 <a name="getObject"></a>
@@ -1284,25 +1294,32 @@ String url = minioClient.getPresignedObjectUrl(Method.DELETE, "my-bucketname", "
 ```
 
  <a name="isObjectLegalHoldEnabled"></a>
-### isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
-`public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#isObjectLegalHoldEnabled-java.lang.String-java.lang.String-java.lang.String-)_
+### isObjectLegalHoldEnabled(IsObjectLegalHoldEnabledArgs args)
+`public boolean isObjectLegalHoldEnabled(IsObjectLegalHoldEnabledArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#isObjectLegalHoldEnabled-io.minio.IsObjectLegalHoldEnabledArgs-)_
 
 Returns true if legal hold is enabled on an object.
 
  __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
-| ``versionId``  | _String_ | Version ID of the object.  |
+
+| Parameter | Type                             | Description  |
+|:----------|:---------------------------------|:-------------|
+| ``args``  | _[IsObjectLegalHoldEnabledArgs]_ | Arguments.   |
+
 
 | Returns                                    |
 |:-------------------------------------------|
 | _boolean_ - True if legal hold is enabled. |
 
  __Example__
+
 ```java
-boolean status = minioClient.isObjectLegalHoldEnabled("my-bucketname", "my-objectname", null);
+boolean status =
+    s3Client.isObjectLegalHoldEnabled(
+       IsObjectLegalHoldEnabledArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .versionId("object-versionId")
+            .build());
 if (status) {
   System.out.println("Legal hold is on");
 else {
@@ -1769,3 +1786,6 @@ ObjectStat objectStat =
 [DownloadObjectArgs]: http://minio.github.io/minio-java/io/minio/DownloadObjectArgs.html
 [IsVersioningEnabledArgs]: http://minio.github.io/minio-java/io/minio/IsVersioningEnabledArgs.html
 [BucketExistsArgs]: http://minio.github.io/minio-java/io/minio/BucketExistsArgs.html
+[EnableObjectLegalHoldArgs]: http://minio.github.io/minio-java/io/minio/EnableObjectLegalHoldArgs.html
+[DisableObjectLegalHoldArgs]: http://minio.github.io/minio-java/io/minio/DisableObjectLegalHoldArgs.html
+[IsObjectLegalHoldEnabledArgs]: http://minio.github.io/minio-java/io/minio/IsObjectLegalHoldEnabledArgs.html
