@@ -28,12 +28,14 @@ import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketTagsArgs;
 import io.minio.DeleteObjectTagsArgs;
 import io.minio.DisableVersioningArgs;
+import io.minio.DownloadObjectArgs;
 import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.GetBucketLifeCycleArgs;
 import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketTagsArgs;
+import io.minio.GetObjectArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.ListObjectsArgs;
@@ -47,6 +49,7 @@ import io.minio.RemoveObjectArgs;
 import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.SetBucketLifeCycleArgs;
 import io.minio.SetBucketPolicyArgs;
@@ -1191,7 +1194,8 @@ public class FunctionalTest {
       // Generate a new 256 bit AES key - This key must be remembered by the client.
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
       keyGen.init(256);
-      ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+      ServerSideEncryptionCustomerKey sse =
+          ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
       try (final InputStream is = new ContentInputStream(1)) {
         PutObjectOptions options = new PutObjectOptions(1, -1);
@@ -1335,8 +1339,9 @@ public class FunctionalTest {
 
   /** Test: getObject(String bucketName, String objectName). */
   public static void getObject_test1() throws Exception {
+    String methodName = "getObject(GetObjectArgs) [bucketName, objectName]";
     if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1346,25 +1351,23 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
-      client.getObject(bucketName, objectName).close();
+      client
+          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
+          .close();
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
   /** Test: getObject(String bucketName, String objectName, long offset). */
   public static void getObject_test2() throws Exception {
+    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, offset]";
+    String args = "offset: 1000";
     if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, long offset)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1374,28 +1377,23 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
-      client.getObject(bucketName, objectName, 1000L).close();
+      client
+          .getObject(
+              GetObjectArgs.builder().bucket(bucketName).object(objectName).offset(1000L).build())
+          .close();
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "getObject(String bucketName, String objectName, long offset)",
-          "offset: 1000",
-          startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName, long offset)",
-          "offset: 1000",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     }
   }
 
   /** Test: getObject(String bucketName, String objectName, long offset, Long length). */
   public static void getObject_test3() throws Exception {
+    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, offset, length]";
+    String args = "offset: 1000, length: 64 KB";
     if (!mintEnv) {
-      System.out.println(
-          "Test: getObject(String bucketName, String objectName, long offset, Long length)");
+      System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
 
@@ -1405,27 +1403,28 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(6 * MB, -1));
       }
 
-      client.getObject(bucketName, objectName, 1000L, 64 * 1024L).close();
+      client
+          .getObject(
+              GetObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .offset(1000L)
+                  .length(64 * 1024L)
+                  .build())
+          .close();
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "getObject(String bucketName, String objectName, long offset, Long length)",
-          "offset: 1000, length: 64 KB",
-          startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName, long offset, Long length)",
-          "offset: 1000, length: 64 KB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     }
   }
 
   /** Test: getObject(String bucketName, String objectName, String filename). */
   public static void getObject_test4() throws Exception {
+    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, fileName]";
+    String args = "offset: 1000, length: 64 KB";
     if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName, String filename)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1435,20 +1434,18 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
-      client.getObject(bucketName, objectName, objectName + ".downloaded");
+      client.downloadObject(
+          DownloadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(objectName)
+              .fileName(objectName + ".downloaded")
+              .build());
       Files.delete(Paths.get(objectName + ".downloaded"));
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
-      mintSuccessLog(
-          "getObject(String bucketName, String objectName, String filename)", null, startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName, String filename)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     }
   }
 
@@ -1457,43 +1454,40 @@ public class FunctionalTest {
    * multiple path segments.
    */
   public static void getObject_test5() throws Exception {
+    String methodName = "downloadObject(GetObjectArgs) [bucketName, objectName, fileName]";
     if (!mintEnv) {
-      System.out.println(
-          "Test: objectName with multiple path segments: "
-              + "getObject(String bucketName, String objectName, String filename)");
+      System.out.println("Test: " + methodName);
     }
-
     long startTime = System.currentTimeMillis();
     String baseObjectName = getRandomName();
     String objectName = "path/to/" + baseObjectName;
+    String args = "objectName: " + objectName;
     try {
       try (final InputStream is = new ContentInputStream(1 * KB)) {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
       }
 
-      client.getObject(bucketName, objectName, baseObjectName + ".downloaded");
+      client.downloadObject(
+          DownloadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(objectName)
+              .fileName(baseObjectName + ".downloaded")
+              .build());
       Files.delete(Paths.get(baseObjectName + ".downloaded"));
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
-      mintSuccessLog(
-          "getObject(String bucketName, String objectName, String filename)",
-          "objectName: " + objectName,
-          startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName, String filename)",
-          "objectName: " + objectName,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     }
   }
 
   /** Test: getObject(String bucketName, String objectName) zero size object. */
   public static void getObject_test6() throws Exception {
+    String methodName =
+        "getObject(GetObjectArgs) [bucketName, objectName, fileName] zero size object";
     if (!mintEnv) {
-      System.out.println("Test: getObject(String bucketName, String objectName) zero size object");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1503,17 +1497,13 @@ public class FunctionalTest {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(0, -1));
       }
 
-      client.getObject(bucketName, objectName).close();
+      client
+          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
+          .close();
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("getObject(String bucketName, String objectName)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -1522,16 +1512,17 @@ public class FunctionalTest {
    * getObject when object is put using SSE_C.
    */
   public static void getObject_test7() throws Exception {
+    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, sse] using SSE_C.";
     if (!mintEnv) {
-      System.out.println(
-          "Test: getObject(String bucketName, String objectName, ServerSideEncryption sse) using SSE_C");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     // Generate a new 256 bit AES key - This key must be remembered by the client.
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
-    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    ServerSideEncryptionCustomerKey sse =
+        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
     try {
       String objectName = getRandomName();
@@ -1546,7 +1537,9 @@ public class FunctionalTest {
         putString = new String(putbyteArray, StandardCharsets.UTF_8);
       }
 
-      InputStream stream = client.getObject(bucketName, objectName, sse);
+      InputStream stream =
+          client.getObject(
+              GetObjectArgs.builder().bucket(bucketName).object(objectName).ssec(sse).build());
       byte[] getbyteArray = new byte[stream.available()];
       int bytes_read_get = stream.read(getbyteArray);
       String getString = new String(getbyteArray, StandardCharsets.UTF_8);
@@ -1557,20 +1550,9 @@ public class FunctionalTest {
         throw new Exception("Contents received from getObject doesn't match initial contents.");
       }
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "getObject(String bucketName, String objectName, ServerSideEncryption sse)"
-              + " using SSE_C.",
-          null,
-          startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName, ServerSideEncryption sse)"
-              + " using SSE_C.",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -1578,9 +1560,9 @@ public class FunctionalTest {
    * Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0.
    */
   public static void getObject_test8() throws Exception {
+    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, offset, length]";
     if (!mintEnv) {
-      System.out.println(
-          "Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0");
+      System.out.println("Test: " + methodName + " with offset=0");
     }
 
     final long startTime = System.currentTimeMillis();
@@ -1588,13 +1570,20 @@ public class FunctionalTest {
     final int partialLength = 256;
     final long offset = 0L;
     final String objectName = getRandomName();
+    String args = String.format("offset: %d, length: %d bytes", offset, partialLength);
     try {
       try (final InputStream is = new ContentInputStream(fullLength)) {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(fullLength, -1));
       }
 
       try (final InputStream partialObjectStream =
-          client.getObject(bucketName, objectName, offset, Long.valueOf(partialLength))) {
+          client.getObject(
+              GetObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .offset(offset)
+                  .length(Long.valueOf(partialLength))
+                  .build())) {
         byte[] result = new byte[fullLength];
         final int read = partialObjectStream.read(result);
         result = Arrays.copyOf(result, read);
@@ -1606,18 +1595,9 @@ public class FunctionalTest {
         }
       }
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
-          String.format("offset: %d, length: %d bytes", offset, partialLength),
-          startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (final Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName, long offset, Long length) with offset=0",
-          String.format("offset: %d, length: %d bytes", offset, partialLength),
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     }
   }
 
@@ -1626,40 +1606,37 @@ public class FunctionalTest {
    * fileName).
    */
   public static void getObject_test9() throws Exception {
+    String methodName = "downloadObject(GetObjectArgs) [bucketName, objectName, sse, fileName]";
+    String args = "size: 1 KB";
     if (!mintEnv) {
-      System.out.println(
-          "Test: getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     // Generate a new 256 bit AES key - This key must be remembered by the client.
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
-    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    ServerSideEncryptionCustomerKey sse =
+        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
     try {
       String objectName = getRandomName();
       String filename = createFile1Kb();
       PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
       options.setSse(sse);
       client.putObject(bucketName, objectName, filename, options);
-      client.getObject(bucketName, objectName, sse, objectName + ".downloaded");
+      client.downloadObject(
+          DownloadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(objectName)
+              .ssec(sse)
+              .fileName(objectName + ".downloaded")
+              .build());
       Files.delete(Paths.get(objectName + ".downloaded"));
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
 
-      mintSuccessLog(
-          "getObject(String bucketName, String objectName, ServerSideEncryption sse, "
-              + "String filename). To test SSE_C",
-          "size: 1 KB",
-          startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getObject(String bucketName, String objectName, ServerSideEncryption sse, "
-              + "String filename). To test SSE_C",
-          "size: 1 KB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     }
   }
 
@@ -2463,9 +2440,9 @@ public class FunctionalTest {
 
   /** Test: copyObject(String bucketName, String objectName, String destBucketName). */
   public static void copyObject_test1() throws Exception {
+    String methodName = "copyObject(String bucketName, String objectName, String destBucketName)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2478,24 +2455,17 @@ public class FunctionalTest {
       String destBucketName = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
       client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, null);
-      client.getObject(destBucketName, objectName).close();
+      client
+          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
+          .close();
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       client.removeObject(
           RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName)",
-          null,
-          startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -2557,10 +2527,11 @@ public class FunctionalTest {
    * copyConditions) with ETag to match.
    */
   public static void copyObject_test3() throws Exception {
+    String methodName =
+        "copyObject(String bucketName, String objectName, String destBucketName,"
+            + " CopyConditions copyConditions) with Matching ETag (Positive Case)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions) with Matching ETag (Positive Case)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2581,26 +2552,17 @@ public class FunctionalTest {
       // File should be copied as ETag set in copyConditions matches object's ETag.
       client.copyObject(
           destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
-      client.getObject(destBucketName, objectName).close();
+      client
+          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
+          .close();
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       client.removeObject(
           RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName,"
-              + " CopyConditions copyConditions)",
-          null,
-          startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName,"
-              + " CopyConditions copyConditions)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -2609,11 +2571,12 @@ public class FunctionalTest {
    * copyConditions) with ETag to not match.
    */
   public static void copyObject_test4() throws Exception {
+    String methodName =
+        "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+            + "CopyConditions copyConditions) with not matching ETag"
+            + " (Positive Case)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions) with not matching ETag"
-              + " (Positive Case)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2633,27 +2596,18 @@ public class FunctionalTest {
       // ETag.
       client.copyObject(
           destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
-      client.getObject(destBucketName, objectName).close();
+      client
+          .getObject(GetObjectArgs.builder().bucket(destBucketName).object(objectName).build())
+          .close();
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       client.removeObject(
           RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
 
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName,"
-              + " CopyConditions copyConditions)",
-          null,
-          startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -2720,11 +2674,13 @@ public class FunctionalTest {
    * copyConditions) with object modified after condition.
    */
   public static void copyObject_test6() throws Exception {
+    String methodName =
+        "Test: copyObject(String bucketName, String objectName, String destBucketName,"
+            + "CopyConditions copyConditions) with modified after "
+            + "condition (Positive Case)";
+    String args = "CopyCondition: modifiedDateCondition";
     if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions) with modified after "
-              + "condition (Positive Case)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2743,26 +2699,17 @@ public class FunctionalTest {
       // File should be copied as object was modified after the set date.
       client.copyObject(
           destBucketName, objectName, null, null, bucketName, null, null, modifiedDateCondition);
-      client.getObject(destBucketName, objectName).close();
+      client
+          .getObject(GetObjectArgs.builder().bucket(destBucketName).object(objectName).build())
+          .close();
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       client.removeObject(
           RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
       client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions)",
-          "CopyCondition: modifiedDateCondition",
-          startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions)",
-          "CopyCondition: modifiedDateCondition",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     }
   }
 
@@ -2982,7 +2929,8 @@ public class FunctionalTest {
       byte[] keyTarget = "98765432100123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
 
-      ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
+      ServerSideEncryptionCustomerKey sseTarget =
+          ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
 
       try (final InputStream is = new ContentInputStream(1)) {
         PutObjectOptions options = new PutObjectOptions(1, -1);
@@ -3363,7 +3311,7 @@ public class FunctionalTest {
       byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-      ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
+      ServerSideEncryptionCustomerKey ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
 
       byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
@@ -3442,7 +3390,7 @@ public class FunctionalTest {
       byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-      ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
+      ServerSideEncryptionCustomerKey ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();

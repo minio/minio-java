@@ -18,6 +18,7 @@ import io.minio.ComposeSource;
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,7 +43,7 @@ public class ComposeObjectEncrypted {
       byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-      ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
+      ServerSideEncryptionCustomerKey ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
 
       byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");

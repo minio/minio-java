@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -40,7 +41,14 @@ public class GetPartialObject {
 
       // Get input stream to have content of 'my-objectname' from 'my-bucketname' starts from
       // byte position 1024 and length 4096.
-      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L);
+      InputStream stream =
+          minioClient.getObject(
+              GetObjectArgs.builder()
+                  .bucket("my-bucketname")
+                  .object("my-objectname")
+                  .offset(1024L)
+                  .length(4096L)
+                  .build());
 
       // Read the input stream and print to the console till EOF.
       byte[] buf = new byte[16384];

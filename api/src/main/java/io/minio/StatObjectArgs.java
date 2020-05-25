@@ -17,26 +17,11 @@
 package io.minio;
 
 /** Argument class of MinioClient.statObject(). */
-public class StatObjectArgs extends ObjectArgs {
-  private ServerSideEncryption ssec;
-
-  public ServerSideEncryption ssec() {
-    return ssec;
-  }
-
+public class StatObjectArgs extends SsecObjectArgs {
   public static Builder builder() {
     return new Builder();
   }
 
   /** Argument builder of {@link StatObjectArgs}. */
-  public static final class Builder extends ObjectArgs.Builder<Builder, StatObjectArgs> {
-    public Builder ssec(ServerSideEncryption ssec) {
-      if (ssec != null && ssec.type() != ServerSideEncryption.Type.SSE_C) {
-        throw new IllegalArgumentException("only SSE-C type server-side encryption is allowed");
-      }
-
-      operations.add(args -> args.ssec = ssec);
-      return this;
-    }
-  }
+  public static final class Builder extends SsecObjectArgs.Builder<Builder, StatObjectArgs> {}
 }

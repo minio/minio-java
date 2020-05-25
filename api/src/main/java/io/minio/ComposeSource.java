@@ -29,7 +29,7 @@ public class ComposeSource {
   private Long length;
   private Map<String, String> headerMap;
   private CopyConditions copyConditions;
-  private ServerSideEncryption sse;
+  private ServerSideEncryptionCustomerKey ssec;
   private long objectSize;
   private Map<String, String> headers;
 
@@ -79,7 +79,7 @@ public class ComposeSource {
       Long length,
       Map<String, String> headerMap,
       CopyConditions copyConditions,
-      ServerSideEncryption sse)
+      ServerSideEncryptionCustomerKey ssec)
       throws IllegalArgumentException {
     if (bucketName == null) {
       throw new IllegalArgumentException("Source bucket name cannot be empty");
@@ -111,7 +111,7 @@ public class ComposeSource {
       this.headerMap = null;
     }
     this.copyConditions = copyConditions;
-    this.sse = sse;
+    this.ssec = ssec;
   }
 
   /** Constructs header . */
@@ -166,8 +166,8 @@ public class ComposeSource {
       headers.putAll(copyConditions.getConditions());
     }
 
-    if (sse != null) {
-      headers.putAll(sse.copySourceHeaders());
+    if (ssec != null) {
+      headers.putAll(ssec.copySourceHeaders());
     }
 
     this.objectSize = objectSize;
@@ -194,8 +194,8 @@ public class ComposeSource {
     return copyConditions;
   }
 
-  public ServerSideEncryption sse() {
-    return sse;
+  public ServerSideEncryptionCustomerKey ssec() {
+    return ssec;
   }
 
   public Map<String, String> headers() {

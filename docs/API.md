@@ -22,25 +22,25 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`deleteBucketEncryption`](#deleteBucketEncryption)           | [`copyObject`](#copyObject)                             |
 | [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`deleteObjectTags`](#deleteObjectTags)                 |
 | [`deleteBucketPolicy`](#deleteBucketPolicy)                   | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
-| [`deleteBucketTags`](#deleteBucketTags)                       | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`disableVersioning`](#disableVersioning)                     | [`getObject`](#getObject)                               |
-| [`enableVersioning`](#enableVersioning)                       | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectTags`](#getObjectTags)                       |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getBucketNotification`](#getBucketNotification)             | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketPolicy`](#getBucketPolicy)                         | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`getBucketTags`](#getBucketTags)                             | [`listObjects`](#listObjects)                           |
-| [`getDefaultRetention`](#getDefaultRetention)                 | [`presignedGetObject`](#presignedGetObject)             |
-| [`listBuckets`](#listBuckets)                                 | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPutObject`](#presignedPutObject)             |
-| [`listIncompleteUploads`](#listIncompleteUploads)             | [`putObject`](#putObject)                               |
-| [`makeBucket`](#makeBucket)                                   | [`removeObject`](#removeObject)                         |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`removeObjects`](#removeObjects)                       |
-| [`removeBucket`](#removeBucket)                               | [`selectObjectContent`](#selectObjectContent)           |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`setObjectRetention`](#setObjectRetention)             |
-| [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`statObject`](#statObject)                             |
-| [`setBucketNotification`](#setBucketNotification)             |                                                         |
+| [`deleteBucketTags`](#deleteBucketTags)                       | [`downloadObject`](#downloadObject)                     |
+| [`disableVersioning`](#disableVersioning)                     | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
+| [`enableVersioning`](#enableVersioning)                       | [`getObject`](#getObject)                               |
+| [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectRetention`](#getObjectRetention)             |
+| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectTags`](#getObjectTags)                       |
+| [`getBucketNotification`](#getBucketNotification)             | [`getObjectUrl`](#getObjectUrl)                         |
+| [`getBucketPolicy`](#getBucketPolicy)                         | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketTags`](#getBucketTags)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getDefaultRetention`](#getDefaultRetention)                 | [`listObjects`](#listObjects)                           |
+| [`listBuckets`](#listBuckets)                                 | [`presignedGetObject`](#presignedGetObject)             |
+| [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`listIncompleteUploads`](#listIncompleteUploads)             | [`presignedPutObject`](#presignedPutObject)             |
+| [`makeBucket`](#makeBucket)                                   | [`putObject`](#putObject)                               |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`removeObject`](#removeObject)                         |
+| [`removeBucket`](#removeBucket)                               | [`removeObjects`](#removeObjects)                       |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`selectObjectContent`](#selectObjectContent)           |
+| [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectRetention`](#setObjectRetention)             |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketNotification`](#setBucketNotification)             | [`statObject`](#statObject)                             |
 | [`setBucketPolicy`](#setBucketPolicy)                         |                                                         |
 | [`setBucketTags`](#setBucketTags)                             |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
@@ -654,9 +654,9 @@ for (Result<Upload> result : results) {
 Lists object information of a bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``args`` | _[ListObjectsArgs]_ | Arguments to list objects |
+| Parameter        | Type                | Description               |
+|:-----------------|:--------------------|:--------------------------|
+| ``args``         | _[ListObjectsArgs]_ | Arguments to list objects |
 
 | Returns                                                                   |
 |:--------------------------------------------------------------------------|
@@ -1055,16 +1055,15 @@ minioClient.enableObjectLegalHold("my-bucketname", "my-objectname", null);
 ```
 
 <a name="getObject"></a>
-### getObject(String bucketName, String objectName)
-`public InputStream getObject(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-)_
+### getObject(GetObjectArgs args)
+`public InputStream getObject(GetObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-io.minio.GetObjectArgs-)_
 
 Gets data of an object. Returned `InputStream` must be closed after use to release network resources.
 
 __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
+| Parameter      | Type            | Description                |
+|:---------------|:----------------|:---------------------------|
+| ``args``       | _GetObjectArgs_ | Arguments.                 |
 
 | Returns                               |
 |:--------------------------------------|
@@ -1072,145 +1071,88 @@ __Parameters__
 
 __Example__
 ```java
-try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname")) {
+// get object given the bucket and object name
+try (InputStream stream = minioClient.getObject(
+  GetObjectArgs.builder()
+  .bucket("my-bucketname")
+  .object("my-objectname")
+  .build()) {
+  // Read data from stream
+}
+
+// get object data from offset
+try (InputStream stream = minioClient.getObject(
+  GetObjectArgs.builder()
+  .bucket("my-bucketname")
+  .object("my-objectname")
+  .offset(1024L)
+  .build()) {
+  // Read data from stream
+}
+
+// get object data from offset to length
+try (InputStream stream = minioClient.getObject(
+  GetObjectArgs.builder()
+  .bucket("my-bucketname")
+  .object("my-objectname")
+  .offset(1024L)
+  .length(4096L)
+  .build()) {
+  // Read data from stream
+}
+
+// get data of an SSE-C encrypted object
+try (InputStream stream = minioClient.getObject(
+  GetObjectArgs.builder()
+  .bucket("my-bucketname")
+  .object("my-objectname")
+  .ssec(ssec)
+  .build()) {
+  // Read data from stream
+}
+
+// get object data from offset to length of an SSE-C encrypted object
+try (InputStream stream = minioClient.getObject(
+  GetObjectArgs.builder()
+  .bucket("my-bucketname")
+  .object("my-objectname")
+  .offset(1024L)
+  .length(4096L)
+  .ssec(ssec)
+  .build()) {
   // Read data from stream
 }
 ```
 
-<a name="getObject"></a>
-### getObject(String bucketName, String objectName, long offset)
-`public InputStream getObject(String bucketName, String objectName, long offset)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-long-)_
-
-Gets data from offset of an object. Returned `InputStream` must be closed after use to release network resources.
-
-__Parameters__
-| Parameter      | Type     | Description                         |
-|:---------------|:---------|:------------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.                 |
-| ``objectName`` | _String_ | Object name in the bucket.          |
-| ``offset``     | _long_   | Start byte position of object data. |
-
-| Returns                               |
-|:--------------------------------------|
-| _InputStream_ - Contains object data. |
-
-__Example__
-```java
-try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L)) {
-  // Read data from stream
-}
-```
-
-<a name="getObject"></a>
-### getObject(String bucketName, String objectName, long offset, Long length)
-`public InputStream getObject(String bucketName,  String objectName, long offset, Long length)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-long-java.lang.Long-)_
-
-Gets data from offset to length of an object. Returned {@link InputStream} must be closed after use to release network resources.
-
-__Parameters__
-| Parameter      | Type     | Description                                            |
-|:---------------|:---------|:-------------------------------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.                                    |
-| ``objectName`` | _String_ | Object name in the bucket.                             |
-| ``offset``     | _long_   | Start byte position of object data.                    |
-| ``length``     | _Long_   | (Optional) Number of bytes of object data from offset. |
-
-| Returns                               |
-|:--------------------------------------|
-| _InputStream_ - Contains object data. |
-
-__Example__
-```java
-try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L)) {
-  // Read data from stream
-}
-```
-
-<a name="getObject"></a>
-### getObject(String bucketName, String objectName, ServerSideEncryption sse)
-`public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-)_
-
-Gets data of a SSE-C encrypted object. Returned {@link InputStream} must be closed after use to release network resources.
-
-__Parameters__
-| Parameter      | Type                     | Description                        |
-|:---------------|:-------------------------|:-----------------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.                |
-| ``objectName`` | _String_                 | Object name in the bucket.         |
-| ``sse``        | _[ServerSideEncryption]_ | SSE-C type server-side encryption. |
-
-| Returns                               |
-|:--------------------------------------|
-| _InputStream_ - Contains object data. |
-
-__Example__
-```java
-try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", ssec)) {
-  // Read data from stream
-}
-```
-
-<a name="getObject"></a>
-### getObject(String bucketName, String objectName, Long offset, Long length, ServerSideEncryption sse)
-`public InputStream getObject(String bucketName, String objectName, Long offset, Long length, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-java.lang.Long-java.lang.Long-io.minio.ServerSideEncryption-)_
-
-Gets data from offset to length of a SSE-C encrypted object. Returned {@link InputStream} must be closed after use to release network resources.
-
-__Parameters__
-| Parameter      | Type                     | Description                                            |
-|:---------------|:-------------------------|:-------------------------------------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.                                    |
-| ``objectName`` | _String_                 | Object name in the bucket.                             |
-| ``offset``     | _Long_                   | (Optional) Start byte position of object data.         |
-| ``length``     | _Long_                   | (Optional) Number of bytes of object data from offset. |
-| ``sse``        | _[ServerSideEncryption]_ | (Optional) Server-side encryption.                     |
-
-| Returns                               |
-|:--------------------------------------|
-| _InputStream_ - Contains object data. |
-
-__Example__
-```java
-try (InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", 1024L, 4096L, ssec)) {
-  // Read data from stream
-}
-```
-
-<a name="getObject"></a>
-### getObject(String bucketName, String objectName, String fileName)
-`public void getObject(String bucketName, String objectName, String fileName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-java.lang.String-)_
+<a name="downloadObject"></a>
+### downloadObject(DownloadObjectArgs args)
+`public void downloadObject(DownloadObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-io.minio.DownloadObjectArgs-)_
 
 Downloads data of an object to file.
 
 __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
-| ``fileName``   | _String_ | Name of the file.          |
+| Parameter        | Type                 | Description                  |
+|:-----------------|:---------------------|:-----------------------------|
+| ``args``         | _DownloadObjectArgs_ | Arguments.                   |
 
 __Example__
 ```java
-minioClient.getObject("my-bucketname", "my-objectname", "my-object-file");
-```
+// Download object given the bucket, object name and output file name
+minioClient.downloadObject(
+  DownloadObjectArgs.builder()
+  .bucket("my-bucketname")
+  .object("my-objectname")
+  .fileName("my-object-file")
+  .build());
 
-<a name="getObject"></a>
-### getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)
-`public void getObject(String bucketName, String objectName, ServerSideEncryption sse, String fileName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-java.lang.String-)_
-
-Downloads server-side encrypted object in bucket to given file name.
-
-__Parameters__
-| Parameter      | Type                     | Description                        |
-|:---------------|:-------------------------|:-----------------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.                |
-| ``objectName`` | _String_                 | Object name in the bucket.         |
-| ``sse``        | _[ServerSideEncryption]_ | SSE-C type server-side encryption. |
-| ``fileName``   | _String_                 | Name of the file.                  |
-
-__Example__
-```java
-minioClient.getObject("my-bucketname", "my-objectname", ssec, "my-object-file");
+// Download server-side encrypted object in bucket to given file name
+minioClient.downloadObject(
+  DownloadObjectArgs.builder()
+  .bucket("my-bucketname")
+  .object("my-objectname")
+  .ssec(ssec)
+  .fileName("my-object-file")
+  .build());
 ```
 
  <a name="getObjectRetention"></a>
@@ -1591,24 +1533,24 @@ for (Result<DeleteError> result : results) {
 ```
 
  <a name="selectObjectContent"></a>
-### selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)
-`public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-java.lang.String-java.lang.String-java.lang.String-io.minio.messages.InputSerialization-io.minio.messages.OutputSerialization-boolean-java.lang.Long-java.lang.Long-io.minio.ServerSideEncryption-)_
+### selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryptionCustomerKey ssec)
+`public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryptionCustomerKey ssec)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-java.lang.String-java.lang.String-java.lang.String-io.minio.messages.InputSerialization-io.minio.messages.OutputSerialization-boolean-java.lang.Long-java.lang.Long-io.minio.ServerSideEncryptionCustomerKey-)_
 
 Selects content of a object by SQL expression.
 
 __Parameters__
 
-| Parameter           | Type                     | Description                           |
-|:--------------------|:-------------------------|:--------------------------------------|
-| ``bucketName``      | _String_                 | Name of the bucket.                   |
-| ``objectName``      | _String_                 | Object name in the bucket.            |
-| ``sqlExpression``   | _String_                 | SQL expression.                       |
-| ``is``              | _[InputSerialization]_   | Input specification of object data.   |
-| ``os``              | _[OutputSerialization]_  | Output specification of result.       |
-| ``requestProgress`` | _boolean_                | Flag to request progress information. |
-| ``scanStartRange``  | _Long_                   | scan start range of the object.       |
-| ``scanEndRange``    | _Long_                   | scan end range of the object.         |
-| ``sse``             | _[ServerSideEncryption]_ | SSE-C type server-side encryption.    |
+| Parameter           | Type                                | Description                           |
+|:--------------------|:------------------------------------|:--------------------------------------|
+| ``bucketName``      | _String_                            | Name of the bucket.                   |
+| ``objectName``      | _String_                            | Object name in the bucket.            |
+| ``sqlExpression``   | _String_                            | SQL expression.                       |
+| ``is``              | _[InputSerialization]_              | Input specification of object data.   |
+| ``os``              | _[OutputSerialization]_             | Output specification of result.       |
+| ``requestProgress`` | _boolean_                           | Flag to request progress information. |
+| ``scanStartRange``  | _Long_                              | scan start range of the object.       |
+| ``scanEndRange``    | _Long_                              | scan end range of the object.         |
+| ``sse``             | _[ServerSideEncryptionCustomerKey]_ | SSE-C type server-side encryption.    |
 
 | Returns                                                            |
 |:-------------------------------------------------------------------|
@@ -1756,6 +1698,7 @@ ObjectStat objectStat =
 [Item]: http://minio.github.io/minio-java/io/minio/messages/Item.html
 [ComposeSource]: http://minio.github.io/minio-java/io/minio/ComposeSource.html
 [ServerSideEncryption]: http://minio.github.io/minio-java/io/minio/ServerSideEncryption.html
+[ServerSideEncryptionCustomerKey]: http://minio.github.io/minio-java/io/minio/ServerSideEncryptionCustomerKey.html
 [CopyConditions]: http://minio.github.io/minio-java/io/minio/CopyConditions.html
 [PostPolicy]: http://minio.github.io/minio-java/io/minio/PostPolicy.html
 [PutObjectOptions]: http://minio.github.io/minio-java/io/minio/PutObjectOptions.html
@@ -1792,3 +1735,5 @@ ObjectStat objectStat =
 [GetBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/GetBucketPolicyArgs.html
 [SetBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/SetBucketPolicyArgs.html
 [DeleteBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketPolicyArgs.html
+[GetObjectArgs]: http://minio.github.io/minio-java/io/minio/GetObjectArgs.html
+[DownloadObjectArgs]: http://minio.github.io/minio-java/io/minio/DownloadObjectArgs.html

@@ -1626,7 +1626,7 @@ public class MinioClient {
    *
    * <pre>Example:{@code
    * ObjectStat objectStat =
-   *     minioClient.statObject("my-bucketname", "my-objectname", ssec);
+   *     minioClient.statObject("my-bucketname", "my-objectname", sse);
    * }</pre>
    *
    * @param bucketName Name of the bucket.
@@ -1647,12 +1647,13 @@ public class MinioClient {
    * @see ObjectStat
    */
   @Deprecated
-  public ObjectStat statObject(String bucketName, String objectName, ServerSideEncryption sse)
+  public ObjectStat statObject(
+      String bucketName, String objectName, ServerSideEncryptionCustomerKey ssec)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     return statObject(
-        StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(sse).build());
+        StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(ssec).build());
   }
 
   /**
@@ -1713,7 +1714,7 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     checkArgs(args);
-    checkReadRequestSse(args.ssec());
+    args.validateSsec(baseUrl);
 
     Multimap<String, String> headers = HashMultimap.create();
     headers.putAll(args.extraHeaders());
@@ -1788,12 +1789,14 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObject(GetObjectArgs)}
    */
+  @Deprecated
   public InputStream getObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    return getObject(bucketName, objectName, null, null, null);
+    return getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build());
   }
 
   /**
@@ -1809,7 +1812,7 @@ public class MinioClient {
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param sse SSE-C type server-side encryption.
+   * @param ssec SSE-C type server-side encryption.
    * @return {@link InputStream} - Contains object data.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -1822,12 +1825,16 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObject(GetObjectArgs)}
    */
-  public InputStream getObject(String bucketName, String objectName, ServerSideEncryption sse)
+  @Deprecated
+  public InputStream getObject(
+      String bucketName, String objectName, ServerSideEncryptionCustomerKey ssec)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    return getObject(bucketName, objectName, null, null, sse);
+    return getObject(
+        GetObjectArgs.builder().bucket(bucketName).object(objectName).ssec(ssec).build());
   }
 
   /**
@@ -1856,12 +1863,15 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObject(GetObjectArgs)}
    */
+  @Deprecated
   public InputStream getObject(String bucketName, String objectName, long offset)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    return getObject(bucketName, objectName, offset, null, null);
+    return getObject(
+        GetObjectArgs.builder().bucket(bucketName).object(objectName).offset(offset).build());
   }
 
   /**
@@ -1891,12 +1901,20 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObject(GetObjectArgs)}
    */
+  @Deprecated
   public InputStream getObject(String bucketName, String objectName, long offset, Long length)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    return getObject(bucketName, objectName, offset, length, null);
+    return getObject(
+        GetObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .offset(offset)
+            .length(length)
+            .build());
   }
 
   /**
@@ -1914,7 +1932,7 @@ public class MinioClient {
    * @param objectName Object name in the bucket.
    * @param offset Start byte position of object data.
    * @param length Number of bytes of object data from offset.
-   * @param sse SSE-C type server-side encryption.
+   * @param ssec SSE-C type server-side encryption.
    * @return {@link InputStream} - Contains object data.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -1927,34 +1945,75 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObject(GetObjectArgs)}
    */
+  @Deprecated
   public InputStream getObject(
-      String bucketName, String objectName, Long offset, Long length, ServerSideEncryption sse)
+      String bucketName,
+      String objectName,
+      Long offset,
+      Long length,
+      ServerSideEncryptionCustomerKey ssec)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new IllegalArgumentException("bucket name cannot be empty");
-    }
+    return getObject(
+        GetObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .offset(offset)
+            .length(length)
+            .ssec(ssec)
+            .build());
+  }
 
-    checkObjectName(objectName);
-
-    if (offset != null && offset < 0) {
-      throw new IllegalArgumentException("offset should be zero or greater");
-    }
-
-    if (length != null && length <= 0) {
-      throw new IllegalArgumentException("length should be greater than zero");
-    }
-
-    checkReadRequestSse(sse);
+  /**
+   * Gets data from offset to length of a SSE-C encrypted object. Returned {@link InputStream} must
+   * be closed after use to release network resources.
+   *
+   * <pre>Example:{@code
+   * try (InputStream stream =
+   *     minioClient.getObject(
+   *   GetObjectArgs.builder()
+   *     .bucket("my-bucketname")
+   *     .object("my-objectname")
+   *     .offset(offset)
+   *     .length(len)
+   *     .ssec(ssec)
+   *     .build()
+   * ) {
+   *   // Read data from stream
+   * }
+   * }</pre>
+   *
+   * @param args Object of {@link GetObjectArgs}
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public InputStream getObject(GetObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    Long offset = args.offset();
+    Long length = args.length();
+    ServerSideEncryptionCustomerKey ssec = args.ssec();
+    args.validateSsec(this.baseUrl);
 
     if (length != null && offset == null) {
       offset = 0L;
     }
 
     Map<String, String> headerMap = null;
-    if (offset != null || length != null || sse != null) {
+    if (offset != null || length != null || ssec != null) {
       headerMap = new HashMap<>();
     }
 
@@ -1964,11 +2023,11 @@ public class MinioClient {
       headerMap.put("Range", "bytes=" + offset + "-");
     }
 
-    if (sse != null) {
-      headerMap.putAll(sse.headers());
+    if (ssec != null) {
+      headerMap.putAll(ssec.headers());
     }
 
-    Response response = executeGet(bucketName, objectName, headerMap, null);
+    Response response = executeGet(args.bucket(), args.object(), headerMap, null);
     return response.body().byteStream();
   }
 
@@ -1993,12 +2052,19 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObject(GetObjectArgs)}
    */
+  @Deprecated
   public void getObject(String bucketName, String objectName, String fileName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    getObject(bucketName, objectName, null, fileName);
+    downloadObject(
+        DownloadObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .fileName(fileName)
+            .build());
   }
 
   /**
@@ -2010,7 +2076,52 @@ public class MinioClient {
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param sse SSE-C type server-side encryption.
+   * @param ssec SSE-C type server-side encryption.
+   * @param fileName Name of the file.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObject(GetObjectArgs)}
+   */
+  @Deprecated
+  public void getObject(
+      String bucketName, String objectName, ServerSideEncryptionCustomerKey ssec, String fileName)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    downloadObject(
+        DownloadObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .ssec(ssec)
+            .fileName(fileName)
+            .build());
+  }
+
+  /**
+   * Downloads data of a SSE-C encrypted object to file.
+   *
+   * <pre>Example:{@code
+   * minioClient.downloadObject(
+   *   GetObjectArgs.builder()
+   *     .bucket("my-bucketname")
+   *     .object("my-objectname")
+   *     .ssec(ssec)
+   *     .fileName("my-filename")
+   *     .build());
+   * }</pre>
+   *
+   * @param args Object of {@link GetObjectArgs}
+   * @param objectName Object name in the bucket.
+   * @param ssec SSE-C type server-side encryption.
    * @param fileName Name of the file.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -2024,21 +2135,21 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void getObject(
-      String bucketName, String objectName, ServerSideEncryption sse, String fileName)
+  public void downloadObject(DownloadObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    checkReadRequestSse(sse);
-
+    String fileName = args.fileName();
     Path filePath = Paths.get(fileName);
     boolean fileExists = Files.exists(filePath);
 
-    if (fileExists && !Files.isRegularFile(filePath)) {
-      throw new IllegalArgumentException(fileName + ": not a regular file");
-    }
-
-    ObjectStat objectStat = statObject(bucketName, objectName, sse);
+    ObjectStat objectStat =
+        statObject(
+            StatObjectArgs.builder()
+                .bucket(args.bucket())
+                .object(args.object())
+                .ssec(args.ssec())
+                .build());
     long length = objectStat.length();
     String etag = objectStat.etag();
 
@@ -2068,7 +2179,7 @@ public class MinioClient {
       } else if (fileSize > length) {
         throw new IllegalArgumentException(
             "Source object, '"
-                + objectName
+                + args.object()
                 + "', size:"
                 + length
                 + " is smaller than the destination file, '"
@@ -2086,7 +2197,13 @@ public class MinioClient {
     InputStream is = null;
     OutputStream os = null;
     try {
-      is = getObject(bucketName, objectName, tempFileSize, null, sse);
+      is =
+          getObject(
+              GetObjectArgs.builder()
+                  .bucket(args.bucket())
+                  .object(args.object())
+                  .ssec(args.ssec())
+                  .build());
       os =
           Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       long bytesWritten = ByteStreams.copy(is, os);
@@ -2285,9 +2402,9 @@ public class MinioClient {
     for (int i = 0; i < sources.size(); i++) {
       ComposeSource src = sources.get(i);
 
-      checkReadRequestSse(src.sse());
+      checkReadRequestSse(src.ssec());
 
-      ObjectStat stat = statObject(src.bucketName(), src.objectName(), src.sse());
+      ObjectStat stat = statObject(src.bucketName(), src.objectName(), src.ssec());
       src.buildHeaders(stat.length(), stat.etag());
 
       if (i != 0 && src.headers().containsKey("x-amz-meta-x-amz-key")) {
@@ -2379,7 +2496,7 @@ public class MinioClient {
           sse,
           src.bucketName(),
           src.objectName(),
-          src.sse(),
+          src.ssec(),
           src.copyConditions());
       return;
     }
@@ -2980,6 +3097,7 @@ public class MinioClient {
    * @throws XmlParserException upon parsing response xml
    * @deprecated use {@link #listObjects(ListObjectsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Item>> listObjects(final String bucketName) throws XmlParserException {
     return listObjects(bucketName, null);
   }
@@ -3002,6 +3120,7 @@ public class MinioClient {
    * @throws XmlParserException upon parsing response xml
    * @deprecated use {@link #listObjects(ListObjectsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Item>> listObjects(final String bucketName, final String prefix)
       throws XmlParserException {
     // list all objects recursively
@@ -3030,6 +3149,7 @@ public class MinioClient {
    * @see #listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
    * @deprecated use {@link #listObjects(ListObjectsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Item>> listObjects(
       final String bucketName, final String prefix, final boolean recursive) {
     return listObjects(bucketName, prefix, recursive, false);
@@ -3058,6 +3178,7 @@ public class MinioClient {
    * @see #listObjects(String bucketName, String prefix, boolean recursive)
    * @deprecated use {@link #listObjects(ListObjectsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Item>> listObjects(
       final String bucketName,
       final String prefix,
@@ -3092,6 +3213,7 @@ public class MinioClient {
    * @see #listObjects(String bucketName, String prefix, boolean recursive)
    * @deprecated use {@link #listObjects(ListObjectsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Item>> listObjects(
       final String bucketName,
       final String prefix,
@@ -5395,7 +5517,7 @@ public class MinioClient {
    * @param requestProgress Flag to request progress information.
    * @param scanStartRange scan start range of the object.
    * @param scanEndRange scan end range of the object.
-   * @param sse SSE-C type server-side encryption.
+   * @param ssec SSE-C type server-side encryption.
    * @return {@link SelectResponseStream} - Contains filtered records and progress.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -5418,7 +5540,7 @@ public class MinioClient {
       boolean requestProgress,
       Long scanStartRange,
       Long scanEndRange,
-      ServerSideEncryption sse)
+      ServerSideEncryptionCustomerKey ssec)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
@@ -5426,11 +5548,11 @@ public class MinioClient {
       throw new IllegalArgumentException("bucket name cannot be empty");
     }
     checkObjectName(objectName);
-    checkReadRequestSse(sse);
+    checkReadRequestSse(ssec);
 
     Map<String, String> headerMap = null;
-    if (sse != null) {
-      headerMap = sse.headers();
+    if (ssec != null) {
+      headerMap = ssec.headers();
     }
 
     Map<String, String> queryParamMap = new HashMap<>();

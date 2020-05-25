@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -37,7 +38,12 @@ public class DownloadObject {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Download 'my-objectname' from 'my-bucketname' to 'my-filename'
-      minioClient.getObject("my-bucketname", "my-objectname", "my-filename");
+      minioClient.downloadObject(
+          DownloadObjectArgs.builder()
+              .bucket("my-bucketname")
+              .object("my-objectname")
+              .fileName("my-filename")
+              .build());
       System.out.println("my-objectname is successfully downloaded to my-filename");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

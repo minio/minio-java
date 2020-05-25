@@ -20,7 +20,6 @@ import com.google.common.io.BaseEncoding;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -74,64 +73,6 @@ public abstract class ServerSideEncryption implements Destroyable {
     return !key.isDestroyed() && key.getAlgorithm().equals("AES") && key.getEncoded().length == 32;
   }
 
-  static class ServerSideEncryptionWithCustomerKey extends ServerSideEncryption {
-    final SecretKey secretKey;
-    final Map<String, String> headers;
-    final Map<String, String> copySourceHeaders;
-
-    public ServerSideEncryptionWithCustomerKey(SecretKey key)
-        throws InvalidKeyException, NoSuchAlgorithmException {
-      this.secretKey = key;
-
-      byte[] keyBytes = key.getEncoded();
-      MessageDigest md5 = MessageDigest.getInstance("MD5");
-      md5.update(keyBytes);
-      String customerKey = BaseEncoding.base64().encode(keyBytes);
-      String customerKeyMd5 = BaseEncoding.base64().encode(md5.digest());
-
-      Map<String, String> map = new HashMap<>();
-      map.put("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256");
-      map.put("X-Amz-Server-Side-Encryption-Customer-Key", customerKey);
-      map.put("X-Amz-Server-Side-Encryption-Customer-Key-Md5", customerKeyMd5);
-      this.headers = Collections.unmodifiableMap(map);
-
-      map = new HashMap<>();
-      map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Algorithm", "AES256");
-      map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key", customerKey);
-      map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key-Md5", customerKeyMd5);
-      this.copySourceHeaders = Collections.unmodifiableMap(map);
-    }
-
-    @Override
-    public final Type type() {
-      return Type.SSE_C;
-    }
-
-    @Override
-    public final Map<String, String> headers() {
-      if (this.isDestroyed()) {
-        throw new IllegalStateException("object is already destroyed");
-      }
-
-      return headers;
-    }
-
-    @Override
-    public final Map<String, String> copySourceHeaders() {
-      if (this.isDestroyed()) {
-        throw new IllegalStateException("object is already destroyed");
-      }
-
-      return copySourceHeaders;
-    }
-
-    @Override
-    public final void destroy() throws DestroyFailedException {
-      secretKey.destroy();
-      this.destroyed = true;
-    }
-  }
-
   /**
    * Create a new server-side-encryption object for encryption with customer provided keys (a.k.a.
    * SSE-C).
@@ -141,13 +82,13 @@ public abstract class ServerSideEncryption implements Destroyable {
    * @throws InvalidKeyException if the provided secret key is not a 256 bit AES key.
    * @throws NoSuchAlgorithmException if the crypto provider does not implement MD5.
    */
-  public static ServerSideEncryption withCustomerKey(SecretKey key)
+  public static ServerSideEncryptionCustomerKey withCustomerKey(SecretKey key)
       throws InvalidKeyException, NoSuchAlgorithmException {
     if (!isCustomerKeyValid(key)) {
       throw new InvalidKeyException("The secret key is not a 256 bit AES key");
     }
 
-    return new ServerSideEncryptionWithCustomerKey(key);
+    return new ServerSideEncryptionCustomerKey(key);
   }
 
   static final class ServerSideEncryptionS3 extends ServerSideEncryption {
