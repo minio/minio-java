@@ -19,24 +19,27 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | Bucket operations                                             | Object operations                                       |
 |---------------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                               | [`composeObject`](#composeObject)                       |
-| [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`copyObject`](#copyObject)                             |
-| [`disableVersioning`](#disableVersioning)                     | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
-| [`enableVersioning`](#enableVersioning)                       | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObject`](#getObject)                               |
-| [`getBucketNotification`](#getBucketNotification)             | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketPolicy`](#getBucketPolicy)                         | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getDefaultRetention`](#getDefaultRetention)                 | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`listBuckets`](#listBuckets)                                 | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`listenBucketNotification`](#listenBucketNotification)       | [`listObjects`](#listObjects)                           |
-| [`listIncompleteUploads`](#listIncompleteUploads)             | [`presignedGetObject`](#presignedGetObject)             |
-| [`makeBucket`](#makeBucket)                                   | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`presignedPutObject`](#presignedPutObject)             |
-| [`removeBucket`](#removeBucket)                               | [`putObject`](#putObject)                               |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`removeObject`](#removeObject)                         |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`removeObjects`](#removeObjects)                       |
-| [`setBucketNotification`](#setBucketNotification)             | [`selectObjectContent`](#selectObjectContent)           |
-| [`setBucketPolicy`](#setBucketPolicy)                         | [`setObjectRetention`](#setObjectRetention)             |
-| [`setDefaultRetention`](#setDefaultRetention)                 | [`statObject`](#statObject)                             |
+| [`deleteBucketEncryption`](#deleteBucketEncryption)           | [`copyObject`](#copyObject)                             |
+| [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
+| [`disableVersioning`](#disableVersioning)                     | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
+| [`enableVersioning`](#enableVersioning)                       | [`getObject`](#getObject)                               |
+| [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectRetention`](#getObjectRetention)             |
+| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectUrl`](#getObjectUrl)                         |
+| [`getBucketNotification`](#getBucketNotification)             | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketPolicy`](#getBucketPolicy)                         | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getDefaultRetention`](#getDefaultRetention)                 | [`listObjects`](#listObjects)                           |
+| [`listBuckets`](#listBuckets)                                 | [`presignedGetObject`](#presignedGetObject)             |
+| [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`listIncompleteUploads`](#listIncompleteUploads)             | [`presignedPutObject`](#presignedPutObject)             |
+| [`makeBucket`](#makeBucket)                                   | [`putObject`](#putObject)                               |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`removeObject`](#removeObject)                         |
+| [`removeBucket`](#removeBucket)                               | [`removeObjects`](#removeObjects)                       |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`selectObjectContent`](#selectObjectContent)           |
+| [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectRetention`](#setObjectRetention)             |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`statObject`](#statObject)                             |
+| [`setBucketNotification`](#setBucketNotification)             |                                                         |
+| [`setBucketPolicy`](#setBucketPolicy)                         |                                                         |
+| [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
 
 ## 1. Constructors
 |                                                                                                                          |
@@ -281,6 +284,23 @@ if (found) {
 }
 ```
 
+<a name="deleteBucketEncryption"></a>
+### deleteBucketEncryption(DeleteBucketEncryptionArgs args)
+`private void deleteBucketEncryption(DeleteBucketEncryptionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketEncryption-io.minio.DeleteBucketEncryptionArgs-)_
+
+Deletes encryption configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                           | Description |
+|:----------|:-------------------------------|:------------|
+| ``args``  | _[DeleteBucketEncryptionArgs]_ | Arguments.  |
+
+__Example__
+```java
+minioClient.deleteBucketEncryption(
+    DeleteBucketEncryptionArgs.builder().bucket("my-bucketname").build());
+```
+
 <a name="deleteBucketLifeCycle"></a>
 ### deleteBucketLifeCycle(String bucketName)
 `private void deleteBucketLifeCycle(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketLifeCycle-java.lang.String-)_
@@ -329,6 +349,28 @@ __Parameters__
 __Example__
 ```java
 minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucket").build());
+```
+
+<a name="getBucketEncryption"></a>
+### getBucketEncryption(GetBucketEncryptionArgs args)
+`public SseConfiguration getBucketEncryption(GetBucketEncryptionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketEncryption-io.minio.GetBucketEncryptionArgs-)_
+
+Gets encryption configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                        | Description |
+|:----------|:----------------------------|:------------|
+| ``args``  | _[GetBucketEncryptionArgs]_ | Arguments.  |
+
+| Returns                                                      |
+|:-------------------------------------------------------------|
+| _[SseConfiguration]_ - Server-side encryption configuration. |
+
+__Example__
+```java
+SseConfiguration config =
+    minioClient.getBucketEncryption(
+        GetBucketEncryptionArgs.builder().bucket("my-bucketname").build());
 ```
 
 <a name="getBucketLifeCycle"></a>
@@ -661,6 +703,23 @@ __Example__
 ```java
 minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
 ```
+
+<a name="setBucketEncryption"></a>
+### setBucketEncryption(SetBucketEncryptionArgs args)
+`public void setBucketEncryption(SetBucketEncryptionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketEncryption-io.minio.SetBucketEncryptionArgs-)_
+
+Sets encryption configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                        | Description |
+|:----------|:----------------------------|:------------|
+| ``args``  | _[SetBucketEncryptionArgs]_ | Arguments.  |
+
+__Example__
+```java
+minioClient.setBucketEncryption(
+    SetBucketEncryptionArgs.builder().bucket("my-bucketname").config(config).build());
+ ```
 
 <a name="setBucketLifeCycle"></a>
 ### setBucketLifeCycle(String bucketName, String lifeCycle)
@@ -1564,3 +1623,7 @@ ObjectStat objectStat =
 [Method]: http://minio.github.io/minio-java/io/minio/http/Method.html
 [StatObjectArgs]: http://minio.github.io/minio-java/io/minio/StatObjectArgs.html
 [RemoveObjectArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectArgs.html
+[SseConfiguration]: http://minio.github.io/minio-java/io/minio/messages/SseConfiguration.html
+[DeleteBucketEncryptionArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketEncryptionArgs.html
+[GetBucketEncryptionArgs]: http://minio.github.io/minio-java/io/minio/GetBucketEncryptionArgs.html
+[SetBucketEncryptionArgs]: http://minio.github.io/minio-java/io/minio/SetBucketEncryptionArgs.html

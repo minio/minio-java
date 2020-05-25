@@ -22,9 +22,11 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.CloseableIterator;
 import io.minio.ComposeSource;
 import io.minio.CopyConditions;
+import io.minio.DeleteBucketEncryptionArgs;
 import io.minio.DisableVersioningArgs;
 import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
+import io.minio.GetBucketEncryptionArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -36,6 +38,7 @@ import io.minio.RemoveObjectArgs;
 import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
+import io.minio.SetBucketEncryptionArgs;
 import io.minio.StatObjectArgs;
 import io.minio.Time;
 import io.minio.errors.ErrorResponseException;
@@ -54,6 +57,9 @@ import io.minio.messages.QuoteFields;
 import io.minio.messages.RetentionDurationDays;
 import io.minio.messages.RetentionDurationYears;
 import io.minio.messages.RetentionMode;
+import io.minio.messages.SseAlgorithm;
+import io.minio.messages.SseConfiguration;
+import io.minio.messages.SseConfigurationRule;
 import io.minio.messages.Stats;
 import io.minio.messages.TopicConfiguration;
 import io.minio.messages.Upload;
@@ -276,6 +282,24 @@ public class FunctionalTest {
     } finally {
       response.close();
     }
+  }
+
+  private static void handleException(String methodName, long startTime, Exception e)
+      throws Exception {
+    if (e instanceof ErrorResponseException) {
+      if (((ErrorResponseException) e).errorResponse().errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+        mintIgnoredLog(methodName, null, startTime);
+        return;
+      }
+    }
+
+    mintFailedLog(
+        methodName,
+        null,
+        startTime,
+        null,
+        e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+    throw e;
   }
 
   /** Test: makeBucket(MakeBucketArgs args). */
@@ -4254,6 +4278,116 @@ public class FunctionalTest {
     }
   }
 
+  /** Test: setBucketEncryption(SetBucketEncryptionArgs args). */
+  public static void setBucketEncryption_test() throws Exception {
+    String methodName = "setBucketEncryption(SetBucketEncryptionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        List<SseConfigurationRule> ruleList = new LinkedList<>();
+        ruleList.add(new SseConfigurationRule(null, SseAlgorithm.AES256));
+        SseConfiguration config = new SseConfiguration(ruleList);
+        client.setBucketEncryption(
+            SetBucketEncryptionArgs.builder().bucket(bucketName).config(config).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
+  /** Test: getBucketEncryption(GetBucketEncryptionArgs args). */
+  public static void getBucketEncryption_test() throws Exception {
+    String methodName = "getBucketEncryption(GetBucketEncryptionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        SseConfiguration config =
+            client.getBucketEncryption(
+                GetBucketEncryptionArgs.builder().bucket(bucketName).build());
+        if (config.rules().size() != 0) {
+          throw new Exception("expected: <empty rules>, got: " + config.rules());
+        }
+
+        List<SseConfigurationRule> ruleList = new LinkedList<>();
+        ruleList.add(new SseConfigurationRule(null, SseAlgorithm.AES256));
+        SseConfiguration expectedConfig = new SseConfiguration(ruleList);
+        client.setBucketEncryption(
+            SetBucketEncryptionArgs.builder().bucket(bucketName).config(expectedConfig).build());
+        config =
+            client.getBucketEncryption(
+                GetBucketEncryptionArgs.builder().bucket(bucketName).build());
+        if (config.rules().size() != 1) {
+          throw new Exception("expected: 1, got: " + config.rules().size());
+        }
+        if (config.rules().get(0).sseAlgorithm() != expectedConfig.rules().get(0).sseAlgorithm()) {
+          throw new Exception(
+              "expected: "
+                  + expectedConfig.rules().get(0).sseAlgorithm()
+                  + ", got: "
+                  + config.rules().get(0).sseAlgorithm());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
+  /** Test: deleteBucketEncryption(DeleteBucketEncryptionArgs args). */
+  public static void deleteBucketEncryption_test() throws Exception {
+    String methodName = "deleteBucketEncryption(DeleteBucketEncryptionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        // Delete should succeed.
+        client.deleteBucketEncryption(
+            DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
+
+        List<SseConfigurationRule> ruleList = new LinkedList<>();
+        ruleList.add(new SseConfigurationRule(null, SseAlgorithm.AES256));
+        SseConfiguration config = new SseConfiguration(ruleList);
+        client.setBucketEncryption(
+            SetBucketEncryptionArgs.builder().bucket(bucketName).config(config).build());
+        client.deleteBucketEncryption(
+            DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
+        config =
+            client.getBucketEncryption(
+                GetBucketEncryptionArgs.builder().bucket(bucketName).build());
+        if (config.rules().size() != 0) {
+          throw new Exception("expected: <empty rules>, got: " + config.rules());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
   /** runTests: runs as much as possible of test combinations. */
   public static void runTests() throws Exception {
     makeBucket_test1();
@@ -4342,6 +4476,10 @@ public class FunctionalTest {
     getDefaultRetention_test();
 
     selectObjectContent_test1();
+
+    setBucketEncryption_test();
+    getBucketEncryption_test();
+    deleteBucketEncryption_test();
 
     // SSE_C tests will only work over TLS connection
     if (endpoint.toLowerCase(Locale.US).contains("https://")) {
@@ -4471,6 +4609,10 @@ public class FunctionalTest {
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");
     env.put("MINIO_SECRET_KEY", "minio123");
+    env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
+    env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
+    env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
+    env.put("MINIO_KMS_KES_KEY_NAME", "my-minio-key");
 
     pb.redirectErrorStream(true);
     pb.redirectOutput(ProcessBuilder.Redirect.to(new File(MINIO_BINARY + ".log")));

@@ -69,6 +69,7 @@ import io.minio.messages.Part;
 import io.minio.messages.Prefix;
 import io.minio.messages.Retention;
 import io.minio.messages.SelectObjectContentRequest;
+import io.minio.messages.SseConfiguration;
 import io.minio.messages.Upload;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
@@ -5143,6 +5144,128 @@ public class MinioClient {
             sqlExpression, requestProgress, is, os, scanStartRange, scanEndRange);
     Response response = executePost(bucketName, objectName, headerMap, queryParamMap, request);
     return new SelectResponseStream(response.body().byteStream());
+  }
+
+  /**
+   * Sets encryption configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.setBucketEncryption(
+   *     SetBucketEncryptionArgs.builder().bucket("my-bucketname").config(config).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketEncryptionArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketEncryption(SetBucketEncryptionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("encryption", "");
+    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    response.close();
+  }
+
+  /**
+   * Gets encryption configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * SseConfiguration config =
+   *     minioClient.getBucketEncryption(
+   *         GetBucketEncryptionArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketEncryptionArgs} object.
+   * @return {@link SseConfiguration} - Server-side encryption configuration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public SseConfiguration getBucketEncryption(GetBucketEncryptionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("encryption", "");
+    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+      return Xml.unmarshal(SseConfiguration.class, response.body().charStream());
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode()
+          != ErrorCode.SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR) {
+        throw e;
+      }
+    }
+
+    return new SseConfiguration();
+  }
+
+  /**
+   * Deletes encryption configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteBucketEncryption(
+   *     DeleteBucketEncryptionArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketEncryptionArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketEncryption(DeleteBucketEncryptionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("encryption", "");
+    try {
+      Response response = executeDelete(args.bucket(), "", queryParamMap);
+      response.close();
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode()
+          != ErrorCode.SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR) {
+        throw e;
+      }
+    }
   }
 
   private long getAvailableSize(Object data, long expectedReadSize)
