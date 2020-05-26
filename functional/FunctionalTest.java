@@ -23,10 +23,14 @@ import io.minio.CloseableIterator;
 import io.minio.ComposeSource;
 import io.minio.CopyConditions;
 import io.minio.DeleteBucketEncryptionArgs;
+import io.minio.DeleteBucketTagsArgs;
+import io.minio.DeleteObjectTagsArgs;
 import io.minio.DisableVersioningArgs;
 import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
+import io.minio.GetBucketTagsArgs;
+import io.minio.GetObjectTagsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -39,6 +43,8 @@ import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
 import io.minio.SetBucketEncryptionArgs;
+import io.minio.SetBucketTagsArgs;
+import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
 import io.minio.Time;
 import io.minio.errors.ErrorResponseException;
@@ -61,6 +67,7 @@ import io.minio.messages.SseAlgorithm;
 import io.minio.messages.SseConfiguration;
 import io.minio.messages.SseConfigurationRule;
 import io.minio.messages.Stats;
+import io.minio.messages.Tags;
 import io.minio.messages.TopicConfiguration;
 import io.minio.messages.Upload;
 import java.io.ByteArrayInputStream;
@@ -4388,6 +4395,225 @@ public class FunctionalTest {
     }
   }
 
+  /** Test: setBucketTags(SetBucketTagsArgs args). */
+  public static void setBucketTags_test() throws Exception {
+    String methodName = "setBucketTags(SetBucketTagsArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        Map<String, String> map = new HashMap<>();
+        map.put("Project", "Project One");
+        map.put("User", "jsmith");
+        client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
+  /** Test: getBucketTags(GetBucketTagsArgs args). */
+  public static void getBucketTags_test() throws Exception {
+    String methodName = "getBucketTags(GetBucketTagsArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        Map<String, String> map = new HashMap<>();
+        Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
+        if (!map.equals(tags.get())) {
+          throw new Exception("expected: " + map + ", got: " + tags.get());
+        }
+
+        map.put("Project", "Project One");
+        map.put("User", "jsmith");
+        client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
+        tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
+        if (!map.equals(tags.get())) {
+          throw new Exception("expected: " + map + ", got: " + tags.get());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
+  /** Test: deleteBucketTags(DeleteBucketTagsArgs args). */
+  public static void deleteBucketTags_test() throws Exception {
+    String methodName = "deleteBucketTags(DeleteBucketTagsArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        // Delete should succeed.
+        client.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket(bucketName).build());
+
+        Map<String, String> map = new HashMap<>();
+        map.put("Project", "Project One");
+        map.put("User", "jsmith");
+        client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
+        client.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket(bucketName).build());
+        Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
+        if (tags.get().size() != 0) {
+          throw new Exception("expected: <empty map>" + ", got: " + tags.get());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
+  /** Test: setObjectTags(String bucketName, Tags tags). */
+  public static void setObjectTags_test() throws Exception {
+    String methodName = "setObjectTags(String bucketName, String bucketName, Tags tags)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.putObject(
+            bucketName,
+            objectName,
+            new ContentInputStream(1 * KB),
+            new PutObjectOptions(1 * KB, -1));
+        Map<String, String> map = new HashMap<>();
+        map.put("Project", "Project One");
+        map.put("User", "jsmith");
+        client.setObjectTags(
+            SetObjectTagsArgs.builder().bucket(bucketName).object(objectName).tags(map).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
+  /** Test: getObjectTags(String bucketName). */
+  public static void getObjectTags_test() throws Exception {
+    String methodName = "getObjectTags(String bucketName, String bucketName)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.putObject(
+            bucketName,
+            objectName,
+            new ContentInputStream(1 * KB),
+            new PutObjectOptions(1 * KB, -1));
+        Map<String, String> map = new HashMap<>();
+        Tags tags =
+            client.getObjectTags(
+                GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
+        if (!map.equals(tags.get())) {
+          throw new Exception("expected: " + map + ", got: " + tags.get());
+        }
+
+        map.put("Project", "Project One");
+        map.put("User", "jsmith");
+        client.setObjectTags(
+            SetObjectTagsArgs.builder().bucket(bucketName).object(objectName).tags(map).build());
+        tags =
+            client.getObjectTags(
+                GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
+        if (!map.equals(tags.get())) {
+          throw new Exception("expected: " + map + ", got: " + tags.get());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
+  /** Test: deleteObjectTags(String bucketName). */
+  public static void deleteObjectTags_test() throws Exception {
+    String methodName = "deleteObjectTags(String bucketName, String objectName)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.putObject(
+            bucketName,
+            objectName,
+            new ContentInputStream(1 * KB),
+            new PutObjectOptions(1 * KB, -1));
+        // Delete should succeed.
+        client.deleteObjectTags(
+            DeleteObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
+
+        Map<String, String> map = new HashMap<>();
+        map.put("Project", "Project One");
+        map.put("User", "jsmith");
+        client.setObjectTags(
+            SetObjectTagsArgs.builder().bucket(bucketName).object(objectName).tags(map).build());
+        client.deleteObjectTags(
+            DeleteObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
+        Tags tags =
+            client.getObjectTags(
+                GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
+        if (tags.get().size() != 0) {
+          throw new Exception("expected: <empty map>" + ", got: " + tags.get());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, startTime, e);
+    }
+  }
+
   /** runTests: runs as much as possible of test combinations. */
   public static void runTests() throws Exception {
     makeBucket_test1();
@@ -4481,6 +4707,13 @@ public class FunctionalTest {
     getBucketEncryption_test();
     deleteBucketEncryption_test();
 
+    setBucketTags_test();
+    getBucketTags_test();
+    deleteBucketTags_test();
+    setObjectTags_test();
+    getObjectTags_test();
+    deleteObjectTags_test();
+
     // SSE_C tests will only work over TLS connection
     if (endpoint.toLowerCase(Locale.US).contains("https://")) {
       getObject_test7();
@@ -4546,6 +4779,12 @@ public class FunctionalTest {
     setBucketPolicy_test1();
     selectObjectContent_test1();
     listenBucketNotification_test1();
+    setBucketTags_test();
+    getBucketTags_test();
+    deleteBucketTags_test();
+    setObjectTags_test();
+    getObjectTags_test();
+    deleteObjectTags_test();
 
     teardown();
   }

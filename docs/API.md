@@ -20,13 +20,15 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 |---------------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                               | [`composeObject`](#composeObject)                       |
 | [`deleteBucketEncryption`](#deleteBucketEncryption)           | [`copyObject`](#copyObject)                             |
-| [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
+| [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`deleteObjectTags`](#deleteObjectTags)                 |
+| [`deleteBucketTags`](#deleteBucketTags)                       | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
 | [`disableVersioning`](#disableVersioning)                     | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
 | [`enableVersioning`](#enableVersioning)                       | [`getObject`](#getObject)                               |
 | [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getBucketNotification`](#getBucketNotification)             | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketPolicy`](#getBucketPolicy)                         | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectTags`](#getObjectTags)                       |
+| [`getBucketNotification`](#getBucketNotification)             | [`getObjectUrl`](#getObjectUrl)                         |
+| [`getBucketPolicy`](#getBucketPolicy)                         | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketTags`](#getBucketTags)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
 | [`getDefaultRetention`](#getDefaultRetention)                 | [`listObjects`](#listObjects)                           |
 | [`listBuckets`](#listBuckets)                                 | [`presignedGetObject`](#presignedGetObject)             |
 | [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPostPolicy`](#presignedPostPolicy)           |
@@ -36,9 +38,10 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`removeBucket`](#removeBucket)                               | [`removeObjects`](#removeObjects)                       |
 | [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`selectObjectContent`](#selectObjectContent)           |
 | [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectRetention`](#setObjectRetention)             |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`statObject`](#statObject)                             |
-| [`setBucketNotification`](#setBucketNotification)             |                                                         |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketNotification`](#setBucketNotification)             | [`statObject`](#statObject)                             |
 | [`setBucketPolicy`](#setBucketPolicy)                         |                                                         |
+| [`setBucketTags`](#setBucketTags)                             |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
 
 ## 1. Constructors
@@ -317,6 +320,22 @@ __Example__
 minioClient.deleteBucketLifeCycle("my-bucketname");
 ```
 
+<a name="deleteBucketTags"></a>
+### deleteBucketTags(DeleteBucketTagsArgs args)
+`private void deleteBucketTags(DeleteBucketTagsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketTags-io.minio.DeleteBucketTagsArgs-)_
+
+Deletes tags of a bucket.
+
+__Parameters__
+| Parameter | Type                     | Description |
+|:----------|:-------------------------|:------------|
+| ``args``  | _[DeleteBucketTagsArgs]_ | Arguments.  |
+
+__Example__
+```java
+minioClient.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket("my-bucketname").build());
+```
+
 <a name="disableVersioning"></a>
 ### disableVersioning(DisableVersioningArgs args)
 `public void disableVersioning(DisableVersioningArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.DisableVersioningArgs-)_
@@ -433,6 +452,27 @@ __Parameters__
 __Example__
 ```java
 String config = minioClient.getBucketPolicy("my-bucketname");
+```
+
+<a name="getBucketTags"></a>
+### getBucketTags(GetBucketTagsArgs args)
+`public Tags getBucketTags(GetBucketTagsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.htmlgetBucketTags-io.minio.GetBucketTagsArgs-)_
+
+Gets tags of a bucket.
+
+__Parameters__
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[GetBucketTagsArgs]_ | Arguments.  |
+
+
+| Returns          |
+|:-----------------|
+| _[Tags]_ - tags. |
+
+__Example__
+```java
+Tags tags = minioClient.getBucketTags(GetBucketTagsArgs.builder().bucket("my-bucketname").build());
 ```
 
 <a name="getDefaultRetention"></a>
@@ -824,6 +864,26 @@ __Example__
 minioClient.setBucketPolicy("my-bucketname", policyJson);
 ```
 
+<a name="setBucketTags"></a>
+### setBucketTags(SetBucketTagsArgs args)
+`public void setBucketTags(SetBucketTagsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketTags-io.minio.SetBucketTagsArgs-)_
+
+Sets tags to a bucket.
+
+__Parameters__
+
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[SetBucketTagsArgs]_ | Arguments.  |
+
+__Example__
+```java
+Map<String, String> map = new HashMap<>();
+map.put("Project", "Project One");
+map.put("User", "jsmith");
+minioClient.setBucketTags(SetBucketTagsArgs.builder().bucket("my-bucketname").tags(map).build());
+```
+
 <a name="setDefaultRetention"></a>
 ### setDefaultRetention(String bucketName, ObjectLockConfiguration config)
 `public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setDefaultRetention-java.lang.String-io.minio.messages.ObjectLockConfiguration-)_
@@ -918,6 +978,23 @@ minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-
 // copy conditions.
 minioClient.copyObject("my-bucketname", "my-objectname", headers, null, "my-source-bucketname", null, null,
     conditions);
+```
+
+<a name="deleteObjectTags"></a>
+### deleteObjectTags(DeleteObjectTagsArgs args)
+`private void deleteObjectTags(DeleteObjectTagsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteObjectTags-io.minio.DeleteObjectTagsArgs-)_
+
+Deletes tags of an object.
+
+__Parameters__
+| Parameter | Type                     | Description |
+|:----------|:-------------------------|:------------|
+| ``args``  | _[DeleteObjectTagsArgs]_ | Arguments.  |
+
+__Example__
+```java
+minioClient.deleteObjectTags(
+    DeleteObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
 ```
 
 <a name="disableObjectLegalHold"></a>
@@ -1136,6 +1213,28 @@ Gets retention configuration of an object.
  ```java
 Retention retention = minioClient.getObjectRetention("my-bucketname", "my-objectname", null);
 System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());
+```
+
+<a name="getObjectTags"></a>
+### getObjectTags(GetObjectTagsArgs args)
+`public Tags getObjectTags(GetObjectTagsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectTags-io.minio.GetObjectTagsArgs-)_
+
+Gets tags of an object.
+
+__Parameters__
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[GetObjectTagsArgs]_ | Arguments.  |
+
+
+| Returns          |
+|:-----------------|
+| _[Tags]_ - tags. |
+
+__Example__
+```java
+Tags tags = minioClient.getObjectTags(
+    GetObjectTagsArgs.builder().bucket("my-bucketname").object("my-objectname").build());
 ```
 
  <a name="getObjectUrl"></a>
@@ -1529,6 +1628,27 @@ Retention retention = new Retention(RetentionMode.COMPLIANCE, ZonedDateTime.now(
 minioClient.setObjectRetention("my-bucketname", "my-objectname", null, true, retention);
 ```
 
+<a name="setObjectTags"></a>
+### setObjectTags(SetObjectTagsArgs args)
+`public void setObjectTags(SetObjectTagsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setObjectTags-io.minio.SetObjectTagsArgs-)_
+
+Sets tags to an object.
+
+__Parameters__
+
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[SetObjectTagsArgs]_ | Arguments.  |
+
+__Example__
+```java
+Map<String, String> map = new HashMap<>();
+map.put("Project", "Project One");
+map.put("User", "jsmith");
+minioClient.setObjectTags(
+    SetObjectTagsArgs.builder().bucket("my-bucketname").object("my-objectname").tags(map).build());
+```
+
 <a name="statObject"></a>
 ### statObject(StatObjectArgs args)
 `public ObjectStat statObject(StatObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-io.minio.StatObjectArgs-)_
@@ -1627,3 +1747,10 @@ ObjectStat objectStat =
 [DeleteBucketEncryptionArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketEncryptionArgs.html
 [GetBucketEncryptionArgs]: http://minio.github.io/minio-java/io/minio/GetBucketEncryptionArgs.html
 [SetBucketEncryptionArgs]: http://minio.github.io/minio-java/io/minio/SetBucketEncryptionArgs.html
+[Tags]: http://minio.github.io/minio-java/io/minio/messages/Tags.html
+[DeleteBucketTagsArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketTagsArgs.html
+[GetBucketTagsArgs]: http://minio.github.io/minio-java/io/minio/GetBucketTagsArgs.html
+[SetBucketTagsArgs]: http://minio.github.io/minio-java/io/minio/SetBucketTagsArgs.html
+[DeleteObjectTagsArgs]: http://minio.github.io/minio-java/io/minio/DeleteObjectTagsArgs.html
+[GetObjectTagsArgs]: http://minio.github.io/minio-java/io/minio/GetObjectTagsArgs.html
+[SetObjectTagsArgs]: http://minio.github.io/minio-java/io/minio/SetObjectTagsArgs.html
