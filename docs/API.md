@@ -16,6 +16,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
     "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 ```
 
+<<<<<<< HEAD
 | Bucket operations                                       | Object operations                                       |
 |---------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                         | [`composeObject`](#composeObject)                       |
@@ -46,6 +47,35 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`setBucketPolicy`](#setBucketPolicy)                   |                                                         |
 | [`setBucketTags`](#setBucketTags)                       |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)           |                                                         |
+=======
+| Bucket operations                                             | Object operations                                       |
+|---------------------------------------------------------------|---------------------------------------------------------|
+| [`bucketExists`](#bucketExists)                               | [`composeObject`](#composeObject)                       |
+| [`deleteBucketEncryption`](#deleteBucketEncryption)           | [`copyObject`](#copyObject)                             |
+| [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`deleteObjectTags`](#deleteObjectTags)                 |
+| [`deleteBucketTags`](#deleteBucketTags)                       | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
+| [`disableVersioning`](#disableVersioning)                     | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
+| [`enableVersioning`](#enableVersioning)                       | [`getObject`](#getObject)                               |
+| [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectRetention`](#getObjectRetention)             |
+| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectTags`](#getObjectTags)                       |
+| [`getBucketNotification`](#getBucketNotification)             | [`getObjectUrl`](#getObjectUrl)                         |
+| [`getBucketPolicy`](#getBucketPolicy)                         | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketTags`](#getBucketTags)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getDefaultRetention`](#getDefaultRetention)                 | [`listObjects`](#listObjects)                           |
+| [`listBuckets`](#listBuckets)                                 | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`listenBucketNotification`](#listenBucketNotification)       | [`putObject`](#putObject)                               |
+| [`listIncompleteUploads`](#listIncompleteUploads)             | [`removeObject`](#removeObject)                         |
+| [`makeBucket`](#makeBucket)                                   | [`removeObjects`](#removeObjects)                       |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`selectObjectContent`](#selectObjectContent)           |
+| [`removeBucket`](#removeBucket)                               | [`setObjectRetention`](#setObjectRetention)             |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketEncryption`](#setBucketEncryption)                 | [`statObject`](#statObject)                             |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)                   |                                                         |
+| [`setBucketNotification`](#setBucketNotification)             |                                                         |
+| [`setBucketPolicy`](#setBucketPolicy)                         |                                                         |
+| [`setBucketTags`](#setBucketTags)                             |                                                         |
+| [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
+>>>>>>> address review comments
 
 ## 1. Constructors
 |                                                                                                                          |
@@ -1274,15 +1304,17 @@ Tags tags = minioClient.getObjectTags(
 ```
 
  <a name="getObjectUrl"></a>
-### getObjectUrl(GetObjectUrlArgs args)
-`public String getObjectUrl(GetObjectUrlArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectUrl-io.minio.GetObjectUrlArgs-)_
+### getObjectUrl(String bucketName, String objectName)
+`public String getObjectUrl(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectUrl-java.lang.String-java.lang.String-)_
 
 Gets URL of an object useful when this object has public read access.
 
  __Parameters__
+
 | Parameter      | Type     | Description                |
 |:---------------|:---------|:---------------------------|
-| ``args``       | _[GetObjectUrlArgs]_ | Argument.        |
+| ``bucketName`` | _String_ | Name of the bucket.        |
+| ``objectName`` | _String_ | Object name in the bucket. |
 
 
 | Returns                |
@@ -1293,8 +1325,7 @@ Gets URL of an object useful when this object has public read access.
  ```java
 // Get URL of an object useful when this object has public read access.
 String url =
-    minioClient.getObjectUrl(
-        GetObjectUrlArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+    minioClient.getObjectUrl("my-bucketname","my-objectname");
 System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ```
 
@@ -1318,6 +1349,9 @@ Gets presigned URL of an object for HTTP method, expiry time and custom request 
  __Example__
  ```java
 // Get presigned URL of an object for HTTP method, expiry time and custom request parameters.
+Map<String, String> reqParams = new HashMap<>();
+      reqParams.put("response-content-type", "application/json");
+      
 String url =
     minioClient.getPresignedObjectUrl(
         GetPresignedObjectUrlArgs.builder()
@@ -1325,7 +1359,7 @@ String url =
             .bucket("my-bucketname")
             .object("my-objectname")
             .expires(24 * 60 * 60)
-            .params(reqParams)
+            .extraQueryParams(reqParams)
             .build());
 System.out.println(url);
 ```
@@ -1364,50 +1398,6 @@ else {
 }
 ```
 
-<a name="presignedGetObject"></a>
-### presignedGetObject(PresignedGetObjectArgs args)
-`public String presignedGetObject(PresignedGetObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedGetObject-io.minio.PresignedGetObjectArgs-)_
-
-Gets presigned URL of an object to download its data for expiry time and request parameters.
-
-__Parameters__
-
-| Parameter      | Type                        | Description    |
-|:---------------|:----------------------------|:---------------|
-| ``args``       | _[PresignedGetObjectArgs]_  | Arguments.     |
-
-| Returns                                       |
-|:----------------------------------------------|
-| _String_ - URL string to download the object. |
-
-__Example__
-
-```java
-// Gets presigned URL of an object to download its data for 7 days.
-String url =
-    minioClient.presignedGetObject(
-        PresignedGetObject.builder().bucket("my-bucketname").object("my-objectname").build());
-
-// Get presigned URL to download my-objectname data with one day expiry.
-String url =
-    minioClient.presignedGetObject(
-        PresignedGetObject.builder()
-            .bucket("my-bucketname")
-            .object("my-objectname")
-            .expires(24 * 60 * 60)
-            .build());
-
-// Get presigned URL to download my-objectname data with one day expiry and request parameters.
-String url =
-    minioClient.presignedGetObject(
-        PresignedGetObject.builder()
-            .bucket("my-bucketname")
-            .object("my-objectname")
-            .expires(24 * 60 * 60)
-            .params(reqParams)
-            .build());
-```
-
 <a name="presignedPostPolicy"></a>
 ### presignedPostPolicy(PostPolicy policy)
 `public Map<String,String> presignedPostPolicy(PostPolicy policy)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPostPolicy-io.minio.PostPolicy-)_
@@ -1444,46 +1434,6 @@ for (Map.Entry<String,String> entry : formData.entrySet()) {
 }
 System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname");
 ```
-
-<a name="presignedPutObject"></a>
-### presignedPutObject(PresignedPutObjectArgs args)
-`public String presignedPutObject(PresignedPutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPutObject-io.minio.PresignedPutObjectArgs-)_
-
-Gets presigned URL of an object.
-
-__Parameters__
-
-| Parameter      | Type                       | Description       |
-|:---------------|:---------------------------|:------------------|
-| ``args ``      | _[PresignedPutObjectArgs]_ | Arguments.        |
-
-
-| Returns                                    |
-|:-------------------------------------------|
-| _String_ - URL string to upload an object. |
-
-__Example__
-
-```java
-// Gets presigned URL of an object to upload data for 7 days.
-String url =
-    minioClient.presignedPutObject(
-        PresignedPutObjectArgs.builder()
-            .bucket("my-bucketname")
-            .object("my-objectname")
-            .build());
-
-// Get presigned URL to upload data to my-objectname with one day expiry.
-String url =
-    minioClient.presignedPutObject(
-        PresignedPutObjectArgs.builder()
-            .bucket("my-bucketname")
-            .object("my-objectname")
-            .expires(24 * 60 * 60)
-            .build());
-
-```
-
 
 <a name="putObject"></a>
 ### putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)

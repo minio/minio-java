@@ -16,15 +16,13 @@
 
 package io.minio;
 
-import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.http.Method;
-import java.util.Map;
 
 /** Argument class of MinioClient.getPresignedObjectUrl(). */
 public class GetPresignedObjectUrlArgs extends ObjectArgs {
   private Method method;
-  private Integer expires;
-  private Map<String, String> reqParams;
+  // set default expiry as 7 days if not specified.
+  private Integer expires = 7 * 24 * 3600;
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
 
@@ -36,36 +34,44 @@ public class GetPresignedObjectUrlArgs extends ObjectArgs {
     return expires;
   }
 
-  public Map<String, String> params() {
-    return reqParams;
-  }
-
   public static Builder builder() {
     return new Builder();
   }
 
   /** Argument builder of {@link GetPresignedObjectUrlArgs}. */
   public static final class Builder extends ObjectArgs.Builder<Builder, GetPresignedObjectUrlArgs> {
+    private void validateConfig(Method method) {
+      if (method == null) {
+        throw new IllegalArgumentException("mull method for presigned url");
+      }
+    }
+
+    private void validateConfig(Integer expires) {
+      if (expires == null) {
+        throw new IllegalArgumentException("null expiry for presigned url");
+      }
+    }
+
+    protected void validate(GetPresignedObjectUrlArgs args) {
+      super.validate(args);
+      validateConfig(args.method);
+      validateConfig(args.expires);
+    }
+
     /* method HTTP {@link Method} to generate presigned URL. */
     public Builder method(Method method) {
+      validateConfig(method);
       operations.add(args -> args.method = method);
       return this;
     }
 
     /*expires Expiry in seconds; defaults to 7 days. */
-    public Builder expires(Integer expires) throws InvalidExpiresRangeException {
+    public Builder expires(Integer expires) {
       if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-        throw new InvalidExpiresRangeException(
-            expires, "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
+        throw new IllegalArgumentException(
+            expires + "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
       }
       operations.add(args -> args.expires = expires);
-      return this;
-    }
-
-    /* Supported params are response-expires, response-content-type,
-     * response-cache-control and response-content-disposition. */
-    public Builder params(Map<String, String> reqParams) {
-      operations.add(args -> args.reqParams = reqParams);
       return this;
     }
   }

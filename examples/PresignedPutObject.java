@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
-import io.minio.PresignedPutObjectArgs;
 import io.minio.errors.MinioException;
+import io.minio.http.Method;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -41,8 +42,9 @@ public class PresignedPutObject {
       // one day.
 
       String url =
-          minioClient.presignedPutObject(
-              PresignedPutObjectArgs.builder()
+          minioClient.getPresignedObjectUrl(
+              GetPresignedObjectUrlArgs.builder()
+                  .method(Method.GET)
                   .bucket("my-bucketname")
                   .object("my-objectname")
                   .expires(60 * 60 * 24)
