@@ -3811,22 +3811,21 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1).withNano(0);
+        client.putObject(
+            bucketName,
+            objectName,
+            new ContentInputStream(1 * KB),
+            new PutObjectOptions(1 * KB, -1));
+
+        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
-
-        try (final InputStream is = new ContentInputStream(1 * KB)) {
-          PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-          options.setContentType(customContentType);
-          client.putObject(bucketName, objectName, is, options);
-        }
-
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
                 .config(expectedConfig)
                 .build());
-        // Set empty object lock configuration by setting bypassGovernanceMode as true
+
         Retention emptyConfig = new Retention();
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
@@ -3851,7 +3850,7 @@ public class FunctionalTest {
   public static void getObjectRetention_test1() throws Exception {
     String methodName = "getObjectRetention(GetObjectRetentionArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: with shortened retention period: " + methodName);
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3860,11 +3859,11 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        try (final InputStream is = new ContentInputStream(1 * KB)) {
-          PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-          options.setContentType(customContentType);
-          client.putObject(bucketName, objectName, is, options);
-        }
+        client.putObject(
+            bucketName,
+            objectName,
+            new ContentInputStream(1 * KB),
+            new PutObjectOptions(1 * KB, -1));
 
         ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
@@ -3880,57 +3879,59 @@ public class FunctionalTest {
                 GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
 
         if (!(config
-                .retainUntilDate()
-                .withNano(0)
-                .equals(expectedConfig.retainUntilDate().withNano(0)))
-            || (config.mode() != expectedConfig.mode())) {
+            .retainUntilDate()
+            .withNano(0)
+            .equals(expectedConfig.retainUntilDate().withNano(0)))) {
           throw new Exception(
               "[FAILED] Expected: expected duration : "
                   + expectedConfig.retainUntilDate()
                   + ", got: "
-                  + config.retainUntilDate()
+                  + config.retainUntilDate());
+        }
+
+        if (config.mode() != expectedConfig.mode()) {
+          throw new Exception(
+              "[FAILED] Expected: expected mode: "
                   + " expected mode :"
                   + expectedConfig.mode()
                   + ", got: "
                   + config.mode());
         }
 
-        // You can perform operations on object versions that are locked in governance mode as if
-        // they were unprotected if you have the s3:bypassGovernanceMode permission. These
-        // operations include deleting an object version, shortening the retention period, or
-        // removing the Object Lock by placing a new lock with empty parameters.
+        // Check shortening retention until period
         ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
-        Retention expectedConfigWithShortenedPeriod =
-            new Retention(RetentionMode.GOVERNANCE, shortenedRetentionUntil);
+        expectedConfig = new Retention(RetentionMode.GOVERNANCE, shortenedRetentionUntil);
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(expectedConfigWithShortenedPeriod)
+                .config(expectedConfig)
                 .bypassGovernanceMode(true)
                 .build());
 
-        Retention updatedConfig =
+        config =
             client.getObjectRetention(
                 GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
 
-        if (!(updatedConfig
-                .retainUntilDate()
-                .withNano(0)
-                .equals(expectedConfigWithShortenedPeriod.retainUntilDate().withNano(0)))
-            || (updatedConfig.mode() != expectedConfigWithShortenedPeriod.mode())) {
+        if (!(config
+            .retainUntilDate()
+            .withNano(0)
+            .equals(expectedConfig.retainUntilDate().withNano(0)))) {
           throw new Exception(
               "[FAILED] Expected: expected duration : "
-                  + expectedConfigWithShortenedPeriod.retainUntilDate()
+                  + expectedConfig.retainUntilDate()
                   + ", got: "
-                  + updatedConfig.retainUntilDate()
-                  + " expected mode :"
-                  + expectedConfigWithShortenedPeriod.mode()
-                  + ", got: "
-                  + updatedConfig.mode());
+                  + config.retainUntilDate());
         }
 
-        // Set empty object lock configuration by setting bypassGovernanceMode as true
+        if (config.mode() != expectedConfig.mode()) {
+          throw new Exception(
+              " [FAILED] Expected: Expected mode :"
+                  + expectedConfig.mode()
+                  + ", got: "
+                  + config.mode());
+        }
+
         Retention emptyConfig = new Retention();
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
@@ -3945,9 +3946,9 @@ public class FunctionalTest {
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog(methodName, "shortening the retention period", startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      handleException(methodName, "shortening the retention period", startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 

@@ -3873,9 +3873,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
@@ -3965,9 +3963,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("retention", "");
