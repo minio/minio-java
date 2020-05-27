@@ -23,12 +23,14 @@ import io.minio.CloseableIterator;
 import io.minio.ComposeSource;
 import io.minio.CopyConditions;
 import io.minio.DeleteBucketEncryptionArgs;
+import io.minio.DeleteBucketLifeCycleArgs;
 import io.minio.DeleteBucketTagsArgs;
 import io.minio.DeleteObjectTagsArgs;
 import io.minio.DisableVersioningArgs;
 import io.minio.EnableVersioningArgs;
 import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
+import io.minio.GetBucketLifeCycleArgs;
 import io.minio.GetBucketTagsArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.ListObjectsArgs;
@@ -43,6 +45,7 @@ import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
 import io.minio.SetBucketEncryptionArgs;
+import io.minio.SetBucketLifeCycleArgs;
 import io.minio.SetBucketTagsArgs;
 import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
@@ -3870,10 +3873,11 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setBucketLifeCycle(String bucketName, String lifeCycle). */
+  /** Test: setBucketLifeCycle(SetBucketLifeCycleArgs args). */
   public static void setBucketLifeCycle_test1() throws Exception {
+    String methodName = "setBucketLifeCycle(SetBucketLifeCycleArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: setBucketLifeCycle(String bucketName, String lifeCycle)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3882,58 +3886,43 @@ public class FunctionalTest {
           "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
               + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
               + "</Rule></LifecycleConfiguration>";
-      client.setBucketLifeCycle(bucketName, lifeCycle);
-      mintSuccessLog("setBucketLifeCycle(String bucketName, String lifeCycle)", null, startTime);
+      client.setBucketLifeCycle(
+          SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "setBucketLifeCycle(String bucketName, String lifeCycle) ",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, startTime, e);
     }
   }
 
-  /** Test: deleteBucketLifeCycle(String bucketName). */
+  /** Test: deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args). */
   public static void deleteBucketLifeCycle_test1() throws Exception {
+    String methodName = "deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: deleteBucketLifeCycle(String bucketNam)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      client.deleteBucketLifeCycle(bucketName);
-      mintSuccessLog("deleteBucketLifeCycle(String bucketName)", null, startTime);
+      client.deleteBucketLifeCycle(DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "deleteBucketLifeCycle(String bucketName) ",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, startTime, e);
     }
   }
 
-  /** Test: getBucketLifeCycle(String bucketName). */
+  /** Test: getBucketLifeCycle(GetBucketLifeCycleArgs args). */
   public static void getBucketLifeCycle_test1() throws Exception {
+    String methodName = "getBucketLifeCycle(GetBucketLifeCycleArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: getBucketLifeCycle(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      client.getBucketLifeCycle(bucketName);
-      mintSuccessLog("getBucketLifeCycle(String bucketName)", null, startTime);
+      client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "getBucketLifeCycle(String bucketName) ",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, startTime, e);
     }
   }
 

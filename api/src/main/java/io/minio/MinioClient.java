@@ -4393,7 +4393,7 @@ public class MinioClient {
   }
 
   /**
-   * Sets life cycle configuration to a bucket.
+   * Sets life-cycle configuration to a bucket.
    *
    * <pre>Example:{@code
    * // Lets consider variable 'lifeCycleXml' contains below XML String;
@@ -4408,7 +4408,7 @@ public class MinioClient {
    * //   </Rule>
    * // </LifecycleConfiguration>
    * //
-   * minioClient.setBucketLifecycle("my-bucketname", lifeCycleXml);
+   * minioClient.setBucketLifeCycle("my-bucketname", lifeCycleXml);
    * }</pre>
    *
    * @param bucketName Name of the bucket.
@@ -4425,21 +4425,64 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void setBucketLifeCycle(String bucketName, String lifeCycle)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if ((lifeCycle == null) || "".equals(lifeCycle)) {
-      throw new IllegalArgumentException("life cycle cannot be empty");
-    }
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("lifecycle", "");
-    Response response = executePut(bucketName, null, null, queryParamMap, lifeCycle, 0);
-    response.body().close();
+    setBucketLifeCycle(
+        SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
   }
 
   /**
-   * Deletes life cycle configuration of a bucket.
+   * Sets life-cycle configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * // Lets consider variable 'lifeCycleXml' contains below XML String;
+   * // <LifecycleConfiguration>
+   * //   <Rule>
+   * //     <ID>expire-bucket</ID>
+   * //     <Prefix></Prefix>
+   * //     <Status>Enabled</Status>
+   * //     <Expiration>
+   * //       <Days>365</Days>
+   * //     </Expiration>
+   * //   </Rule>
+   * // </LifecycleConfiguration>
+   * //
+   * minioClient.setBucketLifeCycle(
+   *     SetBucketLifeCycleArgs.builder().bucket("my-bucketname").config(lifeCycleXml).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketLifeCycleArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketLifeCycle(SetBucketLifeCycleArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("lifecycle", "");
+    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    response.close();
+  }
+
+  /**
+   * Deletes life-cycle configuration of a bucket.
    *
    * <pre>Example:{@code
    * deleteBucketLifeCycle("my-bucketname");
@@ -4458,21 +4501,53 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public void deleteBucketLifeCycle(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("lifecycle", "");
-    Response response = executeDelete(bucketName, "", queryParamMap);
-    response.body().close();
+    deleteBucketLifeCycle(DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
   }
 
   /**
-   * Gets life cycle configuration of a bucket.
+   * Deletes life-cycle configuration of a bucket.
    *
    * <pre>Example:{@code
-   * String lifecycle = minioClient.getBucketLifecycle("my-bucketname");
+   * deleteBucketLifeCycle(DeleteBucketLifeCycleArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketLifeCycleArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("lifecycle", "");
+    Response response = executeDelete(args.bucket(), "", queryParamMap);
+    response.close();
+  }
+
+  /**
+   * Gets life-cycle configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * String lifecycle = minioClient.getBucketLifeCycle("my-bucketname");
    * }</pre>
    *
    * @param bucketName Name of the bucket.
@@ -4489,28 +4564,56 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   public String getBucketLifeCycle(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    return getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
+  }
+
+  /**
+   * Gets life-cycle configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * String lifecycle =
+   *     minioClient.getBucketLifeCycle(
+   *         GetBucketLifeCycleArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketLifeCycleArgs} object.
+   * @return String - Life cycle configuration as XML string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public String getBucketLifeCycle(GetBucketLifeCycleArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    if (args == null) {
+      throw new IllegalArgumentException("null arguments");
+    }
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
-    String bodyContent = "";
-    Response response = null;
-    try {
-      response = executeGet(bucketName, null, null, queryParamMap);
-      bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
+    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+      return new String(response.body().bytes(), StandardCharsets.UTF_8);
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_LIFECYCLE_CONFIGURATION) {
         throw e;
       }
-    } finally {
-      if (response != null) {
-        response.body().close();
-      }
     }
 
-    return bodyContent;
+    return "";
   }
 
   /**
