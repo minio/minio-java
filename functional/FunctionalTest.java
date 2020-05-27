@@ -3866,7 +3866,7 @@ public class FunctionalTest {
           client.putObject(bucketName, objectName, is, options);
         }
 
-        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3).withNano(0);
+        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
@@ -3879,7 +3879,10 @@ public class FunctionalTest {
             client.getObjectRetention(
                 GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
 
-        if (!(config.retainUntilDate().equals(expectedConfig.retainUntilDate()))
+        if (!(config
+                .retainUntilDate()
+                .withNano(0)
+                .equals(expectedConfig.retainUntilDate().withNano(0)))
             || (config.mode() != expectedConfig.mode())) {
           throw new Exception(
               "[FAILED] Expected: expected duration : "
@@ -3896,7 +3899,7 @@ public class FunctionalTest {
         // they were unprotected if you have the s3:bypassGovernanceMode permission. These
         // operations include deleting an object version, shortening the retention period, or
         // removing the Object Lock by placing a new lock with empty parameters.
-        ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1).withNano(0);
+        ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
         Retention expectedConfigWithShortenedPeriod =
             new Retention(RetentionMode.GOVERNANCE, shortenedRetentionUntil);
         client.setObjectRetention(
@@ -3913,7 +3916,8 @@ public class FunctionalTest {
 
         if (!(updatedConfig
                 .retainUntilDate()
-                .equals(expectedConfigWithShortenedPeriod.retainUntilDate()))
+                .withNano(0)
+                .equals(expectedConfigWithShortenedPeriod.retainUntilDate().withNano(0)))
             || (updatedConfig.mode() != expectedConfigWithShortenedPeriod.mode())) {
           throw new Exception(
               "[FAILED] Expected: expected duration : "
