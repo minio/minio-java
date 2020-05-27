@@ -38,6 +38,7 @@ import io.minio.GetBucketTagsArgs;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
+import io.minio.IsVersioningEnabledArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
@@ -432,8 +433,9 @@ public class FunctionalTest {
 
   /** Test: enableVersioning(EnableVersioningArgs args). */
   public static void enableVersioning_test() throws Exception {
+    String methodName = "enableVersioning(EnableVersioningArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: enableVersioning(EnableVersioningArgs args)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -441,33 +443,21 @@ public class FunctionalTest {
       String name = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
       client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+      if (!client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+        throw new Exception("[FAILED] isVersioningEnabled(): expected: true, got: false");
+      }
       client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("enableVersioning(EnableVersioningArgs args)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("enableVersioning(EnableVersioningArgs args)", null, startTime);
-      } else {
-        mintFailedLog(
-            "enableVersioning(EnableVersioningArgs args)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
   /** Test: disableVersioning(DisableVersioningArgs args). */
   public static void disableVersioning_test() throws Exception {
+    String methodName = "disableVersioning(DisableVersioningArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: disableVersioning(DisableVersioningArgs args)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -475,30 +465,20 @@ public class FunctionalTest {
       String name = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
       client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+      if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+        throw new Exception("[FAILED] isVersioningEnabled(): expected: false, got: true");
+      }
 
       client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
       client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+      if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+        throw new Exception("[FAILED] isVersioningEnabled(): expected: false, got: true");
+      }
 
       client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("disableVersioning(DisableVersioningArgs args)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("disableVersioning(DisableVersioningArgs args)", null, startTime);
-      } else {
-        mintFailedLog(
-            "disableVersioning(DisableVersioningArgs args)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4880,6 +4860,7 @@ public class FunctionalTest {
   public static boolean downloadMinio() throws IOException {
     String url = "https://dl.min.io/server/minio/release/";
     if (OS.contains("linux")) {
+
       url += "linux-amd64/minio";
     } else if (OS.contains("windows")) {
       url += "windows-amd64/minio.exe";
