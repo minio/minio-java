@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import io.minio.GetObjectRetentionArgs;
 import io.minio.MinioClient;
 import io.minio.SetObjectRetentionArgs;
+import io.minio.Time;
 import io.minio.errors.MinioException;
 import io.minio.messages.Retention;
 import io.minio.messages.RetentionMode;
@@ -39,11 +39,11 @@ public class SetObjectRetention {
               "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Declaring config with Retention mode as Compliance and
-      // retain until one year to current date.
-      ZonedDateTime retentionUntil = ZonedDateTime.now().plusYears(1);
+      // retain until 3 days from current date.
+      ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3).withNano(0);
       Retention config = new Retention(RetentionMode.COMPLIANCE, retentionUntil);
 
-      // Set object lock configuration
+      // Set object retention
       minioClient.setObjectRetention(
           SetObjectRetentionArgs.builder()
               .bucket("my-bucketname")
@@ -52,16 +52,6 @@ public class SetObjectRetention {
               .bypassGovernanceMode(true)
               .build());
 
-      // Get object lock retention
-      Retention retention =
-          minioClient.getObjectRetention(
-              GetObjectRetentionArgs.builder()
-                  .bucket("my-bucketname")
-                  .object("my-objectname")
-                  .build());
-
-      System.out.println("Mode: " + retention.mode());
-      System.out.println("Retainuntil Date: " + retention.retainUntilDate());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

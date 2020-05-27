@@ -37,7 +37,19 @@ public class SetObjectRetentionArgs extends ObjectArgs {
 
   /** Argument builder of {@link SetObjectRetentionArgs}. */
   public static final class Builder extends ObjectArgs.Builder<Builder, SetObjectRetentionArgs> {
+    private void validateConfig(Retention config) {
+      if (config == null) {
+        throw new IllegalArgumentException("empty retention configuration");
+      }
+    }
+
+    protected void validate(SetObjectRetentionArgs args) {
+      super.validate(args);
+      validateConfig(args.config);
+    }
+
     public Builder config(Retention config) {
+      validateConfig(config);
       operations.add(args -> args.config = config);
       return this;
     }

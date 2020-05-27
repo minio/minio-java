@@ -46,13 +46,10 @@ import io.minio.Result;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
 import io.minio.SetBucketEncryptionArgs;
-<<<<<<< HEAD
 import io.minio.SetBucketLifeCycleArgs;
 import io.minio.SetBucketTagsArgs;
-import io.minio.SetObjectTagsArgs;
-=======
 import io.minio.SetObjectRetentionArgs;
->>>>>>> add arg builder to objectRetention API
+import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
 import io.minio.Time;
 import io.minio.errors.ErrorResponseException;
@@ -3814,7 +3811,7 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(1);
+        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1).withNano(0);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
 
         try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -3854,80 +3851,6 @@ public class FunctionalTest {
   public static void getObjectRetention_test1() throws Exception {
     String methodName = "getObjectRetention(GetObjectRetentionArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
-    String objectName = getRandomName();
-    try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
-      try {
-        try (final InputStream is = new ContentInputStream(1 * KB)) {
-          PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-          options.setContentType(customContentType);
-          client.putObject(bucketName, objectName, is, options);
-        }
-
-        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(3);
-        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
-        client.setObjectRetention(
-            SetObjectRetentionArgs.builder()
-                .bucket(bucketName)
-                .object(objectName)
-                .config(expectedConfig)
-                .build());
-
-        Retention config =
-            client.getObjectRetention(
-                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
-
-        if ((!(config
-                .retainUntilDate()
-                .toString()
-                .substring(0, config.retainUntilDate().toString().indexOf("T"))
-                .equals(
-                    expectedConfig
-                        .retainUntilDate()
-                        .toString()
-                        .substring(0, expectedConfig.retainUntilDate().toString().indexOf("T")))))
-            || (config.mode() != expectedConfig.mode())) {
-          throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.retainUntilDate()
-                  + ", got: "
-                  + config.retainUntilDate()
-                  + " expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
-        }
-
-        // Set empty object lock configuration by setting bypassGovernanceMode as true
-        Retention emptyConfig = new Retention();
-        client.setObjectRetention(
-            SetObjectRetentionArgs.builder()
-                .bucket(bucketName)
-                .object(objectName)
-                .config(emptyConfig)
-                .bypassGovernanceMode(true)
-                .build());
-
-      } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-      }
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: getObjectRetention(GetObjectRetentionArgs args). */
-  public static void getObjectRetention_test2() throws Exception {
-    String methodName = "getObjectRetention(GetObjectRetentionArgs args)";
-    if (!mintEnv) {
       System.out.println("Test: with shortened retention period: " + methodName);
     }
 
@@ -3943,7 +3866,7 @@ public class FunctionalTest {
           client.putObject(bucketName, objectName, is, options);
         }
 
-        ZonedDateTime retentionUntil = ZonedDateTime.now().plusDays(3);
+        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3).withNano(0);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
@@ -3956,15 +3879,7 @@ public class FunctionalTest {
             client.getObjectRetention(
                 GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
 
-        if ((!(config
-                .retainUntilDate()
-                .toString()
-                .substring(0, config.retainUntilDate().toString().indexOf("T"))
-                .equals(
-                    expectedConfig
-                        .retainUntilDate()
-                        .toString()
-                        .substring(0, expectedConfig.retainUntilDate().toString().indexOf("T")))))
+        if (!(config.retainUntilDate().equals(expectedConfig.retainUntilDate()))
             || (config.mode() != expectedConfig.mode())) {
           throw new Exception(
               "[FAILED] Expected: expected duration : "
@@ -3981,7 +3896,7 @@ public class FunctionalTest {
         // they were unprotected if you have the s3:bypassGovernanceMode permission. These
         // operations include deleting an object version, shortening the retention period, or
         // removing the Object Lock by placing a new lock with empty parameters.
-        ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now().plusDays(1);
+        ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1).withNano(0);
         Retention expectedConfigWithShortenedPeriod =
             new Retention(RetentionMode.GOVERNANCE, shortenedRetentionUntil);
         client.setObjectRetention(
@@ -3996,20 +3911,9 @@ public class FunctionalTest {
             client.getObjectRetention(
                 GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
 
-        if ((!(updatedConfig
+        if (!(updatedConfig
                 .retainUntilDate()
-                .toString()
-                .substring(0, updatedConfig.retainUntilDate().toString().indexOf("T"))
-                .equals(
-                    expectedConfigWithShortenedPeriod
-                        .retainUntilDate()
-                        .toString()
-                        .substring(
-                            0,
-                            expectedConfigWithShortenedPeriod
-                                .retainUntilDate()
-                                .toString()
-                                .indexOf("T")))))
+                .equals(expectedConfigWithShortenedPeriod.retainUntilDate()))
             || (updatedConfig.mode() != expectedConfigWithShortenedPeriod.mode())) {
           throw new Exception(
               "[FAILED] Expected: expected duration : "
@@ -4138,7 +4042,7 @@ public class FunctionalTest {
           SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4154,7 +4058,7 @@ public class FunctionalTest {
       client.deleteBucketLifeCycle(DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4170,7 +4074,7 @@ public class FunctionalTest {
       client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4653,7 +4557,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4687,7 +4591,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4720,7 +4624,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4754,7 +4658,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4801,7 +4705,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4847,7 +4751,7 @@ public class FunctionalTest {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4872,7 +4776,6 @@ public class FunctionalTest {
 
     setObjectRetention_test1();
     getObjectRetention_test1();
-    getObjectRetention_test2();
 
     putObject_test1();
     putObject_test2();
@@ -4944,7 +4847,6 @@ public class FunctionalTest {
 
     setObjectRetention_test1();
     getObjectRetention_test1();
-    getObjectRetention_test2();
 
     selectObjectContent_test1();
 

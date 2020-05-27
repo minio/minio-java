@@ -1213,7 +1213,6 @@ Gets retention configuration of an object.
 
  __Example__
  ```java
-
 // Object with version id.
 Retention retention =
     minioClient.getObjectRetention(
@@ -1223,7 +1222,6 @@ Retention retention =
             .versionId("object-version-id")
             .build());
 System.out.println("mode: " + retention.mode() + "until: " + retention.retainUntilDate());
-
 ```
 
 <a name="getObjectTags"></a>
