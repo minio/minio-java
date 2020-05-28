@@ -41,15 +41,18 @@ public class DisableObjectLegalHold {
               .object("my-objectname")
               .build());
 
-      // Check if the object legal hold is enabled or not.
-      System.out.println(
-          " Is object legal hold is enabled "
-              + minioClient.isObjectLegalHoldEnabled(
-                  IsObjectLegalHoldEnabledArgs.builder()
-                      .bucket("my-bucketname")
-                      .object("my-objectname")
-                      .versionId("object-versionId")
-                      .build()));
+      boolean status =
+          minioClient.isObjectLegalHoldEnabled(
+              IsObjectLegalHoldEnabledArgs.builder()
+                  .bucket("my-bucketname")
+                  .object("my-objectname")
+                  .build());
+
+      if (status) {
+        System.out.println("Legal hold is on");
+      } else {
+        System.out.println("Legal hold is off");
+      }
 
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

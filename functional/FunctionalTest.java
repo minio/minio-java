@@ -3496,8 +3496,9 @@ public class FunctionalTest {
 
   /** Test: enableObjectLegalHold(EnableObjectLegalHoldArgs args) */
   public static void enableObjectLegalHold_test() throws Exception {
+    String methodName = "enableObjectLegalHold(EnableObjectLegalHoldArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: enableObjectLegalHold(EnableObjectLegalHoldArgs args)");
+      System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
@@ -3518,38 +3519,22 @@ public class FunctionalTest {
         }
         client.disableObjectLegalHold(
             DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        mintSuccessLog("enableObjectLegalHold(EnableObjectLegalHoldArgs args)", null, startTime);
+        mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("enableObjectLegalHold(EnableObjectLegalHoldArgs args)", null, startTime);
-      } else {
-        mintFailedLog(
-            "enableObjectLegalHold(EnableObjectLegalHoldArgs args)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
   /** Test: disableObjectLegalHold(DisableObjectLegalHoldArgs args) */
   public static void disableObjectLegalHold_test() throws Exception {
+    String methodName = "disableObjectLegalHold(DisableObjectLegalHoldArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: disableObjectLegalHold(DisableObjectLegalHoldArgs args)");
+      System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
@@ -3573,26 +3558,9 @@ public class FunctionalTest {
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog("disableObjectLegalHold(DisableObjectLegalHoldArgs args)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("disableObjectLegalHold(DisableObjectLegalHoldArgs args)", null, startTime);
-      } else {
-        mintFailedLog(
-            "disableObjectLegalHold(DisableObjectLegalHoldArgs args)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
