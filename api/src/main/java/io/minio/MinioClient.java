@@ -4373,21 +4373,53 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getBucketPolicy(GetBucketPolicyArgs)}
    */
+  @Deprecated
   public String getBucketPolicy(String bucketName)
       throws BucketPolicyTooLargeException, ErrorResponseException, IllegalArgumentException,
           InsufficientDataException, InternalException, InvalidBucketNameException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           XmlParserException {
+    return getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
+  }
+
+  /**
+   * Gets bucket policy configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * String config =
+   *     minioClient.getBucketPolicy(GetBucketPolicyArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketPolicyArgs} object.
+   * @return String - Bucket policy configuration as JSON string.
+   * @throws BucketPolicyTooLargeException thrown to indicate returned bucket policy is too large.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public String getBucketPolicy(GetBucketPolicyArgs args)
+      throws BucketPolicyTooLargeException, ErrorResponseException, IllegalArgumentException,
+          InsufficientDataException, InternalException, InvalidBucketNameException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          XmlParserException {
+    checkArgs(args);
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
-    Response response = null;
-    byte[] buf = new byte[MAX_BUCKET_POLICY_SIZE];
-    int bytesRead = 0;
-
-    try {
-      response = executeGet(bucketName, null, null, queryParamMap);
+    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+      byte[] buf = new byte[MAX_BUCKET_POLICY_SIZE];
+      int bytesRead = 0;
       bytesRead = response.body().byteStream().read(buf, 0, MAX_BUCKET_POLICY_SIZE);
       if (bytesRead < 0) {
         throw new IOException("unexpected EOF when reading bucket policy");
@@ -4399,26 +4431,23 @@ public class MinioClient {
         while (byteRead == 0) {
           byteRead = response.body().byteStream().read();
           if (byteRead < 0) {
-            // reached EOF which is fine.
-            break;
+            break; // reached EOF which is fine.
           }
 
           if (byteRead > 0) {
-            throw new BucketPolicyTooLargeException(bucketName);
+            throw new BucketPolicyTooLargeException(args.bucket());
           }
         }
       }
+
+      return new String(buf, 0, bytesRead, StandardCharsets.UTF_8);
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
         throw e;
       }
-    } finally {
-      if (response != null) {
-        response.body().close();
-      }
     }
 
-    return new String(buf, 0, bytesRead, StandardCharsets.UTF_8);
+    return "";
   }
 
   /**
@@ -4463,19 +4492,112 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #setBucketPolicy(SetBucketPolicyArgs)}
    */
+  @Deprecated
   public void setBucketPolicy(String bucketName, String policy)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    setBucketPolicy(SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+  }
+
+  /**
+   * Sets bucket policy configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * // Assume policyJson contains below JSON string;
+   * // {
+   * //     "Statement": [
+   * //         {
+   * //             "Action": [
+   * //                 "s3:GetBucketLocation",
+   * //                 "s3:ListBucket"
+   * //             ],
+   * //             "Effect": "Allow",
+   * //             "Principal": "*",
+   * //             "Resource": "arn:aws:s3:::my-bucketname"
+   * //         },
+   * //         {
+   * //             "Action": "s3:GetObject",
+   * //             "Effect": "Allow",
+   * //             "Principal": "*",
+   * //             "Resource": "arn:aws:s3:::my-bucketname/myobject*"
+   * //         }
+   * //     ],
+   * //     "Version": "2012-10-17"
+   * // }
+   * //
+   * minioClient.setBucketPolicy(
+   *     SetBucketPolicyArgs.builder().bucket("my-bucketname").config(policyJson).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketPolicyArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketPolicy(SetBucketPolicyArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
     Map<String, String> headerMap = new HashMap<>();
     headerMap.put("Content-Type", "application/json");
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("policy", "");
 
-    Response response = executePut(bucketName, null, headerMap, queryParamMap, policy, 0);
-    response.body().close();
+    Response response = executePut(args.bucket(), null, headerMap, queryParamMap, args.config(), 0);
+    response.close();
+  }
+
+  /**
+   * Deletes bucket policy configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket("my-bucketname"));
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketPolicyArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketPolicy(DeleteBucketPolicyArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("policy", "");
+
+    try {
+      Response response = executeDelete(args.bucket(), "", queryParamMap);
+      response.close();
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
+        throw e;
+      }
+    }
   }
 
   /**
@@ -4557,9 +4679,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
@@ -4619,9 +4739,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
@@ -4685,9 +4803,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("lifecycle", "");
@@ -5353,9 +5469,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("encryption", "");
@@ -5390,9 +5504,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("encryption", "");
@@ -5433,9 +5545,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+    checkArgs(args);
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("encryption", "");

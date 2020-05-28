@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.SetBucketPolicyArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -57,7 +58,8 @@ public class SetBucketPolicy {
       builder.append("    ],\n");
       builder.append("    \"Version\": \"2012-10-17\"\n");
       builder.append("}\n");
-      minioClient.setBucketPolicy("my-bucketname", builder.toString());
+      minioClient.setBucketPolicy(
+          SetBucketPolicyArgs.builder().bucket("my-bucketname").config(builder.toString()).build());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
