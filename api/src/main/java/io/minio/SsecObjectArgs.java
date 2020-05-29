@@ -20,8 +20,6 @@ import okhttp3.HttpUrl;
 
 public abstract class SsecObjectArgs extends ObjectArgs {
   protected ServerSideEncryptionCustomerKey ssec;
-  public static final int TYPE_READ = 0;
-  public static final int TYPE_WRITE = 1;
 
   public ServerSideEncryptionCustomerKey ssec() {
     return ssec;

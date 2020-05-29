@@ -1626,12 +1626,12 @@ public class MinioClient {
    *
    * <pre>Example:{@code
    * ObjectStat objectStat =
-   *     minioClient.statObject("my-bucketname", "my-objectname", sse);
+   *     minioClient.statObject("my-bucketname", "my-objectname", ssec);
    * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param sse SSE-C type server-side encryption.
+   * @param ssec SSE-C type server-side encryption.
    * @return {@link ObjectStat} - Populated object information and metadata.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
