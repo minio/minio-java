@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -39,7 +40,9 @@ public class GetObject {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Get input stream to have content of 'my-objectname' from 'my-bucketname'
-      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname");
+      InputStream stream =
+          minioClient.getObject(
+              GetObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
 
       // Read the input stream and print to the console till EOF.
       byte[] buf = new byte[16384];

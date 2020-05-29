@@ -1,6 +1,8 @@
+import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -34,13 +36,20 @@ public class PutGetObjectEncryptedFile {
       keyGen.init(256);
 
       // To test SSE-C
-      ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+      ServerSideEncryptionCustomerKey ssec =
+          ServerSideEncryption.withCustomerKey(keyGen.generateKey());
       PutObjectOptions options = new PutObjectOptions(inputfileSize, -1);
-      options.setSse(sse);
+      options.setSse(ssec);
       minioClient.putObject(bucketName, objectName, inputfile, options);
       System.out.println("my-objectname is encrypted and uploaded successfully.");
 
-      minioClient.getObject(bucketName, objectName, sse, outputfile);
+      minioClient.downloadObject(
+          DownloadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(objectName)
+              .ssec(ssec)
+              .fileName(outputfile)
+              .build());
       System.out.println("Content of my-objectname saved to my-outputfile ");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

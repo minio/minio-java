@@ -312,19 +312,6 @@ public class MinioClientTest {
   @Test(expected = IllegalArgumentException.class)
   public void testReadSse1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.statObject(
-        StatObjectArgs.builder()
-            .bucket("mybucket")
-            .object("myobject")
-            .ssec(ServerSideEncryption.atRest())
-            .build());
-    Assert.fail("exception should be thrown");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testReadSse2()
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
     MinioClient client = new MinioClient("http://play.min.io:9000");
@@ -454,7 +441,13 @@ public class MinioClientTest {
   public void testGetObjectNegativeOffset()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObject("mybucket", "myobject", -1L, 5L);
+    client.getObject(
+        GetObjectArgs.builder()
+            .bucket("mybucket")
+            .object("myobject")
+            .offset(-1L)
+            .length(5L)
+            .build());
     Assert.fail("exception should be thrown");
   }
 
@@ -462,7 +455,13 @@ public class MinioClientTest {
   public void testGetObjectNegativeLength()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObject("mybucket", "myobject", 0L, -5L);
+    client.getObject(
+        GetObjectArgs.builder()
+            .bucket("mybucket")
+            .object("myobject")
+            .offset(0L)
+            .length(-5L)
+            .build());
     Assert.fail("exception should be thrown");
   }
 
@@ -470,7 +469,13 @@ public class MinioClientTest {
   public void testGetObjectZeroLength()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getObject("mybucket", "myobject", 0L, 0L);
+    client.getObject(
+        GetObjectArgs.builder()
+            .bucket("mybucket")
+            .object("myobject")
+            .offset(0L)
+            .length(0L)
+            .build());
     Assert.fail("exception should be thrown");
   }
 }

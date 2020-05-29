@@ -66,21 +66,12 @@ public class StatObjectArgsTest {
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testUnsupportedSseBuild() {
-    StatObjectArgs.builder()
-        .bucket("mybucket")
-        .ssec(ServerSideEncryption.atRest())
-        .object("myobject")
-        .build();
-    Assert.fail("exception should be thrown");
-  }
-
   @Test
   public void testBuild() throws NoSuchAlgorithmException, InvalidKeyException {
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
-    ServerSideEncryption ssec = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    ServerSideEncryptionCustomerKey ssec =
+        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
     StatObjectArgs args =
         StatObjectArgs.builder()
             .bucket("mybucket")

@@ -1,6 +1,8 @@
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -61,17 +63,24 @@ public class PutGetObjectEncrypted {
       keyGen.init(256);
 
       // To test SSE-C
-      ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+      ServerSideEncryptionCustomerKey ssec =
+          ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
       PutObjectOptions options = new PutObjectOptions(bais.available(), -1);
-      options.setSse(sse);
+      options.setSse(ssec);
       minioClient.putObject("my-bucketname", "my-objectname", bais, options);
 
       bais.close();
 
       System.out.println("my-objectname is encrypted and uploaded successfully.");
 
-      InputStream stream = minioClient.getObject("my-bucketname", "my-objectname", sse);
+      InputStream stream =
+          minioClient.getObject(
+              GetObjectArgs.builder()
+                  .bucket("my-bucketname")
+                  .object("my-objectname")
+                  .ssec(ssec)
+                  .build());
 
       // Read the input stream and print to the console till EOF.
       byte[] buf = new byte[16384];

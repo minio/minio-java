@@ -15,6 +15,7 @@
  */
 
 import com.google.common.io.ByteStreams;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.StatObjectArgs;
@@ -64,7 +65,8 @@ public class GetObjectProgressBar {
               "Downloading .. ",
               ProgressBarStyle.ASCII,
               objectStat.length(),
-              minioClient.getObject("my-bucketname", "my-objectname"));
+              minioClient.getObject(
+                  GetObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build()));
 
       Path path = Paths.get("my-filename");
       OutputStream os = Files.newOutputStream(path, StandardOpenOption.CREATE);
