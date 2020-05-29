@@ -46,7 +46,6 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`setBucketTags`](#setBucketTags)                             |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
 
- 
 ## 1. Constructors
 |                                                                                                                          |
 |--------------------------------------------------------------------------------------------------------------------------|
