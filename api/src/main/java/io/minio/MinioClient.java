@@ -4201,6 +4201,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #enableObjectLegalHold(EnableObjectLegalHoldArgs)}
    */
   @Deprecated
   public void enableObjectLegalHold(String bucketName, String objectName, String versionId)
@@ -4278,6 +4279,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #disableObjectLegalHold(DisableObjectLegalHoldArgs)}
    */
   @Deprecated
   public void disableObjectLegalHold(String bucketName, String objectName, String versionId)
@@ -4363,6 +4365,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #isObjectLegalHoldEnabled(IsObjectLegalHoldEnabledArgs)}
    */
   @Deprecated
   public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
