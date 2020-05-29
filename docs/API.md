@@ -264,15 +264,15 @@ All APIs throw below exceptions in addition to specific to API.
 ## 2. Bucket operations
 
 <a name="bucketExists"></a>
-### bucketExists(String bucketName)
-`public boolean bucketExists(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#bucketExists-java.lang.String-)_
+### bucketExists(BucketExistsArgs args)
+`public boolean bucketExists(BucketExistsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#bucketExists-io.minio.BucketExistsArgs-)_
 
 Checks if a bucket exists.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| Parameter      | Type                 | Description    |
+|:---------------|:---------------------|:---------------|
+| ``bucketName`` | _[BucketExistsArgs]_ | Arguments.     |
 
 | Returns                                |
 |:---------------------------------------|
@@ -281,7 +281,8 @@ __Parameters__
 __Example__
 ```java
 // Check whether 'my-bucketname' exists or not.
-boolean found = minioClient.bucketExists("my-bucketname");
+boolean found = 
+  minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
 if (found) {
   System.out.println("my-bucketname exists");
 } else {
@@ -1767,3 +1768,4 @@ ObjectStat objectStat =
 [GetObjectArgs]: http://minio.github.io/minio-java/io/minio/GetObjectArgs.html
 [DownloadObjectArgs]: http://minio.github.io/minio-java/io/minio/DownloadObjectArgs.html
 [IsVersioningEnabledArgs]: http://minio.github.io/minio-java/io/minio/IsVersioningEnabledArgs.html
+[BucketExistsArgs]: http://minio.github.io/minio-java/io/minio/BucketExistsArgs.html

@@ -19,6 +19,7 @@ import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.minio.BucketExistsArgs;
 import io.minio.CloseableIterator;
 import io.minio.ComposeSource;
 import io.minio.CopyConditions;
@@ -527,29 +528,24 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: bucketExists(String bucketName). */
+  /** Test: bucketExists(BucketExistsArgs args). */
   public static void bucketExists_test() throws Exception {
+    String methodName = "bucketExists(BucketExistsArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: bucketExists(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
       String name = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      if (!client.bucketExists(name)) {
+      if (!client.bucketExists(BucketExistsArgs.builder().bucket(name).build())) {
         throw new Exception("[FAILED] bucket does not exist");
       }
       client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("bucketExists(String bucketName)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "bucketExists(String bucketName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 

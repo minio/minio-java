@@ -3524,20 +3524,56 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #bucketExists(BucketExistsArgs)}
    */
+  @Deprecated
   public boolean bucketExists(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    return bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+  }
+
+  /**
+   * Checks if a bucket exists.
+   *
+   * <pre>Example:{@code
+   * boolean found =
+   *      minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
+   * if (found) {
+   *   System.out.println("my-bucketname exists");
+   * } else {
+   *   System.out.println("my-bucketname does not exist");
+   * }
+   * }</pre>
+   *
+   * @param args {@link BucketExistsArgs} object.
+   * @return boolean - True if the bucket exists.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public boolean bucketExists(BucketExistsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
     try {
-      executeHead(bucketName, null);
+      executeHead(args.bucket(), null);
       return true;
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET) {
         throw e;
       }
     }
-
     return false;
   }
 

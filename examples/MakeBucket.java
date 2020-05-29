@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
@@ -38,13 +39,14 @@ public class MakeBucket {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Create bucket 'my-bucketname' if it doesn`t exist.
-      if (!minioClient.bucketExists("my-bucketname")) {
+      if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build())) {
         minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is created successfully");
       }
 
       // Create bucket 'my-bucketname-in-eu' in 'eu-west-1' region if it doesn't exist.
-      if (!minioClient.bucketExists("my-bucketname-in-eu")) {
+      if (!minioClient.bucketExists(
+          BucketExistsArgs.builder().bucket("my-bucketname-in-eu").build())) {
         minioClient.makeBucket(
             MakeBucketArgs.builder().bucket("my-bucketname-in-eu").region("eu-west-1").build());
         System.out.println("my-bucketname-in-eu is created successfully");
@@ -52,7 +54,8 @@ public class MakeBucket {
 
       // Create bucket 'my-bucketname-in-eu-with-object-lock' in 'eu-west-1' with object lock
       // functionality enabled.
-      if (!minioClient.bucketExists("my-bucketname-in-eu-with-object-lock")) {
+      if (!minioClient.bucketExists(
+          BucketExistsArgs.builder().bucket("my-bucketname-in-eu-with-object-lock").build())) {
         minioClient.makeBucket(
             MakeBucketArgs.builder()
                 .bucket("my-bucketname-in-eu-with-object-lock")

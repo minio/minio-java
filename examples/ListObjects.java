@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
@@ -40,7 +41,8 @@ public class ListObjects {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Check whether 'my-bucketname' exist or not.
-      boolean found = minioClient.bucketExists("my-bucketname");
+      boolean found =
+          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
       if (found) {
         // List objects from 'my-bucketname'
         Iterable<Result<Item>> myObjects =

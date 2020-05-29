@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
 import io.minio.RemoveBucketArgs;
 import io.minio.errors.MinioException;
@@ -39,7 +40,8 @@ public class RemoveBucket {
 
       // Remove bucket 'my-bucketname' if it exists.
       // This operation will only work if your bucket is empty.
-      boolean found = minioClient.bucketExists("my-bucketname");
+      boolean found =
+          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
       if (found) {
         minioClient.removeBucket(RemoveBucketArgs.builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is removed successfully");

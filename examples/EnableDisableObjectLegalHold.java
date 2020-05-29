@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
@@ -51,7 +52,8 @@ public class EnableDisableObjectLegalHold {
               "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Create bucket if it doesn't exist.
-      boolean found = minioClient.bucketExists("my-bucketname");
+      boolean found =
+          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
       if (found) {
         System.out.println("my-bucketname already exists");
       } else {

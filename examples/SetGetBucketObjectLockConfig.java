@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
@@ -34,7 +35,8 @@ public class SetGetBucketObjectLockConfig {
           new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 
       // Create bucket if it doesn't exist.
-      boolean found = s3Client.bucketExists("my-bucketname");
+      boolean found =
+          s3Client.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
       if (found) {
         System.out.println("my-bucketname already exists");
       } else {
