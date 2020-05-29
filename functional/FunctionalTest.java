@@ -4860,7 +4860,6 @@ public class FunctionalTest {
   public static boolean downloadMinio() throws IOException {
     String url = "https://dl.min.io/server/minio/release/";
     if (OS.contains("linux")) {
-
       url += "linux-amd64/minio";
     } else if (OS.contains("windows")) {
       url += "windows-amd64/minio.exe";

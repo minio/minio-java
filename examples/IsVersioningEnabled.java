@@ -15,14 +15,16 @@
  */
 
 import io.minio.EnableVersioningArgs;
+import io.minio.IsVersioningEnabledArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class EnableVersioning {
-  /** MinioClient.enableVersioning() example. */
+public class IsVersioningEnabled {
+  /** MinioClient.isVersioningEnabled() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -37,10 +39,32 @@ public class EnableVersioning {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
+      // Create bucket 'my-bucketname' if it doesn`t exist.
+      if (!minioClient.bucketExists("my-bucketname")) {
+        minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
+        System.out.println("my-bucketname is created successfully");
+      }
+
+      boolean isVersioningEnabled =
+          minioClient.isVersioningEnabled(
+              IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
+      if (isVersioningEnabled) {
+        System.out.println("Bucket versioning is enabled");
+      } else {
+        System.out.println("Bucket versioning is disabled");
+      }
       // Enable versioning on 'my-bucketname'.
       minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucketname").build());
-
       System.out.println("Bucket versioning is enabled successfully");
+
+      isVersioningEnabled =
+          minioClient.isVersioningEnabled(
+              IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
+      if (isVersioningEnabled) {
+        System.out.println("Bucket versioning is enabled");
+      } else {
+        System.out.println("Bucket versioning is disabled");
+      }
 
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

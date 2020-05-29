@@ -15,7 +15,6 @@
  */
 
 import io.minio.DisableVersioningArgs;
-import io.minio.IsVersioningEnabledArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -42,14 +41,8 @@ public class DisableVersioning {
       minioClient.disableVersioning(
           DisableVersioningArgs.builder().bucket("my-bucketname").build());
 
-      boolean isVersioningEnabled =
-          minioClient.isVersioningEnabled(
-              IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
-      if (isVersioningEnabled) {
-        System.out.println("Bucket versioning is enabled");
-      } else {
-        System.out.println("Bucket versioning is disabled");
-      }
+      System.out.println("Bucket versioning is disabled successfully");
+
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
