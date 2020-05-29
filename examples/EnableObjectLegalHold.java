@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import io.minio.EnableObjectLegalHoldArgs;
-import io.minio.IsObjectLegalHoldEnabledArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -42,19 +41,7 @@ public class EnableObjectLegalHold {
               .versionId("object-versionId")
               .build());
 
-      boolean status =
-          minioClient.isObjectLegalHoldEnabled(
-              IsObjectLegalHoldEnabledArgs.builder()
-                  .bucket("my-bucketname")
-                  .object("my-objectname")
-                  .build());
-
-      if (status) {
-        System.out.println("Legal hold is on");
-      } else {
-        System.out.println("Legal hold is off");
-      }
-
+      System.out.println("Legal hold enabled on object successfully ");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
