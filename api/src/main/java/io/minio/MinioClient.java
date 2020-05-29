@@ -2120,10 +2120,7 @@ public class MinioClient {
    *     .build());
    * }</pre>
    *
-   * @param args Object of {@link GetObjectArgs}
-   * @param objectName Object name in the bucket.
-   * @param ssec SSE-C type server-side encryption.
-   * @param fileName Name of the file.
+   * @param args Object of {@link DownloadObjectArgs}
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3734,6 +3731,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #enableVersioning(EnableVersioningArgs)}
    */
   @Deprecated
   public void enableVersioning(String bucketName)
@@ -3796,6 +3794,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #disableVersioning(DisableVersioningArgs)}
    */
   @Deprecated
   public void disableVersioning(String bucketName)
