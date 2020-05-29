@@ -16,14 +16,7 @@
 
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidPortException;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.XmlParserException;
+import io.minio.errors.MinioException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedInputStream;
@@ -67,10 +60,7 @@ public class PutObjectUiProgressBar extends JFrame {
    * on the UI
    */
   private void uploadFile(String fileName)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, XmlParserException,
-          InvalidEndpointException, InvalidPortException, InvalidBucketNameException,
-          InsufficientDataException, ErrorResponseException, InternalException,
-          IllegalArgumentException, InvalidResponseException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, MinioException {
 
     /* play.min.io for test and development. */
     MinioClient minioClient =
