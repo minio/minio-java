@@ -72,6 +72,7 @@ import io.minio.messages.SelectObjectContentRequest;
 import io.minio.messages.SseConfiguration;
 import io.minio.messages.Tags;
 import io.minio.messages.Upload;
+import io.minio.messages.VersioningConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -2119,10 +2120,7 @@ public class MinioClient {
    *     .build());
    * }</pre>
    *
-   * @param args Object of {@link GetObjectArgs}
-   * @param objectName Object name in the bucket.
-   * @param ssec SSE-C type server-side encryption.
-   * @param fileName Name of the file.
+   * @param args Object of {@link DownloadObjectArgs}
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3733,6 +3731,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #enableVersioning(EnableVersioningArgs)}
    */
   @Deprecated
   public void enableVersioning(String bucketName)
@@ -3770,9 +3769,8 @@ public class MinioClient {
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
-    String config =
-        "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
-            + "<Status>Enabled</Status></VersioningConfiguration>";
+    VersioningConfiguration config = new VersioningConfiguration(true);
+
     Response response = executePut(args.bucket(), null, null, queryParamMap, config, 0);
     response.body().close();
   }
@@ -3796,6 +3794,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #disableVersioning(DisableVersioningArgs)}
    */
   @Deprecated
   public void disableVersioning(String bucketName)
@@ -3834,11 +3833,51 @@ public class MinioClient {
 
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("versioning", "");
-    String config =
-        "<VersioningConfiguration xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
-            + "<Status>Suspended</Status></VersioningConfiguration>";
+    VersioningConfiguration config = new VersioningConfiguration(false);
     Response response = executePut(args.bucket(), null, null, queryParamMap, config, 0);
     response.body().close();
+  }
+
+  /**
+   * Returns true if versioning is enabled on the bucket.
+   *
+   * <pre>Example:{@code
+   * boolean isVersioningEnabled =
+   *  minioClient.isVersioningEnabled(
+   *       IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
+   * if (isVersioningEnabled) {
+   *   System.out.println("Bucket versioning is enabled");
+   * } else {
+   *   System.out.println("Bucket versioning is disabled");
+   * }
+   * }</pre>
+   *
+   * @param args {@link IsVersioningEnabledArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public boolean isVersioningEnabled(IsVersioningEnabledArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("versioning", "");
+    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+      VersioningConfiguration result =
+          Xml.unmarshal(VersioningConfiguration.class, response.body().charStream());
+      return result.status();
+    }
   }
 
   /**

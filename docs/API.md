@@ -31,16 +31,17 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`getBucketPolicy`](#getBucketPolicy)                         | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
 | [`getBucketTags`](#getBucketTags)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
 | [`getDefaultRetention`](#getDefaultRetention)                 | [`listObjects`](#listObjects)                           |
-| [`listBuckets`](#listBuckets)                                 | [`presignedGetObject`](#presignedGetObject)             |
-| [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`listIncompleteUploads`](#listIncompleteUploads)             | [`presignedPutObject`](#presignedPutObject)             |
-| [`makeBucket`](#makeBucket)                                   | [`putObject`](#putObject)                               |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`removeObject`](#removeObject)                         |
-| [`removeBucket`](#removeBucket)                               | [`removeObjects`](#removeObjects)                       |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`selectObjectContent`](#selectObjectContent)           |
-| [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectRetention`](#setObjectRetention)             |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketNotification`](#setBucketNotification)             | [`statObject`](#statObject)                             |
+| [`isVersioningEnabled`](#isVersioningEnabled)                 | [`presignedGetObject`](#presignedGetObject)             |
+| [`listBuckets`](#listBuckets)                                 | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`listenBucketNotification`](#listenBucketNotification)       | [`presignedPutObject`](#presignedPutObject)             |
+| [`listIncompleteUploads`](#listIncompleteUploads)             | [`putObject`](#putObject)                               |
+| [`makeBucket`](#makeBucket)                                   | [`removeObject`](#removeObject)                         |
+| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`removeObjects`](#removeObjects)                       |
+| [`removeBucket`](#removeBucket)                               | [`selectObjectContent`](#selectObjectContent)           |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`setObjectRetention`](#setObjectRetention)             |
+| [`setBucketEncryption`](#setBucketEncryption)                 | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)                   | [`statObject`](#statObject)                             |
+| [`setBucketNotification`](#setBucketNotification)             |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                         |                                                         |
 | [`setBucketTags`](#setBucketTags)                             |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
@@ -386,6 +387,34 @@ __Parameters__
 __Example__
 ```java
 minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucket").build());
+```
+
+<a name="isVersioningEnabled"></a>
+### isVersioningEnabled(IsVersioningEnabledArgs args)
+`public boolean isVersioningEnabled(IsVersioningEnabledArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#isVersioningEnabled-io.minio.IsVersioningEnabledArgs-)_
+
+Get bucket version status.
+
+__Parameters__
+
+| Parameter  | Type                         | Description      |
+|:-----------|:-----------------------------|:-----------------|
+| ``args``   | _[IsVersioningEnabledArgs]_  | Arguments.       |
+
+| Returns                                           |
+|:--------------------------------------------------|
+| _boolean_ - True if bucket versioning is enabled. |
+
+__Example__
+```java
+boolean isVersioningEnabled =
+  minioClient.isVersioningEnabled(
+      IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
+if (isVersioningEnabled) {
+  System.out.println("Bucket versioning is enabled");
+} else {
+  System.out.println("Bucket versioning is disabled");
+}
 ```
 
 <a name="getBucketEncryption"></a>
@@ -1737,3 +1766,4 @@ ObjectStat objectStat =
 [DeleteBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketPolicyArgs.html
 [GetObjectArgs]: http://minio.github.io/minio-java/io/minio/GetObjectArgs.html
 [DownloadObjectArgs]: http://minio.github.io/minio-java/io/minio/DownloadObjectArgs.html
+[IsVersioningEnabledArgs]: http://minio.github.io/minio-java/io/minio/IsVersioningEnabledArgs.html
