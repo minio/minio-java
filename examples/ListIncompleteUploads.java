@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
@@ -39,7 +40,8 @@ public class ListIncompleteUploads {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Check whether 'my-bucketname' exist or not.
-      boolean found = minioClient.bucketExists("my-bucketname");
+      boolean found =
+          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
       if (found) {
         // List all incomplete multipart upload of objects in 'my-bucketname'
         Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname");

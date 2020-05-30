@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -37,7 +38,8 @@ public class BucketExists {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Check whether 'my-bucketname' exist or not.
-      boolean found = minioClient.bucketExists("my-bucketname");
+      boolean found =
+          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
       if (found) {
         System.out.println("my-bucketname exists");
       } else {

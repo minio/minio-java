@@ -60,7 +60,8 @@ public class FileUploader {
       MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Check if the bucket already exists.
-      boolean isExist = minioClient.bucketExists("asiatrip");
+      boolean isExist = 
+        minioClient.bucketExists(BucketExistsArgs.builder().bucket("asiatrip").build());
       if(isExist) {
         System.out.println("Bucket already exists.");
       } else {

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.BucketExistsArgs;
 import io.minio.EnableVersioningArgs;
 import io.minio.IsVersioningEnabledArgs;
 import io.minio.MakeBucketArgs;
@@ -40,7 +41,7 @@ public class IsVersioningEnabled {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Create bucket 'my-bucketname' if it doesn`t exist.
-      if (!minioClient.bucketExists("my-bucketname")) {
+      if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build())) {
         minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is created successfully");
       }
