@@ -4201,20 +4201,60 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #enableObjectLegalHold(EnableObjectLegalHoldArgs)}
    */
+  @Deprecated
   public void enableObjectLegalHold(String bucketName, String objectName, String versionId)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    enableObjectLegalHold(
+        EnableObjectLegalHoldArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .versionId(versionId)
+            .build());
+  }
+
+  /**
+   * Enables legal hold on an object.
+   *
+   * <pre>Example:{@code
+   * minioClient.enableObjectLegalHold(
+   *    EnableObjectLegalHoldArgs.builder()
+   *        .bucket("my-bucketname")
+   *        .object("my-objectname")
+   *        .versionId("object-versionId")
+   *        .build());
+   * }</pre>
+   *
+   * @param args {@link EnableObjectLegalHoldArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void enableObjectLegalHold(EnableObjectLegalHoldArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (versionId != null && !versionId.isEmpty()) {
-      queryParamMap.put("versionId", versionId);
+    if (args.versionId() != null) {
+      queryParamMap.put("versionId", args.versionId());
     }
 
     LegalHold legalHold = new LegalHold(true);
-    Response response = executePut(bucketName, objectName, null, queryParamMap, legalHold, 0);
+    Response response = executePut(args.bucket(), args.object(), null, queryParamMap, legalHold, 0);
     response.body().close();
   }
 
@@ -4239,21 +4279,61 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #disableObjectLegalHold(DisableObjectLegalHoldArgs)}
    */
+  @Deprecated
   public void disableObjectLegalHold(String bucketName, String objectName, String versionId)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    disableObjectLegalHold(
+        DisableObjectLegalHoldArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .versionId(versionId)
+            .build());
+  }
+
+  /**
+   * Disables legal hold on an object.
+   *
+   * <pre>Example:{@code
+   * minioClient.disableObjectLegalHold(
+   *    DisableObjectLegalHoldArgs.builder()
+   *        .bucket("my-bucketname")
+   *        .object("my-objectname")
+   *        .versionId("object-versionId")
+   *        .build());
+   * }</pre>
+   *
+   * @param args {@link DisableObjectLegalHoldArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void disableObjectLegalHold(DisableObjectLegalHoldArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (versionId != null && !versionId.isEmpty()) {
-      queryParamMap.put("versionId", versionId);
+    if (args.versionId() != null) {
+      queryParamMap.put("versionId", args.versionId());
     }
 
     LegalHold legalHold = new LegalHold(false);
-
-    Response response = executePut(bucketName, objectName, null, queryParamMap, legalHold, 0);
+    Response response = executePut(args.bucket(), args.object(), null, queryParamMap, legalHold, 0);
     response.body().close();
   }
 
@@ -4285,19 +4365,68 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #isObjectLegalHoldEnabled(IsObjectLegalHoldEnabledArgs)}
    */
+  @Deprecated
   public boolean isObjectLegalHoldEnabled(String bucketName, String objectName, String versionId)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    return isObjectLegalHoldEnabled(
+        IsObjectLegalHoldEnabledArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .versionId(versionId)
+            .build());
+  }
+
+  /**
+   * Returns true if legal hold is enabled on an object.
+   *
+   * <pre>Example:{@code
+   * boolean status =
+   *     s3Client.isObjectLegalHoldEnabled(
+   *        IsObjectLegalHoldEnabledArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .versionId("object-versionId")
+   *             .build());
+   * if (status) {
+   *   System.out.println("Legal hold is on");
+   *  } else {
+   *   System.out.println("Legal hold is off");
+   *  }
+   * }</pre>
+   *
+   * args {@link IsObjectLegalHoldEnabledArgs} object.
+   *
+   * @return boolean - True if legal hold is enabled.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public boolean isObjectLegalHoldEnabled(IsObjectLegalHoldEnabledArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("legal-hold", "");
 
-    if (versionId != null && !versionId.isEmpty()) {
-      queryParamMap.put("versionId", versionId);
+    if (args.versionId() != null) {
+      queryParamMap.put("versionId", args.versionId());
     }
 
-    try (Response response = executeGet(bucketName, objectName, null, queryParamMap)) {
+    try (Response response = executeGet(args.bucket(), args.object(), null, queryParamMap)) {
       LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
       return result.status();
     } catch (ErrorResponseException e) {
