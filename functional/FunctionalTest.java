@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015-2019 MinIO, Inc.
+ * (C) 2015-2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -577,12 +577,22 @@ public class FunctionalTest {
 
   /** Tear down test setup. */
   public static void setup() throws Exception {
-    client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+    long startTime = System.currentTimeMillis();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+    } catch (Exception e) {
+      handleException("makeBucket(MakeBucketArgs args)", null, startTime, e);
+    }
   }
 
   /** Tear down test setup. */
   public static void teardown() throws Exception {
-    client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+    long startTime = System.currentTimeMillis();
+    try {
+      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+    } catch (Exception e) {
+      handleException("removeBucket(RemoveBucketArgs args)", null, startTime, e);
+    }
   }
 
   /**
@@ -4954,7 +4964,9 @@ public class FunctionalTest {
         FunctionalTest.runQuickTests();
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      if (!mintEnv) {
+        e.printStackTrace();
+      }
       exitValue = -1;
     } finally {
       if (minioProcess != null) {
