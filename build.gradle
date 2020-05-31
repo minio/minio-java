@@ -131,7 +131,7 @@ project(':api') {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
             'Implementation-Version': version,
-            'Built-By': System.getProperty('user.name'),
+            'Built-By': 'MinIO, inc',
             'Built-JDK': System.getProperty('java.version'),
             'Source-Compatibility': sourceCompatibility,
             'Target-Compatibility': targetCompatibility)
