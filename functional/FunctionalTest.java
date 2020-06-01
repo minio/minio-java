@@ -55,6 +55,7 @@ import io.minio.PutObjectOptions;
 import io.minio.RemoveBucketArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.Result;
+import io.minio.SelectObjectContentArgs;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
@@ -4186,13 +4187,12 @@ public class FunctionalTest {
    * Long scanEndRange, ServerSideEncryption sse).
    */
   public static void selectObjectContent_test1() throws Exception {
-    String testName =
-        "selectObjectContent(String bucketName, String objectName, String sqlExpression,"
-            + " InputSerialization is, OutputSerialization os, boolean requestProgress,"
-            + " Long scanStartRange, Long scanEndRange, ServerSideEncryption sse)";
+    String methodName = "selectObjectContent(SelectObjectContentArgs args)";
+    String sqlExpression = "select * from S3Object";
+    String args = "sqlExpression: " + sqlExpression + ", requestProgress: true";
 
     if (!mintEnv) {
-      System.out.println("Test: " + testName);
+      System.out.println("Test: " + methodName + ", " + args);
     }
 
     long startTime = System.currentTimeMillis();
@@ -4210,7 +4210,6 @@ public class FunctionalTest {
       ByteArrayInputStream bais = new ByteArrayInputStream(data);
       client.putObject(bucketName, objectName, bais, new PutObjectOptions(data.length, -1));
 
-      String sqlExpression = "select * from S3Object";
       InputSerialization is =
           new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
       OutputSerialization os =
@@ -4218,7 +4217,14 @@ public class FunctionalTest {
 
       responseStream =
           client.selectObjectContent(
-              bucketName, objectName, sqlExpression, is, os, true, null, null, null);
+              SelectObjectContentArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .sqlExpression(sqlExpression)
+                  .inputSerialization(is)
+                  .outputSerialization(os)
+                  .requestProgress(true)
+                  .build());
 
       String result = new String(readAllBytes(responseStream), StandardCharsets.UTF_8);
       if (!result.equals(expectedResult)) {
@@ -4246,11 +4252,11 @@ public class FunctionalTest {
             "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
       }
 
-      mintSuccessLog(testName, null, startTime);
+      mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
       mintFailedLog(
-          testName,
-          null,
+          methodName,
+          args,
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));

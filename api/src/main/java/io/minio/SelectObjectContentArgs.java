@@ -1,0 +1,91 @@
+/*
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
+ * (C) 2015, 2016, 2017, 2018, 2019 MinIO, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.minio;
+
+import io.minio.messages.InputSerialization;
+import io.minio.messages.OutputSerialization;
+
+public class SelectObjectContentArgs extends SsecObjectArgs {
+  private String sqlExpression;
+  private InputSerialization inputSerialization;
+  private OutputSerialization outputSerialization;
+  private Boolean requestProgress;
+  private Long scanStartRange;
+  private Long scanEndRange;
+
+  public Long scanEndRange() {
+    return scanEndRange;
+  }
+
+  public Long scanStartRange() {
+    return scanStartRange;
+  }
+
+  public Boolean requestProgress() {
+    return requestProgress;
+  }
+
+  public OutputSerialization outputSerialization() {
+    return outputSerialization;
+  }
+
+  public InputSerialization inputSerialization() {
+    return inputSerialization;
+  }
+
+  public String sqlExpression() {
+    return sqlExpression;
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static final class Builder
+      extends SsecObjectArgs.Builder<Builder, SelectObjectContentArgs> {
+    public Builder sqlExpression(String sqlExpression) {
+      operations.add(args -> args.sqlExpression = sqlExpression);
+      return this;
+    }
+
+    public Builder inputSerialization(InputSerialization inputSerialization) {
+      operations.add(args -> args.inputSerialization = inputSerialization);
+      return this;
+    }
+
+    public Builder outputSerialization(OutputSerialization outputSerialization) {
+      operations.add(args -> args.outputSerialization = outputSerialization);
+      return this;
+    }
+
+    public Builder requestProgress(Boolean requestProgress) {
+      operations.add(args -> args.requestProgress = requestProgress);
+      return this;
+    }
+
+    public Builder scanStartRange(Long scanStartRange) {
+      operations.add(args -> args.scanStartRange = scanStartRange);
+      return this;
+    }
+
+    public Builder scanEndRange(Long scanEndRange) {
+      operations.add(args -> args.scanEndRange = scanEndRange);
+      return this;
+    }
+  }
+}

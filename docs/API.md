@@ -1586,8 +1586,8 @@ for (Result<DeleteError> result : results) {
 ```
 
  <a name="selectObjectContent"></a>
-### selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryptionCustomerKey ssec)
-`public SelectResponseStream selectObjectContent(String bucketName, String objectName, String sqlExpression, InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange, Long scanEndRange, ServerSideEncryptionCustomerKey ssec)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-java.lang.String-java.lang.String-java.lang.String-io.minio.messages.InputSerialization-io.minio.messages.OutputSerialization-boolean-java.lang.Long-java.lang.Long-io.minio.ServerSideEncryptionCustomerKey-)_
+### selectObjectContent(SelectObjectContentArgs args)
+`public SelectResponseStream selectObjectContent(SelectObjectContentArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-io.minio.SelectObjectContentArgs-)_
 
 Selects content of a object by SQL expression.
 
@@ -1595,15 +1595,7 @@ __Parameters__
 
 | Parameter           | Type                                | Description                           |
 |:--------------------|:------------------------------------|:--------------------------------------|
-| ``bucketName``      | _String_                            | Name of the bucket.                   |
-| ``objectName``      | _String_                            | Object name in the bucket.            |
-| ``sqlExpression``   | _String_                            | SQL expression.                       |
-| ``is``              | _[InputSerialization]_              | Input specification of object data.   |
-| ``os``              | _[OutputSerialization]_             | Output specification of result.       |
-| ``requestProgress`` | _boolean_                           | Flag to request progress information. |
-| ``scanStartRange``  | _Long_                              | scan start range of the object.       |
-| ``scanEndRange``    | _Long_                              | scan end range of the object.         |
-| ``sse``             | _[ServerSideEncryptionCustomerKey]_ | SSE-C type server-side encryption.    |
+| ``args``            | _SelectObjectContentArgs_           | Arguments.                            |
 
 | Returns                                                            |
 |:-------------------------------------------------------------------|
@@ -1614,8 +1606,16 @@ __Example__
 String sqlExpression = "select * from S3Object";
 InputSerialization is = new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
 OutputSerialization os = new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
-SelectResponseStream stream = minioClient.selectObjectContent("my-bucketname", "my-objectName", sqlExpression,
-    is, os, true, null, null, null);
+SelectResponseStream stream =
+    minioClient.selectObjectContent(
+        SelectObjectContentArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectName")
+            .sqlExpression(sqlExpression)
+            .inputSerialization(is)
+            .outputSerialization(os)
+            .requestProgress(true)
+            .build());
 
 byte[] buf = new byte[512];
 int bytesRead = stream.read(buf, 0, buf.length);
@@ -1799,3 +1799,4 @@ ObjectStat objectStat =
 [GetBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/GetBucketNotificationArgs.html
 [SetBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/SetBucketNotificationArgs.html
 [ListenBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/ListenBucketNotificationArgs.html
+[SelectObjectContentArgs]: http://minio.github.io/minio-java/io/minio/SelectObjectContentArgs.html
