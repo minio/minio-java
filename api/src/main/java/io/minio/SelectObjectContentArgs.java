@@ -58,17 +58,32 @@ public class SelectObjectContentArgs extends SsecObjectArgs {
 
   public static final class Builder
       extends SsecObjectArgs.Builder<Builder, SelectObjectContentArgs> {
+    private void validateSqlExpression(String se) {
+      validateNotEmptyString(se, "sqlExpression");
+    }
+
     public Builder sqlExpression(String sqlExpression) {
+      validateSqlExpression(sqlExpression);
       operations.add(args -> args.sqlExpression = sqlExpression);
       return this;
     }
 
+    private void validateInputSerialization(InputSerialization is) {
+      validateNotNull(is, "inputSerialization");
+    }
+
     public Builder inputSerialization(InputSerialization inputSerialization) {
+      validateInputSerialization(inputSerialization);
       operations.add(args -> args.inputSerialization = inputSerialization);
       return this;
     }
 
+    private void validateOutputSerialization(OutputSerialization os) {
+      validateNotNull(os, "outputSerialization");
+    }
+
     public Builder outputSerialization(OutputSerialization outputSerialization) {
+      validateOutputSerialization(outputSerialization);
       operations.add(args -> args.outputSerialization = outputSerialization);
       return this;
     }
@@ -86,6 +101,14 @@ public class SelectObjectContentArgs extends SsecObjectArgs {
     public Builder scanEndRange(Long scanEndRange) {
       operations.add(args -> args.scanEndRange = scanEndRange);
       return this;
+    }
+
+    @Override
+    protected void validate(SelectObjectContentArgs args) {
+      super.validate(args);
+      validateSqlExpression(args.sqlExpression());
+      validateInputSerialization(args.inputSerialization());
+      validateOutputSerialization(args.outputSerialization());
     }
   }
 }

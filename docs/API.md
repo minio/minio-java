@@ -1595,7 +1595,7 @@ __Parameters__
 
 | Parameter           | Type                                | Description                           |
 |:--------------------|:------------------------------------|:--------------------------------------|
-| ``args``            | _SelectObjectContentArgs_           | Arguments.                            |
+| ``args``            | _[SelectObjectContentArgs]_           | Arguments.                            |
 
 | Returns                                                            |
 |:-------------------------------------------------------------------|

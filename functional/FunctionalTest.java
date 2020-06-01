@@ -4254,13 +4254,7 @@ public class FunctionalTest {
 
       mintSuccessLog(methodName, args, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          args,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, args, startTime, e);
     } finally {
       if (responseStream != null) {
         responseStream.close();
