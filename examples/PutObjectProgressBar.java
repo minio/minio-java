@@ -16,14 +16,7 @@
 
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidPortException;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.XmlParserException;
+import io.minio.errors.MinioException;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,10 +29,7 @@ import me.tongfei.progressbar.ProgressBarStyle;
 public class PutObjectProgressBar {
   /** MinioClient.putObjectProgressBar() example. */
   public static void main(String[] args)
-      throws InvalidKeyException, NoSuchAlgorithmException, InvalidEndpointException,
-          InvalidPortException, InvalidBucketNameException, InsufficientDataException,
-          ErrorResponseException, InternalException, IllegalArgumentException, IOException,
-          XmlParserException, InvalidResponseException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException, MinioException {
     /* play.min.io for test and development. */
     MinioClient minioClient =
         new MinioClient(
