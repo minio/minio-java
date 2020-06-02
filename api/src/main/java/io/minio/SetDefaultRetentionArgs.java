@@ -38,6 +38,7 @@ public class SetDefaultRetentionArgs extends BucketArgs {
       }
     }
 
+    @Override
     protected void validate(SetDefaultRetentionArgs args) {
       super.validate(args);
       validateConfig(args.config);

@@ -28,6 +28,7 @@ import io.minio.DeleteBucketLifeCycleArgs;
 import io.minio.DeleteBucketNotificationArgs;
 import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketTagsArgs;
+import io.minio.DeleteDefaultRetentionArgs;
 import io.minio.DeleteObjectTagsArgs;
 import io.minio.DisableObjectLegalHoldArgs;
 import io.minio.DisableVersioningArgs;
@@ -86,6 +87,7 @@ import io.minio.messages.OutputSerialization;
 import io.minio.messages.QueueConfiguration;
 import io.minio.messages.QuoteFields;
 import io.minio.messages.Retention;
+import io.minio.messages.RetentionDuration;
 import io.minio.messages.RetentionDurationDays;
 import io.minio.messages.RetentionDurationYears;
 import io.minio.messages.RetentionMode;
@@ -3592,7 +3594,7 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
-
+    String mintArgs = "config={COMPLIANCE, 10 days}";
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
@@ -3603,9 +3605,29 @@ public class FunctionalTest {
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog(methodName, null, startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
+      handleException(methodName, mintArgs, startTime, e);
+    }
+  }
+
+  public static void testGetDefaultRetention(
+      String bucketName, RetentionMode mode, RetentionDuration duration) throws Exception {
+    ObjectLockConfiguration expectedConfig = new ObjectLockConfiguration(mode, duration);
+    client.setDefaultRetention(
+        SetDefaultRetentionArgs.builder().bucket(bucketName).config(expectedConfig).build());
+    ObjectLockConfiguration config =
+        client.getDefaultRetention(GetDefaultRetentionArgs.builder().bucket(bucketName).build());
+
+    if (config.mode() != expectedConfig.mode()) {
+      throw new Exception(
+          "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
+    }
+
+    if (config.duration().unit() != expectedConfig.duration().unit()
+        || config.duration().duration() != expectedConfig.duration().duration()) {
+      throw new Exception(
+          "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
     }
   }
 
@@ -3621,48 +3643,43 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        ObjectLockConfiguration expectedConfig =
-            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        client.setDefaultRetention(
-            SetDefaultRetentionArgs.builder().bucket(bucketName).config(expectedConfig).build());
-        ObjectLockConfiguration config =
-            client.getDefaultRetention(
-                GetDefaultRetentionArgs.builder().bucket(bucketName).build());
-
-        if (config.mode() != expectedConfig.mode()) {
-          throw new Exception(
-              "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
-        }
-
-        if (config.duration().unit() != expectedConfig.duration().unit()
-            || config.duration().duration() != expectedConfig.duration().duration()) {
-          throw new Exception(
-              "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
-        }
-
-        expectedConfig =
-            new ObjectLockConfiguration(RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
-        client.setDefaultRetention(
-            SetDefaultRetentionArgs.builder().bucket(bucketName).config(expectedConfig).build());
-        config =
-            client.getDefaultRetention(
-                GetDefaultRetentionArgs.builder().bucket(bucketName).build());
-
-        if (config.mode() != expectedConfig.mode()) {
-          throw new Exception(
-              "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
-        }
-
-        if (config.duration().unit() != expectedConfig.duration().unit()
-            || config.duration().duration() != expectedConfig.duration().duration()) {
-          throw new Exception(
-              "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
-        }
-
+        testGetDefaultRetention(
+            bucketName, RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+        testGetDefaultRetention(
+            bucketName, RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
 
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  /** Test: deleteDefaultRetention(DeleteDefaultRetentionArgs args). */
+  public static void deleteDefaultRetention_test() throws Exception {
+    String methodName = "deleteDefaultRetention(DeleteDefaultRetentionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+      try {
+        client.deleteDefaultRetention(
+            DeleteDefaultRetentionArgs.builder().bucket(bucketName).build());
+        ObjectLockConfiguration config =
+            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+        client.setDefaultRetention(
+            SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
+        client.deleteDefaultRetention(
+            DeleteDefaultRetentionArgs.builder().bucket(bucketName).build());
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
