@@ -16,6 +16,7 @@
 
 import io.minio.MinioClient;
 import io.minio.PutObjectOptions;
+import io.minio.SelectObjectContentArgs;
 import io.minio.SelectResponseStream;
 import io.minio.errors.MinioException;
 import io.minio.messages.FileHeaderInfo;
@@ -65,7 +66,14 @@ public class SelectObjectContent {
 
       SelectResponseStream stream =
           minioClient.selectObjectContent(
-              "my-bucketname", "my-objectName", sqlExpression, is, os, true, null, null, null);
+              SelectObjectContentArgs.builder()
+                  .bucket("my-bucketname")
+                  .object("my-objectName")
+                  .sqlExpression(sqlExpression)
+                  .inputSerialization(is)
+                  .outputSerialization(os)
+                  .requestProgress(true)
+                  .build());
 
       byte[] buf = new byte[512];
       int bytesRead = stream.read(buf, 0, buf.length);

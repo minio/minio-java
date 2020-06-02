@@ -5961,7 +5961,7 @@ public class MinioClient {
   }
 
   /**
-   * Selects content of a object by SQL expression.
+   * Selects content of an object by SQL expression.
    *
    * <pre>Example:{@code
    * String sqlExpression = "select * from S3Object";
@@ -6007,7 +6007,9 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #selectObjectContent(SelectObjectContentArgs)}
    */
+  @Deprecated
   public SelectResponseStream selectObjectContent(
       String bucketName,
       String objectName,
@@ -6022,15 +6024,76 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new IllegalArgumentException("bucket name cannot be empty");
-    }
-    checkObjectName(objectName);
-    checkReadRequestSse(ssec);
+    return selectObjectContent(
+        SelectObjectContentArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .sqlExpression(sqlExpression)
+            .inputSerialization(is)
+            .outputSerialization(os)
+            .requestProgress(requestProgress)
+            .scanStartRange(scanStartRange)
+            .scanEndRange(scanEndRange)
+            .build());
+  }
+
+  /**
+   * Selects content of an object by SQL expression.
+   *
+   * <pre>Example:{@code
+   * String sqlExpression = "select * from S3Object";
+   * InputSerialization is =
+   *     new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null,
+   *         null);
+   * OutputSerialization os =
+   *     new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
+   * SelectResponseStream stream =
+   *     minioClient.selectObjectContent(
+   *       SelectObjectContentArgs.builder()
+   *       .bucket("my-bucketname")
+   *       .object("my-objectname")
+   *       .sqlExpression(sqlExpression)
+   *       .inputSerialization(is)
+   *       .outputSerialization(os)
+   *       .requestProgress(true)
+   *       .build());
+   *
+   * byte[] buf = new byte[512];
+   * int bytesRead = stream.read(buf, 0, buf.length);
+   * System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+   *
+   * Stats stats = stream.stats();
+   * System.out.println("bytes scanned: " + stats.bytesScanned());
+   * System.out.println("bytes processed: " + stats.bytesProcessed());
+   * System.out.println("bytes returned: " + stats.bytesReturned());
+   *
+   * stream.close();
+   * }</pre>
+   *
+   * @param args instance of {@link SelectObjectContentArgs}
+   * @return {@link SelectResponseStream} - Contains filtered records and progress.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public SelectResponseStream selectObjectContent(SelectObjectContentArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    args.validateSsec(this.baseUrl);
 
     Map<String, String> headerMap = null;
-    if (ssec != null) {
-      headerMap = ssec.headers();
+    if (args.ssec() != null) {
+      headerMap = args.ssec().headers();
     }
 
     Map<String, String> queryParamMap = new HashMap<>();
@@ -6039,8 +6102,14 @@ public class MinioClient {
 
     SelectObjectContentRequest request =
         new SelectObjectContentRequest(
-            sqlExpression, requestProgress, is, os, scanStartRange, scanEndRange);
-    Response response = executePost(bucketName, objectName, headerMap, queryParamMap, request);
+            args.sqlExpression(),
+            args.requestProgress(),
+            args.inputSerialization(),
+            args.outputSerialization(),
+            args.scanStartRange(),
+            args.scanEndRange());
+    Response response =
+        executePost(args.bucket(), args.object(), headerMap, queryParamMap, request);
     return new SelectResponseStream(response.body().byteStream());
   }
 

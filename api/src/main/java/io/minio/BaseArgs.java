@@ -46,6 +46,19 @@ public abstract class BaseArgs {
 
     protected abstract void validate(A args);
 
+    protected void validateNotNull(Object arg, String argName) {
+      if (arg == null) {
+        throw new IllegalArgumentException(argName + " must not be null.");
+      }
+    }
+
+    protected void validateNotEmptyString(String arg, String argName) {
+      validateNotNull(arg, argName);
+      if (arg.isEmpty()) {
+        throw new IllegalArgumentException(argName + " must be a non-empty string.");
+      }
+    }
+
     public Builder() {
       this.operations = new ArrayList<>();
     }
