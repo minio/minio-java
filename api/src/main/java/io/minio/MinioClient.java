@@ -1407,7 +1407,7 @@ public class MinioClient {
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          ServerException, XmlParserException {
+          XmlParserException {
     if (this.region != null && !this.region.equals("")) {
       return this.region;
     }
@@ -1629,7 +1629,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
-   * @see ObjectStat
+   * @deprecated use {@link #statObject(StatObjectArgs)}
    */
   @Deprecated
   public ObjectStat statObject(String bucketName, String objectName)
@@ -1663,7 +1663,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
-   * @see ObjectStat
+   * @deprecated use {@link #statObject(StatObjectArgs)}
    */
   @Deprecated
   public ObjectStat statObject(
@@ -2912,6 +2912,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #removeObject(RemoveObjectArgs)}
    */
   @Deprecated
   public void removeObject(String bucketName, String objectName)
@@ -3639,6 +3640,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws RegionConflictException thrown to indicate passed region conflict with default region.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #makeBucket(MakeBucketArgs)}
    */
   @Deprecated
   public void makeBucket(String bucketName)
@@ -3670,6 +3672,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws RegionConflictException thrown to indicate passed region conflict with default region.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #makeBucket(MakeBucketArgs)}
    */
   @Deprecated
   public void makeBucket(String bucketName, String region)
@@ -3702,6 +3705,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws RegionConflictException thrown to indicate passed region conflict with default region.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #makeBucket(MakeBucketArgs)}
    */
   @Deprecated
   public void makeBucket(String bucketName, String region, boolean objectLock)
@@ -4066,6 +4070,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #setObjectRetention(SetObjectRetentionArgs)}
    */
   @Deprecated
   public void setObjectRetention(
@@ -4166,6 +4171,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getObjectRetention(GetObjectRetentionArgs)}
    */
   @Deprecated
   public Retention getObjectRetention(String bucketName, String objectName, String versionId)
@@ -4516,6 +4522,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #removeBucket(RemoveBucketArgs)}
    */
   @Deprecated
   public void removeBucket(String bucketName)
@@ -5026,6 +5033,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #setBucketLifeCycle(SetBucketLifeCycleArgs)}
    */
   @Deprecated
   public void setBucketLifeCycle(String bucketName, String lifeCycle)
@@ -5102,6 +5110,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #deleteBucketLifeCycle(DeleteBucketLifeCycleArgs)}
    */
   @Deprecated
   public void deleteBucketLifeCycle(String bucketName)
@@ -5165,6 +5174,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getBucketLifeCycle(GetBucketLifeCycleArgs)}
    */
   @Deprecated
   public String getBucketLifeCycle(String bucketName)
@@ -5842,7 +5852,7 @@ public class MinioClient {
    * <pre>Example:{@code
    * String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
    * try (CloseableIterator<Result<NotificationInfo>> ci =
-   *     minioClient.listenBucketNotification("bcketName", "", "", events)) {
+   *     minioClient.listenBucketNotification("bucketName", "", "", events)) {
    *   while (ci.hasNext()) {
    *     NotificationRecords records = ci.next().get();
    *     for (Event event : records.events()) {
@@ -5871,22 +5881,81 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #listenBucketNotification(ListenBucketNotificationArgs)}
    */
+  @Deprecated
   public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(
       String bucketName, String prefix, String suffix, String[] events)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
+    return listenBucketNotification(
+        ListenBucketNotificationArgs.builder()
+            .bucket(bucketName)
+            .prefix(prefix)
+            .suffix(suffix)
+            .events(events)
+            .build());
+  }
+
+  /**
+   * Listens events of object prefix and suffix of a bucket. The returned closable iterator is
+   * lazily evaluated hence its required to iterate to get new records and must be used with
+   * try-with-resource to release underneath network resources.
+   *
+   * <pre>Example:{@code
+   * String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
+   * try (CloseableIterator<Result<NotificationRecords>> ci =
+   *     minioClient.listenBucketNotification(
+   *         ListenBucketNotificationArgs.builder()
+   *             .bucket("bucketName")
+   *             .prefix("")
+   *             .suffix("")
+   *             .events(events)
+   *             .build())) {
+   *   while (ci.hasNext()) {
+   *     NotificationRecords records = ci.next().get();
+   *     for (Event event : records.events()) {
+   *       System.out.println("Event " + event.eventType() + " occurred at "
+   *           + event.eventTime() + " for " + event.bucketName() + "/"
+   *           + event.objectName());
+   *     }
+   *   }
+   * }
+   * }</pre>
+   *
+   * @param args {@link ListenBucketNotificationArgs} object.
+   * @return CloseableIterator&ltResult&ltNotificationRecords&gt&gt - Lazy closable iterator
+   *     contains event records.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(
+      ListenBucketNotificationArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+
     Multimap<String, String> queryParamMap = HashMultimap.create();
-    queryParamMap.put("prefix", prefix);
-    queryParamMap.put("suffix", suffix);
-    for (String event : events) {
+    queryParamMap.put("prefix", args.prefix());
+    queryParamMap.put("suffix", args.suffix());
+    for (String event : args.events()) {
       queryParamMap.put("events", event);
     }
 
-    Response response = executeGet(bucketName, "", queryParamMap);
-
+    Response response = executeGet(args.bucket(), "", queryParamMap);
     NotificationResultRecords result = new NotificationResultRecords(response);
     return result.closeableIterator();
   }

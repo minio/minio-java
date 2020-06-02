@@ -589,18 +589,15 @@ for (Bucket bucket : bucketList) {
 ```
 
 <a name="listenBucketNotification"></a>
-### listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)
-`public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(String bucketName, String prefix, String suffix, String[] events)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-java.lang.String-java.lang.String-java.lang.String-java.lang.String:A-)_
+### listenBucketNotification(ListenBucketNotificationArgs args)
+`public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(ListenBucketNotificationArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-io.minio.ListenBucketNotificationArgs-)_
 
 Listens events of object prefix and suffix of a bucket. The returned closable iterator is lazily evaluated hence its required to iterate to get new records and must be used with try-with-resource to release underneath network resources.
 
 __Parameters__
-| Parameter      | Type       | Description                                 |
-|:---------------|:-----------|:--------------------------------------------|
-| ``bucketName`` | _String_   | Name of the bucket.                         |
-| ``prefix``     | _String_   | Listen events of object starts with prefix. |
-| ``suffix``     | _String_   | Listen events of object ends with suffix.   |
-| ``events``     | _String[]_ | Events to listen.                           |
+| Parameter | Type                             | Description |
+|:----------|:---------------------------------|:------------|
+| ``args``  | _[ListenBucketNotificationArgs]_ | Arguments.  |
 
 | Returns                                                                                                 |
 |:--------------------------------------------------------------------------------------------------------|
@@ -609,8 +606,14 @@ __Parameters__
 __Example__
 ```java
 String[] events = {"s3:ObjectCreated:*", "s3:ObjectAccessed:*"};
-try (CloseableIterator<Result<NotificationInfo>> ci =
-    minioClient.listenBucketNotification("bcketName", "", "", events)) {
+try (CloseableIterator<Result<NotificationRecords>> ci =
+    minioClient.listenBucketNotification(
+        ListenBucketNotificationArgs.builder()
+            .bucket("bucketName")
+            .prefix("")
+            .suffix("")
+            .events(events)
+            .build())) {
   while (ci.hasNext()) {
     NotificationRecords records = ci.next().get();
     for (Event event : records.events()) {
@@ -1795,3 +1798,4 @@ ObjectStat objectStat =
 [DeleteBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketNotificationArgs.html
 [GetBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/GetBucketNotificationArgs.html
 [SetBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/SetBucketNotificationArgs.html
+[ListenBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/ListenBucketNotificationArgs.html
