@@ -24,11 +24,20 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java-version }}
+      - name: Set environment variables
+        run: |
+          echo "::set-env name=DEV_VERSION::$(./gradlew properties | awk '/^version:/ { print $2 }')"
+          echo "::set-env name=RELEASE_VERSION::$(./gradlew properties -Prelease | awk '/^version:/ { print $2 }')"
       - name: Gradle build on ${{ matrix.java-version }}
         if: matrix.os == 'ubuntu-latest'
         run: |
           ./gradlew build
           ./gradlew runFunctionalTest
+          javac -cp api/build/libs/minio-${DEV_VERSION}-all.jar functional/TestUserAgent.java
+          java -Dversion=${DEV_VERSION} -cp api/build/libs/minio-${DEV_VERSION}-all.jar:functional TestUserAgent
+          ./gradlew build -Prelease
+          javac -cp api/build/libs/minio-${RELEASE_VERSION}-all.jar functional/TestUserAgent.java
+          java -Dversion=${RELEASE_VERSION} -cp api/build/libs/minio-${RELEASE_VERSION}-all.jar:functional TestUserAgent
       - name: Gradle build on ${{ matrix.java-version }}
         if: matrix.os == 'windows-latest'
         run: |
