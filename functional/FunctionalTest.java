@@ -4129,6 +4129,8 @@ public class FunctionalTest {
     String file = createFile1Kb();
     String bucketName = getRandomName();
     CloseableIterator<Result<NotificationRecords>> ci = null;
+    String mintArgs =
+        "prefix=prefix, suffix=suffix, events={\"s3:ObjectCreated:*\", \"s3:ObjectAccessed:*\"}";
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
 
@@ -4163,9 +4165,9 @@ public class FunctionalTest {
         }
       }
 
-      mintSuccessLog(methodName, null, startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
+      handleException(methodName, mintArgs, startTime, e);
     } finally {
       if (ci != null) {
         ci.close();
