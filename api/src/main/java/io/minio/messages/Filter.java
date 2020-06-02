@@ -67,10 +67,7 @@ public class Filter {
   }
 
   public List<FilterRule> filterRuleList() {
-    if (filterRuleList == null) {
-      return null;
-    }
-
-    return Collections.unmodifiableList(filterRuleList);
+    return Collections.unmodifiableList(
+        filterRuleList == null ? new LinkedList<>() : filterRuleList);
   }
 }

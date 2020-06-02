@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+import io.minio.DeleteBucketNotificationArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class RemoveAllBucketNotification {
+public class DeleteBucketNotification {
   /** MinioClient.removeAllBucketNotification() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
@@ -36,7 +37,8 @@ public class RemoveAllBucketNotification {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      minioClient.removeAllBucketNotification("my-bucketname");
+      minioClient.deleteBucketNotification(
+          DeleteBucketNotificationArgs.builder().bucket("my-bucketname").build());
       System.out.println("Removed all bucket notification");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.SetBucketNotificationArgs;
 import io.minio.errors.MinioException;
 import io.minio.messages.EventType;
 import io.minio.messages.NotificationConfiguration;
@@ -38,13 +39,10 @@ public class SetBucketNotification {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Get current notification configuration.
-      NotificationConfiguration notificationConfiguration =
-          minioClient.getBucketNotification("my-bucketname");
+      NotificationConfiguration config = new NotificationConfiguration();
 
       // Add a new SQS configuration.
-      List<QueueConfiguration> queueConfigurationList =
-          notificationConfiguration.queueConfigurationList();
+      List<QueueConfiguration> queueConfigurationList = config.queueConfigurationList();
       QueueConfiguration queueConfiguration = new QueueConfiguration();
       queueConfiguration.setQueue("arn:minio:sqs::1:webhook");
 
@@ -56,10 +54,11 @@ public class SetBucketNotification {
       queueConfiguration.setSuffixRule("pg");
 
       queueConfigurationList.add(queueConfiguration);
-      notificationConfiguration.setQueueConfigurationList(queueConfigurationList);
+      config.setQueueConfigurationList(queueConfigurationList);
 
       // Set updated notification configuration.
-      minioClient.setBucketNotification("my-bucketname", notificationConfiguration);
+      minioClient.setBucketNotification(
+          SetBucketNotificationArgs.builder().bucket("my-bucketname").config(config).build());
       System.out.println("Bucket notification is set successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
