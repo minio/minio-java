@@ -3130,17 +3130,20 @@ public class FunctionalTest {
    * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test1() throws Exception {
+
+    String methodName =
+        "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget).");
+      System.out.println("Test :" + methodName);
     }
     long startTime = System.currentTimeMillis();
-
+    String mintArgs = "size: 6 MB & 6 MB ";
     try {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
+
       PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
       client.putObject(bucketName, filename1, filename1, options);
       client.putObject(bucketName, filename2, filename2, options);
@@ -3150,45 +3153,22 @@ public class FunctionalTest {
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
+      try {
+        client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
+      } finally {
+        Files.delete(Paths.get(filename1));
+        Files.delete(Paths.get(filename2));
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      }
 
-      client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
-      Files.delete(Paths.get(filename1));
-      Files.delete(Paths.get(filename2));
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-
-      mintSuccessLog(
-          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "size: 6 MB & 6 MB ",
-          startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-            null,
-            startTime);
-      } else {
-        mintFailedLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-            "size: 6 MB & 6 MB",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 
@@ -3197,67 +3177,49 @@ public class FunctionalTest {
    * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test2() throws Exception {
+    String methodName =
+        "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with offset and length.";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with offset and length.");
+      System.out.println("Test :" + methodName);
     }
     long startTime = System.currentTimeMillis();
+    final long partialLength = 6291436L;
+    final long offset = 10L;
+    String mintArgs = String.format("offset: %d, length: %d bytes", offset, partialLength);
 
     try {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
+
       PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
       client.putObject(bucketName, filename1, filename1, options);
       client.putObject(bucketName, filename2, filename2, options);
-      ComposeSource s1 = new ComposeSource(bucketName, filename1, 10L, 6291436L, null, null, null);
+      ComposeSource s1 =
+          new ComposeSource(bucketName, filename1, offset, partialLength, null, null, null);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
-      Files.delete(Paths.get(filename1));
-      Files.delete(Paths.get(filename2));
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-
-      mintSuccessLog(
-          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with offset and length.",
-          startTime);
-
+      try {
+        client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
+      } finally {
+        Files.delete(Paths.get(filename1));
+        Files.delete(Paths.get(filename2));
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      }
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)"
-                + "with offset and length.",
-            null,
-            startTime);
-      } else {
-        mintFailedLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-            "with offset and length.",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 
@@ -3266,10 +3228,11 @@ public class FunctionalTest {
    * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test3() throws Exception {
+    String methodName =
+        "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with one source";
     if (!mintEnv) {
-      System.out.println(
-          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with one source");
+      System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
 
@@ -3282,44 +3245,21 @@ public class FunctionalTest {
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
 
-      client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
-      Files.delete(Paths.get(filename1));
+      try {
+        client.composeObject(bucketName, destinationObjectName, listSourceObjects, null, null);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
+      } finally {
+        Files.delete(Paths.get(filename1));
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+      }
 
-      mintSuccessLog(
-          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with one source.",
-          startTime);
+      mintSuccessLog(methodName, null, startTime);
 
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)"
-                + "with one source.",
-            null,
-            startTime);
-      } else {
-        mintFailedLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-            "with one source.",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -3328,10 +3268,12 @@ public class FunctionalTest {
    * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test4() throws Exception {
+    String methodName =
+        "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C and SSE_C Target";
+
     if (!mintEnv) {
-      System.out.println(
-          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C and SSE_C Target");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3362,43 +3304,22 @@ public class FunctionalTest {
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName, objectName, listSourceObjects, null, sseTarget);
-      Files.delete(Paths.get(filename1));
-      Files.delete(Paths.get(filename2));
+      try {
+        client.composeObject(bucketName, objectName, listSourceObjects, null, sseTarget);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      } finally {
+        Files.delete(Paths.get(filename1));
+        Files.delete(Paths.get(filename2));
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with SSE_C and SSE_C Target",
-          startTime);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and"
-                + "SSE_C Target",
-            null,
-            startTime);
-      } else {
-        mintFailedLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C and ",
-            "SSE_C Target",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -3407,10 +3328,11 @@ public class FunctionalTest {
    * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test5() throws Exception {
+    String methodName =
+        "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C on one source object";
     if (!mintEnv) {
-      System.out.println(
-          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C on one source object");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3436,43 +3358,22 @@ public class FunctionalTest {
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName, objectName, listSourceObjects, null, null);
-      Files.delete(Paths.get(filename1));
-      Files.delete(Paths.get(filename2));
+      try {
+        client.composeObject(bucketName, objectName, listSourceObjects, null, null);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      } finally {
+        Files.delete(Paths.get(filename1));
+        Files.delete(Paths.get(filename2));
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "with SSE_C on one source object ",
-          startTime);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on and"
-                + "one source object",
-            null,
-            startTime);
-      } else {
-        mintFailedLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C on ",
-            "one source object",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -3481,10 +3382,11 @@ public class FunctionalTest {
    * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
    */
   public static void composeObject_test6() throws Exception {
+    String methodName =
+        "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
+            + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C Target only.";
     if (!mintEnv) {
-      System.out.println(
-          "Test: composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > userMetaData, ServerSideEncryption sseTarget) with SSE_C Target only.");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3507,42 +3409,23 @@ public class FunctionalTest {
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      client.composeObject(bucketName, objectName, listSourceObjects, null, sseTarget);
-      Files.delete(Paths.get(filename1));
-      Files.delete(Paths.get(filename2));
+      try {
+        client.composeObject(bucketName, objectName, listSourceObjects, null, sseTarget);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      } finally {
+        Files.delete(Paths.get(filename1));
+        Files.delete(Paths.get(filename2));
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-              + "Map <String,String > headerMap, ServerSideEncryption sseTarget)",
-          "SSE_C Target only.",
-          startTime);
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+      }
+
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) with SSE_C only",
-            null,
-            startTime);
-      } else {
-        mintFailedLog(
-            "composeObject(String bucketName, String objectName,List<ComposeSource> composeSources, "
-                + "Map <String,String > headerMap, ServerSideEncryption sseTarget) SSE_C Target ",
-            " only.",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, null, startTime, e);
     }
   }
 
