@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import io.minio.ComposeSource;
+import io.minio.ComposeObjectArgs;
+import io.minio.ComposeSourceArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -35,19 +36,35 @@ public class ComposeObject {
               "Q3AM3UQ867SPQQA43P2F",
               "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
-      // Create a ComposeSource to compose Object.
-      ComposeSource s1 = new ComposeSource("my-bucketname-one", "my-objectname-one");
-      ComposeSource s2 = new ComposeSource("my-bucketname-two", "my-objectname-two");
-      ComposeSource s3 = new ComposeSource("my-bucketname-three", "my-objectname-three");
+      // Create a ComposeSourceArgs to compose Object.
+      ComposeSourceArgs s1 =
+          ComposeSourceArgs.builder()
+              .srcBucket("my-bucketname-one")
+              .srcObject("my-objectname-one")
+              .build();
+      ComposeSourceArgs s2 =
+          ComposeSourceArgs.builder()
+              .srcBucket("my-bucketname-two")
+              .srcObject("my-objectname-two")
+              .build();
+      ComposeSourceArgs s3 =
+          ComposeSourceArgs.builder()
+              .srcBucket("my-bucketname-three")
+              .srcObject("my-objectname-three")
+              .build();
 
-      // Adding the ComposeSource to an ArrayList
-      List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
+      // Adding the ComposeSourceArgs to an ArrayList
+      List<ComposeSourceArgs> sourceObjectList = new ArrayList<ComposeSourceArgs>();
       sourceObjectList.add(s1);
       sourceObjectList.add(s2);
       sourceObjectList.add(s3);
 
       minioClient.composeObject(
-          "my-destination-bucket", "my-destination-object", sourceObjectList, null, null);
+          ComposeObjectArgs.builder()
+              .bucket("my-destination-bucket")
+              .object("my-destination-object")
+              .sources(sourceObjectList)
+              .build());
       System.out.println("Object Composed successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

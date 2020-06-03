@@ -65,6 +65,12 @@ public abstract class BaseArgs {
       }
     }
 
+    protected void validateNullOrEmpty(Long arg, String argName) {
+      if (arg != null && arg < 0) {
+        throw new IllegalArgumentException(argName + " cannot be non-negative.");
+      }
+    }
+
     public Builder() {
       this.operations = new ArrayList<>();
     }

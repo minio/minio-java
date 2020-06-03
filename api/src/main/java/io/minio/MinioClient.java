@@ -2546,7 +2546,9 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #composeObject(ComposeObjectArgs)}
    */
+  @Deprecated
   public void composeObject(
       String bucketName,
       String objectName,
@@ -2751,6 +2753,258 @@ public class MinioClient {
       throw e;
     } catch (Exception e) {
       abortMultipartUpload(bucketName, objectName, uploadId);
+      throw e;
+    }
+  }
+
+  /**
+   * Creates an object by combining data from different source objects using server-side copy.
+   *
+   * <pre>Example:{@code
+   * List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
+   * sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-one"));
+   * sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-two"));
+   * sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-three"));
+   *
+   * // Create my-bucketname/my-objectname by combining source object list.
+   * minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList,
+   *     null, null);
+   *
+   * // Create my-bucketname/my-objectname with user metadata by combining source object
+   * // list.
+   * minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList,
+   *     userMetadata, null);
+   *
+   * // Create my-bucketname/my-objectname with user metadata and server-side encryption
+   * // by combining source object list.
+   * minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList,
+   *     userMetadata, sse);
+   * }</pre>
+   *
+   * @param args {@link ComposeObjectArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void composeObject(ComposeObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+
+    checkWriteRequestSse(args.sse());
+
+    long objectSize = 0;
+    int partsCount = 0;
+    List<ComposeSourceArgs> sources = args.sources();
+    for (int i = 0; i < sources.size(); i++) {
+      ComposeSourceArgs src = sources.get(i);
+
+      checkReadRequestSse(src.srcSsec());
+
+      ObjectStat stat =
+          statObject(
+              StatObjectArgs.builder()
+                  .bucket(src.srcBucket())
+                  .object(src.srcObject())
+                  .versionId(src.srcVersionId())
+                  .ssec(src.srcSsec())
+                  .build());
+
+      src.buildHeaders(stat.length(), stat.etag());
+
+      if (i != 0 && src.extraHeaders().containsKey("x-amz-meta-x-amz-key")) {
+        throw new IllegalArgumentException(
+            "Client side encryption is not supported for more than one source");
+      }
+
+      long size = stat.length();
+      if (src.srcLength() != null) {
+        size = src.srcLength();
+      } else if (src.srcOffset() != null) {
+        size -= src.srcOffset();
+      }
+
+      if (size < PutObjectOptions.MIN_MULTIPART_SIZE
+          && sources.size() != 1
+          && i != (sources.size() - 1)) {
+        throw new IllegalArgumentException(
+            "source "
+                + src.srcBucket()
+                + "/"
+                + src.srcObject()
+                + ": size "
+                + size
+                + " must be greater than "
+                + PutObjectOptions.MIN_MULTIPART_SIZE);
+      }
+
+      objectSize += size;
+      if (objectSize > PutObjectOptions.MAX_OBJECT_SIZE) {
+        throw new IllegalArgumentException(
+            "Destination object size must be less than " + PutObjectOptions.MAX_OBJECT_SIZE);
+      }
+
+      if (size > PutObjectOptions.MAX_PART_SIZE) {
+        long count = size / PutObjectOptions.MAX_PART_SIZE;
+        long lastPartSize = size - (count * PutObjectOptions.MAX_PART_SIZE);
+        if (lastPartSize > 0) {
+          count++;
+        } else {
+          lastPartSize = PutObjectOptions.MAX_PART_SIZE;
+        }
+
+        if (lastPartSize < PutObjectOptions.MIN_MULTIPART_SIZE
+            && sources.size() != 1
+            && i != (sources.size() - 1)) {
+          throw new IllegalArgumentException(
+              "source "
+                  + src.srcBucket()
+                  + "/"
+                  + src.srcObject()
+                  + ": "
+                  + "for multipart split upload of "
+                  + size
+                  + ", last part size is less than "
+                  + PutObjectOptions.MIN_MULTIPART_SIZE);
+        }
+
+        partsCount += (int) count;
+      } else {
+        partsCount++;
+      }
+
+      if (partsCount > PutObjectOptions.MAX_MULTIPART_COUNT) {
+        throw new IllegalArgumentException(
+            "Compose sources create more than allowed multipart count "
+                + PutObjectOptions.MAX_MULTIPART_COUNT);
+      }
+    }
+
+    if (partsCount == 1) {
+      ComposeSourceArgs src = sources.get(0);
+      Multimap<String, String> headers = HashMultimap.create();
+      if (args.extraHeaders() != null) {
+        headers.putAll(args.extraHeaders());
+      }
+      if ((src.srcOffset() != null) && (src.srcLength() == null)) {
+        headers.put("x-amz-copy-source-range", "bytes=" + src.srcOffset() + "-");
+      }
+
+      if ((src.srcOffset() != null) && (src.srcLength() != null)) {
+        headers.put(
+            "x-amz-copy-source-range",
+            "bytes=" + src.srcOffset() + "-" + (src.srcOffset() + src.srcLength() - 1));
+      }
+      copyObject(
+          CopyObjectArgs.builder()
+              .bucket(args.bucket())
+              .object(args.object())
+              .extraHeaders(args.extraHeaders)
+              .sse(args.sse())
+              .srcBucket(src.srcBucket())
+              .srcObject(src.srcObject())
+              .srcVersionId(src.srcVersionId())
+              .srcSsec(src.srcSsec())
+              .srcMatchETag(src.srcMatchETag())
+              .srcNotMatchETag(src.srcNotMatchETag())
+              .srcModifiedSince(src.srcModifiedSince())
+              .srcUnmodifiedSince(src.srcUnmodifiedSince())
+              .metadataDirective(src.metadataDirective())
+              .taggingDirective(src.taggingDirective())
+              .build());
+
+      return;
+    }
+
+    Multimap<String, String> sseHeaders = HashMultimap.create();
+    Multimap<String, String> headerMap = HashMultimap.create();
+    if (args.sse() != null) {
+      sseHeaders.putAll(Multimaps.forMap(args.sse().headers()));
+      if (args.extraHeaders != null) {
+        headerMap.putAll(args.extraHeaders());
+      }
+      headerMap.putAll(sseHeaders);
+    }
+
+    String uploadId = createMultipartUpload(args.bucket(), null, args.object(), headerMap, null);
+
+    int partNumber = 0;
+    Part[] totalParts = new Part[partsCount];
+    try {
+      for (int i = 0; i < sources.size(); i++) {
+        ComposeSourceArgs src = sources.get(i);
+
+        long size = src.objectSize();
+        if (src.srcLength() != null) {
+          size = src.srcLength();
+        } else if (src.srcOffset() != null) {
+          size -= src.srcOffset();
+        }
+        long offset = 0;
+        if (src.srcOffset() != null) {
+          offset = src.srcOffset();
+        }
+
+        if (size <= PutObjectOptions.MAX_PART_SIZE) {
+          partNumber++;
+          Multimap<String, String> headers = HashMultimap.create();
+          if (src.headers() != null) {
+            headers.putAll(src.headers());
+          }
+          if (src.srcLength() != null) {
+            headers.put(
+                "x-amz-copy-source-range",
+                "bytes=" + offset + "-" + (offset + src.srcLength() - 1));
+          } else if (src.srcOffset() != null) {
+            headers.put("x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + size - 1));
+          }
+          if (sseHeaders != null) {
+            headers.putAll(sseHeaders);
+          }
+          String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
+
+          totalParts[partNumber - 1] = new Part(partNumber, eTag);
+          continue;
+        }
+
+        while (size > 0) {
+          partNumber++;
+
+          long startBytes = offset;
+          long endBytes = startBytes + PutObjectOptions.MAX_PART_SIZE;
+          if (size < PutObjectOptions.MAX_PART_SIZE) {
+            endBytes = startBytes + size;
+          }
+
+          Multimap<String, String> headers = src.headers();
+          headers.put("x-amz-copy-source-range", "bytes=" + startBytes + "-" + endBytes);
+          if (sseHeaders != null) {
+            headers.putAll(sseHeaders);
+          }
+          String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
+
+          totalParts[partNumber - 1] = new Part(partNumber, eTag);
+
+          offset = startBytes;
+          size -= (endBytes - startBytes);
+        }
+      }
+
+      completeMultipartUpload(args.bucket(), args.object(), uploadId, totalParts);
+    } catch (RuntimeException e) {
+      abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      throw e;
+    } catch (Exception e) {
+      abortMultipartUpload(args.bucket(), args.object(), uploadId);
       throw e;
     }
   }
@@ -7667,6 +7921,67 @@ public class MinioClient {
 
   /**
    * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html">CreateMultipartUpload
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param headers Request headers.
+   * @return String - Contains upload ID.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected String createMultipartUpload(
+      String bucketName,
+      String region,
+      String objectName,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, ServerException,
+          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+    Multimap<String, String> queryParams = HashMultimap.create();
+    if (extraQueryParams != null) {
+      queryParams.putAll(extraQueryParams);
+    }
+    queryParams.put("uploads", "");
+
+    Multimap<String, String> headersCopy = HashMultimap.create();
+    if (headers != null) {
+      headersCopy.putAll(headers);
+    }
+    // set content type if not set already
+    if (!headersCopy.containsKey("Content-Type")) {
+      headersCopy.put("Content-Type", "application/octet-stream");
+    }
+
+    try (Response response =
+        execute(
+            Method.POST,
+            bucketName,
+            objectName,
+            (region != null) ? region : getRegion(bucketName),
+            headersCopy,
+            queryParams,
+            null,
+            0)) {
+      InitiateMultipartUploadResult result =
+          Xml.unmarshal(InitiateMultipartUploadResult.class, response.body().charStream());
+      return result.uploadId();
+    }
+  }
+
+  /**
+   * Do <a
    * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html">DeleteObjects S3
    * API</a>.
    *
@@ -8169,6 +8484,58 @@ public class MinioClient {
     queryParamMap.put("partNumber", Integer.toString(partNumber));
     queryParamMap.put("uploadId", uploadId);
     Response response = executePut(bucketName, objectName, headerMap, queryParamMap, "", 0);
+    try (ResponseBody body = response.body()) {
+      CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
+      return result.etag();
+    }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html">UploadPartCopy
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param uploadId Upload ID.
+   * @param partNumber Part number.
+   * @param headerMap Source object definitions.
+   * @return String - Contains ETag.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected String uploadPartCopy(
+      String bucketName,
+      String objectName,
+      String uploadId,
+      int partNumber,
+      Multimap<String, String> headerMap)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, ServerException,
+          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+    Multimap<String, String> queryParamMap = HashMultimap.create();
+    queryParamMap.put("partNumber", Integer.toString(partNumber));
+    queryParamMap.put("uploadId", uploadId);
+
+    Response response =
+        execute(
+            Method.PUT,
+            bucketName,
+            objectName,
+            getRegion(bucketName),
+            headerMap,
+            queryParamMap,
+            "",
+            0);
     try (ResponseBody body = response.body()) {
       CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
       return result.etag();

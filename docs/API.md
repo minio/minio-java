@@ -991,36 +991,32 @@ minioClient.setDefaultRetention(
 ## 3. Object operations
 
  <a name="composeObject"></a>
-### composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)
-`public void composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-java.lang.String-java.lang.String-java.util.List-java.util.Map-io.minio.ServerSideEncryption-)_
+### composeObject(ComposeObjectArgs  args)
+`public void composeObject(ComposeObjectArgs)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-io.minio.ComposeObjectArgs--)_
 
 Creates an object by combining data from different source objects using server-side copy.
 
  __Parameters__
-| Param          | Type                     | Description                        |
-|:---------------|:-------------------------|:-----------------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.                |
-| ``objectName`` | _String_                 | Object name to be created.         |
-| ``sources``    | _List<[ComposeSource]>_  | List of compose sources.           |
-| ``headerMap``  | _Map<String,String>_     | (Optional) User metadata.          |
-| ``sse``        | _[ServerSideEncryption]_ | (Optional) Server-side encryption. |
+| Param          | Type                     | Description   |
+|:---------------|:-------------------------|:--------------|
+| ``args``       | _[ComposeObjectArgs]_    | Arguments.    |
 
 __Example__
  ```java
-List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
-sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-one"));
-sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-two"));
-sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-three"));
+List<ComposeSourceArgs> sourceObjectList = new ArrayList<ComposeSourceArgs>();
+sourceObjectList.add(ComposeSourceArgs.builder().bucket("my-job-bucket").object("my-objectname-part-one").build());
+sourceObjectList.add(ComposeSourceArgs.builder().bucket("my-job-bucket").object("my-objectname-part-two").build();
+sourceObjectList.add(ComposeSourceArgs.builder().bucket("my-job-bucket").object("my-objectname-part-three").build());
 
 // Create my-bucketname/my-objectname by combining source object list.
-minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, null, null);
+minioClient.composeObject(ComposeObjectArgs.builder().bucket("my-bucketname").object("my-objectname").source(sourceObjectList).build());
 
 // Create my-bucketname/my-objectname with user metadata by combining source object list.
-minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, userMetadata, null);
+minioClient.composeObject(ComposeObjectArgs.builder().bucket("my-bucketname").object("my-objectname").source(sourceObjectList).extraHeaders(userMetadata).build());
 
 // Create my-bucketname/my-objectname with user metadata and server-side encryption by combining
 // source object list.
-minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, userMetadata, sse);
+minioClient.composeObject(ComposeObjectArgs.builder().bucket("my-bucketname").object("my-objectname").source(sourceObjectList).extraHeaders(userMetadata).sse(sse).build());
 ```
 
 <a name="copyObject"></a>
@@ -1824,3 +1820,4 @@ ObjectStat objectStat =
 [ListIncompleteUploadsArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsArgs.html
 [PutObjectArgs]: http://minio.github.io/minio-java/io/minio/PutObjectArgs.html
 [UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
+[ComposeObjectArgs]: http://minio.github.io/minio-java/io/minio/ComposeObjectArgs.html

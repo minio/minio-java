@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import io.minio.ComposeSource;
+import io.minio.ComposeObjectArgs;
+import io.minio.ComposeSourceArgs;
 import io.minio.MinioClient;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
@@ -75,16 +76,29 @@ public class ComposeObjectEncrypted {
               .sse(ssePut)
               .build());
 
-      ComposeSource s1 =
-          new ComposeSource(bucketName, sourceObject1, null, null, null, null, ssePut);
-      ComposeSource s2 =
-          new ComposeSource(bucketName, sourceObject2, null, null, null, null, ssePut);
+      ComposeSourceArgs s1 =
+          ComposeSourceArgs.builder()
+              .srcBucket(bucketName)
+              .srcObject(sourceObject1)
+              .srcSsec(ssePut)
+              .build();
+      ComposeSourceArgs s2 =
+          ComposeSourceArgs.builder()
+              .srcBucket(bucketName)
+              .srcObject(sourceObject2)
+              .srcSsec(ssePut)
+              .build();
 
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
+      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 
-      minioClient.composeObject(bucketName, destObject, listSourceObjects, null, sseTarget);
+      minioClient.composeObject(
+          ComposeObjectArgs.builder()
+              .bucket(destObject)
+              .sources(listSourceObjects)
+              .sse(sseTarget)
+              .build());
       System.out.println("Object Composed successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
