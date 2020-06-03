@@ -28,6 +28,7 @@ import io.minio.DeleteBucketLifeCycleArgs;
 import io.minio.DeleteBucketNotificationArgs;
 import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketTagsArgs;
+import io.minio.DeleteDefaultRetentionArgs;
 import io.minio.DeleteObjectTagsArgs;
 import io.minio.DisableObjectLegalHoldArgs;
 import io.minio.DisableVersioningArgs;
@@ -40,6 +41,7 @@ import io.minio.GetBucketLifeCycleArgs;
 import io.minio.GetBucketNotificationArgs;
 import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketTagsArgs;
+import io.minio.GetDefaultRetentionArgs;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
@@ -64,6 +66,7 @@ import io.minio.SetBucketLifeCycleArgs;
 import io.minio.SetBucketNotificationArgs;
 import io.minio.SetBucketPolicyArgs;
 import io.minio.SetBucketTagsArgs;
+import io.minio.SetDefaultRetentionArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
@@ -84,6 +87,7 @@ import io.minio.messages.OutputSerialization;
 import io.minio.messages.QueueConfiguration;
 import io.minio.messages.QuoteFields;
 import io.minio.messages.Retention;
+import io.minio.messages.RetentionDuration;
 import io.minio.messages.RetentionDurationDays;
 import io.minio.messages.RetentionDurationYears;
 import io.minio.messages.RetentionMode;
@@ -3581,51 +3585,57 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setDefaultRetention(String bucketName). */
+  /** Test: setDefaultRetention(SetDefaultRetentionArgs args). */
   public static void setDefaultRetention_test() throws Exception {
+    String methodName = "setDefaultRetention(SetDefaultRetentionArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: setDefaultRetention(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
-
+    String mintArgs = "config={COMPLIANCE, 10 days}";
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
         ObjectLockConfiguration config =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        client.setDefaultRetention(bucketName, config);
+        client.setDefaultRetention(
+            SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog("setDefaultRetention (String bucketName)", null, startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("setDefaultRetention (String bucketName)", null, startTime);
-      } else {
-        mintFailedLog(
-            "setDefaultRetention (String bucketName)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 
-  /** Test: getDefaultRetention(String bucketName). */
+  public static void testGetDefaultRetention(
+      String bucketName, RetentionMode mode, RetentionDuration duration) throws Exception {
+    ObjectLockConfiguration expectedConfig = new ObjectLockConfiguration(mode, duration);
+    client.setDefaultRetention(
+        SetDefaultRetentionArgs.builder().bucket(bucketName).config(expectedConfig).build());
+    ObjectLockConfiguration config =
+        client.getDefaultRetention(GetDefaultRetentionArgs.builder().bucket(bucketName).build());
+
+    if (config.mode() != expectedConfig.mode()) {
+      throw new Exception(
+          "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
+    }
+
+    if (config.duration().unit() != expectedConfig.duration().unit()
+        || config.duration().duration() != expectedConfig.duration().duration()) {
+      throw new Exception(
+          "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
+    }
+  }
+
+  /** Test: getDefaultRetention(GetDefaultRetentionArgs args). */
   public static void getDefaultRetention_test() throws Exception {
+    String methodName = "getDefaultRetention(GetDefaultRetentionArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: getDefaultRetention(String bucketName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3633,68 +3643,46 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        ObjectLockConfiguration expectedConfig =
-            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        client.setDefaultRetention(bucketName, expectedConfig);
-        ObjectLockConfiguration config = client.getDefaultRetention(bucketName);
-
-        if ((!(config.duration().unit() == expectedConfig.duration().unit()
-                && config.duration().duration() == expectedConfig.duration().duration()))
-            || (config.mode() != expectedConfig.mode())) {
-          throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.duration()
-                  + ", got: "
-                  + config.duration()
-                  + " expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
-        }
-
-        expectedConfig =
-            new ObjectLockConfiguration(RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
-        client.setDefaultRetention(bucketName, expectedConfig);
-        config = client.getDefaultRetention(bucketName);
-
-        if ((!(config.duration().unit() == expectedConfig.duration().unit()
-                && config.duration().duration() == expectedConfig.duration().duration()))
-            || (config.mode() != expectedConfig.mode())) {
-          throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.duration()
-                  + ", got: "
-                  + config.duration()
-                  + " expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
-        }
+        testGetDefaultRetention(
+            bucketName, RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+        testGetDefaultRetention(
+            bucketName, RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
 
-      mintSuccessLog("getDefaultRetention (String bucketName)", null, startTime);
-
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
+      handleException(methodName, null, startTime, e);
+    }
+  }
 
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog("getDefaultRetention (String bucketName)", null, startTime);
-      } else {
-        mintFailedLog(
-            "getDefaultRetention (String bucketName)",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
+  /** Test: deleteDefaultRetention(DeleteDefaultRetentionArgs args). */
+  public static void deleteDefaultRetention_test() throws Exception {
+    String methodName = "deleteDefaultRetention(DeleteDefaultRetentionArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+      try {
+        client.deleteDefaultRetention(
+            DeleteDefaultRetentionArgs.builder().bucket(bucketName).build());
+        ObjectLockConfiguration config =
+            new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
+        client.setDefaultRetention(
+            SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
+        client.deleteDefaultRetention(
+            DeleteDefaultRetentionArgs.builder().bucket(bucketName).build());
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
     }
   }
 

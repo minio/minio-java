@@ -3990,25 +3990,95 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #setDefaultRetention(SetDefaultRetentionArgs)}
    */
+  @Deprecated
   public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
+    setDefaultRetention(
+        SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
+  }
+
+  /**
+   * Sets default object retention in a bucket.
+   *
+   * <pre>Example:{@code
+   * ObjectLockConfiguration config = new ObjectLockConfiguration(
+   *     RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
+   * minioClient.setDefaultRetention(
+   *     SetDefaultRetentionArgs.builder().bucket("my-bucketname").config(config).build());
+   * }</pre>
+   *
+   * @param args {@link SetDefaultRetentionArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setDefaultRetention(SetDefaultRetentionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("object-lock", "");
 
-    Response response = executePut(bucketName, null, null, queryParamMap, config, 0);
-    response.body().close();
+    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    response.close();
+  }
+
+  /**
+   * Deletes default object retention in a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteDefaultRetention(
+   *     DeleteDefaultRetentionArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteDefaultRetentionArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteDefaultRetention(DeleteDefaultRetentionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("object-lock", "");
+
+    Response response =
+        executePut(args.bucket(), null, null, queryParamMap, new ObjectLockConfiguration(), 0);
+    response.close();
   }
 
   /**
    * Gets default object retention in a bucket.
    *
    * <pre>Example:{@code
-   * // bucket must be created with object lock enabled.
-   * minioClient.makeBucket("my-bucketname", null, true);
    * ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname");
    * System.out.println("Mode: " + config.mode());
    * System.out.println(
@@ -4028,19 +4098,55 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getDefaultRetention(GetDefaultRetentionArgs)}
    */
+  @Deprecated
   public ObjectLockConfiguration getDefaultRetention(String bucketName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
+    return getDefaultRetention(GetDefaultRetentionArgs.builder().bucket(bucketName).build());
+  }
+
+  /**
+   * Gets default object retention in a bucket.
+   *
+   * <pre>Example:{@code
+   * ObjectLockConfiguration config =
+   *     minioClient.getDefaultRetention(
+   *         GetDefaultRetentionArgs.builder().bucket("my-bucketname").build());
+   * System.out.println("Mode: " + config.mode());
+   * System.out.println(
+   *     "Duration: " + config.duration().duration() + " " + config.duration().unit());
+   * }</pre>
+   *
+   * @param args {@link GetDefaultRetentionArgs} object.
+   * @return {@link ObjectLockConfiguration} - Default retention configuration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public ObjectLockConfiguration getDefaultRetention(GetDefaultRetentionArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+
     Map<String, String> queryParamMap = new HashMap<>();
     queryParamMap.put("object-lock", "");
 
-    Response response = executeGet(bucketName, null, null, queryParamMap);
-
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(ObjectLockConfiguration.class, body.charStream());
+    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+      return Xml.unmarshal(ObjectLockConfiguration.class, response.body().charStream());
     }
   }
 

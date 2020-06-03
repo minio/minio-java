@@ -24,23 +24,24 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`deleteBucketNotification`](#deleteBucketNotification) | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
 | [`deleteBucketPolicy`](#deleteBucketPolicy)             | [`downloadObject`](#downloadObject)                     |
 | [`deleteBucketTags`](#deleteBucketTags)                 | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`disableVersioning`](#disableVersioning)               | [`getObject`](#getObject)                               |
-| [`enableVersioning`](#enableVersioning)                 | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketEncryption`](#getBucketEncryption)           | [`getObjectTags`](#getObjectTags)                       |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)             | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getBucketNotification`](#getBucketNotification)       | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketPolicy`](#getBucketPolicy)                   | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`getBucketTags`](#getBucketTags)                       | [`listObjects`](#listObjects)                           |
-| [`getDefaultRetention`](#getDefaultRetention)           | [`presignedGetObject`](#presignedGetObject)             |
-| [`isVersioningEnabled`](#isVersioningEnabled)           | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`listBuckets`](#listBuckets)                           | [`presignedPutObject`](#presignedPutObject)             |
-| [`listenBucketNotification`](#listenBucketNotification) | [`putObject`](#putObject)                               |
-| [`listIncompleteUploads`](#listIncompleteUploads)       | [`removeObject`](#removeObject)                         |
-| [`makeBucket`](#makeBucket)                             | [`removeObjects`](#removeObjects)                       |
-| [`removeBucket`](#removeBucket)                         | [`selectObjectContent`](#selectObjectContent)           |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)     | [`setObjectRetention`](#setObjectRetention)             |
-| [`setBucketEncryption`](#setBucketEncryption)           | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)             | [`statObject`](#statObject)                             |
+| [`deleteDefaultRetention`](#deleteDefaultRetention)     | [`getObject`](#getObject)                               |
+| [`disableVersioning`](#disableVersioning)               | [`getObjectRetention`](#getObjectRetention)             |
+| [`enableVersioning`](#enableVersioning)                 | [`getObjectTags`](#getObjectTags)                       |
+| [`getBucketEncryption`](#getBucketEncryption)           | [`getObjectUrl`](#getObjectUrl)                         |
+| [`getBucketLifeCycle`](#getBucketLifeCycle)             | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketNotification`](#getBucketNotification)       | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getBucketPolicy`](#getBucketPolicy)                   | [`listObjects`](#listObjects)                           |
+| [`getBucketTags`](#getBucketTags)                       | [`presignedGetObject`](#presignedGetObject)             |
+| [`getDefaultRetention`](#getDefaultRetention)           | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`isVersioningEnabled`](#isVersioningEnabled)           | [`presignedPutObject`](#presignedPutObject)             |
+| [`listBuckets`](#listBuckets)                           | [`putObject`](#putObject)                               |
+| [`listenBucketNotification`](#listenBucketNotification) | [`removeObject`](#removeObject)                         |
+| [`listIncompleteUploads`](#listIncompleteUploads)       | [`removeObjects`](#removeObjects)                       |
+| [`makeBucket`](#makeBucket)                             | [`selectObjectContent`](#selectObjectContent)           |
+| [`removeBucket`](#removeBucket)                         | [`setObjectRetention`](#setObjectRetention)             |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)     | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketEncryption`](#setBucketEncryption)           | [`statObject`](#statObject)                             |
+| [`setBucketLifeCycle`](#setBucketLifeCycle)             |                                                         |
 | [`setBucketNotification`](#setBucketNotification)       |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                   |                                                         |
 | [`setBucketTags`](#setBucketTags)                       |                                                         |
@@ -373,6 +374,23 @@ minioClient.deleteBucketNotification(
     DeleteBucketNotificationArgs.builder().bucket("my-bucketname").build());
 ```
 
+<a name="deleteDefaultRetention"></a>
+### deleteDefaultRetention(DeleteDefaultRetentionArgs args)
+`public void deleteDefaultRetention(DeleteDefaultRetentionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteDefaultRetention-io.minio.DeleteDefaultRetentionArgs-)_
+
+Deletes default object retention in a bucket.
+
+__Parameters__
+| Parameter | Type                           | Description |
+|:----------|:-------------------------------|:------------|
+| ``args``  | _[DeleteDefaultRetentionArgs]_ | Arguments.  |
+
+__Example__
+```java
+minioClient.deleteDefaultRetention(
+    DeleteDefaultRetentionArgs.builder().bucket("my-bucketname").build());
+```
+
 <a name="disableVersioning"></a>
 ### disableVersioning(DisableVersioningArgs args)
 `public void disableVersioning(DisableVersioningArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#disableVersioning-io.minio.DisableVersioningArgs-)_
@@ -546,16 +564,16 @@ Tags tags = minioClient.getBucketTags(GetBucketTagsArgs.builder().bucket("my-buc
 ```
 
 <a name="getDefaultRetention"></a>
-### getDefaultRetention(String bucketName)
-`public ObjectLockConfiguration getDefaultRetention(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getDefaultRetention-java.lang.String-)_
+### getDefaultRetention(GetDefaultRetentionArgs args)
+`public ObjectLockConfiguration getDefaultRetention(GetDefaultRetentionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getDefaultRetention-io.minio.GetDefaultRetentionArgs-)_
 
 Gets default object retention in a bucket.
 
 __Parameters__
 
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+| Parameter | Type                        | Description |
+|:----------|:----------------------------|:------------|
+| ``args``  | _[GetDefaultRetentionArgs]_ | Arguments.  |
 
 | Returns                                                        |
 |:---------------------------------------------------------------|
@@ -563,9 +581,9 @@ __Parameters__
 
 __Example__
 ```java
-// bucket must be created with object lock enabled.
-minioClient.makeBucket("my-bucketname", null, true);
-ObjectLockConfiguration config = minioClient.getDefaultRetention("my-bucketname");
+ObjectLockConfiguration config =
+    minioClient.getDefaultRetention(
+	    GetDefaultRetentionArgs.builder().bucket("my-bucketname").build());
 System.out.println("Mode: " + config.mode());
 System.out.println("Duration: " + config.duration().duration() + " " + config.duration().unit());
 ```
@@ -942,22 +960,22 @@ minioClient.setBucketTags(SetBucketTagsArgs.builder().bucket("my-bucketname").ta
 ```
 
 <a name="setDefaultRetention"></a>
-### setDefaultRetention(String bucketName, ObjectLockConfiguration config)
-`public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setDefaultRetention-java.lang.String-io.minio.messages.ObjectLockConfiguration-)_
+### setDefaultRetention(SetDefaultRetentionArgs args)
+`public void setDefaultRetention(SetDefaultRetentionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setDefaultRetention-io.minio.SetDefaultRetentionArgs-)_
 
 Sets default object retention in a bucket.
 
 __Parameters__
-| Parameter      | Type                        | Description                |
-|:---------------|:----------------------------|:---------------------------|
-| ``bucketName`` | _String_                    | Name of the bucket.        |
-| ``config``     | _[ObjectLockConfiguration]_ | Object lock Configuration. |
+| Parameter | Type                        | Description |
+|:----------|:----------------------------|:------------|
+| ``args``  | _[SetDefaultRetentionArgs]_ | Arguments.  |
 
 __Example__
 ```java
 ObjectLockConfiguration config =
     new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
-minioClient.setDefaultRetention("my-bucketname", config);
+minioClient.setDefaultRetention(
+    SetDefaultRetentionArgs.builder().bucket("my-bucketname").config(config).build());
 ```
 
 ## 3. Object operations
@@ -1800,3 +1818,6 @@ ObjectStat objectStat =
 [SetBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/SetBucketNotificationArgs.html
 [ListenBucketNotificationArgs]: http://minio.github.io/minio-java/io/minio/ListenBucketNotificationArgs.html
 [SelectObjectContentArgs]: http://minio.github.io/minio-java/io/minio/SelectObjectContentArgs.html
+[GetDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/GetDefaultRetentionArgs.html
+[SetDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/SetDefaultRetentionArgs.html
+[DeleteDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html
