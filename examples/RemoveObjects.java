@@ -15,9 +15,11 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
 import io.minio.errors.MinioException;
 import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -40,18 +42,17 @@ public class RemoveObjects {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      List<String> objectNames = new LinkedList<String>();
-      objectNames.add("my-objectname1");
-      objectNames.add("my-objectname2");
-      objectNames.add("my-objectname3");
-
-      // Remove object all objects 'objectNames' list from 'my-bucketname'.
-      // It is required to traverse over the returned Iterable for lazy evaluation.
-      for (Result<DeleteError> errorResult :
-          minioClient.removeObjects("my-bucketname", objectNames)) {
-        DeleteError error = errorResult.get();
+      List<DeleteObject> objects = new LinkedList<>();
+      objects.add(new DeleteObject("my-objectname1"));
+      objects.add(new DeleteObject("my-objectname2"));
+      objects.add(new DeleteObject("my-objectname3"));
+      Iterable<Result<DeleteError>> results =
+          minioClient.removeObjects(
+              RemoveObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
+      for (Result<DeleteError> result : results) {
+        DeleteError error = result.get();
         System.out.println(
-            "Failed to remove '" + error.objectName() + "'. Error:" + error.message());
+            "Error in deleting object " + error.objectName() + "; " + error.message());
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

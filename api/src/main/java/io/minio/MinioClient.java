@@ -114,6 +114,8 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -3116,9 +3118,46 @@ public class MinioClient {
    * @param bucketName Name of the bucket.
    * @param objectNames List of Object names in the bucket.
    * @return Iterable&ltResult&ltDeleteError&gt&gt - Lazy iterator contains object removal status.
+   * @deprecated use {@link #removeObjects(RemoveObjectsArgs)}
    */
+  @Deprecated
   public Iterable<Result<DeleteError>> removeObjects(
       final String bucketName, final Iterable<String> objectNames) {
+    Stream<DeleteObject> stream =
+        StreamSupport.stream(objectNames.spliterator(), false)
+            .map(
+                name -> {
+                  return new DeleteObject(name);
+                });
+    return removeObjects(
+        RemoveObjectsArgs.builder().bucket(bucketName).objects(stream::iterator).build());
+  }
+
+  /**
+   * Removes multiple objects lazily. Its required to iterate the returned Iterable to perform
+   * removal.
+   *
+   * <pre>Example:{@code
+   * List<DeleteObject> objects = new LinkedList<>();
+   * objects.add(new DeleteObject("my-objectname1"));
+   * objects.add(new DeleteObject("my-objectname2"));
+   * objects.add(new DeleteObject("my-objectname3"));
+   * Iterable<Result<DeleteError>> results =
+   *     minioClient.removeObjects(
+   *         RemoveObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
+   * for (Result<DeleteError> result : results) {
+   *   DeleteError error = errorResult.get();
+   *   System.out.println(
+   *       "Error in deleting object " + error.objectName() + "; " + error.message());
+   * }
+   * }</pre>
+   *
+   * @param args {@link RemoveObjectsArgs} object.
+   * @return Iterable&ltResult&ltDeleteError&gt&gt - Lazy iterator contains object removal status.
+   */
+  public Iterable<Result<DeleteError>> removeObjects(RemoveObjectsArgs args) {
+    checkArgs(args);
+
     return new Iterable<Result<DeleteError>>() {
       @Override
       public Iterator<Result<DeleteError>> iterator() {
@@ -3126,20 +3165,22 @@ public class MinioClient {
           private Result<DeleteError> error;
           private Iterator<DeleteError> errorIterator;
           private boolean completed = false;
-          private Iterator<String> objectNameIter = objectNames.iterator();
+          private Iterator<DeleteObject> objectIter = args.objects().iterator();
 
           private synchronized void populate() {
             List<DeleteError> errorList = null;
             try {
-              List<DeleteObject> objectList = new LinkedList<DeleteObject>();
+              List<DeleteObject> objectList = new LinkedList<>();
               int i = 0;
-              while (objectNameIter.hasNext() && i < 1000) {
-                objectList.add(new DeleteObject(objectNameIter.next()));
+              while (objectIter.hasNext() && i < 1000) {
+                objectList.add(objectIter.next());
                 i++;
               }
 
-              if (i > 0) {
-                DeleteResult result = deleteObjects(bucketName, objectList, true);
+              if (objectList.size() > 0) {
+                DeleteResult result =
+                    deleteObjects(
+                        args.bucket(), objectList, args.quiet(), args.bypassGovernanceMode());
                 errorList = result.errorList();
               }
             } catch (ErrorResponseException
@@ -7118,32 +7159,34 @@ public class MinioClient {
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
   protected DeleteResult deleteObjects(
-      String bucketName, List<DeleteObject> objectList, boolean quiet)
+      String bucketName, List<DeleteObject> objectList, boolean quiet, boolean bypassGovernanceMode)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, ServerException, XmlParserException,
           ErrorResponseException, InternalException, InvalidResponseException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("delete", "");
+    Map<String, String> queryParams = new HashMap<>();
+    queryParams.put("delete", "");
+
+    Map<String, String> headers = null;
+    if (bypassGovernanceMode) {
+      headers = new HashMap<>();
+      headers.put("x-amz-bypass-governance-retention", "true");
+    }
 
     DeleteRequest request = new DeleteRequest(objectList, quiet);
-    Response response = executePost(bucketName, null, null, queryParamMap, request);
-
-    String bodyContent = "";
-    try (ResponseBody body = response.body()) {
-      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
-    }
-
-    try {
-      if (Xml.validate(DeleteError.class, bodyContent)) {
-        DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
-        return new DeleteResult(error);
+    try (Response response = executePost(bucketName, null, headers, queryParams, request)) {
+      String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
+      try {
+        if (Xml.validate(DeleteError.class, bodyContent)) {
+          DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
+          return new DeleteResult(error);
+        }
+      } catch (XmlParserException e) {
+        // As it is not <Error> message, parse it as <DeleteResult> message.
+        // Ignore this exception
       }
-    } catch (XmlParserException e) {
-      // As it is not <Error> message, parse it as <DeleteResult> message.
-      // Ignore this exception
-    }
 
-    return Xml.unmarshal(DeleteResult.class, bodyContent);
+      return Xml.unmarshal(DeleteResult.class, bodyContent);
+    }
   }
 
   private Map<String, String> getCommonListObjectsQueryParams(ListObjectsArgs args) {

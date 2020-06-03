@@ -58,6 +58,7 @@ import io.minio.PutObjectOptions;
 import io.minio.RemoveBucketArgs;
 import io.minio.RemoveIncompleteUploadArgs;
 import io.minio.RemoveObjectArgs;
+import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
 import io.minio.SelectObjectContentArgs;
 import io.minio.SelectResponseStream;
@@ -78,6 +79,7 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
+import io.minio.messages.DeleteObject;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.Event;
 import io.minio.messages.EventType;
@@ -122,6 +124,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
 import okhttp3.HttpUrl;
@@ -1643,288 +1646,121 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: listObjects(final String bucketName). */
-  public static void listObject_test1() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: listObjects(ListObjectsArgs args) [bucket]");
+  public static String[] createObjects(String bucketName, int count) throws Exception {
+    String[] objectNames = new String[count];
+    for (int i = 0; i < count; i++) {
+      objectNames[i] = getRandomName();
+      try (final InputStream is = new ContentInputStream(1)) {
+        client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
+      }
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String[] objectNames = new String[3];
-      int i = 0;
-      for (i = 0; i < 3; i++) {
-        objectNames[i] = getRandomName();
-        try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
-        }
-      }
+    return objectNames;
+  }
 
-      i = 0;
-      for (Result<?> r : client.listObjects(ListObjectsArgs.builder().bucket(bucketName).build())) {
-        ignore(i++, r.get());
-        if (i == 3) {
-          break;
-        }
-      }
-
-      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
-        ignore(r.get());
-      }
-
-      mintSuccessLog("listObjects(ListObjectsArgs args) [bucket]", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "listObjects(ListObjectsArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+  public static void removeObjects(String bucketName, String[] objectNames) throws Exception {
+    List<DeleteObject> objects =
+        Arrays.stream(objectNames)
+            .map(
+                name -> {
+                  return new DeleteObject(name);
+                })
+            .collect(Collectors.toList());
+    for (Result<?> r :
+        client.removeObjects(
+            RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
+      ignore(r.get());
     }
   }
 
-  /** Test: listObjects(bucketName, final String prefix). */
-  public static void listObject_test2() throws Exception {
+  public static void testListObjects(
+      String methodName, String tag, ListObjectsArgs args, int objCount) throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listObjects(ListObjectsArgs args) [bucket, prefix]");
+      System.out.println("Test: " + tag + " " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = args.bucket();
+    String[] objectNames = null;
     try {
-      String[] objectNames = new String[3];
-      int i = 0;
-      for (i = 0; i < 3; i++) {
-        objectNames[i] = getRandomName();
-        try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        objectNames = createObjects(bucketName, objCount);
+
+        int i = 0;
+        for (Result<?> r : client.listObjects(args)) {
+          r.get();
+          i++;
         }
-      }
 
-      i = 0;
-      for (Result<?> r :
-          client.listObjects(
-              ListObjectsArgs.builder().bucket(bucketName).prefix("minio").build())) {
-        ignore(i++, r.get());
-        if (i == 3) {
-          break;
+        if (i != objCount) {
+          throw new Exception("object count; expected=" + objCount + ", got=" + i);
         }
-      }
 
-      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
-        ignore(r.get());
+        mintSuccessLog(methodName, tag, startTime);
+      } finally {
+        if (objectNames != null) {
+          removeObjects(bucketName, objectNames);
+        }
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-
-      mintSuccessLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix]", "prefix :minio", startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix]",
-          "prefix :minio",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, tag, startTime, e);
     }
   }
 
-  /** Test: listObjects(bucketName, final String prefix, final boolean recursive). */
-  public static void listObject_test3() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: listObjects(ListObjectsArgs args) [bucket, prefix, recursive]");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String[] objectNames = new String[3];
-      int i = 0;
-      for (i = 0; i < 3; i++) {
-        objectNames[i] = getRandomName();
-        try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
-        }
-      }
-
-      i = 0;
-      for (Result<?> r :
-          client.listObjects(
-              ListObjectsArgs.builder()
-                  .bucket(bucketName)
-                  .prefix("minio")
-                  .recursive(true)
-                  .build())) {
-        ignore(i++, r.get());
-        if (i == 3) {
-          break;
-        }
-      }
-
-      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
-        ignore(r.get());
-      }
-
-      mintSuccessLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
-          "prefix :minio, recursive: true",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "listObjects with args [bucket, prefix, recursive]",
-          "prefix :minio, recursive: true",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+  /** Test: [bucket] listObjects(ListObjectsArgs args). */
+  public static void listObjects_test1() throws Exception {
+    testListObjects(
+        "listObjects(ListObjectsArgs args)",
+        "[bucket]",
+        ListObjectsArgs.builder().bucket(getRandomName()).build(),
+        3);
   }
 
-  /** Test: listObjects(final string bucketName). */
-  public static void listObject_test4() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: empty bucket: listObjects(ListObjectsArgs args) [bucket, prefix, recursive]"
-              + " final boolean recursive)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      int i = 0;
-      for (Result<?> r :
-          client.listObjects(
-              ListObjectsArgs.builder()
-                  .bucket(bucketName)
-                  .prefix("minioemptybucket")
-                  .recursive(true)
-                  .build())) {
-        ignore(i++, r.get());
-        if (i == 3) {
-          break;
-        }
-      }
-      mintSuccessLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
-          "prefix :minioemptybucket, recursive: true",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
-          "prefix :minioemptybucket, recursive: true",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+  /** Test: [bucket, prefix] listObjects(ListObjectsArgs args). */
+  public static void listObjects_test2() throws Exception {
+    testListObjects(
+        "listObjects(ListObjectsArgs args)",
+        "[bucket, prefix]",
+        ListObjectsArgs.builder().bucket(getRandomName()).prefix("minio").build(),
+        3);
   }
 
-  /** Test: recursive: listObjects(bucketName, final String prefix, final boolean recursive). */
-  public static void listObject_test5() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: recursive: listObjects(ListObjectsArgs args) [bucket, prefix, recursive]"
-              + "final boolean recursive)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      int objCount = 1050;
-      String[] objectNames = new String[objCount];
-      int i = 0;
-      for (i = 0; i < objCount; i++) {
-        objectNames[i] = getRandomName();
-        try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
-        }
-      }
-
-      i = 0;
-      for (Result<?> r :
-          client.listObjects(
-              ListObjectsArgs.builder()
-                  .bucket(bucketName)
-                  .prefix("minio")
-                  .recursive(true)
-                  .build())) {
-        ignore(i++, r.get());
-      }
-
-      // Check the number of uploaded objects
-      if (i != objCount) {
-        throw new Exception("item count differs, expected: " + objCount + ", got: " + i);
-      }
-
-      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
-        ignore(r.get());
-      }
-
-      mintSuccessLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
-          "prefix :minio, recursive: true",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive]",
-          "prefix :minio, recursive: true",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+  /** Test: [bucket, prefix, recursive] listObjects(ListObjectsArgs args). */
+  public static void listObjects_test3() throws Exception {
+    testListObjects(
+        "listObjects(ListObjectsArgs args)",
+        "[bucket, prefix, recursive]",
+        ListObjectsArgs.builder().bucket(getRandomName()).prefix("minio").recursive(true).build(),
+        3);
   }
 
-  /**
-   * Test: listObjects(bucketName, final String prefix, final boolean recursive, final boolean
-   * useVersion1).
-   */
-  public static void listObject_test6() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: listObjects(ListObjectsArgs args) [bucket, prefix, recursive, useVersion1]"
-              + "final boolean useVersion1)");
-    }
+  /** Test: [empty bucket] listObjects(ListObjectsArgs args). */
+  public static void listObjects_test4() throws Exception {
+    testListObjects(
+        "listObjects(ListObjectsArgs args)",
+        "[empty bucket]",
+        ListObjectsArgs.builder().bucket(getRandomName()).build(),
+        0);
+  }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String[] objectNames = new String[3];
-      int i = 0;
-      for (i = 0; i < 3; i++) {
-        objectNames[i] = getRandomName();
-        try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
-        }
-      }
+  /** Test: [bucket, prefix, recursive, 1050 objects] listObjects(ListObjectsArgs args). */
+  public static void listObjects_test5() throws Exception {
+    testListObjects(
+        "listObjects(ListObjectsArgs args)",
+        "[bucket, prefix, recursive, 1050 objects]",
+        ListObjectsArgs.builder().bucket(getRandomName()).prefix("minio").recursive(true).build(),
+        1050);
+  }
 
-      i = 0;
-      for (Result<?> r :
-          client.listObjects(
-              ListObjectsArgs.builder()
-                  .bucket(bucketName)
-                  .prefix("minio")
-                  .recursive(true)
-                  .useVersion1(true)
-                  .build())) {
-        ignore(i++, r.get());
-        if (i == 3) {
-          break;
-        }
-      }
-
-      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
-        ignore(r.get());
-      }
-
-      mintSuccessLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive, useVersion1]",
-          "prefix :minio, recursive: true, useVersion1: true",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "listObjects(ListObjectsArgs args) [bucket, prefix, recursive, useVersion1]",
-          "prefix :minio, recursive: true, useVersion1: true",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+  /** Test: [bucket, version1] listObjects(ListObjectsArgs args). */
+  public static void listObjects_test6() throws Exception {
+    testListObjects(
+        "listObjects(ListObjectsArgs args)",
+        "[bucket, version1]",
+        ListObjectsArgs.builder().bucket(getRandomName()).useVersion1(true).build(),
+        3);
   }
 
   /** Test: removeObject(String bucketName, String objectName). */
@@ -1953,39 +1789,33 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: removeObjects(final String bucketName, final Iterable&lt;String&gt; objectNames). */
-  public static void removeObject_test2() throws Exception {
+  /** Test: removeObjects(RemoveObjectsArgs args). */
+  public static void removeObjects_test1() throws Exception {
+    String methodName = "removeObjects(RemoveObjectsArgs args)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: removeObjects(final String bucketName, final Iterable<String> objectNames)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      String[] objectNames = new String[4];
-      for (int i = 0; i < 3; i++) {
-        objectNames[i] = getRandomName();
-        try (final InputStream is = new ContentInputStream(1)) {
-          client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
+      String bucketName = getRandomName();
+      String[] objectNames = null;
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        String[] createdNames = createObjects(bucketName, 3);
+        objectNames = new String[createdNames.length + 1];
+        System.arraycopy(createdNames, 0, objectNames, 0, createdNames.length);
+        objectNames[3] = "nonexistent-object";
+        removeObjects(bucketName, objectNames);
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        if (objectNames != null) {
+          removeObjects(bucketName, objectNames);
         }
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      objectNames[3] = "nonexistent-object";
-
-      for (Result<?> r : client.removeObjects(bucketName, Arrays.asList(objectNames))) {
-        ignore(r.get());
-      }
-      mintSuccessLog(
-          "removeObjects(final String bucketName, final Iterable<String> objectNames)",
-          null,
-          startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "removeObjects(final String bucketName, final Iterable<String> objectNames)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -4665,15 +4495,15 @@ public class FunctionalTest {
     getPresignedObjectUrl_test5();
     getPresignedObjectUrl_test6();
 
-    listObject_test1();
-    listObject_test2();
-    listObject_test3();
-    listObject_test4();
-    listObject_test5();
-    listObject_test6();
+    listObjects_test1();
+    listObjects_test2();
+    listObjects_test3();
+    listObjects_test4();
+    listObjects_test5();
+    listObjects_test6();
 
     removeObject_test1();
-    removeObject_test2();
+    removeObjects_test1();
 
     listIncompleteUploads_test1();
     listIncompleteUploads_test2();
@@ -4768,7 +4598,7 @@ public class FunctionalTest {
     putObject_test1();
     statObject_test1();
     getObject_test1();
-    listObject_test1();
+    listObjects_test1();
     removeObject_test1();
     listIncompleteUploads_test1();
     removeIncompleteUploads_test();

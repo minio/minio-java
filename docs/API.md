@@ -1496,16 +1496,15 @@ minioClient.removeObject(
 ```
 
 <a name="removeObjects"></a>
-### removeObjects(String bucketName, Iterable<String> objectNames)
-`public Iterable<Result<DeleteError>> removeObjects(String bucketName, Iterable<String> objectNames)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObjects-java.lang.String-java.lang.Iterable-)_
+### removeObjects(RemoveObjectsArgs args)
+`public Iterable<Result<DeleteError>> removeObjects(RemoveObjectsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObjects-io.minio.RemoveObjectsArgs-)_
 
 Removes multiple objects lazily. Its required to iterate the returned Iterable to perform removal.
 
 __Parameters__
-| Parameter       | Type               | Description                    |
-|:----------------|:-------------------|:-------------------------------|
-| ``bucketName``  | _String_           | Name of the bucket.            |
-| ``objectNames`` | _Iterable<String>_ | List of objects in the bucket. |
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[RemoveObjectsArgs]_ | Arguments.  |
 
 | Returns                                                                             |
 |:------------------------------------------------------------------------------------|
@@ -1513,14 +1512,17 @@ __Parameters__
 
 __Example__
 ```java
-List<String> myObjectNames = new LinkedList<String>();
-objectNames.add("my-objectname1");
-objectNames.add("my-objectname2");
-objectNames.add("my-objectname3");
-Iterable<Result<DeleteError>> results = minioClient.removeObjects("my-bucketname", myObjectNames);
+List<DeleteObject> objects = new LinkedList<>();
+objects.add(new DeleteObject("my-objectname1"));
+objects.add(new DeleteObject("my-objectname2"));
+objects.add(new DeleteObject("my-objectname3"));
+Iterable<Result<DeleteError>> results =
+    minioClient.removeObjects(
+        RemoveObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
 for (Result<DeleteError> result : results) {
-  DeleteError error = errorResult.get();
-  System.out.println("Error in deleting object " + error.objectName() + "; " + error.message());
+  DeleteError error = result.get();
+  System.out.println(
+      "Error in deleting object " + error.objectName() + "; " + error.message());
 }
 ```
 
@@ -1744,3 +1746,4 @@ ObjectStat objectStat =
 [DeleteDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html
 [RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/RemoveIncompleteUploadArgs.html
 [GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html
+[RemoveObjectsArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectsArgs.html
