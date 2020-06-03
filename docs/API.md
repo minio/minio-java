@@ -16,7 +16,6 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
     "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
 ```
 
-<<<<<<< HEAD
 | Bucket operations                                       | Object operations                                       |
 |---------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                         | [`composeObject`](#composeObject)                       |
@@ -32,50 +31,21 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`getBucketLifeCycle`](#getBucketLifeCycle)             | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
 | [`getBucketNotification`](#getBucketNotification)       | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
 | [`getBucketPolicy`](#getBucketPolicy)                   | [`listObjects`](#listObjects)                           |
-| [`getBucketTags`](#getBucketTags)                       | [`presignedGetObject`](#presignedGetObject)             |
-| [`getDefaultRetention`](#getDefaultRetention)           | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`isVersioningEnabled`](#isVersioningEnabled)           | [`presignedPutObject`](#presignedPutObject)             |
-| [`listBuckets`](#listBuckets)                           | [`putObject`](#putObject)                               |
-| [`listenBucketNotification`](#listenBucketNotification) | [`removeObject`](#removeObject)                         |
-| [`listIncompleteUploads`](#listIncompleteUploads)       | [`removeObjects`](#removeObjects)                       |
-| [`makeBucket`](#makeBucket)                             | [`selectObjectContent`](#selectObjectContent)           |
-| [`removeBucket`](#removeBucket)                         | [`setObjectRetention`](#setObjectRetention)             |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)     | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketEncryption`](#setBucketEncryption)           | [`statObject`](#statObject)                             |
+| [`getBucketTags`](#getBucketTags)                       | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`getDefaultRetention`](#getDefaultRetention)           | [`putObject`](#putObject)                               |
+| [`isVersioningEnabled`](#isVersioningEnabled)           | [`removeObject`](#removeObject)                         |
+| [`listBuckets`](#listBuckets)                           | [`removeObjects`](#removeObjects)                       |
+| [`listenBucketNotification`](#listenBucketNotification) | [`selectObjectContent`](#selectObjectContent)           |
+| [`listIncompleteUploads`](#listIncompleteUploads)       | [`setObjectRetention`](#setObjectRetention)             |
+| [`makeBucket`](#makeBucket)                             | [`setObjectTags`](#setObjectTags)                       |
+| [`removeBucket`](#removeBucket)                         | [`statObject`](#statObject)                             |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)     |                                                         |
+| [`setBucketEncryption`](#setBucketEncryption)           |                                                         |
 | [`setBucketLifeCycle`](#setBucketLifeCycle)             |                                                         |
 | [`setBucketNotification`](#setBucketNotification)       |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                   |                                                         |
 | [`setBucketTags`](#setBucketTags)                       |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)           |                                                         |
-=======
-| Bucket operations                                             | Object operations                                       |
-|---------------------------------------------------------------|---------------------------------------------------------|
-| [`bucketExists`](#bucketExists)                               | [`composeObject`](#composeObject)                       |
-| [`deleteBucketEncryption`](#deleteBucketEncryption)           | [`copyObject`](#copyObject)                             |
-| [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)             | [`deleteObjectTags`](#deleteObjectTags)                 |
-| [`deleteBucketTags`](#deleteBucketTags)                       | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
-| [`disableVersioning`](#disableVersioning)                     | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`enableVersioning`](#enableVersioning)                       | [`getObject`](#getObject)                               |
-| [`getBucketEncryption`](#getBucketEncryption)                 | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)                   | [`getObjectTags`](#getObjectTags)                       |
-| [`getBucketNotification`](#getBucketNotification)             | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getBucketPolicy`](#getBucketPolicy)                         | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketTags`](#getBucketTags)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`getDefaultRetention`](#getDefaultRetention)                 | [`listObjects`](#listObjects)                           |
-| [`listBuckets`](#listBuckets)                                 | [`presignedPostPolicy`](#presignedPostPolicy)           |
-| [`listenBucketNotification`](#listenBucketNotification)       | [`putObject`](#putObject)                               |
-| [`listIncompleteUploads`](#listIncompleteUploads)             | [`removeObject`](#removeObject)                         |
-| [`makeBucket`](#makeBucket)                                   | [`removeObjects`](#removeObjects)                       |
-| [`removeAllBucketNotification`](#removeAllBucketNotification) | [`selectObjectContent`](#selectObjectContent)           |
-| [`removeBucket`](#removeBucket)                               | [`setObjectRetention`](#setObjectRetention)             |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)           | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketEncryption`](#setBucketEncryption)                 | [`statObject`](#statObject)                             |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                   |                                                         |
-| [`setBucketNotification`](#setBucketNotification)             |                                                         |
-| [`setBucketPolicy`](#setBucketPolicy)                         |                                                         |
-| [`setBucketTags`](#setBucketTags)                             |                                                         |
-| [`setDefaultRetention`](#setDefaultRetention)                 |                                                         |
->>>>>>> address review comments
 
 ## 1. Constructors
 |                                                                                                                          |
@@ -1756,5 +1726,5 @@ ObjectStat objectStat =
 [GetDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/GetDefaultRetentionArgs.html
 [SetDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/SetDefaultRetentionArgs.html
 [DeleteDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html
-[RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html
+[RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/RemoveIncompleteUploadArgs.html
 [GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html

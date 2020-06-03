@@ -21,10 +21,11 @@ import io.minio.http.Method;
 /** Argument class of MinioClient.getPresignedObjectUrl(). */
 public class GetPresignedObjectUrlArgs extends ObjectArgs {
   private Method method;
-  // set default expiry as 7 days if not specified.
-  private Integer expires = 7 * 24 * 3600;
+
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
+  // set default expiry as 7 days if not specified.
+  private Integer expires = DEFAULT_EXPIRY_TIME;
 
   public Method method() {
     return method;
@@ -40,37 +41,32 @@ public class GetPresignedObjectUrlArgs extends ObjectArgs {
 
   /** Argument builder of {@link GetPresignedObjectUrlArgs}. */
   public static final class Builder extends ObjectArgs.Builder<Builder, GetPresignedObjectUrlArgs> {
-    private void validateConfig(Method method) {
+    private void validateMethod(Method method) {
       if (method == null) {
         throw new IllegalArgumentException("mull method for presigned url");
       }
     }
 
-    private void validateConfig(Integer expires) {
+    private void validateExpiry(Integer expires) {
       if (expires == null) {
         throw new IllegalArgumentException("null expiry for presigned url");
       }
-    }
-
-    protected void validate(GetPresignedObjectUrlArgs args) {
-      super.validate(args);
-      validateConfig(args.method);
-      validateConfig(args.expires);
+      if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
+        throw new IllegalArgumentException(
+            "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
+      }
     }
 
     /* method HTTP {@link Method} to generate presigned URL. */
     public Builder method(Method method) {
-      validateConfig(method);
+      validateMethod(method);
       operations.add(args -> args.method = method);
       return this;
     }
 
     /*expires Expiry in seconds; defaults to 7 days. */
     public Builder expires(Integer expires) {
-      if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
-        throw new IllegalArgumentException(
-            expires + "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
-      }
+      validateExpiry(expires);
       operations.add(args -> args.expires = expires);
       return this;
     }

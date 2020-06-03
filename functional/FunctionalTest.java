@@ -2160,7 +2160,7 @@ public class FunctionalTest {
   public static void getPresignedObjectUrl_test1() throws Exception {
     String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: presigned get object: " + methodName);
+      System.out.println("Test: " + methodName + "presigned get");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2189,9 +2189,9 @@ public class FunctionalTest {
       }
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "presigned get object", startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      handleException(methodName, "presigned get object", startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -2199,10 +2199,11 @@ public class FunctionalTest {
   public static void getPresignedObjectUrl_test2() throws Exception {
     String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: presigned get object with expiry: " + methodName);
+      System.out.println("Test: " + methodName + " presigned get with expiry");
     }
 
     long startTime = System.currentTimeMillis();
+    String mintArgs = "expiry: 3600 sec";
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -2227,9 +2228,9 @@ public class FunctionalTest {
         throw new Exception("object content differs");
       }
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "presigned get object expiry :3600 sec ", startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      handleException(methodName, "presigned get object expiry :3600 sec ", startTime, e);
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 
@@ -2237,10 +2238,12 @@ public class FunctionalTest {
   public static void getPresignedObjectUrl_test3() throws Exception {
     String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: presigned get object with expiry and params: " + methodName);
+      System.out.println("Test: " + methodName + "presigned get with expiry and params");
     }
 
     long startTime = System.currentTimeMillis();
+    String mintArgs =
+        "presigned get object expiry : 3600 sec, reqParams : response-content-type as application/json";
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -2270,16 +2273,9 @@ public class FunctionalTest {
         throw new Exception("object content differs");
       }
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          methodName,
-          "presigned get object expiry : 3600 sec, reqParams : response-content-type as application/json",
-          startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      handleException(
-          methodName,
-          "presigned get object expiry : 3600 sec, reqParams : response-content-type as application/json",
-          startTime,
-          e);
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 
@@ -2287,7 +2283,7 @@ public class FunctionalTest {
   public static void getPresignedObjectUrl_test4() throws Exception {
     String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: presigned put object: " + methodName);
+      System.out.println("Test: " + methodName + " presigned put");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2303,9 +2299,9 @@ public class FunctionalTest {
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "presigned put object", startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      handleException(methodName, "presigned put object", startTime, e);
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -2313,10 +2309,11 @@ public class FunctionalTest {
   public static void getPresignedObjectUrl_test5() throws Exception {
     String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: presigned put object with expiry: " + methodName);
+      System.out.println("Test: " + methodName + " presigned put with expiry");
     }
 
     long startTime = System.currentTimeMillis();
+    String mintArgs = "expiry: 3600 sec";
     try {
       String objectName = getRandomName();
 
@@ -2331,16 +2328,17 @@ public class FunctionalTest {
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "presigned put object with expiry :3600 sec", startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      handleException(methodName, "presigned put object with expiry :3600 sec", startTime, e);
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 
   /** Test: presignedPostPolicy(PostPolicy policy). */
   public static void presignedPostPolicy_test() throws Exception {
+    String methodName = "presignedPostPolicy(PostPolicy policy)";
     if (!mintEnv) {
-      System.out.println("Test: presignedPostPolicy(PostPolicy policy)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2386,17 +2384,10 @@ public class FunctionalTest {
       } finally {
         response.close();
       }
-
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("presignedPostPolicy(PostPolicy policy)", null, startTime);
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "presignedPostPolicy(PostPolicy policy)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 

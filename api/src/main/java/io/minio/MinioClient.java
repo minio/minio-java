@@ -1779,7 +1779,8 @@ public class MinioClient {
   public String getObjectUrl(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
     checkObjectName(objectName);
     HttpUrl url = buildUrl(Method.GET, bucketName, objectName, getRegion(bucketName), null);
     return url.toString();
@@ -2639,6 +2640,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getPresignedObjectUrl(GetPresignedObjectUrlArgs)}
    */
   @Deprecated
   public String getPresignedObjectUrl(
@@ -2652,7 +2654,7 @@ public class MinioClient {
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
 
-    return this.getPresignedObjectUrl(
+    return getPresignedObjectUrl(
         GetPresignedObjectUrlArgs.builder()
             .bucket(bucketName)
             .object(objectName)
@@ -2692,15 +2694,14 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @throws ServerException
    */
   public String getPresignedObjectUrl(GetPresignedObjectUrlArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
-          XmlParserException {
-    if (args == null) {
-      throw new IllegalArgumentException("null arguments");
-    }
+          XmlParserException, ServerException {
+    checkArgs(args);
 
     byte[] body = null;
     if (args.method() == Method.PUT || args.method() == Method.POST) {
@@ -2750,6 +2751,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getPresignedObjectUrl(GetPresignedObjectUrlArgs)}
    */
   @Deprecated
   public String presignedGetObject(
@@ -2794,6 +2796,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getPresignedObjectUrl(GetPresignedObjectUrlArgs)}
    */
   @Deprecated
   public String presignedGetObject(String bucketName, String objectName, Integer expires)
@@ -2832,6 +2835,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getPresignedObjectUrl(GetPresignedObjectUrlArgs)}
    */
   @Deprecated
   public String presignedGetObject(String bucketName, String objectName)
@@ -2873,6 +2877,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getPresignedObjectUrl(GetPresignedObjectUrlArgs)}
    */
   @Deprecated
   public String presignedPutObject(String bucketName, String objectName, Integer expires)
@@ -2912,6 +2917,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #getPresignedObjectUrl(GetPresignedObjectUrlArgs)}
    */
   @Deprecated
   public String presignedPutObject(String bucketName, String objectName)
