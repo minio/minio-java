@@ -15,6 +15,7 @@
  */
 
 import io.minio.MinioClient;
+import io.minio.RemoveIncompleteUploadArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -37,7 +38,11 @@ public class RemoveIncompleteUpload {
       //                                           "YOUR-SECRETACCESSKEY");
 
       // Remove all incomplete multipart upload sessions for a given bucket and object name.
-      minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
+      minioClient.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder()
+              .bucket("my-bucketname")
+              .object("my-objectname")
+              .build());
       System.out.println(
           "successfully removed all incomplete upload session of my-bucketname/my-objectname");
     } catch (MinioException e) {

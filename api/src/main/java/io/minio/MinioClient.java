@@ -5935,16 +5935,51 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #removeIncompleteUpload(RemoveIncompleteUploadArgs)}
    */
+  @Deprecated
   public void removeIncompleteUpload(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    for (Result<Upload> r : listIncompleteUploads(bucketName, objectName, true, false)) {
+    removeIncompleteUpload(
+        RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
+  }
+
+  /**
+   * Removes incomplete uploads of an object.
+   *
+   * <pre>Example:{@code
+   * minioClient.removeIncompleteUpload(
+   *     RemoveIncompleteUploadArgs.builder()
+   *     .bucket("my-bucketname")
+   *     .object("my-objectname")
+   *     .build());
+   * }</pre>
+   *
+   * @param args instance of {@link RemoveIncompleteUploadArgs}
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void removeIncompleteUpload(RemoveIncompleteUploadArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    for (Result<Upload> r : listIncompleteUploads(args.bucket(), args.object(), true, false)) {
       Upload upload = r.get();
-      if (objectName.equals(upload.objectName())) {
-        abortMultipartUpload(bucketName, objectName, upload.uploadId());
+      if (args.object().equals(upload.objectName())) {
+        abortMultipartUpload(args.bucket(), args.object(), upload.uploadId());
         return;
       }
     }
