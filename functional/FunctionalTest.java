@@ -340,6 +340,16 @@ public class FunctionalTest {
     throw e;
   }
 
+  private static void deleteFilesAndObjects(Map<String, List<String>> deleteList) throws Exception {
+    for (Map.Entry<String, List<String>> entry : deleteList.entrySet()) {
+      for (String objectName : entry.getValue()) {
+        Files.delete(Paths.get(objectName));
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(entry.getKey()).object(objectName).build());
+      }
+    }
+  }
+
   /** Test: makeBucket(MakeBucketArgs args). */
   public static void makeBucket_test1() throws Exception {
     if (!mintEnv) {
@@ -3158,14 +3168,11 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        Files.delete(Paths.get(filename1));
-        Files.delete(Paths.get(filename2));
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+        Map<String, List<String>> deleteObjectList = new HashMap<String, List<String>>();
+        deleteObjectList.put(
+            bucketName, new ArrayList<String>(Arrays.asList(filename1, filename2)));
+        deleteFilesAndObjects(deleteObjectList);
       }
-
       mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
       handleException(methodName, mintArgs, startTime, e);
@@ -3210,12 +3217,10 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        Files.delete(Paths.get(filename1));
-        Files.delete(Paths.get(filename2));
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+        Map<String, List<String>> deleteObjectList = new HashMap<String, List<String>>();
+        deleteObjectList.put(
+            bucketName, new ArrayList<String>(Arrays.asList(filename1, filename2)));
+        deleteFilesAndObjects(deleteObjectList);
       }
       mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
@@ -3250,14 +3255,11 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        Files.delete(Paths.get(filename1));
-
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
+        Map<String, List<String>> deleteObjectList = new HashMap<String, List<String>>();
+        deleteObjectList.put(bucketName, new ArrayList<String>(Arrays.asList(filename1)));
+        deleteFilesAndObjects(deleteObjectList);
       }
-
       mintSuccessLog(methodName, null, startTime);
-
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3309,13 +3311,10 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       } finally {
-        Files.delete(Paths.get(filename1));
-        Files.delete(Paths.get(filename2));
-
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+        Map<String, List<String>> deleteObjectList = new HashMap<String, List<String>>();
+        deleteObjectList.put(
+            bucketName, new ArrayList<String>(Arrays.asList(filename1, filename2)));
+        deleteFilesAndObjects(deleteObjectList);
       }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
@@ -3363,13 +3362,10 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       } finally {
-        Files.delete(Paths.get(filename1));
-        Files.delete(Paths.get(filename2));
-
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+        Map<String, List<String>> deleteObjectList = new HashMap<String, List<String>>();
+        deleteObjectList.put(
+            bucketName, new ArrayList<String>(Arrays.asList(filename1, filename2)));
+        deleteFilesAndObjects(deleteObjectList);
       }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
@@ -3414,15 +3410,11 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       } finally {
-        Files.delete(Paths.get(filename1));
-        Files.delete(Paths.get(filename2));
-
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename1).build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(filename2).build());
+        Map<String, List<String>> deleteObjectList = new HashMap<String, List<String>>();
+        deleteObjectList.put(
+            bucketName, new ArrayList<String>(Arrays.asList(filename1, filename2)));
+        deleteFilesAndObjects(deleteObjectList);
       }
-
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
