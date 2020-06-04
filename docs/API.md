@@ -803,20 +803,23 @@ minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
 ```
 
 <a name="removeIncompleteUpload"></a>
-### removeIncompleteUpload(String bucketName, String objectName)
-`public void removeIncompleteUpload(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeIncompleteUpload-java.lang.String-java.lang.String-)_
+### removeIncompleteUpload(RemoveIncompleteUploadArgs args)
+`public void removeIncompleteUpload(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeIncompleteUpload-io.minio.RemoveIncompleteUploadArgs-)_
 
 Removes incomplete uploads of an object.
 
 __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
+| Parameter        | Type                           | Description                  |
+|:-----------------|:-------------------------------|:-----------------------------|
+| ``args``         | _[RemoveIncompleteUploadArgs]_ | Arguments.                   |
 
 __Example__
 ```java
-minioClient.removeIncompleteUpload("my-bucketname", "my-objectname");
+minioClient.removeIncompleteUpload(
+    RemoveIncompleteUploadArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .build());
 ```
 
 <a name="setBucketEncryption"></a>
@@ -1821,3 +1824,4 @@ ObjectStat objectStat =
 [GetDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/GetDefaultRetentionArgs.html
 [SetDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/SetDefaultRetentionArgs.html
 [DeleteDefaultRetentionArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html
+[RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/DeleteDefaultRetentionArgs.html

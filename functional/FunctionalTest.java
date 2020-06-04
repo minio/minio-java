@@ -55,6 +55,7 @@ import io.minio.ObjectStat;
 import io.minio.PostPolicy;
 import io.minio.PutObjectOptions;
 import io.minio.RemoveBucketArgs;
+import io.minio.RemoveIncompleteUploadArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.Result;
 import io.minio.SelectObjectContentArgs;
@@ -2013,7 +2014,8 @@ public class FunctionalTest {
         }
       }
 
-      client.removeIncompleteUpload(bucketName, objectName);
+      client.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("listIncompleteUploads(String bucketName)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -2053,7 +2055,8 @@ public class FunctionalTest {
         }
       }
 
-      client.removeIncompleteUpload(bucketName, objectName);
+      client.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("listIncompleteUploads(String bucketName, String prefix)", null, startTime);
     } catch (Exception e) {
       mintFailedLog(
@@ -2098,7 +2101,8 @@ public class FunctionalTest {
         }
       }
 
-      client.removeIncompleteUpload(bucketName, objectName);
+      client.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(
           "listIncompleteUploads(final String bucketName, final String prefix, final boolean recursive)",
           "prefix: minio, recursive: true",
@@ -2116,8 +2120,9 @@ public class FunctionalTest {
 
   /** Test: removeIncompleteUpload(String bucketName, String objectName). */
   public static void removeIncompleteUploads_test() throws Exception {
+    String methodName = "removeIncompleteUpload(RemoveIncompleteUploadArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: removeIncompleteUpload(String bucketName, String objectName)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2141,17 +2146,11 @@ public class FunctionalTest {
         }
       }
 
-      client.removeIncompleteUpload(bucketName, objectName);
-      mintSuccessLog(
-          "removeIncompleteUpload(String bucketName, String objectName)", null, startTime);
+      client.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "removeIncompleteUpload(String bucketName, String objectName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
