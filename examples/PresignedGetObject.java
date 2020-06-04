@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetPresignedObjectUrl {
-  /** MinioClient.getPresignedObjectUrl() example. */
+public class PresignedGetObject {
+  /** MinioClient.presignedGetObject() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -38,12 +38,12 @@ public class GetPresignedObjectUrl {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Get presigned URL string to delete 'my-objectname' in 'my-bucketname' and its life time
+      // Get presigned URL string to download 'my-objectname' in 'my-bucketname' and its life time
       // is one day.
       String url =
           minioClient.getPresignedObjectUrl(
               GetPresignedObjectUrlArgs.builder()
-                  .method(Method.DELETE)
+                  .method(Method.GET)
                   .bucket("my-bucketname")
                   .object("my-objectname")
                   .expiry(60 * 60 * 24)

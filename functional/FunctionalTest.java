@@ -2221,7 +2221,7 @@ public class FunctionalTest {
                   .method(Method.GET)
                   .bucket(bucketName)
                   .object(objectName)
-                  .expires(3600)
+                  .expiry(3600)
                   .build());
       byte[] outBytes = readObject(urlString);
       if (!Arrays.equals(inBytes, outBytes)) {
@@ -2264,7 +2264,7 @@ public class FunctionalTest {
                   .method(Method.GET)
                   .bucket(bucketName)
                   .object(objectName)
-                  .expires(3600)
+                  .expiry(3600)
                   .extraQueryParams(reqParams)
                   .build());
 
@@ -2323,10 +2323,49 @@ public class FunctionalTest {
                   .method(Method.PUT)
                   .bucket(bucketName)
                   .object(objectName)
-                  .expires(3600)
+                  .expiry(3600)
                   .build());
       byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
       writeObject(urlString, data);
+      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      mintSuccessLog(methodName, mintArgs, startTime);
+    } catch (Exception e) {
+      handleException(methodName, mintArgs, startTime, e);
+    }
+  }
+
+  /** Test: getPresignedObjectUrl(GetPresignedObjectUrlArgs args). */
+  public static void getPresignedObjectUrl_test6() throws Exception {
+    String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName + " presigned get with expiry in TimeUnit");
+    }
+
+    long startTime = System.currentTimeMillis();
+    String mintArgs = "expiry: 2 TimeUnit.DAYS";
+    try {
+      String objectName = getRandomName();
+      try (final InputStream is = new ContentInputStream(1 * KB)) {
+        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
+      }
+
+      byte[] inBytes;
+      try (final InputStream is = new ContentInputStream(1 * KB)) {
+        inBytes = readAllBytes(is);
+      }
+
+      String urlString =
+          client.getPresignedObjectUrl(
+              GetPresignedObjectUrlArgs.builder()
+                  .method(Method.GET)
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .expiry(2, TimeUnit.DAYS)
+                  .build());
+      byte[] outBytes = readObject(urlString);
+      if (!Arrays.equals(inBytes, outBytes)) {
+        throw new Exception("object content differs");
+      }
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
@@ -4624,6 +4663,7 @@ public class FunctionalTest {
     getPresignedObjectUrl_test3();
     getPresignedObjectUrl_test4();
     getPresignedObjectUrl_test5();
+    getPresignedObjectUrl_test6();
 
     listObject_test1();
     listObject_test2();

@@ -17,22 +17,23 @@
 package io.minio;
 
 import io.minio.http.Method;
+import java.util.concurrent.TimeUnit;
 
 /** Argument class of MinioClient.getPresignedObjectUrl(). */
 public class GetPresignedObjectUrlArgs extends ObjectArgs {
-  private Method method;
 
   // default expiration for a presigned URL is 7 days in seconds
-  private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
+  public static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
+  private Method method;
   // set default expiry as 7 days if not specified.
-  private Integer expires = DEFAULT_EXPIRY_TIME;
+  private int expiry = DEFAULT_EXPIRY_TIME;
 
   public Method method() {
     return method;
   }
 
-  public Integer expires() {
-    return expires;
+  public int expiry() {
+    return expiry;
   }
 
   public static Builder builder() {
@@ -42,16 +43,11 @@ public class GetPresignedObjectUrlArgs extends ObjectArgs {
   /** Argument builder of {@link GetPresignedObjectUrlArgs}. */
   public static final class Builder extends ObjectArgs.Builder<Builder, GetPresignedObjectUrlArgs> {
     private void validateMethod(Method method) {
-      if (method == null) {
-        throw new IllegalArgumentException("mull method for presigned url");
-      }
+      validateNotNull(method, "method");
     }
 
-    private void validateExpiry(Integer expires) {
-      if (expires == null) {
-        throw new IllegalArgumentException("null expiry for presigned url");
-      }
-      if (expires < 1 || expires > DEFAULT_EXPIRY_TIME) {
+    private void validateExpiry(int expiry) {
+      if (expiry < 1 || expiry > DEFAULT_EXPIRY_TIME) {
         throw new IllegalArgumentException(
             "expires must be in range of 1 to " + DEFAULT_EXPIRY_TIME);
       }
@@ -65,9 +61,16 @@ public class GetPresignedObjectUrlArgs extends ObjectArgs {
     }
 
     /*expires Expiry in seconds; defaults to 7 days. */
-    public Builder expires(Integer expires) {
-      validateExpiry(expires);
-      operations.add(args -> args.expires = expires);
+    public Builder expiry(int expiry) {
+      validateExpiry(expiry);
+      operations.add(args -> args.expiry = expiry);
+      return this;
+    }
+
+    public Builder expiry(int duration, TimeUnit unit) {
+      int expiry = (int) TimeUnit.SECONDS.convert(duration, unit);
+      validateExpiry(expiry);
+      operations.add(args -> args.expiry = expiry);
       return this;
     }
   }

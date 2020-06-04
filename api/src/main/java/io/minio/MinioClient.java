@@ -2659,7 +2659,7 @@ public class MinioClient {
             .bucket(bucketName)
             .object(objectName)
             .method(method)
-            .expires(expires)
+            .expiry(expires)
             .extraQueryParams(reqParams)
             .build());
   }
@@ -2668,15 +2668,44 @@ public class MinioClient {
    * Gets presigned URL of an object for HTTP method, expiry time and custom request parameters.
    *
    * <pre>Example:{@code
-   * // Get presigned URL of an object for HTTP method, expiry time and custom request parameters.
+   * // Get presigned URL string to delete 'my-objectname' in 'my-bucketname' and its life time
+   * // is one day.
    * String url =
-   *     minioClient.getPresignedObjectUrl(
-   *         GetPresignedObjectUrlArgs.builder()
-   *             .method(Method.DELETE)
-   *             .bucket("my-bucketname")
-   *             .object("my-objectname")
-   *             .expires(24 * 60 * 60)
-   *             .build());
+   *    minioClient.getPresignedObjectUrl(
+   *        GetPresignedObjectUrlArgs.builder()
+   *            .method(Method.DELETE)
+   *            .bucket("my-bucketname")
+   *            .object("my-objectname")
+   *            .expiry(24 * 60 * 60)
+   *            .build());
+   * System.out.println(url);
+   *
+   * // Get presigned URL string to upload 'my-objectname' in 'my-bucketname'
+   * // with response-content-type as application/json and life time as one day.
+   * Map<String, String> reqParams = new HashMap<String, String>();
+   * reqParams.put("response-content-type", "application/json");
+   *
+   * String url =
+   *    minioClient.getPresignedObjectUrl(
+   *        GetPresignedObjectUrlArgs.builder()
+   *            .method(Method.PUT)
+   *            .bucket("my-bucketname")
+   *            .object("my-objectname")
+   *            .expiry(1, TimeUnit.DAYS)
+   *            .extraQueryParams(reqParams)
+   *            .build());
+   * System.out.println(url);
+   *
+   * // Get presigned URL string to download 'my-objectname' in 'my-bucketname' and its life time
+   * // is 2 hours.
+   * String url =
+   *    minioClient.getPresignedObjectUrl(
+   *        GetPresignedObjectUrlArgs.builder()
+   *            .method(Method.GET)
+   *            .bucket("my-bucketname")
+   *            .object("my-objectname")
+   *            .expiry(2, TimeUnit.HOURS)
+   *            .build());
    * System.out.println(url);
    * }</pre>
    *
@@ -2705,21 +2734,14 @@ public class MinioClient {
 
     byte[] body = null;
     if (args.method() == Method.PUT || args.method() == Method.POST) {
-      body = new byte[0];
-    }
-
-    Multimap<String, String> queryParamMap = null;
-    if (args.extraQueryParams() != null) {
-      queryParamMap = HashMultimap.create();
-      for (Map.Entry<String, String> m : args.extraQueryParams().entries()) {
-        queryParamMap.put(m.getKey(), m.getValue());
-      }
+      body = EMPTY_BODY;
     }
 
     String region = getRegion(args.bucket());
-    HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParamMap);
+    HttpUrl url =
+        buildUrl(args.method(), args.bucket(), args.object(), region, args.extraQueryParams());
     Request request = createRequest(url, args.method(), null, body, 0);
-    url = Signer.presignV4(request, region, accessKey, secretKey, args.expires());
+    url = Signer.presignV4(request, region, accessKey, secretKey, args.expiry());
     return url.toString();
   }
 
@@ -2766,7 +2788,7 @@ public class MinioClient {
             .method(Method.GET)
             .bucket(bucketName)
             .object(objectName)
-            .expires(expires)
+            .expiry(expires)
             .extraQueryParams(reqParams)
             .build());
   }
@@ -2809,7 +2831,7 @@ public class MinioClient {
             .method(Method.GET)
             .bucket(bucketName)
             .object(objectName)
-            .expires(expires)
+            .expiry(expires)
             .build());
   }
 
@@ -2891,7 +2913,7 @@ public class MinioClient {
             .method(Method.PUT)
             .bucket(bucketName)
             .object(objectName)
-            .expires(expires)
+            .expiry(expires)
             .build());
   }
 
