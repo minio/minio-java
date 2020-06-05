@@ -18,7 +18,6 @@
 package io.minio;
 
 import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidExpiresRangeException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.errors.RegionConflictException;
@@ -423,18 +422,30 @@ public class MinioClientTest {
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidExpiresRangeException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testInvalidExpiresRange1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getPresignedObjectUrl(Method.GET, "mybucket", "myobject", 0, null);
+    client.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.GET)
+            .bucket("mybucket")
+            .object("myobject")
+            .expiry(0)
+            .build());
   }
 
-  @Test(expected = InvalidExpiresRangeException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testInvalidExpiresRange2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     MinioClient client = new MinioClient("https://play.min.io:9000");
-    client.getPresignedObjectUrl(Method.GET, "mybucket", "myobject", 8 * 24 * 3600, null);
+    client.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.GET)
+            .bucket("mybucket")
+            .object("myobject")
+            .expiry(8 * 24 * 3600)
+            .build());
   }
 
   @Test(expected = IllegalArgumentException.class)
