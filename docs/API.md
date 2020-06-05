@@ -1280,7 +1280,6 @@ Tags tags = minioClient.getObjectTags(
 Gets URL of an object useful when this object has public read access.
 
  __Parameters__
-
 | Parameter      | Type     | Description                |
 |:---------------|:---------|:---------------------------|
 | ``bucketName`` | _String_ | Name of the bucket.        |
@@ -1292,9 +1291,7 @@ Gets URL of an object useful when this object has public read access.
 
  __Example__
  ```java
-// Get URL of an object useful when this object has public read access.
-String url =
-    minioClient.getObjectUrl("my-bucketname","my-objectname");
+String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
 System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ```
 
@@ -1304,19 +1301,16 @@ System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 
 Gets presigned URL of an object for HTTP method, expiry time and custom request parameters.
 
- __Parameters__
- 
+ __Parameters__ 
 | Parameter   | Type                           | Description  |
 |:------------|:-------------------------------|:-------------|
 | ``args``    | _[GetPresignedObjectUrlArgs]_  | Arguments.   |
-
 
 | Returns                |
 |:-----------------------|
 | _String_ - URL string. |
 
  __Example__
- 
  ```java
 // Get presigned URL of an object for HTTP method, expiry time and custom request parameters.
 String url =
@@ -1399,11 +1393,9 @@ else {
 Gets form-data of [PostPolicy] of an object to upload its data using POST method.
 
 __Parameters__
-
 | Parameter  | Type           | Description               |
 |:-----------|:---------------|:--------------------------|
 | ``policy`` | _[PostPolicy]_ | Post policy of an object. |
-
 
 | Returns                                                                           |
 |:----------------------------------------------------------------------------------|
