@@ -65,7 +65,6 @@ import io.minio.Result;
 import io.minio.SelectObjectContentArgs;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
-<<<<<<< HEAD
 import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.SetBucketLifeCycleArgs;
@@ -75,8 +74,6 @@ import io.minio.SetBucketTagsArgs;
 import io.minio.SetDefaultRetentionArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
-=======
->>>>>>> Add arg builder to listIncompleteUpload API
 import io.minio.StatObjectArgs;
 import io.minio.Time;
 import io.minio.Xml;
@@ -1834,8 +1831,9 @@ public class FunctionalTest {
 
   /** Test: listIncompleteUploads(ListIncompleteUploadsArgs args). */
   public static void listIncompleteUploads_test1() throws Exception {
+    String methodName = "listIncompleteUploads(ListIncompleteUploadsArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: listIncompleteUploads(ListIncompleteUploadsArgs args)");
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1861,26 +1859,23 @@ public class FunctionalTest {
         }
       }
 
-      client.removeIncompleteUpload(bucketName, objectName);
-      mintSuccessLog("listIncompleteUploads(ListIncompleteUploadsArgs args)", null, startTime);
+      client.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
     }
   }
 
   /** Test: listIncompleteUploads(ListIncompleteUploadsArgs args). */
   public static void listIncompleteUploads_test2() throws Exception {
+    String methodName = "listIncompleteUploads(ListIncompleteUploadsArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: with Prefix listIncompleteUploads(ListIncompleteUploadsArgs args)");
+      System.out.println("Test: " + methodName + "with prefix.");
     }
 
     long startTime = System.currentTimeMillis();
+    String mintArgs = "prefix :minio";
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
@@ -1903,17 +1898,11 @@ public class FunctionalTest {
         }
       }
 
-      client.removeIncompleteUpload(bucketName, objectName);
-      mintSuccessLog(
-          "listIncompleteUploads(ListIncompleteUploadsArgs args)", "prefix :minio", startTime);
+      client.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
-          "prefix :minio",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 
@@ -1922,12 +1911,13 @@ public class FunctionalTest {
    * recursive).
    */
   public static void listIncompleteUploads_test3() throws Exception {
+    String methodName = "listIncompleteUploads(ListIncompleteUploadsArgs args)";
     if (!mintEnv) {
-      System.out.println(
-          "Test: with prefix and recursive as true listIncompleteUploads(ListIncompleteUploadsArgs args)");
+      System.out.println("Test: " + methodName + "with prefix and recursive as true.");
     }
 
     long startTime = System.currentTimeMillis();
+    String mintArgs = "prefix: minio, recursive: true";
     try {
       String objectName = getRandomName();
       try (final InputStream is = new ContentInputStream(6 * MB)) {
@@ -1956,18 +1946,9 @@ public class FunctionalTest {
 
       client.removeIncompleteUpload(
           RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
-          "prefix: minio, recursive: true",
-          startTime);
+      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "listIncompleteUploads(ListIncompleteUploadsArgs args)",
-          "prefix: minio, recursive: true",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, mintArgs, startTime, e);
     }
   }
 

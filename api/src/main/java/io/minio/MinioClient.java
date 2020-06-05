@@ -5872,12 +5872,14 @@ public class MinioClient {
    * }</pre>
    *
    * @param bucketName Name of the bucket.
-   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
-   * @see #listIncompleteUploads(String, String, boolean)
+   * @return Iterable&ltResult&ltUpload&gt;&gt; - Lazy iterator contains object upload information.
+   * @deprecated use {@link #listIncompleteUploads(ListIncompleteUploadsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName)
       throws XmlParserException {
-    return listIncompleteUploads(bucketName, null, true, true);
+    return listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder().bucket(bucketName).recursive(true).build());
   }
 
   /**
@@ -5894,13 +5896,19 @@ public class MinioClient {
    *
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
-   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
+   * @return Iterable&ltResult&ltUpload&gt;&gt; - Lazy iterator contains object upload information.
    * @throws XmlParserException upon parsing response xml
-   * @see #listIncompleteUploads(String, String, boolean)
+   * @deprecated use {@link #listIncompleteUploads(ListIncompleteUploadsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
       throws XmlParserException {
-    return listIncompleteUploads(bucketName, prefix, true, true);
+    return listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder()
+            .bucket(bucketName)
+            .prefix(prefix)
+            .recursive(true)
+            .build());
   }
 
   /**
@@ -5918,13 +5926,66 @@ public class MinioClient {
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
    * @param recursive List recursively than directory structure emulation.
-   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
-   * @see #listIncompleteUploads(String bucketName)
-   * @see #listIncompleteUploads(String bucketName, String prefix)
+   * @return Iterable&ltResult&ltUpload&gt;&gt; - Lazy iterator contains object upload information.
+   * @deprecated use {@link #listIncompleteUploads(ListIncompleteUploadsArgs)}
    */
+  @Deprecated
   public Iterable<Result<Upload>> listIncompleteUploads(
       String bucketName, String prefix, boolean recursive) {
-    return listIncompleteUploads(bucketName, prefix, recursive, true);
+    return listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder()
+            .bucket(bucketName)
+            .prefix(prefix)
+            .recursive(recursive)
+            .build());
+  }
+
+  /**
+   * Lists incomplete object upload information of a bucket for prefix recursively.
+   *
+   * <pre>Example:{@code
+   *  // Lists incomplete object upload information of a bucket.
+   *   Iterable<Result<Upload>> results =
+   *       minioClient.listIncompleteUploads(
+   *           ListIncompleteUploadsArgs.builder().bucket("my-bucketname").build());
+   *   for (Result<Upload> result : results) {
+   *     Upload upload = result.get();
+   *     System.out.println(upload.uploadId() + ", " + upload.objectName());
+   *   }
+   *
+   *   // Lists incomplete object upload information of a bucket for prefix.
+   *   Iterable<Result<Upload>> results =
+   *       minioClient.listIncompleteUploads(
+   *           ListIncompleteUploadsArgs.builder()
+   *               .bucket("my-bucketname")
+   *               .prefix("my-obj")
+   *               .build());
+   *   for (Result<Upload> result : results) {
+   *     Upload upload = result.get();
+   *     System.out.println(upload.uploadId() + ", " + upload.objectName());
+   *   }
+   *
+   *   // Lists incomplete object upload information of a bucket for prefix recursively.
+   *   Iterable<Result<Upload>> results =
+   *       minioClient.listIncompleteUploads(
+   *           ListIncompleteUploadsArgs.builder()
+   *               .bucket("my-bucketname")
+   *               .prefix("my-obj")
+   *               .recursive(true)
+   *               .build());
+   *   for (Result<Upload> result : results) {
+   *    Upload upload = result.get();
+   *    System.out.println(upload.uploadId() + ", " + upload.objectName());
+   *   }
+   * }</pre>
+   *
+   * @param args {@link ListIncompleteUploadsArgs} objects.
+   * @return Iterable&lt;Result&lt;Upload&gt;&gt; - Lazy iterator contains object upload
+   *     information.
+   */
+  public Iterable<Result<Upload>> listIncompleteUploads(ListIncompleteUploadsArgs args) {
+    checkArgs(args);
+    return listIncompleteUploads(args.bucket(), args.prefix(), args.recursive(), true);
   }
 
   /**
