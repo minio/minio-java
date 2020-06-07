@@ -16,31 +16,20 @@
 
 package io.minio;
 
-import okhttp3.HttpUrl;
+/** Base argument class holds object name and version ID along with bucket information. */
+public abstract class ObjectVersionArgs extends ObjectArgs {
+  protected String versionId;
 
-public abstract class SsecObjectArgs extends ObjectArgs {
-  protected ServerSideEncryptionCustomerKey ssec;
-
-  public ServerSideEncryptionCustomerKey ssec() {
-    return ssec;
+  public String versionId() {
+    return versionId;
   }
 
-  protected void validateSsec(HttpUrl baseUrl) {
-    if (ssec == null) {
-      return;
-    }
-
-    if (ssec.type().requiresTls() && !baseUrl.isHttps()) {
-      throw new IllegalArgumentException(
-          ssec.type().name() + "operations must be performed over a secure connection.");
-    }
-  }
-
-  public abstract static class Builder<B extends Builder<B, A>, A extends SsecObjectArgs>
+  /** Base argument builder class for {@link ObjectVersionArgs}. */
+  public abstract static class Builder<B extends Builder<B, A>, A extends ObjectVersionArgs>
       extends ObjectArgs.Builder<B, A> {
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
-    public B ssec(ServerSideEncryptionCustomerKey ssec) {
-      operations.add(args -> args.ssec = ssec);
+    public B versionId(String versionId) {
+      operations.add(args -> args.versionId = versionId);
       return (B) this;
     }
   }

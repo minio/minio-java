@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.Retention;
 
 /** Argument class of MinioClient.setObjectRetention(). */
-public class SetObjectRetentionArgs extends ObjectArgs {
+public class SetObjectRetentionArgs extends ObjectVersionArgs {
   private Retention config;
   private boolean bypassGovernanceMode;
 
@@ -36,11 +36,10 @@ public class SetObjectRetentionArgs extends ObjectArgs {
   }
 
   /** Argument builder of {@link SetObjectRetentionArgs}. */
-  public static final class Builder extends ObjectArgs.Builder<Builder, SetObjectRetentionArgs> {
+  public static final class Builder
+      extends ObjectVersionArgs.Builder<Builder, SetObjectRetentionArgs> {
     private void validateConfig(Retention config) {
-      if (config == null) {
-        throw new IllegalArgumentException("empty retention configuration");
-      }
+      validateNotNull(config, "retention configuration");
     }
 
     protected void validate(SetObjectRetentionArgs args) {

@@ -33,9 +33,7 @@ public class SetBucketNotificationArgs extends BucketArgs {
   /** Argument builder of {@link SetBucketNotificationArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketNotificationArgs> {
     private void validateConfig(NotificationConfiguration config) {
-      if (config == null) {
-        throw new IllegalArgumentException("null notification configuration");
-      }
+      validateNotNull(config, "notification configuration");
     }
 
     protected void validate(SetBucketNotificationArgs args) {

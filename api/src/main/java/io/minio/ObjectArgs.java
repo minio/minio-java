@@ -16,43 +16,43 @@
 
 package io.minio;
 
+import okhttp3.HttpUrl;
+
 /** Base argument class holds object name and version ID along with bucket information. */
 public abstract class ObjectArgs extends BucketArgs {
   protected String objectName;
-  protected String versionId;
 
   public String object() {
     return objectName;
   }
 
-  public String versionId() {
-    return versionId;
+  protected void checkSse(ServerSideEncryption sse, HttpUrl url) {
+    if (sse == null) {
+      return;
+    }
+
+    if (sse.type().requiresTls() && !url.isHttps()) {
+      throw new IllegalArgumentException(
+          sse.type().name() + "operations must be performed over a secure connection.");
+    }
   }
 
   /** Base argument builder class for {@link ObjectArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectArgs>
       extends BucketArgs.Builder<B, A> {
-    private void validateName(String name) {
-      if (name == null || name.isEmpty()) {
-        throw new IllegalArgumentException("object name must be non-null/non-empty string");
-      }
+    protected void validateObjectName(String name) {
+      validateNotEmptyString(name, "object name");
     }
 
     protected void validate(A args) {
       super.validate(args);
-      validateName(args.objectName);
+      validateObjectName(args.objectName);
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B object(String name) {
-      validateName(name);
+      validateObjectName(name);
       operations.add(args -> args.objectName = name);
-      return (B) this;
-    }
-
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
-    public B versionId(String versionId) {
-      operations.add(args -> args.versionId = versionId);
       return (B) this;
     }
   }

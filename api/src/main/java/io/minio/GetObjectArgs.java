@@ -16,7 +16,7 @@
 
 package io.minio;
 
-public class GetObjectArgs extends SsecObjectArgs {
+public class GetObjectArgs extends ObjectReadArgs {
   private Long offset;
   private Long length;
 
@@ -32,7 +32,7 @@ public class GetObjectArgs extends SsecObjectArgs {
     return new Builder();
   }
 
-  public static final class Builder extends SsecObjectArgs.Builder<Builder, GetObjectArgs> {
+  public static final class Builder extends ObjectReadArgs.Builder<Builder, GetObjectArgs> {
     public Builder offset(Long offset) {
       validateOffset(offset);
       operations.add(args -> args.offset = offset);

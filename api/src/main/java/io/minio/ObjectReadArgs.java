@@ -16,13 +16,25 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.disableObjectLegalHold(). */
-public class DisableObjectLegalHoldArgs extends ObjectVersionArgs {
-  public static Builder builder() {
-    return new Builder();
+import okhttp3.HttpUrl;
+
+public abstract class ObjectReadArgs extends ObjectVersionArgs {
+  protected ServerSideEncryptionCustomerKey ssec;
+
+  public ServerSideEncryptionCustomerKey ssec() {
+    return ssec;
   }
 
-  /** Argument builder of {@link DisableObjectLegalHoldArgs}. */
-  public static final class Builder
-      extends ObjectVersionArgs.Builder<Builder, DisableObjectLegalHoldArgs> {}
+  protected void validateSsec(HttpUrl url) {
+    checkSse(ssec, url);
+  }
+
+  public abstract static class Builder<B extends Builder<B, A>, A extends ObjectReadArgs>
+      extends ObjectVersionArgs.Builder<B, A> {
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
+    public B ssec(ServerSideEncryptionCustomerKey ssec) {
+      operations.add(args -> args.ssec = ssec);
+      return (B) this;
+    }
+  }
 }

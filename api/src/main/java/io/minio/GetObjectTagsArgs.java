@@ -17,11 +17,11 @@
 package io.minio;
 
 /** Argument class of MinioClient.getObjectTags(). */
-public class GetObjectTagsArgs extends ObjectArgs {
+public class GetObjectTagsArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();
   }
 
   /** Argument builder of {@link GetObjectTagsArgs}. */
-  public static final class Builder extends ObjectArgs.Builder<Builder, GetObjectTagsArgs> {}
+  public static final class Builder extends ObjectVersionArgs.Builder<Builder, GetObjectTagsArgs> {}
 }
