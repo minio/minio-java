@@ -27,6 +27,14 @@ import java.util.stream.Collectors;
 import okhttp3.HttpUrl;
 
 public abstract class ObjectWriteArgs extends ObjectArgs {
+  // allowed maximum object size is 5TiB.
+  public static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
+  // allowed minimum part size is 5MiB in multipart upload.
+  public static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
+  // allowed minimum part size is 5GiB in multipart upload.
+  public static final long MAX_PART_SIZE = 5L * 1024 * 1024 * 1024;
+  public static final int MAX_MULTIPART_COUNT = 10000;
+
   protected Multimap<String, String> headers =
       Multimaps.unmodifiableMultimap(HashMultimap.create());
   protected Multimap<String, String> userMetadata =

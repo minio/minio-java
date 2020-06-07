@@ -326,24 +326,28 @@ public class MinioClientTest {
   @Test(expected = IllegalArgumentException.class)
   public void testWriteSse1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
+    MinioClient client = new MinioClient("http://play.min.io:9000");
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
-    PutObjectOptions options = new PutObjectOptions(0, -1);
-    options.setSse(ServerSideEncryption.withCustomerKey(keyGen.generateKey()));
-    MinioClient client = new MinioClient("http://play.min.io:9000");
-    client.putObject("mybucket", "myobject", new ByteArrayInputStream(new byte[] {}), options);
+    client.putObject(
+        PutObjectArgs.builder().bucket("mybucket").object("myobject").stream(
+                new ByteArrayInputStream(new byte[] {}), 0, -1)
+            .sse(ServerSideEncryption.withCustomerKey(keyGen.generateKey()))
+            .build());
     Assert.fail("exception should be thrown");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testWriteSse2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
+    MinioClient client = new MinioClient("http://play.min.io:9000");
     Map<String, String> myContext = new HashMap<>();
     myContext.put("key1", "value1");
-    PutObjectOptions options = new PutObjectOptions(0, -1);
-    options.setSse(ServerSideEncryption.withManagedKeys("keyId", myContext));
-    MinioClient client = new MinioClient("http://play.min.io:9000");
-    client.putObject("mybucket", "myobject", new ByteArrayInputStream(new byte[] {}), options);
+    client.putObject(
+        PutObjectArgs.builder().bucket("mybucket").object("myobject").stream(
+                new ByteArrayInputStream(new byte[] {}), 0, -1)
+            .sse(ServerSideEncryption.withManagedKeys("keyId", myContext))
+            .build());
     Assert.fail("exception should be thrown");
   }
 

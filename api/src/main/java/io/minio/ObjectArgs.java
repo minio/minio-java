@@ -33,7 +33,7 @@ public abstract class ObjectArgs extends BucketArgs {
 
     if (sse.type().requiresTls() && !url.isHttps()) {
       throw new IllegalArgumentException(
-          sse.type().name() + "operations must be performed over a secure connection.");
+          sse.type().name() + " operations must be performed over a secure connection.");
     }
   }
 

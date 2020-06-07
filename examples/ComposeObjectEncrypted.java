@@ -16,9 +16,9 @@
 
 import io.minio.ComposeSource;
 import io.minio.MinioClient;
-import io.minio.PutObjectOptions;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
+import io.minio.UploadObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -59,13 +59,21 @@ public class ComposeObjectEncrypted {
       long inputfile1Size = 100000L;
       long inputfile2Size = 200000L;
 
-      PutObjectOptions options = new PutObjectOptions(inputfile1Size, -1);
-      options.setSse(ssePut);
-      minioClient.putObject(bucketName, sourceObject1, inputfile1, options);
+      minioClient.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(sourceObject1)
+              .filename(inputfile1)
+              .sse(ssePut)
+              .build());
 
-      options = new PutObjectOptions(inputfile2Size, -1);
-      options.setSse(ssePut);
-      minioClient.putObject(bucketName, sourceObject2, inputfile2, options);
+      minioClient.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(sourceObject2)
+              .filename(inputfile2)
+              .sse(ssePut)
+              .build());
 
       ComposeSource s1 =
           new ComposeSource(bucketName, sourceObject1, null, null, null, null, ssePut);

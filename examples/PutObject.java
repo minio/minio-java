@@ -15,12 +15,17 @@
  */
 
 import io.minio.MinioClient;
-import io.minio.PutObjectOptions;
+import io.minio.PutObjectArgs;
+import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
+import javax.crypto.KeyGenerator;
 
 public class PutObject {
   /** MinioClient.putObject() example. */
@@ -65,14 +70,112 @@ public class PutObject {
         builder.append("---\n");
       }
 
-      // Create a InputStream for object upload.
-      ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+      {
+        // Create a InputStream for object upload.
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
-      // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
-      minioClient.putObject(
-          "my-bucketname", "my-objectname", bais, new PutObjectOptions(bais.available(), -1));
-      bais.close();
-      System.out.println("my-objectname is uploaded successfully");
+        // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
+        minioClient.putObject(
+            PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+                    bais, bais.available(), -1)
+                .build());
+        bais.close();
+        System.out.println("my-objectname is uploaded successfully");
+      }
+
+      {
+        // Create a InputStream for object upload.
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+
+        // Generate a new 256 bit AES key - This key must be remembered by the client.
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256);
+        ServerSideEncryptionCustomerKey ssec =
+            ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+        // Create encrypted object 'my-objectname' using SSE-C in 'my-bucketname' with content from
+        // the input stream.
+        minioClient.putObject(
+            PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+                    bais, bais.available(), -1)
+                .sse(ssec)
+                .build());
+        bais.close();
+        System.out.println("my-objectname is uploaded successfully");
+      }
+
+      {
+        // Create a InputStream for object upload.
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+
+        Map<String, String> myContext = new HashMap<>();
+        myContext.put("key1", "value1");
+        ServerSideEncryption sseKms = ServerSideEncryption.withManagedKeys("Key-Id", myContext);
+
+        // Create encrypted object 'my-objectname' using SSE-KMS in 'my-bucketname' with content
+        // from the input stream.
+        minioClient.putObject(
+            PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+                    bais, bais.available(), -1)
+                .sse(sseKms)
+                .build());
+        bais.close();
+        System.out.println("my-objectname is uploaded successfully");
+      }
+
+      {
+        // Create a InputStream for object upload.
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+
+        ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+
+        // Create encrypted object 'my-objectname' using SSE-S3 in 'my-bucketname' with content
+        // from the input stream.
+        minioClient.putObject(
+            PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+                    bais, bais.available(), -1)
+                .sse(sseS3)
+                .build());
+        bais.close();
+        System.out.println("my-objectname is uploaded successfully");
+      }
+
+      {
+        // Create a InputStream for object upload.
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+
+        // Create headers
+        Map<String, String> headers = new HashMap<>();
+        // Add custom content type
+        headers.put("Content-Type", "application/octet-stream");
+        // Add storage class
+        headers.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
+
+        // Add custom/user metadata
+        Map<String, String> userMetadata = new HashMap<>();
+        userMetadata.put("My-Project", "Project One");
+
+        // Create object 'my-objectname' with user metadata and other properties in 'my-bucketname'
+        // with content
+        // from the input stream.
+        minioClient.putObject(
+            PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+                    bais, bais.available(), -1)
+                .headers(headers)
+                .userMetadata(userMetadata)
+                .build());
+        bais.close();
+        System.out.println("my-objectname is uploaded successfully");
+      }
+
+      {
+        // Create object name ending with '/' (mostly called folder or directory).
+        minioClient.putObject(
+            PutObjectArgs.builder().bucket("my-bucketname").object("path/to/").stream(
+                    new ByteArrayInputStream(new byte[] {}), 1, -1)
+                .build());
+        System.out.println("path/to/ is created successfully");
+      }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
