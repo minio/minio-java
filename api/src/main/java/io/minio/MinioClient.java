@@ -2307,7 +2307,9 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #copyObject(CopyObjectArgs)}
    */
+  @Deprecated
   public void copyObject(
       String bucketName,
       String objectName,
@@ -2321,48 +2323,184 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new IllegalArgumentException("bucket name cannot be empty");
+    ServerSideEncryptionCustomerKey srcSsec = null;
+    if (srcSse instanceof ServerSideEncryptionCustomerKey) {
+      srcSsec = (ServerSideEncryptionCustomerKey) srcSse;
     }
-
-    checkObjectName(objectName);
-
-    checkWriteRequestSse(sse);
-
-    if ((srcBucketName == null) || (srcBucketName.isEmpty())) {
-      throw new IllegalArgumentException("Source bucket name cannot be empty");
-    }
-
-    // Source object name is optional, if empty default to object name.
-    if (srcObjectName == null) {
-      srcObjectName = objectName;
-    }
-
     checkReadRequestSse(srcSse);
 
-    if (headerMap == null) {
-      headerMap = new HashMap<>();
-    }
-
-    headerMap.put("x-amz-copy-source", S3Escaper.encodePath(srcBucketName + "/" + srcObjectName));
-
-    if (sse != null) {
-      headerMap.putAll(sse.headers());
-    }
-
-    if (srcSse != null) {
-      headerMap.putAll(srcSse.copySourceHeaders());
-    }
+    CopyObjectArgs.Builder builder =
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .headers(headerMap)
+            .sse(sse)
+            .srcBucket(srcBucketName)
+            .srcObject(srcObjectName)
+            .srcSsec(srcSsec);
 
     if (copyConditions != null) {
-      headerMap.putAll(copyConditions.getConditions());
+      Map<String, String> map = copyConditions.getConditions();
+      String value;
+
+      builder.srcMatchETag(map.get("x-amz-copy-source-if-match"));
+      builder.srcNotMatchETag(map.get("x-amz-copy-source-if-none-match"));
+
+      value = map.get("x-amz-copy-source-if-modified-since");
+      if (value != null) {
+        builder.srcModifiedSince(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
+      }
+
+      value = map.get("x-amz-copy-source-if-unmodified-since");
+      if (value != null) {
+        builder.srcUnmodifiedSince(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
+      }
+
+      value = map.get("x-amz-metadata-directive");
+      if (value != null) {
+        builder.metadataDirective(Directive.REPLACE);
+      }
     }
 
-    Response response = executePut(bucketName, objectName, headerMap, null, "", 0);
+    copyObject(builder.build());
+  }
 
-    try (ResponseBody body = response.body()) {
+  /**
+   * Creates an object by server-side copying data from another object.
+   *
+   * <pre>Example:{@code
+   * // Create object "my-objectname" in bucket "my-bucketname" by copying from object
+   * // "my-objectname" in bucket "my-source-bucketname".
+   * minioClient.copyObject(
+   *     CopyObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .srcBucket("my-source-bucketname")
+   *         .build());
+   *
+   * // Create object "my-objectname" in bucket "my-bucketname" by copying from object
+   * // "my-source-objectname" in bucket "my-source-bucketname".
+   * minioClient.copyObject(
+   *     CopyObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .srcBucket("my-source-bucketname")
+   *         .srcObject("my-source-objectname")
+   *         .build());
+   *
+   * // Create object "my-objectname" in bucket "my-bucketname" with server-side encryption by
+   * // copying from object "my-objectname" in bucket "my-source-bucketname".
+   * minioClient.copyObject(
+   *     CopyObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .srcBucket("my-source-bucketname")
+   *         .sse(sse)
+   *         .build());
+   *
+   * // Create object "my-objectname" in bucket "my-bucketname" by copying from SSE-C encrypted
+   * // object "my-source-objectname" in bucket "my-source-bucketname".
+   * minioClient.copyObject(
+   *     CopyObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .srcBucket("my-source-bucketname")
+   *         .srcObject("my-source-objectname")
+   *         .srcSsec(ssec)
+   *         .build());
+   *
+   * // Create object "my-objectname" in bucket "my-bucketname" with custom headers by copying from
+   * // object "my-objectname" in bucket "my-source-bucketname" using conditions.
+   * minioClient.copyObject(
+   *     CopyObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .srcBucket("my-source-bucketname")
+   *         .headers(headers)
+   *         .srcMatchETag(etag)
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link CopyObjectArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void copyObject(CopyObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+    args.validateSse(this.baseUrl);
+
+    Multimap<String, String> headers = args.genHeaders();
+
+    // Source object name is optional, if empty default to object name.
+    String srcObject = args.object();
+    if (args.srcObject() != null) {
+      srcObject = args.srcObject();
+    }
+
+    String copySource = S3Escaper.encodePath("/" + args.srcBucket() + "/" + srcObject);
+    if (args.srcVersionId() != null) {
+      copySource += "?versionId=" + S3Escaper.encode(args.srcVersionId());
+    }
+
+    headers.put("x-amz-copy-source", copySource);
+
+    if (args.srcSsec() != null) {
+      headers.putAll(Multimaps.forMap(args.srcSsec().copySourceHeaders()));
+    }
+
+    if (args.srcMatchETag() != null) {
+      headers.put("x-amz-copy-source-if-match", args.srcMatchETag());
+    }
+
+    if (args.srcNotMatchETag() != null) {
+      headers.put("x-amz-copy-source-if-none-match", args.srcNotMatchETag());
+    }
+
+    if (args.srcModifiedSince() != null) {
+      headers.put(
+          "x-amz-copy-source-if-modified-since",
+          args.srcModifiedSince().format(Time.HTTP_HEADER_DATE_FORMAT));
+    }
+
+    if (args.srcUnmodifiedSince() != null) {
+      headers.put(
+          "x-amz-copy-source-if-unmodified-since",
+          args.srcUnmodifiedSince().format(Time.HTTP_HEADER_DATE_FORMAT));
+    }
+
+    if (args.metadataDirective() != null) {
+      headers.put("x-amz-metadata-directive", args.metadataDirective().name());
+    }
+
+    if (args.taggingDirective() != null) {
+      headers.put("x-amz-tagging-directive", args.taggingDirective().name());
+    }
+
+    try (Response response =
+        execute(
+            Method.PUT,
+            args.bucket(),
+            args.object(),
+            getRegion(args.bucket()),
+            headers,
+            null,
+            null,
+            0)) {
       // For now ignore the copyObjectResult, just read and parse it.
-      Xml.unmarshal(CopyObjectResult.class, body.charStream());
+      Xml.unmarshal(CopyObjectResult.class, response.body().charStream());
     }
   }
 
