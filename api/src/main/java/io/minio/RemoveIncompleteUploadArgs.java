@@ -17,12 +17,12 @@
 
 package io.minio;
 
-public class RemoveIncompleteUploadArgs extends ObjectArgs {
+public class RemoveIncompleteUploadArgs extends ObjectVersionArgs {
 
   public static Builder builder() {
     return new Builder();
   }
 
   public static final class Builder
-      extends ObjectArgs.Builder<Builder, RemoveIncompleteUploadArgs> {}
+      extends ObjectVersionArgs.Builder<Builder, RemoveIncompleteUploadArgs> {}
 }

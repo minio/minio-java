@@ -32,10 +32,8 @@ public abstract class BucketArgs extends BaseArgs {
   /** Base argument builder class for {@link BucketArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends BucketArgs>
       extends BaseArgs.Builder<B, A> {
-    private void validateName(String name) {
-      if (name == null) {
-        throw new IllegalArgumentException("null bucket name");
-      }
+    protected void validateBucketName(String name) {
+      validateNotNull(name, "bucket name");
 
       // Bucket names cannot be no less than 3 and no more than 63 characters long.
       if (name.length() < 3 || name.length() > 63) {
@@ -59,20 +57,17 @@ public abstract class BucketArgs extends BaseArgs {
     }
 
     private void validateRegion(String region) {
-      if (region != null && region.isEmpty()) {
-        throw new IllegalArgumentException("region cannot be empty");
-      }
+      validateNullOrNotEmptyString(region, "region");
     }
 
     @Override
     protected void validate(A args) {
-      validateName(args.bucketName);
-      validateRegion(args.region);
+      validateBucketName(args.bucketName);
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B bucket(String name) {
-      validateName(name);
+      validateBucketName(name);
       operations.add(args -> args.bucketName = name);
       return (B) this;
     }

@@ -44,9 +44,7 @@ public class ListenBucketNotificationArgs extends BucketArgs {
   public static final class Builder
       extends BucketArgs.Builder<Builder, ListenBucketNotificationArgs> {
     private void validateEvents(String[] events) {
-      if (events == null) {
-        throw new IllegalArgumentException("null events");
-      }
+      validateNotNull(events, "events");
     }
 
     protected void validate(ListenBucketNotificationArgs args) {

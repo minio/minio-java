@@ -31,9 +31,7 @@ public class SetBucketLifeCycleArgs extends BucketArgs {
   /** Argument builder of {@link SetBucketLifeCycleArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketLifeCycleArgs> {
     private void validateConfig(String config) {
-      if (config == null || config.isEmpty()) {
-        throw new IllegalArgumentException("empty life-cycle configuration");
-      }
+      validateNotEmptyString(config, "life-cycle configuration");
     }
 
     protected void validate(SetBucketLifeCycleArgs args) {

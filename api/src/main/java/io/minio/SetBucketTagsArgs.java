@@ -34,9 +34,7 @@ public class SetBucketTagsArgs extends BucketArgs {
   /** Argument builder of {@link SetBucketTagsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketTagsArgs> {
     private void validateTags(Tags tags) {
-      if (tags == null) {
-        throw new IllegalArgumentException("null tags to set");
-      }
+      validateNotNull(tags, "tags");
     }
 
     protected void validate(SetBucketTagsArgs args) {
@@ -45,10 +43,7 @@ public class SetBucketTagsArgs extends BucketArgs {
     }
 
     public Builder tags(Map<String, String> map) {
-      if (map == null) {
-        throw new IllegalArgumentException("null map for tags");
-      }
-
+      validateNotNull(map, "map for tags");
       operations.add(args -> args.tags = Tags.newBucketTags(map));
       return this;
     }

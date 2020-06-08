@@ -17,11 +17,12 @@
 package io.minio;
 
 /** Argument class of MinioClient.deleteObjectTags(). */
-public class DeleteObjectTagsArgs extends ObjectArgs {
+public class DeleteObjectTagsArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();
   }
 
   /** Argument builder of {@link DeleteObjectTagsArgs}. */
-  public static final class Builder extends ObjectArgs.Builder<Builder, DeleteObjectTagsArgs> {}
+  public static final class Builder
+      extends ObjectVersionArgs.Builder<Builder, DeleteObjectTagsArgs> {}
 }

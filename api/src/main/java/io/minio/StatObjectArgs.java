@@ -17,11 +17,11 @@
 package io.minio;
 
 /** Argument class of MinioClient.statObject(). */
-public class StatObjectArgs extends SsecObjectArgs {
+public class StatObjectArgs extends ObjectReadArgs {
   public static Builder builder() {
     return new Builder();
   }
 
   /** Argument builder of {@link StatObjectArgs}. */
-  public static final class Builder extends SsecObjectArgs.Builder<Builder, StatObjectArgs> {}
+  public static final class Builder extends ObjectReadArgs.Builder<Builder, StatObjectArgs> {}
 }

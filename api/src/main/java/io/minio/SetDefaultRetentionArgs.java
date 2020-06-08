@@ -33,9 +33,7 @@ public class SetDefaultRetentionArgs extends BucketArgs {
   /** Argument builder of {@link SetDefaultRetentionArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetDefaultRetentionArgs> {
     private void validateConfig(ObjectLockConfiguration config) {
-      if (config == null) {
-        throw new IllegalArgumentException("null object-lock configuration");
-      }
+      validateNotNull(config, "object-lock configuration");
     }
 
     @Override

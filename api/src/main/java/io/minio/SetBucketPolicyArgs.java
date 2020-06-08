@@ -31,9 +31,7 @@ public class SetBucketPolicyArgs extends BucketArgs {
   /** Argument builder of {@link SetBucketPolicyArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketPolicyArgs> {
     private void validateConfig(String config) {
-      if (config == null) {
-        throw new IllegalArgumentException("null policy configuration");
-      }
+      validateNotNull(config, "policy configuration");
     }
 
     @Override

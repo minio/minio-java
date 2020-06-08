@@ -59,11 +59,17 @@ public abstract class BaseArgs {
       }
     }
 
+    protected void validateNullOrNotEmptyString(String arg, String argName) {
+      if (arg != null && arg.isEmpty()) {
+        throw new IllegalArgumentException(argName + " must be a non-empty string.");
+      }
+    }
+
     public Builder() {
       this.operations = new ArrayList<>();
     }
 
-    private Multimap<String, String> copyMultimap(Multimap<String, String> multimap) {
+    protected Multimap<String, String> copyMultimap(Multimap<String, String> multimap) {
       Multimap<String, String> multimapCopy = HashMultimap.create();
       if (multimap != null) {
         multimapCopy.putAll(multimap);
@@ -71,7 +77,7 @@ public abstract class BaseArgs {
       return Multimaps.unmodifiableMultimap(multimapCopy);
     }
 
-    private Multimap<String, String> toMultimap(Map<String, String> map) {
+    protected Multimap<String, String> toMultimap(Map<String, String> map) {
       Multimap<String, String> multimap = HashMultimap.create();
       if (map != null) {
         multimap.putAll(Multimaps.forMap(map));

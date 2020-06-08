@@ -20,7 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class DownloadObjectArgs extends SsecObjectArgs {
+public class DownloadObjectArgs extends ObjectReadArgs {
   private String fileName;
 
   public String fileName() {
@@ -31,7 +31,7 @@ public class DownloadObjectArgs extends SsecObjectArgs {
     return new Builder();
   }
 
-  public static final class Builder extends SsecObjectArgs.Builder<Builder, DownloadObjectArgs> {
+  public static final class Builder extends ObjectReadArgs.Builder<Builder, DownloadObjectArgs> {
     public Builder fileName(String fileName) {
       validateFileName(fileName);
       operations.add(args -> args.fileName = fileName);
@@ -39,13 +39,7 @@ public class DownloadObjectArgs extends SsecObjectArgs {
     }
 
     private void validateFileName(String fileName) {
-      if (fileName == null) {
-        return;
-      }
-
-      if (fileName.isEmpty()) {
-        throw new IllegalArgumentException("filename should be either null or non-empty");
-      }
+      validateNotEmptyString(fileName, "filename");
 
       Path filePath = Paths.get(fileName);
       boolean fileExists = Files.exists(filePath);

@@ -17,12 +17,12 @@
 package io.minio;
 
 /** Argument class of MinioClient.isObjectLegalHoldEnabled(). */
-public class IsObjectLegalHoldEnabledArgs extends ObjectArgs {
+public class IsObjectLegalHoldEnabledArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();
   }
 
   /** Argument builder of {@link IsObjectLegalHoldEnabledArgs}. */
   public static final class Builder
-      extends ObjectArgs.Builder<Builder, IsObjectLegalHoldEnabledArgs> {}
+      extends ObjectVersionArgs.Builder<Builder, IsObjectLegalHoldEnabledArgs> {}
 }
