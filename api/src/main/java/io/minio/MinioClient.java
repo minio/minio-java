@@ -2359,7 +2359,7 @@ public class MinioClient {
 
       value = map.get("x-amz-metadata-directive");
       if (value != null) {
-        builder.metadataDirective(Directive.REPLACE);
+        builder.metadataDirective(Directive.valueOf(value));
       }
     }
 
