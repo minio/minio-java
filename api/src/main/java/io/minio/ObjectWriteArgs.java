@@ -96,28 +96,25 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
     checkSse(sse, url);
   }
 
+  @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectWriteArgs>
       extends ObjectArgs.Builder<B, A> {
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B headers(Map<String, String> headers) {
       final Multimap<String, String> headersCopy = toMultimap(headers);
       operations.add(args -> args.headers = headersCopy);
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B headers(Multimap<String, String> headers) {
       final Multimap<String, String> headersCopy = copyMultimap(headers);
       operations.add(args -> args.headers = headersCopy);
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B userMetadata(Map<String, String> userMetadata) {
       return userMetadata((userMetadata == null) ? null : Multimaps.forMap(userMetadata));
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B userMetadata(Multimap<String, String> userMetadata) {
       Multimap<String, String> userMetadataCopy = HashMultimap.create();
       if (userMetadata != null) {
@@ -134,33 +131,28 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B sse(ServerSideEncryption sse) {
       operations.add(args -> args.sse = sse);
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B tags(Map<String, String> map) {
       final Tags tags = (map == null) ? new Tags() : Tags.newObjectTags(map);
       operations.add(args -> args.tags = tags);
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B tags(Tags tags) {
       Tags tagsCopy = (tags == null) ? new Tags() : Tags.newObjectTags(tags.get());
       operations.add(args -> args.tags = tagsCopy);
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B retention(Retention retention) {
       operations.add(args -> args.retention = retention);
       return (B) this;
     }
 
-    @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
     public B legalHold(boolean flag) {
       operations.add(args -> args.legalHold = flag);
       return (B) this;

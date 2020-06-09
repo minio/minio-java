@@ -110,6 +110,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -2445,10 +2446,7 @@ public class MinioClient {
     Multimap<String, String> headers = args.genHeaders();
 
     // Source object name is optional, if empty default to object name.
-    String srcObject = args.object();
-    if (args.srcObject() != null) {
-      srcObject = args.srcObject();
-    }
+    String srcObject = Optional.ofNullable(args.srcObject()).orElse(args.object());
 
     String copySource = S3Escaper.encodePath("/" + args.srcBucket() + "/" + srcObject);
     if (args.srcVersionId() != null) {

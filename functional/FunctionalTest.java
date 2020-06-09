@@ -123,6 +123,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -2315,10 +2316,7 @@ public class FunctionalTest {
       System.out.println("Test: " + methodName + " " + testTags);
     }
 
-    String srcObject = args.object();
-    if (args.srcObject() != null) {
-      srcObject = args.srcObject();
-    }
+    String srcObject = Optional.ofNullable(args.srcObject()).orElse(args.object());
 
     long startTime = System.currentTimeMillis();
     try {
