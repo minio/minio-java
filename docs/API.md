@@ -693,6 +693,22 @@ for (Result<Upload> result : results) {
   Upload upload = result.get();
   System.out.println(upload.uploadId() + ", " + upload.objectName());
 }
+
+// Lists incomplete object upload information of a bucket for prefix, delimiter.
+//  uploadIdMarker, encodingType and maxUpload to 500
+Iterable<Result<Upload>> results =
+    minioClient.listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder()
+            .bucket("my-bucketname")
+            .prefix("my-obj")
+            .delimiter("-")
+            .encodingType("url")
+            .maxUploads(500)
+            .uploadIdMarker("Xgw4MJT6ZPAVxpY0SAuGN7q4uWJJM22ZYg1W99trdp4tpO88")
+            .build());
+for (Result<Upload> result : results) {
+  Upload upload = result.get();
+  System.out.println(upload.uploadId() + ", " + upload.objectName());
 ```
 
 <a name="listObjects"></a>
@@ -1749,12 +1765,5 @@ ObjectStat objectStat =
 [RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/RemoveIncompleteUploadArgs.html
 [GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html
 [RemoveObjectsArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectsArgs.html
-<<<<<<< HEAD
-<<<<<<< HEAD
 [CopyObjectArgs]: http://minio.github.io/minio-java/io/minio/CopyObjectArgs.html
-=======
-[ListIncompleteUploadsBucketArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsBucketArgs.html
->>>>>>> ListIncompleteUpload using builder
-=======
 [ListIncompleteUploadsArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsArgs.html
->>>>>>> Add arg builder to listIncompleteUpload API

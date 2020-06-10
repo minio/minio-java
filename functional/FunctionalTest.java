@@ -1839,6 +1839,7 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
+
       try (final InputStream is = new ContentInputStream(6 * MB)) {
         client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
       } catch (ErrorResponseException e) {
@@ -1848,7 +1849,6 @@ public class FunctionalTest {
       } catch (InsufficientDataException e) {
         ignore();
       }
-
       int i = 0;
       for (Result<Upload> r :
           client.listIncompleteUploads(
@@ -1859,8 +1859,8 @@ public class FunctionalTest {
         }
       }
 
-      client.removeIncompleteUpload(
-          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
+      // client.removeIncompleteUpload(
+      //     RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
@@ -1994,7 +1994,7 @@ public class FunctionalTest {
   public static void getPresignedObjectUrl_test1() throws Exception {
     String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName + "presigned get");
+      System.out.println("Test: " + methodName + " presigned get");
     }
 
     long startTime = System.currentTimeMillis();
@@ -2072,7 +2072,7 @@ public class FunctionalTest {
   public static void getPresignedObjectUrl_test3() throws Exception {
     String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName + "presigned get with expiry and params");
+      System.out.println("Test: " + methodName + " presigned get with expiry and params");
     }
 
     long startTime = System.currentTimeMillis();

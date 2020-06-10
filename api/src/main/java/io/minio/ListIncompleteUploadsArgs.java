@@ -19,14 +19,37 @@ package io.minio;
 /** Argument class of @see #listIncompleteUploads(ListIncompleteUploadsArgs args). */
 public class ListIncompleteUploadsArgs extends BucketArgs {
   private String prefix;
+  private String delimiter;
+  private String encodingType;
+  private String keyMarker;
+  private Integer maxUploads;
+  private String uploadIdMarker;
   private boolean recursive;
 
-  /** Returns prefix. */
   public String prefix() {
     return prefix;
   }
 
-  /** Returns recursive flag. */
+  public String delimiter() {
+    return delimiter;
+  }
+
+  public String encodingType() {
+    return encodingType;
+  }
+
+  public String keyMarker() {
+    return keyMarker;
+  }
+
+  public Integer maxUploads() {
+    return maxUploads;
+  }
+
+  public String uploadIdMarker() {
+    return uploadIdMarker;
+  }
+
   public boolean recursive() {
     return recursive;
   }
@@ -39,6 +62,37 @@ public class ListIncompleteUploadsArgs extends BucketArgs {
   public static final class Builder extends BucketArgs.Builder<Builder, ListIncompleteUploadsArgs> {
     public Builder prefix(String prefix) {
       operations.add(args -> args.prefix = prefix);
+      return this;
+    }
+
+    public Builder delimitter(String delimiter) {
+      operations.add(args -> args.delimiter = delimiter);
+      return this;
+    }
+
+    public Builder encodingType(String encodingType) {
+      if (!encodingType.equals("url")) {
+        throw new IllegalArgumentException(" valid value for encodingType is url ");
+      }
+      operations.add(args -> args.encodingType = encodingType);
+      return this;
+    }
+
+    public Builder keyMarker(String keyMarker) {
+      operations.add(args -> args.keyMarker = keyMarker);
+      return this;
+    }
+
+    public Builder maxUploads(int maxUploads) {
+      if (maxUploads < 1 || maxUploads > 1000) {
+        throw new IllegalArgumentException("maxUploads must be minimum 1  to maximum  1000");
+      }
+      operations.add(args -> args.maxUploads = maxUploads);
+      return this;
+    }
+
+    public Builder uploadIdMarker(String uploadIdMarker) {
+      operations.add(args -> args.uploadIdMarker = uploadIdMarker);
       return this;
     }
 
