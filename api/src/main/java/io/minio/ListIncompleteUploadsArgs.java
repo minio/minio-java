@@ -20,7 +20,6 @@ package io.minio;
 public class ListIncompleteUploadsArgs extends BucketArgs {
   private String prefix;
   private String delimiter;
-  private String encodingType;
   private String keyMarker;
   private Integer maxUploads;
   private String uploadIdMarker;
@@ -32,10 +31,6 @@ public class ListIncompleteUploadsArgs extends BucketArgs {
 
   public String delimiter() {
     return delimiter;
-  }
-
-  public String encodingType() {
-    return encodingType;
   }
 
   public String keyMarker() {
@@ -70,28 +65,22 @@ public class ListIncompleteUploadsArgs extends BucketArgs {
       return this;
     }
 
-    public Builder encodingType(String encodingType) {
-      if (!encodingType.equals("url")) {
-        throw new IllegalArgumentException(" valid value for encodingType is url ");
-      }
-      operations.add(args -> args.encodingType = encodingType);
-      return this;
-    }
-
     public Builder keyMarker(String keyMarker) {
+      validateNullOrNotEmptyString(keyMarker, "keyMarker");
       operations.add(args -> args.keyMarker = keyMarker);
       return this;
     }
 
     public Builder maxUploads(int maxUploads) {
       if (maxUploads < 1 || maxUploads > 1000) {
-        throw new IllegalArgumentException("maxUploads must be minimum 1  to maximum  1000");
+        throw new IllegalArgumentException("maxUploads must be minimum 1 to maximum 1000");
       }
       operations.add(args -> args.maxUploads = maxUploads);
       return this;
     }
 
     public Builder uploadIdMarker(String uploadIdMarker) {
+      validateNullOrNotEmptyString(uploadIdMarker, "uploadIdMarker");
       operations.add(args -> args.uploadIdMarker = uploadIdMarker);
       return this;
     }

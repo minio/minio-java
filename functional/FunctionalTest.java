@@ -1858,9 +1858,8 @@ public class FunctionalTest {
           break;
         }
       }
-
-      // client.removeIncompleteUpload(
-      //     RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
+      client.removeIncompleteUpload(
+          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);

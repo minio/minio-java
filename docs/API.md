@@ -695,14 +695,13 @@ for (Result<Upload> result : results) {
 }
 
 // Lists incomplete object upload information of a bucket for prefix, delimiter.
-//  uploadIdMarker, encodingType and maxUpload to 500
+// uploadIdMarker and maxUpload to 500
 Iterable<Result<Upload>> results =
     minioClient.listIncompleteUploads(
         ListIncompleteUploadsArgs.builder()
             .bucket("my-bucketname")
             .prefix("my-obj")
             .delimiter("-")
-            .encodingType("url")
             .maxUploads(500)
             .uploadIdMarker("Xgw4MJT6ZPAVxpY0SAuGN7q4uWJJM22ZYg1W99trdp4tpO88")
             .build());
