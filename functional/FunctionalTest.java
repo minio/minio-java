@@ -22,7 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.BucketExistsArgs;
 import io.minio.CloseableIterator;
 import io.minio.ComposeSource;
-import io.minio.CopyConditions;
+import io.minio.CopyObjectArgs;
 import io.minio.DeleteBucketEncryptionArgs;
 import io.minio.DeleteBucketLifeCycleArgs;
 import io.minio.DeleteBucketNotificationArgs;
@@ -30,6 +30,7 @@ import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketTagsArgs;
 import io.minio.DeleteDefaultRetentionArgs;
 import io.minio.DeleteObjectTagsArgs;
+import io.minio.Directive;
 import io.minio.DisableObjectLegalHoldArgs;
 import io.minio.DisableVersioningArgs;
 import io.minio.DownloadObjectArgs;
@@ -122,6 +123,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -158,6 +160,8 @@ public class FunctionalTest {
   private static String accessKey;
   private static String secretKey;
   private static String region;
+  private static boolean isSecureEndpoint = false;
+  private static String kmsKeyName = null;
   private static String sqsArn = null;
   private static MinioClient client = null;
 
@@ -1190,11 +1194,16 @@ public class FunctionalTest {
 
   /** Test: with SSE-C: statObject(StatObjectArgs args). */
   public static void statObject_test2() throws Exception {
+    long startTime = System.currentTimeMillis();
+    if (!isSecureEndpoint) {
+      mintIgnoredLog("statObject(StatObjectArgs args) using SSE_C.", null, startTime);
+      return;
+    }
+
     if (!mintEnv) {
       System.out.println("Test: with SSE-C: statObject(StatObjectArgs args)");
     }
 
-    long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
       // Generate a new 256 bit AES key - This key must be remembered by the client.
@@ -2299,660 +2308,365 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: copyObject(String bucketName, String objectName, String destBucketName). */
-  public static void copyObject_test1() throws Exception {
-    String methodName = "copyObject(String bucketName, String objectName, String destBucketName)";
+  public static void testCopyObject(
+      String testTags, ServerSideEncryption sse, CopyObjectArgs args, boolean negativeCase)
+      throws Exception {
+    String methodName = "copyObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println("Test: " + methodName + " " + testTags);
     }
+
+    String srcObject = Optional.ofNullable(args.srcObject()).orElse(args.object());
 
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-      client.copyObject(destBucketName, objectName, null, null, bucketName, null, null, null);
-      client
-          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
-          .close();
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions) with ETag to match.
-   */
-  public static void copyObject_test2() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions) with Matching ETag (Negative Case)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-
-      CopyConditions invalidETag = new CopyConditions();
-      invalidETag.setMatchETag("TestETag");
-
+      client.makeBucket(MakeBucketArgs.builder().bucket(args.srcBucket()).build());
       try {
-        client.copyObject(
-            destBucketName, objectName, null, null, bucketName, null, null, invalidETag);
-      } catch (ErrorResponseException e) {
-        if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
-          throw e;
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        if (sse != null) {
+          options.setSse(sse);
         }
-      }
+        client.putObject(args.srcBucket(), srcObject, new ContentInputStream(1 * KB), options);
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
+        if (negativeCase) {
+          try {
+            client.copyObject(args);
+          } catch (ErrorResponseException e) {
+            if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
+              throw e;
+            }
+          }
+        } else {
+          client.copyObject(args);
 
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName,"
-              + " CopyConditions copyConditions)",
-          "CopyConditions: invalidETag",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions)",
-          "CopyConditions: invalidETag",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions) with ETag to match.
-   */
-  public static void copyObject_test3() throws Exception {
-    String methodName =
-        "copyObject(String bucketName, String objectName, String destBucketName,"
-            + " CopyConditions copyConditions) with Matching ETag (Positive Case)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-
-      ObjectStat stat =
-          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      CopyConditions copyConditions = new CopyConditions();
-      copyConditions.setMatchETag(stat.etag());
-
-      // File should be copied as ETag set in copyConditions matches object's ETag.
-      client.copyObject(
-          destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
-      client
-          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
-          .close();
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions) with ETag to not match.
-   */
-  public static void copyObject_test4() throws Exception {
-    String methodName =
-        "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-            + "CopyConditions copyConditions) with not matching ETag"
-            + " (Positive Case)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-
-      CopyConditions copyConditions = new CopyConditions();
-      copyConditions.setMatchETagNone("TestETag");
-
-      // File should be copied as ETag set in copyConditions doesn't match object's
-      // ETag.
-      client.copyObject(
-          destBucketName, objectName, null, null, bucketName, null, null, copyConditions);
-      client
-          .getObject(GetObjectArgs.builder().bucket(destBucketName).object(objectName).build())
-          .close();
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions) with ETag to not match.
-   */
-  public static void copyObject_test5() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions) with not matching ETag"
-              + " (Negative Case)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-
-      ObjectStat stat =
-          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      CopyConditions matchingETagNone = new CopyConditions();
-      matchingETagNone.setMatchETagNone(stat.etag());
-
-      try {
-        client.copyObject(
-            destBucketName, objectName, null, null, bucketName, null, null, matchingETagNone);
-      } catch (ErrorResponseException e) {
-        // File should not be copied as ETag set in copyConditions matches object's
-        // ETag.
-        if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
-          throw e;
-        }
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions)",
-          null,
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions) with object modified after condition.
-   */
-  public static void copyObject_test6() throws Exception {
-    String methodName =
-        "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-            + "CopyConditions copyConditions) with modified after "
-            + "condition (Positive Case)";
-    String args = "CopyCondition: modifiedDateCondition";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-
-      CopyConditions modifiedDateCondition = new CopyConditions();
-      modifiedDateCondition.setModified(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
-
-      // File should be copied as object was modified after the set date.
-      client.copyObject(
-          destBucketName, objectName, null, null, bucketName, null, null, modifiedDateCondition);
-      client
-          .getObject(GetObjectArgs.builder().bucket(destBucketName).object(objectName).build())
-          .close();
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(methodName, args, startTime);
-    } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions) with object modified after condition.
-   */
-  public static void copyObject_test7() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions) with modified after"
-              + " condition (Negative Case)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-
-      CopyConditions invalidUnmodifiedCondition = new CopyConditions();
-      invalidUnmodifiedCondition.setUnmodified(
-          ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC));
-
-      try {
-        client.copyObject(
-            destBucketName,
-            objectName,
-            null,
-            null,
-            bucketName,
-            null,
-            null,
-            invalidUnmodifiedCondition);
-      } catch (ErrorResponseException e) {
-        // File should not be copied as object was modified after date set in
-        // copyConditions.
-        if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
-          throw e;
-        }
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      // Destination bucket is expected to be empty, otherwise it will trigger an
-      // exception.
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions)",
-          "CopyCondition: invalidUnmodifiedCondition",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions)",
-          "CopyCondition: invalidUnmodifiedCondition",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions, Map metadata) replace object metadata.
-   */
-  public static void copyObject_test8() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions, Map<String, String> metadata)"
-              + " replace object metadata");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      String destBucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(destBucketName).build());
-
-      CopyConditions copyConditions = new CopyConditions();
-      copyConditions.setReplaceMetadataDirective();
-
-      Map<String, String> metadata = new HashMap<>();
-      metadata.put("Content-Type", customContentType);
-
-      client.copyObject(
-          destBucketName, objectName, metadata, null, bucketName, objectName, null, copyConditions);
-
-      ObjectStat objectStat =
+          ServerSideEncryptionCustomerKey ssec = null;
+          if (sse instanceof ServerSideEncryptionCustomerKey) {
+            ssec = (ServerSideEncryptionCustomerKey) sse;
+          }
           client.statObject(
-              StatObjectArgs.builder().bucket(destBucketName).object(objectName).build());
-      if (!customContentType.equals(objectStat.contentType())) {
-        throw new Exception(
-            "content type differs. expected: "
-                + customContentType
-                + ", got: "
-                + objectStat.contentType());
+              StatObjectArgs.builder()
+                  .bucket(args.bucket())
+                  .object(args.object())
+                  .ssec(ssec)
+                  .build());
+        }
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(args.srcBucket()).object(srcObject).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(args.srcBucket()).build());
       }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      client.removeObject(
-          RemoveObjectArgs.builder().bucket(destBucketName).object(objectName).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(destBucketName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions, Map<String, String> metadata)",
-          null,
-          startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions, Map<String, String> metadata)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /**
-   * Test: copyObject(String bucketName, String objectName, String destBucketName, CopyConditions
-   * copyConditions, Map metadata) remove object metadata.
-   */
+  /** Test: copyObject(). */
+  public static void copyObject_test1() throws Exception {
+    testCopyObject(
+        "",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .srcBucket(getRandomName())
+            .build(),
+        false);
+  }
+
+  /** Test: copyObject() match ETag (Negative case). */
+  public static void copyObject_test2() throws Exception {
+    testCopyObject(
+        "[negative match etag]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .srcBucket(getRandomName())
+            .srcObject(getRandomName())
+            .srcMatchETag("invalid-etag")
+            .build(),
+        true);
+  }
+
+  /** Test: copyObject() match ETag. */
+  public static void copyObject_test3() throws Exception {
+    String methodName = "copyObject()";
+    String testTags = "[match etag]";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName + " " + testTags);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String srcBucketName = getRandomName();
+    String srcObjectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(srcBucketName).build());
+      try {
+        client.putObject(
+            srcBucketName,
+            srcObjectName,
+            new ContentInputStream(1 * KB),
+            new PutObjectOptions(1 * KB, -1));
+        ObjectStat stat =
+            client.statObject(
+                StatObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).build());
+
+        client.copyObject(
+            CopyObjectArgs.builder()
+                .bucket(bucketName)
+                .object(srcObjectName + "-copy")
+                .srcBucket(srcBucketName)
+                .srcObject(srcObjectName)
+                .srcMatchETag(stat.etag())
+                .build());
+
+        client.statObject(
+            StatObjectArgs.builder().bucket(bucketName).object(srcObjectName + "-copy").build());
+
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(srcObjectName + "-copy").build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(srcBucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
+  }
+
+  /** Test: copyObject() not match ETag. */
+  public static void copyObject_test4() throws Exception {
+    testCopyObject(
+        "[not match etag]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .srcBucket(getRandomName())
+            .srcObject(getRandomName())
+            .srcNotMatchETag("not-etag-of-source-object")
+            .build(),
+        false);
+  }
+
+  /** Test: copyObject() modified since. */
+  public static void copyObject_test5() throws Exception {
+    testCopyObject(
+        "[modified since]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .srcBucket(getRandomName())
+            .srcObject(getRandomName())
+            .srcModifiedSince(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC))
+            .build(),
+        false);
+  }
+
+  /** Test: copyObject() unmodified since (Negative case). */
+  public static void copyObject_test6() throws Exception {
+    testCopyObject(
+        "[negative unmodified since]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .srcBucket(getRandomName())
+            .srcObject(getRandomName())
+            .srcUnmodifiedSince(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC))
+            .build(),
+        true);
+  }
+
+  /** Test: copyObject() metadata replace. */
+  public static void copyObject_test7() throws Exception {
+    String methodName = "copyObject()";
+    String testTags = "[metadata replace]";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName + " " + testTags);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String srcBucketName = getRandomName();
+    String srcObjectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(srcBucketName).build());
+      try {
+        client.putObject(
+            srcBucketName,
+            srcObjectName,
+            new ContentInputStream(1 * KB),
+            new PutObjectOptions(1 * KB, -1));
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", customContentType);
+        headers.put("X-Amz-Meta-My-Project", "Project One");
+        client.copyObject(
+            CopyObjectArgs.builder()
+                .bucket(bucketName)
+                .object(srcObjectName + "-copy")
+                .srcBucket(srcBucketName)
+                .srcObject(srcObjectName)
+                .headers(headers)
+                .metadataDirective(Directive.REPLACE)
+                .build());
+
+        ObjectStat stat =
+            client.statObject(
+                StatObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(srcObjectName + "-copy")
+                    .build());
+        if (!customContentType.equals(stat.contentType())) {
+          throw new Exception(
+              "content type differs. expected: "
+                  + customContentType
+                  + ", got: "
+                  + stat.contentType());
+        }
+
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(srcObjectName + "-copy").build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(srcBucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
+  }
+
+  /** Test: copyObject() empty metadata replace. */
+  public static void copyObject_test8() throws Exception {
+    String methodName = "copyObject()";
+    String testTags = "[empty metadata replace]";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName + " " + testTags);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String srcBucketName = getRandomName();
+    String srcObjectName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(srcBucketName).build());
+      try {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", customContentType);
+        headers.put("X-Amz-Meta-My-Project", "Project One");
+        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        options.setHeaders(headers);
+        client.putObject(srcBucketName, srcObjectName, new ContentInputStream(1 * KB), options);
+
+        client.copyObject(
+            CopyObjectArgs.builder()
+                .bucket(bucketName)
+                .object(srcObjectName + "-copy")
+                .srcBucket(srcBucketName)
+                .srcObject(srcObjectName)
+                .metadataDirective(Directive.REPLACE)
+                .build());
+
+        ObjectStat stat =
+            client.statObject(
+                StatObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(srcObjectName + "-copy")
+                    .build());
+        if (stat.httpHeaders().containsKey("X-Amz-Meta-My-Project")) {
+          throw new Exception("expected user metadata to be removed in new object");
+        }
+
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(srcObjectName + "-copy").build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(srcBucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
+  }
+
+  /** Test: copyObject() SSE-C. */
   public static void copyObject_test9() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, String destBucketName,"
-              + "CopyConditions copyConditions, Map<String, String> metadata)"
-              + " remove object metadata");
+    String testTags = "[SSE-C]";
+    if (!isSecureEndpoint) {
+      mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Test", "testValue");
-
-      try (final InputStream is = new ContentInputStream(1)) {
-        PutObjectOptions options = new PutObjectOptions(1, -1);
-        options.setHeaders(headerMap);
-        client.putObject(bucketName, objectName, is, options);
-      }
-
-      // Attempt to remove the user-defined metadata from the object
-      CopyConditions copyConditions = new CopyConditions();
-      copyConditions.setReplaceMetadataDirective();
-
-      client.copyObject(
-          bucketName,
-          objectName,
-          new HashMap<String, String>(),
-          null,
-          bucketName,
-          objectName,
-          null,
-          copyConditions);
-      ObjectStat objectStat =
-          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
-        throw new Exception("expected user-defined metadata has been removed");
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions, Map<String, String> metadata)",
-          null,
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, String destBucketName, "
-              + "CopyConditions copyConditions, Map<String, String> metadata)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+    ServerSideEncryptionCustomerKey ssec =
+        ServerSideEncryption.withCustomerKey(
+            new SecretKeySpec(
+                "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8), "AES"));
+    testCopyObject(
+        testTags,
+        ssec,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sse(ssec)
+            .srcBucket(getRandomName())
+            .srcObject(getRandomName())
+            .srcSsec(ssec)
+            .build(),
+        false);
   }
 
-  /**
-   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String
-   * destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget) To test using
-   * SSE_C.
-   */
+  /** Test: copyObject() SSE-S3. */
   public static void copyObject_test10() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_C. ");
+    String testTags = "[SSE-S3]";
+    if (!isSecureEndpoint) {
+      mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-
-      // Generate a new 256 bit AES key - This key must be remembered by the client.
-      byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
-      SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-
-      ServerSideEncryption ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
-      ServerSideEncryption sseSource = ServerSideEncryption.withCustomerKey(secretKeySpec);
-
-      byte[] keyTarget = "98765432100123456789012345678901".getBytes(StandardCharsets.UTF_8);
-      SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
-
-      ServerSideEncryptionCustomerKey sseTarget =
-          ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
-
-      try (final InputStream is = new ContentInputStream(1)) {
-        PutObjectOptions options = new PutObjectOptions(1, -1);
-        options.setSse(ssePut);
-        client.putObject(bucketName, objectName, is, options);
-      }
-
-      // Attempt to remove the user-defined metadata from the object
-      CopyConditions copyConditions = new CopyConditions();
-      copyConditions.setReplaceMetadataDirective();
-
-      client.copyObject(
-          bucketName,
-          objectName,
-          null,
-          sseTarget,
-          bucketName,
-          objectName,
-          sseSource,
-          copyConditions);
-
-      client.statObject(
-          StatObjectArgs.builder()
-              .bucket(bucketName)
-              .object(objectName)
-              .ssec(sseTarget)
-              .build()); // Check for object existence.
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_C.",
-          null,
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_C.",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+    ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+    testCopyObject(
+        testTags,
+        sseS3,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sse(sseS3)
+            .srcBucket(getRandomName())
+            .srcObject(getRandomName())
+            .build(),
+        false);
   }
 
-  /**
-   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String
-   * destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget) To test using
-   * SSE_S3.
-   */
+  /** Test: copyObject() SSE-KMS. */
   public static void copyObject_test11() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_S3. ");
+    String testTags = "[SSE-KMS]";
+    if (!isSecureEndpoint || kmsKeyName == null) {
+      mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-
-      ServerSideEncryption sse = ServerSideEncryption.atRest();
-
-      try (final InputStream is = new ContentInputStream(1)) {
-        PutObjectOptions options = new PutObjectOptions(1, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
-
-      // Attempt to remove the user-defined metadata from the object
-      CopyConditions copyConditions = new CopyConditions();
-      copyConditions.setReplaceMetadataDirective();
-
-      client.copyObject(
-          bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
-      ObjectStat objectStat =
-          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
-        throw new Exception("expected user-defined metadata has been removed");
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_S3.",
-          null,
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-              + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)"
-              + " using SSE_S3.",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, String
-   * destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget) To test using
-   * SSE_KMS.
-   */
-  public static void copyObject_test12() throws Exception {
-    String methodName =
-        "SSE-KMS: copyObject(String bucketName, String objectName, ServerSideEncryption sseSource, "
-            + "String destBucketName, CopyConditions copyConditions, ServerSideEncryption sseTarget)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-
-      Map<String, String> myContext = new HashMap<>();
-      myContext.put("key1", "value1");
-
-      String keyId = "";
-      keyId = System.getenv("MINT_KEY_ID");
-      if (keyId.equals("")) {
-        mintIgnoredLog(methodName, null, startTime);
-      }
-      ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
-
-      try (final InputStream is = new ContentInputStream(1)) {
-        PutObjectOptions options = new PutObjectOptions(1, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
-
-      // Attempt to remove the user-defined metadata from the object
-      CopyConditions copyConditions = new CopyConditions();
-      copyConditions.setReplaceMetadataDirective();
-
-      client.copyObject(
-          bucketName, objectName, null, sse, bucketName, objectName, null, copyConditions);
-      ObjectStat objectStat =
-          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      if (objectStat.httpHeaders().containsKey("X-Amz-Meta-Test")) {
-        throw new Exception("expected user-defined metadata has been removed");
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+    Map<String, String> myContext = new HashMap<>();
+    myContext.put("key1", "value1");
+    ServerSideEncryption sseKms = ServerSideEncryption.withManagedKeys(kmsKeyName, myContext);
+    testCopyObject(
+        testTags,
+        sseKms,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sse(sseKms)
+            .srcBucket(getRandomName())
+            .srcObject(getRandomName())
+            .build(),
+        false);
   }
 
   /**
@@ -4476,7 +4190,7 @@ public class FunctionalTest {
     putObject_test11();
 
     statObject_test1();
-    if (endpoint.toLowerCase(Locale.US).contains("https://")) statObject_test2();
+    statObject_test2();
     statObject_test3();
     statObject_test4();
 
@@ -4522,6 +4236,8 @@ public class FunctionalTest {
     copyObject_test7();
     copyObject_test8();
     copyObject_test9();
+    copyObject_test10();
+    copyObject_test11();
     composeObject_test1();
     composeObject_test2();
     composeObject_test3();
@@ -4548,12 +4264,11 @@ public class FunctionalTest {
     deleteObjectTags_test();
 
     // SSE_C tests will only work over TLS connection
-    if (endpoint.toLowerCase(Locale.US).contains("https://")) {
+    if (isSecureEndpoint) {
       getObject_test7();
       getObject_test9();
       putObject_test12();
       putObject_test13();
-      copyObject_test10();
       composeObject_test4();
       composeObject_test5();
       composeObject_test6();
@@ -4564,8 +4279,6 @@ public class FunctionalTest {
     if (requestUrl.contains(".amazonaws.com")) {
       putObject_test14();
       putObject_test15();
-      copyObject_test11();
-      copyObject_test12();
       setBucketLifeCycle_test1();
       getBucketLifeCycle_test1();
       deleteBucketLifeCycle_test1();
@@ -4677,13 +4390,15 @@ public class FunctionalTest {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
     ProcessBuilder pb = new ProcessBuilder(binaryPath.getPath(), "server", "d1");
 
+    kmsKeyName = "my-minio-key";
+
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");
     env.put("MINIO_SECRET_KEY", "minio123");
     env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
     env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
     env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
-    env.put("MINIO_KMS_KES_KEY_NAME", "my-minio-key");
+    env.put("MINIO_KMS_KES_KEY_NAME", kmsKeyName);
     env.put("MINIO_NOTIFY_WEBHOOK_ENABLE_miniojavatest", "on");
     env.put("MINIO_NOTIFY_WEBHOOK_ENDPOINT_miniojavatest", "http://example.org/");
     sqsArn = "arn:minio:sqs::miniojavatest:webhook";
@@ -4711,6 +4426,10 @@ public class FunctionalTest {
       accessKey = "minio";
       secretKey = "minio123";
       region = "us-east-1";
+      kmsKeyName = System.getenv("MINIO_JAVA_TEST_KMS_KEY_NAME");
+      if (kmsKeyName == null) {
+        kmsKeyName = System.getenv("MINT_KEY_ID");
+      }
       sqsArn = System.getenv("MINIO_JAVA_TEST_SQS_ARN");
 
       if (!downloadMinio()) {
@@ -4740,6 +4459,8 @@ public class FunctionalTest {
       secretKey = args[2];
       region = args[3];
     }
+
+    isSecureEndpoint = endpoint.toLowerCase(Locale.US).contains("https://");
 
     int exitValue = 0;
     try {

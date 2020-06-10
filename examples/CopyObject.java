@@ -15,13 +15,17 @@
  * limitations under the License.
  */
 
+import io.minio.CopyObjectArgs;
 import io.minio.MinioClient;
-import io.minio.PutObjectOptions;
+import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.errors.MinioException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
+import javax.crypto.KeyGenerator;
 
 public class CopyObject {
   /** MinioClient.copyObject() example. */
@@ -39,52 +43,130 @@ public class CopyObject {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Create some content for the object.
-      StringBuilder builder = new StringBuilder();
-      for (int i = 0; i < 1000; i++) {
-        builder.append(
-            "Sphinx of black quartz, judge my vow: Used by Adobe InDesign to display font samples. ");
-        builder.append("(29 letters)\n");
-        builder.append(
-            "Jackdaws love my big sphinx of quartz: Similarly, used by Windows XP for some fonts. ");
-        builder.append("(31 letters)\n");
-        builder.append(
-            "Pack my box with five dozen liquor jugs: According to Wikipedia, this one is used on ");
-        builder.append("NASAs Space Shuttle. (32 letters)\n");
-        builder.append(
-            "The quick onyx goblin jumps over the lazy dwarf: Flavor text from an Unhinged Magic Card. ");
-        builder.append("(39 letters)\n");
-        builder.append(
-            "How razorback-jumping frogs can level six piqued gymnasts!: Not going to win any brevity ");
-        builder.append("awards at 49 letters long, but old-time Mac users may recognize it.\n");
-        builder.append(
-            "Cozy lummox gives smart squid who asks for job pen: A 41-letter tester sentence for Mac ");
-        builder.append("computers after System 7.\n");
-        builder.append(
-            "A few others we like: Amazingly few discotheques provide jukeboxes; Now fax quiz Jack! my ");
-        builder.append("brave ghost pled; Watch Jeopardy!, Alex Trebeks fun TV quiz game.\n");
-        builder.append("---\n");
+      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(256);
+      ServerSideEncryptionCustomerKey ssec =
+          ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+      Map<String, String> myContext = new HashMap<>();
+      myContext.put("key1", "value1");
+      ServerSideEncryption sseKms = ServerSideEncryption.withManagedKeys("Key-Id", myContext);
+
+      ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+
+      String versionId = "ac38316c-fe14-4f96-9f76-8f675ae5a79e";
+
+      Map<String, String> headers = new HashMap<>();
+      headers.put("Content-Type", "application/json");
+      headers.put("x-amz-meta-my-project", "Project One");
+
+      String etag = "9855d05ab7a1cfd5ea304f0547c24496";
+
+      {
+        // Create object "my-objectname" in bucket "my-bucketname" by copying from object
+        // "my-objectname" in bucket "my-source-bucketname".
+        minioClient.copyObject(
+            CopyObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .srcBucket("my-source-bucketname")
+                .build());
+        System.out.println(
+            "my-source-bucketname/my-objectname copied "
+                + "to my-bucketname/my-objectname successfully");
       }
 
-      // Create a InputStream for object upload.
-      ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+      {
+        // Create object "my-objectname" in bucket "my-bucketname" by copying from object
+        // "my-source-objectname" in bucket "my-source-bucketname".
+        minioClient.copyObject(
+            CopyObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .srcBucket("my-source-bucketname")
+                .srcObject("my-source-objectname")
+                .build());
+        System.out.println(
+            "my-source-bucketname/my-source-objectname copied "
+                + "to my-bucketname/my-objectname successfully");
+      }
 
-      // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
-      minioClient.putObject(
-          "my-bucketname", "my-objectname", bais, new PutObjectOptions(bais.available(), -1));
-      bais.close();
-      System.out.println("my-objectname is uploaded successfully");
+      {
+        // Create object "my-objectname" in bucket "my-bucketname" with SSE-KMS server-side
+        // encryption by copying from object "my-objectname" in bucket "my-source-bucketname".
+        minioClient.copyObject(
+            CopyObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .srcBucket("my-source-bucketname")
+                .sse(sseKms) // Replace with actual key.
+                .build());
+        System.out.println(
+            "my-source-bucketname/my-objectname copied "
+                + "to my-bucketname/my-objectname successfully");
+      }
 
-      minioClient.copyObject(
-          "my-destbucketname",
-          "my-objectname-copy",
-          null,
-          null,
-          "my-bucketname",
-          "my-objectname",
-          null,
-          null);
-      System.out.println("my-objectname-copy copied to my-destbucketname successfully");
+      {
+        // Create object "my-objectname" in bucket "my-bucketname" with SSE-S3 server-side
+        // encryption by copying from object "my-objectname" in bucket "my-source-bucketname".
+        minioClient.copyObject(
+            CopyObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .srcBucket("my-source-bucketname")
+                .sse(sseS3) // Replace with actual key.
+                .build());
+        System.out.println(
+            "my-source-bucketname/my-objectname copied "
+                + "to my-bucketname/my-objectname successfully");
+      }
+
+      {
+        // Create object "my-objectname" in bucket "my-bucketname" with SSE-C server-side encryption
+        // by copying from object "my-objectname" in bucket "my-source-bucketname".
+        minioClient.copyObject(
+            CopyObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .srcBucket("my-source-bucketname")
+                .sse(ssec) // Replace with actual key.
+                .build());
+        System.out.println(
+            "my-source-bucketname/my-objectname copied "
+                + "to my-bucketname/my-objectname successfully");
+      }
+
+      {
+        // Create object "my-objectname" in bucket "my-bucketname" by copying from SSE-C encrypted
+        // object "my-source-objectname" in bucket "my-source-bucketname".
+        minioClient.copyObject(
+            CopyObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .srcBucket("my-source-bucketname")
+                .srcObject("my-source-objectname")
+                .srcSsec(ssec) // Replace with actual key.
+                .build());
+        System.out.println(
+            "my-source-bucketname/my-source-objectname copied "
+                + "to my-bucketname/my-objectname successfully");
+      }
+
+      {
+        // Create object "my-objectname" in bucket "my-bucketname" with custom headers conditionally
+        // by copying from object "my-objectname" in bucket "my-source-bucketname".
+        minioClient.copyObject(
+            CopyObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .srcBucket("my-source-bucketname")
+                .headers(headers) // Replace with actual headers.
+                .srcMatchETag(etag) // Replace with actual ETag.
+                .build());
+        System.out.println(
+            "my-source-bucketname/my-objectname copied "
+                + "to my-bucketname/my-objectname successfully");
+      }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

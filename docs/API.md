@@ -1017,45 +1017,69 @@ minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, us
 ```
 
 <a name="copyObject"></a>
-### copyObject(String bucketName, String objectName, Map<String,String> headerMap, ServerSideEncryption sse, String srcBucketName, String srcObjectName, ServerSideEncryption srcSse, CopyConditions copyConditions)
-`public void copyObject(String bucketName, String objectName, Map<String,String> headerMap, ServerSideEncryption sse, String srcBucketName, String srcObjectName, ServerSideEncryption srcSse, CopyConditions copyConditions)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-java.lang.String-java.lang.String-java.util.Map-io.minio.ServerSideEncryption-java.lang.String-java.lang.String-io.minio.ServerSideEncryption-io.minio.CopyConditions-)_
+### copyObject(CopyObjectArgs args)
+`public void copyObject(CopyObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-io.minio.CopyObjectArgs-)_
 
 Creates an object by server-side copying data from another object.
 
 __Parameters__
-| Parameter          | Type                     | Description                                                    |
-|:-------------------|:-------------------------|:---------------------------------------------------------------|
-| ``bucketName``     | _String_                 | Name of the bucket.                                            |
-| ``objectName``     | _String_                 | Object name to be created.                                     |
-| ``headerMap``      | _Map<String,String>_     | (Optional) User metadata.                                      |
-| ``sse``            | _[ServerSideEncryption]_ | (Optional) Server-side encryption.                             |
-| ``srcBucketName``  | _String_                 | Source bucket name.                                            |
-| ``srcObjectName``  | _String_                 | (Optional) Source object name.                                 |
-| ``srcSse``         | _[ServerSideEncryption]_ | (Optional) SSE-C type server-side encryption of source object. |
-| ``copyConditions`` | _[CopyConditions]_       | (Optional) Conditiions to be used in copy operation.           |
+| Parameter | Type               | Description |
+|:----------|:-------------------|:------------|
+| ``args``  | _[CopyObjectArgs]_ | Arguments.  |
 
 __Example__
 
 ```java
-// Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname.
-minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-bucketname", null, null,
-    null);
+// Create object "my-objectname" in bucket "my-bucketname" by copying from object
+// "my-objectname" in bucket "my-source-bucketname".
+minioClient.copyObject(
+    CopyObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .srcBucket("my-source-bucketname")
+        .build());
 
-// Copy data from my-source-bucketname/my-source-objectname to my-bucketname/my-objectname.
-minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-bucketname",
-    "my-source-objectname", null, null);
+// Create object "my-objectname" in bucket "my-bucketname" by copying from object
+// "my-source-objectname" in bucket "my-source-bucketname".
+minioClient.copyObject(
+    CopyObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .srcBucket("my-source-bucketname")
+        .srcObject("my-source-objectname")
+        .build());
 
-// Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname by server-side encryption.
-minioClient.copyObject("my-bucketname", "my-objectname", null, sse, "my-source-bucketname", null, null, null);
+// Create object "my-objectname" in bucket "my-bucketname" with server-side encryption by
+// copying from object "my-objectname" in bucket "my-source-bucketname".
+minioClient.copyObject(
+    CopyObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .srcBucket("my-source-bucketname")
+        .sse(sse)
+        .build());
 
-// Copy data from SSE-C encrypted my-source-bucketname/my-objectname to my-bucketname/my-objectname.
-minioClient.copyObject("my-bucketname", "my-objectname", null, null, "my-source-bucketname", null, srcSsec,
-    null);
+// Create object "my-objectname" in bucket "my-bucketname" by copying from SSE-C encrypted
+// object "my-source-objectname" in bucket "my-source-bucketname".
+minioClient.copyObject(
+    CopyObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .srcBucket("my-source-bucketname")
+        .srcObject("my-source-objectname")
+        .srcSsec(ssec)
+        .build());
 
-// Copy data from my-source-bucketname/my-objectname to my-bucketname/my-objectname with user metadata and
-// copy conditions.
-minioClient.copyObject("my-bucketname", "my-objectname", headers, null, "my-source-bucketname", null, null,
-    conditions);
+// Create object "my-objectname" in bucket "my-bucketname" with custom headers by copying from
+// object "my-objectname" in bucket "my-source-bucketname" using conditions.
+minioClient.copyObject(
+    CopyObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .srcBucket("my-source-bucketname")
+        .headers(headers)
+        .srcMatchETag(etag)
+        .build());
 ```
 
 <a name="deleteObjectTags"></a>
@@ -1747,3 +1771,4 @@ ObjectStat objectStat =
 [RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/RemoveIncompleteUploadArgs.html
 [GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html
 [RemoveObjectsArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectsArgs.html
+[CopyObjectArgs]: http://minio.github.io/minio-java/io/minio/CopyObjectArgs.html
