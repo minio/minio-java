@@ -71,23 +71,7 @@ public class PutObjectArgs extends ObjectWriteArgs {
       validateNotNull(args.stream, "stream");
     }
 
-    /**
-     * Sets stream to upload. Two ways to provide object/part sizes.
-     *
-     * <ul>
-     *   <li>If object size is unknown, pass -1 to objectSize and pass valid partSize.
-     *   <li>If object size is known, pass -1 to partSize for auto detect; else pass valid partSize
-     *       to control memory usage and no. of parts in upload.
-     *   <li>If partSize is greater than objectSize, objectSize is used as partSize.
-     * </ul>
-     *
-     * <p>A valid part size is between 5MiB to 5GiB (both limits inclusive).
-     */
-    public Builder stream(InputStream stream, long objectSize, long partSize) {
-      validateNotNull(stream, "stream");
-
-      int partCount = -1;
-
+    private void validateSizes(long objectSize, long partSize) {
       if (partSize > 0) {
         if (partSize < MIN_MULTIPART_SIZE) {
           throw new IllegalArgumentException(
@@ -105,23 +89,33 @@ public class PutObjectArgs extends ObjectWriteArgs {
           throw new IllegalArgumentException(
               "object size " + objectSize + " is not supported; maximum allowed 5TiB");
         }
+      } else if (partSize <= 0) {
+        throw new IllegalArgumentException(
+            "valid part size must be provided when object size is unknown");
+      }
+    }
 
+    private void validatePartCount(int partCount, long objectSize, long partSize) {
+      if (partCount > MAX_MULTIPART_COUNT) {
+        throw new IllegalArgumentException(
+            "object size "
+                + objectSize
+                + " and part size "
+                + partSize
+                + " make more than "
+                + MAX_MULTIPART_COUNT
+                + "parts for upload");
+      }
+    }
+
+    private long[] partInfo(long objectSize, long partSize) {
+      long partCount = -1;
+      if (objectSize >= 0) {
         if (partSize > 0) {
           if (partSize > objectSize) {
             partSize = objectSize;
           }
-
           partCount = (int) Math.ceil((double) objectSize / partSize);
-          if (partCount > MAX_MULTIPART_COUNT) {
-            throw new IllegalArgumentException(
-                "object size "
-                    + objectSize
-                    + " and part size "
-                    + partSize
-                    + " make more than "
-                    + MAX_MULTIPART_COUNT
-                    + "parts for upload");
-          }
         } else {
           double pSize = Math.ceil((double) objectSize / MAX_MULTIPART_COUNT);
           pSize = Math.ceil(pSize / MIN_MULTIPART_SIZE) * MIN_MULTIPART_SIZE;
@@ -134,22 +128,44 @@ public class PutObjectArgs extends ObjectWriteArgs {
             partCount = 1;
           }
         }
-      } else if (partSize <= 0) {
-        throw new IllegalArgumentException(
-            "valid part size must be provided when object size is unknown");
       }
+      return new long[] {partSize, partCount};
+    }
+
+    /**
+     * Sets stream to upload. Two ways to provide object/part sizes.
+     *
+     * <ul>
+     *   <li>If object size is unknown, pass -1 to objectSize and pass valid partSize.
+     *   <li>If object size is known, pass -1 to partSize for auto detect; else pass valid partSize
+     *       to control memory usage and no. of parts in upload.
+     *   <li>If partSize is greater than objectSize, objectSize is used as partSize.
+     * </ul>
+     *
+     * <p>A valid part size is between 5MiB to 5GiB (both limits inclusive).
+     */
+    public Builder stream(InputStream stream, long objectSize, long partSize) {
+      validateNotNull(stream, "stream");
+      validateSizes(objectSize, partSize);
+
+      long[] partinfo = partInfo(objectSize, partSize);
+      long pSize = partinfo[0];
+      int pCount = (int) partinfo[1];
+      validatePartCount(pCount, objectSize, partSize);
 
       final BufferedInputStream bis =
           (stream instanceof BufferedInputStream)
               ? (BufferedInputStream) stream
               : new BufferedInputStream(stream);
-      final long finalPartSize = partSize;
-      final int finalPartCount = partCount;
+      return setStream(bis, objectSize, pSize, pCount);
+    }
 
-      operations.add(args -> args.stream = bis);
+    private Builder setStream(
+        BufferedInputStream stream, long objectSize, long partSize, int partCount) {
+      operations.add(args -> args.stream = stream);
       operations.add(args -> args.objectSize = objectSize);
-      operations.add(args -> args.partSize = finalPartSize);
-      operations.add(args -> args.partCount = finalPartCount);
+      operations.add(args -> args.partSize = partSize);
+      operations.add(args -> args.partCount = partCount);
       return this;
     }
 
