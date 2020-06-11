@@ -65,7 +65,7 @@ enum MinioProperties {
       while (resources.hasMoreElements()) {
         Manifest manifest = new Manifest(resources.nextElement().openStream());
         for (Object k : manifest.getMainAttributes().keySet()) {
-          String versionString = "MinIO-Client-Java-Version";
+          String versionString = "Implementation-Version";
           if (k.toString().equals(versionString)) {
             version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
           }
