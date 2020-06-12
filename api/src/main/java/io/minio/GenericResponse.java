@@ -18,8 +18,8 @@ package io.minio;
 
 import okhttp3.Headers;
 
-/** Base reply class. */
-public abstract class BaseReply {
+/** Generic response class of any APIs. */
+public abstract class GenericResponse {
   private Headers headers;
 
   protected void setHeaders(Headers headers) {

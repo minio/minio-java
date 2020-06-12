@@ -18,11 +18,12 @@ package io.minio;
 
 import okhttp3.Headers;
 
-public class ObjectWriteReply extends BaseReply {
+/** Response class of any APIs doing object creation. */
+public class ObjectWriteResponse extends GenericResponse {
   private String etag;
   private String versionId;
 
-  public ObjectWriteReply(Headers headers, String etag, String versionId) {
+  public ObjectWriteResponse(Headers headers, String etag, String versionId) {
     setHeaders(headers);
     this.etag = etag;
     this.versionId = versionId;

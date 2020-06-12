@@ -4959,7 +4959,7 @@ public class MinioClient {
     executeDelete(args.bucket(), null, null);
   }
 
-  private ObjectWriteReply putObject(
+  private ObjectWriteResponse putObject(
       ObjectWriteArgs args,
       Object data,
       long objectSize,
@@ -5177,7 +5177,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args {@link PutObjectArgs} object.
-   * @return {@link ObjectWriteReply} object.
+   * @return {@link ObjectWriteResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -5190,7 +5190,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public ObjectWriteReply putObject(PutObjectArgs args)
+  public ObjectWriteResponse putObject(PutObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -5226,7 +5226,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args {@link UploadObjectArgs} object.
-   * @return {@link ObjectWriteReply} object.
+   * @return {@link ObjectWriteResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -5239,7 +5239,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public ObjectWriteReply uploadObject(UploadObjectArgs args)
+  public ObjectWriteResponse uploadObject(UploadObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -7420,7 +7420,7 @@ public class MinioClient {
    * @param parts List of parts.
    * @param extraHeaders Extra headers.
    * @param extraQueryParams Extra query parameters.
-   * @return {@link ObjectWriteReply} object.
+   * @return {@link ObjectWriteResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -7433,7 +7433,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected ObjectWriteReply completeMultipartUpload(
+  protected ObjectWriteResponse completeMultipartUpload(
       String bucketName,
       String region,
       String objectName,
@@ -7487,7 +7487,7 @@ public class MinioClient {
         }
       }
 
-      return new ObjectWriteReply(response.headers(), etag, response.header("x-amz-version-id"));
+      return new ObjectWriteResponse(response.headers(), etag, response.header("x-amz-version-id"));
     }
   }
 
@@ -7736,7 +7736,7 @@ public class MinioClient {
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    ObjectWriteReply reply =
+    ObjectWriteResponse reply =
         putObject(
             bucketName,
             null,
@@ -7758,7 +7758,7 @@ public class MinioClient {
    * @param length Length of object data.
    * @param headers Additional headers.
    * @param extraQueryParams Additional query parameters if any.
-   * @return {@link ObjectWriteReply} object.
+   * @return {@link ObjectWriteResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -7771,7 +7771,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected ObjectWriteReply putObject(
+  protected ObjectWriteResponse putObject(
       String bucketName,
       String region,
       String objectName,
@@ -7800,7 +7800,7 @@ public class MinioClient {
             extraQueryParams,
             data,
             length)) {
-      return new ObjectWriteReply(
+      return new ObjectWriteResponse(
           response.headers(),
           response.header("ETag").replaceAll("\"", ""),
           response.header("x-amz-version-id"));
