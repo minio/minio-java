@@ -17,46 +17,24 @@
 package io.minio;
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 /** Argument class of MinioClient.putObject(). */
-public class PutObjectArgs extends ObjectWriteArgs {
+public class PutObjectArgs extends PutObjectBaseArgs {
   private BufferedInputStream stream;
-  private long objectSize;
-  private long partSize;
-  private int partCount;
-  private String contentType;
 
   public BufferedInputStream stream() {
     return stream;
-  }
-
-  public long objectSize() {
-    return objectSize;
-  }
-
-  public long partSize() {
-    return partSize;
-  }
-
-  public int partCount() {
-    return partCount;
   }
 
   /**
    * Gets content type. It returns if content type is set (or) value of "Content-Type" header (or)
    * default "application/octet-stream".
    */
-  public String contentType() {
-    if (contentType != null) {
-      return contentType;
-    }
-
-    if (this.headers().containsKey("Content-Type")) {
-      return this.headers().get("Content-Type").iterator().next();
-    }
-
-    return "application/octet-stream";
+  public String contentType() throws IOException {
+    String contentType = super.contentType();
+    return (contentType != null) ? contentType : "application/octet-stream";
   }
 
   public static Builder builder() {

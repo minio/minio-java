@@ -21,27 +21,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 /** Argument class of MinioClient.uploadObject(). */
-public class UploadObjectArgs extends ObjectWriteArgs {
+public class UploadObjectArgs extends PutObjectBaseArgs {
   private String filename;
-  private long objectSize;
-  private long partSize;
-  private int partCount;
-  private String contentType;
 
   public String filename() {
     return filename;
-  }
-
-  public long objectSize() {
-    return objectSize;
-  }
-
-  public long partSize() {
-    return partSize;
-  }
-
-  public int partCount() {
-    return partCount;
   }
 
   /**
@@ -49,15 +33,12 @@ public class UploadObjectArgs extends ObjectWriteArgs {
    * probed content type of file (or) default "application/octet-stream".
    */
   public String contentType() throws IOException {
+    String contentType = super.contentType();
     if (contentType != null) {
       return contentType;
     }
 
-    if (this.headers().containsKey("Content-Type")) {
-      return this.headers().get("Content-Type").iterator().next();
-    }
-
-    String contentType = Files.probeContentType(Paths.get(filename));
+    contentType = Files.probeContentType(Paths.get(filename));
     return (contentType != null && !contentType.isEmpty())
         ? contentType
         : "application/octet-stream";
