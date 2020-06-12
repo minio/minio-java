@@ -57,7 +57,7 @@ public class DownloadObject {
         ServerSideEncryptionCustomerKey ssec =
             ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
-        // Download encrypted 'my-objectname' from 'my-bucketname' to 'my-filename'
+        // Download SSE-C encrypted 'my-objectname' from 'my-bucketname' to 'my-filename'
         minioClient.downloadObject(
             DownloadObjectArgs.builder()
                 .bucket("my-bucketname")

@@ -115,6 +115,7 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -7470,7 +7471,7 @@ public class MinioClient {
             throw new ErrorResponseException(errorResponse, response);
           }
         } catch (XmlParserException e) {
-          // As it is not <Error> message, ignore this exception
+          // As it is not <Error> message, fall-back to parse CompleteMultipartUploadOutput XML.
         }
 
         try {
@@ -7478,7 +7479,11 @@ public class MinioClient {
               Xml.unmarshal(CompleteMultipartUploadOutput.class, bodyContent);
           etag = result.etag();
         } catch (XmlParserException e) {
-          // As the call succeeded, ignore this exception
+          // As this CompleteMultipartUpload REST call succeeded, just log it.
+          Logger.getLogger(MinioClient.class.getName())
+              .warning(
+                  "S3 service returned unknown XML for CompleteMultipartUpload REST API. "
+                      + bodyContent);
         }
       }
 
