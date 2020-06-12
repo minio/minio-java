@@ -109,26 +109,27 @@ public class PutObjectArgs extends ObjectWriteArgs {
     }
 
     private long[] partInfo(long objectSize, long partSize) {
-      long partCount = -1;
-      if (objectSize >= 0) {
-        if (partSize > 0) {
-          if (partSize > objectSize) {
-            partSize = objectSize;
-          }
-          partCount = (int) Math.ceil((double) objectSize / partSize);
-        } else {
-          double pSize = Math.ceil((double) objectSize / MAX_MULTIPART_COUNT);
-          pSize = Math.ceil(pSize / MIN_MULTIPART_SIZE) * MIN_MULTIPART_SIZE;
-
-          partSize = (long) pSize;
-
-          if (pSize > 0) {
-            partCount = (int) Math.ceil(objectSize / pSize);
-          } else {
-            partCount = 1;
-          }
-        }
+      if (objectSize < 0) {
+        return new long[] {partSize, -1};
       }
+
+      if (partSize > 0) {
+        if (partSize > objectSize) {
+          partSize = objectSize;
+        }
+
+        long partCount = (long) Math.ceil((double) objectSize / partSize);
+        return new long[] {partSize, partCount};
+      }
+
+      double pSize = Math.ceil((double) objectSize / MAX_MULTIPART_COUNT);
+      pSize = Math.ceil(pSize / MIN_MULTIPART_SIZE) * MIN_MULTIPART_SIZE;
+      partSize = (long) pSize;
+      long partCount = 1;
+      if (pSize > 0) {
+        partCount = (long) Math.ceil(objectSize / pSize);
+      }
+
       return new long[] {partSize, partCount};
     }
 
