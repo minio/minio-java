@@ -643,15 +643,16 @@ try (CloseableIterator<Result<NotificationRecords>> ci =
 ```
 
 <a name="listIncompleteUploads"></a>
-### listIncompleteUploads(String bucketName)
-`public Iterable<Result<Upload>> listIncompleteUploads(String bucketName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-java.lang.String-)_
+### listIncompleteUploads(ListIncompleteUploadsArgs args)
+`public Iterable<Result<Upload>> listIncompleteUploads(ListIncompleteUploadsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-io.minio.ListIncompleteUploadsArgs-)_
 
 Lists incomplete object upload information of a bucket.
 
 __Parameters__
-| Parameter      | Type     | Description         |
-|:---------------|:---------|:--------------------|
-| ``bucketName`` | _String_ | Name of the bucket. |
+
+| Parameter      | Type                           | Description    |
+|:---------------|:-------------------------------|:---------------|
+| ``args``       | _[ListIncompleteUploadsArgs]_  | Arguments.     |
 
 | Returns                                                                            |
 |:-----------------------------------------------------------------------------------|
@@ -659,62 +660,54 @@ __Parameters__
 
 __Example__
 ```java
-Iterable<Result<Upload>> results = minioClient.listIncompleteUploads("my-bucketname");
+ // Lists incomplete object upload information of a bucket.
+Iterable<Result<Upload>> results =
+    minioClient.listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder().bucket("my-bucketname").build());
 for (Result<Upload> result : results) {
   Upload upload = result.get();
   System.out.println(upload.uploadId() + ", " + upload.objectName());
 }
-```
 
-<a name="listIncompleteUploads"></a>
-### listIncompleteUploads(String bucketName, String prefix)
-`public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-java.lang.String-java.lang.String-)_
-
-Lists incomplete object upload information of a bucket for prefix.
-
-__Parameters__
-| Parameter      | Type     | Description                     |
-|:---------------|:---------|:--------------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.             |
-| ``prefix``     | _String_ | Object name starts with prefix. |
-
-| Returns                                                                            |
-|:-----------------------------------------------------------------------------------|
-| _Iterable<[Result]<[Upload]>>_ - Lazy iterator contains object upload information. |
-
-__Example__
-```java
-Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname", "my-obj");
+// Lists incomplete object upload information of a bucket for prefix.
+Iterable<Result<Upload>> results =
+    minioClient.listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder()
+            .bucket("my-bucketname")
+            .prefix("my-obj")
+            .build());
 for (Result<Upload> result : results) {
   Upload upload = result.get();
   System.out.println(upload.uploadId() + ", " + upload.objectName());
 }
-```
 
-<a name="listIncompleteUploads"></a>
-### listIncompleteUploads(String bucketName, String prefix, boolean recursive)
-`public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix, boolean recursive)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-java.lang.String-java.lang.String-boolean-)_
-
-Lists incomplete object upload information of a bucket for prefix recursively.
-
-__Parameters__
-| Param          | Type      | Description                                          |
-|:---------------|:----------|:-----------------------------------------------------|
-| ``bucketName`` | _String_  | Name of the bucket.                                  |
-| ``prefix``     | _String_  | Object name starts with prefix.                      |
-| ``recursive``  | _boolean_ | List recursively than directory structure emulation. |
-
-| Returns                                                                            |
-|:-----------------------------------------------------------------------------------|
-| _Iterable<[Result]<[Upload]>>_ - Lazy iterator contains object upload information. |
-
-__Example__
-```java
-Iterable<Result<Upload>> myObjects = minioClient.listIncompleteUploads("my-bucketname", "my-obj", true);
+// Lists incomplete object upload information of a bucket for prefix recursively.
+Iterable<Result<Upload>> results =
+    minioClient.listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder()
+            .bucket("my-bucketname")
+            .prefix("my-obj")
+            .recursive(true)
+            .build());
 for (Result<Upload> result : results) {
   Upload upload = result.get();
   System.out.println(upload.uploadId() + ", " + upload.objectName());
 }
+
+// Lists incomplete object upload information of a bucket for prefix, delimiter.
+// uploadIdMarker and maxUpload to 500
+Iterable<Result<Upload>> results =
+    minioClient.listIncompleteUploads(
+        ListIncompleteUploadsArgs.builder()
+            .bucket("my-bucketname")
+            .prefix("my-obj")
+            .delimiter("-")
+            .maxUploads(500)
+            .uploadIdMarker("Xgw4MJT6ZPAVxpY0SAuGN7q4uWJJM22ZYg1W99trdp4tpO88")
+            .build());
+for (Result<Upload> result : results) {
+  Upload upload = result.get();
+  System.out.println(upload.uploadId() + ", " + upload.objectName());
 ```
 
 <a name="listObjects"></a>
@@ -1772,3 +1765,4 @@ ObjectStat objectStat =
 [GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html
 [RemoveObjectsArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectsArgs.html
 [CopyObjectArgs]: http://minio.github.io/minio-java/io/minio/CopyObjectArgs.html
+[ListIncompleteUploadsArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsArgs.html
