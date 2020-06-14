@@ -117,7 +117,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -166,9 +168,12 @@ public class FunctionalTest {
   private static String secretKey;
   private static String region;
   private static boolean isSecureEndpoint = false;
-  private static String kmsKeyName = null;
   private static String sqsArn = null;
   private static MinioClient client = null;
+
+  private static ServerSideEncryptionCustomerKey ssec = null;
+  private static ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+  private static ServerSideEncryption sseKms = null;
 
   static {
     String binaryName = "minio";
@@ -177,6 +182,14 @@ public class FunctionalTest {
     }
 
     MINIO_BINARY = binaryName;
+
+    try {
+      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(256);
+      ssec = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    } catch (InvalidKeyException | NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /** Do no-op. */
@@ -394,12 +407,17 @@ public class FunctionalTest {
       }
     }
 
-    mintFailedLog(
-        methodName,
-        args,
-        startTime,
-        null,
-        e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+    if (mintEnv) {
+      mintFailedLog(
+          methodName,
+          args,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+    } else {
+      System.out.println("<FAILED> " + methodName + " " + ((args == null) ? "" : args));
+    }
+
     throw e;
   }
 
@@ -675,10 +693,6 @@ public class FunctionalTest {
   public static void testUploadObject(String testTags, String filename, String contentType)
       throws Exception {
     String methodName = "uploadObject()";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
     long startTime = System.currentTimeMillis();
     try {
       try {
@@ -700,6 +714,11 @@ public class FunctionalTest {
 
   /** Test: uploadObject() [single upload] */
   public static void uploadObject_test() throws Exception {
+    String methodName = "uploadObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
     testUploadObject("[single upload]", createFile1Kb(), null);
 
     if (isQuickTest) {
@@ -713,10 +732,6 @@ public class FunctionalTest {
   public static void testPutObject(String testTags, PutObjectArgs args, ErrorCode errorCode)
       throws Exception {
     String methodName = "putObject()";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
     long startTime = System.currentTimeMillis();
     try {
       try {
@@ -734,8 +749,40 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: putObject() */
+  public static void testThreadedPutObject() throws Exception {
+    String methodName = "putObject()";
+    String testTags = "[threaded]";
+    long startTime = System.currentTimeMillis();
+    try {
+      int count = 7;
+      Thread[] threads = new Thread[count];
+
+      for (int i = 0; i < count; i++) {
+        threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile6Mb()));
+      }
+
+      for (int i = 0; i < count; i++) {
+        threads[i].start();
+      }
+
+      // Waiting for threads to complete.
+      for (int i = 0; i < count; i++) {
+        threads[i].join();
+      }
+
+      // All threads are completed.
+      mintSuccessLog(methodName, testTags, startTime);
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
+  }
+
   public static void putObject_test() throws Exception {
+    String methodName = "putObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
     testPutObject(
         "[single upload]",
         PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
@@ -835,13 +882,21 @@ public class FunctionalTest {
             .build(),
         ErrorCode.INVALID_STORAGE_CLASS);
 
+    testPutObject(
+        "[SSE-S3]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .contentType(customContentType)
+            .sse(sseS3)
+            .build(),
+        null);
+
+    testThreadedPutObject();
+
     if (!isSecureEndpoint) {
       return;
     }
 
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryption ssec = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
     testPutObject(
         "[SSE-C single upload]",
         PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
@@ -860,27 +915,17 @@ public class FunctionalTest {
             .build(),
         null);
 
-    testPutObject(
-        "[SSE-S3]",
-        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
-                new ContentInputStream(1 * KB), 1 * KB, -1)
-            .contentType(customContentType)
-            .sse(ServerSideEncryption.atRest())
-            .build(),
-        null);
-
-    if (kmsKeyName == null) {
+    if (sseKms == null) {
+      mintIgnoredLog(methodName, null, System.currentTimeMillis());
       return;
     }
 
-    Map<String, String> myContext = new HashMap<>();
-    myContext.put("key1", "value1");
     testPutObject(
         "[SSE-KMS]",
         PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
                 new ContentInputStream(1 * KB), 1 * KB, -1)
             .contentType(customContentType)
-            .sse(ServerSideEncryption.withManagedKeys(kmsKeyName, myContext))
+            .sse(sseKms)
             .build(),
         null);
   }
@@ -952,21 +997,16 @@ public class FunctionalTest {
 
     try {
       String objectName = getRandomName();
-      // Generate a new 256 bit AES key - This key must be remembered by the client.
-      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-      keyGen.init(256);
-      ServerSideEncryptionCustomerKey sse =
-          ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
       client.putObject(
           PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
                   new ContentInputStream(1), 1, -1)
-              .sse(sse)
+              .sse(ssec)
               .build());
 
       ObjectStat objectStat =
           client.statObject(
-              StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(sse).build());
+              StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(ssec).build());
 
       if (!(objectName.equals(objectStat.name())
           && (objectStat.length() == 1)
@@ -1106,10 +1146,6 @@ public class FunctionalTest {
       String sha256sum)
       throws Exception {
     String methodName = "getObject()";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
     long startTime = System.currentTimeMillis();
     try {
       PutObjectArgs.Builder builder =
@@ -1136,6 +1172,11 @@ public class FunctionalTest {
   }
 
   public static void getObject_test() throws Exception {
+    String methodName = "getObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
     testGetObject(
         "[single upload]",
         1 * KB,
@@ -1232,10 +1273,6 @@ public class FunctionalTest {
       return;
     }
 
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryptionCustomerKey ssec =
-        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
     testGetObject(
         "[single upload, SSE-C]",
         1 * KB,
@@ -1249,10 +1286,6 @@ public class FunctionalTest {
       String testTags, int objectSize, ServerSideEncryption sse, DownloadObjectArgs args)
       throws Exception {
     String methodName = "downloadObject()";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
     long startTime = System.currentTimeMillis();
     try {
       PutObjectArgs.Builder builder =
@@ -1274,6 +1307,11 @@ public class FunctionalTest {
   }
 
   public static void downloadObject_test() throws Exception {
+    String methodName = "downloadObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
     String objectName = getRandomName();
     testDownloadObject(
         "[single upload]",
@@ -1305,10 +1343,6 @@ public class FunctionalTest {
       return;
     }
 
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryptionCustomerKey ssec =
-        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
     objectName = getRandomName();
     testDownloadObject(
         "[single upload, SSE-C]",
@@ -1947,45 +1981,6 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: PutObject(): do put object using multi-threaded way in parallel. */
-  public static void threadedPutObject() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: threadedPutObject");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      Thread[] threads = new Thread[7];
-
-      for (int i = 0; i < 7; i++) {
-        threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile6Mb()));
-      }
-
-      for (int i = 0; i < 7; i++) {
-        threads[i].start();
-      }
-
-      // Waiting for threads to complete.
-      for (int i = 0; i < 7; i++) {
-        threads[i].join();
-      }
-
-      // All threads are completed.
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, String filename)",
-          "filename: threaded6MB",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "putObject(String bucketName, String objectName, String filename)",
-          "filename: threaded6MB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
   public static void testCopyObject(
       String testTags, ServerSideEncryption sse, CopyObjectArgs args, boolean negativeCase)
       throws Exception {
@@ -2285,10 +2280,6 @@ public class FunctionalTest {
       return;
     }
 
-    ServerSideEncryptionCustomerKey ssec =
-        ServerSideEncryption.withCustomerKey(
-            new SecretKeySpec(
-                "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8), "AES"));
     testCopyObject(
         testTags,
         ssec,
@@ -2311,7 +2302,6 @@ public class FunctionalTest {
       return;
     }
 
-    ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
     testCopyObject(
         testTags,
         sseS3,
@@ -2328,14 +2318,11 @@ public class FunctionalTest {
   /** Test: copyObject() SSE-KMS. */
   public static void copyObject_test11() throws Exception {
     String testTags = "[SSE-KMS]";
-    if (!isSecureEndpoint || kmsKeyName == null) {
+    if (!isSecureEndpoint || sseKms == null) {
       mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
       return;
     }
 
-    Map<String, String> myContext = new HashMap<>();
-    myContext.put("key1", "value1");
-    ServerSideEncryption sseKms = ServerSideEncryption.withManagedKeys(kmsKeyName, myContext);
     testCopyObject(
         testTags,
         sseKms,
@@ -4003,8 +3990,6 @@ public class FunctionalTest {
 
     listenBucketNotification_test1();
 
-    threadedPutObject();
-
     teardown();
 
     setBucketNotification_test1();
@@ -4105,15 +4090,13 @@ public class FunctionalTest {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
     ProcessBuilder pb = new ProcessBuilder(binaryPath.getPath(), "server", "d1");
 
-    kmsKeyName = "my-minio-key";
-
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");
     env.put("MINIO_SECRET_KEY", "minio123");
     env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
     env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
     env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
-    env.put("MINIO_KMS_KES_KEY_NAME", kmsKeyName);
+    env.put("MINIO_KMS_KES_KEY_NAME", "my-minio-key");
     env.put("MINIO_NOTIFY_WEBHOOK_ENABLE_miniojavatest", "on");
     env.put("MINIO_NOTIFY_WEBHOOK_ENDPOINT_miniojavatest", "http://example.org/");
     sqsArn = "arn:minio:sqs::miniojavatest:webhook";
@@ -4142,16 +4125,12 @@ public class FunctionalTest {
 
     Process minioProcess = null;
 
+    String kmsKeyName = "my-minio-key";
     if (args.length != 4) {
       endpoint = "http://localhost:9000";
       accessKey = "minio";
       secretKey = "minio123";
       region = "us-east-1";
-      kmsKeyName = System.getenv("MINIO_JAVA_TEST_KMS_KEY_NAME");
-      if (kmsKeyName == null) {
-        kmsKeyName = System.getenv("MINT_KEY_ID");
-      }
-      sqsArn = System.getenv("MINIO_JAVA_TEST_SQS_ARN");
 
       if (!downloadMinio()) {
         System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
@@ -4168,6 +4147,11 @@ public class FunctionalTest {
         ignore();
       }
     } else {
+      kmsKeyName = System.getenv("MINIO_JAVA_TEST_KMS_KEY_NAME");
+      if (kmsKeyName == null) {
+        kmsKeyName = System.getenv("MINT_KEY_ID");
+      }
+      sqsArn = System.getenv("MINIO_JAVA_TEST_SQS_ARN");
       endpoint = args[0];
       accessKey = args[1];
       secretKey = args[2];
@@ -4175,6 +4159,11 @@ public class FunctionalTest {
     }
 
     isSecureEndpoint = endpoint.toLowerCase(Locale.US).contains("https://");
+    if (kmsKeyName != null) {
+      Map<String, String> myContext = new HashMap<>();
+      myContext.put("key1", "value1");
+      sseKms = ServerSideEncryption.withManagedKeys(kmsKeyName, myContext);
+    }
 
     int exitValue = 0;
     try {
