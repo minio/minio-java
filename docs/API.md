@@ -1003,10 +1003,48 @@ Creates an object by combining data from different source objects using server-s
 
 __Example__
  ```java
-List<ComposeSourceArgs> sourceObjectList = new ArrayList<ComposeSourceArgs>();
-sourceObjectList.add(ComposeSourceArgs.builder().bucket("my-job-bucket").object("my-objectname-part-one").build());
-sourceObjectList.add(ComposeSourceArgs.builder().bucket("my-job-bucket").object("my-objectname-part-two").build();
-sourceObjectList.add(ComposeSourceArgs.builder().bucket("my-job-bucket").object("my-objectname-part-three").build());
+List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
+sourceObjectList.add(
+  ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-one").build());
+sourceObjectList.add(
+  ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-two").build());
+sourceObjectList.add(
+  ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-three").build());
+
+// Create my-bucketname/my-objectname by combining source object list.
+minioClient.composeObject(
+  ComposeObjectArgs.builder()
+      .bucket("my-bucketname")
+      .object("my-objectname")
+      .sources(sourceObjectList)
+      .build());
+
+// Create my-bucketname/my-objectname with user metadata by combining source object
+// list.
+minioClient.composeObject(
+    ComposeObjectArgs.builder()
+      .bucket("my-bucketname")
+      .object("my-objectname")
+      .sources(sourceObjectList)
+      .extraHeaders(Multimaps.forMap(userMetadata))
+      .build());
+
+// Create my-bucketname/my-objectname with user metadata and server-side encryption
+// by combining source object list.
+minioClient.composeObject(
+  ComposeObjectArgs.builder()
+      .bucket("my-bucketname")
+      .object("my-objectname")
+      .sources(sourceObjectList)
+      .extraHeaders(Multimaps.forMap(userMetadata))
+      .ssec(sse)
+      .build());
+
+
+List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
+sourceObjectList.add(ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-one").build());
+sourceObjectList.add(ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-two").build();
+sourceObjectList.add(ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-three").build());
 
 // Create my-bucketname/my-objectname by combining source object list.
 minioClient.composeObject(ComposeObjectArgs.builder().bucket("my-bucketname").object("my-objectname").source(sourceObjectList).build());

@@ -23,7 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.BucketExistsArgs;
 import io.minio.CloseableIterator;
 import io.minio.ComposeObjectArgs;
-import io.minio.ComposeSourceArgs;
+import io.minio.ComposeSource;
 import io.minio.CopyObjectArgs;
 import io.minio.DeleteBucketEncryptionArgs;
 import io.minio.DeleteBucketLifeCycleArgs;
@@ -2352,7 +2352,7 @@ public class FunctionalTest {
         false);
   }
 
-  /** Test: ccomposeObject(ComposeObjectArgs args). */
+  /** Test: composeObject(ComposeObjectArgs args). */
   public static void composeObject_test1() throws Exception {
     String methodName = "composeObject(ComposeObjectArgs args)";
     if (!mintEnv) {
@@ -2377,12 +2377,10 @@ public class FunctionalTest {
               .object(filename2)
               .filename(filename2)
               .build());
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder().srcBucket(bucketName).srcObject(filename1).build();
-      ComposeSourceArgs s2 =
-          ComposeSourceArgs.builder().srcBucket(bucketName).srcObject(filename2).build();
+      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(filename1).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
 
-      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
       try {
@@ -2431,17 +2429,16 @@ public class FunctionalTest {
               .object(filename2)
               .filename(filename2)
               .build());
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder()
+      ComposeSource s1 =
+          ComposeSource.builder()
               .bucket(bucketName)
               .object(filename1)
-              .srcOffset(10L)
-              .srcLength(6291436L)
+              .offset(10L)
+              .length(6291436L)
               .build();
-      ComposeSourceArgs s2 =
-          ComposeSourceArgs.builder().bucket(bucketName).object(filename2).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
 
-      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
       try {
@@ -2482,15 +2479,15 @@ public class FunctionalTest {
               .filename(filename1)
               .build());
 
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder()
+      ComposeSource s1 =
+          ComposeSource.builder()
               .bucket(bucketName)
               .object(filename1)
-              .srcOffset(10L)
-              .srcLength(6291436L)
+              .offset(10L)
+              .length(6291436L)
               .build();
 
-      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       try {
         client.composeObject(
@@ -2550,20 +2547,12 @@ public class FunctionalTest {
               .filename(filename2)
               .sse(ssePut)
               .build());
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder()
-              .srcBucket(bucketName)
-              .srcObject(filename1)
-              .srcSsec(ssePut)
-              .build();
-      ComposeSourceArgs s2 =
-          ComposeSourceArgs.builder()
-              .srcBucket(bucketName)
-              .srcObject(filename2)
-              .srcSsec(ssePut)
-              .build();
+      ComposeSource s1 =
+          ComposeSource.builder().bucket(bucketName).object(filename1).ssec(ssePut).build();
+      ComposeSource s2 =
+          ComposeSource.builder().bucket(bucketName).object(filename2).ssec(ssePut).build();
 
-      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
       try {
@@ -2618,16 +2607,11 @@ public class FunctionalTest {
               .object(filename2)
               .filename(filename2)
               .build());
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder()
-              .srcBucket(bucketName)
-              .object(filename1)
-              .srcSsec(ssePut)
-              .build();
-      ComposeSourceArgs s2 =
-          ComposeSourceArgs.builder().srcBucket(bucketName).object(filename2).build();
+      ComposeSource s1 =
+          ComposeSource.builder().bucket(bucketName).object(filename1).ssec(ssePut).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
 
-      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
       try {
@@ -2681,12 +2665,10 @@ public class FunctionalTest {
               .object(filename2)
               .filename(filename2)
               .build());
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder().bucket(bucketName).object(filename1).build();
-      ComposeSourceArgs s2 =
-          ComposeSourceArgs.builder().bucket(bucketName).object(filename2).build();
+      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(filename1).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
 
-      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
       try {

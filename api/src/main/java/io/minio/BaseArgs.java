@@ -65,8 +65,8 @@ public abstract class BaseArgs {
       }
     }
 
-    protected void validateNullOrEmpty(Long arg, String argName) {
-      if (arg != null && arg < 0) {
+    protected void validateNullOrPositive(Number arg, String argName) {
+      if (arg != null && arg.longValue() < 0) {
         throw new IllegalArgumentException(argName + " cannot be non-negative.");
       }
     }

@@ -15,7 +15,7 @@
  */
 
 import io.minio.ComposeObjectArgs;
-import io.minio.ComposeSourceArgs;
+import io.minio.ComposeSource;
 import io.minio.MinioClient;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
@@ -76,20 +76,12 @@ public class ComposeObjectEncrypted {
               .sse(ssePut)
               .build());
 
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder()
-              .srcBucket(bucketName)
-              .srcObject(sourceObject1)
-              .srcSsec(ssePut)
-              .build();
-      ComposeSourceArgs s2 =
-          ComposeSourceArgs.builder()
-              .srcBucket(bucketName)
-              .srcObject(sourceObject2)
-              .srcSsec(ssePut)
-              .build();
+      ComposeSource s1 =
+          ComposeSource.builder().bucket(bucketName).object(sourceObject1).ssec(ssePut).build();
+      ComposeSource s2 =
+          ComposeSource.builder().bucket(bucketName).object(sourceObject2).ssec(ssePut).build();
 
-      List<ComposeSourceArgs> listSourceObjects = new ArrayList<ComposeSourceArgs>();
+      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
 

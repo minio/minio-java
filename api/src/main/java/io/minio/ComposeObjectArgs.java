@@ -19,9 +19,9 @@ package io.minio;
 import java.util.List;
 
 public class ComposeObjectArgs extends ObjectWriteArgs {
-  List<ComposeSourceArgs> sources;
+  List<ComposeSource> sources;
 
-  public List<ComposeSourceArgs> sources() {
+  public List<ComposeSource> sources() {
     return sources;
   }
 
@@ -30,13 +30,19 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
   }
 
   public static final class Builder extends ObjectWriteArgs.Builder<Builder, ComposeObjectArgs> {
-    public Builder sources(List<ComposeSourceArgs> sources) {
+    @Override
+    protected void validate(ComposeObjectArgs args) {
+      super.validate(args);
+      validateSources(args.sources);
+    }
+
+    public Builder sources(List<ComposeSource> sources) {
       validateSources(sources);
       operations.add(args -> args.sources = sources);
       return this;
     }
 
-    private void validateSources(List<ComposeSourceArgs> sources) {
+    private void validateSources(List<ComposeSource> sources) {
       if (sources.isEmpty()) {
         throw new IllegalArgumentException("compose sources cannot be empty");
       }

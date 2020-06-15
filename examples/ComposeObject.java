@@ -15,7 +15,7 @@
  */
 
 import io.minio.ComposeObjectArgs;
-import io.minio.ComposeSourceArgs;
+import io.minio.ComposeSource;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -36,25 +36,19 @@ public class ComposeObject {
               "Q3AM3UQ867SPQQA43P2F",
               "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
-      // Create a ComposeSourceArgs to compose Object.
-      ComposeSourceArgs s1 =
-          ComposeSourceArgs.builder()
-              .srcBucket("my-bucketname-one")
-              .srcObject("my-objectname-one")
-              .build();
-      ComposeSourceArgs s2 =
-          ComposeSourceArgs.builder()
-              .srcBucket("my-bucketname-two")
-              .srcObject("my-objectname-two")
-              .build();
-      ComposeSourceArgs s3 =
-          ComposeSourceArgs.builder()
-              .srcBucket("my-bucketname-three")
-              .srcObject("my-objectname-three")
+      // Create a ComposeSource to compose Object.
+      ComposeSource s1 =
+          ComposeSource.builder().bucket("my-bucketname-one").object("my-objectname-one").build();
+      ComposeSource s2 =
+          ComposeSource.builder().bucket("my-bucketname-two").object("my-objectname-two").build();
+      ComposeSource s3 =
+          ComposeSource.builder()
+              .bucket("my-bucketname-three")
+              .object("my-objectname-three")
               .build();
 
-      // Adding the ComposeSourceArgs to an ArrayList
-      List<ComposeSourceArgs> sourceObjectList = new ArrayList<ComposeSourceArgs>();
+      // Adding the ComposeSource to an ArrayList
+      List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
       sourceObjectList.add(s1);
       sourceObjectList.add(s2);
       sourceObjectList.add(s3);
