@@ -39,7 +39,7 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`listIncompleteUploads`](#listIncompleteUploads)       | [`setObjectRetention`](#setObjectRetention)             |
 | [`makeBucket`](#makeBucket)                             | [`setObjectTags`](#setObjectTags)                       |
 | [`removeBucket`](#removeBucket)                         | [`statObject`](#statObject)                             |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)     |                                                         |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)     | [`uploadObject`](#uploadObject)                         |
 | [`setBucketEncryption`](#setBucketEncryption)           |                                                         |
 | [`setBucketLifeCycle`](#setBucketLifeCycle)             |                                                         |
 | [`setBucketNotification`](#setBucketNotification)       |                                                         |
@@ -1439,42 +1439,84 @@ System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname
 ```
 
 <a name="putObject"></a>
-### putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)
-`public void putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.io.InputStream-io.minio.PutObjectOptions-)_
+### putObject(PutObjectArgs args)
+`public void putObject(PutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-io.minio.PutObjectArgs-)_
 
-Uploads given stream as object in bucket by using given options.
+Uploads given stream as object in bucket.
 
 __Parameters__
-| Parameter      | Type                 | Description                       |
-|:---------------|:---------------------|:----------------------------------|
-| ``bucketName`` | _String_             | Name of the bucket.               |
-| ``objectName`` | _String_             | Object name in the bucket.        |
-| ``stream``     | _InputStream_        | Stream contains object data.      |
-| ``options``    | _[PutObjectOptions]_ | Options to be used during upload. |
+| Parameter | Type              | Description |
+|:----------|:------------------|:------------|
+| ``args``  | _[PutObjectArgs]_ | Arguments.  |
 
 __Example__
 ```java
-PutObjectOptions options = new PutObjectOptions(7003256, -1);
-minioClient.putObject("my-bucketname", "my-objectname", stream, options);
+// Upload known sized input stream.
+minioClient.putObject(
+    PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+            inputStream, size, -1)
+        .contentType("video/mp4")
+        .build());
+
+// Upload unknown sized input stream.
+minioClient.putObject(
+    PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+            inputStream, -1, 10485760)
+        .contentType("video/mp4")
+        .build());
+
+// Create object ends with '/' (also called as folder or directory).
+minioClient.putObject(
+    PutObjectArgs.builder().bucket("my-bucketname").object("path/to/").stream(
+            new ByteArrayInputStream(new byte[] {}), 0, -1)
+        .build());
+
+// Upload input stream with headers and user metadata.
+Map<String, String> headers = new HashMap<>();
+headers.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
+Map<String, String> userMetadata = new HashMap<>();
+userMetadata.put("My-Project", "Project One");
+minioClient.putObject(
+    PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+            inputStream, size, -1)
+        .headers(headers)
+        .userMetadata(userMetadata)
+        .build());
+
+// Upload input stream with server-side encryption.
+minioClient.putObject(
+    PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+            inputStream, size, -1)
+        .sse(sse)
+        .build());
 ```
 
-<a name="putObject"></a>
-### putObject(String bucketName, String objectName, String filename, PutObjectOptions options)
-`public void putObject(String bucketName, String objectName, String filename, PutObjectOptions options)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-java.lang.String-java.lang.String-java.lang.String-io.minio.PutObjectOptions-)_
+<a name="uploadObject"></a>
+### uploadObject(UploadObjectArgs args)
+`public void uploadObject(UploadObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#uploadObject-io.minio.UploadObjectArgs-)_
 
-Uploads contents from a file as object in bucket using options.
+Uploads contents from a file as object in bucket.
 
 __Parameters__
-| Parameter      | Type                 | Description                                  |
-|:---------------|:---------------------|:---------------------------------------------|
-| ``bucketName`` | _String_             | Name of the bucket.                          |
-| ``objectName`` | _String_             | Object name in the bucket.                   |
-| ``fileName``   | _String_             | Name of file to upload.                      |
-| ``options``    | _[PutObjectOptions]_ | (Optional) Options to be used during upload. |
+| Parameter | Type                 | Description |
+|:----------|:---------------------|:------------|
+| ``args``  | _[UploadObjectArgs]_ | Arguments.  |
 
 __Example__
 ```java
-minioClient.putObject("my-bucketname", "my-objectname", "my-filename", null);
+// Upload an JSON file.
+minioClient.uploadObject(
+    UploadObjectArgs.builder()
+        .bucket("my-bucketname").object("my-objectname").filename("person.json").build());
+
+// Upload a video file.
+minioClient.uploadObject(
+    UploadObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .filename("my-video.avi")
+        .contentType("video/mp4")
+        .build());
 ```
 
 <a name="removeObject"></a>
@@ -1766,3 +1808,5 @@ ObjectStat objectStat =
 [RemoveObjectsArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectsArgs.html
 [CopyObjectArgs]: http://minio.github.io/minio-java/io/minio/CopyObjectArgs.html
 [ListIncompleteUploadsArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsArgs.html
+[PutObjectArgs]: http://minio.github.io/minio-java/io/minio/PutObjectArgs.html
+[UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
