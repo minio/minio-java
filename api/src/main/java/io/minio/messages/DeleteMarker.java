@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,16 @@
 
 package io.minio.messages;
 
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/**
- * Helper class to denote Prefix information in {@link ListBucketResultV1}, {@link
- * ListBucketResultV2} and {@link ListVersionsResult}.
- */
-@Root(name = "CommonPrefixes", strict = false)
-public class Prefix {
-  @Element(name = "Prefix")
-  private String prefix;
+/** Helper class to denote delete marker information in {@link ListVersionsResult}. */
+@Root(name = "DeleteMarker", strict = false)
+public class DeleteMarker extends Item {
+  public DeleteMarker() {
+    super();
+  }
 
-  public Prefix() {}
-
-  public Item toItem() {
-    return new Contents(prefix);
+  public DeleteMarker(String prefix) {
+    super(prefix);
   }
 }

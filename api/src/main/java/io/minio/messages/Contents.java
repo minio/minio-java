@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,19 @@
 
 package io.minio.messages;
 
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote Prefix information in {@link ListBucketResultV1}, {@link
- * ListBucketResultV2} and {@link ListVersionsResult}.
+ * Helper class to denote Object information in {@link ListBucketResultV1} and {@link
+ * ListBucketResultV2}
  */
-@Root(name = "CommonPrefixes", strict = false)
-public class Prefix {
-  @Element(name = "Prefix")
-  private String prefix;
+@Root(name = "Contents", strict = false)
+public class Contents extends Item {
+  public Contents() {
+    super();
+  }
 
-  public Prefix() {}
-
-  public Item toItem() {
-    return new Contents(prefix);
+  public Contents(String prefix) {
+    super(prefix);
   }
 }

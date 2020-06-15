@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015, 2016, 2017 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,15 @@ import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
-public abstract class ListBucketResult {
+public abstract class ListObjectsResult {
   @Element(name = "Name")
   private String name;
 
+  @Element(name = "EncodingType", required = false)
+  private String encodingType;
+
   @Element(name = "Prefix", required = false)
   private String prefix;
-
-  @Element(name = "StartAfter", required = false)
-  private String startAfter;
-
-  @Element(name = "KeyCount", required = false)
-  private int keyCount;
-
-  @Element(name = "MaxKeys")
-  private int maxKeys;
 
   @Element(name = "Delimiter", required = false)
   private String delimiter;
@@ -44,37 +38,28 @@ public abstract class ListBucketResult {
   @Element(name = "IsTruncated", required = false)
   private boolean isTruncated;
 
-  @ElementList(name = "Contents", inline = true, required = false)
-  private List<Item> contents;
+  @Element(name = "MaxKeys", required = false)
+  private int maxKeys;
 
   @ElementList(name = "CommonPrefixes", inline = true, required = false)
   private List<Prefix> commonPrefixes;
 
-  public ListBucketResult() {}
+  private static final List<Item> deleteMarkers = Collections.unmodifiableList(new LinkedList<>());
+
+  public ListObjectsResult() {}
 
   /** Returns bucket name. */
   public String name() {
     return name;
   }
 
+  public boolean useUrlEncodingType() {
+    return (encodingType != null && encodingType.equals("url"));
+  }
+
   /** Returns prefix. */
   public String prefix() {
     return prefix;
-  }
-
-  /** Returns start after. */
-  public String startAfter() {
-    return startAfter;
-  }
-
-  /** Returns key count. */
-  public int keyCount() {
-    return keyCount;
-  }
-
-  /** Returns max keys. */
-  public int maxKeys() {
-    return maxKeys;
   }
 
   /** Returns delimiter. */
@@ -87,26 +72,20 @@ public abstract class ListBucketResult {
     return isTruncated;
   }
 
-  /** Returns List of Items. */
-  public List<Item> contents() {
-    if (contents == null) {
-      return Collections.unmodifiableList(new LinkedList<>());
-    }
-
-    return Collections.unmodifiableList(contents);
+  /** Returns max keys. */
+  public int maxKeys() {
+    return maxKeys;
   }
 
   /** Returns List of Prefix. */
   public List<Prefix> commonPrefixes() {
-    if (commonPrefixes == null) {
-      return Collections.unmodifiableList(new LinkedList<>());
-    }
-
-    return Collections.unmodifiableList(commonPrefixes);
+    return Collections.unmodifiableList(
+        (commonPrefixes == null) ? new LinkedList<>() : commonPrefixes);
   }
 
-  /** Returns continuation token. */
-  public abstract String continuationToken();
+  public List<Item> deleteMarkers() {
+    return deleteMarkers;
+  }
 
-  public abstract String nextContinuationToken();
+  public abstract List<Item> contents();
 }

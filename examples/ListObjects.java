@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import io.minio.BucketExistsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
@@ -40,19 +39,72 @@ public class ListObjects {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Check whether 'my-bucketname' exist or not.
-      boolean found =
-          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
-      if (found) {
-        // List objects from 'my-bucketname'
-        Iterable<Result<Item>> myObjects =
+      {
+        // Lists objects information.
+        Iterable<Result<Item>> results =
             minioClient.listObjects(ListObjectsArgs.builder().bucket("my-bucketname").build());
-        for (Result<Item> result : myObjects) {
+
+        for (Result<Item> result : results) {
           Item item = result.get();
-          System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
+          System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
         }
-      } else {
-        System.out.println("my-bucketname does not exist");
+      }
+
+      {
+        // Lists objects information recursively.
+        Iterable<Result<Item>> results =
+            minioClient.listObjects(
+                ListObjectsArgs.builder().bucket("my-bucketname").recursive(true).build());
+
+        for (Result<Item> result : results) {
+          Item item = result.get();
+          System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
+        }
+      }
+
+      {
+        // Lists maximum 100 objects information those names starts with 'E' and after
+        // 'ExampleGuide.pdf'.
+        Iterable<Result<Item>> results =
+            minioClient.listObjects(
+                ListObjectsArgs.builder()
+                    .bucket("my-bucketname")
+                    .startAfter("ExampleGuide.pdf")
+                    .prefix("E")
+                    .maxKeys(100)
+                    .build());
+
+        for (Result<Item> result : results) {
+          Item item = result.get();
+          System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
+        }
+      }
+
+      {
+        // Lists maximum 100 objects information with version those names starts with 'E' and after
+        // 'ExampleGuide.pdf'.
+        Iterable<Result<Item>> results =
+            minioClient.listObjects(
+                ListObjectsArgs.builder()
+                    .bucket("my-bucketname")
+                    .startAfter("ExampleGuide.pdf")
+                    .prefix("E")
+                    .maxKeys(100)
+                    .includeVersions(true)
+                    .build());
+
+        for (Result<Item> result : results) {
+          Item item = result.get();
+          System.out.println(
+              item.lastModified()
+                  + "\t"
+                  + item.size()
+                  + "\t"
+                  + item.objectName()
+                  + " ["
+                  + item.versionId()
+                  + "]");
+        }
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

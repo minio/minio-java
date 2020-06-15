@@ -727,19 +727,33 @@ __Parameters__
 
 __Example__
 ```java
+// Lists objects information.
 Iterable<Result<Item>> results = minioClient.listObjects(
-  ListObjectsArgs.builder()
-    .bucket("my-bucketname")
-    .includeUserMetadata(true)
-    .startAfter("start-after-entry")
-    .prefix("my-obj")
-    .maxKeys(100)
-    .fetchOwner(true)
-);
-for (Result<Item> result : results) {
-  Item item = result.get();
-  System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
-}
+    ListObjectsArgs.builder().bucket("my-bucketname").build());
+
+// Lists objects information recursively.
+Iterable<Result<Item>> results = minioClient.listObjects(
+    ListObjectsArgs.builder().bucket("my-bucketname").recursive(true).build());
+
+// Lists maximum 100 objects information those names starts with 'E' and after 'ExampleGuide.pdf'.
+Iterable<Result<Item>> results = minioClient.listObjects(
+    ListObjectsArgs.builder()
+        .bucket("my-bucketname")
+        .startAfter("ExampleGuide.pdf")
+        .prefix("E")
+        .maxKeys(100)
+        .build());
+
+// Lists maximum 100 objects information with version those names starts with 'E' and after
+// 'ExampleGuide.pdf'.
+Iterable<Result<Item>> results = minioClient.listObjects(
+    ListObjectsArgs.builder()
+        .bucket("my-bucketname")
+        .startAfter("ExampleGuide.pdf")
+        .prefix("E")
+        .maxKeys(100)
+        .includeVersions(true)
+        .build());
 ```
 
 ### makeBucket(MakeBucketArgs args)
