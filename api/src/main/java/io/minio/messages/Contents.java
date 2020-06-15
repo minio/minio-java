@@ -16,31 +16,19 @@
 
 package io.minio.messages;
 
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote owner information for {@link ListAllMyBucketsResult}, {@link
- * ListBucketResultV1}, {@link ListBucketResultV2}, {@link ListVersionsResult}, {@link
- * ListMultipartUploadsResult} and {@link ListPartsResult}.
+ * Helper class to denote Object information in {@link ListBucketResultV1} and {@link
+ * ListBucketResultV2}
  */
-@Root(name = "Owner", strict = false)
-public class Owner {
-  @Element(name = "ID", required = false)
-  private String id;
-
-  @Element(name = "DisplayName", required = false)
-  private String displayName;
-
-  public Owner() {}
-
-  /** Returns owner ID. */
-  public String id() {
-    return id;
+@Root(name = "Contents", strict = false)
+public class Contents extends Item {
+  public Contents() {
+    super();
   }
 
-  /** Returns owner display name. */
-  public String displayName() {
-    return displayName;
+  public Contents(String prefix) {
+    super(prefix);
   }
 }

@@ -16,7 +16,11 @@
 
 package io.minio.messages;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
@@ -26,22 +30,25 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "ListBucketResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class ListBucketResultV1 extends ListBucketResult {
+public class ListBucketResultV1 extends ListObjectsResult {
   @Element(name = "Marker", required = false)
   private String marker;
 
   @Element(name = "NextMarker", required = false)
   private String nextMarker;
 
-  /** Returns continuation token. */
-  @Override
-  public String continuationToken() {
+  @ElementList(name = "Contents", inline = true, required = false)
+  private List<Contents> contents;
+
+  public String marker() {
     return marker;
   }
 
-  /** Returns next continuation token. */
-  @Override
-  public String nextContinuationToken() {
+  public String nextMarker() {
     return nextMarker;
+  }
+
+  public List<Item> contents() {
+    return Collections.unmodifiableList((contents == null) ? new LinkedList<>() : contents);
   }
 }

@@ -26,49 +26,53 @@ import org.simpleframework.xml.Root;
 
 /**
  * Object representation of response XML of <a
- * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">ListObjectsV2
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectVersions.html">ListObjectVersions
  * API</a>.
  */
-@Root(name = "ListBucketResult", strict = false)
+@Root(name = "ListVersionsResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class ListBucketResultV2 extends ListObjectsResult {
-  @Element(name = "KeyCount", required = false)
-  private int keyCount;
+public class ListVersionsResult extends ListObjectsResult {
+  @Element(name = "KeyMarker", required = false)
+  private String keyMarker;
 
-  @Element(name = "StartAfter", required = false)
-  private String startAfter;
+  @Element(name = "NextKeyMarker", required = false)
+  private String nextKeyMarker;
 
-  @Element(name = "ContinuationToken", required = false)
-  private String continuationToken;
+  @Element(name = "VersionIdMarker", required = false)
+  private String versionIdMarker;
 
-  @Element(name = "NextContinuationToken", required = false)
-  private String nextContinuationToken;
+  @Element(name = "NextVersionIdMarker", required = false)
+  private String nextVersionIdMarker;
 
-  @ElementList(name = "Contents", inline = true, required = false)
-  private List<Contents> contents;
+  @ElementList(name = "Version", inline = true, required = false)
+  private List<Version> contents;
 
-  /** Returns key count. */
-  public int keyCount() {
-    return keyCount;
+  @ElementList(name = "DeleteMarker", inline = true, required = false)
+  private List<DeleteMarker> deleteMarkers;
+
+  public String keyMarker() {
+    return keyMarker;
   }
 
-  /** Returns start after. */
-  public String startAfter() {
-    return startAfter;
+  public String nextKeyMarker() {
+    return nextKeyMarker;
   }
 
-  /** Returns continuation token. */
-  public String continuationToken() {
-    return continuationToken;
+  public String versionIdMarker() {
+    return versionIdMarker;
   }
 
-  /** Returns next continuation token. */
-  public String nextContinuationToken() {
-    return nextContinuationToken;
+  public String nextVersionIdMarker() {
+    return nextVersionIdMarker;
   }
 
-  /** Returns List of Items. */
   public List<Item> contents() {
     return Collections.unmodifiableList((contents == null) ? new LinkedList<>() : contents);
+  }
+
+  @Override
+  public List<Item> deleteMarkers() {
+    return Collections.unmodifiableList(
+        (deleteMarkers == null) ? new LinkedList<>() : deleteMarkers);
   }
 }

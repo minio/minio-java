@@ -20,8 +20,8 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote Prefix information in {@link ListBucketResult} and {@link
- * ListBucketResultV1}.
+ * Helper class to denote Prefix information in {@link ListBucketResultV1}, {@link
+ * ListBucketResultV2} and {@link ListVersionsResult}.
  */
 @Root(name = "CommonPrefixes", strict = false)
 public class Prefix {
@@ -31,6 +31,6 @@ public class Prefix {
   public Prefix() {}
 
   public Item toItem() {
-    return new Item(prefix);
+    return new Contents(prefix);
   }
 }

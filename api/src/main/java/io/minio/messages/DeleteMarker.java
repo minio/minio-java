@@ -16,31 +16,16 @@
 
 package io.minio.messages;
 
-import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/**
- * Helper class to denote owner information for {@link ListAllMyBucketsResult}, {@link
- * ListBucketResultV1}, {@link ListBucketResultV2}, {@link ListVersionsResult}, {@link
- * ListMultipartUploadsResult} and {@link ListPartsResult}.
- */
-@Root(name = "Owner", strict = false)
-public class Owner {
-  @Element(name = "ID", required = false)
-  private String id;
-
-  @Element(name = "DisplayName", required = false)
-  private String displayName;
-
-  public Owner() {}
-
-  /** Returns owner ID. */
-  public String id() {
-    return id;
+/** Helper class to denote delete marker information in {@link ListVersionsResult}. */
+@Root(name = "DeleteMarker", strict = false)
+public class DeleteMarker extends Item {
+  public DeleteMarker() {
+    super();
   }
 
-  /** Returns owner display name. */
-  public String displayName() {
-    return displayName;
+  public DeleteMarker(String prefix) {
+    super(prefix);
   }
 }
