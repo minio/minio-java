@@ -5084,13 +5084,12 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     UploadObjectArgs.Builder builder =
-        UploadObjectArgs.builder()
-            .bucket(bucketName)
-            .object(objectName)
-            .filename(filename)
-            .sse(options.sse());
-    if (!options.contentType().equals("application/octet-stream")) {
-      builder.contentType(options.contentType());
+        UploadObjectArgs.builder().bucket(bucketName).object(objectName).filename(filename);
+    if (options != null) {
+      builder.sse(options.sse());
+      if (!options.contentType().equals("application/octet-stream")) {
+        builder.contentType(options.contentType());
+      }
     }
     uploadObject(builder.build());
   }
