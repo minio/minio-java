@@ -15,7 +15,7 @@
  */
 
 import io.minio.MinioClient;
-import io.minio.PutObjectOptions;
+import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -80,7 +80,9 @@ public class PutObjectUiProgressBar extends JFrame {
 
       pmis.getProgressMonitor().setMillisToPopup(10);
       minioClient.putObject(
-          "bank", "my-objectname", pmis, new PutObjectOptions(pmis.available(), -1));
+          PutObjectArgs.builder().bucket("bank").object("my-objectname").stream(
+                  pmis, pmis.available(), -1)
+              .build());
       System.out.println("my-objectname is uploaded successfully");
     } catch (FileNotFoundException e) {
       // TODO Auto-generated catch block

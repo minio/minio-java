@@ -17,12 +17,15 @@
 import static java.nio.file.StandardOpenOption.*;
 
 import io.minio.MinioClient;
-import io.minio.PutObjectOptions;
+import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
+import io.minio.UploadObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.nio.file.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import javax.crypto.KeyGenerator;
 
 public class UploadObject {
   /** MinioClient.putObject() example. */
@@ -40,10 +43,33 @@ public class UploadObject {
       // MinioClient minioClient = new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID",
       //                                           "YOUR-SECRETACCESSKEY");
 
-      // Upload 'my-filename' as object 'my-objectname' in 'my-bucketname'.
-      minioClient.putObject(
-          "my-bucketname", "my-objectname", "my-filename", new PutObjectOptions(67108864, -1));
-      System.out.println("my-filename is uploaded to my-objectname successfully");
+      {
+        // Upload 'my-filename' as object 'my-objectname' in 'my-bucketname'.
+        minioClient.uploadObject(
+            UploadObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .filename("my-filename")
+                .build());
+        System.out.println("my-filename is uploaded to my-objectname successfully");
+      }
+
+      {
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256);
+        ServerSideEncryptionCustomerKey ssec =
+            ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+
+        // Upload 'my-filename' as object encrypted 'my-objectname' in 'my-bucketname'.
+        minioClient.uploadObject(
+            UploadObjectArgs.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname")
+                .filename("my-filename")
+                .sse(ssec)
+                .build());
+        System.out.println("my-filename is uploaded to my-objectname successfully");
+      }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

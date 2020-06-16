@@ -21,10 +21,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class DownloadObjectArgs extends ObjectReadArgs {
-  private String fileName;
+  private String filename;
 
-  public String fileName() {
-    return fileName;
+  public String filename() {
+    return filename;
   }
 
   public static Builder builder() {
@@ -32,20 +32,20 @@ public class DownloadObjectArgs extends ObjectReadArgs {
   }
 
   public static final class Builder extends ObjectReadArgs.Builder<Builder, DownloadObjectArgs> {
-    public Builder fileName(String fileName) {
-      validateFileName(fileName);
-      operations.add(args -> args.fileName = fileName);
+    public Builder filename(String filename) {
+      validateFileName(filename);
+      operations.add(args -> args.filename = filename);
       return this;
     }
 
-    private void validateFileName(String fileName) {
-      validateNotEmptyString(fileName, "filename");
+    private void validateFileName(String filename) {
+      validateNotEmptyString(filename, "filename");
 
-      Path filePath = Paths.get(fileName);
+      Path filePath = Paths.get(filename);
       boolean fileExists = Files.exists(filePath);
 
       if (fileExists && !Files.isRegularFile(filePath)) {
-        throw new IllegalArgumentException(fileName + ": not a regular file");
+        throw new IllegalArgumentException(filename + ": not a regular file");
       }
     }
   }

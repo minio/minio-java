@@ -43,6 +43,7 @@ import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.CompleteMultipartUpload;
+import io.minio.messages.CompleteMultipartUploadOutput;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CopyPartResult;
 import io.minio.messages.CreateBucketConfiguration;
@@ -114,6 +115,7 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -2095,7 +2097,7 @@ public class MinioClient {
         DownloadObjectArgs.builder()
             .bucket(bucketName)
             .object(objectName)
-            .fileName(fileName)
+            .filename(fileName)
             .build());
   }
 
@@ -2135,7 +2137,7 @@ public class MinioClient {
             .bucket(bucketName)
             .object(objectName)
             .ssec(ssec)
-            .fileName(fileName)
+            .filename(fileName)
             .build());
   }
 
@@ -2170,8 +2172,8 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    String fileName = args.fileName();
-    Path filePath = Paths.get(fileName);
+    String filename = args.filename();
+    Path filePath = Paths.get(filename);
     boolean fileExists = Files.exists(filePath);
 
     ObjectStat objectStat =
@@ -2184,12 +2186,12 @@ public class MinioClient {
     long length = objectStat.length();
     String etag = objectStat.etag();
 
-    String tempFileName = fileName + "." + etag + ".part.minio";
-    Path tempFilePath = Paths.get(tempFileName);
+    String tempFilename = filename + "." + etag + ".part.minio";
+    Path tempFilePath = Paths.get(tempFilename);
     boolean tempFileExists = Files.exists(tempFilePath);
 
     if (tempFileExists && !Files.isRegularFile(tempFilePath)) {
-      throw new IOException(tempFileName + ": not a regular file");
+      throw new IOException(tempFilename + ": not a regular file");
     }
 
     long tempFileSize = 0;
@@ -2214,7 +2216,7 @@ public class MinioClient {
                 + "', size:"
                 + length
                 + " is smaller than the destination file, '"
-                + fileName
+                + filename
                 + "', size:"
                 + fileSize);
       } else if (!tempFileExists) {
@@ -2243,7 +2245,7 @@ public class MinioClient {
 
       if (bytesWritten != length - tempFileSize) {
         throw new IOException(
-            tempFileName
+            tempFilename
                 + ": unexpected data written.  expected = "
                 + (length - tempFileSize)
                 + ", written = "
@@ -2587,7 +2589,7 @@ public class MinioClient {
         size -= src.offset();
       }
 
-      if (size < PutObjectOptions.MIN_MULTIPART_SIZE
+      if (size < ObjectWriteArgs.MIN_MULTIPART_SIZE
           && sources.size() != 1
           && i != (sources.size() - 1)) {
         throw new IllegalArgumentException(
@@ -2598,25 +2600,25 @@ public class MinioClient {
                 + ": size "
                 + size
                 + " must be greater than "
-                + PutObjectOptions.MIN_MULTIPART_SIZE);
+                + ObjectWriteArgs.MIN_MULTIPART_SIZE);
       }
 
       objectSize += size;
-      if (objectSize > PutObjectOptions.MAX_OBJECT_SIZE) {
+      if (objectSize > ObjectWriteArgs.MAX_OBJECT_SIZE) {
         throw new IllegalArgumentException(
-            "Destination object size must be less than " + PutObjectOptions.MAX_OBJECT_SIZE);
+            "Destination object size must be less than " + ObjectWriteArgs.MAX_OBJECT_SIZE);
       }
 
-      if (size > PutObjectOptions.MAX_PART_SIZE) {
-        long count = size / PutObjectOptions.MAX_PART_SIZE;
-        long lastPartSize = size - (count * PutObjectOptions.MAX_PART_SIZE);
+      if (size > ObjectWriteArgs.MAX_PART_SIZE) {
+        long count = size / ObjectWriteArgs.MAX_PART_SIZE;
+        long lastPartSize = size - (count * ObjectWriteArgs.MAX_PART_SIZE);
         if (lastPartSize > 0) {
           count++;
         } else {
-          lastPartSize = PutObjectOptions.MAX_PART_SIZE;
+          lastPartSize = ObjectWriteArgs.MAX_PART_SIZE;
         }
 
-        if (lastPartSize < PutObjectOptions.MIN_MULTIPART_SIZE
+        if (lastPartSize < ObjectWriteArgs.MIN_MULTIPART_SIZE
             && sources.size() != 1
             && i != (sources.size() - 1)) {
           throw new IllegalArgumentException(
@@ -2628,7 +2630,7 @@ public class MinioClient {
                   + "for multipart split upload of "
                   + size
                   + ", last part size is less than "
-                  + PutObjectOptions.MIN_MULTIPART_SIZE);
+                  + ObjectWriteArgs.MIN_MULTIPART_SIZE);
         }
 
         partsCount += (int) count;
@@ -2636,10 +2638,10 @@ public class MinioClient {
         partsCount++;
       }
 
-      if (partsCount > PutObjectOptions.MAX_MULTIPART_COUNT) {
+      if (partsCount > ObjectWriteArgs.MAX_MULTIPART_COUNT) {
         throw new IllegalArgumentException(
             "Compose sources create more than allowed multipart count "
-                + PutObjectOptions.MAX_MULTIPART_COUNT);
+                + ObjectWriteArgs.MAX_MULTIPART_COUNT);
       }
     }
 
@@ -2697,7 +2699,7 @@ public class MinioClient {
           offset = src.offset();
         }
 
-        if (size <= PutObjectOptions.MAX_PART_SIZE) {
+        if (size <= ObjectWriteArgs.MAX_PART_SIZE) {
           partNumber++;
           Map<String, String> headers = new HashMap<>();
           if (src.headers() != null) {
@@ -2722,8 +2724,8 @@ public class MinioClient {
           partNumber++;
 
           long startBytes = offset;
-          long endBytes = startBytes + PutObjectOptions.MAX_PART_SIZE;
-          if (size < PutObjectOptions.MAX_PART_SIZE) {
+          long endBytes = startBytes + ObjectWriteArgs.MAX_PART_SIZE;
+          if (size < ObjectWriteArgs.MAX_PART_SIZE) {
             endBytes = startBytes + size;
           }
 
@@ -4957,76 +4959,95 @@ public class MinioClient {
     executeDelete(args.bucket(), null, null);
   }
 
-  private void putObject(
-      String bucketName, String objectName, PutObjectOptions options, Object data)
+  private ObjectWriteResponse putObject(
+      ObjectWriteArgs args,
+      Object data,
+      long objectSize,
+      long partSize,
+      int partCount,
+      String contentType)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    Map<String, String> headerMap = new HashMap<>();
-
-    if (options.headers() != null) {
-      headerMap.putAll(options.headers());
+    Multimap<String, String> headers = HashMultimap.create();
+    headers.putAll(args.extraHeaders());
+    headers.putAll(args.genHeaders());
+    if (!headers.containsKey("Content-Type")) {
+      headers.put("Content-Type", contentType);
     }
 
-    if (options.sse() != null) {
-      checkWriteRequestSse(options.sse());
-      headerMap.putAll(options.sse().headers());
-    }
-
-    headerMap.put("Content-Type", options.contentType());
-
-    // initiate new multipart upload.
-    String uploadId = createMultipartUpload(bucketName, objectName, headerMap);
-
+    String uploadId = null;
     long uploadedSize = 0L;
-    int partCount = options.partCount();
-    Part[] totalParts = new Part[PutObjectOptions.MAX_MULTIPART_COUNT];
+    Part[] parts = null;
 
     try {
       for (int partNumber = 1; partNumber <= partCount || partCount < 0; partNumber++) {
-        long availableSize = options.partSize();
+        long availableSize = partSize;
         if (partCount > 0) {
           if (partNumber == partCount) {
-            availableSize = options.objectSize() - uploadedSize;
+            availableSize = objectSize - uploadedSize;
           }
         } else {
-          availableSize = getAvailableSize(data, options.partSize() + 1);
+          availableSize = getAvailableSize(data, partSize + 1);
 
-          // If availableSize is less or equal to options.partSize(), then we have reached last
+          // If availableSize is less or equal to partSize, then we have reached last
           // part.
-          if (availableSize <= options.partSize()) {
+          if (availableSize <= partSize) {
             partCount = partNumber;
           } else {
-            availableSize = options.partSize();
+            availableSize = partSize;
           }
+        }
+
+        if (partCount == 1) {
+          return putObject(
+              args.bucket(),
+              args.region(),
+              args.object(),
+              data,
+              (int) availableSize,
+              headers,
+              args.extraQueryParams());
+        }
+
+        if (uploadId == null) {
+          uploadId =
+              createMultipartUpload(
+                  args.bucket(), args.region(), args.object(), headers, args.extraQueryParams());
+          parts = new Part[ObjectWriteArgs.MAX_MULTIPART_COUNT];
         }
 
         Map<String, String> ssecHeaders = null;
         // set encryption headers in the case of SSE-C.
-        if (options.sse() != null && options.sse().type() == ServerSideEncryption.Type.SSE_C) {
-          ssecHeaders = options.sse().headers();
+        if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
+          ssecHeaders = args.sse().headers();
         }
 
         String etag =
             uploadPart(
-                bucketName,
-                objectName,
+                args.bucket(),
+                args.object(),
                 data,
                 (int) availableSize,
                 uploadId,
                 partNumber,
                 ssecHeaders);
-        totalParts[partNumber - 1] = new Part(partNumber, etag);
+        parts[partNumber - 1] = new Part(partNumber, etag);
         uploadedSize += availableSize;
       }
 
-      completeMultipartUpload(bucketName, objectName, uploadId, totalParts);
+      return completeMultipartUpload(
+          args.bucket(), args.region(), args.object(), uploadId, parts, null, null);
     } catch (RuntimeException e) {
-      abortMultipartUpload(bucketName, objectName, uploadId);
+      if (uploadId != null) {
+        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      }
       throw e;
     } catch (Exception e) {
-      abortMultipartUpload(bucketName, objectName, uploadId);
+      if (uploadId != null) {
+        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      }
       throw e;
     }
   }
@@ -5053,47 +5074,24 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #uploadObject(UploadObjectArgs)}
    */
+  @Deprecated
   public void putObject(
       String bucketName, String objectName, String filename, PutObjectOptions options)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    checkBucketName(bucketName);
-    checkObjectName(objectName);
-
-    if (filename == null || "".equals(filename)) {
-      throw new IllegalArgumentException("empty filename is not allowed");
-    }
-
-    Path filePath = Paths.get(filename);
-    if (!Files.isRegularFile(filePath)) {
-      throw new IllegalArgumentException(filename + " not a regular file");
-    }
-
-    long fileSize = Files.size(filePath);
-    if (options == null) {
-      options = new PutObjectOptions(fileSize, -1);
-    } else if (options.objectSize() != fileSize) {
-      throw new IllegalArgumentException(
-          "file size "
-              + fileSize
-              + " and object size in options "
-              + options.objectSize()
-              + " do not match");
-    }
-
-    if (options.contentType().equals("application/octet-stream")) {
-      String contentType = Files.probeContentType(filePath);
-      if (contentType != null && !contentType.equals("")) {
-        options.setContentType(contentType);
+    UploadObjectArgs.Builder builder =
+        UploadObjectArgs.builder().bucket(bucketName).object(objectName).filename(filename);
+    if (options != null) {
+      builder.sse(options.sse());
+      if (!options.contentType().equals("application/octet-stream")) {
+        builder.contentType(options.contentType());
       }
     }
-
-    try (RandomAccessFile file = new RandomAccessFile(filePath.toFile(), "r")) {
-      putObject(bucketName, objectName, options, file);
-    }
+    uploadObject(builder.build());
   }
 
   /**
@@ -5119,29 +5117,142 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #putObject(PutObjectArgs)}
    */
+  @Deprecated
   public void putObject(
       String bucketName, String objectName, InputStream stream, PutObjectOptions options)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    checkBucketName(bucketName);
-    checkObjectName(objectName);
+    putObject(
+        PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                stream, options.objectSize(), options.partSize())
+            .contentType(options.contentType())
+            .headers(options.headers())
+            .sse(options.sse())
+            .build());
+  }
 
-    if (stream == null) {
-      throw new IllegalArgumentException("InputStream must be provided");
+  /**
+   * Uploads data from a stream to an object.
+   *
+   * <pre>Example:{@code
+   * // Upload known sized input stream.
+   * minioClient.putObject(
+   *     PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+   *             inputStream, size, -1)
+   *         .contentType("video/mp4")
+   *         .build());
+   *
+   * // Upload unknown sized input stream.
+   * minioClient.putObject(
+   *     PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+   *             inputStream, -1, 10485760)
+   *         .contentType("video/mp4")
+   *         .build());
+   *
+   * // Create object ends with '/' (also called as folder or directory).
+   * minioClient.putObject(
+   *     PutObjectArgs.builder().bucket("my-bucketname").object("path/to/").stream(
+   *             new ByteArrayInputStream(new byte[] {}), 0, -1)
+   *         .build());
+   *
+   * // Upload input stream with headers and user metadata.
+   * Map<String, String> headers = new HashMap<>();
+   * headers.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
+   * Map<String, String> userMetadata = new HashMap<>();
+   * userMetadata.put("My-Project", "Project One");
+   * minioClient.putObject(
+   *     PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+   *             inputStream, size, -1)
+   *         .headers(headers)
+   *         .userMetadata(userMetadata)
+   *         .build());
+   *
+   * // Upload input stream with server-side encryption.
+   * minioClient.putObject(
+   *     PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
+   *             inputStream, size, -1)
+   *         .sse(sse)
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link PutObjectArgs} object.
+   * @return {@link ObjectWriteResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public ObjectWriteResponse putObject(PutObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+    args.validateSse(this.baseUrl);
+    return putObject(
+        args,
+        args.stream(),
+        args.objectSize(),
+        args.partSize(),
+        args.partCount(),
+        args.contentType());
+  }
+
+  /**
+   * Uploads data from a file to an object.
+   *
+   * <pre>Example:{@code
+   * // Upload an JSON file.
+   * minioClient.uploadObject(
+   *     UploadObjectArgs.builder()
+   *         .bucket("my-bucketname").object("my-objectname").filename("person.json").build());
+   *
+   * // Upload a video file.
+   * minioClient.uploadObject(
+   *     UploadObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .filename("my-video.avi")
+   *         .contentType("video/mp4")
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link UploadObjectArgs} object.
+   * @return {@link ObjectWriteResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public ObjectWriteResponse uploadObject(UploadObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    checkArgs(args);
+    args.validateSse(this.baseUrl);
+    try (RandomAccessFile file = new RandomAccessFile(args.filename(), "r")) {
+      return putObject(
+          args, file, args.objectSize(), args.partSize(), args.partCount(), args.contentType());
     }
-
-    if (options == null) {
-      throw new IllegalArgumentException("PutObjectOptions must be provided");
-    }
-
-    if (!(stream instanceof BufferedInputStream)) {
-      stream = new BufferedInputStream(stream);
-    }
-
-    putObject(bucketName, objectName, options, stream);
   }
 
   /**
@@ -7291,31 +7402,95 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   protected void completeMultipartUpload(
       String bucketName, String objectName, String uploadId, Part[] parts)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put(UPLOAD_ID, uploadId);
-    CompleteMultipartUpload completeManifest = new CompleteMultipartUpload(parts);
-    Response response = executePost(bucketName, objectName, null, queryParamMap, completeManifest);
-    String bodyContent = "";
-    try (ResponseBody body = response.body()) {
-      bodyContent = new String(body.bytes(), StandardCharsets.UTF_8);
-      bodyContent = bodyContent.trim();
-    }
+    completeMultipartUpload(bucketName, null, objectName, uploadId, parts, null, null);
+  }
 
-    // Handle if body contains error.
-    if (!bodyContent.isEmpty()) {
-      try {
-        if (Xml.validate(ErrorResponse.class, bodyContent)) {
-          ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
-          throw new ErrorResponseException(errorResponse, response);
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param uploadId Upload ID.
+   * @param parts List of parts.
+   * @param extraHeaders Extra headers.
+   * @param extraQueryParams Extra query parameters.
+   * @return {@link ObjectWriteResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ObjectWriteResponse completeMultipartUpload(
+      String bucketName,
+      String region,
+      String objectName,
+      String uploadId,
+      Part[] parts,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, ServerException,
+          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+    Multimap<String, String> queryParams = HashMultimap.create();
+    if (extraQueryParams != null) {
+      queryParams.putAll(extraQueryParams);
+    }
+    queryParams.put(UPLOAD_ID, uploadId);
+
+    try (Response response =
+        execute(
+            Method.POST,
+            bucketName,
+            objectName,
+            (region != null) ? region : getRegion(bucketName),
+            extraHeaders,
+            queryParams,
+            new CompleteMultipartUpload(parts),
+            0)) {
+      String etag = null;
+
+      String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
+      bodyContent = bodyContent.trim();
+      if (!bodyContent.isEmpty()) {
+        try {
+          if (Xml.validate(ErrorResponse.class, bodyContent)) {
+            ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
+            throw new ErrorResponseException(errorResponse, response);
+          }
+        } catch (XmlParserException e) {
+          // As it is not <Error> message, fall-back to parse CompleteMultipartUploadOutput XML.
         }
-      } catch (XmlParserException e) {
-        // As it is not <ResponseError> message, ignore this exception
+
+        try {
+          CompleteMultipartUploadOutput result =
+              Xml.unmarshal(CompleteMultipartUploadOutput.class, bodyContent);
+          etag = result.etag();
+        } catch (XmlParserException e) {
+          // As this CompleteMultipartUpload REST call succeeded, just log it.
+          Logger.getLogger(MinioClient.class.getName())
+              .warning(
+                  "S3 service returned unknown XML for CompleteMultipartUpload REST API. "
+                      + bodyContent);
+        }
       }
+
+      return new ObjectWriteResponse(response.headers(), etag, response.header("x-amz-version-id"));
     }
   }
 
@@ -7340,24 +7515,77 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   protected String createMultipartUpload(
       String bucketName, String objectName, Map<String, String> headerMap)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+    return createMultipartUpload(
+        bucketName,
+        null,
+        objectName,
+        (headerMap != null) ? Multimaps.forMap(headerMap) : null,
+        null);
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html">CreateMultipartUpload
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param headers Request headers.
+   * @return String - Contains upload ID.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected String createMultipartUpload(
+      String bucketName,
+      String region,
+      String objectName,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, ServerException,
+          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+    Multimap<String, String> queryParams = HashMultimap.create();
+    if (extraQueryParams != null) {
+      queryParams.putAll(extraQueryParams);
+    }
+    queryParams.put("uploads", "");
+
+    Multimap<String, String> headersCopy = HashMultimap.create();
+    if (headers != null) {
+      headersCopy.putAll(headers);
+    }
     // set content type if not set already
-    if ((headerMap != null) && (headerMap.get("Content-Type") == null)) {
-      headerMap.put("Content-Type", "application/octet-stream");
+    if (!headersCopy.containsKey("Content-Type")) {
+      headersCopy.put("Content-Type", "application/octet-stream");
     }
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("uploads", "");
-
-    Response response = executePost(bucketName, objectName, headerMap, queryParamMap, "");
-
-    try (ResponseBody body = response.body()) {
+    try (Response response =
+        execute(
+            Method.POST,
+            bucketName,
+            objectName,
+            (region != null) ? region : getRegion(bucketName),
+            headersCopy,
+            queryParams,
+            null,
+            0)) {
       InitiateMultipartUploadResult result =
-          Xml.unmarshal(InitiateMultipartUploadResult.class, body.charStream());
+          Xml.unmarshal(InitiateMultipartUploadResult.class, response.body().charStream());
       return result.uploadId();
     }
   }
@@ -7505,8 +7733,55 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   protected String putObject(
       String bucketName, String objectName, Object data, int length, Map<String, String> headerMap)
+      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
+          InsufficientDataException, IOException, InvalidKeyException, ServerException,
+          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
+    ObjectWriteResponse reply =
+        putObject(
+            bucketName,
+            null,
+            objectName,
+            data,
+            length,
+            (headerMap != null) ? Multimaps.forMap(headerMap) : null,
+            null);
+    return reply.etag();
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">PutObject S3
+   * API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
+   * @param length Length of object data.
+   * @param headers Additional headers.
+   * @param extraQueryParams Additional query parameters if any.
+   * @return {@link ObjectWriteResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ObjectWriteResponse putObject(
+      String bucketName,
+      String region,
+      String objectName,
+      Object data,
+      int length,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
@@ -7518,9 +7793,21 @@ public class MinioClient {
           "data must be BufferedInputStream, RandomAccessFile, byte[] or String");
     }
 
-    Response response = executePut(bucketName, objectName, headerMap, null, data, length);
-    response.close();
-    return response.header("ETag").replaceAll("\"", "");
+    try (Response response =
+        execute(
+            Method.PUT,
+            bucketName,
+            objectName,
+            (region != null) ? region : getRegion(bucketName),
+            headers,
+            extraQueryParams,
+            data,
+            length)) {
+      return new ObjectWriteResponse(
+          response.headers(),
+          response.header("ETag").replaceAll("\"", ""),
+          response.header("x-amz-version-id"));
+    }
   }
 
   /**

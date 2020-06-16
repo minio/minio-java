@@ -15,7 +15,7 @@
  */
 
 import io.minio.MinioClient;
-import io.minio.PutObjectOptions;
+import io.minio.PutObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -48,7 +48,10 @@ public class PutObjectProgressBar {
     InputStream pis =
         new BufferedInputStream(
             new ProgressStream("Uploading... ", ProgressBarStyle.ASCII, new FileInputStream(file)));
-    minioClient.putObject(bucketName, objectName, pis, new PutObjectOptions(pis.available(), -1));
+    minioClient.putObject(
+        PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                pis, pis.available(), -1)
+            .build());
     pis.close();
     System.out.println("my-objectname is uploaded successfully");
   }

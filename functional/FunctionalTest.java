@@ -18,6 +18,7 @@
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 
+import com.google.common.io.BaseEncoding;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.BucketExistsArgs;
 import io.minio.CloseableIterator;
@@ -56,7 +57,7 @@ import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PostPolicy;
-import io.minio.PutObjectOptions;
+import io.minio.PutObjectArgs;
 import io.minio.RemoveBucketArgs;
 import io.minio.RemoveIncompleteUploadArgs;
 import io.minio.RemoveObjectArgs;
@@ -76,6 +77,7 @@ import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
 import io.minio.Time;
+import io.minio.UploadObjectArgs;
 import io.minio.Xml;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -115,6 +117,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -155,6 +160,7 @@ public class FunctionalTest {
   private static final String nullContentType = null;
   private static String bucketName = getRandomName();
   private static boolean mintEnv = false;
+  private static boolean isQuickTest = false;
   private static Path dataFile1Kb;
   private static Path dataFile6Mb;
   private static String endpoint;
@@ -162,9 +168,12 @@ public class FunctionalTest {
   private static String secretKey;
   private static String region;
   private static boolean isSecureEndpoint = false;
-  private static String kmsKeyName = null;
   private static String sqsArn = null;
   private static MinioClient client = null;
+
+  private static ServerSideEncryptionCustomerKey ssec = null;
+  private static ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+  private static ServerSideEncryption sseKms = null;
 
   static {
     String binaryName = "minio";
@@ -173,6 +182,14 @@ public class FunctionalTest {
     }
 
     MINIO_BINARY = binaryName;
+
+    try {
+      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+      keyGen.init(256);
+      ssec = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+    } catch (InvalidKeyException | NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /** Do no-op. */
@@ -330,6 +347,57 @@ public class FunctionalTest {
     }
   }
 
+  public static String getSha256Sum(InputStream stream, int len) throws Exception {
+    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
+
+    // 16KiB buffer for optimization
+    byte[] buf = new byte[16384];
+    int bytesToRead = buf.length;
+    int bytesRead = 0;
+    int totalBytesRead = 0;
+    while (totalBytesRead < len) {
+      if ((len - totalBytesRead) < bytesToRead) {
+        bytesToRead = len - totalBytesRead;
+      }
+
+      bytesRead = stream.read(buf, 0, bytesToRead);
+      if (bytesRead < 0) {
+        // reached EOF
+        throw new Exception("data length mismatch. expected: " + len + ", got: " + totalBytesRead);
+      }
+
+      if (bytesRead > 0) {
+        sha256Digest.update(buf, 0, bytesRead);
+        totalBytesRead += bytesRead;
+      }
+    }
+
+    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
+  }
+
+  public static void skipStream(InputStream stream, int len) throws Exception {
+    // 16KiB buffer for optimization
+    byte[] buf = new byte[16384];
+    int bytesToRead = buf.length;
+    int bytesRead = 0;
+    int totalBytesRead = 0;
+    while (totalBytesRead < len) {
+      if ((len - totalBytesRead) < bytesToRead) {
+        bytesToRead = len - totalBytesRead;
+      }
+
+      bytesRead = stream.read(buf, 0, bytesToRead);
+      if (bytesRead < 0) {
+        // reached EOF
+        throw new Exception("insufficient data. expected: " + len + ", got: " + totalBytesRead);
+      }
+
+      if (bytesRead > 0) {
+        totalBytesRead += bytesRead;
+      }
+    }
+  }
+
   private static void handleException(String methodName, String args, long startTime, Exception e)
       throws Exception {
     if (e instanceof ErrorResponseException) {
@@ -339,12 +407,17 @@ public class FunctionalTest {
       }
     }
 
-    mintFailedLog(
-        methodName,
-        args,
-        startTime,
-        null,
-        e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+    if (mintEnv) {
+      mintFailedLog(
+          methodName,
+          args,
+          startTime,
+          null,
+          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+    } else {
+      System.out.println("<FAILED> " + methodName + " " + ((args == null) ? "" : args));
+    }
+
     throw e;
   }
 
@@ -617,526 +690,244 @@ public class FunctionalTest {
     }
   }
 
-  /**
-   * Test: putObject(String bucketName, String objectName, String filename, PutObjectOptions
-   * options)
-   */
-  public static void putObject_test1() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, String filename, PutObjectOptions options)";
+  public static void testUploadObject(String testTags, String filename, String contentType)
+      throws Exception {
+    String methodName = "uploadObject()";
+    long startTime = System.currentTimeMillis();
+    try {
+      try {
+        UploadObjectArgs.Builder builder =
+            UploadObjectArgs.builder().bucket(bucketName).object(filename).filename(filename);
+        if (contentType != null) {
+          builder.contentType(contentType);
+        }
+        client.uploadObject(builder.build());
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        Files.delete(Paths.get(filename));
+        client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
+  }
 
+  /** Test: uploadObject() [single upload] */
+  public static void uploadObject_test() throws Exception {
+    String methodName = "uploadObject()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
+    testUploadObject("[single upload]", createFile1Kb(), null);
+
+    if (isQuickTest) {
+      return;
+    }
+
+    testUploadObject("[multi-part upload]", createFile6Mb(), null);
+    testUploadObject("[custom content-type]", createFile1Kb(), customContentType);
+  }
+
+  public static void testPutObject(String testTags, PutObjectArgs args, ErrorCode errorCode)
+      throws Exception {
+    String methodName = "putObject()";
     long startTime = System.currentTimeMillis();
     try {
-      String filename = createFile1Kb();
-      client.putObject(bucketName, filename, filename, null);
-      Files.delete(Paths.get(filename));
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
-      mintSuccessLog(methodName, "filename: 1KB", startTime);
+      try {
+        client.putObject(args);
+      } catch (ErrorResponseException e) {
+        if (errorCode == null || e.errorResponse().errorCode() != errorCode) {
+          throw e;
+        }
+      }
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+      mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "filename: 1KB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /**
-   * Test: multipart: putObject(String bucketName, String objectName, String filename,
-   * PutObjectOptions options)
-   */
-  public static void putObject_test2() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, String filename, PutObjectOptions options)";
-
-    if (!mintEnv) {
-      System.out.println("Test: multipart: " + methodName);
-    }
-
+  public static void testThreadedPutObject() throws Exception {
+    String methodName = "putObject()";
+    String testTags = "[threaded]";
     long startTime = System.currentTimeMillis();
     try {
-      String filename = createFile6Mb();
-      client.putObject(bucketName, filename, filename, new PutObjectOptions(6 * MB, 5 * MB));
-      Files.delete(Paths.get(filename));
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
-      mintSuccessLog(methodName, "filename: 6MB", startTime);
+      int count = 7;
+      Thread[] threads = new Thread[count];
+
+      for (int i = 0; i < count; i++) {
+        threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile6Mb()));
+      }
+
+      for (int i = 0; i < count; i++) {
+        threads[i].start();
+      }
+
+      // Waiting for threads to complete.
+      for (int i = 0; i < count; i++) {
+        threads[i].join();
+      }
+
+      // All threads are completed.
+      mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "filename: 6MB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /**
-   * Test: with content-type: putObject(String bucketName, String objectName, String filename,
-   * PutObjectOptions options)
-   */
-  public static void putObject_test3() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, String filename, PutObjectOptions options)";
-
-    if (!mintEnv) {
-      System.out.println("Test: with content-type: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String filename = createFile1Kb();
-      PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-      options.setContentType(customContentType);
-      client.putObject(bucketName, filename, filename, options);
-      Files.delete(Paths.get(filename));
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
-      mintSuccessLog(methodName, "contentType: " + customContentType, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "contentType: " + customContentType,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions
-   * options)
-   */
-  public static void putObject_test4() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
-
+  public static void putObject_test() throws Exception {
+    String methodName = "putObject()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setContentType(customContentType);
-        client.putObject(bucketName, objectName, is, options);
-      }
+    testPutObject(
+        "[single upload]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .contentType(customContentType)
+            .build(),
+        null);
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "size: 1 KB, objectName: " + customContentType, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "size: 1 KB, objectName: " + customContentType,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: object name with multiple path segments: putObject(String bucketName, String objectName,
-   * InputStream stream, PutObjectOptions options)
-   */
-  public static void putObject_test5() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
-
-    if (!mintEnv) {
-      System.out.println("Test: object name with path segments: " + methodName);
+    if (isQuickTest) {
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = "path/to/" + getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setContentType(customContentType);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "size: 1 KB, contentType: " + customContentType, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "size: 1 KB, contentType: " + customContentType,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
+    testPutObject(
+        "[multi-part upload]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(11 * MB), 11 * MB, -1)
+            .contentType(customContentType)
+            .build(),
+        null);
 
-  /**
-   * Test: unknown size stream: putObject(String bucketName, String objectName, InputStream stream,
-   * PutObjectOptions options)
-   */
-  public static void putObject_test6() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+    testPutObject(
+        "[object name with path segments]",
+        PutObjectArgs.builder().bucket(bucketName).object("path/to/" + getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .contentType(customContentType)
+            .build(),
+        null);
 
-    if (!mintEnv) {
-      System.out.println("Test: unknown size stream: " + methodName);
-    }
+    testPutObject(
+        "[zero sized object]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(0), 0, -1)
+            .build(),
+        null);
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(3 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(is.available(), -1);
-        options.setContentType(customContentType);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "size: -1, contentType: " + customContentType, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "size: -1, contentType: " + customContentType,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
+    testPutObject(
+        "[object name ends with '/']",
+        PutObjectArgs.builder().bucket(bucketName).object("path/to/" + getRandomName() + "/")
+            .stream(new ContentInputStream(0), 0, -1)
+            .contentType(customContentType)
+            .build(),
+        null);
 
-  /**
-   * Test: multipart unknown size stream: putObject(String bucketName, String objectName,
-   * InputStream stream, PutObjectOptions options)
-   */
-  public static void putObject_test7() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+    testPutObject(
+        "[unknown stream size, single upload]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), -1, PutObjectArgs.MIN_MULTIPART_SIZE)
+            .contentType(customContentType)
+            .build(),
+        null);
 
-    if (!mintEnv) {
-      System.out.println("Test: multipart unknown size stream: " + methodName);
-    }
+    testPutObject(
+        "[unknown stream size, multi-part upload]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(11 * MB), -1, PutObjectArgs.MIN_MULTIPART_SIZE)
+            .contentType(customContentType)
+            .build(),
+        null);
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(11 * MB)) {
-        PutObjectOptions options = new PutObjectOptions(is.available(), -1);
-        options.setContentType(customContentType);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "size: -1, contentType: " + customContentType, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "size: -1, contentType: " + customContentType,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
+    Map<String, String> userMetadata = new HashMap<>();
+    userMetadata.put("My-Project", "Project One");
 
-  /**
-   * Test: with user metadata: putObject(String bucketName, String objectName, InputStream stream,
-   * PutObjectOptions options).
-   */
-  public static void putObject_test8() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+    testPutObject(
+        "[user metadata]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .userMetadata(userMetadata)
+            .build(),
+        null);
 
-    if (!mintEnv) {
-      System.out.println("Test: with user metadata: " + methodName);
-    }
+    Map<String, String> headers = new HashMap<>();
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("X-Amz-Meta-mykey", "myvalue");
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setHeaders(headerMap);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "X-Amz-Meta-mykey: myvalue", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "X-Amz-Meta-mykey: myvalue",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
+    headers.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
+    testPutObject(
+        "[storage-class=REDUCED_REDUNDANCY]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .headers(headers)
+            .build(),
+        null);
 
-  /**
-   * Test: with storage class REDUCED_REDUNDANCY: putObject(String bucketName, String objectName,
-   * InputStream stream, PutObjectOptions options).
-   */
-  public static void putObject_test9() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+    headers.put("X-Amz-Storage-Class", "STANDARD");
+    testPutObject(
+        "[storage-class=STANDARD]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .headers(headers)
+            .build(),
+        null);
 
-    if (!mintEnv) {
-      System.out.println("Test: with storage class REDUCED_REDUNDANCY: " + methodName);
+    headers.put("X-Amz-Storage-Class", "INVALID");
+    testPutObject(
+        "[storage-class=INVALID negative case]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .headers(headers)
+            .build(),
+        ErrorCode.INVALID_STORAGE_CLASS);
+
+    testPutObject(
+        "[SSE-S3]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .contentType(customContentType)
+            .sse(sseS3)
+            .build(),
+        null);
+
+    testThreadedPutObject();
+
+    if (!isSecureEndpoint) {
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("X-Amz-Storage-Class", "REDUCED_REDUNDANCY");
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setHeaders(headerMap);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "X-Amz-Storage-Class: REDUCED_REDUNDANCY", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "X-Amz-Storage-Class: REDUCED_REDUNDANCY",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
+    testPutObject(
+        "[SSE-C single upload]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .contentType(customContentType)
+            .sse(ssec)
+            .build(),
+        null);
 
-  /**
-   * Test: with storage class STANDARD: putObject(String bucketName, String objectName, InputStream
-   * stream, PutObjectOptions options).
-   */
-  public static void putObject_test10() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
+    testPutObject(
+        "[SSE-C multi-part upload]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(11 * MB), 11 * MB, -1)
+            .contentType(customContentType)
+            .sse(ssec)
+            .build(),
+        null);
 
-    if (!mintEnv) {
-      System.out.println("Test: with storage class STANDARD: " + methodName);
+    if (sseKms == null) {
+      mintIgnoredLog(methodName, null, System.currentTimeMillis());
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("X-Amz-Storage-Class", "STANDARD");
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setHeaders(headerMap);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "X-Amz-Storage-Class: STANDARD", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "X-Amz-Storage-Class: STANDARD",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: with storage class INVALID: putObject(String bucketName, String objectName, InputStream
-   * stream, PutObjectOptions options).
-   */
-  public static void putObject_test11() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
-
-    if (!mintEnv) {
-      System.out.println("Test: with storage class INVALID: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("X-Amz-Storage-Class", "INVALID");
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setHeaders(headerMap);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-    } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.INVALID_STORAGE_CLASS) {
-        mintFailedLog(
-            methodName,
-            "X-Amz-Storage-Class: INVALID",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "X-Amz-Storage-Class: INVALID",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-    mintSuccessLog(methodName, "X-Amz-Storage-Class: INVALID", startTime);
-  }
-
-  /**
-   * Test: with SSE_C: putObject(String bucketName, String objectName, InputStream stream,
-   * PutObjectOptions options).
-   */
-  public static void putObject_test12() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
-    if (!mintEnv) {
-      System.out.println("Test: with SSE_C: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "Server-side encryption: SSE_C", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "Server-side encryption: SSE_C",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: multipart with SSE_C: putObject(String bucketName, String objectName, InputStream stream,
-   * PutObjectOptions options).
-   */
-  public static void putObject_test13() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
-    if (!mintEnv) {
-      System.out.println("Test: multipart with SSE_C: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryption sse = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(11 * MB)) {
-        PutObjectOptions options = new PutObjectOptions(-1, 5 * MB);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "Size: 11 MB, Server-side encryption: SSE_C", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "Size: 11 MB, Server-side encryption: SSE_C",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: with SSE_S3: putObject(String bucketName, String objectName, InputStream stream,
-   * PutObjectOptions options).
-   */
-  public static void putObject_test14() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
-    if (!mintEnv) {
-      System.out.println("Test: with SSE_S3: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-
-    ServerSideEncryption sse = ServerSideEncryption.atRest();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "Server-side encryption: SSE_S3", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "Server-side encryption: SSE_S3",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /**
-   * Test: with SSE_KMS: putObject(String bucketName, String objectName, InputStream stream,
-   * PutObjectOptions options).
-   */
-  public static void putObject_test15() throws Exception {
-    String methodName =
-        "putObject(String bucketName, String objectName, InputStream stream, PutObjectOptions options)";
-    if (!mintEnv) {
-      System.out.println("Test: with SSE_KMS: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-
-    if (System.getenv("MINT_KEY_ID").equals("")) {
-      mintIgnoredLog(methodName, "Server-side encryption: SSE_KMS", startTime);
-    }
-
-    Map<String, String> myContext = new HashMap<>();
-    myContext.put("key1", "value1");
-    ServerSideEncryption sse = ServerSideEncryption.withManagedKeys("keyId", myContext);
-
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, "Server-side encryption: SSE_KMS", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          methodName,
-          "Server-side encryption: SSE_KMS",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+    testPutObject(
+        "[SSE-KMS]",
+        PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .contentType(customContentType)
+            .sse(sseKms)
+            .build(),
+        null);
   }
 
   /** Test: statObject(StatObjectArgs args). */
@@ -1149,14 +940,13 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
       headerMap.put("my-custom-data", "foo");
-      try (final InputStream is = new ContentInputStream(1)) {
-        PutObjectOptions options = new PutObjectOptions(1, -1);
-        options.setHeaders(headerMap);
-        options.setContentType(customContentType);
-        client.putObject(bucketName, objectName, is, options);
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1), 1, -1)
+              .contentType(customContentType)
+              .userMetadata(headerMap)
+              .build());
 
       ObjectStat objectStat =
           client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
@@ -1207,21 +997,16 @@ public class FunctionalTest {
 
     try {
       String objectName = getRandomName();
-      // Generate a new 256 bit AES key - This key must be remembered by the client.
-      KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-      keyGen.init(256);
-      ServerSideEncryptionCustomerKey sse =
-          ServerSideEncryption.withCustomerKey(keyGen.generateKey());
 
-      try (final InputStream is = new ContentInputStream(1)) {
-        PutObjectOptions options = new PutObjectOptions(1, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1), 1, -1)
+              .sse(ssec)
+              .build());
 
       ObjectStat objectStat =
           client.statObject(
-              StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(sse).build());
+              StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(ssec).build());
 
       if (!(objectName.equals(objectStat.name())
           && (objectStat.length() == 1)
@@ -1298,14 +1083,13 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
       Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("Content-Type", customContentType);
       headerMap.put("my-custom-data", "foo");
-      try (final InputStream is = new ContentInputStream(1)) {
-        PutObjectOptions options = new PutObjectOptions(1, -1);
-        options.setHeaders(headerMap);
-        options.setContentType(customContentType);
-        client.putObject(bucketName, objectName, is, options);
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1), 1, -1)
+              .contentType(customContentType)
+              .userMetadata(headerMap)
+              .build());
 
       HashMap<String, String> headers = new HashMap<>();
       headers.put("x-amz-request-payer", "requester");
@@ -1353,316 +1137,233 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getObject(String bucketName, String objectName). */
-  public static void getObject_test1() throws Exception {
-    String methodName = "getObject(GetObjectArgs) [bucketName, objectName]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
+  public static void testGetObject(
+      String testTags,
+      long objectSize,
+      ServerSideEncryption sse,
+      GetObjectArgs args,
+      int length,
+      String sha256sum)
+      throws Exception {
+    String methodName = "getObject()";
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
+      PutObjectArgs.Builder builder =
+          PutObjectArgs.builder().bucket(args.bucket()).object(args.object()).stream(
+              new ContentInputStream(objectSize), objectSize, -1);
+      if (sse != null) {
+        builder.sse(sse);
       }
+      client.putObject(builder.build());
 
-      client
-          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
-          .close();
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: getObject(String bucketName, String objectName, long offset). */
-  public static void getObject_test2() throws Exception {
-    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, offset]";
-    String args = "offset: 1000";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      client
-          .getObject(
-              GetObjectArgs.builder().bucket(bucketName).object(objectName).offset(1000L).build())
-          .close();
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, args, startTime);
-    } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
-    }
-  }
-
-  /** Test: getObject(String bucketName, String objectName, long offset, Long length). */
-  public static void getObject_test3() throws Exception {
-    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, offset, length]";
-    String args = "offset: 1000, length: 64 KB";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-    long startTime = System.currentTimeMillis();
-
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(6 * MB, -1));
-      }
-
-      client
-          .getObject(
-              GetObjectArgs.builder()
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .offset(1000L)
-                  .length(64 * 1024L)
-                  .build())
-          .close();
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, args, startTime);
-    } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
-    }
-  }
-
-  /** Test: getObject(String bucketName, String objectName, String filename). */
-  public static void getObject_test4() throws Exception {
-    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, fileName]";
-    String args = "offset: 1000, length: 64 KB";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      client.downloadObject(
-          DownloadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(objectName)
-              .fileName(objectName + ".downloaded")
-              .build());
-      Files.delete(Paths.get(objectName + ".downloaded"));
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-
-      mintSuccessLog(methodName, args, startTime);
-    } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
-    }
-  }
-
-  /**
-   * Test: getObject(String bucketName, String objectName, String filename). where objectName has
-   * multiple path segments.
-   */
-  public static void getObject_test5() throws Exception {
-    String methodName = "downloadObject(GetObjectArgs) [bucketName, objectName, fileName]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-    long startTime = System.currentTimeMillis();
-    String baseObjectName = getRandomName();
-    String objectName = "path/to/" + baseObjectName;
-    String args = "objectName: " + objectName;
-    try {
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
-
-      client.downloadObject(
-          DownloadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(objectName)
-              .fileName(baseObjectName + ".downloaded")
-              .build());
-      Files.delete(Paths.get(baseObjectName + ".downloaded"));
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-
-      mintSuccessLog(methodName, args, startTime);
-    } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
-    }
-  }
-
-  /** Test: getObject(String bucketName, String objectName) zero size object. */
-  public static void getObject_test6() throws Exception {
-    String methodName =
-        "getObject(GetObjectArgs) [bucketName, objectName, fileName] zero size object";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(0)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(0, -1));
-      }
-
-      client
-          .getObject(GetObjectArgs.builder().bucket(bucketName).object(objectName).build())
-          .close();
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /**
-   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse). To test
-   * getObject when object is put using SSE_C.
-   */
-  public static void getObject_test7() throws Exception {
-    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, sse] using SSE_C.";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    // Generate a new 256 bit AES key - This key must be remembered by the client.
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryptionCustomerKey sse =
-        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-
-    try {
-      String objectName = getRandomName();
-      String putString;
-      int bytes_read_put;
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setSse(sse);
-        client.putObject(bucketName, objectName, is, options);
-        byte[] putbyteArray = new byte[is.available()];
-        bytes_read_put = is.read(putbyteArray);
-        putString = new String(putbyteArray, StandardCharsets.UTF_8);
-      }
-
-      InputStream stream =
-          client.getObject(
-              GetObjectArgs.builder().bucket(bucketName).object(objectName).ssec(sse).build());
-      byte[] getbyteArray = new byte[stream.available()];
-      int bytes_read_get = stream.read(getbyteArray);
-      String getString = new String(getbyteArray, StandardCharsets.UTF_8);
-      stream.close();
-
-      // Compare if contents received are same as the initial uploaded object.
-      if ((!putString.equals(getString)) || (bytes_read_put != bytes_read_get)) {
-        throw new Exception("Contents received from getObject doesn't match initial contents.");
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /**
-   * Test: getObject(String bucketName, String objectName, long offset, Long length) with offset=0.
-   */
-  public static void getObject_test8() throws Exception {
-    String methodName = "getObject(GetObjectArgs) [bucketName, objectName, offset, length]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " with offset=0");
-    }
-
-    final long startTime = System.currentTimeMillis();
-    final int fullLength = 1024;
-    final int partialLength = 256;
-    final long offset = 0L;
-    final String objectName = getRandomName();
-    String args = String.format("offset: %d, length: %d bytes", offset, partialLength);
-    try {
-      try (final InputStream is = new ContentInputStream(fullLength)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(fullLength, -1));
-      }
-
-      try (final InputStream partialObjectStream =
-          client.getObject(
-              GetObjectArgs.builder()
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .offset(offset)
-                  .length(Long.valueOf(partialLength))
-                  .build())) {
-        byte[] result = new byte[fullLength];
-        final int read = partialObjectStream.read(result);
-        result = Arrays.copyOf(result, read);
-        if (result.length != partialLength) {
-          throw new Exception(
-              String.format(
-                  "Expecting only the first %d bytes from partial getObject request; received %d bytes instead.",
-                  partialLength, read));
+      try (InputStream is = client.getObject(args)) {
+        String checksum = getSha256Sum(is, length);
+        if (!checksum.equals(sha256sum)) {
+          throw new Exception("checksum mismatch. expected: " + sha256sum + ", got: " + checksum);
         }
       }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, args, startTime);
-    } catch (final Exception e) {
-      handleException(methodName, args, startTime, e);
+      mintSuccessLog(methodName, testTags, startTime);
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    } finally {
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
     }
   }
 
-  /**
-   * Test: getObject(String bucketName, String objectName, ServerSideEncryption sse, String
-   * fileName).
-   */
-  public static void getObject_test9() throws Exception {
-    String methodName = "downloadObject(GetObjectArgs) [bucketName, objectName, sse, fileName]";
-    String args = "size: 1 KB";
+  public static void getObject_test() throws Exception {
+    String methodName = "getObject()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
-    long startTime = System.currentTimeMillis();
-    // Generate a new 256 bit AES key - This key must be remembered by the client.
-    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-    keyGen.init(256);
-    ServerSideEncryptionCustomerKey sse =
-        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
-    try {
-      String objectName = getRandomName();
-      String filename = createFile1Kb();
-      PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-      options.setSse(sse);
-      client.putObject(bucketName, objectName, filename, options);
-      client.downloadObject(
-          DownloadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(objectName)
-              .ssec(sse)
-              .fileName(objectName + ".downloaded")
-              .build());
-      Files.delete(Paths.get(objectName + ".downloaded"));
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+    testGetObject(
+        "[single upload]",
+        1 * KB,
+        null,
+        GetObjectArgs.builder().bucket(bucketName).object(getRandomName()).build(),
+        1 * KB,
+        getSha256Sum(new ContentInputStream(1 * KB), 1 * KB));
 
-      mintSuccessLog(methodName, args, startTime);
-    } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
+    if (isQuickTest) {
+      return;
     }
+
+    InputStream cis = new ContentInputStream(1 * KB);
+    skipStream(cis, 1000);
+    testGetObject(
+        "[single upload, offset]",
+        1 * KB,
+        null,
+        GetObjectArgs.builder().bucket(bucketName).object(getRandomName()).offset(1000L).build(),
+        1 * KB - 1000,
+        getSha256Sum(cis, 1 * KB - 1000));
+
+    testGetObject(
+        "[single upload, length]",
+        1 * KB,
+        null,
+        GetObjectArgs.builder().bucket(bucketName).object(getRandomName()).length(256L).build(),
+        256,
+        getSha256Sum(new ContentInputStream(1 * KB), 256));
+
+    cis = new ContentInputStream(1 * KB);
+    skipStream(cis, 1000);
+    testGetObject(
+        "[single upload, offset, length]",
+        1 * KB,
+        null,
+        GetObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .offset(1000L)
+            .length(24L)
+            .build(),
+        24,
+        getSha256Sum(cis, 24));
+
+    cis = new ContentInputStream(1 * KB);
+    skipStream(cis, 1000);
+    testGetObject(
+        "[single upload, offset, length beyond available]",
+        1 * KB,
+        null,
+        GetObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .offset(1000L)
+            .length(30L)
+            .build(),
+        24,
+        getSha256Sum(cis, 24));
+
+    testGetObject(
+        "[multi-part upload]",
+        6 * MB,
+        null,
+        GetObjectArgs.builder().bucket(bucketName).object(getRandomName()).build(),
+        6 * MB,
+        getSha256Sum(new ContentInputStream(6 * MB), 6 * MB));
+
+    cis = new ContentInputStream(6 * MB);
+    skipStream(cis, 1000);
+    testGetObject(
+        "[multi-part upload, offset, length]",
+        6 * MB,
+        null,
+        GetObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .offset(1000L)
+            .length(64 * 1024L)
+            .build(),
+        64 * KB,
+        getSha256Sum(cis, 64 * 1024));
+
+    cis = new ContentInputStream(0);
+    testGetObject(
+        "[zero sized object]",
+        0,
+        null,
+        GetObjectArgs.builder().bucket(bucketName).object(getRandomName()).build(),
+        0,
+        getSha256Sum(cis, 0));
+
+    if (!isSecureEndpoint) {
+      return;
+    }
+
+    testGetObject(
+        "[single upload, SSE-C]",
+        1 * KB,
+        ssec,
+        GetObjectArgs.builder().bucket(bucketName).object(getRandomName()).ssec(ssec).build(),
+        1 * KB,
+        getSha256Sum(new ContentInputStream(1 * KB), 1 * KB));
+  }
+
+  public static void testDownloadObject(
+      String testTags, int objectSize, ServerSideEncryption sse, DownloadObjectArgs args)
+      throws Exception {
+    String methodName = "downloadObject()";
+    long startTime = System.currentTimeMillis();
+    try {
+      PutObjectArgs.Builder builder =
+          PutObjectArgs.builder().bucket(args.bucket()).object(args.object()).stream(
+              new ContentInputStream(objectSize), objectSize, -1);
+      if (sse != null) {
+        builder.sse(sse);
+      }
+      client.putObject(builder.build());
+      client.downloadObject(args);
+      Files.delete(Paths.get(args.filename()));
+      mintSuccessLog(methodName, testTags, startTime);
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    } finally {
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+    }
+  }
+
+  public static void downloadObject_test() throws Exception {
+    String methodName = "downloadObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    String objectName = getRandomName();
+    testDownloadObject(
+        "[single upload]",
+        1 * KB,
+        null,
+        DownloadObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .filename(objectName + ".downloaded")
+            .build());
+
+    if (isQuickTest) {
+      return;
+    }
+
+    String baseName = getRandomName();
+    objectName = "path/to/" + baseName;
+    testDownloadObject(
+        "[single upload with multiple path segments]",
+        1 * KB,
+        null,
+        DownloadObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .filename(baseName + ".downloaded")
+            .build());
+
+    if (!isSecureEndpoint) {
+      return;
+    }
+
+    objectName = getRandomName();
+    testDownloadObject(
+        "[single upload, SSE-C]",
+        1 * KB,
+        ssec,
+        DownloadObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .ssec(ssec)
+            .filename(objectName + ".downloaded")
+            .build());
   }
 
   public static String[] createObjects(String bucketName, int count) throws Exception {
     String[] objectNames = new String[count];
     for (int i = 0; i < count; i++) {
       objectNames[i] = getRandomName();
-      try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectNames[i], is, new PutObjectOptions(1, -1));
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectNames[i]).stream(
+                  new ContentInputStream(1), 1, -1)
+              .build());
     }
 
     return objectNames;
@@ -1782,9 +1483,10 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1, -1));
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1), 1, -1)
+              .build());
 
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       mintSuccessLog("removeObject(String bucketName, String objectName)", null, startTime);
@@ -1840,8 +1542,11 @@ public class FunctionalTest {
     try {
       String objectName = getRandomName();
 
-      try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
+      try {
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(6 * MB), 9 * MB, -1)
+                .build());
       } catch (ErrorResponseException e) {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
@@ -1877,8 +1582,11 @@ public class FunctionalTest {
     String mintArgs = "prefix :minio";
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
+      try {
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(6 * MB), 9 * MB, -1)
+                .build());
       } catch (ErrorResponseException e) {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
@@ -1919,8 +1627,11 @@ public class FunctionalTest {
     String mintArgs = "prefix: minio, recursive: true";
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
+      try {
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(6 * MB), 9 * MB, -1)
+                .build());
       } catch (ErrorResponseException e) {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
@@ -1961,8 +1672,11 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(6 * MB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(9 * MB, -1));
+      try {
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(6 * MB), 9 * MB, -1)
+                .build());
       } catch (ErrorResponseException e) {
         if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
           throw e;
@@ -1999,9 +1713,10 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1 * KB), 1 * KB, -1)
+              .build());
 
       byte[] inBytes;
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -2039,9 +1754,10 @@ public class FunctionalTest {
     String mintArgs = "expiry: 3600 sec";
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1 * KB), 1 * KB, -1)
+              .build());
 
       byte[] inBytes;
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -2079,9 +1795,10 @@ public class FunctionalTest {
         "presigned get object expiry : 3600 sec, reqParams : response-content-type as application/json";
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1 * KB), 1 * KB, -1)
+              .build());
 
       byte[] inBytes;
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -2178,9 +1895,10 @@ public class FunctionalTest {
     String mintArgs = "expiry: 2 TimeUnit.DAYS";
     try {
       String objectName = getRandomName();
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-      }
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  new ContentInputStream(1 * KB), 1 * KB, -1)
+              .build());
 
       byte[] inBytes;
       try (final InputStream is = new ContentInputStream(1 * KB)) {
@@ -2263,45 +1981,6 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: PutObject(): do put object using multi-threaded way in parallel. */
-  public static void threadedPutObject() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: threadedPutObject");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      Thread[] threads = new Thread[7];
-
-      for (int i = 0; i < 7; i++) {
-        threads[i] = new Thread(new PutObjectRunnable(client, bucketName, createFile6Mb(), 6 * MB));
-      }
-
-      for (int i = 0; i < 7; i++) {
-        threads[i].start();
-      }
-
-      // Waiting for threads to complete.
-      for (int i = 0; i < 7; i++) {
-        threads[i].join();
-      }
-
-      // All threads are completed.
-      mintSuccessLog(
-          "putObject(String bucketName, String objectName, String filename)",
-          "filename: threaded6MB",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "putObject(String bucketName, String objectName, String filename)",
-          "filename: threaded6MB",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
   public static void testCopyObject(
       String testTags, ServerSideEncryption sse, CopyObjectArgs args, boolean negativeCase)
       throws Exception {
@@ -2316,11 +1995,13 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(args.srcBucket()).build());
       try {
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
+        PutObjectArgs.Builder builder =
+            PutObjectArgs.builder().bucket(args.srcBucket()).object(srcObject).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1);
         if (sse != null) {
-          options.setSse(sse);
+          builder.sse(sse);
         }
-        client.putObject(args.srcBucket(), srcObject, new ContentInputStream(1 * KB), options);
+        client.putObject(builder.build());
 
         if (negativeCase) {
           try {
@@ -2400,10 +2081,9 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(srcBucketName).build());
       try {
         client.putObject(
-            srcBucketName,
-            srcObjectName,
-            new ContentInputStream(1 * KB),
-            new PutObjectOptions(1 * KB, -1));
+            PutObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
         ObjectStat stat =
             client.statObject(
                 StatObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).build());
@@ -2493,10 +2173,9 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(srcBucketName).build());
       try {
         client.putObject(
-            srcBucketName,
-            srcObjectName,
-            new ContentInputStream(1 * KB),
-            new PutObjectOptions(1 * KB, -1));
+            PutObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", customContentType);
@@ -2555,9 +2234,11 @@ public class FunctionalTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", customContentType);
         headers.put("X-Amz-Meta-My-Project", "Project One");
-        PutObjectOptions options = new PutObjectOptions(1 * KB, -1);
-        options.setHeaders(headers);
-        client.putObject(srcBucketName, srcObjectName, new ContentInputStream(1 * KB), options);
+        client.putObject(
+            PutObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .headers(headers)
+                .build());
 
         client.copyObject(
             CopyObjectArgs.builder()
@@ -2599,10 +2280,6 @@ public class FunctionalTest {
       return;
     }
 
-    ServerSideEncryptionCustomerKey ssec =
-        ServerSideEncryption.withCustomerKey(
-            new SecretKeySpec(
-                "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8), "AES"));
     testCopyObject(
         testTags,
         ssec,
@@ -2625,7 +2302,6 @@ public class FunctionalTest {
       return;
     }
 
-    ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
     testCopyObject(
         testTags,
         sseS3,
@@ -2642,14 +2318,11 @@ public class FunctionalTest {
   /** Test: copyObject() SSE-KMS. */
   public static void copyObject_test11() throws Exception {
     String testTags = "[SSE-KMS]";
-    if (!isSecureEndpoint || kmsKeyName == null) {
+    if (!isSecureEndpoint || sseKms == null) {
       mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
       return;
     }
 
-    Map<String, String> myContext = new HashMap<>();
-    myContext.put("key1", "value1");
-    ServerSideEncryption sseKms = ServerSideEncryption.withManagedKeys(kmsKeyName, myContext);
     testCopyObject(
         testTags,
         sseKms,
@@ -2679,9 +2352,18 @@ public class FunctionalTest {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
-      client.putObject(bucketName, filename1, filename1, options);
-      client.putObject(bucketName, filename2, filename2, options);
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename1)
+              .filename(filename1)
+              .build());
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename2)
+              .filename(filename2)
+              .build());
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, null);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -2746,9 +2428,18 @@ public class FunctionalTest {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
-      client.putObject(bucketName, filename1, filename1, options);
-      client.putObject(bucketName, filename2, filename2, options);
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename1)
+              .filename(filename1)
+              .build());
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename2)
+              .filename(filename2)
+              .build());
       ComposeSource s1 = new ComposeSource(bucketName, filename1, 10L, 6291436L, null, null, null);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -2814,7 +2505,12 @@ public class FunctionalTest {
     try {
       String destinationObjectName = getRandomName();
       String filename1 = createFile6Mb();
-      client.putObject(bucketName, filename1, filename1, new PutObjectOptions(6 * MB, -1));
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename1)
+              .filename(filename1)
+              .build());
       ComposeSource s1 = new ComposeSource(bucketName, filename1, 10L, 6291436L, null, null, null);
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
@@ -2889,10 +2585,20 @@ public class FunctionalTest {
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
-      options.setSse(ssePut);
-      client.putObject(bucketName, filename1, filename1, options);
-      client.putObject(bucketName, filename2, filename2, options);
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename1)
+              .filename(filename1)
+              .sse(ssePut)
+              .build());
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename2)
+              .filename(filename2)
+              .sse(ssePut)
+              .build());
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, ssePut);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, ssePut);
 
@@ -2963,10 +2669,19 @@ public class FunctionalTest {
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
-      options.setSse(ssePut);
-      client.putObject(bucketName, filename1, filename1, options);
-      client.putObject(bucketName, filename2, filename2, new PutObjectOptions(6 * MB, -1));
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename1)
+              .filename(filename1)
+              .sse(ssePut)
+              .build());
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename2)
+              .filename(filename2)
+              .build());
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, ssePut);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -3035,9 +2750,18 @@ public class FunctionalTest {
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
-      PutObjectOptions options = new PutObjectOptions(6 * MB, -1);
-      client.putObject(bucketName, filename1, filename1, options);
-      client.putObject(bucketName, filename2, filename2, options);
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename1)
+              .filename(filename1)
+              .build());
+      client.uploadObject(
+          UploadObjectArgs.builder()
+              .bucket(bucketName)
+              .object(filename2)
+              .filename(filename2)
+              .build());
       ComposeSource s1 = new ComposeSource(bucketName, filename1, null, null, null, null, null);
       ComposeSource s2 = new ComposeSource(bucketName, filename2, null, null, null, null, null);
 
@@ -3097,9 +2821,10 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
 
       try {
-        try (final InputStream is = new ContentInputStream(1 * KB)) {
-          client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-        }
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
 
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
@@ -3132,9 +2857,10 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        try (final InputStream is = new ContentInputStream(1 * KB)) {
-          client.putObject(bucketName, objectName, is, new PutObjectOptions(1 * KB, -1));
-        }
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
         client.disableObjectLegalHold(
@@ -3269,10 +2995,9 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
         client.putObject(
-            bucketName,
-            objectName,
-            new ContentInputStream(1 * KB),
-            new PutObjectOptions(1 * KB, -1));
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
 
         ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
@@ -3317,10 +3042,9 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
         client.putObject(
-            bucketName,
-            objectName,
-            new ContentInputStream(1 * KB),
-            new PutObjectOptions(1 * KB, -1));
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
 
         ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
@@ -3702,7 +3426,10 @@ public class FunctionalTest {
                   .events(events)
                   .build());
 
-      client.putObject(bucketName, "prefix-random-suffix", file, new PutObjectOptions(1 * KB, -1));
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object("prefix-random-suffix").stream(
+                  new ContentInputStream(1 * KB), 1 * KB, -1)
+              .build());
 
       while (ci.hasNext()) {
         NotificationRecords records = ci.next().get();
@@ -3765,7 +3492,10 @@ public class FunctionalTest {
       byte[] data =
           ("Year,Make,Model,Description,Price\n" + expectedResult).getBytes(StandardCharsets.UTF_8);
       ByteArrayInputStream bais = new ByteArrayInputStream(data);
-      client.putObject(bucketName, objectName, bais, new PutObjectOptions(data.length, -1));
+      client.putObject(
+          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                  bais, data.length, -1)
+              .build());
 
       InputSerialization is =
           new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
@@ -4036,10 +3766,9 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
         client.putObject(
-            bucketName,
-            objectName,
-            new ContentInputStream(1 * KB),
-            new PutObjectOptions(1 * KB, -1));
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
         Map<String, String> map = new HashMap<>();
         map.put("Project", "Project One");
         map.put("User", "jsmith");
@@ -4070,10 +3799,9 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
         client.putObject(
-            bucketName,
-            objectName,
-            new ContentInputStream(1 * KB),
-            new PutObjectOptions(1 * KB, -1));
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
         Map<String, String> map = new HashMap<>();
         Tags tags =
             client.getObjectTags(
@@ -4117,10 +3845,9 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
         client.putObject(
-            bucketName,
-            objectName,
-            new ContentInputStream(1 * KB),
-            new PutObjectOptions(1 * KB, -1));
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
         // Delete should succeed.
         client.deleteObjectTags(
             DeleteObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
@@ -4168,33 +3895,18 @@ public class FunctionalTest {
 
     setup();
 
+    putObject_test();
+    getObject_test();
+    uploadObject_test();
+    downloadObject_test();
+
     setObjectRetention_test1();
     getObjectRetention_test1();
-
-    putObject_test1();
-    putObject_test2();
-    putObject_test3();
-    putObject_test4();
-    putObject_test5();
-    putObject_test6();
-    putObject_test7();
-    putObject_test8();
-    putObject_test9();
-    putObject_test10();
-    putObject_test11();
 
     statObject_test1();
     statObject_test2();
     statObject_test3();
     statObject_test4();
-
-    getObject_test1();
-    getObject_test2();
-    getObject_test3();
-    getObject_test4();
-    getObject_test5();
-    getObject_test6();
-    getObject_test8();
 
     getPresignedObjectUrl_test1();
     getPresignedObjectUrl_test2();
@@ -4259,10 +3971,6 @@ public class FunctionalTest {
 
     // SSE_C tests will only work over TLS connection
     if (isSecureEndpoint) {
-      getObject_test7();
-      getObject_test9();
-      putObject_test12();
-      putObject_test13();
       composeObject_test4();
       composeObject_test5();
       composeObject_test6();
@@ -4271,8 +3979,6 @@ public class FunctionalTest {
     // SSE_S3 and SSE_KMS only work with Amazon AWS endpoint.
     String requestUrl = endpoint;
     if (requestUrl.contains(".amazonaws.com")) {
-      putObject_test14();
-      putObject_test15();
       setBucketLifeCycle_test1();
       getBucketLifeCycle_test1();
       deleteBucketLifeCycle_test1();
@@ -4283,8 +3989,6 @@ public class FunctionalTest {
     deleteBucketPolicy_test1();
 
     listenBucketNotification_test1();
-
-    threadedPutObject();
 
     teardown();
 
@@ -4302,9 +4006,11 @@ public class FunctionalTest {
 
     setup();
 
-    putObject_test1();
+    uploadObject_test();
+    putObject_test();
     statObject_test1();
-    getObject_test1();
+    getObject_test();
+    downloadObject_test();
     listObjects_test1();
     removeObject_test1();
     listIncompleteUploads_test1();
@@ -4384,15 +4090,13 @@ public class FunctionalTest {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
     ProcessBuilder pb = new ProcessBuilder(binaryPath.getPath(), "server", "d1");
 
-    kmsKeyName = "my-minio-key";
-
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");
     env.put("MINIO_SECRET_KEY", "minio123");
     env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
     env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
     env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
-    env.put("MINIO_KMS_KES_KEY_NAME", kmsKeyName);
+    env.put("MINIO_KMS_KES_KEY_NAME", "my-minio-key");
     env.put("MINIO_NOTIFY_WEBHOOK_ENABLE_miniojavatest", "on");
     env.put("MINIO_NOTIFY_WEBHOOK_ENDPOINT_miniojavatest", "http://example.org/");
     sqsArn = "arn:minio:sqs::miniojavatest:webhook";
@@ -4408,23 +4112,25 @@ public class FunctionalTest {
 
   /** main(). */
   public static void main(String[] args) throws Exception {
-    String mintMode = null;
+    String mintMode = System.getenv("MINT_MODE");
+    mintEnv = (mintMode != null);
     if (mintEnv) {
-      mintMode = System.getenv("MINT_MODE");
+      isQuickTest = !mintMode.equals("full");
+      String dataDir = System.getenv("MINT_DATA_DIR");
+      if (dataDir != null && !dataDir.equals("")) {
+        dataFile1Kb = Paths.get(dataDir, "datafile-1-kB");
+        dataFile6Mb = Paths.get(dataDir, "datafile-6-MB");
+      }
     }
 
     Process minioProcess = null;
 
+    String kmsKeyName = "my-minio-key";
     if (args.length != 4) {
       endpoint = "http://localhost:9000";
       accessKey = "minio";
       secretKey = "minio123";
       region = "us-east-1";
-      kmsKeyName = System.getenv("MINIO_JAVA_TEST_KMS_KEY_NAME");
-      if (kmsKeyName == null) {
-        kmsKeyName = System.getenv("MINT_KEY_ID");
-      }
-      sqsArn = System.getenv("MINIO_JAVA_TEST_SQS_ARN");
 
       if (!downloadMinio()) {
         System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
@@ -4441,13 +4147,11 @@ public class FunctionalTest {
         ignore();
       }
     } else {
-      String dataDir = System.getenv("MINT_DATA_DIR");
-      if (dataDir != null && !dataDir.equals("")) {
-        mintEnv = true;
-        dataFile1Kb = Paths.get(dataDir, "datafile-1-kB");
-        dataFile6Mb = Paths.get(dataDir, "datafile-6-MB");
+      kmsKeyName = System.getenv("MINIO_JAVA_TEST_KMS_KEY_NAME");
+      if (kmsKeyName == null) {
+        kmsKeyName = System.getenv("MINT_KEY_ID");
       }
-
+      sqsArn = System.getenv("MINIO_JAVA_TEST_SQS_ARN");
       endpoint = args[0];
       accessKey = args[1];
       secretKey = args[2];
@@ -4455,6 +4159,11 @@ public class FunctionalTest {
     }
 
     isSecureEndpoint = endpoint.toLowerCase(Locale.US).contains("https://");
+    if (kmsKeyName != null) {
+      Map<String, String> myContext = new HashMap<>();
+      myContext.put("key1", "value1");
+      sseKms = ServerSideEncryption.withManagedKeys(kmsKeyName, myContext);
+    }
 
     int exitValue = 0;
     try {
@@ -4464,13 +4173,14 @@ public class FunctionalTest {
 
       // For mint environment, run tests based on mint mode
       if (mintEnv) {
-        if (mintMode != null && mintMode.equals("full")) {
-          FunctionalTest.runTests();
-        } else {
+        if (isQuickTest) {
           FunctionalTest.runQuickTests();
+        } else {
+          FunctionalTest.runTests();
         }
       } else {
         FunctionalTest.runTests();
+        isQuickTest = true;
         // Get new bucket name to avoid minio azure gateway failure.
         bucketName = getRandomName();
         // Quick tests with passed region.
