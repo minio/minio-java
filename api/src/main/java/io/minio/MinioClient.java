@@ -2439,7 +2439,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void copyObject(CopyObjectArgs args)
+  public ObjectWriteResponse copyObject(CopyObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -2501,8 +2501,32 @@ public class MinioClient {
             null,
             null,
             0)) {
-      // For now ignore the copyObjectResult, just read and parse it.
-      Xml.unmarshal(CopyObjectResult.class, response.body().charStream());
+
+      String etag = null;
+
+      String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
+      bodyContent = bodyContent.trim();
+      if (!bodyContent.isEmpty()) {
+        try {
+          if (Xml.validate(ErrorResponse.class, bodyContent)) {
+            ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
+            throw new ErrorResponseException(errorResponse, response);
+          }
+        } catch (XmlParserException e) {
+          // As it is not <Error> message, fall-back to parse CopyObjectResult XML.
+        }
+
+        try {
+          CopyObjectResult result = Xml.unmarshal(CopyObjectResult.class, bodyContent);
+          etag = result.etag();
+        } catch (XmlParserException e) {
+          // As this CopyObjectResult REST call succeeded, just log it.
+          Logger.getLogger(MinioClient.class.getName())
+              .warning(
+                  "S3 service returned unknown XML for CopyObjectResult REST API. " + bodyContent);
+        }
+      }
+      return new ObjectWriteResponse(response.headers(), etag, response.header("x-amz-version-id"));
     }
   }
 
@@ -2616,6 +2640,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args {@link ComposeObjectArgs} object.
+   * @return {@link ObjectWriteResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -2628,7 +2653,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void composeObject(ComposeObjectArgs args)
+  public ObjectWriteResponse composeObject(ComposeObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -2738,7 +2763,7 @@ public class MinioClient {
             "x-amz-copy-source-range",
             "bytes=" + src.offset() + "-" + (src.offset() + src.length() - 1));
       }
-      copyObject(
+      return copyObject(
           CopyObjectArgs.builder()
               .bucket(args.bucket())
               .object(args.object())
@@ -2753,7 +2778,6 @@ public class MinioClient {
               .srcModifiedSince(src.modifiedSince())
               .srcUnmodifiedSince(src.unmodifiedSince())
               .build());
-      return;
     }
 
     Multimap<String, String> sseHeaders = HashMultimap.create();
@@ -2828,7 +2852,8 @@ public class MinioClient {
         }
       }
 
-      completeMultipartUpload(args.bucket(), args.object(), uploadId, totalParts);
+      return completeMultipartUpload(
+          args.bucket(), getRegion(args.bucket()), args.object(), uploadId, totalParts, null, null);
     } catch (RuntimeException e) {
       abortMultipartUpload(args.bucket(), args.object(), uploadId);
       throw e;

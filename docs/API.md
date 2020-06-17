@@ -992,7 +992,7 @@ minioClient.setDefaultRetention(
 
  <a name="composeObject"></a>
 ### composeObject(ComposeObjectArgs  args)
-`public void composeObject(ComposeObjectArgs)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-io.minio.ComposeObjectArgs--)_
+`public ObjectWriteResponse composeObject(ComposeObjectArgs)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-io.minio.ComposeObjectArgs--)_
 
 Creates an object by combining data from different source objects using server-side copy.
 
@@ -1000,6 +1000,10 @@ Creates an object by combining data from different source objects using server-s
 | Param          | Type                     | Description   |
 |:---------------|:-------------------------|:--------------|
 | ``args``       | _[ComposeObjectArgs]_    | Arguments.    |
+
+| Returns                                                                     |
+|:----------------------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Response class of any APIs doing object creation. |
 
 __Example__
  ```java
@@ -1039,27 +1043,11 @@ minioClient.composeObject(
       .extraHeaders(Multimaps.forMap(userMetadata))
       .ssec(sse)
       .build());
-
-
-List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
-sourceObjectList.add(ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-one").build());
-sourceObjectList.add(ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-two").build();
-sourceObjectList.add(ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-three").build());
-
-// Create my-bucketname/my-objectname by combining source object list.
-minioClient.composeObject(ComposeObjectArgs.builder().bucket("my-bucketname").object("my-objectname").source(sourceObjectList).build());
-
-// Create my-bucketname/my-objectname with user metadata by combining source object list.
-minioClient.composeObject(ComposeObjectArgs.builder().bucket("my-bucketname").object("my-objectname").source(sourceObjectList).extraHeaders(userMetadata).build());
-
-// Create my-bucketname/my-objectname with user metadata and server-side encryption by combining
-// source object list.
-minioClient.composeObject(ComposeObjectArgs.builder().bucket("my-bucketname").object("my-objectname").source(sourceObjectList).extraHeaders(userMetadata).sse(sse).build());
 ```
 
 <a name="copyObject"></a>
 ### copyObject(CopyObjectArgs args)
-`public void copyObject(CopyObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-io.minio.CopyObjectArgs-)_
+`public ObjectWriteResponse copyObject(CopyObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-io.minio.CopyObjectArgs-)_
 
 Creates an object by server-side copying data from another object.
 
@@ -1067,6 +1055,10 @@ __Parameters__
 | Parameter | Type               | Description |
 |:----------|:-------------------|:------------|
 | ``args``  | _[CopyObjectArgs]_ | Arguments.  |
+
+| Returns                                                                     |
+|:----------------------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Response class of any APIs doing object creation. |
 
 __Example__
 
@@ -1488,7 +1480,7 @@ System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname
 
 <a name="putObject"></a>
 ### putObject(PutObjectArgs args)
-`public void putObject(PutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-io.minio.PutObjectArgs-)_
+`public ObjectWriteResponse putObject(PutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-io.minio.PutObjectArgs-)_
 
 Uploads given stream as object in bucket.
 
@@ -1496,6 +1488,10 @@ __Parameters__
 | Parameter | Type              | Description |
 |:----------|:------------------|:------------|
 | ``args``  | _[PutObjectArgs]_ | Arguments.  |
+
+| Returns                                                                     |
+|:----------------------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Response class of any APIs doing object creation. |
 
 __Example__
 ```java
@@ -1859,3 +1855,4 @@ ObjectStat objectStat =
 [PutObjectArgs]: http://minio.github.io/minio-java/io/minio/PutObjectArgs.html
 [UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
 [ComposeObjectArgs]: http://minio.github.io/minio-java/io/minio/ComposeObjectArgs.html
+[ObjectWriteResponse] : http://minio.github.io/minio-java/io/minio/ObjectWriteResponse.html
