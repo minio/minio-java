@@ -156,10 +156,6 @@ public class ComposeSource extends ObjectVersionArgs {
 
   /** Argument builder of {@link ComposeSource}. */
   public static final class Builder extends ObjectVersionArgs.Builder<Builder, ComposeSource> {
-    @Override
-    protected void validate(ComposeSource args) {
-      super.validate(args);
-    }
 
     public Builder offset(long offset) {
       validateNullOrPositive(offset, "offset");
