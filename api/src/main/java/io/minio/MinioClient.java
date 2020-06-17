@@ -7463,8 +7463,6 @@ public class MinioClient {
             queryParams,
             new CompleteMultipartUpload(parts),
             0)) {
-      String etag = null;
-
       String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
       bodyContent = bodyContent.trim();
       if (!bodyContent.isEmpty()) {
@@ -7480,7 +7478,13 @@ public class MinioClient {
         try {
           CompleteMultipartUploadOutput result =
               Xml.unmarshal(CompleteMultipartUploadOutput.class, bodyContent);
-          etag = result.etag();
+          return new ObjectWriteResponse(
+              response.headers(),
+              result.bucket(),
+              result.location(),
+              result.object(),
+              result.etag(),
+              response.header("x-amz-version-id"));
         } catch (XmlParserException e) {
           // As this CompleteMultipartUpload REST call succeeded, just log it.
           Logger.getLogger(MinioClient.class.getName())
@@ -7490,7 +7494,13 @@ public class MinioClient {
         }
       }
 
-      return new ObjectWriteResponse(response.headers(), etag, response.header("x-amz-version-id"));
+      return new ObjectWriteResponse(
+          response.headers(),
+          bucketName,
+          region,
+          objectName,
+          null,
+          response.header("x-amz-version-id"));
     }
   }
 
@@ -7805,6 +7815,9 @@ public class MinioClient {
             length)) {
       return new ObjectWriteResponse(
           response.headers(),
+          bucketName,
+          region,
+          objectName,
           response.header("ETag").replaceAll("\"", ""),
           response.header("x-amz-version-id"));
     }

@@ -23,8 +23,9 @@ public class ObjectWriteResponse extends GenericResponse {
   private String etag;
   private String versionId;
 
-  public ObjectWriteResponse(Headers headers, String etag, String versionId) {
-    setHeaders(headers);
+  public ObjectWriteResponse(
+      Headers headers, String bucket, String region, String object, String etag, String versionId) {
+    super(headers, bucket, region, object);
     this.etag = etag;
     this.versionId = versionId;
   }
