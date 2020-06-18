@@ -2816,23 +2816,24 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: enableObjectLegalHold(EnableObjectLegalHoldArgs args) */
   public static void enableObjectLegalHold_test() throws Exception {
-    String methodName = "enableObjectLegalHold(EnableObjectLegalHoldArgs args)";
+    String methodName = "enableObjectLegalHold()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
 
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
 
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
@@ -2844,8 +2845,14 @@ public class FunctionalTest {
             DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
         mintSuccessLog(methodName, null, startTime);
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
@@ -2853,22 +2860,23 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: disableObjectLegalHold(DisableObjectLegalHoldArgs args) */
   public static void disableObjectLegalHold_test() throws Exception {
-    String methodName = "disableObjectLegalHold(DisableObjectLegalHoldArgs args)";
+    String methodName = "disableObjectLegalHold()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
         client.disableObjectLegalHold(
@@ -2878,8 +2886,14 @@ public class FunctionalTest {
           throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
         }
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
@@ -2989,9 +3003,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setObjectRetention(SetObjectRetentionArgs args). */
-  public static void setObjectRetention_test1() throws Exception {
-    String methodName = "setObjectRetention(SetObjectRetentionArgs args)";
+  public static void setObjectRetention_test() throws Exception {
+    String methodName = "setObjectRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -2999,13 +3012,15 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
 
         ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
@@ -3026,12 +3041,14 @@ public class FunctionalTest {
                 .build());
 
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder()
-                .bucket(bucketName)
-                .object(objectName)
-                .bypassGovernanceMode(true)
-                .build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
@@ -3040,9 +3057,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getObjectRetention(GetObjectRetentionArgs args). */
-  public static void getObjectRetention_test1() throws Exception {
-    String methodName = "getObjectRetention(GetObjectRetentionArgs args)";
+  public static void getObjectRetention_test() throws Exception {
+    String methodName = "getObjectRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3050,13 +3066,15 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
 
         ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
@@ -3135,12 +3153,14 @@ public class FunctionalTest {
                 .build());
 
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder()
-                .bucket(bucketName)
-                .object(objectName)
-                .bypassGovernanceMode(true)
-                .build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
@@ -3916,8 +3936,8 @@ public class FunctionalTest {
     uploadObject_test();
     downloadObject_test();
 
-    setObjectRetention_test1();
-    getObjectRetention_test1();
+    setObjectRetention_test();
+    getObjectRetention_test();
 
     statObject_test1();
     statObject_test2();
@@ -3964,8 +3984,8 @@ public class FunctionalTest {
     setDefaultRetention_test();
     getDefaultRetention_test();
 
-    setObjectRetention_test1();
-    getObjectRetention_test1();
+    setObjectRetention_test();
+    getObjectRetention_test();
 
     selectObjectContent_test1();
 
@@ -4099,7 +4119,8 @@ public class FunctionalTest {
 
   public static Process runMinio() throws Exception {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
-    ProcessBuilder pb = new ProcessBuilder(binaryPath.getPath(), "server", "d1");
+    ProcessBuilder pb =
+        new ProcessBuilder(binaryPath.getPath(), "server", ".d1", ".d2", ".d3", ".d4");
 
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");

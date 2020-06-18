@@ -39,7 +39,7 @@ functional/.classpath
 functional/.project
 functional/.settings/
 functional/bin/
-functional/d1/
+functional/.d*/
 minio
 !minio/
 minio.exe
