@@ -75,7 +75,7 @@ public class ComposeSource extends ObjectVersionArgs {
     return new Builder();
   }
 
-  /** Constructs header . */
+  /** Constructs header. */
   public void buildHeaders(long objectSize, String etag) throws IllegalArgumentException {
     validateSize(objectSize);
     Multimap<String, String> headers = HashMultimap.create();

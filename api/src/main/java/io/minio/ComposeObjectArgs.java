@@ -43,7 +43,7 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
     }
 
     private void validateSources(List<ComposeSource> sources) {
-      if (sources.isEmpty()) {
+      if (sources == null) {
         throw new IllegalArgumentException("compose sources cannot be empty");
       }
     }

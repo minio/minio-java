@@ -423,10 +423,31 @@ public class FunctionalTest {
     throw e;
   }
 
-  private static void deleteFilesAndObjects(String bucketName, String files[]) throws Exception {
-    for (String filename : files) {
+  // private static void deleteFilesAndObjects(String bucketName, String[] filenames) throws
+  // Exception {
+  //   for (String filename : filenames) {
+  //     Files.delete(Paths.get(filename));
+  //
+  // client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
+  //   }
+  // }
+
+  private static void deleteFilesAndObjects(String bucketName, String[] filenames)
+      throws Exception {
+    for (String filename : filenames) {
       Files.delete(Paths.get(filename));
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
+    }
+    List<DeleteObject> objects =
+        Arrays.stream(filenames)
+            .map(
+                name -> {
+                  return new DeleteObject(name);
+                })
+            .collect(Collectors.toList());
+    for (Result<?> r :
+        client.removeObjects(
+            RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
+      ignore(r.get());
     }
   }
 

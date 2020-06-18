@@ -992,7 +992,7 @@ minioClient.setDefaultRetention(
 
  <a name="composeObject"></a>
 ### composeObject(ComposeObjectArgs  args)
-`public ObjectWriteResponse composeObject(ComposeObjectArgs)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-io.minio.ComposeObjectArgs--)_
+`public ObjectWriteResponse composeObject(ComposeObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-io.minio.ComposeObjectArgs--)_
 
 Creates an object by combining data from different source objects using server-side copy.
 
@@ -1003,7 +1003,7 @@ Creates an object by combining data from different source objects using server-s
 
 | Returns                                                                     |
 |:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Response class of any APIs doing object creation. |
+| _[ObjectWriteResponse]_ - Contains object versionId, etag and headers.      |
 
 __Example__
  ```java
@@ -1030,7 +1030,7 @@ minioClient.composeObject(
       .bucket("my-bucketname")
       .object("my-objectname")
       .sources(sourceObjectList)
-      .extraHeaders(Multimaps.forMap(userMetadata))
+      .headers(Multimaps.forMap(userMetadata))
       .build());
 
 // Create my-bucketname/my-objectname with user metadata and server-side encryption
@@ -1040,7 +1040,7 @@ minioClient.composeObject(
       .bucket("my-bucketname")
       .object("my-objectname")
       .sources(sourceObjectList)
-      .extraHeaders(Multimaps.forMap(userMetadata))
+      .headers(Multimaps.forMap(userMetadata))
       .ssec(sse)
       .build());
 ```
@@ -1058,7 +1058,7 @@ __Parameters__
 
 | Returns                                                                     |
 |:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Response class of any APIs doing object creation. |
+| _[ObjectWriteResponse]_ - Contains object versionId, etag and headers.      |
 
 __Example__
 
@@ -1491,7 +1491,7 @@ __Parameters__
 
 | Returns                                                                     |
 |:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Response class of any APIs doing object creation. |
+| _[ObjectWriteResponse]_ - Contains object versionId, etag and headers.      |
 
 __Example__
 ```java
@@ -1855,4 +1855,4 @@ ObjectStat objectStat =
 [PutObjectArgs]: http://minio.github.io/minio-java/io/minio/PutObjectArgs.html
 [UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
 [ComposeObjectArgs]: http://minio.github.io/minio-java/io/minio/ComposeObjectArgs.html
-[ObjectWriteResponse] : http://minio.github.io/minio-java/io/minio/ObjectWriteResponse.html
+[ObjectWriteResponse]: http://minio.github.io/minio-java/io/minio/ObjectWriteResponse.html

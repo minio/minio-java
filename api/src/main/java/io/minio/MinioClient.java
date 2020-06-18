@@ -2506,20 +2506,11 @@ public class MinioClient {
       bodyContent = bodyContent.trim();
       if (!bodyContent.isEmpty()) {
         try {
-          if (Xml.validate(ErrorResponse.class, bodyContent)) {
-            ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
-            throw new ErrorResponseException(errorResponse, response);
-          }
-        } catch (XmlParserException e) {
-          // As it is not <Error> message, fall-back to parse CopyObjectResult XML.
-        }
-
-        try {
           CopyObjectResult result = Xml.unmarshal(CopyObjectResult.class, bodyContent);
           return new ObjectWriteResponse(
               response.headers(),
               args.bucket(),
-              getRegion(args.bucket()),
+              args.region(),
               args.object(),
               result.etag(),
               response.header("x-amz-version-id"));
@@ -2598,7 +2589,7 @@ public class MinioClient {
         ComposeObjectArgs.builder()
             .bucket(bucketName)
             .object(objectName)
-            .extraHeaders(Multimaps.forMap(headerMap))
+            .headers(Multimaps.forMap(headerMap))
             .sources(sources)
             .sse(sse);
 
@@ -2633,7 +2624,6 @@ public class MinioClient {
    *        .bucket("my-bucketname")
    *        .object("my-objectname")
    *        .sources(sourceObjectList)
-   *        .extraHeaders(Multimaps.forMap(userMetadata))
    *        .build());
    *
    * // Create my-bucketname/my-objectname with user metadata and server-side encryption
@@ -2643,7 +2633,6 @@ public class MinioClient {
    *        .bucket("my-bucketname")
    *        .object("my-objectname")
    *        .sources(sourceObjectList)
-   *        .extraHeaders(Multimaps.forMap(userMetadata))
    *        .ssec(sse)
    *        .build());
    *
@@ -2702,7 +2691,7 @@ public class MinioClient {
         size -= src.offset();
       }
 
-      if (size < PutObjectOptions.MIN_MULTIPART_SIZE
+      if (size < ObjectWriteArgs.MIN_MULTIPART_SIZE
           && sources.size() != 1
           && i != (sources.size() - 1)) {
         throw new IllegalArgumentException(
@@ -2713,25 +2702,25 @@ public class MinioClient {
                 + ": size "
                 + size
                 + " must be greater than "
-                + PutObjectOptions.MIN_MULTIPART_SIZE);
+                + ObjectWriteArgs.MIN_MULTIPART_SIZE);
       }
 
       objectSize += size;
-      if (objectSize > PutObjectOptions.MAX_OBJECT_SIZE) {
+      if (objectSize > ObjectWriteArgs.MAX_OBJECT_SIZE) {
         throw new IllegalArgumentException(
-            "Destination object size must be less than " + PutObjectOptions.MAX_OBJECT_SIZE);
+            "Destination object size must be less than " + ObjectWriteArgs.MAX_OBJECT_SIZE);
       }
 
-      if (size > PutObjectOptions.MAX_PART_SIZE) {
-        long count = size / PutObjectOptions.MAX_PART_SIZE;
-        long lastPartSize = size - (count * PutObjectOptions.MAX_PART_SIZE);
+      if (size > ObjectWriteArgs.MAX_PART_SIZE) {
+        long count = size / ObjectWriteArgs.MAX_PART_SIZE;
+        long lastPartSize = size - (count * ObjectWriteArgs.MAX_PART_SIZE);
         if (lastPartSize > 0) {
           count++;
         } else {
-          lastPartSize = PutObjectOptions.MAX_PART_SIZE;
+          lastPartSize = ObjectWriteArgs.MAX_PART_SIZE;
         }
 
-        if (lastPartSize < PutObjectOptions.MIN_MULTIPART_SIZE
+        if (lastPartSize < ObjectWriteArgs.MIN_MULTIPART_SIZE
             && sources.size() != 1
             && i != (sources.size() - 1)) {
           throw new IllegalArgumentException(
@@ -2743,7 +2732,7 @@ public class MinioClient {
                   + "for multipart split upload of "
                   + size
                   + ", last part size is less than "
-                  + PutObjectOptions.MIN_MULTIPART_SIZE);
+                  + ObjectWriteArgs.MIN_MULTIPART_SIZE);
         }
 
         partsCount += (int) count;
@@ -2751,19 +2740,18 @@ public class MinioClient {
         partsCount++;
       }
 
-      if (partsCount > PutObjectOptions.MAX_MULTIPART_COUNT) {
+      if (partsCount > ObjectWriteArgs.MAX_MULTIPART_COUNT) {
         throw new IllegalArgumentException(
             "Compose sources create more than allowed multipart count "
-                + PutObjectOptions.MAX_MULTIPART_COUNT);
+                + ObjectWriteArgs.MAX_MULTIPART_COUNT);
       }
     }
 
     if (partsCount == 1) {
       ComposeSource src = sources.get(0);
       Multimap<String, String> headers = HashMultimap.create();
-      if (args.extraHeaders() != null) {
-        headers.putAll(args.extraHeaders());
-      }
+      headers.putAll(args.extraHeaders());
+      headers.putAll(args.headers);
       if ((src.offset() != null) && (src.length() == null)) {
         headers.put("x-amz-copy-source-range", "bytes=" + src.offset() + "-");
       }
@@ -2777,7 +2765,7 @@ public class MinioClient {
           CopyObjectArgs.builder()
               .bucket(args.bucket())
               .object(args.object())
-              .extraHeaders(args.extraHeaders)
+              .headers(args.extraHeaders)
               .sse(args.sse())
               .srcBucket(src.bucket())
               .srcObject(src.object())
@@ -2794,9 +2782,8 @@ public class MinioClient {
     Multimap<String, String> headerMap = HashMultimap.create();
     if (args.sse() != null) {
       sseHeaders.putAll(Multimaps.forMap(args.sse().headers()));
-      if (args.extraHeaders != null) {
-        headerMap.putAll(args.extraHeaders());
-      }
+      headerMap.putAll(args.extraHeaders());
+      headerMap.putAll(args.headers);
       headerMap.putAll(sseHeaders);
     }
 
@@ -2818,7 +2805,7 @@ public class MinioClient {
           offset = src.offset();
         }
 
-        if (size <= PutObjectOptions.MAX_PART_SIZE) {
+        if (size <= ObjectWriteArgs.MAX_PART_SIZE) {
           partNumber++;
           Multimap<String, String> headers = HashMultimap.create();
           if (src.headers() != null) {
@@ -2843,8 +2830,8 @@ public class MinioClient {
           partNumber++;
 
           long startBytes = offset;
-          long endBytes = startBytes + PutObjectOptions.MAX_PART_SIZE;
-          if (size < PutObjectOptions.MAX_PART_SIZE) {
+          long endBytes = startBytes + ObjectWriteArgs.MAX_PART_SIZE;
+          if (size < ObjectWriteArgs.MAX_PART_SIZE) {
             endBytes = startBytes + size;
           }
 
@@ -7708,6 +7695,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
+  @Deprecated
   protected String createMultipartUpload(
       String bucketName, String objectName, Map<String, String> headerMap)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
