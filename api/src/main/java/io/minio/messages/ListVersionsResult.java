@@ -66,8 +66,9 @@ public class ListVersionsResult extends ListObjectsResult {
     return nextVersionIdMarker;
   }
 
-  public List<Item> contents() {
-    return Collections.unmodifiableList((contents == null) ? new LinkedList<>() : contents);
+  @Override
+  public List<Version> contents() {
+    return emptyIfNull(contents);
   }
 
   @Override

@@ -3612,7 +3612,7 @@ public class MinioClient {
 
   private abstract class ObjectIterator implements Iterator<Result<Item>> {
     protected Result<Item> error;
-    protected Iterator<Item> itemIterator;
+    protected Iterator<? extends Item> itemIterator;
     protected Iterator<Item> deleteMarkerIterator;
     protected Iterator<Prefix> prefixIterator;
     protected boolean completed = false;

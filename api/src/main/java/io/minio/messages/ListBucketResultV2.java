@@ -16,8 +16,6 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -68,7 +66,8 @@ public class ListBucketResultV2 extends ListObjectsResult {
   }
 
   /** Returns List of Items. */
-  public List<Item> contents() {
-    return Collections.unmodifiableList((contents == null) ? new LinkedList<>() : contents);
+  @Override
+  public List<Contents> contents() {
+    return emptyIfNull(contents);
   }
 }

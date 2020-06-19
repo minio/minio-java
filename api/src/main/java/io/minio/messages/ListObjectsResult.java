@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import com.google.common.base.MoreObjects;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -87,5 +88,9 @@ public abstract class ListObjectsResult {
     return deleteMarkers;
   }
 
-  public abstract List<Item> contents();
+  protected <T extends Item> List<T> emptyIfNull(List<T> lst) {
+    return Collections.unmodifiableList(MoreObjects.firstNonNull(lst, new LinkedList<T>()));
+  }
+
+  public abstract List<? extends Item> contents();
 }
