@@ -48,6 +48,7 @@ import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CopyPartResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteMarker;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.DeleteRequest;
 import io.minio.messages.DeleteResult;
@@ -3613,7 +3614,7 @@ public class MinioClient {
   private abstract class ObjectIterator implements Iterator<Result<Item>> {
     protected Result<Item> error;
     protected Iterator<? extends Item> itemIterator;
-    protected Iterator<Item> deleteMarkerIterator;
+    protected Iterator<DeleteMarker> deleteMarkerIterator;
     protected Iterator<Prefix> prefixIterator;
     protected boolean completed = false;
     protected ListObjectsResult listObjectsResult;
@@ -3648,7 +3649,7 @@ public class MinioClient {
         this.prefixIterator = this.listObjectsResult.commonPrefixes().iterator();
       } else {
         this.itemIterator = new LinkedList<Item>().iterator();
-        this.deleteMarkerIterator = new LinkedList<Item>().iterator();
+        this.deleteMarkerIterator = new LinkedList<DeleteMarker>().iterator();
         this.prefixIterator = new LinkedList<Prefix>().iterator();
       }
     }

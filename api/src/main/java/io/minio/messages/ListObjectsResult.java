@@ -45,7 +45,8 @@ public abstract class ListObjectsResult {
   @ElementList(name = "CommonPrefixes", inline = true, required = false)
   private List<Prefix> commonPrefixes;
 
-  private static final List<Item> deleteMarkers = Collections.unmodifiableList(new LinkedList<>());
+  private static final List<DeleteMarker> deleteMarkers =
+      Collections.unmodifiableList(new LinkedList<>());
 
   public ListObjectsResult() {}
 
@@ -84,7 +85,7 @@ public abstract class ListObjectsResult {
         (commonPrefixes == null) ? new LinkedList<>() : commonPrefixes);
   }
 
-  public List<Item> deleteMarkers() {
+  public List<DeleteMarker> deleteMarkers() {
     return deleteMarkers;
   }
 

@@ -16,8 +16,6 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -72,8 +70,7 @@ public class ListVersionsResult extends ListObjectsResult {
   }
 
   @Override
-  public List<Item> deleteMarkers() {
-    return Collections.unmodifiableList(
-        (deleteMarkers == null) ? new LinkedList<>() : deleteMarkers);
+  public List<DeleteMarker> deleteMarkers() {
+    return emptyIfNull(deleteMarkers);
   }
 }
