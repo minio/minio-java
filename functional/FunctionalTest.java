@@ -423,34 +423,6 @@ public class FunctionalTest {
     throw e;
   }
 
-  // private static void deleteFilesAndObjects(String bucketName, String[] filenames) throws
-  // Exception {
-  //   for (String filename : filenames) {
-  //     Files.delete(Paths.get(filename));
-  //
-  // client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
-  //   }
-  // }
-
-  private static void deleteFilesAndObjects(String bucketName, String[] filenames)
-      throws Exception {
-    for (String filename : filenames) {
-      Files.delete(Paths.get(filename));
-    }
-    List<DeleteObject> objects =
-        Arrays.stream(filenames)
-            .map(
-                name -> {
-                  return new DeleteObject(name);
-                })
-            .collect(Collectors.toList());
-    for (Result<?> r :
-        client.removeObjects(
-            RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
-      ignore(r.get());
-    }
-  }
-
   /** Test: makeBucket(MakeBucketArgs args). */
   public static void makeBucket_test1() throws Exception {
     if (!mintEnv) {
@@ -2383,24 +2355,25 @@ public class FunctionalTest {
     String mintArgs = "size: 6 MB & 6 MB ";
 
     try {
+      List<ObjectWriteResponse> results = new LinkedList<>();
       String destinationObjectName = getRandomName();
-      String filename1 = createFile6Mb();
-      String filename2 = createFile6Mb();
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename1)
-              .filename(filename1)
-              .build());
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename2)
-              .filename(filename2)
-              .build());
-      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(filename1).build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
+      String objectName1 = getRandomName();
+      String objectName2 = getRandomName();
 
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
+      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(objectName1).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
       listSourceObjects.add(s2);
@@ -2414,7 +2387,7 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        deleteFilesAndObjects(bucketName, new String[] {filename1, filename2});
+        removeObjects(bucketName, results);
       }
       mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
@@ -2435,29 +2408,30 @@ public class FunctionalTest {
     String mintArgs = String.format("offset: %d, length: %d bytes", offset, partialLength);
 
     try {
+      List<ObjectWriteResponse> results = new LinkedList<>();
       String destinationObjectName = getRandomName();
-      String filename1 = createFile6Mb();
-      String filename2 = createFile6Mb();
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename1)
-              .filename(filename1)
-              .build());
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename2)
-              .filename(filename2)
-              .build());
+      String objectName1 = getRandomName();
+      String objectName2 = getRandomName();
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
       ComposeSource s1 =
           ComposeSource.builder()
               .bucket(bucketName)
-              .object(filename1)
+              .object(objectName1)
               .offset(10L)
               .length(6291436L)
               .build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
@@ -2472,7 +2446,7 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        deleteFilesAndObjects(bucketName, new String[] {filename1, filename2});
+        removeObjects(bucketName, results);
       }
       mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
@@ -2491,19 +2465,20 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
 
     try {
+      List<ObjectWriteResponse> results = new LinkedList<>();
       String destinationObjectName = getRandomName();
-      String filename1 = createFile6Mb();
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename1)
-              .filename(filename1)
-              .build());
+      String objectName1 = getRandomName();
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
 
       ComposeSource s1 =
           ComposeSource.builder()
               .bucket(bucketName)
-              .object(filename1)
+              .object(objectName1)
               .offset(10L)
               .length(6291436L)
               .build();
@@ -2520,7 +2495,7 @@ public class FunctionalTest {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        deleteFilesAndObjects(bucketName, new String[] {filename1});
+        removeObjects(bucketName, results);
       }
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
@@ -2539,7 +2514,10 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
 
     try {
-      String objectName = getRandomName();
+      List<ObjectWriteResponse> results = new LinkedList<>();
+      String destinationObjectName = getRandomName();
+      String objectName1 = getRandomName();
+      String objectName2 = getRandomName();
 
       // Generate a new 256 bit AES key - This key must be remembered by the client.
       byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
@@ -2551,6 +2529,21 @@ public class FunctionalTest {
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
 
       ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
+
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .sse(ssePut)
+                  .build()));
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .sse(ssePut)
+                  .build()));
 
       String filename1 = createFile6Mb();
       String filename2 = createFile6Mb();
@@ -2580,14 +2573,14 @@ public class FunctionalTest {
         client.composeObject(
             ComposeObjectArgs.builder()
                 .bucket(bucketName)
-                .object(objectName)
+                .object(destinationObjectName)
                 .sources(listSourceObjects)
                 .sse(sseTarget)
                 .build());
         client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        deleteFilesAndObjects(bucketName, new String[] {filename1, filename2});
+        removeObjects(bucketName, results);
       }
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
@@ -2605,7 +2598,10 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
+      List<ObjectWriteResponse> results = new LinkedList<>();
+      String destinationObjectName = getRandomName();
+      String objectName1 = getRandomName();
+      String objectName2 = getRandomName();
 
       // Generate a new 256 bit AES key - This key must be remembered by the client.
       byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
@@ -2613,24 +2609,23 @@ public class FunctionalTest {
 
       ServerSideEncryptionCustomerKey ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
 
-      String filename1 = createFile6Mb();
-      String filename2 = createFile6Mb();
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename1)
-              .filename(filename1)
-              .sse(ssePut)
-              .build());
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename2)
-              .filename(filename2)
-              .build());
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .sse(ssePut)
+                  .build()));
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
+
       ComposeSource s1 =
-          ComposeSource.builder().bucket(bucketName).object(filename1).ssec(ssePut).build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
+          ComposeSource.builder().bucket(bucketName).object(objectName1).ssec(ssePut).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
@@ -2639,13 +2634,13 @@ public class FunctionalTest {
         client.composeObject(
             ComposeObjectArgs.builder()
                 .bucket(bucketName)
-                .object(objectName)
+                .object(destinationObjectName)
                 .sources(listSourceObjects)
                 .build());
         client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        deleteFilesAndObjects(bucketName, new String[] {filename1, filename2});
+        removeObjects(bucketName, results);
       }
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
@@ -2666,28 +2661,29 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
+      List<ObjectWriteResponse> results = new LinkedList<>();
+      String destinationObjectName = getRandomName();
+      String objectName1 = getRandomName();
+      String objectName2 = getRandomName();
       byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
 
       ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
 
-      String filename1 = createFile6Mb();
-      String filename2 = createFile6Mb();
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename1)
-              .filename(filename1)
-              .build());
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename2)
-              .filename(filename2)
-              .build());
-      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(filename1).build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(filename2).build();
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
+                      new ContentInputStream(6 * MB), 6 * MB, -1)
+                  .contentType(customContentType)
+                  .build()));
+      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(objectName1).build();
+      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);
@@ -2696,14 +2692,14 @@ public class FunctionalTest {
         client.composeObject(
             ComposeObjectArgs.builder()
                 .bucket(bucketName)
-                .object(objectName)
+                .object(destinationObjectName)
                 .sources(listSourceObjects)
                 .sse(sseTarget)
                 .build());
         client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
       } finally {
-        deleteFilesAndObjects(bucketName, new String[] {filename1, filename2});
+        removeObjects(bucketName, results);
       }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {

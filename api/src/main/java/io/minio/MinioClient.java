@@ -2502,31 +2502,13 @@ public class MinioClient {
             null,
             0)) {
 
-      String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
-      bodyContent = bodyContent.trim();
-      if (!bodyContent.isEmpty()) {
-        try {
-          CopyObjectResult result = Xml.unmarshal(CopyObjectResult.class, bodyContent);
-          return new ObjectWriteResponse(
-              response.headers(),
-              args.bucket(),
-              args.region(),
-              args.object(),
-              result.etag(),
-              response.header("x-amz-version-id"));
-        } catch (XmlParserException e) {
-          // As this CopyObjectResult REST call succeeded, just log it.
-          Logger.getLogger(MinioClient.class.getName())
-              .warning(
-                  "S3 service returned unknown XML for CopyObjectResult REST API. " + bodyContent);
-        }
-      }
+      CopyObjectResult result = Xml.unmarshal(CopyObjectResult.class, response.body().charStream());
       return new ObjectWriteResponse(
           response.headers(),
           args.bucket(),
-          getRegion(args.bucket()),
+          args.region(),
           args.object(),
-          null,
+          result.etag(),
           response.header("x-amz-version-id"));
     }
   }

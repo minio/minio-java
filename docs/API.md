@@ -990,8 +990,8 @@ minioClient.setDefaultRetention(
 
 ## 3. Object operations
 
- <a name="composeObject"></a>
-### composeObject(ComposeObjectArgs  args)
+<a name="composeObject"></a>
+### composeObject(ComposeObjectArgs args)
 `public ObjectWriteResponse composeObject(ComposeObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-io.minio.ComposeObjectArgs--)_
 
 Creates an object by combining data from different source objects using server-side copy.
@@ -1003,7 +1003,7 @@ Creates an object by combining data from different source objects using server-s
 
 | Returns                                                                     |
 |:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Contains object versionId, etag and headers.      |
+| _[ObjectWriteResponse]_ - Contains information of created object.           |
 
 __Example__
  ```java
@@ -1058,7 +1058,7 @@ __Parameters__
 
 | Returns                                                                     |
 |:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Contains object versionId, etag and headers.      |
+| _[ObjectWriteResponse]_ - Contains information of created object.           |
 
 __Example__
 
@@ -1491,7 +1491,7 @@ __Parameters__
 
 | Returns                                                                     |
 |:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Contains object versionId, etag and headers.      |
+| _[ObjectWriteResponse]_ - Contains information of created object.           |
 
 __Example__
 ```java
