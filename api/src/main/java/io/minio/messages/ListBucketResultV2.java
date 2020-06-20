@@ -16,7 +16,9 @@
 
 package io.minio.messages;
 
+import java.util.List;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
@@ -27,22 +29,45 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "ListBucketResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class ListBucketResultV2 extends ListBucketResult {
+public class ListBucketResultV2 extends ListObjectsResult {
+  @Element(name = "KeyCount", required = false)
+  private int keyCount;
+
+  @Element(name = "StartAfter", required = false)
+  private String startAfter;
+
   @Element(name = "ContinuationToken", required = false)
   private String continuationToken;
 
   @Element(name = "NextContinuationToken", required = false)
   private String nextContinuationToken;
 
+  @ElementList(name = "Contents", inline = true, required = false)
+  private List<Contents> contents;
+
+  /** Returns key count. */
+  public int keyCount() {
+    return keyCount;
+  }
+
+  /** Returns start after. */
+  public String startAfter() {
+    return startAfter;
+  }
+
   /** Returns continuation token. */
-  @Override
   public String continuationToken() {
     return continuationToken;
   }
 
   /** Returns next continuation token. */
-  @Override
   public String nextContinuationToken() {
     return nextContinuationToken;
+  }
+
+  /** Returns List of Items. */
+  @Override
+  public List<Contents> contents() {
+    return emptyIfNull(contents);
   }
 }

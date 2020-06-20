@@ -56,6 +56,7 @@ import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
+import io.minio.ObjectWriteResponse;
 import io.minio.PostPolicy;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveBucketArgs;
@@ -1356,25 +1357,37 @@ public class FunctionalTest {
             .build());
   }
 
-  public static String[] createObjects(String bucketName, int count) throws Exception {
-    String[] objectNames = new String[count];
+  public static List<ObjectWriteResponse> createObjects(String bucketName, int count, int versions)
+      throws Exception {
+    List<ObjectWriteResponse> results = new LinkedList<>();
     for (int i = 0; i < count; i++) {
-      objectNames[i] = getRandomName();
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectNames[i]).stream(
-                  new ContentInputStream(1), 1, -1)
-              .build());
+      String objectName = getRandomName();
+      results.add(
+          client.putObject(
+              PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                      new ContentInputStream(1), 1, -1)
+                  .build()));
+      if (versions > 1) {
+        for (int j = 0; j < versions - 1; j++) {
+          results.add(
+              client.putObject(
+                  PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                          new ContentInputStream(1), 1, -1)
+                      .build()));
+        }
+      }
     }
 
-    return objectNames;
+    return results;
   }
 
-  public static void removeObjects(String bucketName, String[] objectNames) throws Exception {
+  public static void removeObjects(String bucketName, List<ObjectWriteResponse> results)
+      throws Exception {
     List<DeleteObject> objects =
-        Arrays.stream(objectNames)
+        results.stream()
             .map(
-                name -> {
-                  return new DeleteObject(name);
+                result -> {
+                  return new DeleteObject(result.object(), result.versionId());
                 })
             .collect(Collectors.toList());
     for (Result<?> r :
@@ -1385,18 +1398,19 @@ public class FunctionalTest {
   }
 
   public static void testListObjects(
-      String methodName, String tag, ListObjectsArgs args, int objCount) throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: " + tag + " " + methodName);
-    }
-
+      String testTags, ListObjectsArgs args, int objCount, int versions) throws Exception {
+    String methodName = "listObjects()";
     long startTime = System.currentTimeMillis();
     String bucketName = args.bucket();
-    String[] objectNames = null;
+    List<ObjectWriteResponse> results = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        objectNames = createObjects(bucketName, objCount);
+        if (versions > 0) {
+          client.enableVersioning(EnableVersioningArgs.builder().bucket(bucketName).build());
+        }
+
+        results = createObjects(bucketName, objCount, versions);
 
         int i = 0;
         for (Result<?> r : client.listObjects(args)) {
@@ -1404,74 +1418,69 @@ public class FunctionalTest {
           i++;
         }
 
+        if (versions > 0) {
+          objCount *= versions;
+        }
+
         if (i != objCount) {
           throw new Exception("object count; expected=" + objCount + ", got=" + i);
         }
 
-        mintSuccessLog(methodName, tag, startTime);
+        mintSuccessLog(methodName, testTags, startTime);
       } finally {
-        if (objectNames != null) {
-          removeObjects(bucketName, objectNames);
+        if (results != null) {
+          removeObjects(bucketName, results);
         }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
-      handleException(methodName, tag, startTime, e);
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: [bucket] listObjects(ListObjectsArgs args). */
-  public static void listObjects_test1() throws Exception {
-    testListObjects(
-        "listObjects(ListObjectsArgs args)",
-        "[bucket]",
-        ListObjectsArgs.builder().bucket(getRandomName()).build(),
-        3);
-  }
+  public static void listObjects_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: listObjects()");
+    }
 
-  /** Test: [bucket, prefix] listObjects(ListObjectsArgs args). */
-  public static void listObjects_test2() throws Exception {
+    testListObjects("[bucket]", ListObjectsArgs.builder().bucket(getRandomName()).build(), 3, 0);
+
     testListObjects(
-        "listObjects(ListObjectsArgs args)",
         "[bucket, prefix]",
         ListObjectsArgs.builder().bucket(getRandomName()).prefix("minio").build(),
-        3);
-  }
+        3,
+        0);
 
-  /** Test: [bucket, prefix, recursive] listObjects(ListObjectsArgs args). */
-  public static void listObjects_test3() throws Exception {
     testListObjects(
-        "listObjects(ListObjectsArgs args)",
         "[bucket, prefix, recursive]",
         ListObjectsArgs.builder().bucket(getRandomName()).prefix("minio").recursive(true).build(),
-        3);
-  }
-
-  /** Test: [empty bucket] listObjects(ListObjectsArgs args). */
-  public static void listObjects_test4() throws Exception {
-    testListObjects(
-        "listObjects(ListObjectsArgs args)",
-        "[empty bucket]",
-        ListObjectsArgs.builder().bucket(getRandomName()).build(),
+        3,
         0);
-  }
 
-  /** Test: [bucket, prefix, recursive, 1050 objects] listObjects(ListObjectsArgs args). */
-  public static void listObjects_test5() throws Exception {
     testListObjects(
-        "listObjects(ListObjectsArgs args)",
+        "[bucket, versions]",
+        ListObjectsArgs.builder().bucket(getRandomName()).includeVersions(true).build(),
+        3,
+        2);
+
+    if (isQuickTest) {
+      return;
+    }
+
+    testListObjects(
+        "[empty bucket]", ListObjectsArgs.builder().bucket(getRandomName()).build(), 0, 0);
+
+    testListObjects(
         "[bucket, prefix, recursive, 1050 objects]",
         ListObjectsArgs.builder().bucket(getRandomName()).prefix("minio").recursive(true).build(),
-        1050);
-  }
+        1050,
+        0);
 
-  /** Test: [bucket, version1] listObjects(ListObjectsArgs args). */
-  public static void listObjects_test6() throws Exception {
     testListObjects(
-        "listObjects(ListObjectsArgs args)",
-        "[bucket, version1]",
-        ListObjectsArgs.builder().bucket(getRandomName()).useVersion1(true).build(),
-        3);
+        "[bucket, apiVersion1]",
+        ListObjectsArgs.builder().bucket(getRandomName()).useApiVersion1(true).build(),
+        3,
+        0);
   }
 
   /** Test: removeObject(String bucketName, String objectName). */
@@ -1511,18 +1520,17 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String bucketName = getRandomName();
-      String[] objectNames = null;
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      List<ObjectWriteResponse> results = null;
       try {
-        String[] createdNames = createObjects(bucketName, 3);
-        objectNames = new String[createdNames.length + 1];
-        System.arraycopy(createdNames, 0, objectNames, 0, createdNames.length);
-        objectNames[3] = "nonexistent-object";
-        removeObjects(bucketName, objectNames);
+        results = createObjects(bucketName, 3, 0);
+        results.add(
+            new ObjectWriteResponse(null, bucketName, null, "nonexistent-object", null, null));
+        removeObjects(bucketName, results);
         mintSuccessLog(methodName, null, startTime);
       } finally {
-        if (objectNames != null) {
-          removeObjects(bucketName, objectNames);
+        if (results != null) {
+          removeObjects(bucketName, results);
         }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
@@ -2808,23 +2816,24 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: enableObjectLegalHold(EnableObjectLegalHoldArgs args) */
   public static void enableObjectLegalHold_test() throws Exception {
-    String methodName = "enableObjectLegalHold(EnableObjectLegalHoldArgs args)";
+    String methodName = "enableObjectLegalHold()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
 
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
 
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
@@ -2836,8 +2845,14 @@ public class FunctionalTest {
             DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
         mintSuccessLog(methodName, null, startTime);
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
@@ -2845,22 +2860,23 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: disableObjectLegalHold(DisableObjectLegalHoldArgs args) */
   public static void disableObjectLegalHold_test() throws Exception {
-    String methodName = "disableObjectLegalHold(DisableObjectLegalHoldArgs args)";
+    String methodName = "disableObjectLegalHold()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
         client.disableObjectLegalHold(
@@ -2870,8 +2886,14 @@ public class FunctionalTest {
           throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
         }
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
@@ -2981,9 +3003,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setObjectRetention(SetObjectRetentionArgs args). */
-  public static void setObjectRetention_test1() throws Exception {
-    String methodName = "setObjectRetention(SetObjectRetentionArgs args)";
+  public static void setObjectRetention_test() throws Exception {
+    String methodName = "setObjectRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -2991,13 +3012,15 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
 
         ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
@@ -3018,8 +3041,14 @@ public class FunctionalTest {
                 .build());
 
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
@@ -3028,9 +3057,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getObjectRetention(GetObjectRetentionArgs args). */
-  public static void getObjectRetention_test1() throws Exception {
-    String methodName = "getObjectRetention(GetObjectRetentionArgs args)";
+  public static void getObjectRetention_test() throws Exception {
+    String methodName = "getObjectRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3038,13 +3066,15 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
     String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
 
         ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3);
         Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
@@ -3123,8 +3153,14 @@ public class FunctionalTest {
                 .build());
 
       } finally {
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
@@ -3900,8 +3936,8 @@ public class FunctionalTest {
     uploadObject_test();
     downloadObject_test();
 
-    setObjectRetention_test1();
-    getObjectRetention_test1();
+    setObjectRetention_test();
+    getObjectRetention_test();
 
     statObject_test1();
     statObject_test2();
@@ -3915,12 +3951,7 @@ public class FunctionalTest {
     getPresignedObjectUrl_test5();
     getPresignedObjectUrl_test6();
 
-    listObjects_test1();
-    listObjects_test2();
-    listObjects_test3();
-    listObjects_test4();
-    listObjects_test5();
-    listObjects_test6();
+    listObjects_test();
 
     removeObject_test1();
     removeObjects_test1();
@@ -3953,8 +3984,8 @@ public class FunctionalTest {
     setDefaultRetention_test();
     getDefaultRetention_test();
 
-    setObjectRetention_test1();
-    getObjectRetention_test1();
+    setObjectRetention_test();
+    getObjectRetention_test();
 
     selectObjectContent_test1();
 
@@ -4011,7 +4042,7 @@ public class FunctionalTest {
     statObject_test1();
     getObject_test();
     downloadObject_test();
-    listObjects_test1();
+    listObjects_test();
     removeObject_test1();
     listIncompleteUploads_test1();
     removeIncompleteUploads_test();
@@ -4088,7 +4119,8 @@ public class FunctionalTest {
 
   public static Process runMinio() throws Exception {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
-    ProcessBuilder pb = new ProcessBuilder(binaryPath.getPath(), "server", "d1");
+    ProcessBuilder pb =
+        new ProcessBuilder(binaryPath.getPath(), "server", ".d1", ".d2", ".d3", ".d4");
 
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");

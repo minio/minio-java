@@ -19,31 +19,35 @@ package io.minio.messages;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote Object information in {@link ListBucketResult} and {@link
- * ListBucketResultV1}.
+ * Helper class to denote Object information in {@link ListBucketResultV1}, {@link
+ * ListBucketResultV2} and {@link ListVersionsResult}.
  */
-@Root(name = "Contents", strict = false)
-public class Item {
+public abstract class Item {
+  @Element(name = "ETag", required = false)
+  private String etag; // except DeleteMarker
+
   @Element(name = "Key")
   private String objectName;
 
   @Element(name = "LastModified")
   private ResponseDate lastModified;
 
-  @Element(name = "ETag")
-  private String etag;
-
-  @Element(name = "Size")
-  private long size;
-
-  @Element(name = "StorageClass")
-  private String storageClass;
-
   @Element(name = "Owner", required = false)
   private Owner owner;
+
+  @Element(name = "Size", required = false)
+  private long size; // except DeleteMarker
+
+  @Element(name = "StorageClass", required = false)
+  private String storageClass; // except DeleteMarker
+
+  @Element(name = "IsLatest", required = false)
+  private boolean isLatest; // except ListObjects V1
+
+  @Element(name = "VersionId", required = false)
+  private String versionId; // except ListObjects V1
 
   @Element(name = "UserMetadata", required = false)
   private Metadata userMetadata;
@@ -90,15 +94,26 @@ public class Item {
 
   /** Returns user metadata. This is MinIO specific extension to ListObjectsV2. */
   public Map<String, String> userMetadata() {
-    if (userMetadata == null) {
-      return null;
-    }
-
-    return userMetadata.get();
+    return (userMetadata == null) ? null : userMetadata.get();
   }
 
-  /** Returns whether the object is a directory or not. */
+  /** Returns whether this version ID is latest. */
+  public boolean isLatest() {
+    return isLatest;
+  }
+
+  /** Returns version ID. */
+  public String versionId() {
+    return versionId;
+  }
+
+  /** Returns whether this item is a directory or not. */
   public boolean isDir() {
     return isDir;
+  }
+
+  /** Returns whether this item is a delete marker or not. */
+  public boolean isDeleteMarker() {
+    return (etag == null && size == 0 && storageClass == null && versionId != null);
   }
 }

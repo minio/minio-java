@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.messages;
 
-import okhttp3.Headers;
+import org.simpleframework.xml.Root;
 
-/** Response class of any APIs doing object creation. */
-public class ObjectWriteResponse extends GenericResponse {
-  private String etag;
-  private String versionId;
-
-  public ObjectWriteResponse(
-      Headers headers, String bucket, String region, String object, String etag, String versionId) {
-    super(headers, bucket, region, object);
-    this.etag = etag;
-    this.versionId = versionId;
+/** Helper class to denote delete marker information in {@link ListVersionsResult}. */
+@Root(name = "DeleteMarker", strict = false)
+public class DeleteMarker extends Item {
+  public DeleteMarker() {
+    super();
   }
 
-  public String etag() {
-    return etag;
-  }
-
-  public String versionId() {
-    return versionId;
+  public DeleteMarker(String prefix) {
+    super(prefix);
   }
 }
