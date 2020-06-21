@@ -1470,9 +1470,8 @@ public class FunctionalTest {
         RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
   }
 
-  /** Test: removeObjects(RemoveObjectsArgs args). */
-  public static void removeObjects_test1() throws Exception {
-    String methodName = "removeObjects(RemoveObjectsArgs args)";
+  public static void removeObjects_test() throws Exception {
+    String methodName = "removeObjects()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3438,7 +3437,7 @@ public class FunctionalTest {
     listObjects_test();
 
     removeObject_test();
-    removeObjects_test1();
+    removeObjects_test();
 
     presignedPostPolicy_test();
 
