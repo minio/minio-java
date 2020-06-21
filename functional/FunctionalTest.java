@@ -4199,7 +4199,7 @@ public class FunctionalTest {
 
     int exitValue = 0;
     try {
-      client = new MinioClient(endpoint, accessKey, secretKey);
+      client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
       // Enable trace for debugging.
       // client.traceOn(System.out);
 
@@ -4216,7 +4216,12 @@ public class FunctionalTest {
         // Get new bucket name to avoid minio azure gateway failure.
         bucketName = getRandomName();
         // Quick tests with passed region.
-        client = new MinioClient(endpoint, accessKey, secretKey, region);
+        client =
+            MinioClient.builder()
+                .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
+                .region(region)
+                .build();
         FunctionalTest.runQuickTests();
       }
     } catch (Exception e) {

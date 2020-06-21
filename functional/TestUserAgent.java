@@ -23,7 +23,7 @@ import java.util.Scanner;
 
 public class TestUserAgent {
   public static void main(String[] args) throws Exception {
-    MinioClient client = new MinioClient("http://example.org");
+    MinioClient client = MinioClient.builder().endpoint("http://example.org").build();
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     client.traceOn(baos);
     client.bucketExists(BucketExistsArgs.builder().bucket("any-bucket-name-works").build());

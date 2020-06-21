@@ -1,19 +1,25 @@
 # Java Client API Reference [![Slack](https://slack.min.io/slack?type=svg)](https://slack.min.io)
 
-## Initialize MinIO Client object.
+## Create MinIO Client.
 
 ## MinIO
 
 ```java
-MinioClient minioClient = new MinioClient("https://play.min.io",
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+MinioClient minioClient =
+    MinioClient.builder()
+        .endpoint("https://play.min.io")
+        .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+        .build();
 ```
 
 ## AWS S3
 
 ```java
-MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+MinioClient minioClient =
+    MinioClient.builder()
+        .endpoint("https://s3.amazonaws.com")
+        .credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
+        .build();
 ```
 
 | Bucket operations                                       | Object operations                                       |
@@ -47,144 +53,82 @@ MinioClient s3Client = new MinioClient("https://s3.amazonaws.com",
 | [`setBucketTags`](#setBucketTags)                       |                                                         |
 | [`setDefaultRetention`](#setDefaultRetention)           |                                                         |
 
-## 1. Constructors
-|                                                                                                                          |
-|--------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-1]_ |
-| Creates MinIO client object with given endpoint using anonymous access.                                                  |
+## 1. MinIO Client Builder
 
-|                                                                                                                  |
-|------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(URL url) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-2]_ |
-| Creates MinIO client object with given url using anonymous access.                                               |
+MinIO Client Builder is used to create MinIO client. Builder has below methods to accept arguments.
+| Method          | Description                                                                                                                                |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| `endpoint()`    | Accepts endpoint as a String, URL or okhttp3.HttpUrl object and optionally accepts port number and flag to enable secure (TLS) connection. |
+|                 | Endpoint as a string can be formatted like below:                                                                                          |
+|                 | `https://s3.amazonaws.com`                                                                                                                 |
+|                 | `https://play.min.io`                                                                                                                      |
+|                 | `https://play.min.io:9000`                                                                                                                 |
+|                 | `localhost`                                                                                                                                |
+|                 | `play.min.io`                                                                                                                              |
+| `credentials()` | Accepts access key (aka user ID) and secret key (aka password) of an account in S3 service.                                                |
+| `region()`      | Accepts region name of S3 service. If specified, all operations use this region otherwise region is probed per bucket.                     |
+| `httpClient()`  | Custom HTTP client to override default.                                                                                                    |
 
-|                                                                                                                               |
-|-------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(okhttp3.HttpUrl url) throws  InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-3]_ |
-| Creates MinIO client object with given HttpUrl object using anonymous access.                                                 |
-
-|                                                                                                                                                              |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint, String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-4]_ |
-| Creates MinIO client object with given endpoint, access key and secret key.                                                                                  |
-
-|                                                                                                                                                                         |
-|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint, int port,  String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-5]_ |
-| Creates MinIO client object with given endpoint, port, access key and secret key using secure (HTTPS) connection.                                                       |
-
-|                                                                                                                                                                              |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-6]_ |
-| Creates MinIO client object with given endpoint, access key and secret key using secure (HTTPS) connection.                                                                  |
-
-|                                                                                                                                                                                        |
-|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-7]_ |
-| Creates MinIO client object using given endpoint, port, access key, secret key and secure option.                                                                                      |
-
-|                                                                                                                                                                  |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(okhttp3.HttpUrl url, String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-8]_ |
-| Creates MinIO client object with given URL object, access key and secret key.                                                                                    |
-
-|                                                                                                                                                      |
-|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(URL url, String accessKey, String secretKey) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-9]_ |
-| Creates MinIO client object with given URL object, access key and secret key.                                                                        |
-
-|                                                                                                                                                                              |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint, String accessKey, String secretKey, String region) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-10]_ |
-| Creates MinIO client object with given URL object, access key and secret key.                                                                                                |
-
-|                                                                                                                                                                                                        |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint, int port, String accessKey, String secretKey, String region, boolean secure) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-11]_ |
-| Creates MinIO client object using given endpoint, port, access key, secret key, region and secure option.                                                                                              |
-
-|                                                                                                                                                                                                                                             |
-|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `public MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String region, Boolean secure, okhttp3.OkHttpClient httpClient) throws InvalidEndpointException, InvalidPortException` _[[Javadoc]][constructor-12]_ |
-| Creates MinIO client object using given endpoint, port, access key, secret key, region and secure option.                                                                                                                                   |
-
-__Parameters__
-
-| Parameter    | Type                   | Description                                                                        |
-|--------------|------------------------|------------------------------------------------------------------------------------|
-| `endpoint`   | _String_               | Endpoint is an URL, domain name, IPv4 address or IPv6 address of S3 service.       |
-|              |                        | Examples:                                                                          |
-|              |                        | https://s3.amazonaws.com                                                           |
-|              |                        | https://play.min.io                                                                |
-|              |                        | https://play.min.io:9000                                                           |
-|              |                        | localhost                                                                          |
-|              |                        | play.min.io                                                                        |
-| `url`        | _URL_                  | Endpoint as URL object.                                                            |
-| `url`        | _okhttp3.HttpUrl_      | Endpoint as okhttp3.HttpUrl object.                                                |
-| `port`       | _int_                  | (Optional) TCP/IP port number. 80 and 443 are used as defaults for HTTP and HTTPS. |
-| `accessKey`  | _String_               | (Optional) Access key (aka user ID) of your account in S3 service.                 |
-| `secretKey`  | _String_               | (Optional) Secret Key (aka password) of your account in S3 service.                |
-| `secure`     | _boolean_              | (Optional) Flag to indicate to use secure connection to S3 service or not.         |
-| `region`     | _String_               | (Optional) Region name of buckets in S3 service.                                   |
-| `httpClient` | _okhttp3.OkHttpClient_ | (Optional) Custom HTTP client object.                                              |
-
-__Example__
+__Examples__
 
 ### MinIO
 
 ```java
 // 1. Create client to S3 service 'play.min.io' at port 443 with TLS security
 // for anonymous access.
-MinioClient minioClient = new MinioClient("https://play.min.io");
+MinioClient minioClient = MinioClient.builder().endpoint("https://play.min.io").build();
 
 // 2. Create client to S3 service 'play.min.io' at port 443 with TLS security
 // using URL object for anonymous access.
-MinioClient minioClient = new MinioClient(new URL("https://play.min.io"));
+MinioClient minioClient = MinioClient.builder().endpoint(new URL("https://play.min.io")).build();
 
 // 3. Create client to S3 service 'play.min.io' at port 9000 with TLS security
 // using okhttp3.HttpUrl object for anonymous access.
-MinioClient minioClient = new MinioClient(new HttpUrl.parse("https://play.min.io:9000"));
+MinioClient minioClient =
+    MinioClient.builder().endpoint(HttpUrl.parse("https://play.min.io:9000")).build();
 
 // 4. Create client to S3 service 'play.min.io' at port 443 with TLS security
 // for authenticated access.
-MinioClient minioClient = new MinioClient("https://play.min.io",
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+MinioClient minioClient =
+    MinioClient.builder()
+	    .endpoint("https://play.min.io")
+		.credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+		.build();
 
 // 5. Create client to S3 service 'play.min.io' at port 9000 with non-TLS security
 // for authenticated access.
-MinioClient minioClient = new MinioClient("play.min.io", 9000,
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+MinioClient minioClient =
+    MinioClient.builder()
+	    .endpoint("play.min.io", 9000, false)
+	    .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+		.build();
 
 // 6. Create client to S3 service 'play.min.io' at port 9000 with TLS security
 // for authenticated access.
-MinioClient minioClient = new MinioClient("play.min.io", 9000,
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", true);
+MinioClient minioClient =
+    MinioClient.builder()
+	    .endpoint("play.min.io", 9000, true)
+		.credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+		.build();
 
 // 7. Create client to S3 service 'play.min.io' at port 443 with TLS security
-// using URL object for authenticated access.
-MinioClient minioClient = new MinioClient(new URL("https://play.min.io"),
-     "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
-
-// 8. Create client to S3 service 'play.min.io' at port 443 with TLS security
-// using okhttp3.HttpUrl object for authenticated access.
-MinioClient minioClient = new MinioClient(HttpUrl.parse("https://play.min.io"),
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
-
-// 9. Create client to S3 service 'play.min.io' at port 443 with TLS security
 // and region 'us-west-1' for authenticated access.
-MinioClient minioClient = new MinioClient("https://play.min.io",
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", "us-west-1");
+MinioClient minioClient =
+    MinioClient.builder()
+	    .endpoint(new URL("https://play.min.io"))
+		.credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+		.region("us-west-1")
+		.build();
 
-// 10. Create client to S3 service 'play.min.io' at port 9000 with TLS security
-// and region 'eu-east-1' for authenticated access.
-MinioClient minioClient = new MinioClient("play.min.io", 9000,
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", "eu-east-1", true);
-
-// 11. Create client to S3 service 'play.min.io' at port 9000 with TLS security,
+// 8. Create client to S3 service 'play.min.io' at port 9000 with TLS security,
 // region 'eu-east-1' and custom HTTP client for authenticated access.
-MinioClient minioClient = new MinioClient("play.min.io", 9000,
-    "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG", "eu-east-1",
-    true, customHttpClient);
+MinioClient minioClient =
+    MinioClient.builder()
+	    .endpoint("https://play.min.io:9000")
+		.credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+		.region("eu-east-1")
+		.httpClient(customHttpClient)
+		.build();
 ```
 
 ### AWS S3
@@ -192,58 +136,76 @@ MinioClient minioClient = new MinioClient("play.min.io", 9000,
 ```java
 // 1. Create client to S3 service 's3.amazonaws.com' at port 443 with TLS security
 // for anonymous access.
-MinioClient s3Client = new MinioClient("https://s3.amazonaws.com");
+MinioClient s3Client = MinioClient.builder().endpoint("https://s3.amazonaws.com").build();
 
 // 2. Create client to S3 service 's3.amazonaws.com' at port 443 with TLS security
 // using URL object for anonymous access.
-MinioClient minioClient = new MinioClient(new URL("https://s3.amazonaws.com"));
+MinioClient s3Client = MinioClient.builder().endpoint(new URL("https://s3.amazonaws.com")).build();
 
 // 3. Create client to S3 service 's3.amazonaws.com' at port 9000 with TLS security
 // using okhttp3.HttpUrl object for anonymous access.
-MinioClient s3Client = new MinioClient(new HttpUrl.parse("https://s3.amazonaws.com"));
+MinioClient s3Client =
+    MinioClient.builder().endpoint(HttpUrl.parse("https://s3.amazonaws.com")).build();
 
 // 4. Create client to S3 service 's3.amazonaws.com' at port 80 with TLS security
 // for authenticated access.
-MinioClient s3Client = new MinioClient("s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+MinioClient s3Client =
+    MinioClient.builder()
+	    .endpoint("s3.amazonaws.com")
+		.credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
+		.build();
 
 // 5. Create client to S3 service 's3.amazonaws.com' at port 443 with non-TLS security
 // for authenticated access.
-MinioClient s3Client = new MinioClient("s3.amazonaws.com", 433, "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+MinioClient s3Client =
+    MinioClient.builder()
+        .endpoint("s3.amazonaws.com", 433, false)
+		.credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
+		.build();
 
 // 6. Create client to S3 service 's3.amazonaws.com' at port 80 with non-TLS security
 // for authenticated access.
-MinioClient s3Client = new MinioClient("s3.amazonaws.com",
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", false);
+MinioClient s3Client =
+    MinioClient.builder()
+	    .endpoint("s3.amazonaws.com", 80, false)
+        .credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
+		.build();
 
 // 7. Create client to S3 service 's3.amazonaws.com' at port 80 with TLS security
 // for authenticated access.
-MinioClient s3Client = new MinioClient("s3.amazonaws.com", 80,
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", true);
+MinioClient s3Client =
+    MinioClient.builder()
+	    .endpoint("s3.amazonaws.com", 80, true)
+        .credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
+		.build();
 
 // 8. Create client to S3 service 's3.amazonaws.com' at port 80 with non-TLS security
-// using URL object for authenticated access.
-MinioClient s3Client = new MinioClient(new URL("s3.amazonaws.com"),
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-// 9. Create client to S3 service 's3.amazonaws.com' at port 80 with non-TLS security
-// using okhttp3.HttpUrl object for authenticated access.
-MinioClient s3Client = new MinioClient(HttpUrl.parse("s3.amazonaws.com"),
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
-
-// 10. Create client to S3 service 's3.amazonaws.com' at port 80 with non-TLS security
 // and region 'us-west-1' for authenticated access.
-MinioClient s3Client = new MinioClient("s3.amazonaws.com",
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "us-west-1");
+MinioClient s3Client =
+    MinioClient.builder()
+	    .endpoint("s3.amazonaws.com", 80, false)
+        .credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
+		.region("us-west-1")
+		.build();
 
-// 11. Create client to S3 service 's3.amazonaws.com' at port 443 with TLS security
+// 9. Create client to S3 service 's3.amazonaws.com' at port 443 with TLS security
 // and region 'eu-west-2' for authenticated access.
-MinioClient s3Client = new MinioClient("s3.amazonaws.com", 443,
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "eu-west-2", true);
+MinioClient s3Client =
+    MinioClient.builder()
+	    .endpoint("s3.amazonaws.com", 443, true)
+		.credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY").
+		.region("eu-west-2")
+		.build();
 
-// 12. Create client to S3 service 's3.amazonaws.com' at port 443 with TLS security,
+// 10. Create client to S3 service 's3.amazonaws.com' at port 443 with TLS security,
 // region 'eu-central-1' and custom HTTP client for authenticated access.
-MinioClient s3Client = new MinioClient("s3.amazonaws.com", 443,
-    "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", "eu-central-1", true, customHttpClient);
+MinioClient s3Client =
+    MinioClient.builder()
+	    .endpoint("s3.amazonaws.com", 443, true)
+        .credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
+		.region("eu-central-1")
+		.httpClient(customHttpClient)
+		.build();
 ```
 
 ## Common Exceptions

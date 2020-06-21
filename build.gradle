@@ -101,6 +101,7 @@ subprojects {
             importOrder 'edu', 'com', 'io', 'java', 'javax', 'org', ''
             removeUnusedImports()
             googleJavaFormat()
+            paddedCell()
         }
         groovyGradle {
             target '*.gradle'
