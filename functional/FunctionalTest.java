@@ -51,7 +51,6 @@ import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.IsObjectLegalHoldEnabledArgs;
-import io.minio.IsVersioningEnabledArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
@@ -595,30 +594,28 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: disableVersioning(DisableVersioningArgs args). */
   public static void disableVersioning_test() throws Exception {
-    String methodName = "disableVersioning(DisableVersioningArgs args)";
+    String methodName = "disableVersioning()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String name = getRandomName();
     try {
-      String name = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
-      if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] isVersioningEnabled(): expected: false, got: true");
-      }
+      try {
+        // disableVersioning() should succeed on fresh bucket.
+        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
 
-      client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
-      client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
-      if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] isVersioningEnabled(): expected: false, got: true");
-      }
+        // disableVersioning() should succeed on version enabled bucket.
+        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
 
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(methodName, null, startTime);
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
+      }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
