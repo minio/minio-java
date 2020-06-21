@@ -511,6 +511,51 @@ public class FunctionalTest {
         false);
   }
 
+  public static void listBuckets_test() throws Exception {
+    String methodName = "listBuckets()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    List<String> expectedBucketNames = new LinkedList<>();
+    try {
+      try {
+        String bucketName = getRandomName();
+        client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        expectedBucketNames.add(bucketName);
+
+        bucketName = getRandomName();
+        client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+        expectedBucketNames.add(bucketName);
+
+        bucketName = getRandomName() + ".withperiod";
+        client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        expectedBucketNames.add(bucketName);
+
+        List<String> bucketNames = new LinkedList<>();
+        for (Bucket bucket : client.listBuckets()) {
+          if (expectedBucketNames.contains(bucket.name())) {
+            bucketNames.add(bucket.name());
+          }
+        }
+
+        if (!expectedBucketNames.containsAll(bucketNames)) {
+          throw new Exception(
+              "bucket names differ; expected = " + expectedBucketNames + ", got = " + bucketNames);
+        }
+
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        for (String bucketName : expectedBucketNames) {
+          client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+        }
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
   /** Test: enableVersioning(EnableVersioningArgs args). */
   public static void enableVersioning_test() throws Exception {
     String methodName = "enableVersioning(EnableVersioningArgs args)";
@@ -559,51 +604,6 @@ public class FunctionalTest {
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: listBuckets(). */
-  public static void listBuckets_test() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: listBuckets()");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      long nowSeconds = ZonedDateTime.now().toEpochSecond();
-      String bucketName = getRandomName();
-      boolean found = false;
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-      for (Bucket bucket : client.listBuckets()) {
-        if (bucket.name().equals(bucketName)) {
-          if (found) {
-            throw new Exception(
-                "[FAILED] duplicate entry " + bucketName + " found in list buckets");
-          }
-
-          found = true;
-          // excuse 15 minutes
-          if ((bucket.creationDate().toEpochSecond() - nowSeconds) > (15 * 60)) {
-            throw new Exception(
-                "[FAILED] bucket creation time too apart in "
-                    + (bucket.creationDate().toEpochSecond() - nowSeconds)
-                    + " seconds");
-          }
-        }
-      }
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-      if (!found) {
-        throw new Exception("[FAILED] created bucket not found in list buckets");
-      }
-      mintSuccessLog("listBuckets()", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "listBuckets()",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
     }
   }
 
