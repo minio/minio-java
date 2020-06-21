@@ -84,7 +84,6 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.DeleteObject;
-import io.minio.messages.ErrorResponse;
 import io.minio.messages.Event;
 import io.minio.messages.EventType;
 import io.minio.messages.FileHeaderInfo;
@@ -417,113 +416,99 @@ public class FunctionalTest {
     throw e;
   }
 
-  /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucket_test1() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: makeBucket(MakeBucketArgs args)");
-    }
-
+  public static void testBucketApi(
+      String methodName,
+      String testTags,
+      MakeBucketArgs args,
+      boolean existCheck,
+      boolean removeCheck)
+      throws Exception {
     long startTime = System.currentTimeMillis();
     try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("makeBucket(MakeBucketArgs args)", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucket_test2() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with region and object lock : makeBucket(MakeBucketArgs args)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(
-          MakeBucketArgs.builder().bucket(name).region("eu-west-1").objectLock(true).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(
-          "makeBucket(MakeBucketArgs args)", "region: eu-west-1, objectLock: true", startTime);
-    } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
+      client.makeBucket(args);
+      try {
+        if (existCheck
+            && !client.bucketExists(
+                BucketExistsArgs.builder().bucket(args.bucket()).region(args.region()).build())) {
+          throw new Exception(methodName + " failed after bucket creation");
+        }
+        if (removeCheck) {
+          client.removeBucket(
+              RemoveBucketArgs.builder().bucket(args.bucket()).region(args.region()).build());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        if (!removeCheck) {
+          client.removeBucket(
+              RemoveBucketArgs.builder().bucket(args.bucket()).region(args.region()).build());
+        }
       }
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "makeBucket(MakeBucketArgs args)", "region: eu-west-1, objectLock: true", startTime);
-      } else {
-        mintFailedLog(
-            "makeBucket(MakeBucketArgs args)",
-            "region: eu-west-1, objectLock: true",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucket_test3() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with region: makeBucket(MakeBucketArgs args)");
+  public static void testBucketApiCases(String methodName, boolean existCheck, boolean removeCheck)
+      throws Exception {
+    testBucketApi(
+        methodName,
+        "[basic check]",
+        MakeBucketArgs.builder().bucket(getRandomName()).build(),
+        existCheck,
+        removeCheck);
+
+    if (isQuickTest) {
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).region("eu-west-1").build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("makeBucket(MakeBucketArgs args) ", "region: eu-west-1", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args) ",
-          "region: eu-west-1",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+    testBucketApi(
+        methodName,
+        "[object lock]",
+        MakeBucketArgs.builder().bucket(getRandomName()).objectLock(true).build(),
+        existCheck,
+        removeCheck);
+    testBucketApi(
+        methodName,
+        "[name contains period]",
+        MakeBucketArgs.builder().bucket(getRandomName() + ".withperiod").build(),
+        existCheck,
+        removeCheck);
   }
 
-  /** Test: makeBucket(MakeBucketArgs args) where bucketName has periods in its name. */
-  public static void makeBucket_test4() throws Exception {
+  public static void makeBucket_test() throws Exception {
+    String methodName = "makeBucket()";
     if (!mintEnv) {
-      System.out.println(
-          "Test: with bucket name having periods in its name:  makeBucket(MakeBucketArgs args)");
+      System.out.println("Test: " + methodName);
     }
 
-    long startTime = System.currentTimeMillis();
-    String name = getRandomName() + ".withperiod";
-    try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).region("eu-central-1").build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(
-          "makeBucket(MakeBucketArgs args) bucketname having periods in its name",
-          "name: " + name + ", region: eu-central-1",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args) bucketname having periods in its name",
-          "name: " + name + ", region: eu-central-1",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+    testBucketApiCases(methodName, false, false);
+
+    if (isQuickTest) {
+      return;
     }
+
+    if (!endpoint.contains(".amazonaws.com")) {
+      mintIgnoredLog(methodName, "[region]", System.currentTimeMillis());
+      mintIgnoredLog(methodName, "[region, object lock]", System.currentTimeMillis());
+      return;
+    }
+
+    testBucketApi(
+        methodName,
+        "[region]",
+        MakeBucketArgs.builder().bucket(getRandomName()).region("eu-west-1").build(),
+        false,
+        false);
+    testBucketApi(
+        methodName,
+        "[region, object lock]",
+        MakeBucketArgs.builder()
+            .bucket(getRandomName())
+            .region("eu-central-1")
+            .objectLock(true)
+            .build(),
+        false,
+        false);
   }
 
   /** Test: enableVersioning(EnableVersioningArgs args). */
@@ -3442,13 +3427,7 @@ public class FunctionalTest {
 
   /** runTests: runs as much as possible of test combinations. */
   public static void runTests() throws Exception {
-    makeBucket_test1();
-    makeBucket_test2();
-    if (endpoint.toLowerCase(Locale.US).contains("s3")) {
-      makeBucket_test3();
-      makeBucket_test4();
-    }
-
+    makeBucket_test();
     listBuckets_test();
 
     bucketExists_test();
@@ -3533,7 +3512,7 @@ public class FunctionalTest {
 
   /** runQuickTests: runs tests those completely quicker. */
   public static void runQuickTests() throws Exception {
-    makeBucket_test1();
+    makeBucket_test();
     listBuckets_test();
     bucketExists_test();
     removeBucket_test();
