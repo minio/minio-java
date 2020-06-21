@@ -556,6 +556,15 @@ public class FunctionalTest {
     }
   }
 
+  public static void bucketExists_test() throws Exception {
+    String methodName = "bucketExists()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    testBucketApiCases(methodName, true, false);
+  }
+
   /** Test: enableVersioning(EnableVersioningArgs args). */
   public static void enableVersioning_test() throws Exception {
     String methodName = "enableVersioning(EnableVersioningArgs args)";
@@ -600,27 +609,6 @@ public class FunctionalTest {
         throw new Exception("[FAILED] isVersioningEnabled(): expected: false, got: true");
       }
 
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: bucketExists(BucketExistsArgs args). */
-  public static void bucketExists_test() throws Exception {
-    String methodName = "bucketExists(BucketExistsArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      if (!client.bucketExists(BucketExistsArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] bucket does not exist");
-      }
       client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
@@ -3429,7 +3417,6 @@ public class FunctionalTest {
   public static void runTests() throws Exception {
     makeBucket_test();
     listBuckets_test();
-
     bucketExists_test();
     enableVersioning_test();
     disableVersioning_test();
