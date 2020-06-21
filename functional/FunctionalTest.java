@@ -51,6 +51,7 @@ import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.IsObjectLegalHoldEnabledArgs;
+import io.minio.IsVersioningEnabledArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
@@ -611,6 +612,41 @@ public class FunctionalTest {
         // disableVersioning() should succeed on version enabled bucket.
         client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
         client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void isVersioningEnabled_test() throws Exception {
+    String methodName = "isVersioningEnabled()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String name = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
+      try {
+        if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+          throw new Exception("isVersioningEnabled() should return false on fresh bucket");
+        }
+
+        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+        if (!client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+          throw new Exception("isVersioningEnabled() should return true on versioned bucket");
+        }
+
+        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+        if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+          throw new Exception(
+              "isVersioningEnabled() should return false on version disabled bucket");
+        }
 
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -3404,6 +3440,7 @@ public class FunctionalTest {
 
     enableVersioning_test();
     disableVersioning_test();
+    isVersioningEnabled_test();
 
     setup();
 
