@@ -699,7 +699,6 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: uploadObject() [single upload] */
   public static void uploadObject_test() throws Exception {
     String methodName = "uploadObject()";
     if (!mintEnv) {
