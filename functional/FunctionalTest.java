@@ -1628,9 +1628,8 @@ public class FunctionalTest {
     testGetPresignedObjectUrlForPut();
   }
 
-  /** Test: presignedPostPolicy(PostPolicy policy). */
   public static void presignedPostPolicy_test() throws Exception {
-    String methodName = "presignedPostPolicy(PostPolicy policy)";
+    String methodName = "presignedPostPolicy()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
