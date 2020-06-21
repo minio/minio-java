@@ -1405,31 +1405,69 @@ public class FunctionalTest {
         0);
   }
 
-  /** Test: removeObject(String bucketName, String objectName). */
-  public static void removeObject_test1() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: removeObject(String bucketName, String objectName)");
-    }
-
+  public static void testRemoveObject(
+      String testTags, ServerSideEncryption sse, RemoveObjectArgs args) throws Exception {
+    String methodName = "removeObject()";
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .build());
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("removeObject(String bucketName, String objectName)", null, startTime);
+      PutObjectArgs.Builder builder =
+          PutObjectArgs.builder().bucket(args.bucket()).object(args.object()).stream(
+              new ContentInputStream(1), 1, -1);
+      if (sse != null) {
+        builder.sse(sse);
+      }
+      client.putObject(builder.build());
+      client.removeObject(args);
+      mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "removeObject(String bucketName, String objectName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
+  }
+
+  public static void removeObject_test() throws Exception {
+    String methodName = "removeObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    testRemoveObject(
+        "[base check]",
+        null,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
+    testRemoveObject(
+        "[multiple path segments]",
+        null,
+        RemoveObjectArgs.builder().bucket(bucketName).object("path/to/" + getRandomName()).build());
+
+    if (isQuickTest) {
+      return;
+    }
+
+    testRemoveObject(
+        "[SSE-S3]",
+        sseS3,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
+
+    if (!isSecureEndpoint) {
+      mintIgnoredLog(methodName, "[SSE-C]", System.currentTimeMillis());
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
+      return;
+    }
+
+    testRemoveObject(
+        "[SSE-C]",
+        ssec,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
+
+    if (sseKms == null) {
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
+      return;
+    }
+
+    testRemoveObject(
+        "[SSE-KMS]",
+        sseKms,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
   }
 
   /** Test: removeObjects(RemoveObjectsArgs args). */
@@ -3399,7 +3437,7 @@ public class FunctionalTest {
 
     listObjects_test();
 
-    removeObject_test1();
+    removeObject_test();
     removeObjects_test1();
 
     presignedPostPolicy_test();
@@ -3464,7 +3502,7 @@ public class FunctionalTest {
     getObject_test();
     downloadObject_test();
     listObjects_test();
-    removeObject_test1();
+    removeObject_test();
     getPresignedObjectUrl_test1();
     getPresignedObjectUrl_test2();
     presignedPostPolicy_test();
