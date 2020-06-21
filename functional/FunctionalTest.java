@@ -565,6 +565,15 @@ public class FunctionalTest {
     testBucketApiCases(methodName, true, false);
   }
 
+  public static void removeBucket_test() throws Exception {
+    String methodName = "removeBucket()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    testBucketApiCases(methodName, false, true);
+  }
+
   /** Test: enableVersioning(EnableVersioningArgs args). */
   public static void enableVersioning_test() throws Exception {
     String methodName = "enableVersioning(EnableVersioningArgs args)";
@@ -613,29 +622,6 @@ public class FunctionalTest {
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: removeBucket(RemoveBucketArgs args). */
-  public static void removeBucket_test() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: removeBucket(RemoveBucketArgs args)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("removeBucket(RemoveBucketArgs args)", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "removeBucket(RemoveBucketArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
     }
   }
 
@@ -3418,10 +3404,10 @@ public class FunctionalTest {
     makeBucket_test();
     listBuckets_test();
     bucketExists_test();
+    removeBucket_test();
+
     enableVersioning_test();
     disableVersioning_test();
-
-    removeBucket_test();
 
     setup();
 
