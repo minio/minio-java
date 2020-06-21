@@ -130,6 +130,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.crypto.KeyGenerator;
+import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -916,211 +917,147 @@ public class FunctionalTest {
         null);
   }
 
-  /** Test: statObject(StatObjectArgs args). */
-  public static void statObject_test1() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: statObject(StatObjectArgs args)");
-    }
-
+  public static void testStatObject(String testTags, PutObjectArgs args, ObjectStat expectedStat)
+      throws Exception {
+    String methodName = "statObject()";
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("my-custom-data", "foo");
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .contentType(customContentType)
-              .userMetadata(headerMap)
-              .build());
+      client.putObject(args);
+      try {
+        ServerSideEncryptionCustomerKey ssec = null;
+        if (args.sse() instanceof ServerSideEncryptionCustomerKey) {
+          ssec = (ServerSideEncryptionCustomerKey) args.sse();
+        }
+        ObjectStat stat =
+            client.statObject(
+                StatObjectArgs.builder()
+                    .bucket(args.bucket())
+                    .object(args.object())
+                    .ssec(ssec)
+                    .build());
 
-      ObjectStat objectStat =
-          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (!expectedStat.bucketName().equals(stat.bucketName())) {
+          throw new Exception(
+              "bucket name: expected = "
+                  + expectedStat.bucketName()
+                  + ", got = "
+                  + stat.bucketName());
+        }
 
-      if (!(objectName.equals(objectStat.name())
-          && (objectStat.length() == 1)
-          && bucketName.equals(objectStat.bucketName())
-          && objectStat.contentType().equals(customContentType))) {
-        throw new Exception("[FAILED] object stat differs");
-      }
+        if (!expectedStat.name().equals(stat.name())) {
+          throw new Exception(
+              "object name: expected = " + expectedStat.name() + ", got = " + stat.name());
+        }
 
-      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
-      if (!httpHeaders.containsKey("x-amz-meta-my-custom-data")) {
-        throw new Exception("[FAILED] metadata not found in object stat");
-      }
-      List<String> values = httpHeaders.get("x-amz-meta-my-custom-data");
-      if (values.size() != 1) {
-        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
-      }
-      if (!values.get(0).equals("foo")) {
-        throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
-      }
+        if (expectedStat.length() != stat.length()) {
+          throw new Exception(
+              "length: expected = " + expectedStat.length() + ", got = " + stat.length());
+        }
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("statObject(StatObjectArgs args)", null, startTime);
+        if (!expectedStat.contentType().equals(stat.contentType())) {
+          throw new Exception(
+              "content-type: expected = "
+                  + expectedStat.contentType()
+                  + ", got = "
+                  + stat.contentType());
+        }
+
+        for (String key : expectedStat.httpHeaders().keySet()) {
+          if (!key.startsWith("x-amz-meta-")) {
+            continue;
+          }
+
+          if (!stat.httpHeaders().containsKey(key)) {
+            throw new Exception("metadata " + key + " not found");
+          }
+
+          if (!expectedStat
+              .httpHeaders()
+              .get(key)
+              .get(0)
+              .equals(stat.httpHeaders().get(key).get(0))) {
+            throw new Exception(
+                "metadata "
+                    + key
+                    + " value: expected: "
+                    + expectedStat.httpHeaders().get(key).get(0)
+                    + ", got: "
+                    + stat.httpHeaders().get(key).get(0));
+          }
+        }
+
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+      }
     } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: with SSE-C: statObject(StatObjectArgs args). */
-  public static void statObject_test2() throws Exception {
-    long startTime = System.currentTimeMillis();
-    if (!isSecureEndpoint) {
-      mintIgnoredLog("statObject(StatObjectArgs args) using SSE_C.", null, startTime);
+  public static void statObject_test() throws Exception {
+    String methodName = "statObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    String objectName = getRandomName();
+
+    PutObjectArgs.Builder builder =
+        PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+            new ContentInputStream(1024), 1024, -1);
+    Headers.Builder headersBuilder =
+        new Headers.Builder()
+            .add("Content-Type: application/octet-stream")
+            .add("Content-Length: 1024")
+            .add("Last-Modified", ZonedDateTime.now().format(Time.HTTP_HEADER_DATE_FORMAT));
+
+    testStatObject(
+        "[basic check]",
+        builder.build(),
+        new ObjectStat(bucketName, objectName, headersBuilder.build()));
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Content-Type", customContentType);
+    Map<String, String> userMetadata = new HashMap<>();
+    userMetadata.put("My-Project", "Project One");
+    builder = builder.headers(headers).userMetadata(userMetadata);
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+
+    ObjectStat stat =
+        new ObjectStat(
+            bucketName,
+            objectName,
+            headersBuilder
+                .set("Content-Type", customContentType)
+                .add("X-Amz-Meta-My-Project: Project One")
+                .build());
+
+    testStatObject("[user metadata]", builder.build(), stat);
+
+    if (isQuickTest) {
       return;
     }
 
-    if (!mintEnv) {
-      System.out.println("Test: with SSE-C: statObject(StatObjectArgs args)");
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+    testStatObject("[SSE-S3]", builder.sse(sseS3).build(), stat);
+
+    if (!isSecureEndpoint) {
+      mintIgnoredLog(methodName, "[SSE-C]", System.currentTimeMillis());
+      return;
     }
 
-    try {
-      String objectName = getRandomName();
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+    testStatObject("[SSE-C]", builder.sse(ssec).build(), stat);
 
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .sse(ssec)
-              .build());
-
-      ObjectStat objectStat =
-          client.statObject(
-              StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(ssec).build());
-
-      if (!(objectName.equals(objectStat.name())
-          && (objectStat.length() == 1)
-          && bucketName.equals(objectStat.bucketName()))) {
-        throw new Exception("[FAILED] object stat differs");
-      }
-
-      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
-      if (!httpHeaders.containsKey("X-Amz-Server-Side-Encryption-Customer-Algorithm")) {
-        throw new Exception("[FAILED] metadata not found in object stat");
-      }
-      List<String> values = httpHeaders.get("X-Amz-Server-Side-Encryption-Customer-Algorithm");
-      if (values.size() != 1) {
-        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
-      }
-      if (!values.get(0).equals("AES256")) {
-        throw new Exception(
-            "[FAILED] wrong metadata value. expected: AES256, got: " + values.get(0));
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("statObject(StatObjectArgs args) using SSE_C.", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args) using SSE_C.",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /** Test: wtth non-existing objecth: statObject(StatObjectArgs args). */
-  public static void statObject_test3() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with non-existing object: statObject(StatObjectArgs args)");
+    if (sseKms == null) {
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      client.statObject(
-          StatObjectArgs.builder().bucket(bucketName).object(getRandomName() + "/").build());
-    } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_KEY) {
-        mintFailedLog(
-            "statObject(StatObjectArgs args) with non-existing object",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args) with non-existing object",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    } finally {
-      mintSuccessLog("statObject(StatObjectArgs args) with non-existing object", null, startTime);
-    }
-  }
-
-  /** Test: with extra headers/query params: statObject(StatObjectArgs args). */
-  public static void statObject_test4() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with extra headers/query params: statObject(StatObjectArgs args)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("my-custom-data", "foo");
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .contentType(customContentType)
-              .userMetadata(headerMap)
-              .build());
-
-      HashMap<String, String> headers = new HashMap<>();
-      headers.put("x-amz-request-payer", "requester");
-      HashMap<String, String> queryParams = new HashMap<>();
-      queryParams.put("partNumber", "1");
-      ObjectStat objectStat =
-          client.statObject(
-              StatObjectArgs.builder()
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .extraHeaders(headers)
-                  .extraQueryParams(queryParams)
-                  .build());
-
-      if (!(objectName.equals(objectStat.name())
-          && (objectStat.length() == 1)
-          && bucketName.equals(objectStat.bucketName())
-          && objectStat.contentType().equals(customContentType))) {
-        throw new Exception("[FAILED] object stat differs");
-      }
-
-      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
-      if (!httpHeaders.containsKey("x-amz-meta-my-custom-data")) {
-        throw new Exception("[FAILED] metadata not found in object stat");
-      }
-      List<String> values = httpHeaders.get("x-amz-meta-my-custom-data");
-      if (values.size() != 1) {
-        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
-      }
-      if (!values.get(0).equals("foo")) {
-        throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "statObject(StatObjectArgs args) with extra headers/query params", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args) with extra headers/query params",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+    testStatObject("[SSE-KMS]", builder.sse(sseKms).build(), stat);
   }
 
   public static void testGetObject(
@@ -3451,10 +3388,7 @@ public class FunctionalTest {
     setObjectRetention_test();
     getObjectRetention_test();
 
-    statObject_test1();
-    statObject_test2();
-    statObject_test3();
-    statObject_test4();
+    statObject_test();
 
     getPresignedObjectUrl_test1();
     getPresignedObjectUrl_test2();
@@ -3526,7 +3460,7 @@ public class FunctionalTest {
 
     uploadObject_test();
     putObject_test();
-    statObject_test1();
+    statObject_test();
     getObject_test();
     downloadObject_test();
     listObjects_test();
