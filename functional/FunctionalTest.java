@@ -574,23 +574,22 @@ public class FunctionalTest {
     testBucketApiCases(methodName, false, true);
   }
 
-  /** Test: enableVersioning(EnableVersioningArgs args). */
   public static void enableVersioning_test() throws Exception {
-    String methodName = "enableVersioning(EnableVersioningArgs args)";
+    String methodName = "enableVersioning()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String name = getRandomName();
     try {
-      String name = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
-      if (!client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] isVersioningEnabled(): expected: true, got: false");
+      try {
+        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
       }
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
