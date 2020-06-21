@@ -2216,6 +2216,24 @@ public class FunctionalTest {
     }
   }
 
+  public static void checkObjectLegalHold(String bucketName, String objectName, boolean enableCheck)
+      throws Exception {
+    if (enableCheck) {
+      client.enableObjectLegalHold(
+          EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+    } else {
+      client.disableObjectLegalHold(
+          DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+    }
+
+    boolean result =
+        client.isObjectLegalHoldEnabled(
+            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build());
+    if (result != enableCheck) {
+      throw new Exception("object legal hold: expected: " + enableCheck + ", got: " + result);
+    }
+  }
+
   public static void enableObjectLegalHold_test() throws Exception {
     String methodName = "enableObjectLegalHold()";
     if (!mintEnv) {
@@ -2235,12 +2253,7 @@ public class FunctionalTest {
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        client.enableObjectLegalHold(
-            EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        if (!client.isObjectLegalHoldEnabled(
-            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build())) {
-          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: true, got: false");
-        }
+        checkObjectLegalHold(bucketName, objectName, true);
         client.disableObjectLegalHold(
             DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
         mintSuccessLog(methodName, null, startTime);
