@@ -2636,7 +2636,6 @@ public class MinioClient {
     List<ComposeSource> sources = args.sources();
     for (int i = 0; i < sources.size(); i++) {
       ComposeSource src = sources.get(i);
-      src.validateSse(this.baseUrl);
       ObjectStat stat =
           statObject(
               StatObjectArgs.builder()
@@ -2647,11 +2646,6 @@ public class MinioClient {
                   .build());
 
       src.buildHeaders(stat.length(), stat.etag());
-
-      if (i != 0 && src.headers().containsKey("x-amz-meta-x-amz-key")) {
-        throw new IllegalArgumentException(
-            "Client side encryption is not supported for more than one source");
-      }
 
       long size = stat.length();
       if (src.length() != null) {
@@ -2719,7 +2713,7 @@ public class MinioClient {
       ComposeSource src = sources.get(0);
       Multimap<String, String> headers = HashMultimap.create();
       headers.putAll(args.extraHeaders());
-      headers.putAll(args.headers);
+      headers.putAll(args.headers());
       if (src.offset() == null && src.length() == null) {
         return copyObject(
             CopyObjectArgs.builder()
@@ -2739,15 +2733,21 @@ public class MinioClient {
       }
     }
 
-    Multimap<String, String> sseHeaders = HashMultimap.create();
-    Multimap<String, String> headerMap = HashMultimap.create();
-    if (args.sse() != null) {
-      sseHeaders.putAll(Multimaps.forMap(args.sse().headers()));
-      headerMap.putAll(args.extraHeaders());
-      headerMap.putAll(args.headers);
-    }
+    Multimap<String, String> headersCreateMultiPart = HashMultimap.create();
+    headersCreateMultiPart.putAll(args.extraHeaders());
+    headersCreateMultiPart.putAll(args.genHeaders());
+    String uploadId =
+        createMultipartUpload(
+            args.bucket(),
+            args.region(),
+            args.object(),
+            headersCreateMultiPart,
+            args.extraQueryParams());
 
-    String uploadId = createMultipartUpload(args.bucket(), null, args.object(), headerMap, null);
+    Multimap<String, String> ssecHeaders = HashMultimap.create();
+    if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
+      ssecHeaders.putAll(Multimaps.forMap(args.sse().headers()));
+    }
 
     int partNumber = 0;
     Part[] totalParts = new Part[partsCount];
@@ -2777,8 +2777,8 @@ public class MinioClient {
           } else if (src.offset() != null) {
             headers.put("x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + size - 1));
           }
-          if (sseHeaders != null) {
-            headers.putAll(sseHeaders);
+          if (ssecHeaders != null) {
+            headers.putAll(ssecHeaders);
           }
           String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
 
@@ -2797,13 +2797,11 @@ public class MinioClient {
 
           Multimap<String, String> headers = src.headers();
           headers.put("x-amz-copy-source-range", "bytes=" + startBytes + "-" + endBytes);
-          if (sseHeaders != null) {
-            headers.putAll(sseHeaders);
+          if (ssecHeaders != null) {
+            headers.putAll(ssecHeaders);
           }
           String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
-
           totalParts[partNumber - 1] = new Part(partNumber, eTag);
-
           offset = startBytes;
           size -= (endBytes - startBytes);
         }
@@ -2812,10 +2810,18 @@ public class MinioClient {
       return completeMultipartUpload(
           args.bucket(), getRegion(args.bucket()), args.object(), uploadId, totalParts, null, null);
     } catch (RuntimeException e) {
-      abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      if (!(args.sources().size() == 1
+          && args.sources().get(0).offset() == null
+          && args.sources().get(0).length() == null)) {
+        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      }
       throw e;
     } catch (Exception e) {
-      abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      if (!(args.sources().size() == 1
+          && args.sources().get(0).offset() == null
+          && args.sources().get(0).length() == null)) {
+        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      }
       throw e;
     }
   }
