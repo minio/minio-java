@@ -27,12 +27,22 @@ public class GetDefaultRetention {
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
+      /* play.min.io for test and development. */
+      MinioClient minioClient =
+          MinioClient.builder()
+              .endpoint("https://play.min.io")
+              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+              .build();
+
       /* Amazon S3: */
-      MinioClient s3Client =
-          new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+      // MinioClient minioClient =
+      //     MinioClient.builder()
+      //         .endpoint("https://s3.amazonaws.com")
+      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+      //         .build();
 
       ObjectLockConfiguration config =
-          s3Client.getDefaultRetention(
+          minioClient.getDefaultRetention(
               GetDefaultRetentionArgs.builder().bucket("my-lock-enabled-bucketname").build());
 
       System.out.println("Default retention configuration of bucket");

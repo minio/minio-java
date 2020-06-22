@@ -167,6 +167,20 @@ import okhttp3.ResponseBody;
  *
  * <p>Examples on using this library are available <a
  * href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples">here</a>.
+ *
+ * <p>Use {@code MinioClient.builder()} to create S3 client.
+ * </pre>{@code
+ * // Create client with anonymous access.
+ * MinioClient minioClient = MinioClient.builder()
+ *     .endpoint("https://play.min.io")
+ *     .build();
+ *
+ * // Create client with credentials.
+ * MinioClient minioClient = MinioClient.builder()
+ *     .endpoint("https://play.min.io")
+ *     .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+ *     .build();
+ * }</pre>
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class MinioClient {
@@ -213,25 +227,52 @@ public class MinioClient {
     standardHeaders.add("range");
   }
 
+  private String userAgent = DEFAULT_USER_AGENT;
   private PrintWriter traceStream;
 
-  // the current client instance's base URL.
   private HttpUrl baseUrl;
-  // access key to sign all requests with
-  private String accessKey;
-  // Secret key to sign all requests with
-  private String secretKey;
-  // Region to sign all requests with
   private String region;
-
-  private String userAgent = DEFAULT_USER_AGENT;
-
+  private boolean isAwsHost;
+  private boolean isAcceleratedHost;
+  private boolean isDualStackHost;
+  private boolean useVirtualStyle;
+  private String accessKey;
+  private String secretKey;
   private OkHttpClient httpClient;
 
-  private boolean isAwsHost = false;
-  private boolean isAcceleratedHost = false;
-  private boolean isDualStackHost = false;
-  private boolean useVirtualStyle = false;
+  private MinioClient(
+      HttpUrl baseUrl,
+      String region,
+      boolean isAwsHost,
+      boolean isAcceleratedHost,
+      boolean isDualStackHost,
+      boolean useVirtualStyle,
+      String accessKey,
+      String secretKey,
+      OkHttpClient httpClient) {
+    this.baseUrl = baseUrl;
+    this.region = region;
+    this.isAwsHost = isAwsHost;
+    this.isAcceleratedHost = isAcceleratedHost;
+    this.isDualStackHost = isDualStackHost;
+    this.useVirtualStyle = useVirtualStyle;
+    this.accessKey = accessKey;
+    this.secretKey = secretKey;
+    this.httpClient = httpClient;
+  }
+
+  /** Remove this constructor when all deprecated contructors are removed. */
+  private MinioClient(MinioClient client) {
+    this.baseUrl = client.baseUrl;
+    this.region = client.region;
+    this.isAwsHost = client.isAwsHost;
+    this.isAcceleratedHost = client.isAcceleratedHost;
+    this.isDualStackHost = client.isDualStackHost;
+    this.useVirtualStyle = client.useVirtualStyle;
+    this.accessKey = client.accessKey;
+    this.secretKey = client.secretKey;
+    this.httpClient = client.httpClient;
+  }
 
   /**
    * Creates MinIO client object with given endpoint using anonymous access.
@@ -254,21 +295,11 @@ public class MinioClient {
    *             * ::1</pre>
    *
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(String endpoint) throws IllegalArgumentException {
-    this(endpoint, null, null, null, null, null, null);
+    this(builder().endpoint(endpoint).build());
   }
 
   /**
@@ -280,21 +311,11 @@ public class MinioClient {
    *
    * @param url Endpoint as {@link URL} object.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(URL url) throws InvalidEndpointException, InvalidPortException {
-    this(url.toString(), null, null, null, null, null, null);
+    this(builder().endpoint(url).build());
   }
 
   /**
@@ -306,22 +327,11 @@ public class MinioClient {
    *
    * @param url Endpoint as {@link HttpUrl} object.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(HttpUrl url) throws IllegalArgumentException {
-    this(url.toString(), null, null, null, null, null, null);
+    this(builder().endpoint(url).build());
   }
 
   /**
@@ -348,23 +358,12 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(String endpoint, String accessKey, String secretKey)
       throws IllegalArgumentException {
-    this(endpoint, null, accessKey, secretKey, null, null, null);
+    this(builder().endpoint(endpoint).credentials(accessKey, secretKey).build());
   }
 
   /**
@@ -392,23 +391,12 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param region Region name of buckets in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(String endpoint, String accessKey, String secretKey, String region)
       throws IllegalArgumentException {
-    this(endpoint, null, accessKey, secretKey, region, null, null);
+    this(builder().endpoint(endpoint).region(region).credentials(accessKey, secretKey).build());
   }
 
   /**
@@ -434,8 +422,9 @@ public class MinioClient {
    * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
    *     region, Boolean secure, OkHttpClient httpClient)
    */
+  @Deprecated
   public MinioClient(URL url, String accessKey, String secretKey) throws IllegalArgumentException {
-    this(url.toString(), null, accessKey, secretKey, null, null, null);
+    this(builder().endpoint(url).credentials(accessKey, secretKey).build());
   }
 
   /**
@@ -450,23 +439,12 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(HttpUrl url, String accessKey, String secretKey)
       throws IllegalArgumentException {
-    this(url.toString(), null, accessKey, secretKey, null, null, null);
+    this(builder().endpoint(url).credentials(accessKey, secretKey).build());
   }
 
   /**
@@ -494,22 +472,16 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(String endpoint, int port, String accessKey, String secretKey)
       throws IllegalArgumentException {
-    this(endpoint, port, accessKey, secretKey, null, null, null);
+    this(
+        builder()
+            .endpoint(endpoint, Integer.valueOf(port), null)
+            .credentials(accessKey, secretKey)
+            .build());
   }
 
   /**
@@ -538,22 +510,16 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean
-   *     secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
       throws IllegalArgumentException {
-    this(endpoint, null, accessKey, secretKey, null, secure, null);
+    this(
+        builder()
+            .endpoint(endpoint, null, Boolean.valueOf(secure))
+            .credentials(accessKey, secretKey)
+            .build());
   }
 
   /**
@@ -583,21 +549,16 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(String endpoint, int port, String accessKey, String secretKey, boolean secure)
       throws IllegalArgumentException {
-    this(endpoint, port, accessKey, secretKey, null, secure, null);
+    this(
+        builder()
+            .endpoint(endpoint, Integer.valueOf(port), Boolean.valueOf(secure))
+            .credentials(accessKey, secretKey)
+            .build());
   }
 
   /**
@@ -628,20 +589,18 @@ public class MinioClient {
    * @param region Region name of buckets in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, Integer port, String accessKey, String secretKey, String
-   *     region, Boolean secure, OkHttpClient httpClient)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(
       String endpoint, int port, String accessKey, String secretKey, String region, boolean secure)
       throws IllegalArgumentException {
-    this(endpoint, port, accessKey, secretKey, region, secure, null);
+    this(
+        builder()
+            .endpoint(endpoint, Integer.valueOf(port), Boolean.valueOf(secure))
+            .region(region)
+            .credentials(accessKey, secretKey)
+            .build());
   }
 
   /**
@@ -675,16 +634,9 @@ public class MinioClient {
    *     if it is non-null.
    * @param httpClient Customized HTTP client object.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
-   * @see #MinioClient(String endpoint)
-   * @see #MinioClient(URL url)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, String region)
-   * @see #MinioClient(URL url, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey)
-   * @see #MinioClient(String endpoint, String accessKey, String secretKey, boolean secure)
-   * @see #MinioClient(String endpoint, int port, String accessKey, String secretKey, String region,
-   *     boolean secure)
+   * @see #builder()
    */
+  @Deprecated
   public MinioClient(
       String endpoint,
       Integer port,
@@ -694,228 +646,13 @@ public class MinioClient {
       Boolean secure,
       OkHttpClient httpClient)
       throws IllegalArgumentException {
-    if (endpoint == null) {
-      throw new IllegalArgumentException("null endpoint");
-    }
-
-    if (region != null && region.equals("")) {
-      region = null;
-    }
-
-    HttpUrl.Builder urlBuilder = null;
-    HttpUrl url = HttpUrl.parse(endpoint);
-    if (url != null) {
-      if (!"/".equals(url.encodedPath())) {
-        throw new IllegalArgumentException("no path allowed in endpoint '" + endpoint + "'");
-      }
-
-      urlBuilder = url.newBuilder();
-    } else {
-      // endpoint may be a valid hostname, IPv4 or IPv6 address
-      if (!isValidEndpoint(endpoint)) {
-        throw new IllegalArgumentException("invalid host '" + endpoint + "'");
-      }
-
-      urlBuilder = new HttpUrl.Builder().host(endpoint);
-
-      if (secure == null) {
-        secure = Boolean.TRUE;
-      }
-    }
-
-    if (secure != null) {
-      if (secure) {
-        urlBuilder.scheme("https");
-      } else {
-        urlBuilder.scheme("http");
-      }
-    }
-
-    if (port != null) {
-      if (port < 1 || port > 65535) {
-        throw new IllegalArgumentException("port " + port + " must be in range of 1 to 65535");
-      }
-
-      urlBuilder.port(port);
-    }
-
-    url = urlBuilder.build();
-
-    String host = url.host();
-    this.isAwsHost = isAwsEndpoint(host);
-    boolean isAwsChinaHost = false;
-    if (this.isAwsHost) {
-      isAwsChinaHost = host.endsWith(".cn");
-      if (isAwsChinaHost) {
-        urlBuilder.host("amazonaws.com.cn");
-      } else {
-        urlBuilder.host("amazonaws.com");
-      }
-      url = urlBuilder.build();
-
-      this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
-      this.isDualStackHost = isAwsDualStackEndpoint(host);
-      if (region == null) {
-        region = extractRegion(host);
-      }
-      this.useVirtualStyle = true;
-    } else {
-      this.useVirtualStyle = host.endsWith("aliyuncs.com");
-    }
-
-    if (isAwsChinaHost && region == null) {
-      throw new IllegalArgumentException(
-          "Region missing in Amazon S3 China endpoint '" + endpoint + "'");
-    }
-
-    this.region = region;
-    this.baseUrl = url;
-    this.accessKey = accessKey;
-    this.secretKey = secretKey;
-
-    if (httpClient == null) {
-      this.httpClient =
-          new OkHttpClient()
-              .newBuilder()
-              .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-              .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-              .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-              .protocols(Arrays.asList(Protocol.HTTP_1_1))
-              .build();
-      String filename = System.getenv("SSL_CERT_FILE");
-      if (filename != null && !filename.equals("")) {
-        try {
-          this.httpClient = enableExternalCertificates(this.httpClient, filename);
-        } catch (GeneralSecurityException | IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    } else {
-      this.httpClient = httpClient;
-    }
-  }
-
-  private boolean isAwsEndpoint(String endpoint) {
-    return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
-        && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
-  }
-
-  private boolean isAwsAccelerateEndpoint(String endpoint) {
-    return endpoint.startsWith("s3-accelerate.");
-  }
-
-  private boolean isAwsDualStackEndpoint(String endpoint) {
-    return endpoint.contains(".dualstack.");
-  }
-
-  /**
-   * Extracts region from AWS endpoint if available. Region is placed at second token normal
-   * endpoints and third token for dualstack endpoints.
-   *
-   * <p>Region is marked in square brackets in below examples.
-   * <pre>
-   * https://s3.[us-east-2].amazonaws.com
-   * https://s3.dualstack.[ca-central-1].amazonaws.com
-   * https://s3.[cn-north-1].amazonaws.com.cn
-   * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
-   */
-  private String extractRegion(String endpoint) {
-    String[] tokens = endpoint.split("\\.");
-    String token = tokens[1];
-
-    // If token is "dualstack", then region might be in next token.
-    if (token.equals("dualstack")) {
-      token = tokens[2];
-    }
-
-    // If token is equal to "amazonaws", region is not passed in the endpoint.
-    if (token.equals("amazonaws")) {
-      return null;
-    }
-
-    // Return token as region.
-    return token;
-  }
-
-  /**
-   * copied logic from
-   * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
-   */
-  private OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
-      throws GeneralSecurityException, IOException {
-    Collection<? extends Certificate> certificates = null;
-    FileInputStream fis = null;
-    try {
-      fis = new FileInputStream(filename);
-      certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
-    } finally {
-      if (fis != null) {
-        fis.close();
-      }
-    }
-
-    if (certificates == null || certificates.isEmpty()) {
-      throw new IllegalArgumentException("expected non-empty set of trusted certificates");
-    }
-
-    char[] password = "password".toCharArray(); // Any password will work.
-
-    // Put the certificates a key store.
-    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-    // By convention, 'null' creates an empty key store.
-    keyStore.load(null, password);
-
-    int index = 0;
-    for (Certificate certificate : certificates) {
-      String certificateAlias = Integer.toString(index++);
-      keyStore.setCertificateEntry(certificateAlias, certificate);
-    }
-
-    // Use it to build an X509 trust manager.
-    KeyManagerFactory keyManagerFactory =
-        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-    keyManagerFactory.init(keyStore, password);
-    TrustManagerFactory trustManagerFactory =
-        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    trustManagerFactory.init(keyStore);
-
-    final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
-    final TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
-
-    SSLContext sslContext = SSLContext.getInstance("TLS");
-    sslContext.init(keyManagers, trustManagers, null);
-    SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-    return httpClient
-        .newBuilder()
-        .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
-        .build();
-  }
-
-  /** Returns true if given endpoint is valid else false. */
-  private boolean isValidEndpoint(String endpoint) {
-    if (InetAddressValidator.getInstance().isValid(endpoint)) {
-      return true;
-    }
-
-    // endpoint may be a hostname
-    // refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
-    // why checks are done like below
-    if (endpoint.length() < 1 || endpoint.length() > 253) {
-      return false;
-    }
-
-    for (String label : endpoint.split("\\.")) {
-      if (label.length() < 1 || label.length() > 63) {
-        return false;
-      }
-
-      if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
-        return false;
-      }
-    }
-
-    return true;
+    this(
+        builder()
+            .endpoint(endpoint, port, secure)
+            .region(region)
+            .credentials(accessKey, secretKey)
+            .httpClient(httpClient)
+            .build());
   }
 
   private void checkArgs(BaseArgs args) {
@@ -8172,6 +7909,304 @@ public class MinioClient {
     try (ResponseBody body = response.body()) {
       CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
       return result.etag();
+    }
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static final class Builder {
+    HttpUrl baseUrl;
+    String region;
+    String accessKey;
+    String secretKey;
+    OkHttpClient httpClient;
+    boolean isAwsHost;
+    boolean isAwsChinaHost;
+    boolean isAcceleratedHost;
+    boolean isDualStackHost;
+    boolean useVirtualStyle;
+    String regionInUrl;
+
+    public Builder() {}
+
+    private boolean isAwsEndpoint(String endpoint) {
+      return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
+          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
+    }
+
+    private boolean isAwsAccelerateEndpoint(String endpoint) {
+      return endpoint.startsWith("s3-accelerate.");
+    }
+
+    private boolean isAwsDualStackEndpoint(String endpoint) {
+      return endpoint.contains(".dualstack.");
+    }
+
+    /**
+     * Extracts region from AWS endpoint if available. Region is placed at second token normal
+     * endpoints and third token for dualstack endpoints.
+     *
+     * <p>Region is marked in square brackets in below examples.
+     * <pre>
+     * https://s3.[us-east-2].amazonaws.com
+     * https://s3.dualstack.[ca-central-1].amazonaws.com
+     * https://s3.[cn-north-1].amazonaws.com.cn
+     * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
+     */
+    private String extractRegion(String endpoint) {
+      String[] tokens = endpoint.split("\\.");
+      String token = tokens[1];
+
+      // If token is "dualstack", then region might be in next token.
+      if (token.equals("dualstack")) {
+        token = tokens[2];
+      }
+
+      // If token is equal to "amazonaws", region is not passed in the endpoint.
+      if (token.equals("amazonaws")) {
+        return null;
+      }
+
+      // Return token as region.
+      return token;
+    }
+
+    private void setBaseUrl(HttpUrl url) {
+      String host = url.host();
+      this.isAwsHost = isAwsEndpoint(host);
+      this.isAwsChinaHost = false;
+      if (this.isAwsHost) {
+        this.isAwsChinaHost = host.endsWith(".cn");
+        url =
+            url.newBuilder()
+                .host(this.isAwsChinaHost ? "amazonaws.com.cn" : "amazonaws.com")
+                .build();
+        this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
+        this.isDualStackHost = isAwsDualStackEndpoint(host);
+        this.regionInUrl = extractRegion(host);
+        this.useVirtualStyle = true;
+      } else {
+        this.useVirtualStyle = host.endsWith("aliyuncs.com");
+      }
+
+      this.baseUrl = url;
+    }
+
+    /**
+     * copied logic from
+     * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
+     */
+    private OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
+        throws GeneralSecurityException, IOException {
+      Collection<? extends Certificate> certificates = null;
+      try (FileInputStream fis = new FileInputStream(filename)) {
+        certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
+      }
+
+      if (certificates == null || certificates.isEmpty()) {
+        throw new IllegalArgumentException("expected non-empty set of trusted certificates");
+      }
+
+      char[] password = "password".toCharArray(); // Any password will work.
+
+      // Put the certificates a key store.
+      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      // By convention, 'null' creates an empty key store.
+      keyStore.load(null, password);
+
+      int index = 0;
+      for (Certificate certificate : certificates) {
+        String certificateAlias = Integer.toString(index++);
+        keyStore.setCertificateEntry(certificateAlias, certificate);
+      }
+
+      // Use it to build an X509 trust manager.
+      KeyManagerFactory keyManagerFactory =
+          KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+      keyManagerFactory.init(keyStore, password);
+      TrustManagerFactory trustManagerFactory =
+          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(keyStore);
+
+      final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+      final TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(keyManagers, trustManagers, null);
+      SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+      return httpClient
+          .newBuilder()
+          .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
+          .build();
+    }
+
+    protected void validateNotNull(Object arg, String argName) {
+      if (arg == null) {
+        throw new IllegalArgumentException(argName + " must not be null.");
+      }
+    }
+
+    protected void validateNotEmptyString(String arg, String argName) {
+      validateNotNull(arg, argName);
+      if (arg.isEmpty()) {
+        throw new IllegalArgumentException(argName + " must be a non-empty string.");
+      }
+    }
+
+    protected void validateNullOrNotEmptyString(String arg, String argName) {
+      if (arg != null && arg.isEmpty()) {
+        throw new IllegalArgumentException(argName + " must be a non-empty string.");
+      }
+    }
+
+    private void validateUrl(HttpUrl url) {
+      if (!url.encodedPath().equals("/")) {
+        throw new IllegalArgumentException("no path allowed in endpoint " + url);
+      }
+    }
+
+    private void validateHostnameOrIPAddress(String endpoint) {
+      // Check endpoint is IPv4 or IPv6.
+      if (InetAddressValidator.getInstance().isValid(endpoint)) {
+        return;
+      }
+
+      // Check endpoint is a hostname.
+
+      // Refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
+      // why checks are done like below
+      if (endpoint.length() < 1 || endpoint.length() > 253) {
+        throw new IllegalArgumentException("invalid hostname");
+      }
+
+      for (String label : endpoint.split("\\.")) {
+        if (label.length() < 1 || label.length() > 63) {
+          throw new IllegalArgumentException("invalid hostname");
+        }
+
+        if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
+          throw new IllegalArgumentException("invalid hostname");
+        }
+      }
+    }
+
+    private HttpUrl getBaseUrl(String endpoint) {
+      validateNotEmptyString(endpoint, "endpoint");
+      HttpUrl url = HttpUrl.parse(endpoint);
+      if (url == null) {
+        validateHostnameOrIPAddress(endpoint);
+        url = new HttpUrl.Builder().scheme("https").host(endpoint).build();
+      } else {
+        validateUrl(url);
+      }
+
+      return url;
+    }
+
+    public Builder endpoint(String endpoint) {
+      setBaseUrl(getBaseUrl(endpoint));
+      return this;
+    }
+
+    public Builder endpoint(String endpoint, int port, boolean secure) {
+      HttpUrl url = getBaseUrl(endpoint);
+      if (port < 1 || port > 65535) {
+        throw new IllegalArgumentException("port must be in range of 1 to 65535");
+      }
+      url = url.newBuilder().port(port).scheme(secure ? "https" : "http").build();
+
+      setBaseUrl(url);
+      return this;
+    }
+
+    /** Remove this method when all deprecated MinioClient constructors are removed. */
+    private Builder endpoint(String endpoint, Integer port, Boolean secure) {
+      HttpUrl url = getBaseUrl(endpoint);
+      if (port != null) {
+        if (port < 1 || port > 65535) {
+          throw new IllegalArgumentException("port must be in range of 1 to 65535");
+        }
+
+        url = url.newBuilder().port(port).build();
+      }
+
+      if (secure != null) {
+        url = url.newBuilder().scheme(secure ? "https" : "http").build();
+      }
+
+      setBaseUrl(url);
+      return this;
+    }
+
+    public Builder endpoint(URL url) {
+      validateNotNull(url, "url");
+      return endpoint(HttpUrl.get(url));
+    }
+
+    public Builder endpoint(HttpUrl url) {
+      validateNotNull(url, "url");
+      validateUrl(url);
+      setBaseUrl(url);
+      return this;
+    }
+
+    public Builder region(String region) {
+      validateNullOrNotEmptyString(region, "region");
+      this.region = region;
+      this.regionInUrl = region;
+      return this;
+    }
+
+    public Builder credentials(String accessKey, String secretKey) {
+      this.accessKey = accessKey;
+      this.secretKey = secretKey;
+      return this;
+    }
+
+    public Builder httpClient(OkHttpClient httpClient) {
+      validateNotNull(httpClient, "http client");
+      this.httpClient = httpClient;
+      return this;
+    }
+
+    public MinioClient build() {
+      validateNotNull(baseUrl, "endpoint");
+      if (isAwsChinaHost && regionInUrl == null && region == null) {
+        throw new IllegalArgumentException("Region missing in Amazon S3 China endpoint " + baseUrl);
+      }
+
+      if (httpClient == null) {
+        this.httpClient =
+            new OkHttpClient()
+                .newBuilder()
+                .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+                .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+                .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+                .protocols(Arrays.asList(Protocol.HTTP_1_1))
+                .build();
+        String filename = System.getenv("SSL_CERT_FILE");
+        if (filename != null && !filename.isEmpty()) {
+          try {
+            this.httpClient = enableExternalCertificates(this.httpClient, filename);
+          } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+
+      return new MinioClient(
+          baseUrl,
+          (region != null) ? region : regionInUrl,
+          isAwsHost,
+          isAcceleratedHost,
+          isDualStackHost,
+          useVirtualStyle,
+          accessKey,
+          secretKey,
+          httpClient);
     }
   }
 }

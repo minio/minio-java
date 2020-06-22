@@ -28,9 +28,20 @@ public class SetObjectTags {
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
-      /* Amazon S3: */
+      /* play.min.io for test and development. */
       MinioClient minioClient =
-          new MinioClient("https://s3.amazonaws.com", "YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY");
+          MinioClient.builder()
+              .endpoint("https://play.min.io")
+              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+              .build();
+
+      /* Amazon S3: */
+      // MinioClient minioClient =
+      //     MinioClient.builder()
+      //         .endpoint("https://s3.amazonaws.com")
+      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+      //         .build();
+
       Map<String, String> map = new HashMap<>();
       map.put("Project", "Project One");
       map.put("User", "jsmith");
