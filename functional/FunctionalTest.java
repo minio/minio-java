@@ -2290,14 +2290,12 @@ public class FunctionalTest {
                 PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
+
+        checkObjectLegalHold(bucketName, objectName, false);
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        client.disableObjectLegalHold(
-            DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        if (client.isObjectLegalHoldEnabled(
-            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build())) {
-          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
-        }
+        checkObjectLegalHold(bucketName, objectName, false);
+        mintSuccessLog(methodName, null, startTime);
       } finally {
         if (objectInfo != null) {
           client.removeObject(
