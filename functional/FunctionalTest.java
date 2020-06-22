@@ -2545,26 +2545,10 @@ public class FunctionalTest {
                   .sse(ssePut)
                   .build()));
 
-      String filename1 = createFile6Mb();
-      String filename2 = createFile6Mb();
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename1)
-              .filename(filename1)
-              .sse(ssePut)
-              .build());
-      client.uploadObject(
-          UploadObjectArgs.builder()
-              .bucket(bucketName)
-              .object(filename2)
-              .filename(filename2)
-              .sse(ssePut)
-              .build());
       ComposeSource s1 =
-          ComposeSource.builder().bucket(bucketName).object(filename1).ssec(ssePut).build();
+          ComposeSource.builder().bucket(bucketName).object(objectName1).ssec(ssePut).build();
       ComposeSource s2 =
-          ComposeSource.builder().bucket(bucketName).object(filename2).ssec(ssePut).build();
+          ComposeSource.builder().bucket(bucketName).object(objectName2).ssec(ssePut).build();
 
       List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
       listSourceObjects.add(s1);

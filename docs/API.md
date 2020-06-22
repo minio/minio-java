@@ -1001,9 +1001,9 @@ Creates an object by combining data from different source objects using server-s
 |:---------------|:-------------------------|:--------------|
 | ``args``       | _[ComposeObjectArgs]_    | Arguments.    |
 
-| Returns                                                                     |
-|:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Contains information of created object.           |
+| Returns                                                          |
+|:-----------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Contains information of created object.|
 
 __Example__
  ```java
@@ -1056,9 +1056,9 @@ __Parameters__
 |:----------|:-------------------|:------------|
 | ``args``  | _[CopyObjectArgs]_ | Arguments.  |
 
-| Returns                                                                     |
-|:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Contains information of created object.           |
+| Returns                                                          |
+|:-----------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Contains information of created object.|
 
 __Example__
 
@@ -1489,9 +1489,9 @@ __Parameters__
 |:----------|:------------------|:------------|
 | ``args``  | _[PutObjectArgs]_ | Arguments.  |
 
-| Returns                                                                     |
-|:----------------------------------------------------------------------------|
-| _[ObjectWriteResponse]_ - Contains information of created object.           |
+| Returns                                                          |
+|:-----------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Contains information of created object.|
 
 __Example__
 ```java

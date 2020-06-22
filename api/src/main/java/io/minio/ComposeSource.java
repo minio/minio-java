@@ -21,6 +21,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.time.ZonedDateTime;
+import okhttp3.HttpUrl;
 
 /** Source information to compose object. */
 public class ComposeSource extends ObjectVersionArgs {
@@ -69,6 +70,10 @@ public class ComposeSource extends ObjectVersionArgs {
 
   public ServerSideEncryptionCustomerKey ssec() {
     return ssec;
+  }
+
+  public void validateSse(HttpUrl url) {
+    checkSse(ssec, url);
   }
 
   public static Builder builder() {

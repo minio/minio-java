@@ -972,17 +972,6 @@ public class MinioClient {
     }
   }
 
-  private void checkWriteRequestSse(ServerSideEncryption sse) throws IllegalArgumentException {
-    if (sse == null) {
-      return;
-    }
-
-    if (sse.type().requiresTls() && !this.baseUrl.isHttps()) {
-      throw new IllegalArgumentException(
-          sse.type().name() + " operations must be performed over a secure connection.");
-    }
-  }
-
   private Map<String, String> normalizeHeaders(Map<String, String> headerMap) {
     Map<String, String> normHeaderMap = new HashMap<String, String>();
     for (Map.Entry<String, String> entry : headerMap.entrySet()) {
@@ -2640,16 +2629,14 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
 
-    checkWriteRequestSse(args.sse());
+    args.validateSse(this.baseUrl);
 
     long objectSize = 0;
     int partsCount = 0;
     List<ComposeSource> sources = args.sources();
     for (int i = 0; i < sources.size(); i++) {
       ComposeSource src = sources.get(i);
-
-      checkReadRequestSse(src.ssec());
-
+      src.validateSse(this.baseUrl);
       ObjectStat stat =
           statObject(
               StatObjectArgs.builder()
@@ -2661,7 +2648,7 @@ public class MinioClient {
 
       src.buildHeaders(stat.length(), stat.etag());
 
-      if (i != 0 && src.extraHeaders().containsKey("x-amz-meta-x-amz-key")) {
+      if (i != 0 && src.headers().containsKey("x-amz-meta-x-amz-key")) {
         throw new IllegalArgumentException(
             "Client side encryption is not supported for more than one source");
       }
@@ -2716,7 +2703,6 @@ public class MinioClient {
                   + ", last part size is less than "
                   + ObjectWriteArgs.MIN_MULTIPART_SIZE);
         }
-
         partsCount += (int) count;
       } else {
         partsCount++;
@@ -2729,35 +2715,28 @@ public class MinioClient {
       }
     }
 
-    if (partsCount == 1) {
+    if (args.sources().size() == 1) {
       ComposeSource src = sources.get(0);
       Multimap<String, String> headers = HashMultimap.create();
       headers.putAll(args.extraHeaders());
       headers.putAll(args.headers);
-      if ((src.offset() != null) && (src.length() == null)) {
-        headers.put("x-amz-copy-source-range", "bytes=" + src.offset() + "-");
+      if (src.offset() == null && src.length() == null) {
+        return copyObject(
+            CopyObjectArgs.builder()
+                .bucket(args.bucket())
+                .object(args.object())
+                .headers(args.extraHeaders())
+                .sse(args.sse())
+                .srcBucket(src.bucket())
+                .srcObject(src.object())
+                .srcVersionId(src.versionId())
+                .srcSsec(src.ssec())
+                .srcMatchETag(src.matchETag())
+                .srcNotMatchETag(src.notMatchETag())
+                .srcModifiedSince(src.modifiedSince())
+                .srcUnmodifiedSince(src.unmodifiedSince())
+                .build());
       }
-
-      if ((src.offset() != null) && (src.length() != null)) {
-        headers.put(
-            "x-amz-copy-source-range",
-            "bytes=" + src.offset() + "-" + (src.offset() + src.length() - 1));
-      }
-      return copyObject(
-          CopyObjectArgs.builder()
-              .bucket(args.bucket())
-              .object(args.object())
-              .headers(args.extraHeaders)
-              .sse(args.sse())
-              .srcBucket(src.bucket())
-              .srcObject(src.object())
-              .srcVersionId(src.versionId())
-              .srcSsec(src.ssec())
-              .srcMatchETag(src.matchETag())
-              .srcNotMatchETag(src.notMatchETag())
-              .srcModifiedSince(src.modifiedSince())
-              .srcUnmodifiedSince(src.unmodifiedSince())
-              .build());
     }
 
     Multimap<String, String> sseHeaders = HashMultimap.create();
@@ -2766,7 +2745,6 @@ public class MinioClient {
       sseHeaders.putAll(Multimaps.forMap(args.sse().headers()));
       headerMap.putAll(args.extraHeaders());
       headerMap.putAll(args.headers);
-      headerMap.putAll(sseHeaders);
     }
 
     String uploadId = createMultipartUpload(args.bucket(), null, args.object(), headerMap, null);
@@ -8244,7 +8222,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  private String uploadPartCopy(
+  protected String uploadPartCopy(
       String bucketName,
       String objectName,
       String uploadId,
