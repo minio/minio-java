@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import io.minio.ComposeObjectArgs;
 import io.minio.ComposeSource;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
@@ -43,9 +44,15 @@ public class ComposeObject {
       //         .build();
 
       // Create a ComposeSource to compose Object.
-      ComposeSource s1 = new ComposeSource("my-bucketname-one", "my-objectname-one");
-      ComposeSource s2 = new ComposeSource("my-bucketname-two", "my-objectname-two");
-      ComposeSource s3 = new ComposeSource("my-bucketname-three", "my-objectname-three");
+      ComposeSource s1 =
+          ComposeSource.builder().bucket("my-bucketname-one").object("my-objectname-one").build();
+      ComposeSource s2 =
+          ComposeSource.builder().bucket("my-bucketname-two").object("my-objectname-two").build();
+      ComposeSource s3 =
+          ComposeSource.builder()
+              .bucket("my-bucketname-three")
+              .object("my-objectname-three")
+              .build();
 
       // Adding the ComposeSource to an ArrayList
       List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
@@ -54,7 +61,11 @@ public class ComposeObject {
       sourceObjectList.add(s3);
 
       minioClient.composeObject(
-          "my-destination-bucket", "my-destination-object", sourceObjectList, null, null);
+          ComposeObjectArgs.builder()
+              .bucket("my-destination-bucket")
+              .object("my-destination-object")
+              .sources(sourceObjectList)
+              .build());
       System.out.println("Object Composed successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

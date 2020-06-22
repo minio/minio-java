@@ -709,17 +709,6 @@ public class MinioClient {
     }
   }
 
-  private void checkWriteRequestSse(ServerSideEncryption sse) throws IllegalArgumentException {
-    if (sse == null) {
-      return;
-    }
-
-    if (sse.type().requiresTls() && !this.baseUrl.isHttps()) {
-      throw new IllegalArgumentException(
-          sse.type().name() + " operations must be performed over a secure connection.");
-    }
-  }
-
   private Map<String, String> normalizeHeaders(Map<String, String> headerMap) {
     Map<String, String> normHeaderMap = new HashMap<String, String>();
     for (Map.Entry<String, String> entry : headerMap.entrySet()) {
@@ -2176,7 +2165,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void copyObject(CopyObjectArgs args)
+  public ObjectWriteResponse copyObject(CopyObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -2238,8 +2227,15 @@ public class MinioClient {
             null,
             null,
             0)) {
-      // For now ignore the copyObjectResult, just read and parse it.
-      Xml.unmarshal(CopyObjectResult.class, response.body().charStream());
+
+      CopyObjectResult result = Xml.unmarshal(CopyObjectResult.class, response.body().charStream());
+      return new ObjectWriteResponse(
+          response.headers(),
+          args.bucket(),
+          args.region(),
+          args.object(),
+          result.etag(),
+          response.header("x-amz-version-id"));
     }
   }
 
@@ -2283,7 +2279,9 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated use {@link #composeObject(ComposeObjectArgs)}
    */
+  @Deprecated
   public void composeObject(
       String bucketName,
       String objectName,
@@ -2294,32 +2292,97 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    if ((bucketName == null) || (bucketName.isEmpty())) {
-      throw new IllegalArgumentException("bucket name cannot be empty");
-    }
 
-    checkObjectName(objectName);
+    ComposeObjectArgs.Builder builder =
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(objectName)
+            .headers(Multimaps.forMap(headerMap))
+            .sources(sources)
+            .sse(sse);
 
-    if (sources.isEmpty()) {
-      throw new IllegalArgumentException("compose sources cannot be empty");
-    }
+    composeObject(builder.build());
+  }
 
-    checkWriteRequestSse(sse);
+  /**
+   * Creates an object by combining data from different source objects using server-side copy.
+   *
+   * <pre>Example:{@code
+   * List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
+   *
+   * sourceObjectList.add(
+   *    ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-one").build());
+   * sourceObjectList.add(
+   *    ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-two").build());
+   * sourceObjectList.add(
+   *    ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-three").build());
+   *
+   * // Create my-bucketname/my-objectname by combining source object list.
+   * minioClient.composeObject(
+   *    ComposeObjectArgs.builder()
+   *        .bucket("my-bucketname")
+   *        .object("my-objectname")
+   *        .sources(sourceObjectList)
+   *        .build());
+   *
+   * // Create my-bucketname/my-objectname with user metadata by combining source object
+   * // list.
+   * minioClient.composeObject(
+   *     ComposeObjectArgs.builder()
+   *        .bucket("my-bucketname")
+   *        .object("my-objectname")
+   *        .sources(sourceObjectList)
+   *        .build());
+   *
+   * // Create my-bucketname/my-objectname with user metadata and server-side encryption
+   * // by combining source object list.
+   * minioClient.composeObject(
+   *   ComposeObjectArgs.builder()
+   *        .bucket("my-bucketname")
+   *        .object("my-objectname")
+   *        .sources(sourceObjectList)
+   *        .ssec(sse)
+   *        .build());
+   *
+   * }</pre>
+   *
+   * @param args {@link ComposeObjectArgs} object.
+   * @return {@link ObjectWriteResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public ObjectWriteResponse composeObject(ComposeObjectArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+
+    args.validateSse(this.baseUrl);
 
     long objectSize = 0;
     int partsCount = 0;
+    List<ComposeSource> sources = args.sources();
     for (int i = 0; i < sources.size(); i++) {
       ComposeSource src = sources.get(i);
+      ObjectStat stat =
+          statObject(
+              StatObjectArgs.builder()
+                  .bucket(src.bucket())
+                  .object(src.object())
+                  .versionId(src.versionId())
+                  .ssec(src.ssec())
+                  .build());
 
-      checkReadRequestSse(src.ssec());
-
-      ObjectStat stat = statObject(src.bucketName(), src.objectName(), src.ssec());
       src.buildHeaders(stat.length(), stat.etag());
-
-      if (i != 0 && src.headers().containsKey("x-amz-meta-x-amz-key")) {
-        throw new IllegalArgumentException(
-            "Client side encryption is not supported for more than one source");
-      }
 
       long size = stat.length();
       if (src.length() != null) {
@@ -2333,9 +2396,9 @@ public class MinioClient {
           && i != (sources.size() - 1)) {
         throw new IllegalArgumentException(
             "source "
-                + src.bucketName()
+                + src.bucket()
                 + "/"
-                + src.objectName()
+                + src.object()
                 + ": size "
                 + size
                 + " must be greater than "
@@ -2362,16 +2425,15 @@ public class MinioClient {
             && i != (sources.size() - 1)) {
           throw new IllegalArgumentException(
               "source "
-                  + src.bucketName()
+                  + src.bucket()
                   + "/"
-                  + src.objectName()
+                  + src.object()
                   + ": "
                   + "for multipart split upload of "
                   + size
                   + ", last part size is less than "
                   + ObjectWriteArgs.MIN_MULTIPART_SIZE);
         }
-
         partsCount += (int) count;
       } else {
         partsCount++;
@@ -2384,49 +2446,51 @@ public class MinioClient {
       }
     }
 
-    if (partsCount == 1) {
+    if (args.sources().size() == 1) {
       ComposeSource src = sources.get(0);
-      if (headerMap == null) {
-        headerMap = new HashMap<>();
+      Multimap<String, String> headers = HashMultimap.create();
+      headers.putAll(args.extraHeaders());
+      headers.putAll(args.headers());
+      if (src.offset() == null && src.length() == null) {
+        return copyObject(
+            CopyObjectArgs.builder()
+                .bucket(args.bucket())
+                .object(args.object())
+                .headers(args.extraHeaders())
+                .sse(args.sse())
+                .srcBucket(src.bucket())
+                .srcObject(src.object())
+                .srcVersionId(src.versionId())
+                .srcSsec(src.ssec())
+                .srcMatchETag(src.matchETag())
+                .srcNotMatchETag(src.notMatchETag())
+                .srcModifiedSince(src.modifiedSince())
+                .srcUnmodifiedSince(src.unmodifiedSince())
+                .build());
       }
-      if ((src.offset() != null) && (src.length() == null)) {
-        headerMap.put("x-amz-copy-source-range", "bytes=" + src.offset() + "-");
-      }
-
-      if ((src.offset() != null) && (src.length() != null)) {
-        headerMap.put(
-            "x-amz-copy-source-range",
-            "bytes=" + src.offset() + "-" + (src.offset() + src.length() - 1));
-      }
-      copyObject(
-          bucketName,
-          objectName,
-          headerMap,
-          sse,
-          src.bucketName(),
-          src.objectName(),
-          src.ssec(),
-          src.copyConditions());
-      return;
     }
 
-    Map<String, String> sseHeaders = null;
-    if (sse != null) {
-      sseHeaders = sse.headers();
-      if (headerMap == null) {
-        headerMap = new HashMap<>();
-      }
-      headerMap.putAll(sseHeaders);
-    }
+    Multimap<String, String> headersCreateMultiPart = HashMultimap.create();
+    headersCreateMultiPart.putAll(args.extraHeaders());
+    headersCreateMultiPart.putAll(args.genHeaders());
+    String uploadId =
+        createMultipartUpload(
+            args.bucket(),
+            args.region(),
+            args.object(),
+            headersCreateMultiPart,
+            args.extraQueryParams());
 
-    String uploadId = createMultipartUpload(bucketName, objectName, headerMap);
+    Multimap<String, String> ssecHeaders = HashMultimap.create();
+    if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
+      ssecHeaders.putAll(Multimaps.forMap(args.sse().headers()));
+    }
 
     int partNumber = 0;
     Part[] totalParts = new Part[partsCount];
     try {
       for (int i = 0; i < sources.size(); i++) {
         ComposeSource src = sources.get(i);
-
         long size = src.objectSize();
         if (src.length() != null) {
           size = src.length();
@@ -2440,7 +2504,7 @@ public class MinioClient {
 
         if (size <= ObjectWriteArgs.MAX_PART_SIZE) {
           partNumber++;
-          Map<String, String> headers = new HashMap<>();
+          Multimap<String, String> headers = HashMultimap.create();
           if (src.headers() != null) {
             headers.putAll(src.headers());
           }
@@ -2450,10 +2514,10 @@ public class MinioClient {
           } else if (src.offset() != null) {
             headers.put("x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + size - 1));
           }
-          if (sseHeaders != null) {
-            headers.putAll(sseHeaders);
+          if (ssecHeaders != null) {
+            headers.putAll(ssecHeaders);
           }
-          String eTag = uploadPartCopy(bucketName, objectName, uploadId, partNumber, headers);
+          String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
 
           totalParts[partNumber - 1] = new Part(partNumber, eTag);
           continue;
@@ -2468,26 +2532,33 @@ public class MinioClient {
             endBytes = startBytes + size;
           }
 
-          Map<String, String> headers = src.headers();
+          Multimap<String, String> headers = src.headers();
           headers.put("x-amz-copy-source-range", "bytes=" + startBytes + "-" + endBytes);
-          if (sseHeaders != null) {
-            headers.putAll(sseHeaders);
+          if (ssecHeaders != null) {
+            headers.putAll(ssecHeaders);
           }
-          String eTag = uploadPartCopy(bucketName, objectName, uploadId, partNumber, headers);
-
+          String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
           totalParts[partNumber - 1] = new Part(partNumber, eTag);
-
           offset = startBytes;
           size -= (endBytes - startBytes);
         }
       }
 
-      completeMultipartUpload(bucketName, objectName, uploadId, totalParts);
+      return completeMultipartUpload(
+          args.bucket(), getRegion(args.bucket()), args.object(), uploadId, totalParts, null, null);
     } catch (RuntimeException e) {
-      abortMultipartUpload(bucketName, objectName, uploadId);
+      if (!(args.sources().size() == 1
+          && args.sources().get(0).offset() == null
+          && args.sources().get(0).length() == null)) {
+        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      }
       throw e;
     } catch (Exception e) {
-      abortMultipartUpload(bucketName, objectName, uploadId);
+      if (!(args.sources().size() == 1
+          && args.sources().get(0).offset() == null
+          && args.sources().get(0).length() == null)) {
+        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      }
       throw e;
     }
   }
@@ -7335,9 +7406,9 @@ public class MinioClient {
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
     return createMultipartUpload(
         bucketName,
-        null,
+        getRegion(bucketName),
         objectName,
-        (headerMap != null) ? Multimaps.forMap(headerMap) : null,
+        Multimaps.forMap(normalizeHeaders(headerMap)),
         null);
   }
 
@@ -7347,6 +7418,7 @@ public class MinioClient {
    * S3 API</a>.
    *
    * @param bucketName Name of the bucket.
+   * @param region Region name of buckets in S3 service.
    * @param objectName Object name in the bucket.
    * @param headers Request headers.
    * @return String - Contains upload ID.
@@ -7898,14 +7970,24 @@ public class MinioClient {
       String objectName,
       String uploadId,
       int partNumber,
-      Map<String, String> headerMap)
+      Multimap<String, String> headerMap)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Map<String, String> queryParamMap = new HashMap<>();
+    Multimap<String, String> queryParamMap = HashMultimap.create();
     queryParamMap.put("partNumber", Integer.toString(partNumber));
     queryParamMap.put("uploadId", uploadId);
-    Response response = executePut(bucketName, objectName, headerMap, queryParamMap, "", 0);
+
+    Response response =
+        execute(
+            Method.PUT,
+            bucketName,
+            objectName,
+            getRegion(bucketName),
+            headerMap,
+            queryParamMap,
+            "",
+            0);
     try (ResponseBody body = response.body()) {
       CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
       return result.etag();

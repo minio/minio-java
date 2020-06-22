@@ -952,42 +952,64 @@ minioClient.setDefaultRetention(
 
 ## 3. Object operations
 
- <a name="composeObject"></a>
-### composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)
-`public void composeObject(String bucketName, String objectName, List<ComposeSource> sources, Map<String,String> headerMap, ServerSideEncryption sse)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-java.lang.String-java.lang.String-java.util.List-java.util.Map-io.minio.ServerSideEncryption-)_
+<a name="composeObject"></a>
+### composeObject(ComposeObjectArgs args)
+`public ObjectWriteResponse composeObject(ComposeObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#composeObject-io.minio.ComposeObjectArgs--)_
 
 Creates an object by combining data from different source objects using server-side copy.
 
  __Parameters__
-| Param          | Type                     | Description                        |
-|:---------------|:-------------------------|:-----------------------------------|
-| ``bucketName`` | _String_                 | Name of the bucket.                |
-| ``objectName`` | _String_                 | Object name to be created.         |
-| ``sources``    | _List<[ComposeSource]>_  | List of compose sources.           |
-| ``headerMap``  | _Map<String,String>_     | (Optional) User metadata.          |
-| ``sse``        | _[ServerSideEncryption]_ | (Optional) Server-side encryption. |
+| Param          | Type                     | Description   |
+|:---------------|:-------------------------|:--------------|
+| ``args``       | _[ComposeObjectArgs]_    | Arguments.    |
+
+| Returns                                                          |
+|:-----------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Contains information of created object.|
 
 __Example__
  ```java
 List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
-sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-one"));
-sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-two"));
-sourceObjectList.add(new ComposeSource("my-job-bucket", "my-objectname-part-three"));
+sourceObjectList.add(
+  ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-one").build());
+sourceObjectList.add(
+  ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-two").build());
+sourceObjectList.add(
+  ComposeSource.builder().bucket("my-job-bucket").object("my-objectname-part-three").build());
 
 // Create my-bucketname/my-objectname by combining source object list.
-minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, null, null);
+minioClient.composeObject(
+  ComposeObjectArgs.builder()
+      .bucket("my-bucketname")
+      .object("my-objectname")
+      .sources(sourceObjectList)
+      .build());
 
-// Create my-bucketname/my-objectname with user metadata by combining source object list.
-minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, userMetadata, null);
+// Create my-bucketname/my-objectname with user metadata by combining source object
+// list.
+minioClient.composeObject(
+    ComposeObjectArgs.builder()
+      .bucket("my-bucketname")
+      .object("my-objectname")
+      .sources(sourceObjectList)
+      .headers(Multimaps.forMap(userMetadata))
+      .build());
 
-// Create my-bucketname/my-objectname with user metadata and server-side encryption by combining
-// source object list.
-minioClient.composeObject("my-bucketname", "my-objectname", sourceObjectList, userMetadata, sse);
+// Create my-bucketname/my-objectname with user metadata and server-side encryption
+// by combining source object list.
+minioClient.composeObject(
+  ComposeObjectArgs.builder()
+      .bucket("my-bucketname")
+      .object("my-objectname")
+      .sources(sourceObjectList)
+      .headers(Multimaps.forMap(userMetadata))
+      .ssec(sse)
+      .build());
 ```
 
 <a name="copyObject"></a>
 ### copyObject(CopyObjectArgs args)
-`public void copyObject(CopyObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-io.minio.CopyObjectArgs-)_
+`public ObjectWriteResponse copyObject(CopyObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#copyObject-io.minio.CopyObjectArgs-)_
 
 Creates an object by server-side copying data from another object.
 
@@ -995,6 +1017,10 @@ __Parameters__
 | Parameter | Type               | Description |
 |:----------|:-------------------|:------------|
 | ``args``  | _[CopyObjectArgs]_ | Arguments.  |
+
+| Returns                                                          |
+|:-----------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Contains information of created object.|
 
 __Example__
 
@@ -1416,7 +1442,7 @@ System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname
 
 <a name="putObject"></a>
 ### putObject(PutObjectArgs args)
-`public void putObject(PutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-io.minio.PutObjectArgs-)_
+`public ObjectWriteResponse putObject(PutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-io.minio.PutObjectArgs-)_
 
 Uploads given stream as object in bucket.
 
@@ -1424,6 +1450,10 @@ __Parameters__
 | Parameter | Type              | Description |
 |:----------|:------------------|:------------|
 | ``args``  | _[PutObjectArgs]_ | Arguments.  |
+
+| Returns                                                          |
+|:-----------------------------------------------------------------|
+| _[ObjectWriteResponse]_ - Contains information of created object.|
 
 __Example__
 ```java
@@ -1786,3 +1816,5 @@ ObjectStat objectStat =
 [ListIncompleteUploadsArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsArgs.html
 [PutObjectArgs]: http://minio.github.io/minio-java/io/minio/PutObjectArgs.html
 [UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
+[ComposeObjectArgs]: http://minio.github.io/minio-java/io/minio/ComposeObjectArgs.html
+[ObjectWriteResponse]: http://minio.github.io/minio-java/io/minio/ObjectWriteResponse.html

@@ -17,105 +17,109 @@
 
 package io.minio;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import java.time.ZonedDateTime;
+import okhttp3.HttpUrl;
 
 /** Source information to compose object. */
-public class ComposeSource {
-  private String bucketName;
-  private String objectName;
+public class ComposeSource extends ObjectVersionArgs {
   private Long offset;
   private Long length;
-  private Map<String, String> headerMap;
-  private CopyConditions copyConditions;
-  private ServerSideEncryptionCustomerKey ssec;
   private long objectSize;
-  private Map<String, String> headers;
+  private String matchETag;
+  private String notMatchETag;
+  private ZonedDateTime modifiedSince;
+  private ZonedDateTime unmodifiedSince;
+  private ServerSideEncryptionCustomerKey ssec;
 
-  /** Create new ComposeSource for given bucket and object. */
-  public ComposeSource(String bucketName, String objectName) throws IllegalArgumentException {
-    this(bucketName, objectName, null, null, null, null, null);
+  private Multimap<String, String> headers;
+
+  public Long offset() {
+    return offset;
   }
 
-  /** Create new ComposeSource for given bucket, object, offset and length. */
-  public ComposeSource(String bucketName, String objectName, Long offset, Long length)
-      throws IllegalArgumentException {
-    this(bucketName, objectName, offset, length, null, null, null);
+  public Long length() {
+    return length;
   }
 
-  /** Create new ComposeSource for given bucket, object, offset, length and headerMap. */
-  public ComposeSource(
-      String bucketName, String objectName, Long offset, Long length, Map<String, String> headerMap)
-      throws IllegalArgumentException {
-    this(bucketName, objectName, offset, length, headerMap, null, null);
+  public long objectSize() {
+    return objectSize;
   }
 
-  /**
-   * Create new ComposeSource for given bucket, object, offset, length, headerMap and
-   * CopyConditions.
-   */
-  public ComposeSource(
-      String bucketName,
-      String objectName,
-      Long offset,
-      Long length,
-      Map<String, String> headerMap,
-      CopyConditions copyConditions)
-      throws IllegalArgumentException {
-    this(bucketName, objectName, offset, length, headerMap, copyConditions, null);
+  public String matchETag() {
+    return matchETag;
   }
 
-  /**
-   * Creates new ComposeSource for given bucket, object, offset, length, headerMap, CopyConditions
-   * and server side encryption.
-   *
-   * @throws IllegalArgumentException upon invalid value is passed to a method.
-   */
-  public ComposeSource(
-      String bucketName,
-      String objectName,
-      Long offset,
-      Long length,
-      Map<String, String> headerMap,
-      CopyConditions copyConditions,
-      ServerSideEncryptionCustomerKey ssec)
-      throws IllegalArgumentException {
-    if (bucketName == null) {
-      throw new IllegalArgumentException("Source bucket name cannot be empty");
-    }
-
-    if (objectName == null) {
-      throw new IllegalArgumentException("Source object name cannot be empty");
-    }
-
-    if (offset != null && offset < 0) {
-      throw new IllegalArgumentException("Offset cannot be negative");
-    }
-
-    if (length != null && length < 0) {
-      throw new IllegalArgumentException("Length cannot be negative");
-    }
-
-    if (length != null && offset == null) {
-      offset = 0L;
-    }
-
-    this.bucketName = bucketName;
-    this.objectName = objectName;
-    this.offset = offset;
-    this.length = length;
-    if (headerMap != null) {
-      this.headerMap = Collections.unmodifiableMap(headerMap);
-    } else {
-      this.headerMap = null;
-    }
-    this.copyConditions = copyConditions;
-    this.ssec = ssec;
+  public String notMatchETag() {
+    return notMatchETag;
   }
 
-  /** Constructs header . */
+  public ZonedDateTime modifiedSince() {
+    return modifiedSince;
+  }
+
+  public ZonedDateTime unmodifiedSince() {
+    return unmodifiedSince;
+  }
+
+  public Multimap<String, String> headers() {
+    return headers;
+  }
+
+  public ServerSideEncryptionCustomerKey ssec() {
+    return ssec;
+  }
+
+  public void validateSse(HttpUrl url) {
+    checkSse(ssec, url);
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /** Constructs header. */
   public void buildHeaders(long objectSize, String etag) throws IllegalArgumentException {
+    validateSize(objectSize);
+    Multimap<String, String> headers = HashMultimap.create();
+    headers.put("x-amz-copy-source", S3Escaper.encodePath(bucketName + "/" + objectName));
+    headers.put("x-amz-copy-source-if-match", etag);
+
+    if (extraHeaders() != null) {
+      headers.putAll(extraHeaders());
+    }
+
+    if (matchETag != null) {
+      headers.put("x-amz-copy-source-if-match", matchETag);
+    }
+
+    if (ssec != null) {
+      headers.putAll(Multimaps.forMap(ssec.copySourceHeaders()));
+    }
+
+    if (notMatchETag != null) {
+      headers.put("x-amz-copy-source-if-none-match", notMatchETag);
+    }
+
+    if (modifiedSince != null) {
+      headers.put(
+          "x-amz-copy-source-if-modified-since",
+          modifiedSince.format(Time.HTTP_HEADER_DATE_FORMAT));
+    }
+
+    if (unmodifiedSince != null) {
+      headers.put(
+          "x-amz-copy-source-if-unmodified-since",
+          unmodifiedSince.format(Time.HTTP_HEADER_DATE_FORMAT));
+    }
+
+    this.objectSize = objectSize;
+    this.headers = headers;
+  }
+
+  private void validateSize(long objectSize) throws IllegalArgumentException {
     if (offset != null && offset >= objectSize) {
       throw new IllegalArgumentException(
           "source "
@@ -153,56 +157,48 @@ public class ComposeSource {
                 + objectSize);
       }
     }
+  }
 
-    Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    headers.put("x-amz-copy-source", S3Escaper.encodePath(bucketName + "/" + objectName));
-    headers.put("x-amz-copy-source-if-match", etag);
+  /** Argument builder of {@link ComposeSource}. */
+  public static final class Builder extends ObjectVersionArgs.Builder<Builder, ComposeSource> {
 
-    if (headerMap != null) {
-      headers.putAll(headerMap);
+    public Builder offset(long offset) {
+      validateNullOrPositive(offset, "offset");
+      operations.add(args -> args.offset = offset);
+      return this;
     }
 
-    if (copyConditions != null) {
-      headers.putAll(copyConditions.getConditions());
+    public Builder length(long length) {
+      validateNullOrPositive(length, "length");
+      operations.add(args -> args.length = length);
+      return this;
     }
 
-    if (ssec != null) {
-      headers.putAll(ssec.copySourceHeaders());
+    public Builder ssec(ServerSideEncryptionCustomerKey ssec) {
+      operations.add(args -> args.ssec = ssec);
+      return this;
     }
 
-    this.objectSize = objectSize;
-    this.headers = Collections.unmodifiableMap(headers);
-  }
+    public Builder matchETag(String etag) {
+      validateNullOrNotEmptyString(etag, "etag");
+      operations.add(args -> args.matchETag = etag);
+      return this;
+    }
 
-  public String bucketName() {
-    return bucketName;
-  }
+    public Builder notMatchETag(String etag) {
+      validateNullOrNotEmptyString(etag, "etag");
+      operations.add(args -> args.notMatchETag = etag);
+      return this;
+    }
 
-  public String objectName() {
-    return objectName;
-  }
+    public Builder modifiedSince(ZonedDateTime modifiedTime) {
+      operations.add(args -> args.modifiedSince = modifiedTime);
+      return this;
+    }
 
-  public Long offset() {
-    return offset;
-  }
-
-  public Long length() {
-    return length;
-  }
-
-  public CopyConditions copyConditions() {
-    return copyConditions;
-  }
-
-  public ServerSideEncryptionCustomerKey ssec() {
-    return ssec;
-  }
-
-  public Map<String, String> headers() {
-    return headers;
-  }
-
-  public long objectSize() {
-    return objectSize;
+    public Builder unmodifiedSince(ZonedDateTime unmodifiedTime) {
+      operations.add(args -> args.unmodifiedSince = unmodifiedTime);
+      return this;
+    }
   }
 }
