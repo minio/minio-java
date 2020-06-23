@@ -17,11 +17,28 @@
 package io.minio;
 
 /** Argument class of MinioClient.statObject(). */
-public class StatObjectArgs extends ObjectReadArgs {
+public class StatObjectArgs extends ObjectConditionalReadArgs {
+  protected StatObjectArgs() {}
+
+  public StatObjectArgs(ObjectConditionalReadArgs args) {
+    this.extraHeaders = args.extraHeaders;
+    this.extraQueryParams = args.extraQueryParams;
+    this.bucketName = args.bucketName;
+    this.region = args.region;
+    this.objectName = args.objectName;
+    this.versionId = args.versionId;
+    this.ssec = args.ssec;
+    this.matchETag = args.matchETag;
+    this.notMatchETag = args.notMatchETag;
+    this.modifiedSince = args.modifiedSince;
+    this.unmodifiedSince = args.unmodifiedSince;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
 
   /** Argument builder of {@link StatObjectArgs}. */
-  public static final class Builder extends ObjectReadArgs.Builder<Builder, StatObjectArgs> {}
+  public static final class Builder
+      extends ObjectConditionalReadArgs.Builder<Builder, StatObjectArgs> {}
 }

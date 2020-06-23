@@ -16,10 +16,30 @@
 
 package io.minio;
 
+import java.util.LinkedList;
 import java.util.List;
+import okhttp3.HttpUrl;
 
 public class ComposeObjectArgs extends ObjectWriteArgs {
   List<ComposeSource> sources;
+
+  protected ComposeObjectArgs() {}
+
+  public ComposeObjectArgs(CopyObjectArgs args) {
+    this.extraHeaders = args.extraHeaders;
+    this.extraQueryParams = args.extraQueryParams;
+    this.bucketName = args.bucketName;
+    this.region = args.region;
+    this.objectName = args.objectName;
+    this.headers = args.headers;
+    this.userMetadata = args.userMetadata;
+    this.sse = args.sse;
+    this.tags = args.tags;
+    this.retention = args.retention;
+    this.legalHold = args.legalHold;
+    this.sources = new LinkedList<>();
+    this.sources.add(new ComposeSource(args.source()));
+  }
 
   public List<ComposeSource> sources() {
     return sources;
@@ -29,7 +49,21 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
     return new Builder();
   }
 
+  @Override
+  public void validateSse(HttpUrl url) {
+    super.validateSse(url);
+    for (ComposeSource source : sources) {
+      source.validateSsec(url);
+    }
+  }
+
   public static final class Builder extends ObjectWriteArgs.Builder<Builder, ComposeObjectArgs> {
+    private void validateSources(List<ComposeSource> sources) {
+      if (sources == null || sources.isEmpty()) {
+        throw new IllegalArgumentException("compose sources cannot be empty");
+      }
+    }
+
     @Override
     protected void validate(ComposeObjectArgs args) {
       super.validate(args);
@@ -40,12 +74,6 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
       validateSources(sources);
       operations.add(args -> args.sources = sources);
       return this;
-    }
-
-    private void validateSources(List<ComposeSource> sources) {
-      if (sources == null || sources.isEmpty()) {
-        throw new IllegalArgumentException("compose sources cannot be empty");
-      }
     }
   }
 }

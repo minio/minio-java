@@ -19,6 +19,7 @@ package io.minio;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -119,24 +120,34 @@ public abstract class BaseArgs {
       return (B) this;
     }
 
-    /** Creates derived Args class with each attribute populated. */
     @SuppressWarnings("unchecked") // safe as B will always be the builder of the current args class
-    public A build() throws IllegalArgumentException {
+    private A newInstance() {
       try {
-        A args = (A) this.getClass().getEnclosingClass().getDeclaredConstructor().newInstance();
-        operations.forEach(operation -> operation.accept(args));
-        validate(args);
-        return args;
+        for (Constructor<?> constructor :
+            this.getClass().getEnclosingClass().getDeclaredConstructors()) {
+          if (constructor.getParameterCount() == 0) {
+            return (A) constructor.newInstance();
+          }
+        }
+
+        throw new RuntimeException(
+            this.getClass().getEnclosingClass() + " must have no argument constructor");
       } catch (InstantiationException
           | IllegalAccessException
           | InvocationTargetException
-          | NoSuchMethodException
           | SecurityException e) {
-        // This should never happen as we'll always have the
-        // Builder class as an enclosed class of the args class
-        e.printStackTrace();
-        return null;
+        // Args class must have no argument constructor with at least protected access.
+        throw new RuntimeException(e);
       }
+    }
+
+    /** Creates derived Args class with each attribute populated. */
+    @SuppressWarnings("unchecked") // safe as B will always be the builder of the current args class
+    public A build() throws IllegalArgumentException {
+      A args = newInstance();
+      operations.forEach(operation -> operation.accept(args));
+      validate(args);
+      return args;
     }
   }
 }

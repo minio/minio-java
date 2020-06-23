@@ -16,13 +16,13 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getObject(). */
-public class GetObjectArgs extends ObjectConditionalReadArgs {
+/** A source object defintion for {@link CopyObjectArgs}. */
+public class CopySource extends ObjectConditionalReadArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetObjectArgs}. */
+  /** Argument builder of {@link CopySource}. */
   public static final class Builder
-      extends ObjectConditionalReadArgs.Builder<Builder, GetObjectArgs> {}
+      extends ObjectConditionalReadArgs.Builder<Builder, CopySource> {}
 }
