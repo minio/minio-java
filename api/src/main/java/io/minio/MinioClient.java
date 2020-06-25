@@ -2379,7 +2379,10 @@ public class MinioClient {
             headers.put("x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + size - 1));
           }
 
-          String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
+          UploadPartCopyResponse response =
+              uploadPartCopy(
+                  args.bucket(), args.region(), args.object(), uploadId, partNumber, headers, null);
+          String eTag = response.result().etag();
 
           totalParts[partNumber - 1] = new Part(partNumber, eTag);
           continue;
@@ -2397,8 +2400,16 @@ public class MinioClient {
           Multimap<String, String> headersCopy = newMultimap(headers);
           headersCopy.put("x-amz-copy-source-range", "bytes=" + startBytes + "-" + endBytes);
 
-          String eTag =
-              uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headersCopy);
+          UploadPartCopyResponse response =
+              uploadPartCopy(
+                  args.bucket(),
+                  args.region(),
+                  args.object(),
+                  uploadId,
+                  partNumber,
+                  headersCopy,
+                  null);
+          String eTag = response.result().etag();
           totalParts[partNumber - 1] = new Part(partNumber, eTag);
           offset = startBytes;
           size -= (endBytes - startBytes);
@@ -7686,11 +7697,13 @@ public class MinioClient {
    * S3 API</a>.
    *
    * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
    * @param objectName Object name in the bucket.
    * @param uploadId Upload ID.
    * @param partNumber Part number.
-   * @param headers Source object definitions.
-   * @return String - Contains ETag.
+   * @param headers Request headers with source object definitions.
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link UploadPartCopyResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -7703,28 +7716,32 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected String uploadPartCopy(
+  protected UploadPartCopyResponse uploadPartCopy(
       String bucketName,
+      String region,
       String objectName,
       String uploadId,
       int partNumber,
-      Multimap<String, String> headers)
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Response response =
+    try (Response response =
         execute(
             Method.PUT,
             bucketName,
             objectName,
-            getRegion(bucketName, null),
+            getRegion(bucketName, region),
             headers,
-            newMultimap("partNumber", Integer.toString(partNumber), "uploadId", uploadId),
+            merge(
+                extraQueryParams,
+                newMultimap("partNumber", Integer.toString(partNumber), "uploadId", uploadId)),
             null,
-            0);
-    try (ResponseBody body = response.body()) {
-      CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
-      return result.etag();
+            0)) {
+      CopyPartResult result = Xml.unmarshal(CopyPartResult.class, response.body().charStream());
+      return new UploadPartCopyResponse(
+          response.headers(), bucketName, region, objectName, uploadId, partNumber, result);
     }
   }
 
