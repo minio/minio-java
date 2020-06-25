@@ -4742,15 +4742,18 @@ public class MinioClient {
           ssecHeaders = args.sse().headers();
         }
 
-        String etag =
+        UploadPartResponse response =
             uploadPart(
                 args.bucket(),
+                args.region(),
                 args.object(),
                 data,
                 (int) availableSize,
                 uploadId,
                 partNumber,
-                ssecHeaders);
+                (ssecHeaders != null) ? Multimaps.forMap(ssecHeaders) : null,
+                null);
+        String etag = response.etag();
         parts[partNumber - 1] = new Part(partNumber, etag);
         uploadedSize += availableSize;
       }
@@ -7639,12 +7642,14 @@ public class MinioClient {
    * API</a>.
    *
    * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
    * @param objectName Object name in the bucket.
    * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
    * @param length Length of object data.
    * @param uploadId Upload ID.
    * @param partNumber Part number.
-   * @param headerMap Additional headers.
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
    * @return String - Contains ETag.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -7658,14 +7663,16 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected String uploadPart(
+  protected UploadPartResponse uploadPart(
       String bucketName,
+      String region,
       String objectName,
       Object data,
       int length,
       String uploadId,
       int partNumber,
-      Map<String, String> headerMap)
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
@@ -7682,12 +7689,21 @@ public class MinioClient {
             Method.PUT,
             bucketName,
             objectName,
-            getRegion(bucketName, null),
-            (headerMap != null) ? newMultimap(headerMap) : null,
-            newMultimap("partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId),
+            getRegion(bucketName, region),
+            extraHeaders,
+            merge(
+                extraQueryParams,
+                newMultimap("partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
             data,
             length)) {
-      return response.header("ETag").replaceAll("\"", "");
+      return new UploadPartResponse(
+          response.headers(),
+          bucketName,
+          region,
+          objectName,
+          uploadId,
+          partNumber,
+          response.header("ETag").replaceAll("\"", ""));
     }
   }
 
