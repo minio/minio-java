@@ -3434,12 +3434,12 @@ public class MinioClient {
             this.itemIterator = null;
             this.prefixIterator = null;
 
-            result =
+            ListObjectsV2Response response =
                 listObjectsV2(
                     args.bucket(),
                     args.region(),
                     args.delimiter(),
-                    args.useUrlEncodingType(),
+                    args.useUrlEncodingType() ? "url" : null,
                     args.startAfter(),
                     args.maxKeys(),
                     args.prefix(),
@@ -3448,7 +3448,8 @@ public class MinioClient {
                     args.includeUserMetadata(),
                     args.extraHeaders(),
                     args.extraQueryParams());
-            this.listObjectsResult = result;
+            result = response.result();
+            this.listObjectsResult = response.result();
           }
         };
       }
@@ -3477,18 +3478,19 @@ public class MinioClient {
               nextMarker = this.lastObjectName;
             }
 
-            result =
+            ListObjectsV1Response response =
                 listObjectsV1(
                     args.bucket(),
                     args.region(),
                     args.delimiter(),
-                    args.useUrlEncodingType(),
+                    args.useUrlEncodingType() ? "url" : null,
                     nextMarker,
                     args.maxKeys(),
                     args.prefix(),
                     args.extraHeaders(),
                     args.extraQueryParams());
-            this.listObjectsResult = result;
+            result = response.result();
+            this.listObjectsResult = response.result();
           }
         };
       }
@@ -3512,19 +3514,20 @@ public class MinioClient {
             this.itemIterator = null;
             this.prefixIterator = null;
 
-            result =
+            ListObjectVersionsResponse response =
                 listObjectVersions(
                     args.bucket(),
                     args.region(),
                     args.delimiter(),
-                    args.useUrlEncodingType(),
+                    args.useUrlEncodingType() ? "url" : null,
                     (result == null) ? args.keyMarker() : result.nextKeyMarker(),
                     args.maxKeys(),
                     args.prefix(),
                     (result == null) ? args.versionIdMarker() : result.nextVersionIdMarker(),
                     args.extraHeaders(),
                     args.extraQueryParams());
-            this.listObjectsResult = result;
+            result = response.result();
+            this.listObjectsResult = response.result();
           }
         };
       }
@@ -7205,7 +7208,7 @@ public class MinioClient {
   }
 
   private Multimap<String, String> getCommonListObjectsQueryParams(
-      String delimiter, boolean useUrlEncodingType, int maxKeys, String prefix) {
+      String delimiter, String encodingType, Integer maxKeys, String prefix) {
     Multimap<String, String> queryParams =
         newMultimap(
             "delimiter",
@@ -7214,17 +7217,46 @@ public class MinioClient {
             Integer.toString(maxKeys > 0 ? maxKeys : 1000),
             "prefix",
             (prefix == null) ? "" : prefix);
-    if (useUrlEncodingType) queryParams.put("encoding-type", "url");
+    if (encodingType != null) queryParams.put("encoding-type", encodingType);
     return queryParams;
   }
 
-  protected ListBucketResultV2 listObjectsV2(
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">ListObjects
+   * version 1 S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param startAfter Fetch listing after this key (Optional).
+   * @param maxKeys Maximum object information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param continuationToken Continuation token (Optional).
+   * @param fetchOwner Flag to fetch owner information (Optional).
+   * @param includeUserMetadata MinIO extension flag to include user metadata (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link ListObjectsV2Response} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ListObjectsV2Response listObjectsV2(
       String bucketName,
       String region,
       String delimiter,
-      boolean useUrlEncodingType,
+      String encodingType,
       String startAfter,
-      int maxKeys,
+      Integer maxKeys,
       String prefix,
       String continuationToken,
       boolean fetchOwner,
@@ -7234,9 +7266,10 @@ public class MinioClient {
       throws InvalidKeyException, InvalidBucketNameException, IllegalArgumentException,
           NoSuchAlgorithmException, InsufficientDataException, ServerException, XmlParserException,
           ErrorResponseException, InternalException, InvalidResponseException, IOException {
-    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
-    queryParams.putAll(
-        getCommonListObjectsQueryParams(delimiter, useUrlEncodingType, maxKeys, prefix));
+    Multimap<String, String> queryParams =
+        merge(
+            extraQueryParams,
+            getCommonListObjectsQueryParams(delimiter, encodingType, maxKeys, prefix));
     queryParams.put("list-type", "2");
     if (continuationToken != null) queryParams.put("continuation-token", continuationToken);
     if (fetchOwner) queryParams.put("fetch-owner", "true");
@@ -7253,26 +7286,55 @@ public class MinioClient {
             queryParams,
             null,
             0)) {
-      return Xml.unmarshal(ListBucketResultV2.class, response.body().charStream());
+      ListBucketResultV2 result =
+          Xml.unmarshal(ListBucketResultV2.class, response.body().charStream());
+      return new ListObjectsV2Response(response.headers(), bucketName, region, result);
     }
   }
 
-  protected ListBucketResultV1 listObjectsV1(
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">ListObjects
+   * version 1 S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param marker Marker (Optional).
+   * @param maxKeys Maximum object information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link ListObjectsV1Response} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ListObjectsV1Response listObjectsV1(
       String bucketName,
       String region,
       String delimiter,
-      boolean useUrlEncodingType,
+      String encodingType,
       String marker,
-      int maxKeys,
+      Integer maxKeys,
       String prefix,
       Multimap<String, String> extraHeaders,
       Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
-    queryParams.putAll(
-        getCommonListObjectsQueryParams(delimiter, useUrlEncodingType, maxKeys, prefix));
+    Multimap<String, String> queryParams =
+        merge(
+            extraQueryParams,
+            getCommonListObjectsQueryParams(delimiter, encodingType, maxKeys, prefix));
     if (marker != null) queryParams.put("marker", marker);
 
     try (Response response =
@@ -7285,17 +7347,47 @@ public class MinioClient {
             queryParams,
             null,
             0)) {
-      return Xml.unmarshal(ListBucketResultV1.class, response.body().charStream());
+      ListBucketResultV1 result =
+          Xml.unmarshal(ListBucketResultV1.class, response.body().charStream());
+      return new ListObjectsV1Response(response.headers(), bucketName, region, result);
     }
   }
 
-  protected ListVersionsResult listObjectVersions(
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectVersions.html">ListObjectVersions
+   * API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param keyMarker Key marker (Optional).
+   * @param maxKeys Maximum object information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param versionIdMarker Version ID marker (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link ListObjectVersionsResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected ListObjectVersionsResponse listObjectVersions(
       String bucketName,
       String region,
       String delimiter,
-      boolean useUrlEncodingType,
+      String encodingType,
       String keyMarker,
-      int maxKeys,
+      Integer maxKeys,
       String prefix,
       String versionIdMarker,
       Multimap<String, String> extraHeaders,
@@ -7303,9 +7395,10 @@ public class MinioClient {
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
-    queryParams.putAll(
-        getCommonListObjectsQueryParams(delimiter, useUrlEncodingType, maxKeys, prefix));
+    Multimap<String, String> queryParams =
+        merge(
+            extraQueryParams,
+            getCommonListObjectsQueryParams(delimiter, encodingType, maxKeys, prefix));
     if (keyMarker != null) queryParams.put("key-marker", keyMarker);
     if (versionIdMarker != null) queryParams.put("version-id-marker", versionIdMarker);
     queryParams.put("versions", "");
@@ -7320,7 +7413,9 @@ public class MinioClient {
             queryParams,
             null,
             0)) {
-      return Xml.unmarshal(ListVersionsResult.class, response.body().charStream());
+      ListVersionsResult result =
+          Xml.unmarshal(ListVersionsResult.class, response.body().charStream());
+      return new ListObjectVersionsResponse(response.headers(), bucketName, region, result);
     }
   }
 
