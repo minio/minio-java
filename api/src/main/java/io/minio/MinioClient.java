@@ -7427,46 +7427,6 @@ public class MinioClient {
    * @param objectName Object name in the bucket.
    * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
    * @param length Length of object data.
-   * @param headerMap Additional headers.
-   * @return String - Contains ETag.
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws IllegalArgumentException throws to indicate invalid argument passed.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   */
-  @Deprecated
-  protected String putObject(
-      String bucketName, String objectName, Object data, int length, Map<String, String> headerMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, ServerException,
-          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    ObjectWriteResponse reply =
-        putObject(
-            bucketName,
-            null,
-            objectName,
-            data,
-            length,
-            (headerMap != null) ? newMultimap(headerMap) : null,
-            null);
-    return reply.etag();
-  }
-
-  /**
-   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">PutObject S3
-   * API</a>.
-   *
-   * @param bucketName Name of the bucket.
-   * @param objectName Object name in the bucket.
-   * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
-   * @param length Length of object data.
    * @param headers Additional headers.
    * @param extraQueryParams Additional query parameters if any.
    * @return {@link ObjectWriteResponse} object.
