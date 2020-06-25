@@ -2990,10 +2990,16 @@ public class MinioClient {
               }
 
               if (objectList.size() > 0) {
-                DeleteResult result =
+                DeleteObjectsResponse response =
                     deleteObjects(
-                        args.bucket(), objectList, args.quiet(), args.bypassGovernanceMode());
-                errorList = result.errorList();
+                        args.bucket(),
+                        args.region(),
+                        objectList,
+                        args.quiet(),
+                        args.bypassGovernanceMode(),
+                        args.extraHeaders(),
+                        args.extraQueryParams());
+                errorList = response.result().errorList();
               }
             } catch (ErrorResponseException
                 | IllegalArgumentException
@@ -7160,9 +7166,13 @@ public class MinioClient {
    * API</a>.
    *
    * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
    * @param objectList List of object names.
    * @param quiet Quiet flag.
-   * @return {@link DeleteResult} - Contains delete result.
+   * @param bypassGovernanceMode Bypass Governance retention mode.
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link DeleteObjectsResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -7175,35 +7185,51 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected DeleteResult deleteObjects(
-      String bucketName, List<DeleteObject> objectList, boolean quiet, boolean bypassGovernanceMode)
+  protected DeleteObjectsResponse deleteObjects(
+      String bucketName,
+      String region,
+      List<DeleteObject> objectList,
+      boolean quiet,
+      boolean bypassGovernanceMode,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, ServerException, XmlParserException,
           ErrorResponseException, InternalException, InvalidResponseException {
+    if (objectList == null) objectList = new LinkedList<>();
+
+    if (objectList.size() > 1000) {
+      throw new IllegalArgumentException("list of objects must not be more than 1000");
+    }
+
     Multimap<String, String> headers =
-        bypassGovernanceMode ? newMultimap("x-amz-bypass-governance-retention", "true") : null;
+        merge(
+            extraHeaders,
+            bypassGovernanceMode ? newMultimap("x-amz-bypass-governance-retention", "true") : null);
     try (Response response =
         execute(
             Method.POST,
             bucketName,
             null,
-            getRegion(bucketName, null),
+            getRegion(bucketName, region),
             headers,
-            newMultimap("delete", ""),
+            merge(extraQueryParams, newMultimap("delete", "")),
             new DeleteRequest(objectList, quiet),
             0)) {
       String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
       try {
         if (Xml.validate(DeleteError.class, bodyContent)) {
           DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
-          return new DeleteResult(error);
+          DeleteResult result = new DeleteResult(error);
+          return new DeleteObjectsResponse(response.headers(), bucketName, region, result);
         }
       } catch (XmlParserException e) {
-        // As it is not <Error> message, parse it as <DeleteResult> message.
-        // Ignore this exception
+        // Ignore this exception as it is not <Error> message,
+        // but parse it as <DeleteResult> message below.
       }
 
-      return Xml.unmarshal(DeleteResult.class, bodyContent);
+      DeleteResult result = Xml.unmarshal(DeleteResult.class, bodyContent);
+      return new DeleteObjectsResponse(response.headers(), bucketName, region, result);
     }
   }
 
