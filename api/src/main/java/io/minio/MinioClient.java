@@ -5674,14 +5674,13 @@ public class MinioClient {
    * }</pre>
    *
    * @param bucketName Name of the bucket.
-   * @return Iterable&ltResult&ltUpload&gt;&gt; - Lazy iterator contains object upload information.
-   * @deprecated use {@link #listIncompleteUploads(ListIncompleteUploadsArgs)}
+   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
+   * @see #listIncompleteUploads(String, String, boolean)
    */
   @Deprecated
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName)
       throws XmlParserException {
-    return listIncompleteUploads(
-        ListIncompleteUploadsArgs.builder().bucket(bucketName).recursive(true).build());
+    return listIncompleteUploads(bucketName, null, true, true);
   }
 
   /**
@@ -5698,19 +5697,14 @@ public class MinioClient {
    *
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
-   * @return Iterable&ltResult&ltUpload&gt;&gt; - Lazy iterator contains object upload information.
+   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
    * @throws XmlParserException upon parsing response xml
-   * @deprecated use {@link #listIncompleteUploads(ListIncompleteUploadsArgs)}
+   * @see #listIncompleteUploads(String, String, boolean)
    */
   @Deprecated
   public Iterable<Result<Upload>> listIncompleteUploads(String bucketName, String prefix)
       throws XmlParserException {
-    return listIncompleteUploads(
-        ListIncompleteUploadsArgs.builder()
-            .bucket(bucketName)
-            .prefix(prefix)
-            .recursive(true)
-            .build());
+    return listIncompleteUploads(bucketName, prefix, true, true);
   }
 
   /**
@@ -5728,105 +5722,39 @@ public class MinioClient {
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
    * @param recursive List recursively than directory structure emulation.
-   * @return Iterable&ltResult&ltUpload&gt;&gt; - Lazy iterator contains object upload information.
-   * @deprecated use {@link #listIncompleteUploads(ListIncompleteUploadsArgs)}
+   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
+   * @see #listIncompleteUploads(String bucketName)
+   * @see #listIncompleteUploads(String bucketName, String prefix)
    */
   @Deprecated
   public Iterable<Result<Upload>> listIncompleteUploads(
       String bucketName, String prefix, boolean recursive) {
-    return listIncompleteUploads(
-        ListIncompleteUploadsArgs.builder()
-            .bucket(bucketName)
-            .prefix(prefix)
-            .recursive(recursive)
-            .build());
+    return listIncompleteUploads(bucketName, prefix, recursive, true);
   }
 
   /**
-   * Lists incomplete object upload information of a bucket for prefix recursively.
-   *
-   * <pre>Example:{@code
-   *  // Lists incomplete object upload information of a bucket.
-   *   Iterable<Result<Upload>> results =
-   *       minioClient.listIncompleteUploads(
-   *           ListIncompleteUploadsArgs.builder().bucket("my-bucketname").build());
-   *   for (Result<Upload> result : results) {
-   *     Upload upload = result.get();
-   *     System.out.println(upload.uploadId() + ", " + upload.objectName());
-   *   }
-   *
-   *   // Lists incomplete object upload information of a bucket for prefix.
-   *   Iterable<Result<Upload>> results =
-   *       minioClient.listIncompleteUploads(
-   *           ListIncompleteUploadsArgs.builder()
-   *               .bucket("my-bucketname")
-   *               .prefix("my-obj")
-   *               .build());
-   *   for (Result<Upload> result : results) {
-   *     Upload upload = result.get();
-   *     System.out.println(upload.uploadId() + ", " + upload.objectName());
-   *   }
-   *
-   *   // Lists incomplete object upload information of a bucket for prefix recursively.
-   *   Iterable<Result<Upload>> results =
-   *       minioClient.listIncompleteUploads(
-   *           ListIncompleteUploadsArgs.builder()
-   *               .bucket("my-bucketname")
-   *               .prefix("my-obj")
-   *               .recursive(true)
-   *               .build());
-   *   for (Result<Upload> result : results) {
-   *    Upload upload = result.get();
-   *    System.out.println(upload.uploadId() + ", " + upload.objectName());
-   *   }
-   *
-   *   // Lists incomplete object upload information of a bucket for prefix, delimiter.
-   *   //  keyMarker, uploadIdMarker and maxUpload to 500
-   *   Iterable<Result<Upload>> results =
-   *       minioClient.listIncompleteUploads(
-   *           ListIncompleteUploadsArgs.builder()
-   *               .bucket("my-bucketname")
-   *               .prefix("my-obj")
-   *               .delimiter("-")
-   *               .keyMarker("b")
-   *               .maxUploads(500)
-   *               .uploadIdMarker("k")
-   *               .build());
-   *   for (Result<Upload> result : results) {
-   *    Upload upload = result.get();
-   *    System.out.println(upload.uploadId() + ", " + upload.objectName());
-   *   }
-   * }</pre>
-   *
-   * @param args {@link ListIncompleteUploadsArgs} objects.
-   * @return Iterable&lt;Result&lt;Upload&gt;&gt; - Lazy iterator contains object upload
-   *     information.
-   */
-  public Iterable<Result<Upload>> listIncompleteUploads(ListIncompleteUploadsArgs args) {
-    checkArgs(args);
-    return this.listIncompleteUploads(args, true);
-  }
-
-  /**
-   * Returns Iterable<Result<Upload>> of given ListIncompleteUploadsArgs argumentsr. All parts size
-   * are aggregated when aggregatePartSize is true.
+   * Returns Iterable<Result<Upload>> of given bucket name, prefix and recursive flag. All parts
+   * size are aggregated when aggregatePartSize is true.
    */
   private Iterable<Result<Upload>> listIncompleteUploads(
-      ListIncompleteUploadsArgs args, final boolean aggregatePartSize) {
+      final String bucketName,
+      final String prefix,
+      final boolean recursive,
+      final boolean aggregatePartSize) {
     return new Iterable<Result<Upload>>() {
       @Override
       public Iterator<Result<Upload>> iterator() {
         return new Iterator<Result<Upload>>() {
-          private String nextKeyMarker = args.keyMarker();
-          private String nextUploadIdMarker = args.uploadIdMarker();
+          private String nextKeyMarker;
+          private String nextUploadIdMarker;
           private ListMultipartUploadsResult listMultipartUploadsResult;
           private Result<Upload> error;
           private Iterator<Upload> uploadIterator;
           private boolean completed = false;
 
           private synchronized void populate() {
-            String delimiter = args.delimiter();
-            if (args.recursive()) {
+            String delimiter = "/";
+            if (recursive) {
               delimiter = null;
             }
 
@@ -5834,14 +5762,19 @@ public class MinioClient {
             this.uploadIterator = null;
 
             try {
-              this.listMultipartUploadsResult =
+              ListMultipartUploadsResponse response =
                   listMultipartUploads(
-                      args.bucket(),
+                      bucketName,
+                      null,
                       delimiter,
+                      "url",
                       nextKeyMarker,
-                      args.maxUploads(),
-                      args.prefix(),
-                      nextUploadIdMarker);
+                      null,
+                      prefix,
+                      nextUploadIdMarker,
+                      null,
+                      null);
+              this.listMultipartUploadsResult = response.result();
             } catch (ErrorResponseException
                 | IllegalArgumentException
                 | InsufficientDataException
@@ -5870,7 +5803,7 @@ public class MinioClient {
                   XmlParserException {
             long aggregatedPartSize = 0;
 
-            for (Result<Part> result : listObjectParts(args.bucket(), objectName, uploadId)) {
+            for (Result<Part> result : listObjectParts(bucketName, objectName, uploadId)) {
               aggregatedPartSize += result.get().partSize();
             }
 
@@ -5994,8 +5927,17 @@ public class MinioClient {
             this.partIterator = null;
 
             try {
-              this.listPartsResult =
-                  listParts(bucketName, objectName, null, nextPartNumberMarker, uploadId);
+              ListPartsResponse response =
+                  listParts(
+                      bucketName,
+                      null,
+                      objectName,
+                      null,
+                      nextPartNumberMarker,
+                      uploadId,
+                      null,
+                      null);
+              this.listPartsResult = response.result();
             } catch (ErrorResponseException
                 | IllegalArgumentException
                 | InsufficientDataException
@@ -6105,7 +6047,6 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
-   * @deprecated use {@link #removeIncompleteUpload(RemoveIncompleteUploadArgs)}
    */
   @Deprecated
   public void removeIncompleteUpload(String bucketName, String objectName)
@@ -6113,52 +6054,10 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    removeIncompleteUpload(
-        RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-  }
-
-  /**
-   * Removes incomplete uploads of an object.
-   *
-   * <pre>Example:{@code
-   * minioClient.removeIncompleteUpload(
-   *     RemoveIncompleteUploadArgs.builder()
-   *     .bucket("my-bucketname")
-   *     .object("my-objectname")
-   *     .build());
-   * }</pre>
-   *
-   * @param args instance of {@link RemoveIncompleteUploadArgs}
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws IllegalArgumentException throws to indicate invalid argument passed.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   */
-  public void removeIncompleteUpload(RemoveIncompleteUploadArgs args)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    for (Result<Upload> r :
-        listIncompleteUploads(
-            ListIncompleteUploadsArgs.builder()
-                .bucket(args.bucket())
-                .prefix(args.object())
-                .recursive(true)
-                .build(),
-            false)) {
-
-      // args.bucket(), args.object(), true, false)) {
+    for (Result<Upload> r : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = r.get();
-      if (args.object().equals(upload.objectName())) {
-        abortMultipartUpload(args.bucket(), args.object(), upload.uploadId());
+      if (objectName.equals(upload.objectName())) {
+        abortMultipartUpload(bucketName, objectName, upload.uploadId());
         return;
       }
     }
@@ -7533,12 +7432,16 @@ public class MinioClient {
    * S3 API</a>.
    *
    * @param bucketName Name of the bucket.
-   * @param delimiter Delimiter.
-   * @param keyMarker Key marker.
-   * @param maxUploads Maximum upload information to fetch.
-   * @param prefix Prefix.
-   * @param uploadIdMarker Upload ID marker.
-   * @return {@link ListMultipartUploadsResult} - Contains uploads information.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param keyMarker Key marker (Optional).
+   * @param maxUploads Maximum upload information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param uploadIdMarker Upload ID marker (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link ListMultipartUploadsResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -7551,37 +7454,51 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected ListMultipartUploadsResult listMultipartUploads(
+  protected ListMultipartUploadsResponse listMultipartUploads(
       String bucketName,
+      String region,
       String delimiter,
+      String encodingType,
       String keyMarker,
       Integer maxUploads,
       String prefix,
-      String uploadIdMarker)
+      String uploadIdMarker,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Multimap<String, String> queryParams =
-        newMultimap(
-            "uploads",
-            "",
-            "delimiter",
-            (delimiter != null) ? delimiter : "",
-            "max-uploads",
-            (maxUploads != null) ? maxUploads.toString() : "1000",
-            "prefix",
-            (prefix != null) ? prefix : "",
-            "encoding-type",
-            "url");
+        merge(
+            extraQueryParams,
+            newMultimap(
+                "uploads",
+                "",
+                "delimiter",
+                (delimiter != null) ? delimiter : "",
+                "max-uploads",
+                (maxUploads != null) ? maxUploads.toString() : "1000",
+                "prefix",
+                (prefix != null) ? prefix : "",
+                "encoding-type",
+                "url"));
+    if (encodingType != null) queryParams.put("encoding-type", encodingType);
     if (keyMarker != null) queryParams.put("key-marker", keyMarker);
     if (uploadIdMarker != null) queryParams.put("upload-id-marker", uploadIdMarker);
 
-    Response response =
+    try (Response response =
         execute(
-            Method.GET, bucketName, null, getRegion(bucketName, null), null, queryParams, null, 0);
-
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(ListMultipartUploadsResult.class, body.charStream());
+            Method.GET,
+            bucketName,
+            null,
+            getRegion(bucketName, region),
+            extraHeaders,
+            queryParams,
+            null,
+            0)) {
+      ListMultipartUploadsResult result =
+          Xml.unmarshal(ListMultipartUploadsResult.class, response.body().charStream());
+      return new ListMultipartUploadsResponse(response.headers(), bucketName, region, result);
     }
   }
 
@@ -7590,11 +7507,14 @@ public class MinioClient {
    * API</a>.
    *
    * @param bucketName Name of the bucket.
+   * @param region Name of the bucket (Optional).
    * @param objectName Object name in the bucket.
-   * @param maxParts Maximum parts information to fetch.
-   * @param partNumberMarker Part number marker.
+   * @param maxParts Maximum parts information to fetch (Optional).
+   * @param partNumberMarker Part number marker (Optional).
    * @param uploadId Upload ID.
-   * @return {@link ListPartsResult} - Contains parts information.
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link ListPartsResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -7607,33 +7527,41 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected ListPartsResult listParts(
+  protected ListPartsResponse listParts(
       String bucketName,
+      String region,
       String objectName,
       Integer maxParts,
       Integer partNumberMarker,
-      String uploadId)
+      String uploadId,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Multimap<String, String> queryParams =
-        newMultimap(
-            UPLOAD_ID, uploadId, "max-parts", (maxParts != null) ? maxParts.toString() : "1000");
+        merge(
+            extraQueryParams,
+            newMultimap(
+                UPLOAD_ID,
+                uploadId,
+                "max-parts",
+                (maxParts != null) ? maxParts.toString() : "1000"));
     if (partNumberMarker != null)
       queryParams.put("part-number-marker", partNumberMarker.toString());
-    Response response =
+
+    try (Response response =
         execute(
             Method.GET,
             bucketName,
             objectName,
-            getRegion(bucketName, null),
-            null,
+            getRegion(bucketName, region),
+            extraHeaders,
             queryParams,
             null,
-            0);
-
-    try (ResponseBody body = response.body()) {
-      return Xml.unmarshal(ListPartsResult.class, body.charStream());
+            0)) {
+      ListPartsResult result = Xml.unmarshal(ListPartsResult.class, response.body().charStream());
+      return new ListPartsResponse(response.headers(), bucketName, region, objectName, result);
     }
   }
 
