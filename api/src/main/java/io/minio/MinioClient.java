@@ -105,7 +105,6 @@ import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -708,20 +707,15 @@ public class MinioClient {
     }
   }
 
-  private Map<String, String> normalizeHeaders(Map<String, String> headerMap) {
-    Map<String, String> normHeaderMap = new HashMap<String, String>();
-    for (Map.Entry<String, String> entry : headerMap.entrySet()) {
-      String key = entry.getKey();
-      String value = entry.getValue();
-      String keyLowerCased = key.toLowerCase(Locale.US);
-      if (amzHeaders.contains(keyLowerCased)) {
-        key = "x-amz-" + key;
-      } else if (!standardHeaders.contains(keyLowerCased) && !keyLowerCased.startsWith("x-amz-")) {
-        key = "x-amz-meta-" + key;
-      }
-      normHeaderMap.put(key, value);
+  private Multimap<String, String> merge(Multimap<String, String> m1, Multimap<String, String> m2) {
+    Multimap<String, String> map = HashMultimap.create();
+    if (m1 != null) {
+      map.putAll(m1);
     }
-    return normHeaderMap;
+    if (m2 != null) {
+      map.putAll(m2);
+    }
+    return map;
   }
 
   private HttpUrl buildUrl(
@@ -916,6 +910,41 @@ public class MinioClient {
 
   private Response execute(
       Method method,
+      BaseArgs args,
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams,
+      Object body,
+      int length)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    String bucketName = null;
+    String region = null;
+    String objectName = null;
+
+    if (args instanceof BucketArgs) {
+      bucketName = ((BucketArgs) args).bucket();
+      region = ((BucketArgs) args).region();
+    }
+
+    if (args instanceof ObjectArgs) {
+      objectName = ((ObjectArgs) args).object();
+    }
+
+    return execute(
+        method,
+        bucketName,
+        objectName,
+        getRegion(bucketName, region),
+        merge(args.extraHeaders(), headers),
+        merge(args.extraQueryParams(), queryParams),
+        body,
+        length);
+  }
+
+  private Response execute(
+      Method method,
       String bucketName,
       String objectName,
       String region,
@@ -993,7 +1022,6 @@ public class MinioClient {
       if (this.traceStream != null) {
         this.traceStream.println(END_HTTP);
       }
-      // response.headers().toMultimap();
       return response;
     }
 
@@ -1107,39 +1135,21 @@ public class MinioClient {
     throw new ErrorResponseException(errorResponse, response);
   }
 
-  private Response execute(
-      Method method,
-      String bucketName,
-      String objectName,
-      String region,
-      Map<String, String> headerMap,
-      Map<String, String> queryParamMap,
-      Object body,
-      int length)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    Multimap<String, String> headerMultiMap = null;
-    if (headerMap != null) {
-      headerMultiMap = Multimaps.forMap(normalizeHeaders(headerMap));
-    }
-
-    Multimap<String, String> queryParamMultiMap = null;
-    if (queryParamMap != null) {
-      queryParamMultiMap = Multimaps.forMap(queryParamMap);
-    }
-
-    return execute(
-        method, bucketName, objectName, region, headerMultiMap, queryParamMultiMap, body, length);
-  }
-
   /** Returns region of given bucket either from region cache or set in constructor. */
-  private String getRegion(String bucketName)
+  private String getRegion(String bucketName, String region)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
+    if (region != null) {
+      // Error out if region does not match with region passed via constructor.
+      if (this.region != null && !this.region.equals(region)) {
+        throw new IllegalArgumentException(
+            "region must be " + this.region + ", but passed " + region);
+      }
+      return region;
+    }
+
     if (this.region != null && !this.region.equals("")) {
       return this.region;
     }
@@ -1148,17 +1158,17 @@ public class MinioClient {
       return US_EAST_1;
     }
 
-    String region = AwsRegionCache.INSTANCE.get(bucketName);
+    region = AwsRegionCache.INSTANCE.get(bucketName);
     if (region != null) {
       return region;
     }
 
     // Execute GetBucketLocation REST API to get region of the bucket.
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("location", null);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("location", null);
 
     Response response =
-        execute(Method.GET, bucketName, null, US_EAST_1, null, queryParamMap, null, 0);
+        execute(Method.GET, bucketName, null, US_EAST_1, null, queryParams, null, 0);
 
     try (ResponseBody body = response.body()) {
       LocationConstraint lc = Xml.unmarshal(LocationConstraint.class, body.charStream());
@@ -1176,65 +1186,24 @@ public class MinioClient {
   }
 
   private Response executeGet(
-      String bucketName,
-      String objectName,
-      Map<String, String> headerMap,
-      Map<String, String> queryParamMap)
+      BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    return execute(
-        Method.GET,
-        bucketName,
-        objectName,
-        getRegion(bucketName),
-        headerMap,
-        queryParamMap,
-        null,
-        0);
-  }
-
-  private Response executeGet(
-      String bucketName, String objectName, Multimap<String, String> queryParamMap)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    return execute(
-        Method.GET, bucketName, objectName, getRegion(bucketName), null, queryParamMap, null, 0);
+    return execute(Method.GET, args, headers, queryParams, null, 0);
   }
 
   private Response executeHead(
-      String bucketName,
-      String objectName,
-      Multimap<String, String> headers,
-      Multimap<String, String> queryParams)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    Response response =
-        execute(
-            Method.HEAD,
-            bucketName,
-            objectName,
-            getRegion(bucketName),
-            headers,
-            queryParams,
-            null,
-            0);
-    response.body().close();
-    return response;
-  }
-
-  private Response executeHead(String bucketName, String objectName)
+      BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     try {
-      return executeHead(bucketName, objectName, null, null);
+      Response response = execute(Method.HEAD, args, headers, queryParams, null, 0);
+      response.body().close();
+      return response;
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.RETRY_HEAD_BUCKET) {
         throw e;
@@ -1242,102 +1211,45 @@ public class MinioClient {
     }
 
     // Retry once for RETRY_HEAD_BUCKET error.
-    return executeHead(bucketName, objectName, null, null);
-  }
-
-  private Response executeDelete(
-      String bucketName,
-      String objectName,
-      Multimap<String, String> headers,
-      Multimap<String, String> queryParams)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    Response response =
-        execute(
-            Method.DELETE,
-            bucketName,
-            objectName,
-            getRegion(bucketName),
-            headers,
-            queryParams,
-            null,
-            0);
+    Response response = execute(Method.HEAD, args, headers, queryParams, null, 0);
     response.body().close();
     return response;
   }
 
   private Response executeDelete(
-      String bucketName, String objectName, Map<String, String> queryParamMap)
+      BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    Response response =
-        execute(
-            Method.DELETE,
-            bucketName,
-            objectName,
-            getRegion(bucketName),
-            null,
-            queryParamMap,
-            null,
-            0);
+    Response response = execute(Method.DELETE, args, headers, queryParams, null, 0);
     response.body().close();
     return response;
   }
 
   private Response executePost(
-      String bucketName,
-      String objectName,
-      Map<String, String> headerMap,
-      Map<String, String> queryParamMap,
+      BaseArgs args,
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams,
       Object data)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    return execute(
-        Method.POST,
-        bucketName,
-        objectName,
-        getRegion(bucketName),
-        headerMap,
-        queryParamMap,
-        data,
-        0);
+    return execute(Method.POST, args, headers, queryParams, data, 0);
   }
 
   private Response executePut(
-      String bucketName,
-      String objectName,
-      String region,
-      Map<String, String> headerMap,
-      Map<String, String> queryParamMap,
+      BaseArgs args,
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams,
       Object data,
       int length)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    return execute(
-        Method.PUT, bucketName, objectName, region, headerMap, queryParamMap, data, length);
-  }
-
-  private Response executePut(
-      String bucketName,
-      String objectName,
-      Map<String, String> headerMap,
-      Map<String, String> queryParamMap,
-      Object data,
-      int length)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    return executePut(
-        bucketName, objectName, getRegion(bucketName), headerMap, queryParamMap, data, length);
+    return execute(Method.PUT, args, headers, queryParams, data, length);
   }
 
   /**
@@ -1469,21 +1381,19 @@ public class MinioClient {
     checkArgs(args);
     args.validateSsec(baseUrl);
 
-    Multimap<String, String> headers = HashMultimap.create();
-    headers.putAll(args.extraHeaders());
+    Multimap<String, String> ssecHeaders = null;
     if (args.ssec() != null) {
-      headers.putAll(Multimaps.forMap(args.ssec().headers()));
+      ssecHeaders = Multimaps.forMap(args.ssec().headers());
     }
 
-    Multimap<String, String> queryParams = HashMultimap.create();
-    queryParams.putAll(args.extraQueryParams());
+    Multimap<String, String> queryParams = null;
     if (args.versionId() != null) {
+      queryParams = HashMultimap.create();
       queryParams.put("versionId", args.versionId());
     }
 
-    try (Response response = executeHead(args.bucket(), args.object(), headers, queryParams)) {
-      return new ObjectStat(args.bucket(), args.object(), response.headers());
-    }
+    Response response = executeHead(args, ssecHeaders, queryParams);
+    return new ObjectStat(args.bucket(), args.object(), response.headers());
   }
 
   /**
@@ -1514,7 +1424,8 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     checkObjectName(objectName);
-    HttpUrl url = buildUrl(Method.GET, bucketName, objectName, getRegion(bucketName), null);
+    HttpUrl url =
+        buildUrl(Method.GET, bucketName, objectName, getRegion(bucketName, this.region), null);
     return url.toString();
   }
 
@@ -1763,31 +1674,27 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    Long offset = args.offset();
-    Long length = args.length();
-    ServerSideEncryptionCustomerKey ssec = args.ssec();
+    checkArgs(args);
     args.validateSsec(this.baseUrl);
 
+    Long offset = args.offset();
+    Long length = args.length();
     if (length != null && offset == null) {
       offset = 0L;
     }
 
-    Map<String, String> headerMap = null;
-    if (offset != null || length != null || ssec != null) {
-      headerMap = new HashMap<>();
-    }
-
+    Multimap<String, String> headers = HashMultimap.create();
     if (length != null) {
-      headerMap.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
+      headers.put("Range", "bytes=" + offset + "-" + (offset + length - 1));
     } else if (offset != null) {
-      headerMap.put("Range", "bytes=" + offset + "-");
+      headers.put("Range", "bytes=" + offset + "-");
     }
 
-    if (ssec != null) {
-      headerMap.putAll(ssec.headers());
+    if (args.ssec() != null) {
+      headers.putAll(Multimaps.forMap(args.ssec().headers()));
     }
 
-    Response response = executeGet(args.bucket(), args.object(), headerMap, null);
+    Response response = executeGet(args, headers, null);
     return response.body().byteStream();
   }
 
@@ -2183,17 +2090,7 @@ public class MinioClient {
 
     headers.putAll(args.source().genCopyHeaders());
 
-    try (Response response =
-        execute(
-            Method.PUT,
-            args.bucket(),
-            args.object(),
-            getRegion(args.bucket()),
-            headers,
-            null,
-            null,
-            0)) {
-
+    try (Response response = executePut(args, headers, null, null, 0)) {
       CopyObjectResult result = Xml.unmarshal(CopyObjectResult.class, response.body().charStream());
       return new ObjectWriteResponse(
           response.headers(),
@@ -2480,7 +2377,13 @@ public class MinioClient {
       }
 
       return completeMultipartUpload(
-          args.bucket(), getRegion(args.bucket()), args.object(), uploadId, totalParts, null, null);
+          args.bucket(),
+          getRegion(args.bucket(), args.region()),
+          args.object(),
+          uploadId,
+          totalParts,
+          null,
+          null);
     } catch (RuntimeException e) {
       abortMultipartUpload(args.bucket(), args.object(), uploadId);
       throw e;
@@ -2614,7 +2517,7 @@ public class MinioClient {
       body = EMPTY_BODY;
     }
 
-    String region = getRegion(args.bucket());
+    String region = getRegion(args.bucket(), args.region());
     HttpUrl url =
         buildUrl(args.method(), args.bucket(), args.object(), region, args.extraQueryParams());
     Request request = createRequest(url, args.method(), null, body, 0);
@@ -2877,7 +2780,7 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName()));
+    return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName(), null));
   }
 
   /**
@@ -2957,19 +2860,19 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Multimap<String, String> headers = HashMultimap.create();
-    headers.putAll(args.extraHeaders());
+    Multimap<String, String> headers = null;
     if (args.bypassGovernanceMode()) {
+      headers = HashMultimap.create();
       headers.put("x-amz-bypass-governance-retention", "true");
     }
 
-    Multimap<String, String> queryParams = HashMultimap.create();
-    queryParams.putAll(args.extraQueryParams());
+    Multimap<String, String> queryParams = null;
     if (args.versionId() != null) {
+      queryParams = HashMultimap.create();
       queryParams.put("versionId", args.versionId());
     }
 
-    executeDelete(args.bucket(), args.object(), headers, queryParams);
+    executeDelete(args, headers, queryParams);
   }
 
   /**
@@ -3622,10 +3525,11 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    Response response = executeGet(null, null, (Multimap<String, String>) null);
-    try (ResponseBody body = response.body()) {
+    try (Response response =
+        execute(
+            Method.GET, null, null, (region != null) ? region : US_EAST_1, null, null, null, 0)) {
       ListAllMyBucketsResult result =
-          Xml.unmarshal(ListAllMyBucketsResult.class, body.charStream());
+          Xml.unmarshal(ListAllMyBucketsResult.class, response.body().charStream());
       return result.buckets();
     }
   }
@@ -3700,7 +3604,7 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     try {
-      executeHead(args.bucket(), null);
+      executeHead(args, null, null);
       return true;
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET) {
@@ -3854,17 +3758,19 @@ public class MinioClient {
           ServerException, XmlParserException {
     checkArgs(args);
 
-    String region = US_EAST_1;
-    if (args.region() != null && !args.region().isEmpty()) {
-      region = args.region();
-    } else if (this.region != null && !this.region.isEmpty()) {
+    String region = args.region();
+    if (this.region != null && !this.region.isEmpty()) {
+      // Error out if region does not match with region passed via constructor.
+      if (region != null && !region.equals(this.region)) {
+        throw new IllegalArgumentException(
+            "region must be " + this.region + ", but passed " + region);
+      }
+
       region = this.region;
     }
 
-    // If constructor already sets a region, check if it is equal to region param if provided
-    if (this.region != null && !this.region.equals(region)) {
-      throw new RegionConflictException(
-          "passed region conflicts with the one previously specified");
+    if (region == null) {
+      region = US_EAST_1;
     }
 
     CreateBucketConfiguration config = null;
@@ -3872,17 +3778,26 @@ public class MinioClient {
       config = new CreateBucketConfiguration(region);
     }
 
-    Map<String, String> headerMap = null;
+    Multimap<String, String> headers = null;
     if (args.objectLock()) {
-      headerMap = new HashMap<>();
-      headerMap.put("x-amz-bucket-object-lock-enabled", "true");
+      headers = HashMultimap.create();
+      headers.put("x-amz-bucket-object-lock-enabled", "true");
     }
 
-    Response response = executePut(args.bucket(), null, region, headerMap, null, config, 0);
-    if (isAwsHost) {
-      AwsRegionCache.INSTANCE.set(args.bucket(), region);
+    try (Response response =
+        execute(
+            Method.PUT,
+            args.bucket(),
+            null,
+            region,
+            merge(args.extraHeaders(), headers),
+            args.extraQueryParams(),
+            config,
+            0)) {
+      if (isAwsHost) {
+        AwsRegionCache.INSTANCE.set(args.bucket(), region);
+      }
     }
-    response.close();
   }
 
   /**
@@ -3942,12 +3857,11 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("versioning", "");
-    VersioningConfiguration config = new VersioningConfiguration(true);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("versioning", "");
 
-    Response response = executePut(args.bucket(), null, null, queryParamMap, config, 0);
-    response.body().close();
+    Response response = executePut(args, null, queryParams, new VersioningConfiguration(true), 0);
+    response.close();
   }
 
   /**
@@ -4008,11 +3922,11 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("versioning", "");
-    VersioningConfiguration config = new VersioningConfiguration(false);
-    Response response = executePut(args.bucket(), null, null, queryParamMap, config, 0);
-    response.body().close();
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("versioning", "");
+
+    Response response = executePut(args, null, queryParams, new VersioningConfiguration(false), 0);
+    response.close();
   }
 
   /**
@@ -4049,9 +3963,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("versioning", "");
-    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("versioning", "");
+
+    try (Response response = executeGet(args, null, queryParams)) {
       VersioningConfiguration result =
           Xml.unmarshal(VersioningConfiguration.class, response.body().charStream());
       return result.status();
@@ -4122,10 +4037,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("object-lock", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("object-lock", "");
 
-    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    Response response = executePut(args, null, queryParams, args.config(), 0);
     response.close();
   }
 
@@ -4157,11 +4072,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("object-lock", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("object-lock", "");
 
-    Response response =
-        executePut(args.bucket(), null, null, queryParamMap, new ObjectLockConfiguration(), 0);
+    Response response = executePut(args, null, queryParams, new ObjectLockConfiguration(), 0);
     response.close();
   }
 
@@ -4232,10 +4146,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("object-lock", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("object-lock", "");
 
-    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+    try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(ObjectLockConfiguration.class, response.body().charStream());
     }
   }
@@ -4325,21 +4239,20 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("retention", "");
-
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("retention", "");
     if (args.versionId() != null) {
-      queryParamMap.put("versionId", args.versionId());
+      queryParams.put("versionId", args.versionId());
     }
 
-    Map<String, String> headerMap = new HashMap<>();
+    Multimap<String, String> headers = null;
     if (args.bypassGovernanceMode()) {
-      headerMap.put("x-amz-bypass-governance-retention", "True");
+      headers = HashMultimap.create();
+      headers.put("x-amz-bypass-governance-retention", "True");
     }
 
-    Response response =
-        executePut(args.bucket(), args.object(), headerMap, queryParamMap, args.config(), 0);
-    response.body().close();
+    Response response = executePut(args, headers, queryParams, args.config(), 0);
+    response.close();
   }
 
   /**
@@ -4418,16 +4331,14 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("retention", "");
-
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("retention", "");
     if (args.versionId() != null) {
-      queryParamMap.put("versionId", args.versionId());
+      queryParams.put("versionId", args.versionId());
     }
 
-    try (Response response = executeGet(args.bucket(), args.object(), null, queryParamMap)) {
-      Retention retention = Xml.unmarshal(Retention.class, response.body().charStream());
-      return retention;
+    try (Response response = executeGet(args, null, queryParams)) {
+      return Xml.unmarshal(Retention.class, response.body().charStream());
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
         throw e;
@@ -4504,16 +4415,15 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     checkArgs(args);
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("legal-hold", "");
 
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("legal-hold", "");
     if (args.versionId() != null) {
-      queryParamMap.put("versionId", args.versionId());
+      queryParams.put("versionId", args.versionId());
     }
 
-    LegalHold legalHold = new LegalHold(true);
-    Response response = executePut(args.bucket(), args.object(), null, queryParamMap, legalHold, 0);
-    response.body().close();
+    Response response = executePut(args, null, queryParams, new LegalHold(true), 0);
+    response.close();
   }
 
   /**
@@ -4585,16 +4495,14 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("legal-hold", "");
-
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("legal-hold", "");
     if (args.versionId() != null) {
-      queryParamMap.put("versionId", args.versionId());
+      queryParams.put("versionId", args.versionId());
     }
 
-    LegalHold legalHold = new LegalHold(false);
-    Response response = executePut(args.bucket(), args.object(), null, queryParamMap, legalHold, 0);
-    response.body().close();
+    Response response = executePut(args, null, queryParams, new LegalHold(false), 0);
+    response.close();
   }
 
   /**
@@ -4681,14 +4589,13 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("legal-hold", "");
-
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("legal-hold", "");
     if (args.versionId() != null) {
-      queryParamMap.put("versionId", args.versionId());
+      queryParams.put("versionId", args.versionId());
     }
 
-    try (Response response = executeGet(args.bucket(), args.object(), null, queryParamMap)) {
+    try (Response response = executeGet(args, null, queryParams)) {
       LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
       return result.status();
     } catch (ErrorResponseException e) {
@@ -4755,8 +4662,7 @@ public class MinioClient {
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     checkArgs(args);
-
-    executeDelete(args.bucket(), null, null);
+    executeDelete(args, null, null);
   }
 
   private ObjectWriteResponse putObject(
@@ -5117,10 +5023,10 @@ public class MinioClient {
           ServerException, XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("policy", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("policy", "");
 
-    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+    try (Response response = executeGet(args, null, queryParams)) {
       byte[] buf = new byte[MAX_BUCKET_POLICY_SIZE];
       int bytesRead = 0;
       bytesRead = response.body().byteStream().read(buf, 0, MAX_BUCKET_POLICY_SIZE);
@@ -5256,13 +5162,13 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> headerMap = new HashMap<>();
-    headerMap.put("Content-Type", "application/json");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("policy", "");
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("policy", "");
+    Multimap<String, String> headers = HashMultimap.create();
+    headers.put("Content-Type", "application/json");
 
-    Response response = executePut(args.bucket(), null, headerMap, queryParamMap, args.config(), 0);
+    Response response = executePut(args, headers, queryParams, args.config(), 0);
     response.close();
   }
 
@@ -5293,12 +5199,11 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("policy", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("policy", "");
 
     try {
-      Response response = executeDelete(args.bucket(), "", queryParamMap);
-      response.close();
+      executeDelete(args, null, queryParams);
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
         throw e;
@@ -5390,9 +5295,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("lifecycle", "");
-    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("lifecycle", "");
+
+    Response response = executePut(args, null, queryParams, args.config(), 0);
     response.close();
   }
 
@@ -5453,10 +5359,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("lifecycle", "");
-    Response response = executeDelete(args.bucket(), "", queryParamMap);
-    response.close();
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("lifecycle", "");
+
+    executeDelete(args, null, queryParams);
   }
 
   /**
@@ -5520,9 +5426,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("lifecycle", "");
-    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("lifecycle", "");
+
+    try (Response response = executeGet(args, null, queryParams)) {
       return new String(response.body().bytes(), StandardCharsets.UTF_8);
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_LIFECYCLE_CONFIGURATION) {
@@ -5595,10 +5502,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("notification", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("notification", "");
 
-    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+    try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(NotificationConfiguration.class, response.body().charStream());
     }
   }
@@ -5699,9 +5606,9 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("notification", "");
-    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("notification", "");
+    Response response = executePut(args, null, queryParams, args.config(), 0);
     response.close();
   }
 
@@ -5763,11 +5670,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    setBucketNotification(
-        SetBucketNotificationArgs.builder()
-            .bucket(args.bucket())
-            .config(new NotificationConfiguration())
-            .build());
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("notification", "");
+    Response response = executePut(args, null, queryParams, new NotificationConfiguration(), 0);
+    response.close();
   }
 
   /**
@@ -6377,14 +6283,14 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Multimap<String, String> queryParamMap = HashMultimap.create();
-    queryParamMap.put("prefix", args.prefix());
-    queryParamMap.put("suffix", args.suffix());
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("prefix", args.prefix());
+    queryParams.put("suffix", args.suffix());
     for (String event : args.events()) {
-      queryParamMap.put("events", event);
+      queryParams.put("events", event);
     }
 
-    Response response = executeGet(args.bucket(), "", queryParamMap);
+    Response response = executeGet(args, null, queryParams);
     NotificationResultRecords result = new NotificationResultRecords(response);
     return result.closeableIterator();
   }
@@ -6518,27 +6424,30 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
+    checkArgs(args);
     args.validateSsec(this.baseUrl);
 
-    Map<String, String> headerMap = null;
+    Multimap<String, String> headers = null;
     if (args.ssec() != null) {
-      headerMap = args.ssec().headers();
+      headers = Multimaps.forMap(args.ssec().headers());
     }
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("select", "");
-    queryParamMap.put("select-type", "2");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("select", "");
+    queryParams.put("select-type", "2");
 
-    SelectObjectContentRequest request =
-        new SelectObjectContentRequest(
-            args.sqlExpression(),
-            args.requestProgress(),
-            args.inputSerialization(),
-            args.outputSerialization(),
-            args.scanStartRange(),
-            args.scanEndRange());
     Response response =
-        executePost(args.bucket(), args.object(), headerMap, queryParamMap, request);
+        executePost(
+            args,
+            headers,
+            queryParams,
+            new SelectObjectContentRequest(
+                args.sqlExpression(),
+                args.requestProgress(),
+                args.inputSerialization(),
+                args.outputSerialization(),
+                args.scanStartRange(),
+                args.scanEndRange()));
     return new SelectResponseStream(response.body().byteStream());
   }
 
@@ -6570,9 +6479,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("encryption", "");
-    Response response = executePut(args.bucket(), null, null, queryParamMap, args.config(), 0);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("encryption", "");
+
+    Response response = executePut(args, null, queryParams, args.config(), 0);
     response.close();
   }
 
@@ -6606,9 +6516,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("encryption", "");
-    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("encryption", "");
+
+    try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(SseConfiguration.class, response.body().charStream());
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode()
@@ -6648,11 +6559,11 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("encryption", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("encryption", "");
+
     try {
-      Response response = executeDelete(args.bucket(), "", queryParamMap);
-      response.close();
+      executeDelete(args, null, queryParams);
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode()
           != ErrorCode.SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR) {
@@ -6690,10 +6601,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("tagging", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("tagging", "");
 
-    try (Response response = executeGet(args.bucket(), null, null, queryParamMap)) {
+    try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(Tags.class, response.body().charStream());
     } catch (ErrorResponseException e) {
       if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_TAG_SET) {
@@ -6735,9 +6646,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("tagging", "");
-    Response response = executePut(args.bucket(), null, null, queryParamMap, args.tags(), 0);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("tagging", "");
+
+    Response response = executePut(args, null, queryParams, args.tags(), 0);
     response.close();
   }
 
@@ -6768,10 +6680,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("tagging", "");
-    Response response = executeDelete(args.bucket(), null, queryParamMap);
-    response.close();
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("tagging", "");
+
+    executeDelete(args, null, queryParams);
   }
 
   /**
@@ -6804,10 +6716,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("tagging", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("tagging", "");
 
-    try (Response response = executeGet(args.bucket(), args.object(), null, queryParamMap)) {
+    try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(Tags.class, response.body().charStream());
     }
   }
@@ -6847,10 +6759,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("tagging", "");
-    Response response =
-        executePut(args.bucket(), args.object(), null, queryParamMap, args.tags(), 0);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("tagging", "");
+
+    Response response = executePut(args, null, queryParams, args.tags(), 0);
     response.close();
   }
 
@@ -6882,10 +6794,10 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("tagging", "");
-    Response response = executeDelete(args.bucket(), args.object(), queryParamMap);
-    response.close();
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("tagging", "");
+
+    executeDelete(args, null, queryParams);
   }
 
   private long getAvailableSize(Object data, long expectedReadSize)
@@ -7177,9 +7089,20 @@ public class MinioClient {
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put(UPLOAD_ID, uploadId);
-    executeDelete(bucketName, objectName, queryParamMap);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put(UPLOAD_ID, uploadId);
+
+    Response response =
+        execute(
+            Method.DELETE,
+            bucketName,
+            objectName,
+            getRegion(bucketName, this.region),
+            null,
+            queryParams,
+            null,
+            0);
+    response.close();
   }
 
   /**
@@ -7258,7 +7181,7 @@ public class MinioClient {
             Method.POST,
             bucketName,
             objectName,
-            (region != null) ? region : getRegion(bucketName),
+            getRegion(bucketName, region),
             extraHeaders,
             queryParams,
             new CompleteMultipartUpload(parts),
@@ -7332,11 +7255,7 @@ public class MinioClient {
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
     return createMultipartUpload(
-        bucketName,
-        getRegion(bucketName),
-        objectName,
-        Multimaps.forMap(normalizeHeaders(headerMap)),
-        null);
+        bucketName, getRegion(bucketName, null), objectName, Multimaps.forMap(headerMap), null);
   }
 
   /**
@@ -7390,7 +7309,7 @@ public class MinioClient {
             Method.POST,
             bucketName,
             objectName,
-            (region != null) ? region : getRegion(bucketName),
+            getRegion(bucketName, region),
             headersCopy,
             queryParams,
             null,
@@ -7427,17 +7346,25 @@ public class MinioClient {
       throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException,
           IOException, InvalidKeyException, ServerException, XmlParserException,
           ErrorResponseException, InternalException, InvalidResponseException {
-    Map<String, String> queryParams = new HashMap<>();
+    Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("delete", "");
 
-    Map<String, String> headers = null;
+    Multimap<String, String> headers = null;
     if (bypassGovernanceMode) {
-      headers = new HashMap<>();
+      headers = HashMultimap.create();
       headers.put("x-amz-bypass-governance-retention", "true");
     }
 
-    DeleteRequest request = new DeleteRequest(objectList, quiet);
-    try (Response response = executePost(bucketName, null, headers, queryParams, request)) {
+    try (Response response =
+        execute(
+            Method.POST,
+            bucketName,
+            null,
+            getRegion(bucketName, null),
+            headers,
+            queryParams,
+            new DeleteRequest(objectList, quiet),
+            0)) {
       String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
       try {
         if (Xml.validate(DeleteError.class, bodyContent)) {
@@ -7506,7 +7433,7 @@ public class MinioClient {
             Method.GET,
             bucketName,
             null,
-            (region == null) ? getRegion(bucketName) : region,
+            getRegion(bucketName, region),
             extraHeaders,
             queryParams,
             null,
@@ -7543,7 +7470,7 @@ public class MinioClient {
             Method.GET,
             bucketName,
             null,
-            (region == null) ? getRegion(bucketName) : region,
+            getRegion(bucketName, region),
             extraHeaders,
             queryParams,
             null,
@@ -7585,7 +7512,7 @@ public class MinioClient {
             Method.GET,
             bucketName,
             null,
-            (region == null) ? getRegion(bucketName) : region,
+            getRegion(bucketName, region),
             extraHeaders,
             queryParams,
             null,
@@ -7681,7 +7608,7 @@ public class MinioClient {
             Method.PUT,
             bucketName,
             objectName,
-            (region != null) ? region : getRegion(bucketName),
+            getRegion(bucketName, region),
             headers,
             extraQueryParams,
             data,
@@ -7730,37 +7657,39 @@ public class MinioClient {
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("uploads", "");
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("uploads", "");
 
     if (delimiter != null) {
-      queryParamMap.put("delimiter", delimiter);
+      queryParams.put("delimiter", delimiter);
     } else {
-      queryParamMap.put("delimiter", "");
+      queryParams.put("delimiter", "");
     }
 
     if (keyMarker != null) {
-      queryParamMap.put("key-marker", keyMarker);
+      queryParams.put("key-marker", keyMarker);
     }
 
     if (maxUploads != null) {
-      queryParamMap.put("max-uploads", Integer.toString(maxUploads));
+      queryParams.put("max-uploads", Integer.toString(maxUploads));
     }
 
     if (prefix != null) {
-      queryParamMap.put("prefix", prefix);
+      queryParams.put("prefix", prefix);
     } else {
-      queryParamMap.put("prefix", "");
+      queryParams.put("prefix", "");
     }
 
     if (uploadIdMarker != null) {
-      queryParamMap.put("upload-id-marker", uploadIdMarker);
+      queryParams.put("upload-id-marker", uploadIdMarker);
     }
 
     // Setting it as default to encode the object keys in the response
-    queryParamMap.put("encoding-type", "url");
+    queryParams.put("encoding-type", "url");
 
-    Response response = executeGet(bucketName, null, null, queryParamMap);
+    Response response =
+        execute(
+            Method.GET, bucketName, null, getRegion(bucketName, null), null, queryParams, null, 0);
 
     try (ResponseBody body = response.body()) {
       return Xml.unmarshal(ListMultipartUploadsResult.class, body.charStream());
@@ -7798,19 +7727,28 @@ public class MinioClient {
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Map<String, String> queryParamMap = new HashMap<>();
+    Multimap<String, String> queryParams = HashMultimap.create();
 
     if (maxParts != null) {
-      queryParamMap.put("max-parts", Integer.toString(maxParts));
+      queryParams.put("max-parts", Integer.toString(maxParts));
     }
 
     if (partNumberMarker != null) {
-      queryParamMap.put("part-number-marker", Integer.toString(partNumberMarker));
+      queryParams.put("part-number-marker", Integer.toString(partNumberMarker));
     }
 
-    queryParamMap.put(UPLOAD_ID, uploadId);
+    queryParams.put(UPLOAD_ID, uploadId);
 
-    Response response = executeGet(bucketName, objectName, null, queryParamMap);
+    Response response =
+        execute(
+            Method.GET,
+            bucketName,
+            objectName,
+            getRegion(bucketName, null),
+            null,
+            queryParams,
+            null,
+            0);
 
     try (ResponseBody body = response.body()) {
       return Xml.unmarshal(ListPartsResult.class, body.charStream());
@@ -7860,13 +7798,22 @@ public class MinioClient {
           "data must be BufferedInputStream, RandomAccessFile, byte[] or String");
     }
 
-    Map<String, String> queryParamMap = new HashMap<>();
-    queryParamMap.put("partNumber", Integer.toString(partNumber));
-    queryParamMap.put(UPLOAD_ID, uploadId);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("partNumber", Integer.toString(partNumber));
+    queryParams.put(UPLOAD_ID, uploadId);
 
-    Response response = executePut(bucketName, objectName, headerMap, queryParamMap, data, length);
-    response.close();
-    return response.header("ETag").replaceAll("\"", "");
+    try (Response response =
+        execute(
+            Method.PUT,
+            bucketName,
+            objectName,
+            getRegion(bucketName, null),
+            (headerMap != null) ? Multimaps.forMap(headerMap) : null,
+            queryParams,
+            data,
+            length)) {
+      return response.header("ETag").replaceAll("\"", "");
+    }
   }
 
   /**
@@ -7878,7 +7825,7 @@ public class MinioClient {
    * @param objectName Object name in the bucket.
    * @param uploadId Upload ID.
    * @param partNumber Part number.
-   * @param headerMap Source object definitions.
+   * @param headers Source object definitions.
    * @return String - Contains ETag.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -7897,23 +7844,22 @@ public class MinioClient {
       String objectName,
       String uploadId,
       int partNumber,
-      Multimap<String, String> headerMap)
+      Multimap<String, String> headers)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Multimap<String, String> queryParamMap = HashMultimap.create();
-    queryParamMap.put("partNumber", Integer.toString(partNumber));
-    queryParamMap.put("uploadId", uploadId);
-
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("partNumber", Integer.toString(partNumber));
+    queryParams.put("uploadId", uploadId);
     Response response =
         execute(
             Method.PUT,
             bucketName,
             objectName,
-            getRegion(bucketName),
-            headerMap,
-            queryParamMap,
-            "",
+            getRegion(bucketName, null),
+            headers,
+            queryParams,
+            null,
             0);
     try (ResponseBody body = response.body()) {
       CopyPartResult result = Xml.unmarshal(CopyPartResult.class, body.charStream());
