@@ -279,7 +279,7 @@ project(':functional') {
 
         maxHeapSize = "4096m"
         jvmArgs "-Xms256m"
-        if (rootProject.hasProperty('endpoint') || OperatingSystem.current().isWindows()) {
+        if (rootProject.hasProperty('endpoint')) {
             args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
 	}
     }
