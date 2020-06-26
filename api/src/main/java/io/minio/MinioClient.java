@@ -6962,41 +6962,12 @@ public class MinioClient {
    * S3 API</a>.
    *
    * @param bucketName Name of the bucket.
-   * @param objectName Object name in the bucket.
-   * @param parts List of parts.
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws IllegalArgumentException throws to indicate invalid argument passed.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   */
-  @Deprecated
-  protected void completeMultipartUpload(
-      String bucketName, String objectName, String uploadId, Part[] parts)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, ServerException,
-          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    completeMultipartUpload(bucketName, null, objectName, uploadId, parts, null, null);
-  }
-
-  /**
-   * Do <a
-   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
-   * S3 API</a>.
-   *
-   * @param bucketName Name of the bucket.
    * @param region Region of the bucket.
    * @param objectName Object name in the bucket.
    * @param uploadId Upload ID.
    * @param parts List of parts.
-   * @param extraHeaders Extra headers.
-   * @param extraQueryParams Extra query parameters.
+   * @param extraHeaders Extra headers (Optional).
+   * @param extraQueryParams Extra query parameters (Optional).
    * @return {@link ObjectWriteResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
