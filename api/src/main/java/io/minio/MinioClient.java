@@ -2343,9 +2343,10 @@ public class MinioClient {
 
     Multimap<String, String> headers = newMultimap(args.extraHeaders());
     headers.putAll(args.genHeaders());
-    String uploadId =
+    CreateMultipartUploadResponse createMultipartUploadResponse =
         createMultipartUpload(
             args.bucket(), args.region(), args.object(), headers, args.extraQueryParams());
+    String uploadId = createMultipartUploadResponse.result().uploadId();
 
     Multimap<String, String> ssecHeaders = HashMultimap.create();
     if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
@@ -4739,9 +4740,10 @@ public class MinioClient {
         }
 
         if (uploadId == null) {
-          uploadId =
+          CreateMultipartUploadResponse response =
               createMultipartUpload(
                   args.bucket(), args.region(), args.object(), headers, args.extraQueryParams());
+          uploadId = response.result().uploadId();
           parts = new Part[ObjectWriteArgs.MAX_MULTIPART_COUNT];
         }
 
@@ -7079,41 +7081,11 @@ public class MinioClient {
    * S3 API</a>.
    *
    * @param bucketName Name of the bucket.
-   * @param objectName Object name in the bucket.
-   * @param headerMap Additional headers.
-   * @return String - Contains upload ID.
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws IllegalArgumentException throws to indicate invalid argument passed.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   */
-  @Deprecated
-  protected String createMultipartUpload(
-      String bucketName, String objectName, Map<String, String> headerMap)
-      throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
-          InsufficientDataException, IOException, InvalidKeyException, ServerException,
-          XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    return createMultipartUpload(
-        bucketName, getRegion(bucketName, null), objectName, newMultimap(headerMap), null);
-  }
-
-  /**
-   * Do <a
-   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html">CreateMultipartUpload
-   * S3 API</a>.
-   *
-   * @param bucketName Name of the bucket.
    * @param region Region name of buckets in S3 service.
    * @param objectName Object name in the bucket.
    * @param headers Request headers.
-   * @return String - Contains upload ID.
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CreateMultipartUploadResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -7126,7 +7098,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected String createMultipartUpload(
+  protected CreateMultipartUploadResponse createMultipartUpload(
       String bucketName,
       String region,
       String objectName,
@@ -7156,7 +7128,8 @@ public class MinioClient {
             0)) {
       InitiateMultipartUploadResult result =
           Xml.unmarshal(InitiateMultipartUploadResult.class, response.body().charStream());
-      return result.uploadId();
+      return new CreateMultipartUploadResponse(
+          response.headers(), bucketName, region, objectName, result);
     }
   }
 
