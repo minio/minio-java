@@ -2426,10 +2426,10 @@ public class MinioClient {
           null,
           null);
     } catch (RuntimeException e) {
-      abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      abortMultipartUpload(args.bucket(), args.region(), args.object(), uploadId, null, null);
       throw e;
     } catch (Exception e) {
-      abortMultipartUpload(args.bucket(), args.object(), uploadId);
+      abortMultipartUpload(args.bucket(), args.region(), args.object(), uploadId, null, null);
       throw e;
     }
   }
@@ -4773,12 +4773,12 @@ public class MinioClient {
           args.bucket(), args.region(), args.object(), uploadId, parts, null, null);
     } catch (RuntimeException e) {
       if (uploadId != null) {
-        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+        abortMultipartUpload(args.bucket(), args.region(), args.object(), uploadId, null, null);
       }
       throw e;
     } catch (Exception e) {
       if (uploadId != null) {
-        abortMultipartUpload(args.bucket(), args.object(), uploadId);
+        abortMultipartUpload(args.bucket(), args.region(), args.object(), uploadId, null, null);
       }
       throw e;
     }
@@ -6068,7 +6068,7 @@ public class MinioClient {
     for (Result<Upload> r : listIncompleteUploads(bucketName, objectName, true, false)) {
       Upload upload = r.get();
       if (objectName.equals(upload.objectName())) {
-        abortMultipartUpload(bucketName, objectName, upload.uploadId());
+        abortMultipartUpload(bucketName, null, objectName, upload.uploadId(), null, null);
         return;
       }
     }
@@ -6925,8 +6925,12 @@ public class MinioClient {
    * S3 API</a>.
    *
    * @param bucketName Name of the bucket.
+   * @param region Region of the bucket.
    * @param objectName Object name in the bucket.
    * @param uploadId Upload ID.
+   * @param extraHeaders Extra headers (Optional).
+   * @param extraQueryParams Extra query parameters (Optional).
+   * @return {@link AbortMultipartUploadResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -6939,21 +6943,29 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected void abortMultipartUpload(String bucketName, String objectName, String uploadId)
+  protected AbortMultipartUploadResponse abortMultipartUpload(
+      String bucketName,
+      String region,
+      String objectName,
+      String uploadId,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
       throws InvalidBucketNameException, IllegalArgumentException, NoSuchAlgorithmException,
           InsufficientDataException, IOException, InvalidKeyException, ServerException,
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
-    Response response =
+    try (Response response =
         execute(
             Method.DELETE,
             bucketName,
             objectName,
-            getRegion(bucketName, this.region),
+            getRegion(bucketName, region),
+            extraHeaders,
+            merge(extraQueryParams, newMultimap(UPLOAD_ID, uploadId)),
             null,
-            newMultimap(UPLOAD_ID, uploadId),
-            null,
-            0);
-    response.close();
+            0)) {
+      return new AbortMultipartUploadResponse(
+          response.headers(), bucketName, region, objectName, uploadId);
+    }
   }
 
   /**
