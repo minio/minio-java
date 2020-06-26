@@ -16,52 +16,16 @@
 
 package io.minio;
 
-import java.time.ZonedDateTime;
 import okhttp3.HttpUrl;
 
 /** Argument class of MinioClient.copyObject(). */
 public class CopyObjectArgs extends ObjectWriteArgs {
-  private String srcBucket;
-  private String srcObject;
-  private String srcVersionId;
-  private ServerSideEncryptionCustomerKey srcSsec;
-  private String srcMatchETag;
-  private String srcNotMatchETag;
-  private ZonedDateTime srcModifiedSince;
-  private ZonedDateTime srcUnmodifiedSince;
+  private CopySource source = null;
   private Directive metadataDirective;
   private Directive taggingDirective;
 
-  public String srcBucket() {
-    return srcBucket;
-  }
-
-  public String srcObject() {
-    return srcObject;
-  }
-
-  public String srcVersionId() {
-    return srcVersionId;
-  }
-
-  public ServerSideEncryptionCustomerKey srcSsec() {
-    return srcSsec;
-  }
-
-  public String srcMatchETag() {
-    return srcMatchETag;
-  }
-
-  public String srcNotMatchETag() {
-    return srcNotMatchETag;
-  }
-
-  public ZonedDateTime srcModifiedSince() {
-    return srcModifiedSince;
-  }
-
-  public ZonedDateTime srcUnmodifiedSince() {
-    return srcUnmodifiedSince;
+  public CopySource source() {
+    return source;
   }
 
   public Directive metadataDirective() {
@@ -79,7 +43,7 @@ public class CopyObjectArgs extends ObjectWriteArgs {
   @Override
   public void validateSse(HttpUrl url) {
     super.validateSse(url);
-    checkSse(srcSsec, url);
+    source.validateSsec(url);
   }
 
   /** Argument builder of {@link CopyObjectArgs}. */
@@ -87,51 +51,22 @@ public class CopyObjectArgs extends ObjectWriteArgs {
     @Override
     protected void validate(CopyObjectArgs args) {
       super.validate(args);
-      validateBucketName(args.srcBucket);
+      validateNotNull(args.source, "copy source");
+      if (args.source.offset() != null || args.source.length() != null) {
+        if (args.metadataDirective != null && args.metadataDirective == Directive.COPY) {
+          throw new IllegalArgumentException(
+              "COPY metadata directive is not applicable to source object with range");
+        }
+        if (args.taggingDirective != null && args.taggingDirective == Directive.COPY) {
+          throw new IllegalArgumentException(
+              "COPY tagging directive is not applicable to source object with range");
+        }
+      }
     }
 
-    public Builder srcBucket(String srcBucket) {
-      validateBucketName(srcBucket);
-      operations.add(args -> args.srcBucket = srcBucket);
-      return this;
-    }
-
-    public Builder srcObject(String srcObject) {
-      validateNullOrNotEmptyString(srcObject, "source object");
-      operations.add(args -> args.srcObject = srcObject);
-      return this;
-    }
-
-    public Builder srcVersionId(String srcVersionId) {
-      validateNullOrNotEmptyString(srcVersionId, "source version ID");
-      operations.add(args -> args.srcVersionId = srcVersionId);
-      return this;
-    }
-
-    public Builder srcSsec(ServerSideEncryptionCustomerKey srcSsec) {
-      operations.add(args -> args.srcSsec = srcSsec);
-      return this;
-    }
-
-    public Builder srcMatchETag(String etag) {
-      validateNullOrNotEmptyString(etag, "etag");
-      operations.add(args -> args.srcMatchETag = etag);
-      return this;
-    }
-
-    public Builder srcNotMatchETag(String etag) {
-      validateNullOrNotEmptyString(etag, "etag");
-      operations.add(args -> args.srcNotMatchETag = etag);
-      return this;
-    }
-
-    public Builder srcModifiedSince(ZonedDateTime modifiedTime) {
-      operations.add(args -> args.srcModifiedSince = modifiedTime);
-      return this;
-    }
-
-    public Builder srcUnmodifiedSince(ZonedDateTime modifiedTime) {
-      operations.add(args -> args.srcUnmodifiedSince = modifiedTime);
+    public Builder source(CopySource source) {
+      validateNotNull(source, "copy source");
+      operations.add(args -> args.source = source);
       return this;
     }
 

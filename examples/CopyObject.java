@@ -16,6 +16,7 @@
  */
 
 import io.minio.CopyObjectArgs;
+import io.minio.CopySource;
 import io.minio.MinioClient;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
@@ -72,7 +73,11 @@ public class CopyObject {
             CopyObjectArgs.builder()
                 .bucket("my-bucketname")
                 .object("my-objectname")
-                .srcBucket("my-source-bucketname")
+                .source(
+                    CopySource.builder()
+                        .bucket("my-source-bucketname")
+                        .object("my-objectname")
+                        .build())
                 .build());
         System.out.println(
             "my-source-bucketname/my-objectname copied "
@@ -86,8 +91,11 @@ public class CopyObject {
             CopyObjectArgs.builder()
                 .bucket("my-bucketname")
                 .object("my-objectname")
-                .srcBucket("my-source-bucketname")
-                .srcObject("my-source-objectname")
+                .source(
+                    CopySource.builder()
+                        .bucket("my-source-bucketname")
+                        .object("my-source-objectname")
+                        .build())
                 .build());
         System.out.println(
             "my-source-bucketname/my-source-objectname copied "
@@ -101,7 +109,11 @@ public class CopyObject {
             CopyObjectArgs.builder()
                 .bucket("my-bucketname")
                 .object("my-objectname")
-                .srcBucket("my-source-bucketname")
+                .source(
+                    CopySource.builder()
+                        .bucket("my-source-bucketname")
+                        .object("my-objectname")
+                        .build())
                 .sse(sseKms) // Replace with actual key.
                 .build());
         System.out.println(
@@ -116,7 +128,11 @@ public class CopyObject {
             CopyObjectArgs.builder()
                 .bucket("my-bucketname")
                 .object("my-objectname")
-                .srcBucket("my-source-bucketname")
+                .source(
+                    CopySource.builder()
+                        .bucket("my-source-bucketname")
+                        .object("my-objectname")
+                        .build())
                 .sse(sseS3) // Replace with actual key.
                 .build());
         System.out.println(
@@ -131,7 +147,11 @@ public class CopyObject {
             CopyObjectArgs.builder()
                 .bucket("my-bucketname")
                 .object("my-objectname")
-                .srcBucket("my-source-bucketname")
+                .source(
+                    CopySource.builder()
+                        .bucket("my-source-bucketname")
+                        .object("my-objectname")
+                        .build())
                 .sse(ssec) // Replace with actual key.
                 .build());
         System.out.println(
@@ -146,9 +166,12 @@ public class CopyObject {
             CopyObjectArgs.builder()
                 .bucket("my-bucketname")
                 .object("my-objectname")
-                .srcBucket("my-source-bucketname")
-                .srcObject("my-source-objectname")
-                .srcSsec(ssec) // Replace with actual key.
+                .source(
+                    CopySource.builder()
+                        .bucket("my-source-bucketname")
+                        .object("my-source-objectname")
+                        .ssec(ssec) // Replace with actual key.
+                        .build())
                 .build());
         System.out.println(
             "my-source-bucketname/my-source-objectname copied "
@@ -162,9 +185,13 @@ public class CopyObject {
             CopyObjectArgs.builder()
                 .bucket("my-bucketname")
                 .object("my-objectname")
-                .srcBucket("my-source-bucketname")
+                .source(
+                    CopySource.builder()
+                        .bucket("my-source-bucketname")
+                        .object("my-objectname")
+                        .matchETag(etag) // Replace with actual etag.
+                        .build())
                 .headers(headers) // Replace with actual headers.
-                .srcMatchETag(etag) // Replace with actual ETag.
                 .build());
         System.out.println(
             "my-source-bucketname/my-objectname copied "

@@ -25,6 +25,7 @@ import io.minio.CloseableIterator;
 import io.minio.ComposeObjectArgs;
 import io.minio.ComposeSource;
 import io.minio.CopyObjectArgs;
+import io.minio.CopySource;
 import io.minio.DeleteBucketEncryptionArgs;
 import io.minio.DeleteBucketLifeCycleArgs;
 import io.minio.DeleteBucketNotificationArgs;
@@ -131,7 +132,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -1994,19 +1994,13 @@ public class FunctionalTest {
       String testTags, ServerSideEncryption sse, CopyObjectArgs args, boolean negativeCase)
       throws Exception {
     String methodName = "copyObject()";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
-    String srcObject = Optional.ofNullable(args.srcObject()).orElse(args.object());
-
     long startTime = System.currentTimeMillis();
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(args.srcBucket()).build());
+      client.makeBucket(MakeBucketArgs.builder().bucket(args.source().bucket()).build());
       try {
         PutObjectArgs.Builder builder =
-            PutObjectArgs.builder().bucket(args.srcBucket()).object(srcObject).stream(
-                new ContentInputStream(1 * KB), 1 * KB, -1);
+            PutObjectArgs.builder().bucket(args.source().bucket()).object(args.source().object())
+                .stream(new ContentInputStream(1 * KB), 1 * KB, -1);
         if (sse != null) {
           builder.sse(sse);
         }
@@ -2037,73 +2031,44 @@ public class FunctionalTest {
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
-            RemoveObjectArgs.builder().bucket(args.srcBucket()).object(srcObject).build());
+            RemoveObjectArgs.builder()
+                .bucket(args.source().bucket())
+                .object(args.source().object())
+                .build());
         client.removeObject(
             RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
-        client.removeBucket(RemoveBucketArgs.builder().bucket(args.srcBucket()).build());
+        client.removeBucket(RemoveBucketArgs.builder().bucket(args.source().bucket()).build());
       }
     } catch (Exception e) {
       handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: copyObject(). */
-  public static void copyObject_test1() throws Exception {
-    testCopyObject(
-        "",
-        null,
-        CopyObjectArgs.builder()
-            .bucket(bucketName)
-            .object(getRandomName())
-            .srcBucket(getRandomName())
-            .build(),
-        false);
-  }
-
-  /** Test: copyObject() match ETag (Negative case). */
-  public static void copyObject_test2() throws Exception {
-    testCopyObject(
-        "[negative match etag]",
-        null,
-        CopyObjectArgs.builder()
-            .bucket(bucketName)
-            .object(getRandomName())
-            .srcBucket(getRandomName())
-            .srcObject(getRandomName())
-            .srcMatchETag("invalid-etag")
-            .build(),
-        true);
-  }
-
-  /** Test: copyObject() match ETag. */
-  public static void copyObject_test3() throws Exception {
+  public static void testCopyObjectMatchETag() throws Exception {
     String methodName = "copyObject()";
     String testTags = "[match etag]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
     long startTime = System.currentTimeMillis();
     String srcBucketName = getRandomName();
     String srcObjectName = getRandomName();
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(srcBucketName).build());
       try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).stream(
-                    new ContentInputStream(1 * KB), 1 * KB, -1)
-                .build());
-        ObjectStat stat =
-            client.statObject(
-                StatObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).build());
+        ObjectWriteResponse result =
+            client.putObject(
+                PutObjectArgs.builder().bucket(srcBucketName).object(srcObjectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
 
         client.copyObject(
             CopyObjectArgs.builder()
                 .bucket(bucketName)
                 .object(srcObjectName + "-copy")
-                .srcBucket(srcBucketName)
-                .srcObject(srcObjectName)
-                .srcMatchETag(stat.etag())
+                .source(
+                    CopySource.builder()
+                        .bucket(srcBucketName)
+                        .object(srcObjectName)
+                        .matchETag(result.etag())
+                        .build())
                 .build());
 
         client.statObject(
@@ -2122,59 +2087,9 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: copyObject() not match ETag. */
-  public static void copyObject_test4() throws Exception {
-    testCopyObject(
-        "[not match etag]",
-        null,
-        CopyObjectArgs.builder()
-            .bucket(bucketName)
-            .object(getRandomName())
-            .srcBucket(getRandomName())
-            .srcObject(getRandomName())
-            .srcNotMatchETag("not-etag-of-source-object")
-            .build(),
-        false);
-  }
-
-  /** Test: copyObject() modified since. */
-  public static void copyObject_test5() throws Exception {
-    testCopyObject(
-        "[modified since]",
-        null,
-        CopyObjectArgs.builder()
-            .bucket(bucketName)
-            .object(getRandomName())
-            .srcBucket(getRandomName())
-            .srcObject(getRandomName())
-            .srcModifiedSince(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC))
-            .build(),
-        false);
-  }
-
-  /** Test: copyObject() unmodified since (Negative case). */
-  public static void copyObject_test6() throws Exception {
-    testCopyObject(
-        "[negative unmodified since]",
-        null,
-        CopyObjectArgs.builder()
-            .bucket(bucketName)
-            .object(getRandomName())
-            .srcBucket(getRandomName())
-            .srcObject(getRandomName())
-            .srcUnmodifiedSince(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC))
-            .build(),
-        true);
-  }
-
-  /** Test: copyObject() metadata replace. */
-  public static void copyObject_test7() throws Exception {
+  public static void testCopyObjectMetadataReplace() throws Exception {
     String methodName = "copyObject()";
     String testTags = "[metadata replace]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
     long startTime = System.currentTimeMillis();
     String srcBucketName = getRandomName();
     String srcObjectName = getRandomName();
@@ -2193,8 +2108,7 @@ public class FunctionalTest {
             CopyObjectArgs.builder()
                 .bucket(bucketName)
                 .object(srcObjectName + "-copy")
-                .srcBucket(srcBucketName)
-                .srcObject(srcObjectName)
+                .source(CopySource.builder().bucket(srcBucketName).object(srcObjectName).build())
                 .headers(headers)
                 .metadataDirective(Directive.REPLACE)
                 .build());
@@ -2226,14 +2140,9 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: copyObject() empty metadata replace. */
-  public static void copyObject_test8() throws Exception {
+  public static void testCopyObjectEmptyMetadataReplace() throws Exception {
     String methodName = "copyObject()";
     String testTags = "[empty metadata replace]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
     long startTime = System.currentTimeMillis();
     String srcBucketName = getRandomName();
     String srcObjectName = getRandomName();
@@ -2253,8 +2162,7 @@ public class FunctionalTest {
             CopyObjectArgs.builder()
                 .bucket(bucketName)
                 .object(srcObjectName + "-copy")
-                .srcBucket(srcBucketName)
-                .srcObject(srcObjectName)
+                .source(CopySource.builder().bucket(srcBucketName).object(srcObjectName).build())
                 .metadataDirective(Directive.REPLACE)
                 .build());
 
@@ -2281,66 +2189,138 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: copyObject() SSE-C. */
-  public static void copyObject_test9() throws Exception {
-    String testTags = "[SSE-C]";
-    if (!isSecureEndpoint) {
-      mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
-      return;
+  public static void copyObject_test() throws Exception {
+    String methodName = "copyObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
     }
 
+    String objectName = getRandomName();
     testCopyObject(
-        testTags,
-        ssec,
+        "[basic check]",
+        null,
         CopyObjectArgs.builder()
             .bucket(bucketName)
             .object(getRandomName())
-            .sse(ssec)
-            .srcBucket(getRandomName())
-            .srcObject(getRandomName())
-            .srcSsec(ssec)
+            .source(CopySource.builder().bucket(getRandomName()).object(objectName).build())
             .build(),
         false);
-  }
 
-  /** Test: copyObject() SSE-S3. */
-  public static void copyObject_test10() throws Exception {
-    String testTags = "[SSE-S3]";
-    if (!isSecureEndpoint) {
-      mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
+    if (isQuickTest) {
       return;
     }
 
     testCopyObject(
-        testTags,
+        "[negative match etag]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .source(
+                CopySource.builder()
+                    .bucket(getRandomName())
+                    .object(getRandomName())
+                    .matchETag("invalid-etag")
+                    .build())
+            .build(),
+        true);
+
+    testCopyObjectMatchETag();
+
+    testCopyObject(
+        "[not match etag]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .source(
+                CopySource.builder()
+                    .bucket(getRandomName())
+                    .object(getRandomName())
+                    .notMatchETag("not-etag-of-source-object")
+                    .build())
+            .build(),
+        false);
+
+    testCopyObject(
+        "[modified since]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .source(
+                CopySource.builder()
+                    .bucket(getRandomName())
+                    .object(getRandomName())
+                    .modifiedSince(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC))
+                    .build())
+            .build(),
+        false);
+
+    testCopyObject(
+        "[negative unmodified since]",
+        null,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .source(
+                CopySource.builder()
+                    .bucket(getRandomName())
+                    .object(getRandomName())
+                    .unmodifiedSince(ZonedDateTime.of(2015, 05, 3, 3, 10, 10, 0, Time.UTC))
+                    .build())
+            .build(),
+        true);
+
+    testCopyObjectMetadataReplace();
+    testCopyObjectEmptyMetadataReplace();
+
+    testCopyObject(
+        "[SSE-S3]",
         sseS3,
         CopyObjectArgs.builder()
             .bucket(bucketName)
             .object(getRandomName())
             .sse(sseS3)
-            .srcBucket(getRandomName())
-            .srcObject(getRandomName())
+            .source(CopySource.builder().bucket(getRandomName()).object(getRandomName()).build())
             .build(),
         false);
-  }
 
-  /** Test: copyObject() SSE-KMS. */
-  public static void copyObject_test11() throws Exception {
-    String testTags = "[SSE-KMS]";
-    if (!isSecureEndpoint || sseKms == null) {
-      mintIgnoredLog("copyObject()", testTags, System.currentTimeMillis());
+    if (!isSecureEndpoint) {
+      mintIgnoredLog(methodName, "[SSE-C]", System.currentTimeMillis());
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
       return;
     }
 
     testCopyObject(
-        testTags,
+        "[SSE-C]",
+        ssec,
+        CopyObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sse(ssec)
+            .source(
+                CopySource.builder()
+                    .bucket(getRandomName())
+                    .object(getRandomName())
+                    .ssec(ssec)
+                    .build())
+            .build(),
+        false);
+
+    if (sseKms == null) {
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
+      return;
+    }
+
+    testCopyObject(
+        "[SSE-KMS]",
         sseKms,
         CopyObjectArgs.builder()
             .bucket(bucketName)
             .object(getRandomName())
             .sse(sseKms)
-            .srcBucket(getRandomName())
-            .srcObject(getRandomName())
+            .source(CopySource.builder().bucket(getRandomName()).object(getRandomName()).build())
             .build(),
         false);
   }
@@ -3839,17 +3819,7 @@ public class FunctionalTest {
 
     presignedPostPolicy_test();
 
-    copyObject_test1();
-    copyObject_test2();
-    copyObject_test3();
-    copyObject_test4();
-    copyObject_test5();
-    copyObject_test6();
-    copyObject_test7();
-    copyObject_test8();
-    copyObject_test9();
-    copyObject_test10();
-    copyObject_test11();
+    copyObject_test();
     composeObject_test1();
     composeObject_test2();
     composeObject_test3();
@@ -3924,7 +3894,7 @@ public class FunctionalTest {
     getPresignedObjectUrl_test1();
     getPresignedObjectUrl_test2();
     presignedPostPolicy_test();
-    copyObject_test1();
+    copyObject_test();
     getBucketPolicy_test1();
     setBucketPolicy_test1();
     deleteBucketPolicy_test1();

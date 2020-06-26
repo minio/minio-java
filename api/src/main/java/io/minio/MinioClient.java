@@ -113,7 +113,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -169,17 +168,17 @@ import okhttp3.ResponseBody;
  * href="https://github.com/minio/minio-java/tree/master/src/test/java/io/minio/examples">here</a>.
  *
  * <p>Use {@code MinioClient.builder()} to create S3 client.
- * </pre>{@code
+ *
+ * <pre>{@code
  * // Create client with anonymous access.
- * MinioClient minioClient = MinioClient.builder()
- *     .endpoint("https://play.min.io")
- *     .build();
+ * MinioClient minioClient = MinioClient.builder().endpoint("https://play.min.io").build();
  *
  * // Create client with credentials.
- * MinioClient minioClient = MinioClient.builder()
- *     .endpoint("https://play.min.io")
- *     .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
- *     .build();
+ * MinioClient minioClient =
+ *     MinioClient.builder()
+ *         .endpoint("https://play.min.io")
+ *         .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+ *         .build();
  * }</pre>
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
@@ -2060,40 +2059,36 @@ public class MinioClient {
     }
     checkReadRequestSse(srcSse);
 
-    CopyObjectArgs.Builder builder =
-        CopyObjectArgs.builder()
-            .bucket(bucketName)
-            .object(objectName)
-            .headers(headerMap)
-            .sse(sse)
-            .srcBucket(srcBucketName)
-            .srcObject(srcObjectName)
-            .srcSsec(srcSsec);
+    CopyObjectArgs.Builder argBuilder =
+        CopyObjectArgs.builder().bucket(bucketName).object(objectName).headers(headerMap).sse(sse);
+
+    CopySource.Builder sourceBuilder =
+        CopySource.builder().bucket(srcBucketName).object(srcObjectName).ssec(srcSsec);
 
     if (copyConditions != null) {
       Map<String, String> map = copyConditions.getConditions();
       String value;
 
-      builder.srcMatchETag(map.get("x-amz-copy-source-if-match"));
-      builder.srcNotMatchETag(map.get("x-amz-copy-source-if-none-match"));
+      sourceBuilder.matchETag(map.get("x-amz-copy-source-if-match"));
+      sourceBuilder.notMatchETag(map.get("x-amz-copy-source-if-none-match"));
 
       value = map.get("x-amz-copy-source-if-modified-since");
       if (value != null) {
-        builder.srcModifiedSince(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
+        sourceBuilder.modifiedSince(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
       }
 
       value = map.get("x-amz-copy-source-if-unmodified-since");
       if (value != null) {
-        builder.srcUnmodifiedSince(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
+        sourceBuilder.unmodifiedSince(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
       }
 
       value = map.get("x-amz-metadata-directive");
       if (value != null) {
-        builder.metadataDirective(Directive.valueOf(value));
+        argBuilder.metadataDirective(Directive.valueOf(value));
       }
     }
 
-    copyObject(builder.build());
+    copyObject(argBuilder.source(sourceBuilder.build()).build());
   }
 
   /**
@@ -2172,42 +2167,11 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
     args.validateSse(this.baseUrl);
+    if (args.source().offset != null || args.source().length != null) {
+      return composeObject(new ComposeObjectArgs(args));
+    }
 
     Multimap<String, String> headers = args.genHeaders();
-
-    // Source object name is optional, if empty default to object name.
-    String srcObject = Optional.ofNullable(args.srcObject()).orElse(args.object());
-
-    String copySource = S3Escaper.encodePath("/" + args.srcBucket() + "/" + srcObject);
-    if (args.srcVersionId() != null) {
-      copySource += "?versionId=" + S3Escaper.encode(args.srcVersionId());
-    }
-
-    headers.put("x-amz-copy-source", copySource);
-
-    if (args.srcSsec() != null) {
-      headers.putAll(Multimaps.forMap(args.srcSsec().copySourceHeaders()));
-    }
-
-    if (args.srcMatchETag() != null) {
-      headers.put("x-amz-copy-source-if-match", args.srcMatchETag());
-    }
-
-    if (args.srcNotMatchETag() != null) {
-      headers.put("x-amz-copy-source-if-none-match", args.srcNotMatchETag());
-    }
-
-    if (args.srcModifiedSince() != null) {
-      headers.put(
-          "x-amz-copy-source-if-modified-since",
-          args.srcModifiedSince().format(Time.HTTP_HEADER_DATE_FORMAT));
-    }
-
-    if (args.srcUnmodifiedSince() != null) {
-      headers.put(
-          "x-amz-copy-source-if-unmodified-since",
-          args.srcUnmodifiedSince().format(Time.HTTP_HEADER_DATE_FORMAT));
-    }
 
     if (args.metadataDirective() != null) {
       headers.put("x-amz-metadata-directive", args.metadataDirective().name());
@@ -2216,6 +2180,8 @@ public class MinioClient {
     if (args.taggingDirective() != null) {
       headers.put("x-amz-tagging-directive", args.taggingDirective().name());
     }
+
+    headers.putAll(args.source().genCopyHeaders());
 
     try (Response response =
         execute(
@@ -2304,6 +2270,83 @@ public class MinioClient {
     composeObject(builder.build());
   }
 
+  private int calculatePartCount(List<ComposeSource> sources)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    long objectSize = 0;
+    int partCount = 0;
+    int i = 0;
+    for (ComposeSource src : sources) {
+      i++;
+      ObjectStat stat = statObject(new StatObjectArgs(src));
+
+      src.buildHeaders(stat.length(), stat.etag());
+
+      long size = stat.length();
+      if (src.length() != null) {
+        size = src.length();
+      } else if (src.offset() != null) {
+        size -= src.offset();
+      }
+
+      if (size < ObjectWriteArgs.MIN_MULTIPART_SIZE && sources.size() != 1 && i != sources.size()) {
+        throw new IllegalArgumentException(
+            "source "
+                + src.bucket()
+                + "/"
+                + src.object()
+                + ": size "
+                + size
+                + " must be greater than "
+                + ObjectWriteArgs.MIN_MULTIPART_SIZE);
+      }
+
+      objectSize += size;
+      if (objectSize > ObjectWriteArgs.MAX_OBJECT_SIZE) {
+        throw new IllegalArgumentException(
+            "destination object size must be less than " + ObjectWriteArgs.MAX_OBJECT_SIZE);
+      }
+
+      if (size > ObjectWriteArgs.MAX_PART_SIZE) {
+        long count = size / ObjectWriteArgs.MAX_PART_SIZE;
+        long lastPartSize = size - (count * ObjectWriteArgs.MAX_PART_SIZE);
+        if (lastPartSize > 0) {
+          count++;
+        } else {
+          lastPartSize = ObjectWriteArgs.MAX_PART_SIZE;
+        }
+
+        if (lastPartSize < ObjectWriteArgs.MIN_MULTIPART_SIZE
+            && sources.size() != 1
+            && i != sources.size()) {
+          throw new IllegalArgumentException(
+              "source "
+                  + src.bucket()
+                  + "/"
+                  + src.object()
+                  + ": "
+                  + "for multipart split upload of "
+                  + size
+                  + ", last part size is less than "
+                  + ObjectWriteArgs.MIN_MULTIPART_SIZE);
+        }
+        partCount += (int) count;
+      } else {
+        partCount++;
+      }
+
+      if (partCount > ObjectWriteArgs.MAX_MULTIPART_COUNT) {
+        throw new IllegalArgumentException(
+            "Compose sources create more than allowed multipart count "
+                + ObjectWriteArgs.MAX_MULTIPART_COUNT);
+      }
+    }
+
+    return partCount;
+  }
+
   /**
    * Creates an object by combining data from different source objects using server-side copy.
    *
@@ -2365,132 +2408,26 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-
+    checkArgs(args);
     args.validateSse(this.baseUrl);
-
-    long objectSize = 0;
-    int partsCount = 0;
     List<ComposeSource> sources = args.sources();
-    for (int i = 0; i < sources.size(); i++) {
-      ComposeSource src = sources.get(i);
-      ObjectStat stat =
-          statObject(
-              StatObjectArgs.builder()
-                  .bucket(src.bucket())
-                  .object(src.object())
-                  .versionId(src.versionId())
-                  .ssec(src.ssec())
-                  .build());
-
-      src.buildHeaders(stat.length(), stat.etag());
-
-      long size = stat.length();
-      if (src.length() != null) {
-        size = src.length();
-      } else if (src.offset() != null) {
-        size -= src.offset();
-      }
-
-      if (size < ObjectWriteArgs.MIN_MULTIPART_SIZE
-          && sources.size() != 1
-          && i != (sources.size() - 1)) {
-        throw new IllegalArgumentException(
-            "source "
-                + src.bucket()
-                + "/"
-                + src.object()
-                + ": size "
-                + size
-                + " must be greater than "
-                + ObjectWriteArgs.MIN_MULTIPART_SIZE);
-      }
-
-      objectSize += size;
-      if (objectSize > ObjectWriteArgs.MAX_OBJECT_SIZE) {
-        throw new IllegalArgumentException(
-            "Destination object size must be less than " + ObjectWriteArgs.MAX_OBJECT_SIZE);
-      }
-
-      if (size > ObjectWriteArgs.MAX_PART_SIZE) {
-        long count = size / ObjectWriteArgs.MAX_PART_SIZE;
-        long lastPartSize = size - (count * ObjectWriteArgs.MAX_PART_SIZE);
-        if (lastPartSize > 0) {
-          count++;
-        } else {
-          lastPartSize = ObjectWriteArgs.MAX_PART_SIZE;
-        }
-
-        if (lastPartSize < ObjectWriteArgs.MIN_MULTIPART_SIZE
-            && sources.size() != 1
-            && i != (sources.size() - 1)) {
-          throw new IllegalArgumentException(
-              "source "
-                  + src.bucket()
-                  + "/"
-                  + src.object()
-                  + ": "
-                  + "for multipart split upload of "
-                  + size
-                  + ", last part size is less than "
-                  + ObjectWriteArgs.MIN_MULTIPART_SIZE);
-        }
-        partsCount += (int) count;
-      } else {
-        partsCount++;
-      }
-
-      if (partsCount > ObjectWriteArgs.MAX_MULTIPART_COUNT) {
-        throw new IllegalArgumentException(
-            "Compose sources create more than allowed multipart count "
-                + ObjectWriteArgs.MAX_MULTIPART_COUNT);
-      }
-    }
-
-    if (args.sources().size() == 1) {
-      ComposeSource src = sources.get(0);
-      Multimap<String, String> headers = HashMultimap.create();
-      headers.putAll(args.extraHeaders());
-      headers.putAll(args.headers());
-      if (src.offset() == null && src.length() == null) {
-        return copyObject(
-            CopyObjectArgs.builder()
-                .bucket(args.bucket())
-                .object(args.object())
-                .headers(args.extraHeaders())
-                .sse(args.sse())
-                .srcBucket(src.bucket())
-                .srcObject(src.object())
-                .srcVersionId(src.versionId())
-                .srcSsec(src.ssec())
-                .srcMatchETag(src.matchETag())
-                .srcNotMatchETag(src.notMatchETag())
-                .srcModifiedSince(src.modifiedSince())
-                .srcUnmodifiedSince(src.unmodifiedSince())
-                .build());
-      }
-    }
-
-    Multimap<String, String> headersCreateMultiPart = HashMultimap.create();
-    headersCreateMultiPart.putAll(args.extraHeaders());
-    headersCreateMultiPart.putAll(args.genHeaders());
+    int partCount = calculatePartCount(sources);
+    Multimap<String, String> headers = HashMultimap.create();
+    headers.putAll(args.extraHeaders());
+    headers.putAll(args.genHeaders());
     String uploadId =
         createMultipartUpload(
-            args.bucket(),
-            args.region(),
-            args.object(),
-            headersCreateMultiPart,
-            args.extraQueryParams());
+            args.bucket(), args.region(), args.object(), headers, args.extraQueryParams());
 
     Multimap<String, String> ssecHeaders = HashMultimap.create();
     if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
       ssecHeaders.putAll(Multimaps.forMap(args.sse().headers()));
     }
 
-    int partNumber = 0;
-    Part[] totalParts = new Part[partsCount];
     try {
-      for (int i = 0; i < sources.size(); i++) {
-        ComposeSource src = sources.get(i);
+      int partNumber = 0;
+      Part[] totalParts = new Part[partCount];
+      for (ComposeSource src : sources) {
         long size = src.objectSize();
         if (src.length() != null) {
           size = src.length();
@@ -2502,21 +2439,19 @@ public class MinioClient {
           offset = src.offset();
         }
 
+        headers = HashMultimap.create();
+        headers.putAll(src.headers());
+        headers.putAll(ssecHeaders);
+
         if (size <= ObjectWriteArgs.MAX_PART_SIZE) {
           partNumber++;
-          Multimap<String, String> headers = HashMultimap.create();
-          if (src.headers() != null) {
-            headers.putAll(src.headers());
-          }
           if (src.length() != null) {
             headers.put(
                 "x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + src.length() - 1));
           } else if (src.offset() != null) {
             headers.put("x-amz-copy-source-range", "bytes=" + offset + "-" + (offset + size - 1));
           }
-          if (ssecHeaders != null) {
-            headers.putAll(ssecHeaders);
-          }
+
           String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
 
           totalParts[partNumber - 1] = new Part(partNumber, eTag);
@@ -2532,12 +2467,12 @@ public class MinioClient {
             endBytes = startBytes + size;
           }
 
-          Multimap<String, String> headers = src.headers();
+          Multimap<String, String> headersCopy = HashMultimap.create();
+          headers.putAll(headers);
           headers.put("x-amz-copy-source-range", "bytes=" + startBytes + "-" + endBytes);
-          if (ssecHeaders != null) {
-            headers.putAll(ssecHeaders);
-          }
-          String eTag = uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headers);
+
+          String eTag =
+              uploadPartCopy(args.bucket(), args.object(), uploadId, partNumber, headersCopy);
           totalParts[partNumber - 1] = new Part(partNumber, eTag);
           offset = startBytes;
           size -= (endBytes - startBytes);
@@ -2547,18 +2482,10 @@ public class MinioClient {
       return completeMultipartUpload(
           args.bucket(), getRegion(args.bucket()), args.object(), uploadId, totalParts, null, null);
     } catch (RuntimeException e) {
-      if (!(args.sources().size() == 1
-          && args.sources().get(0).offset() == null
-          && args.sources().get(0).length() == null)) {
-        abortMultipartUpload(args.bucket(), args.object(), uploadId);
-      }
+      abortMultipartUpload(args.bucket(), args.object(), uploadId);
       throw e;
     } catch (Exception e) {
-      if (!(args.sources().size() == 1
-          && args.sources().get(0).offset() == null
-          && args.sources().get(0).length() == null)) {
-        abortMultipartUpload(args.bucket(), args.object(), uploadId);
-      }
+      abortMultipartUpload(args.bucket(), args.object(), uploadId);
       throw e;
     }
   }
