@@ -2313,6 +2313,53 @@ public class FunctionalTest {
     }
   }
 
+  public static void isObjectLegalHoldEnabled_test() throws Exception {
+    String methodName = "isObjectLegalHoldEnabled()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+      try {
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
+
+        boolean result =
+            client.isObjectLegalHoldEnabled(
+                IsObjectLegalHoldEnabledArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .build());
+        if (result != false) {
+          throw new Exception("object legal hold: expected: false, got: " + result);
+        }
+        checkObjectLegalHold(bucketName, objectName, true);
+        checkObjectLegalHold(bucketName, objectName, false);
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
   /** Test: setDefaultRetention(SetDefaultRetentionArgs args). */
   public static void setDefaultRetention_test() throws Exception {
     String methodName = "setDefaultRetention(SetDefaultRetentionArgs args)";
@@ -3360,6 +3407,7 @@ public class FunctionalTest {
 
     enableObjectLegalHold_test();
     disableObjectLegalHold_test();
+    isObjectLegalHoldEnabled_test();
     setDefaultRetention_test();
     getDefaultRetention_test();
 
