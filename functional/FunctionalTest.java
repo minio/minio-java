@@ -2360,16 +2360,15 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setDefaultRetention(SetDefaultRetentionArgs args). */
   public static void setDefaultRetention_test() throws Exception {
-    String methodName = "setDefaultRetention(SetDefaultRetentionArgs args)";
+    String methodName = "setDefaultRetention()";
+    String testTags = "[COMPLIANCE, 10 days]";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
-    String mintArgs = "config={COMPLIANCE, 10 days}";
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
@@ -2380,9 +2379,9 @@ public class FunctionalTest {
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog(methodName, mintArgs, startTime);
+      mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
@@ -2396,19 +2395,18 @@ public class FunctionalTest {
 
     if (config.mode() != expectedConfig.mode()) {
       throw new Exception(
-          "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
+          "retention mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
     }
 
     if (config.duration().unit() != expectedConfig.duration().unit()
         || config.duration().duration() != expectedConfig.duration().duration()) {
       throw new Exception(
-          "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
+          "retention duration: " + expectedConfig.duration() + ", got: " + config.duration());
     }
   }
 
-  /** Test: getDefaultRetention(GetDefaultRetentionArgs args). */
   public static void getDefaultRetention_test() throws Exception {
-    String methodName = "getDefaultRetention(GetDefaultRetentionArgs args)";
+    String methodName = "getDefaultRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -2432,9 +2430,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: deleteDefaultRetention(DeleteDefaultRetentionArgs args). */
   public static void deleteDefaultRetention_test() throws Exception {
-    String methodName = "deleteDefaultRetention(DeleteDefaultRetentionArgs args)";
+    String methodName = "deleteDefaultRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
