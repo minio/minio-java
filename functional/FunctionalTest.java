@@ -2605,69 +2605,95 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getBucketPolicy(GetBucketPolicyArgs args). */
-  public static void getBucketPolicy_test1() throws Exception {
-    String methodName = "getBucketPolicy(GetBucketPolicyArgs args)";
+  public static void getBucketPolicy_test() throws Exception {
+    String methodName = "getBucketPolicy()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
     try {
-      String policy =
-          "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
-              + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::"
-              + bucketName
-              + "/myobject*\"],\"Sid\":\"\"}]}";
-      client.setBucketPolicy(
-          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
-      client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        String config =
+            client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
+        if (!config.isEmpty()) {
+          throw new Exception("policy: expected: \"\", got: " + config);
+        }
+
+        String policy =
+            "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
+                + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
+                + bucketName
+                + "/myobject*'],'Sid':''}]}";
+        policy = policy.replaceAll("'", "\"");
+        client.setBucketPolicy(
+            SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+        client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: setBucketPolicy(SetBucketPolicyArgs args). */
-  public static void setBucketPolicy_test1() throws Exception {
-    String methodName = "setBucketPolicy(SetBucketPolicyArgs args)";
+  public static void setBucketPolicy_test() throws Exception {
+    String methodName = "setBucketPolicy()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
     try {
-      String policy =
-          "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Effect\":\"Allow\",\"Principal\":"
-              + "\"*\",\"Resource\":\"arn:aws:s3:::"
-              + bucketName
-              + "/myobject*\"}],\"Version\": \"2012-10-17\"}";
-      client.setBucketPolicy(
-          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
-      mintSuccessLog(methodName, null, startTime);
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        String policy =
+            "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
+                + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
+                + bucketName
+                + "/myobject*'],'Sid':''}]}";
+        policy = policy.replaceAll("'", "\"");
+        client.setBucketPolicy(
+            SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: deleteBucketPolicy(deleteBucketPolicyArgs args). */
-  public static void deleteBucketPolicy_test1() throws Exception {
-    String methodName = "deleteBucketPolicy(DeleteBucketPolicyArgs args)";
+  public static void deleteBucketPolicy_test() throws Exception {
+    String methodName = "deleteBucketPolicy()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
     try {
-      String policy =
-          "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
-              + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::"
-              + bucketName
-              + "/myobject*\"],\"Sid\":\"\"}]}";
-      client.setBucketPolicy(
-          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
-      client.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket(bucketName).build());
+
+        String policy =
+            "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
+                + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
+                + bucketName
+                + "/myobject*'],'Sid':''}]}";
+        policy = policy.replaceAll("'", "\"");
+        client.setBucketPolicy(
+            SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+        client.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3413,9 +3439,9 @@ public class FunctionalTest {
       deleteBucketLifeCycle_test1();
     }
 
-    getBucketPolicy_test1();
-    setBucketPolicy_test1();
-    deleteBucketPolicy_test1();
+    getBucketPolicy_test();
+    setBucketPolicy_test();
+    deleteBucketPolicy_test();
 
     listenBucketNotification_test1();
 
@@ -3445,9 +3471,9 @@ public class FunctionalTest {
     getPresignedObjectUrl_test();
     presignedPostPolicy_test();
     copyObject_test();
-    getBucketPolicy_test1();
-    setBucketPolicy_test1();
-    deleteBucketPolicy_test1();
+    getBucketPolicy_test();
+    setBucketPolicy_test();
+    deleteBucketPolicy_test();
     selectObjectContent_test1();
     listenBucketNotification_test1();
     setBucketTags_test();
