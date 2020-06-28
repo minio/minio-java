@@ -2987,18 +2987,13 @@ public class FunctionalTest {
     }
   }
 
-  /**
-   * Test: selectObjectContent(String bucketName, String objectName, String sqlExpression,
-   * InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange,
-   * Long scanEndRange, ServerSideEncryption sse).
-   */
-  public static void selectObjectContent_test1() throws Exception {
-    String methodName = "selectObjectContent(SelectObjectContentArgs args)";
+  public static void selectObjectContent_test() throws Exception {
+    String methodName = "selectObjectContent()";
     String sqlExpression = "select * from S3Object";
-    String args = "sqlExpression: " + sqlExpression + ", requestProgress: true";
+    String testArgs = "[sqlExpression: " + sqlExpression + ", requestProgress: true]";
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName + ", " + args);
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3061,9 +3056,9 @@ public class FunctionalTest {
             "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
       }
 
-      mintSuccessLog(methodName, args, startTime);
+      mintSuccessLog(methodName, testArgs, startTime);
     } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
+      handleException(methodName, testArgs, startTime, e);
     } finally {
       if (responseStream != null) {
         responseStream.close();
@@ -3442,7 +3437,7 @@ public class FunctionalTest {
     setObjectRetention_test();
     getObjectRetention_test();
 
-    selectObjectContent_test1();
+    selectObjectContent_test();
 
     setBucketEncryption_test();
     getBucketEncryption_test();
@@ -3494,7 +3489,7 @@ public class FunctionalTest {
     getBucketPolicy_test();
     setBucketPolicy_test();
     deleteBucketPolicy_test();
-    selectObjectContent_test1();
+    selectObjectContent_test();
     listenBucketNotification_test();
     setBucketTags_test();
     getBucketTags_test();
