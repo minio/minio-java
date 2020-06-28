@@ -2777,9 +2777,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setBucketNotification(SetBucketNotificationArgs args). */
-  public static void setBucketNotification_test1() throws Exception {
-    String methodName = "setBucketNotification(SetBucketNotificationArgs args)";
+  public static void setBucketNotification_test() throws Exception {
+    String methodName = "setBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
       mintIgnoredLog(methodName, null, startTime);
@@ -2793,35 +2792,35 @@ public class FunctionalTest {
     try {
       String bucketName = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
+      try {
+        List<EventType> eventList = new LinkedList<>();
+        eventList.add(EventType.OBJECT_CREATED_PUT);
+        eventList.add(EventType.OBJECT_CREATED_COPY);
+        QueueConfiguration queueConfig = new QueueConfiguration();
+        queueConfig.setQueue(sqsArn);
+        queueConfig.setEvents(eventList);
+        queueConfig.setPrefixRule("images");
+        queueConfig.setSuffixRule("pg");
 
-      List<EventType> eventList = new LinkedList<>();
-      eventList.add(EventType.OBJECT_CREATED_PUT);
-      eventList.add(EventType.OBJECT_CREATED_COPY);
-      QueueConfiguration queueConfig = new QueueConfiguration();
-      queueConfig.setQueue(sqsArn);
-      queueConfig.setEvents(eventList);
-      queueConfig.setPrefixRule("images");
-      queueConfig.setSuffixRule("pg");
+        List<QueueConfiguration> queueConfigList = new LinkedList<>();
+        queueConfigList.add(queueConfig);
 
-      List<QueueConfiguration> queueConfigList = new LinkedList<>();
-      queueConfigList.add(queueConfig);
+        NotificationConfiguration config = new NotificationConfiguration();
+        config.setQueueConfigurationList(queueConfigList);
 
-      NotificationConfiguration config = new NotificationConfiguration();
-      config.setQueueConfigurationList(queueConfigList);
-
-      client.setBucketNotification(
-          SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
-
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+        client.setBucketNotification(
+            SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: getBucketNotification(GetBucketNotificationArgs args). */
-  public static void getBucketNotification_test1() throws Exception {
-    String methodName = "getBucketNotification(GetBucketNotificationArgs args)";
+  public static void getBucketNotification_test() throws Exception {
+    String methodName = "getBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
       mintIgnoredLog(methodName, null, startTime);
@@ -2835,45 +2834,45 @@ public class FunctionalTest {
     try {
       String bucketName = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
+      try {
+        List<EventType> eventList = new LinkedList<>();
+        eventList.add(EventType.OBJECT_CREATED_PUT);
+        QueueConfiguration queueConfig = new QueueConfiguration();
+        queueConfig.setQueue(sqsArn);
+        queueConfig.setEvents(eventList);
 
-      List<EventType> eventList = new LinkedList<>();
-      eventList.add(EventType.OBJECT_CREATED_PUT);
-      QueueConfiguration queueConfig = new QueueConfiguration();
-      queueConfig.setQueue(sqsArn);
-      queueConfig.setEvents(eventList);
+        List<QueueConfiguration> queueConfigList = new LinkedList<>();
+        queueConfigList.add(queueConfig);
 
-      List<QueueConfiguration> queueConfigList = new LinkedList<>();
-      queueConfigList.add(queueConfig);
+        NotificationConfiguration expectedConfig = new NotificationConfiguration();
+        expectedConfig.setQueueConfigurationList(queueConfigList);
 
-      NotificationConfiguration expectedConfig = new NotificationConfiguration();
-      expectedConfig.setQueueConfigurationList(queueConfigList);
+        client.setBucketNotification(
+            SetBucketNotificationArgs.builder().bucket(bucketName).config(expectedConfig).build());
 
-      client.setBucketNotification(
-          SetBucketNotificationArgs.builder().bucket(bucketName).config(expectedConfig).build());
+        NotificationConfiguration config =
+            client.getBucketNotification(
+                GetBucketNotificationArgs.builder().bucket(bucketName).build());
 
-      NotificationConfiguration config =
-          client.getBucketNotification(
-              GetBucketNotificationArgs.builder().bucket(bucketName).build());
-
-      if (config.queueConfigurationList().size() != 1
-          || !sqsArn.equals(config.queueConfigurationList().get(0).queue())
-          || config.queueConfigurationList().get(0).events().size() != 1
-          || config.queueConfigurationList().get(0).events().get(0)
-              != EventType.OBJECT_CREATED_PUT) {
-        System.out.println(
-            "FAILED. expected: " + Xml.marshal(expectedConfig) + ", got: " + Xml.marshal(config));
+        if (config.queueConfigurationList().size() != 1
+            || !sqsArn.equals(config.queueConfigurationList().get(0).queue())
+            || config.queueConfigurationList().get(0).events().size() != 1
+            || config.queueConfigurationList().get(0).events().get(0)
+                != EventType.OBJECT_CREATED_PUT) {
+          System.out.println(
+              "config: expected: " + Xml.marshal(expectedConfig) + ", got: " + Xml.marshal(config));
+        }
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: deleteBucketNotification(DeleteBucketNotificationArgs args). */
-  public static void deleteBucketNotification_test1() throws Exception {
-    String methodName = "deleteBucketNotification(DeleteBucketNotificationArgs args)";
+  public static void deleteBucketNotification_test() throws Exception {
+    String methodName = "deleteBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
       mintIgnoredLog(methodName, null, startTime);
@@ -2887,36 +2886,37 @@ public class FunctionalTest {
     try {
       String bucketName = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
+      try {
+        List<EventType> eventList = new LinkedList<>();
+        eventList.add(EventType.OBJECT_CREATED_PUT);
+        eventList.add(EventType.OBJECT_CREATED_COPY);
+        QueueConfiguration queueConfig = new QueueConfiguration();
+        queueConfig.setQueue(sqsArn);
+        queueConfig.setEvents(eventList);
+        queueConfig.setPrefixRule("images");
+        queueConfig.setSuffixRule("pg");
 
-      List<EventType> eventList = new LinkedList<>();
-      eventList.add(EventType.OBJECT_CREATED_PUT);
-      eventList.add(EventType.OBJECT_CREATED_COPY);
-      QueueConfiguration queueConfig = new QueueConfiguration();
-      queueConfig.setQueue(sqsArn);
-      queueConfig.setEvents(eventList);
-      queueConfig.setPrefixRule("images");
-      queueConfig.setSuffixRule("pg");
+        List<QueueConfiguration> queueConfigList = new LinkedList<>();
+        queueConfigList.add(queueConfig);
 
-      List<QueueConfiguration> queueConfigList = new LinkedList<>();
-      queueConfigList.add(queueConfig);
+        NotificationConfiguration config = new NotificationConfiguration();
+        config.setQueueConfigurationList(queueConfigList);
 
-      NotificationConfiguration config = new NotificationConfiguration();
-      config.setQueueConfigurationList(queueConfigList);
+        client.setBucketNotification(
+            SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
 
-      client.setBucketNotification(
-          SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
+        client.deleteBucketNotification(
+            DeleteBucketNotificationArgs.builder().bucket(bucketName).build());
 
-      client.deleteBucketNotification(
-          DeleteBucketNotificationArgs.builder().bucket(bucketName).build());
-
-      config =
-          client.getBucketNotification(
-              GetBucketNotificationArgs.builder().bucket(bucketName).build());
-      if (config.queueConfigurationList().size() != 0) {
-        System.out.println("FAILED. expected: <empty>, got: " + Xml.marshal(config));
+        config =
+            client.getBucketNotification(
+                GetBucketNotificationArgs.builder().bucket(bucketName).build());
+        if (config.queueConfigurationList().size() != 0) {
+          System.out.println("config: expected: <empty>, got: " + Xml.marshal(config));
+        }
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
@@ -3468,9 +3468,9 @@ public class FunctionalTest {
 
     teardown();
 
-    setBucketNotification_test1();
-    getBucketNotification_test1();
-    deleteBucketNotification_test1();
+    setBucketNotification_test();
+    getBucketNotification_test();
+    deleteBucketNotification_test();
   }
 
   /** runQuickTests: runs tests those completely quicker. */
