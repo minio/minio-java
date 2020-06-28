@@ -2699,54 +2699,79 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setBucketLifeCycle(SetBucketLifeCycleArgs args). */
-  public static void setBucketLifeCycle_test1() throws Exception {
-    String methodName = "setBucketLifeCycle(SetBucketLifeCycleArgs args)";
+  public static void testSetBucketLifeCycle(String bucketName) throws Exception {
+    String lifeCycle =
+        "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
+            + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
+            + "</Rule></LifecycleConfiguration>";
+    client.setBucketLifeCycle(
+        SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
+  }
+
+  public static void setBucketLifeCycle_test() throws Exception {
+    String methodName = "setBucketLifeCycle()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
     try {
-      String lifeCycle =
-          "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
-              + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
-              + "</Rule></LifecycleConfiguration>";
-      client.setBucketLifeCycle(
-          SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
-      mintSuccessLog(methodName, null, startTime);
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        testSetBucketLifeCycle(bucketName);
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args). */
-  public static void deleteBucketLifeCycle_test1() throws Exception {
-    String methodName = "deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args)";
+  public static void deleteBucketLifeCycle_test() throws Exception {
+    String methodName = "deleteBucketLifeCycle()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
     try {
-      client.deleteBucketLifeCycle(DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.deleteBucketLifeCycle(
+            DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        testSetBucketLifeCycle(bucketName);
+        client.deleteBucketLifeCycle(
+            DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: getBucketLifeCycle(GetBucketLifeCycleArgs args). */
-  public static void getBucketLifeCycle_test1() throws Exception {
-    String methodName = "getBucketLifeCycle(GetBucketLifeCycleArgs args)";
+  public static void getBucketLifeCycle_test() throws Exception {
+    String methodName = "getBucketLifeCycle()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
     try {
-      client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        testSetBucketLifeCycle(bucketName);
+        client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3431,17 +3456,13 @@ public class FunctionalTest {
     getObjectTags_test();
     deleteObjectTags_test();
 
-    // SSE_S3 and SSE_KMS only work with Amazon AWS endpoint.
-    String requestUrl = endpoint;
-    if (requestUrl.contains(".amazonaws.com")) {
-      setBucketLifeCycle_test1();
-      getBucketLifeCycle_test1();
-      deleteBucketLifeCycle_test1();
-    }
-
     getBucketPolicy_test();
     setBucketPolicy_test();
     deleteBucketPolicy_test();
+
+    setBucketLifeCycle_test();
+    getBucketLifeCycle_test();
+    deleteBucketLifeCycle_test();
 
     listenBucketNotification_test1();
 
