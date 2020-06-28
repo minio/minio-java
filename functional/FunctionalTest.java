@@ -3067,9 +3067,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setBucketEncryption(SetBucketEncryptionArgs args). */
   public static void setBucketEncryption_test() throws Exception {
-    String methodName = "setBucketEncryption(SetBucketEncryptionArgs args)";
+    String methodName = "setBucketEncryption()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3093,9 +3092,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getBucketEncryption(GetBucketEncryptionArgs args). */
   public static void getBucketEncryption_test() throws Exception {
-    String methodName = "getBucketEncryption(GetBucketEncryptionArgs args)";
+    String methodName = "getBucketEncryption()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3109,7 +3107,7 @@ public class FunctionalTest {
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
         if (config.rules().size() != 0) {
-          throw new Exception("expected: <empty rules>, got: " + config.rules());
+          throw new Exception("rules: expected: <empty>, got: " + config.rules());
         }
 
         List<SseConfigurationRule> ruleList = new LinkedList<>();
@@ -3121,11 +3119,11 @@ public class FunctionalTest {
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
         if (config.rules().size() != 1) {
-          throw new Exception("expected: 1, got: " + config.rules().size());
+          throw new Exception("rules count: expected: 1, got: " + config.rules().size());
         }
         if (config.rules().get(0).sseAlgorithm() != expectedConfig.rules().get(0).sseAlgorithm()) {
           throw new Exception(
-              "expected: "
+              "sse algorithm: expected: "
                   + expectedConfig.rules().get(0).sseAlgorithm()
                   + ", got: "
                   + config.rules().get(0).sseAlgorithm());
@@ -3139,9 +3137,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: deleteBucketEncryption(DeleteBucketEncryptionArgs args). */
   public static void deleteBucketEncryption_test() throws Exception {
-    String methodName = "deleteBucketEncryption(DeleteBucketEncryptionArgs args)";
+    String methodName = "deleteBucketEncryption()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3151,7 +3148,6 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        // Delete should succeed.
         client.deleteBucketEncryption(
             DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
 
@@ -3166,7 +3162,7 @@ public class FunctionalTest {
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
         if (config.rules().size() != 0) {
-          throw new Exception("expected: <empty rules>, got: " + config.rules());
+          throw new Exception("rules: expected: <empty>, got: " + config.rules());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
