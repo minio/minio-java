@@ -2477,24 +2477,22 @@ public class FunctionalTest {
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
-        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(expectedConfig)
+                .config(
+                    new Retention(
+                        RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
                 .build());
 
-        Retention emptyConfig = new Retention();
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(emptyConfig)
+                .config(new Retention())
                 .bypassGovernanceMode(true)
                 .build());
-
       } finally {
         if (objectInfo != null) {
           client.removeObject(
@@ -2509,6 +2507,37 @@ public class FunctionalTest {
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void testGetObjectRetention(SetObjectRetentionArgs args) throws Exception {
+    client.setObjectRetention(args);
+    Retention config =
+        client.getObjectRetention(
+            GetObjectRetentionArgs.builder().bucket(args.bucket()).object(args.object()).build());
+
+    if (args.config().mode() == null) {
+      if (config != null && config.mode() != null) {
+        throw new Exception("retention mode: expected: <null>, got: " + config.mode());
+      }
+    } else if (config.mode() != args.config().mode()) {
+      throw new Exception(
+          "retention mode: expected: " + args.config().mode() + ", got: " + config.mode());
+    }
+
+    ZonedDateTime expectedDate = args.config().retainUntilDate();
+    ZonedDateTime date = (config == null) ? null : config.retainUntilDate();
+
+    if (expectedDate == null) {
+      if (date != null) {
+        throw new Exception("retention retain-until-date: expected: <null>, got: " + date);
+      }
+    } else if (!date.withNano(0).equals(expectedDate.withNano(0))) {
+      throw new Exception(
+          "retention retain-until-date: expected: "
+              + expectedDate.withNano(0)
+              + ", got: "
+              + date.withNano(0));
     }
   }
 
@@ -2531,82 +2560,34 @@ public class FunctionalTest {
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3);
-        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
-        client.setObjectRetention(
+        testGetObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(expectedConfig)
+                .config(
+                    new Retention(
+                        RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(3)))
                 .build());
-
-        Retention config =
-            client.getObjectRetention(
-                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
-
-        if (!(config
-            .retainUntilDate()
-            .withNano(0)
-            .equals(expectedConfig.retainUntilDate().withNano(0)))) {
-          throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.retainUntilDate()
-                  + ", got: "
-                  + config.retainUntilDate());
-        }
-
-        if (config.mode() != expectedConfig.mode()) {
-          throw new Exception(
-              "[FAILED] Expected: expected mode: "
-                  + " expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
-        }
 
         // Check shortening retention until period
-        ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
-        expectedConfig = new Retention(RetentionMode.GOVERNANCE, shortenedRetentionUntil);
-        client.setObjectRetention(
+        testGetObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(expectedConfig)
+                .config(
+                    new Retention(
+                        RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
                 .bypassGovernanceMode(true)
                 .build());
 
-        config =
-            client.getObjectRetention(
-                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
-
-        if (!(config
-            .retainUntilDate()
-            .withNano(0)
-            .equals(expectedConfig.retainUntilDate().withNano(0)))) {
-          throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.retainUntilDate()
-                  + ", got: "
-                  + config.retainUntilDate());
-        }
-
-        if (config.mode() != expectedConfig.mode()) {
-          throw new Exception(
-              " [FAILED] Expected: Expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
-        }
-
-        Retention emptyConfig = new Retention();
-        client.setObjectRetention(
+        // Check empty retention.
+        testGetObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(emptyConfig)
+                .config(new Retention())
                 .bypassGovernanceMode(true)
                 .build());
-
       } finally {
         if (objectInfo != null) {
           client.removeObject(
