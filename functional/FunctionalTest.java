@@ -2923,9 +2923,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: listenBucketNotification(ListenBucketNotificationArgs args). */
-  public static void listenBucketNotification_test1() throws Exception {
-    String methodName = "listenBucketNotification(ListenBucketNotificationArgs args)";
+  public static void listenBucketNotification_test() throws Exception {
+    String methodName = "listenBucketNotification()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3464,7 +3463,7 @@ public class FunctionalTest {
     getBucketLifeCycle_test();
     deleteBucketLifeCycle_test();
 
-    listenBucketNotification_test1();
+    listenBucketNotification_test();
 
     teardown();
 
@@ -3496,7 +3495,7 @@ public class FunctionalTest {
     setBucketPolicy_test();
     deleteBucketPolicy_test();
     selectObjectContent_test1();
-    listenBucketNotification_test1();
+    listenBucketNotification_test();
     setBucketTags_test();
     getBucketTags_test();
     deleteBucketTags_test();
