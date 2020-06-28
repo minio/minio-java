@@ -17,67 +17,6 @@
 
 package io.minio;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.io.ByteStreams;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.minio.errors.BucketPolicyTooLargeException;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
-import io.minio.errors.InternalException;
-import io.minio.errors.InvalidBucketNameException;
-import io.minio.errors.InvalidEndpointException;
-import io.minio.errors.InvalidExpiresRangeException;
-import io.minio.errors.InvalidPortException;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.RegionConflictException;
-import io.minio.errors.ServerException;
-import io.minio.errors.XmlParserException;
-import io.minio.http.Method;
-import io.minio.messages.Bucket;
-import io.minio.messages.CompleteMultipartUpload;
-import io.minio.messages.CompleteMultipartUploadOutput;
-import io.minio.messages.CopyObjectResult;
-import io.minio.messages.CopyPartResult;
-import io.minio.messages.CreateBucketConfiguration;
-import io.minio.messages.DeleteError;
-import io.minio.messages.DeleteMarker;
-import io.minio.messages.DeleteObject;
-import io.minio.messages.DeleteRequest;
-import io.minio.messages.DeleteResult;
-import io.minio.messages.ErrorResponse;
-import io.minio.messages.InitiateMultipartUploadResult;
-import io.minio.messages.InputSerialization;
-import io.minio.messages.Item;
-import io.minio.messages.LegalHold;
-import io.minio.messages.ListAllMyBucketsResult;
-import io.minio.messages.ListBucketResultV1;
-import io.minio.messages.ListBucketResultV2;
-import io.minio.messages.ListMultipartUploadsResult;
-import io.minio.messages.ListObjectsResult;
-import io.minio.messages.ListPartsResult;
-import io.minio.messages.ListVersionsResult;
-import io.minio.messages.LocationConstraint;
-import io.minio.messages.NotificationConfiguration;
-import io.minio.messages.NotificationRecords;
-import io.minio.messages.ObjectLockConfiguration;
-import io.minio.messages.OutputSerialization;
-import io.minio.messages.Part;
-import io.minio.messages.Prefix;
-import io.minio.messages.Retention;
-import io.minio.messages.SelectObjectContentRequest;
-import io.minio.messages.SseConfiguration;
-import io.minio.messages.Tags;
-import io.minio.messages.Upload;
-import io.minio.messages.VersioningConfiguration;
-import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -112,6 +51,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -119,6 +59,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -128,6 +70,72 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.io.ByteStreams;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.minio.errors.BucketPolicyTooLargeException;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidBucketNameException;
+import io.minio.errors.InvalidEndpointException;
+import io.minio.errors.InvalidExpiresRangeException;
+import io.minio.errors.InvalidPortException;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.RegionConflictException;
+import io.minio.errors.ServerException;
+import io.minio.errors.XmlParserException;
+import io.minio.http.Method;
+import io.minio.messages.AssumeRoleWithClientGrantsResponse;
+import io.minio.messages.Bucket;
+import io.minio.messages.ClientGrantsToken;
+import io.minio.messages.CompleteMultipartUpload;
+import io.minio.messages.CompleteMultipartUploadOutput;
+import io.minio.messages.CopyObjectResult;
+import io.minio.messages.CopyPartResult;
+import io.minio.messages.CreateBucketConfiguration;
+import io.minio.messages.Credentials;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteMarker;
+import io.minio.messages.DeleteObject;
+import io.minio.messages.DeleteRequest;
+import io.minio.messages.DeleteResult;
+import io.minio.messages.ErrorResponse;
+import io.minio.messages.InitiateMultipartUploadResult;
+import io.minio.messages.InputSerialization;
+import io.minio.messages.Item;
+import io.minio.messages.LegalHold;
+import io.minio.messages.ListAllMyBucketsResult;
+import io.minio.messages.ListBucketResultV1;
+import io.minio.messages.ListBucketResultV2;
+import io.minio.messages.ListMultipartUploadsResult;
+import io.minio.messages.ListObjectsResult;
+import io.minio.messages.ListPartsResult;
+import io.minio.messages.ListVersionsResult;
+import io.minio.messages.LocationConstraint;
+import io.minio.messages.NotificationConfiguration;
+import io.minio.messages.NotificationRecords;
+import io.minio.messages.ObjectLockConfiguration;
+import io.minio.messages.OutputSerialization;
+import io.minio.messages.Part;
+import io.minio.messages.Prefix;
+import io.minio.messages.Retention;
+import io.minio.messages.SelectObjectContentRequest;
+import io.minio.messages.SseConfiguration;
+import io.minio.messages.Tags;
+import io.minio.messages.Upload;
+import io.minio.messages.VersioningConfiguration;
+import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -229,6 +237,7 @@ public class MinioClient {
   private PrintWriter traceStream;
 
   private HttpUrl baseUrl;
+  private HttpUrl stsUrl;
   private String region;
   private boolean isAwsHost;
   private boolean isAcceleratedHost;
@@ -236,10 +245,13 @@ public class MinioClient {
   private boolean useVirtualStyle;
   private String accessKey;
   private String secretKey;
+  private String sessionToken;
+  private ZonedDateTime tokenExpiredAt;
   private OkHttpClient httpClient;
 
   private MinioClient(
       HttpUrl baseUrl,
+      HttpUrl stsUrl,
       String region,
       boolean isAwsHost,
       boolean isAcceleratedHost,
@@ -249,6 +261,7 @@ public class MinioClient {
       String secretKey,
       OkHttpClient httpClient) {
     this.baseUrl = baseUrl;
+    this.stsUrl = stsUrl;
     this.region = region;
     this.isAwsHost = isAwsHost;
     this.isAcceleratedHost = isAcceleratedHost;
@@ -260,6 +273,7 @@ public class MinioClient {
   }
 
   /** Remove this constructor when all deprecated contructors are removed. */
+  @SuppressWarnings({"IncompleteCopyConstructor", "CopyConstructorMissesField"})
   private MinioClient(MinioClient client) {
     this.baseUrl = client.baseUrl;
     this.region = client.region;
@@ -890,6 +904,10 @@ public class MinioClient {
       requestBuilder.header("x-amz-content-sha256", sha256Hash);
     }
 
+    if (sessionToken != null && !isCredentialsExpired()) {
+      requestBuilder.header("X-Amz-Security-Token", sessionToken);
+    }
+
     ZonedDateTime date = ZonedDateTime.now();
     requestBuilder.header("x-amz-date", date.format(Time.AMZ_DATE_FORMAT));
 
@@ -985,20 +1003,7 @@ public class MinioClient {
     }
 
     if (this.traceStream != null) {
-      this.traceStream.println("---------START-HTTP---------");
-      String encodedPath = request.url().encodedPath();
-      String encodedQuery = request.url().encodedQuery();
-      if (encodedQuery != null) {
-        encodedPath += "?" + encodedQuery;
-      }
-      this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
-      String headers =
-          request
-              .headers()
-              .toString()
-              .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
-      this.traceStream.println(headers);
+      traceRequest(request);
       if (traceRequestBody) {
         this.traceStream.println(new String((byte[]) body, StandardCharsets.UTF_8));
       }
@@ -1133,6 +1138,62 @@ public class MinioClient {
     }
 
     throw new ErrorResponseException(errorResponse, response);
+  }
+
+  private Response executeSTSPost(Multimap<String, String> queryParamMap)
+          throws InternalException, InsufficientDataException, NoSuchAlgorithmException, IOException,
+          InvalidResponseException {
+    final HttpUrl.Builder urlBuilder = stsUrl.newBuilder();
+    for (Map.Entry<String, String> entry : queryParamMap.entries()) {
+      urlBuilder.addEncodedQueryParameter(S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
+    }
+    final Request request = createRequest(urlBuilder.build(), Method.POST, null, EMPTY_BODY, 0);
+    // todo: mb extract all tracing related login into separate component?
+    if (this.traceStream != null) {
+      traceRequest(request);
+    }
+    final OkHttpClient client = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
+
+    final Response response = client.newCall(request).execute();
+    if (this.traceStream != null) {
+      this.traceStream.println(response.protocol().toString().toUpperCase(Locale.US) + " " + response.code());
+      this.traceStream.println(response.headers());
+    }
+
+    if (response.isSuccessful()) {
+      if (this.traceStream != null) {
+        this.traceStream.println(END_HTTP);
+      }
+      return response;
+    }
+
+    String errorXml;
+    try (ResponseBody responseBody = response.body()) {
+      final byte[] content = responseBody != null ? responseBody.bytes() : new byte[]{};
+      errorXml = new String(content, StandardCharsets.UTF_8);
+    }
+
+    if (this.traceStream != null && !errorXml.isEmpty()) {
+      this.traceStream.println(errorXml);
+    }
+    throw new InvalidResponseException(request);
+  }
+
+  private void traceRequest(Request request) {
+    this.traceStream.println("---------START-HTTP---------");
+    String encodedPath = request.url().encodedPath();
+    final String encodedQuery = request.url().encodedQuery();
+    if (encodedQuery != null) {
+      encodedPath += "?" + encodedQuery;
+    }
+    this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
+    final String headers =
+            request
+                    .headers()
+                    .toString()
+                    .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+                    .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
+    this.traceStream.println(headers);
   }
 
   /** Returns region of given bucket either from region cache or set in constructor. */
@@ -6831,6 +6892,52 @@ public class MinioClient {
     return totalBytesRead;
   }
 
+  public Credentials newSTSClientGrants(@Nonnull ClientGrantsToken grantsToken)
+          throws InsufficientDataException, NoSuchAlgorithmException, IOException, InternalException,
+          InvalidResponseException, XmlParserException {
+    return this.newSTSClientGrants(grantsToken, null);
+  }
+
+  public Credentials newSTSClientGrants(@Nonnull ClientGrantsToken grantsToken, @Nullable String customPolicy)
+          throws IOException, InvalidResponseException, InsufficientDataException,
+          NoSuchAlgorithmException, InternalException, XmlParserException {
+    Objects.requireNonNull(stsUrl, "STS endpoint cannot be empty");
+    Objects.requireNonNull(grantsToken, "Client grants access token and expiry should be defined");
+
+    final HashMultimap<String, String> queryParams = HashMultimap.create();
+    queryParams.put("Action", "AssumeRoleWithClientGrants");
+    queryParams.put("DurationSeconds", String.valueOf(grantsToken.getExpiredAfter()));
+    queryParams.put("Token", grantsToken.getToken());
+    queryParams.put("Version", "2011-06-15");
+    if (customPolicy != null) {
+      queryParams.put("Policy", customPolicy);
+    }
+
+    try (Response response = executeSTSPost(queryParams)) {
+      if (response.body() == null) {
+        throw new InvalidResponseException();
+      }
+      final AssumeRoleWithClientGrantsResponse clientGransResponse =
+              Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class, response.body().charStream());
+      return clientGransResponse.getClientGrantsResult().getCredentials();
+    }
+  }
+
+  public void withCredentials(@Nonnull Credentials credentials) {
+    Objects.requireNonNull(credentials, "STS credentials must not be null");
+    this.accessKey = Objects.requireNonNull(credentials.getAccessKey());
+    this.secretKey = Objects.requireNonNull(credentials.getSecretKey());
+    this.sessionToken = Objects.requireNonNull(credentials.getSessionToken());
+    this.tokenExpiredAt = Objects.requireNonNull(credentials.getExpiredAt());
+  }
+
+  public boolean isCredentialsExpired() {
+    if (tokenExpiredAt == null) {
+      return false;
+    }
+    return ZonedDateTime.now().isAfter(tokenExpiredAt);
+  }
+
   /**
    * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values
    * must be between 1 and Integer.MAX_VALUE when converted to milliseconds.
@@ -7850,7 +7957,7 @@ public class MinioClient {
           XmlParserException, ErrorResponseException, InternalException, InvalidResponseException {
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("partNumber", Integer.toString(partNumber));
-    queryParams.put("uploadId", uploadId);
+    queryParams.put(UPLOAD_ID, uploadId);
     Response response =
         execute(
             Method.PUT,
@@ -7873,6 +7980,7 @@ public class MinioClient {
 
   public static final class Builder {
     HttpUrl baseUrl;
+    HttpUrl stsUrl;
     String region;
     String accessKey;
     String secretKey;
@@ -8066,6 +8174,11 @@ public class MinioClient {
       return this;
     }
 
+    public Builder stsEndpoint(String endpoint) {
+      stsUrl = HttpUrl.parse(Objects.requireNonNull(endpoint, "STS endpoint cannot be empty"));
+      return this;
+    }
+
     public Builder endpoint(String endpoint, int port, boolean secure) {
       HttpUrl url = getBaseUrl(endpoint);
       if (port < 1 || port > 65535) {
@@ -8154,6 +8267,7 @@ public class MinioClient {
 
       return new MinioClient(
           baseUrl,
+          stsUrl,
           (region != null) ? region : regionInUrl,
           isAwsHost,
           isAcceleratedHost,
