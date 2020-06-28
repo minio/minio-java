@@ -17,60 +17,6 @@
 
 package io.minio;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.RandomAccessFile;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -81,7 +27,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
@@ -136,6 +81,59 @@ import io.minio.messages.Tags;
 import io.minio.messages.Upload;
 import io.minio.messages.VersioningConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.RandomAccessFile;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -1141,22 +1139,25 @@ public class MinioClient {
   }
 
   private Response executeSTSPost(Multimap<String, String> queryParamMap)
-          throws InternalException, InsufficientDataException, NoSuchAlgorithmException, IOException,
+      throws InternalException, InsufficientDataException, NoSuchAlgorithmException, IOException,
           InvalidResponseException {
     final HttpUrl.Builder urlBuilder = stsUrl.newBuilder();
     for (Map.Entry<String, String> entry : queryParamMap.entries()) {
-      urlBuilder.addEncodedQueryParameter(S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
+      urlBuilder.addEncodedQueryParameter(
+          S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
     }
     final Request request = createRequest(urlBuilder.build(), Method.POST, null, EMPTY_BODY, 0);
     // todo: mb extract all tracing related login into separate component?
     if (this.traceStream != null) {
       traceRequest(request);
     }
-    final OkHttpClient client = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
+    final OkHttpClient client =
+        this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
 
     final Response response = client.newCall(request).execute();
     if (this.traceStream != null) {
-      this.traceStream.println(response.protocol().toString().toUpperCase(Locale.US) + " " + response.code());
+      this.traceStream.println(
+          response.protocol().toString().toUpperCase(Locale.US) + " " + response.code());
       this.traceStream.println(response.headers());
     }
 
@@ -1169,7 +1170,7 @@ public class MinioClient {
 
     String errorXml;
     try (ResponseBody responseBody = response.body()) {
-      final byte[] content = responseBody != null ? responseBody.bytes() : new byte[]{};
+      final byte[] content = responseBody != null ? responseBody.bytes() : new byte[] {};
       errorXml = new String(content, StandardCharsets.UTF_8);
     }
 
@@ -1188,11 +1189,11 @@ public class MinioClient {
     }
     this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
     final String headers =
-            request
-                    .headers()
-                    .toString()
-                    .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-                    .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
+        request
+            .headers()
+            .toString()
+            .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+            .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
     this.traceStream.println(headers);
   }
 
@@ -6893,13 +6894,14 @@ public class MinioClient {
   }
 
   public Credentials newSTSClientGrants(@Nonnull ClientGrantsToken grantsToken)
-          throws InsufficientDataException, NoSuchAlgorithmException, IOException, InternalException,
+      throws InsufficientDataException, NoSuchAlgorithmException, IOException, InternalException,
           InvalidResponseException, XmlParserException {
     return this.newSTSClientGrants(grantsToken, null);
   }
 
-  public Credentials newSTSClientGrants(@Nonnull ClientGrantsToken grantsToken, @Nullable String customPolicy)
-          throws IOException, InvalidResponseException, InsufficientDataException,
+  public Credentials newSTSClientGrants(
+      @Nonnull ClientGrantsToken grantsToken, @Nullable String customPolicy)
+      throws IOException, InvalidResponseException, InsufficientDataException,
           NoSuchAlgorithmException, InternalException, XmlParserException {
     Objects.requireNonNull(stsUrl, "STS endpoint cannot be empty");
     Objects.requireNonNull(grantsToken, "Client grants access token and expiry should be defined");
@@ -6918,7 +6920,7 @@ public class MinioClient {
         throw new InvalidResponseException();
       }
       final AssumeRoleWithClientGrantsResponse clientGransResponse =
-              Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class, response.body().charStream());
+          Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class, response.body().charStream());
       return clientGransResponse.getClientGrantsResult().getCredentials();
     }
   }

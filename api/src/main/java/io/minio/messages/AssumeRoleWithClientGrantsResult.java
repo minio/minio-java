@@ -6,10 +6,10 @@ import org.simpleframework.xml.Root;
 @Root(name = "AssumeRoleWithClientGrantsResult", strict = false)
 public class AssumeRoleWithClientGrantsResult {
 
-    @Element(name = "Credentials")
-    private Credentials credentials;
+  @Element(name = "Credentials")
+  private Credentials credentials;
 
-    public Credentials getCredentials() {
-        return credentials;
-    }
+  public Credentials getCredentials() {
+    return credentials;
+  }
 }

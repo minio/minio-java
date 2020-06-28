@@ -8,10 +8,10 @@ import org.simpleframework.xml.Root;
 @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
 public class AssumeRoleWithClientGrantsResponse {
 
-    @Element(name = "AssumeRoleWithClientGrantsResult")
-    private AssumeRoleWithClientGrantsResult clientGrantsResult;
+  @Element(name = "AssumeRoleWithClientGrantsResult")
+  private AssumeRoleWithClientGrantsResult clientGrantsResult;
 
-    public AssumeRoleWithClientGrantsResult getClientGrantsResult() {
-        return clientGrantsResult;
-    }
+  public AssumeRoleWithClientGrantsResult getClientGrantsResult() {
+    return clientGrantsResult;
+  }
 }
