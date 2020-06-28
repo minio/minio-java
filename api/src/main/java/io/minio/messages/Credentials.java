@@ -15,7 +15,7 @@ public class Credentials {
     private String secretKey;
 
     @Element(name = "Expiration")
-    private ZonedDateTime expiredAt;
+    private ResponseDate expiredAt;
 
     @Element(name = "SessionToken")
     private String sessionToken;
@@ -29,10 +29,21 @@ public class Credentials {
     }
 
     public ZonedDateTime getExpiredAt() {
-        return expiredAt;
+        return expiredAt.zonedDateTime();
     }
 
     public String getSessionToken() {
         return sessionToken;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder(getClass().getSimpleName() + " [");
+        sb.append("accessKey: ").append(accessKey);
+        sb.append(", secretKey: ").append(secretKey);
+        sb.append(", expiredAt: ").append(expiredAt);
+        sb.append(", sessionToken: ").append(sessionToken);
+        sb.append(']');
+        return sb.toString();
     }
 }
