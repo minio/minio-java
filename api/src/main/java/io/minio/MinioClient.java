@@ -6893,12 +6893,44 @@ public class MinioClient {
     return totalBytesRead;
   }
 
+  /**
+   * Returns a pointer to a new, temporary credentials, obtained via STS assume role with client
+   * grants api.
+   *
+   * @param grantsToken contains a jwt access token, and seconds until token expiration.
+   *     customPolicy} and a static policy on minio server, defined for a given user.
+   * @return temporary credentials to access minio api.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
   public Credentials newSTSClientGrants(@Nonnull ClientGrantsToken grantsToken)
       throws InsufficientDataException, NoSuchAlgorithmException, IOException, InternalException,
           InvalidResponseException, XmlParserException {
     return this.newSTSClientGrants(grantsToken, null);
   }
 
+  /**
+   * Returns a pointer to a new, temporary credentials, obtained via STS assume role with client
+   * grants api.
+   *
+   * @param grantsToken contains a jwt access token, and seconds until token expiration.
+   * @param customPolicy is a new policy to apply. Note that resulting policy will be the
+   *     intersection of {@literal customPolicy} and a static policy on minio server, defined for a
+   *     given user.
+   * @return temporary credentials to access minio api.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
   public Credentials newSTSClientGrants(
       @Nonnull ClientGrantsToken grantsToken, @Nullable String customPolicy)
       throws IOException, InvalidResponseException, InsufficientDataException,
@@ -6925,6 +6957,12 @@ public class MinioClient {
     }
   }
 
+  /**
+   * Updates a minio client to use obtained via {@link #newSTSClientGrants(ClientGrantsToken)} or
+   * {@link #newSTSClientGrants(ClientGrantsToken, String)} STS token (temp credentials).
+   *
+   * @param credentials is a STS temporary credentials to use.
+   */
   public void withCredentials(@Nonnull Credentials credentials) {
     Objects.requireNonNull(credentials, "STS credentials must not be null");
     this.accessKey = Objects.requireNonNull(credentials.getAccessKey());
@@ -6933,6 +6971,11 @@ public class MinioClient {
     this.tokenExpiredAt = Objects.requireNonNull(credentials.getExpiredAt());
   }
 
+  /**
+   * Checks if STS credentials is expired.
+   *
+   * @return true if and only if a minio client use STS credentials and that credentials is expired.
+   */
   public boolean isCredentialsExpired() {
     if (tokenExpiredAt == null) {
       return false;
