@@ -9,7 +9,7 @@ public class AssumeRoleWithClientGrantsResult {
   @Element(name = "Credentials")
   private Credentials credentials;
 
-  public Credentials getCredentials() {
+  public Credentials credentials() {
     return credentials;
   }
 }

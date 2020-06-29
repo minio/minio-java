@@ -13,11 +13,11 @@ public class ClientGrantsToken {
     this.expiredAfter = expiredAfter;
   }
 
-  public String getToken() {
+  public String token() {
     return token;
   }
 
-  public long getExpiredAfter() {
+  public long expiredAfter() {
     return expiredAfter;
   }
 }

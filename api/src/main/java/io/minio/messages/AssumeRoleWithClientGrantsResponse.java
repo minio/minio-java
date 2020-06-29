@@ -11,7 +11,7 @@ public class AssumeRoleWithClientGrantsResponse {
   @Element(name = "AssumeRoleWithClientGrantsResult")
   private AssumeRoleWithClientGrantsResult clientGrantsResult;
 
-  public AssumeRoleWithClientGrantsResult getClientGrantsResult() {
-    return clientGrantsResult;
+  public Credentials credentials() {
+    return clientGrantsResult == null ? null : clientGrantsResult.credentials();
   }
 }

@@ -19,19 +19,19 @@ public class Credentials {
   @Element(name = "SessionToken")
   private String sessionToken;
 
-  public String getAccessKey() {
+  public String accessKey() {
     return accessKey;
   }
 
-  public String getSecretKey() {
+  public String secretKey() {
     return secretKey;
   }
 
-  public ZonedDateTime getExpiredAt() {
+  public ZonedDateTime expiredAt() {
     return expiredAt.zonedDateTime();
   }
 
-  public String getSessionToken() {
+  public String sessionToken() {
     return sessionToken;
   }
 

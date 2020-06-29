@@ -6940,8 +6940,8 @@ public class MinioClient {
 
     final HashMultimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("Action", "AssumeRoleWithClientGrants");
-    queryParams.put("DurationSeconds", String.valueOf(grantsToken.getExpiredAfter()));
-    queryParams.put("Token", grantsToken.getToken());
+    queryParams.put("DurationSeconds", String.valueOf(grantsToken.expiredAfter()));
+    queryParams.put("Token", grantsToken.token());
     queryParams.put("Version", "2011-06-15");
     if (customPolicy != null) {
       queryParams.put("Policy", customPolicy);
@@ -6953,7 +6953,7 @@ public class MinioClient {
       }
       final AssumeRoleWithClientGrantsResponse clientGransResponse =
           Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class, response.body().charStream());
-      return clientGransResponse.getClientGrantsResult().getCredentials();
+      return clientGransResponse.credentials();
     }
   }
 
@@ -6965,10 +6965,10 @@ public class MinioClient {
    */
   public void withCredentials(@Nonnull Credentials credentials) {
     Objects.requireNonNull(credentials, "STS credentials must not be null");
-    this.accessKey = Objects.requireNonNull(credentials.getAccessKey());
-    this.secretKey = Objects.requireNonNull(credentials.getSecretKey());
-    this.sessionToken = Objects.requireNonNull(credentials.getSessionToken());
-    this.tokenExpiredAt = Objects.requireNonNull(credentials.getExpiredAt());
+    this.accessKey = Objects.requireNonNull(credentials.accessKey());
+    this.secretKey = Objects.requireNonNull(credentials.secretKey());
+    this.sessionToken = Objects.requireNonNull(credentials.sessionToken());
+    this.tokenExpiredAt = Objects.requireNonNull(credentials.expiredAt());
   }
 
   /**
