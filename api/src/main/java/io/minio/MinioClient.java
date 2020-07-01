@@ -1386,11 +1386,8 @@ public class MinioClient {
       ssecHeaders = Multimaps.forMap(args.ssec().headers());
     }
 
-    Multimap<String, String> queryParams = null;
-    if (args.versionId() != null) {
-      queryParams = HashMultimap.create();
-      queryParams.put("versionId", args.versionId());
-    }
+    Multimap<String, String> queryParams = HashMultimap.create();
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     Response response = executeHead(args, ssecHeaders, queryParams);
     return new ObjectStat(args.bucket(), args.object(), response.headers());
@@ -1694,7 +1691,10 @@ public class MinioClient {
       headers.putAll(Multimaps.forMap(args.ssec().headers()));
     }
 
-    Response response = executeGet(args, headers, null);
+    Multimap<String, String> queryParams = HashMultimap.create();
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
+
+    Response response = executeGet(args, headers, queryParams);
     return response.body().byteStream();
   }
 
@@ -1810,13 +1810,7 @@ public class MinioClient {
     Path filePath = Paths.get(filename);
     boolean fileExists = Files.exists(filePath);
 
-    ObjectStat objectStat =
-        statObject(
-            StatObjectArgs.builder()
-                .bucket(args.bucket())
-                .object(args.object())
-                .ssec(args.ssec())
-                .build());
+    ObjectStat objectStat = statObject(new StatObjectArgs(args));
     long length = objectStat.length();
     String etag = objectStat.etag();
 
@@ -1864,13 +1858,7 @@ public class MinioClient {
     InputStream is = null;
     OutputStream os = null;
     try {
-      is =
-          getObject(
-              GetObjectArgs.builder()
-                  .bucket(args.bucket())
-                  .object(args.object())
-                  .ssec(args.ssec())
-                  .build());
+      is = getObject(new GetObjectArgs(args));
       os =
           Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
       long bytesWritten = ByteStreams.copy(is, os);
@@ -2517,9 +2505,12 @@ public class MinioClient {
       body = EMPTY_BODY;
     }
 
+    Multimap<String, String> queryParams = HashMultimap.create();
+    queryParams.putAll(args.extraQueryParams());
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
+
     String region = getRegion(args.bucket(), args.region());
-    HttpUrl url =
-        buildUrl(args.method(), args.bucket(), args.object(), region, args.extraQueryParams());
+    HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
     Request request = createRequest(url, args.method(), null, body, 0);
     url = Signer.presignV4(request, region, accessKey, secretKey, args.expiry());
     return url.toString();
@@ -2860,17 +2851,11 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
 
-    Multimap<String, String> headers = null;
-    if (args.bypassGovernanceMode()) {
-      headers = HashMultimap.create();
-      headers.put("x-amz-bypass-governance-retention", "true");
-    }
+    Multimap<String, String> headers = HashMultimap.create();
+    if (args.bypassGovernanceMode()) headers.put("x-amz-bypass-governance-retention", "true");
 
-    Multimap<String, String> queryParams = null;
-    if (args.versionId() != null) {
-      queryParams = HashMultimap.create();
-      queryParams.put("versionId", args.versionId());
-    }
+    Multimap<String, String> queryParams = HashMultimap.create();
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     executeDelete(args, headers, queryParams);
   }
@@ -4241,15 +4226,10 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("retention", "");
-    if (args.versionId() != null) {
-      queryParams.put("versionId", args.versionId());
-    }
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
-    Multimap<String, String> headers = null;
-    if (args.bypassGovernanceMode()) {
-      headers = HashMultimap.create();
-      headers.put("x-amz-bypass-governance-retention", "True");
-    }
+    Multimap<String, String> headers = HashMultimap.create();
+    if (args.bypassGovernanceMode()) headers.put("x-amz-bypass-governance-retention", "True");
 
     Response response = executePut(args, headers, queryParams, args.config(), 0);
     response.close();
@@ -4333,9 +4313,7 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("retention", "");
-    if (args.versionId() != null) {
-      queryParams.put("versionId", args.versionId());
-    }
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(Retention.class, response.body().charStream());
@@ -4418,9 +4396,7 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("legal-hold", "");
-    if (args.versionId() != null) {
-      queryParams.put("versionId", args.versionId());
-    }
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     Response response = executePut(args, null, queryParams, new LegalHold(true), 0);
     response.close();
@@ -4497,9 +4473,7 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("legal-hold", "");
-    if (args.versionId() != null) {
-      queryParams.put("versionId", args.versionId());
-    }
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     Response response = executePut(args, null, queryParams, new LegalHold(false), 0);
     response.close();
@@ -4591,9 +4565,7 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("legal-hold", "");
-    if (args.versionId() != null) {
-      queryParams.put("versionId", args.versionId());
-    }
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     try (Response response = executeGet(args, null, queryParams)) {
       LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
@@ -6718,6 +6690,7 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("tagging", "");
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(Tags.class, response.body().charStream());
@@ -6761,6 +6734,7 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("tagging", "");
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     Response response = executePut(args, null, queryParams, args.tags(), 0);
     response.close();
@@ -6796,6 +6770,7 @@ public class MinioClient {
 
     Multimap<String, String> queryParams = HashMultimap.create();
     queryParams.put("tagging", "");
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     executeDelete(args, null, queryParams);
   }
