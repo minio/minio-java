@@ -6,9 +6,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import io.minio.MinioClient;
+import io.minio.credentials.ClientGrantsCredentialsProvider;
+import io.minio.credentials.CredentialsProvider;
 import io.minio.messages.Bucket;
 import io.minio.messages.ClientGrantsToken;
-import io.minio.messages.Credentials;
 import java.beans.ConstructorProperties;
 import java.io.IOException;
 import java.util.List;
@@ -56,12 +57,11 @@ public class ClientGrants {
   }
 
   @SuppressWarnings({"SameParameterValue", "squid:S1192"})
-  private static ClientGrantsToken getTokenAndExpiry(
+  static ClientGrantsToken getTokenAndExpiry(
       @Nonnull String clientId,
       @Nonnull String clientSecret,
       @Nonnull String idpClientId,
-      @Nonnull String idpEndpoint)
-      throws IOException {
+      @Nonnull String idpEndpoint) {
     Objects.requireNonNull(clientId, "Client id must not be null");
     Objects.requireNonNull(clientSecret, "ClientSecret must not be null");
 
@@ -85,7 +85,9 @@ public class ClientGrants {
 
       final JwtToken jwtToken =
           mapper.readValue(Objects.requireNonNull(response.body()).charStream(), JwtToken.class);
-      return new ClientGrantsToken(jwtToken.accessToken, jwtToken.expiredAfter);
+      return new ClientGrantsToken(jwtToken.accessToken, jwtToken.expiredAfter, POLICY);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
     }
   }
 
@@ -94,35 +96,23 @@ public class ClientGrants {
     final String clientId = "user";
     final String clientSecret = "password";
     final String idpEndpoint =
-        "http://idp-host:idp-port/auth/realms/master/protocol/openid-connect/token";
-    final String stsEndpoint = "http://minio-host:minio-port/sts";
+        "http://npz-01.vm.cmx.ru:8081/auth/realms/master/protocol/openid-connect/token";
+    final String stsEndpoint = "http://npz-01.vm.cmx.ru:9000/sts";
 
     // client id for minio on idp
     final String idpClientId = "minio-client-id";
 
-    ClientGrantsToken clientGrantsToken =
-        getTokenAndExpiry(clientId, clientSecret, idpClientId, idpEndpoint);
+    final CredentialsProvider credentialsProvider =
+        new ClientGrantsCredentialsProvider(
+            stsEndpoint, () -> getTokenAndExpiry(clientId, clientSecret, idpClientId, idpEndpoint));
 
     final MinioClient minioClient =
         MinioClient.builder()
-            .endpoint("http://minio-host:minio-port")
-            .stsEndpoint(stsEndpoint)
+            .endpoint("http://npz-01.vm.cmx.ru:9000")
+            .credentialsProvider(credentialsProvider)
             .build();
-    final Credentials clientGrants = minioClient.newSTSClientGrants(clientGrantsToken, POLICY);
-    System.out.println(clientGrants);
-    minioClient.withCredentials(clientGrants);
-    List<Bucket> buckets = minioClient.listBuckets();
-    for (Bucket bucket : buckets) {
-      System.out.print(bucket.name() + " created at ");
-      System.out.println(bucket.creationDate());
-    }
 
-    // refresh token
-    clientGrantsToken = getTokenAndExpiry(clientId, clientSecret, idpClientId, idpEndpoint);
-    final Credentials refreshedCredentials = minioClient.newSTSClientGrants(clientGrantsToken);
-    System.out.println(refreshedCredentials);
-    minioClient.withCredentials(refreshedCredentials);
-    buckets = minioClient.listBuckets();
+    final List<Bucket> buckets = minioClient.listBuckets();
     for (Bucket bucket : buckets) {
       System.out.print(bucket.name() + " created at ");
       System.out.println(bucket.creationDate());
