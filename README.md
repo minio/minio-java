@@ -154,6 +154,7 @@ The full API Reference is available here.
 
 #### Full Examples: STS Operations
 * [ClientGrants.java](https://github.com/minio/minio-java/tree/master/examples/ClientGrants.java)
+* [WebIdentity.java](https://github.com/minio/minio-java/tree/master/examples/WebIdentity.java)
 
 #### Full Examples: Server Side Encryption
 * [CopyObjectEncrypted.java](https://github.com/minio/minio-java/tree/master/examples/CopyObjectEncrypted.java)
