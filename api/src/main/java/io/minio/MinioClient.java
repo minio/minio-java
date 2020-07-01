@@ -1042,7 +1042,10 @@ public class MinioClient {
       if (this.traceStream != null) {
         this.traceStream.println(END_HTTP);
       }
-      throw new InvalidResponseException();
+      throw new InvalidResponseException(
+          response.code(),
+          contentType,
+          errorXml.substring(0, errorXml.length() > 1024 ? 1024 : errorXml.length()));
     }
 
     ErrorResponse errorResponse = null;
@@ -1052,7 +1055,7 @@ public class MinioClient {
       if (this.traceStream != null) {
         this.traceStream.println(END_HTTP);
       }
-      throw new InvalidResponseException();
+      throw new InvalidResponseException(response.code(), contentType, errorXml);
     }
 
     if (this.traceStream != null) {
