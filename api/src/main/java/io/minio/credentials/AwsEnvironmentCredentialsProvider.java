@@ -27,7 +27,9 @@ public class AwsEnvironmentCredentialsProvider extends EnvironmentCredentialsPro
         }
         // avoid race conditions with credentials rewriting
         synchronized (this) {
-            credentials = readCredentials();
+            if (isExpired(credentials)) {
+                credentials = readCredentials();
+            }
         }
         return credentials;
     }

@@ -19,7 +19,6 @@ public interface CredentialsProvider {
      */
     Credentials fetch();
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     default boolean isExpired(@Nullable Credentials credentials) {
         if (credentials == null || credentials.expiredAt() == null || credentials.isAnonymous()) {
             return false;

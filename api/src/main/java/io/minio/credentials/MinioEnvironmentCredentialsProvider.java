@@ -23,7 +23,9 @@ public class MinioEnvironmentCredentialsProvider extends EnvironmentCredentialsP
         }
         // avoid race conditions with credentials rewriting
         synchronized (this) {
-            credentials = readCredentials();
+            if (isExpired(credentials)) {
+                credentials = readCredentials();
+            }
         }
         return credentials;
     }

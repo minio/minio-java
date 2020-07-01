@@ -16,6 +16,7 @@ import io.minio.messages.Credentials;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
+@SuppressWarnings("unused")
 public class ClientGrantsCredentialsProvider extends StsCredentialsProvider {
 
     private Credentials credentials;
@@ -33,15 +34,18 @@ public class ClientGrantsCredentialsProvider extends StsCredentialsProvider {
             return credentials;
         }
         synchronized (this) {
-            try (Response response = callSecurityTokenService()) {
-                final ResponseBody body = response.body();
-                if (body == null) {
-                    // should not happen
-                    throw new IllegalStateException("Received empty response");
+            if (credentials == null || isExpired(credentials)) {
+                try (Response response = callSecurityTokenService()) {
+                    final ResponseBody body = response.body();
+                    if (body == null) {
+                        // should not happen
+                        throw new IllegalStateException("Received empty response");
+                    }
+                    credentials = Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class,
+                            body.charStream()).credentials();
+                } catch (XmlParserException | IOException | InvalidResponseException e) {
+                    throw new IllegalStateException("Failed to process STS call", e);
                 }
-                credentials = Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class, body.charStream()).credentials();
-            } catch (XmlParserException | IOException | InvalidResponseException e) {
-                throw new IllegalStateException("Failed to process STS call", e);
             }
         }
         return credentials;
