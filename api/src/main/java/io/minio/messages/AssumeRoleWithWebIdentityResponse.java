@@ -8,11 +8,10 @@ import org.simpleframework.xml.Root;
 @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
 public class AssumeRoleWithWebIdentityResponse {
 
-    @Element(name = "AssumeRoleWithWebIdentityResult")
-    private AssumeRoleWithWebIdentityResult webIdentityResult;
+  @Element(name = "AssumeRoleWithWebIdentityResult")
+  private AssumeRoleWithWebIdentityResult webIdentityResult;
 
-    public Credentials credentials() {
-        return webIdentityResult == null ? null : webIdentityResult.credentials();
-    }
-
+  public Credentials credentials() {
+    return webIdentityResult == null ? null : webIdentityResult.credentials();
+  }
 }

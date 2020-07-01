@@ -15,7 +15,8 @@ public class ClientGrantsToken {
     this(jwtAccessToken, expiredAfter, null);
   }
 
-  public ClientGrantsToken(@Nonnull String jwtAccessToken, long expiredAfter, @Nullable String policy) {
+  public ClientGrantsToken(
+      @Nonnull String jwtAccessToken, long expiredAfter, @Nullable String policy) {
     this.jwtAccessToken = Objects.requireNonNull(jwtAccessToken);
     this.expiredAfter = expiredAfter;
     this.policy = policy;

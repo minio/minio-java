@@ -6,11 +6,10 @@ import org.simpleframework.xml.Root;
 @Root(name = "AssumeRoleWithWebIdentityResult", strict = false)
 public class AssumeRoleWithWebIdentityResult {
 
-    @Element(name = "Credentials")
-    private Credentials credentials;
+  @Element(name = "Credentials")
+  private Credentials credentials;
 
-    public Credentials credentials() {
-        return credentials;
-    }
-
+  public Credentials credentials() {
+    return credentials;
+  }
 }
