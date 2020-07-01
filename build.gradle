@@ -32,7 +32,7 @@ apply plugin: 'io.codearte.nexus-staging'
 
 allprojects {
     group = 'io.minio'
-    version = '7.1.0'
+    version = '7.1.1'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
