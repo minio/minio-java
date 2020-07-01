@@ -68,7 +68,7 @@ public class ResponseDate {
     }
 
     @Override
-    public void write(OutputNode node, ResponseDate amzDate) throws Exception {
+    public void write(OutputNode node, ResponseDate amzDate) {
       node.setValue(amzDate.toString());
     }
   }
