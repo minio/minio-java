@@ -8,42 +8,58 @@ import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-@Root(name = "Credentials")
+@Root(name = "Credentials", strict = false)
 public class Credentials {
 
+    public static final Credentials EMPTY = new Credentials();
+
     @Element(name = "AccessKeyId")
-    private String accessKey;
+    private final String accessKey;
 
     @Element(name = "SecretAccessKey")
-    private String secretKey;
+    private final String secretKey;
 
     @Element(name = "Expiration")
-    private ResponseDate expiredAt;
+    private final ResponseDate expiredAt;
 
     @Element(name = "SessionToken")
-    private String sessionToken;
+    private final String sessionToken;
 
-    public Credentials() {
-        // default constructor for deserialization stuff
+    private Credentials() {
+        accessKey = null;
+        secretKey = null;
+        expiredAt = null;
+        sessionToken = null;
     }
 
     public Credentials(@Nonnull String accessKey, @Nonnull String secretKey) {
+        this(accessKey, secretKey, null);
+    }
+
+    public Credentials(@Nonnull String accessKey, @Nonnull String secretKey, @Nullable ZonedDateTime expiredAt) {
+        this(accessKey, secretKey, expiredAt, null);
+    }
+
+    public Credentials(@Nonnull String accessKey,
+                       @Nonnull String secretKey,
+                       @Nullable ZonedDateTime expiredAt,
+                       @Nullable String sessionToken) {
+        this(accessKey, secretKey, new ResponseDate(expiredAt), sessionToken);
+    }
+
+    // deserialization constructor
+    @SuppressWarnings("unused")
+    public Credentials(@Nonnull @Element(name = "AccessKeyId") String accessKey,
+                       @Nonnull @Element(name = "SecretAccessKey") String secretKey,
+                       @Nullable @Element(name = "Expiration") ResponseDate expiredAt,
+                       @Nullable @Element(name = "SessionToken") String sessionToken) {
         this.accessKey = Objects.requireNonNull(accessKey, "AccessKey must not be null");
         this.secretKey = Objects.requireNonNull(secretKey, "SecretKey must not be null");
         if (accessKey.isEmpty() || secretKey.isEmpty()) {
             throw new IllegalArgumentException("AccessKey and SecretKey must not be empty");
         }
-    }
-
-    public Credentials(@Nonnull String accessKey, @Nonnull String secretKey, @Nonnull ZonedDateTime expiredAt) {
-        this(accessKey, secretKey);
-        this.expiredAt = new ResponseDate(Objects.requireNonNull(expiredAt));
-    }
-
-    public Credentials(@Nonnull String accessKey, @Nonnull String secretKey, @Nonnull ZonedDateTime expiredAt,
-                       @Nullable String sessionToken) {
-        this(accessKey, secretKey, expiredAt);
         this.sessionToken = sessionToken;
+        this.expiredAt = expiredAt;
     }
 
     public String accessKey() {
@@ -63,7 +79,7 @@ public class Credentials {
     }
 
     public boolean isAnonymous() {
-        return accessKey == null && secretKey == null;
+        return accessKey == null || secretKey == null;
     }
 
     @Override
