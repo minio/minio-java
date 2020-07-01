@@ -10,20 +10,20 @@ import javax.annotation.Nonnull;
 import io.minio.Xml;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.XmlParserException;
-import io.minio.messages.AssumeRoleWithClientGrantsResponse;
-import io.minio.messages.ClientGrantsToken;
+import io.minio.messages.AssumeRoleWithWebIdentityResponse;
 import io.minio.messages.Credentials;
+import io.minio.messages.WebIdentityToken;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 @SuppressWarnings("unused")
-public class ClientGrantsCredentialsProvider extends StsCredentialsProvider {
+public class WebIdentityCredentialsProvider extends StsCredentialsProvider {
 
     private Credentials credentials;
-    private final Supplier<ClientGrantsToken> tokenProducer;
+    private final Supplier<WebIdentityToken> tokenProducer;
 
-    public ClientGrantsCredentialsProvider(@Nonnull String stsEndpoint,
-                                           @Nonnull Supplier<ClientGrantsToken> tokenProducer) {
+    public WebIdentityCredentialsProvider(@Nonnull String stsEndpoint,
+                                          @Nonnull Supplier<WebIdentityToken> tokenProducer) {
         super(stsEndpoint);
         this.tokenProducer = Objects.requireNonNull(tokenProducer, "Token producer must not be null");
     }
@@ -41,7 +41,7 @@ public class ClientGrantsCredentialsProvider extends StsCredentialsProvider {
                         // should not happen
                         throw new IllegalStateException("Received empty response");
                     }
-                    credentials = Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class,
+                    credentials = Xml.unmarshal(AssumeRoleWithWebIdentityResponse.class,
                             body.charStream()).credentials();
                 } catch (XmlParserException | IOException | InvalidResponseException e) {
                     throw new IllegalStateException("Failed to process STS call", e);
@@ -53,11 +53,11 @@ public class ClientGrantsCredentialsProvider extends StsCredentialsProvider {
 
     @Override
     protected Map<String, String> queryParams() {
-        final ClientGrantsToken grantsToken = tokenProducer.get();
+        final WebIdentityToken grantsToken = tokenProducer.get();
         final Map<String, String> queryParamenters = new HashMap<>();
-        queryParamenters.put("Action", "AssumeRoleWithClientGrants");
+        queryParamenters.put("Action", "AssumeRoleWithWebIdentity");
         queryParamenters.put("DurationSeconds", tokenDuration(grantsToken.expiredAfter()));
-        queryParamenters.put("Token", grantsToken.token());
+        queryParamenters.put("WebIdentityToken", grantsToken.token());
         queryParamenters.put("Version", "2011-06-15");
         if (grantsToken.policy() != null) {
             queryParamenters.put("Policy", grantsToken.policy());

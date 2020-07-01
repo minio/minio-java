@@ -18,6 +18,8 @@ import static io.minio.S3Escaper.encode;
 
 public abstract class StsCredentialsProvider implements CredentialsProvider {
 
+    private static final int MINIMUM_TOKEN_DURATION = 900;
+    private static final int MAXIMUM_TOKEN_DURATION = 43200;
     private static final RequestBody EMPTY_BODY = RequestBody.create(
             MediaType.parse("application/octet-stream"), new byte[] {});
 
@@ -47,6 +49,14 @@ public abstract class StsCredentialsProvider implements CredentialsProvider {
         throw new InvalidResponseException(request);
     }
 
+    protected String tokenDuration(long requiredSeconds) {
+        if (requiredSeconds < MINIMUM_TOKEN_DURATION) {
+            return String.valueOf(MINIMUM_TOKEN_DURATION);
+        } else if (requiredSeconds > MAXIMUM_TOKEN_DURATION) {
+            return String.valueOf(MAXIMUM_TOKEN_DURATION);
+        }
+        return String.valueOf(requiredSeconds);
+    }
 
     /**
      * @return specific for concrete method query parameters.
