@@ -96,8 +96,8 @@ public class ClientGrants {
     final String clientId = "user";
     final String clientSecret = "password";
     final String idpEndpoint =
-        "http://npz-01.vm.cmx.ru:8081/auth/realms/master/protocol/openid-connect/token";
-    final String stsEndpoint = "http://npz-01.vm.cmx.ru:9000/sts";
+        "http://idp-host:idp-port/auth/realms/master/protocol/openid-connect/token";
+    final String stsEndpoint = "http://sts-host:sts-port/sts";
 
     // client id for minio on idp
     final String idpClientId = "minio-client-id";
@@ -108,7 +108,7 @@ public class ClientGrants {
 
     final MinioClient minioClient =
         MinioClient.builder()
-            .endpoint("http://npz-01.vm.cmx.ru:9000")
+            .endpoint("http://minio-host:minio-port")
             .credentialsProvider(credentialsProvider)
             .build();
 
