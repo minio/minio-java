@@ -17,7 +17,6 @@
 
 package io.minio;
 
-import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import io.minio.http.Method;
@@ -101,39 +100,81 @@ public class MinioClientTest {
 
     // virtual-style checks.
     client = MinioClient.builder().endpoint("https://s3.amazonaws.com").build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3.us-east-1.amazonaws.com/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3.us-east-1.amazonaws.com/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
             .endpoint("https://s3.us-east-2.amazonaws.com")
             .credentials("myaccesskey", "mysecretkey")
             .build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3.us-east-2.amazonaws.com/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3.us-east-2.amazonaws.com/myobject", url.split("\\?")[0]);
 
     client = MinioClient.builder().endpoint("https://s3-accelerate.amazonaws.com").build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3-accelerate.amazonaws.com/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3-accelerate.amazonaws.com/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
             .endpoint("https://s3.dualstack.ca-central-1.amazonaws.com")
             .credentials("myaccesskey", "mysecretkey")
             .build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3.dualstack.ca-central-1.amazonaws.com/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3.dualstack.ca-central-1.amazonaws.com/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder().endpoint("https://s3-accelerate.dualstack.amazonaws.com").build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3-accelerate.dualstack.amazonaws.com/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3-accelerate.dualstack.amazonaws.com/myobject", url.split("\\?")[0]);
 
     // path-style checks.
     client = MinioClient.builder().endpoint("https://s3.amazonaws.com").build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3.us-east-1.amazonaws.com/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3.us-east-1.amazonaws.com/mybucket/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
@@ -141,13 +182,27 @@ public class MinioClientTest {
             .credentials("myaccesskey", "mysecretkey")
             .build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3.us-east-2.amazonaws.com/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3.us-east-2.amazonaws.com/mybucket/myobject", url.split("\\?")[0]);
 
     client = MinioClient.builder().endpoint("https://s3-accelerate.amazonaws.com").build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3-accelerate.amazonaws.com/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3-accelerate.amazonaws.com/mybucket/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
@@ -155,14 +210,28 @@ public class MinioClientTest {
             .credentials("myaccesskey", "mysecretkey")
             .build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3.dualstack.ca-central-1.amazonaws.com/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3.dualstack.ca-central-1.amazonaws.com/mybucket/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder().endpoint("https://s3-accelerate.dualstack.amazonaws.com").build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3-accelerate.dualstack.amazonaws.com/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3-accelerate.dualstack.amazonaws.com/mybucket/myobject", url.split("\\?")[0]);
 
     // China region.
     // virtual-style checks.
@@ -171,33 +240,61 @@ public class MinioClientTest {
             .endpoint("https://s3.cn-north-1.amazonaws.com.cn")
             .credentials("myaccesskey", "mysecretkey")
             .build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3.cn-north-1.amazonaws.com.cn/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3.cn-north-1.amazonaws.com.cn/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
             .endpoint("https://s3-accelerate.amazonaws.com.cn")
             .region("cn-north-1")
             .build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3-accelerate.amazonaws.com.cn/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3-accelerate.amazonaws.com.cn/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
             .endpoint("https://s3.dualstack.cn-northwest-1.amazonaws.com.cn")
             .credentials("myaccesskey", "mysecretkey")
             .build();
-    url = client.getObjectUrl("mybucket", "myobject");
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
     Assert.assertEquals(
-        "https://mybucket.s3.dualstack.cn-northwest-1.amazonaws.com.cn/myobject", url);
+        "https://mybucket.s3.dualstack.cn-northwest-1.amazonaws.com.cn/myobject",
+        url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
             .endpoint("https://s3-accelerate.dualstack.amazonaws.com.cn")
             .region("cn-north-1")
             .build();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://mybucket.s3-accelerate.dualstack.amazonaws.com.cn/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://mybucket.s3-accelerate.dualstack.amazonaws.com.cn/myobject", url.split("\\?")[0]);
 
     // path-style checks.
     client =
@@ -206,8 +303,15 @@ public class MinioClientTest {
             .credentials("myaccesskey", "mysecretkey")
             .build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3.cn-north-1.amazonaws.com.cn/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3.cn-north-1.amazonaws.com.cn/mybucket/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
@@ -215,8 +319,15 @@ public class MinioClientTest {
             .region("cn-north-1")
             .build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3-accelerate.amazonaws.com.cn/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3-accelerate.amazonaws.com.cn/mybucket/myobject", url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
@@ -224,9 +335,16 @@ public class MinioClientTest {
             .credentials("myaccesskey", "mysecretkey")
             .build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
     Assert.assertEquals(
-        "https://s3.dualstack.cn-northwest-1.amazonaws.com.cn/mybucket/myobject", url);
+        "https://s3.dualstack.cn-northwest-1.amazonaws.com.cn/mybucket/myobject",
+        url.split("\\?")[0]);
 
     client =
         MinioClient.builder()
@@ -234,96 +352,92 @@ public class MinioClientTest {
             .region("cn-north-1")
             .build();
     client.disableVirtualStyleEndpoint();
-    url = client.getObjectUrl("mybucket", "myobject");
-    Assert.assertEquals("https://s3-accelerate.dualstack.amazonaws.com.cn/mybucket/myobject", url);
+    url =
+        client.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket("mybucket")
+                .object("myobject")
+                .build());
+    Assert.assertEquals(
+        "https://s3-accelerate.dualstack.amazonaws.com.cn/mybucket/myobject", url.split("\\?")[0]);
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testBucketName1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl(null, "myobject");
+    StatObjectArgs.builder().bucket(null);
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("", "myobject");
+    StatObjectArgs.builder().bucket("");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName3()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("a", "myobject");
+    StatObjectArgs.builder().bucket("a");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName4()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl(
-        "abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789", "myobject");
+    StatObjectArgs.builder()
+        .bucket("abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName5()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("a..b", "myobject");
+    StatObjectArgs.builder().bucket("a..b");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName6()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("a_b", "myobject");
+    StatObjectArgs.builder().bucket("a_b");
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = InvalidBucketNameException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void testBucketName7()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("a#b", "myobject");
+    StatObjectArgs.builder().bucket("a#b");
     Assert.fail("exception should be thrown");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testObjectName1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("abc", null);
+    StatObjectArgs.builder().object(null);
     Assert.fail("exception should be thrown");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testObjectName2()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("abc", "");
+    StatObjectArgs.builder().object("");
     Assert.fail("exception should be thrown");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testObjectName3()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("abc", "a/./b");
+    StatObjectArgs.builder().object("a/./b");
     Assert.fail("exception should be thrown");
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testObjectName4()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObjectUrl("abc", "a/../b");
+    StatObjectArgs.builder().object("a/../b");
     Assert.fail("exception should be thrown");
   }
 
@@ -447,74 +561,6 @@ public class MinioClientTest {
             .region("us-east-1")
             .build();
     client.makeBucket(MakeBucketArgs.builder().bucket("mybucket").region("us-west-2").build());
-    Assert.fail("exception should be thrown");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testInvalidExpiresRange1()
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getPresignedObjectUrl(
-        GetPresignedObjectUrlArgs.builder()
-            .method(Method.GET)
-            .bucket("mybucket")
-            .object("myobject")
-            .expiry(0)
-            .build());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testInvalidExpiresRange2()
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getPresignedObjectUrl(
-        GetPresignedObjectUrlArgs.builder()
-            .method(Method.GET)
-            .bucket("mybucket")
-            .object("myobject")
-            .expiry(8 * 24 * 3600)
-            .build());
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetObjectNegativeOffset()
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObject(
-        GetObjectArgs.builder()
-            .bucket("mybucket")
-            .object("myobject")
-            .offset(-1L)
-            .length(5L)
-            .build());
-    Assert.fail("exception should be thrown");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetObjectNegativeLength()
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObject(
-        GetObjectArgs.builder()
-            .bucket("mybucket")
-            .object("myobject")
-            .offset(0L)
-            .length(-5L)
-            .build());
-    Assert.fail("exception should be thrown");
-  }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void testGetObjectZeroLength()
-      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
-    MinioClient client = MinioClient.builder().endpoint("https://play.min.io:9000").build();
-    client.getObject(
-        GetObjectArgs.builder()
-            .bucket("mybucket")
-            .object("myobject")
-            .offset(0L)
-            .length(0L)
-            .build());
     Assert.fail("exception should be thrown");
   }
 }
