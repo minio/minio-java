@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2017 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,8 +93,8 @@ public class WebIdentity {
     final String clientSecret = "password";
     final String idpEndpoint =
         "http://idp-host:idp-port/auth/realms/master/protocol/openid-connect/token";
-    final String stsEndpoint = "http://sts-host:sts-port/sts";
-
+    // STS endpoint usually points to MinIO endpoint in case of MinIO
+    final String stsEndpoint = "http://sts-host:sts-port/";
     // client id for minio on idp
     final String idpClientId = "minio-client-id";
 
