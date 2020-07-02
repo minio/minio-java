@@ -24,7 +24,7 @@ public class S3Escaper {
   private static final Escaper ESCAPER = UrlEscapers.urlPathSegmentEscaper();
 
   private S3Escaper() {
-    // no instances plz
+    throw new IllegalAccessError();
   }
 
   /** Returns S3 encoded string. */
