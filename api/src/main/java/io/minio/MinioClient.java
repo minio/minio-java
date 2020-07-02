@@ -293,6 +293,7 @@ public class MinioClient {
    *             * ::1</pre>
    *
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -309,6 +310,7 @@ public class MinioClient {
    *
    * @param url Endpoint as {@link URL} object.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -325,6 +327,7 @@ public class MinioClient {
    *
    * @param url Endpoint as {@link HttpUrl} object.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -356,6 +359,7 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -389,6 +393,7 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param region Region name of buckets in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -407,6 +412,7 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #MinioClient(String endpoint)
    * @see #MinioClient(URL url)
    * @see #MinioClient(String endpoint, String accessKey, String secretKey)
@@ -437,6 +443,7 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -470,6 +477,7 @@ public class MinioClient {
    * @param accessKey Access key (aka user ID) of your account in S3 service.
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -508,6 +516,7 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -547,6 +556,7 @@ public class MinioClient {
    * @param secretKey Secret Key (aka password) of your account in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -587,6 +597,7 @@ public class MinioClient {
    * @param region Region name of buckets in S3 service.
    * @param secure Flag to indicate to use secure (TLS) connection to S3 service or not.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
@@ -632,6 +643,7 @@ public class MinioClient {
    *     if it is non-null.
    * @param httpClient Customized HTTP client object.
    * @throws IllegalArgumentException Throws to indicate invalid argument passed.
+   * @deprecated As of 7.1.0, use {@link MinioClient.Builder} instead
    * @see #builder()
    */
   @Deprecated
