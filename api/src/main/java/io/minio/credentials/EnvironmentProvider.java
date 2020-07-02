@@ -19,7 +19,7 @@ import java.time.Duration;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public abstract class EnvironmentCredentialsProvider implements CredentialsProvider {
+public abstract class EnvironmentProvider implements Provider {
 
   // it's ok to re-read values from env.variables every 5 min.
   protected static final Duration REFRESHED_AFTER = Duration.ofMinutes(5);

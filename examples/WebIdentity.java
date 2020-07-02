@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import io.minio.MinioClient;
-import io.minio.credentials.CredentialsProvider;
-import io.minio.credentials.WebIdentityCredentialsProvider;
+import io.minio.credentials.Provider;
+import io.minio.credentials.WebIdentityProvider;
 import io.minio.messages.Bucket;
 import io.minio.messages.WebIdentityToken;
 import java.beans.ConstructorProperties;
@@ -98,8 +98,8 @@ public class WebIdentity {
     // client id for minio on idp
     final String idpClientId = "minio-client-id";
 
-    final CredentialsProvider credentialsProvider =
-        new WebIdentityCredentialsProvider(
+    final Provider credentialsProvider =
+        new WebIdentityProvider(
             stsEndpoint, () -> getTokenAndExpiry(clientId, clientSecret, idpClientId, idpEndpoint));
 
     final MinioClient minioClient =

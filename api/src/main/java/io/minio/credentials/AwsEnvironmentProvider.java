@@ -17,16 +17,23 @@ package io.minio.credentials;
 
 import io.minio.messages.Credentials;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.Nonnull;
 
 @SuppressWarnings("unused")
-public class MinioEnvironmentCredentialsProvider extends EnvironmentCredentialsProvider {
+public class AwsEnvironmentProvider extends EnvironmentProvider {
 
-  private static final String ACCESS_KEY_ALIAS = "MINIO_ACCESS_KEY";
-  private static final String SECRET_KEY_ALIAS = "MINIO_SECRET_KEY";
+  private static final List<String> ACCESS_KEY_ALIASES =
+      Arrays.asList("AWS_ACCESS_KEY_ID", "AWS_ACCESS_KEY");
+  private static final List<String> SECRET_KEY_ALIASES =
+      Arrays.asList("AWS_SECRET_ACCESS_KEY", "AWS_SECRET_KEY");
+  private static final String SESSION_TOKEN_ALIAS = "AWS_SESSION_TOKEN";
 
   private Credentials credentials;
 
-  public MinioEnvironmentCredentialsProvider() {
+  public AwsEnvironmentProvider() {
     credentials = readCredentials();
   }
 
@@ -45,10 +52,20 @@ public class MinioEnvironmentCredentialsProvider extends EnvironmentCredentialsP
   }
 
   private Credentials readCredentials() {
-    final String accessKey = readProperty(ACCESS_KEY_ALIAS);
-    final String secretKey = readProperty(SECRET_KEY_ALIAS);
+    final String accessKey = readFirst(ACCESS_KEY_ALIASES);
+    final String secretKey = readFirst(SECRET_KEY_ALIASES);
     final ZonedDateTime lifeTime = ZonedDateTime.now().plus(REFRESHED_AFTER);
-    //noinspection ConstantConditions
-    return new Credentials(accessKey, secretKey, lifeTime);
+    final String sessionToken = readProperty(SESSION_TOKEN_ALIAS);
+    return new Credentials(accessKey, secretKey, lifeTime, sessionToken);
+  }
+
+  private String readFirst(@Nonnull Collection<String> propertyKeys) {
+    for (String propertyKey : propertyKeys) {
+      final String value = readProperty(propertyKey);
+      if (value != null) {
+        return value;
+      }
+    }
+    throw new IllegalStateException("Can't find env variables for " + propertyKeys);
   }
 }

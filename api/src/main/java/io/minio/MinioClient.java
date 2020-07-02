@@ -28,9 +28,9 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.minio.credentials.AnonymousCredentialsProvider;
-import io.minio.credentials.CredentialsProvider;
-import io.minio.credentials.StaticCredentialsProvider;
+import io.minio.credentials.AnonymousProvider;
+import io.minio.credentials.Provider;
+import io.minio.credentials.StaticProvider;
 import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -246,9 +246,8 @@ public class MinioClient {
   private boolean useVirtualStyle;
   private OkHttpClient httpClient;
 
-  private final CredentialsProvider credentialsProvider;
+  private final Provider provider;
 
-  @SuppressWarnings("java:S107")
   private MinioClient(
       HttpUrl baseUrl,
       String region,
@@ -256,18 +255,17 @@ public class MinioClient {
       boolean isAcceleratedHost,
       boolean isDualStackHost,
       boolean useVirtualStyle,
-      CredentialsProvider credentialsProvider,
+      Provider provider,
       OkHttpClient httpClient) {
 
     this.region = region;
     this.baseUrl = baseUrl;
+    this.provider = provider;
     this.isAwsHost = isAwsHost;
     this.httpClient = httpClient;
     this.isDualStackHost = isDualStackHost;
     this.useVirtualStyle = useVirtualStyle;
     this.isAcceleratedHost = isAcceleratedHost;
-    this.credentialsProvider =
-        Objects.requireNonNull(credentialsProvider, "Credentials provider can't be null");
   }
 
   /** Remove this constructor when all deprecated contructors are removed. */
@@ -281,7 +279,7 @@ public class MinioClient {
     this.isDualStackHost = client.isDualStackHost;
     this.useVirtualStyle = client.useVirtualStyle;
     this.isAcceleratedHost = client.isAcceleratedHost;
-    this.credentialsProvider = client.credentialsProvider;
+    this.provider = client.provider;
   }
 
   /**
@@ -309,7 +307,6 @@ public class MinioClient {
    * @deprecated
    */
   @Deprecated
-  @SuppressWarnings("java:S1133")
   public MinioClient(String endpoint) {
     this(builder().endpoint(endpoint).build());
   }
@@ -878,7 +875,7 @@ public class MinioClient {
     String sha256Hash = null;
     String md5Hash = null;
 
-    final Credentials credentials = credentialsProvider.fetch();
+    final Credentials credentials = provider.fetch();
     if (!credentials.isAnonymous()) {
       if (url.isHttps()) {
         // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
@@ -1006,7 +1003,7 @@ public class MinioClient {
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
     Request request = createRequest(url, method, headerMap, body, length);
 
-    final Credentials credentials = credentialsProvider.fetch();
+    final Credentials credentials = provider.fetch();
     if (!credentials.isAnonymous()) {
       request = Signer.signV4(request, region, credentials.accessKey(), credentials.secretKey());
     }
@@ -1185,7 +1182,7 @@ public class MinioClient {
       return this.region;
     }
 
-    final Credentials credentials = credentialsProvider.fetch();
+    final Credentials credentials = provider.fetch();
     if (!isAwsHost || bucketName == null || credentials.accessKey() == null) {
       return US_EAST_1;
     }
@@ -2554,7 +2551,7 @@ public class MinioClient {
         buildUrl(args.method(), args.bucket(), args.object(), region, args.extraQueryParams());
     Request request = createRequest(url, args.method(), null, body, 0);
 
-    final Credentials credentials = credentialsProvider.fetch();
+    final Credentials credentials = provider.fetch();
     url =
         Signer.presignV4(
             request, region, credentials.accessKey(), credentials.secretKey(), args.expiry());
@@ -2816,7 +2813,7 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    final Credentials credentials = credentialsProvider.fetch();
+    final Credentials credentials = provider.fetch();
     return policy.formData(
         credentials.accessKey(), credentials.secretKey(), getRegion(policy.bucketName(), null));
   }
@@ -7923,7 +7920,7 @@ public class MinioClient {
     private OkHttpClient httpClient;
 
     // default one
-    private CredentialsProvider credentialsProvider = new AnonymousCredentialsProvider();
+    private Provider provider = new AnonymousProvider();
 
     private boolean isAwsEndpoint(String endpoint) {
       return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
@@ -8160,12 +8157,12 @@ public class MinioClient {
     }
 
     public Builder credentials(@Nonnull String accessKey, @Nonnull String secretKey) {
-      this.credentialsProvider = new StaticCredentialsProvider(accessKey, secretKey);
+      this.provider = new StaticProvider(accessKey, secretKey);
       return this;
     }
 
-    public Builder credentialsProvider(@Nonnull CredentialsProvider credentialsProvider) {
-      this.credentialsProvider = Objects.requireNonNull(credentialsProvider);
+    public Builder credentialsProvider(@Nonnull Provider provider) {
+      this.provider = Objects.requireNonNull(provider);
       return this;
     }
 
@@ -8208,7 +8205,7 @@ public class MinioClient {
           isAcceleratedHost,
           isDualStackHost,
           useVirtualStyle,
-          credentialsProvider,
+          provider,
           httpClient);
     }
   }

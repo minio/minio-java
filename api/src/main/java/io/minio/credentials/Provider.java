@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  * valid {@link Credentials} instance.
  */
 @SuppressWarnings("unused")
-public interface CredentialsProvider {
+public interface Provider {
 
   /**
    * @return a valid (not expired) {@link Credentials} instance for {@link io.minio.MinioClient}.

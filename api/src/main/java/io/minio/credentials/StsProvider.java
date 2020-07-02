@@ -30,7 +30,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public abstract class StsCredentialsProvider implements CredentialsProvider {
+public abstract class StsProvider implements Provider {
 
   private static final int MINIMUM_TOKEN_DURATION = 900;
   private static final int MAXIMUM_TOKEN_DURATION = 43200;
@@ -40,7 +40,7 @@ public abstract class StsCredentialsProvider implements CredentialsProvider {
   private final HttpUrl endpoint;
   private final OkHttpClient httpClient = new OkHttpClient();
 
-  public StsCredentialsProvider(@Nonnull String stsEndpoint) {
+  public StsProvider(@Nonnull String stsEndpoint) {
     this.endpoint =
         HttpUrl.parse(Objects.requireNonNull(stsEndpoint, "STS endpoint cannot be empty"));
   }

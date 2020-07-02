@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.minio.messages;
+package io.minio.credentials;
 
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Root;
+import io.minio.messages.Credentials;
+import javax.annotation.Nonnull;
 
-@Root(name = "AssumeRoleWithWebIdentityResult", strict = false)
-public class AssumeRoleWithWebIdentityResult {
+@SuppressWarnings("unused")
+public class StaticProvider implements Provider {
 
-  @Element(name = "Credentials")
-  private Credentials credentials;
+  private final Credentials credentials;
 
-  public Credentials credentials() {
+  public StaticProvider(@Nonnull String accessKey, @Nonnull String secretKey) {
+    this.credentials = new Credentials(accessKey, secretKey);
+  }
+
+  @Override
+  public Credentials fetch() {
     return credentials;
   }
 }

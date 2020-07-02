@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
 import io.minio.MinioClient;
-import io.minio.credentials.ClientGrantsCredentialsProvider;
-import io.minio.credentials.CredentialsProvider;
+import io.minio.credentials.ClientGrantsProvider;
+import io.minio.credentials.Provider;
 import io.minio.messages.Bucket;
 import io.minio.messages.ClientGrantsToken;
 import java.beans.ConstructorProperties;
@@ -116,8 +116,8 @@ public class ClientGrants {
     // client id for minio on idp
     final String idpClientId = "minio-client-id";
 
-    final CredentialsProvider credentialsProvider =
-        new ClientGrantsCredentialsProvider(
+    final Provider credentialsProvider =
+        new ClientGrantsProvider(
             stsEndpoint, () -> getTokenAndExpiry(clientId, clientSecret, idpClientId, idpEndpoint));
 
     final MinioClient minioClient =
