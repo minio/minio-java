@@ -18,8 +18,9 @@ package io.minio.credentials;
 import io.minio.messages.Credentials;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
+import javax.annotation.Nonnull;
 
 @SuppressWarnings("unused")
 public class AwsEnvironmentCredentialsProvider extends EnvironmentCredentialsProvider {
@@ -51,26 +52,20 @@ public class AwsEnvironmentCredentialsProvider extends EnvironmentCredentialsPro
   }
 
   private Credentials readCredentials() {
-    final String accessKey =
-        ACCESS_KEY_ALIASES.stream()
-            .map(this::readProperty)
-            .filter(Objects::nonNull)
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Can't find env variables for " + ACCESS_KEY_ALIASES));
-    final String secretKey =
-        SECRET_KEY_ALIASES.stream()
-            .map(this::readProperty)
-            .filter(Objects::nonNull)
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Can't find env variables for " + SECRET_KEY_ALIASES));
+    final String accessKey = readFirst(ACCESS_KEY_ALIASES);
+    final String secretKey = readFirst(SECRET_KEY_ALIASES);
     final ZonedDateTime lifeTime = ZonedDateTime.now().plus(REFRESHED_AFTER);
     final String sessionToken = readProperty(SESSION_TOKEN_ALIAS);
     return new Credentials(accessKey, secretKey, lifeTime, sessionToken);
+  }
+
+  private String readFirst(@Nonnull Collection<String> propertyKeys) {
+    for (String propertyKey : propertyKeys) {
+      final String value = readProperty(propertyKey);
+      if (value != null) {
+        return value;
+      }
+    }
+    throw new IllegalStateException("Can't find env variables for " + propertyKeys);
   }
 }
