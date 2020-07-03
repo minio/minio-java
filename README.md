@@ -57,7 +57,10 @@ public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       // Create a minioClient with the MinIO Server name, Port, Access key and Secret key.
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient = MinioClient.builder()
+              .endpoint("https://play.min.io")
+              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+              .build();
 
       // Check if the bucket already exists.
       boolean isExist = 
