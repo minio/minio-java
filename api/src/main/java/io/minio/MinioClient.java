@@ -2062,7 +2062,21 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
     args.validateSse(this.baseUrl);
-    if (args.source().offset != null || args.source().length != null) {
+    if (args.source().offset() != null || args.source().length() != null) {
+      return composeObject(new ComposeObjectArgs(args));
+    }
+
+    ObjectStat stat = statObject(new StatObjectArgs(args.source()));
+    if (stat.length() > ObjectWriteArgs.MAX_PART_SIZE) {
+      if (args.metadataDirective() != null && args.metadataDirective() == Directive.COPY) {
+        throw new IllegalArgumentException(
+            "COPY metadata directive is not applicable to source object size greater than 5 GiB");
+      }
+      if (args.taggingDirective() != null && args.taggingDirective() == Directive.COPY) {
+        throw new IllegalArgumentException(
+            "COPY tagging directive is not applicable to source object size greater than 5 GiB");
+      }
+
       return composeObject(new ComposeObjectArgs(args));
     }
 
@@ -2143,15 +2157,9 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-
     ComposeObjectArgs.Builder builder =
-        ComposeObjectArgs.builder()
-            .bucket(bucketName)
-            .object(objectName)
-            .headers(Multimaps.forMap(headerMap))
-            .sources(sources)
-            .sse(sse);
-
+        ComposeObjectArgs.builder().bucket(bucketName).object(objectName).sources(sources).sse(sse);
+    if (headerMap != null) builder.headers(Multimaps.forMap(headerMap));
     composeObject(builder.build());
   }
 
@@ -2297,6 +2305,12 @@ public class MinioClient {
     args.validateSse(this.baseUrl);
     List<ComposeSource> sources = args.sources();
     int partCount = calculatePartCount(sources);
+    if (partCount == 1
+        && args.sources().get(0).offset() == null
+        && args.sources().get(0).length() == null) {
+      return copyObject(new CopyObjectArgs(args));
+    }
+
     Multimap<String, String> headers = HashMultimap.create();
     headers.putAll(args.extraHeaders());
     headers.putAll(args.genHeaders());

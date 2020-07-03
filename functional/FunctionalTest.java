@@ -125,7 +125,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -136,7 +135,6 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.crypto.KeyGenerator;
-import javax.crypto.spec.SecretKeySpec;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -2325,349 +2323,193 @@ public class FunctionalTest {
         false);
   }
 
-  /** Test: composeObject(ComposeObjectArgs args). */
-  public static void composeObject_test1() throws Exception {
-    String methodName = "composeObject(ComposeObjectArgs args)";
+  public static void testComposeObject(String testTags, ComposeObjectArgs args) throws Exception {
+    String methodName = "composeObject()";
+    long startTime = System.currentTimeMillis();
+    try {
+      client.composeObject(args);
+      client.removeObject(
+          RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+      mintSuccessLog(methodName, testTags, startTime);
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
+  }
+
+  public static List<ComposeSource> createComposeSourceList(ComposeSource... sources) {
+    return Arrays.asList(sources);
+  }
+
+  public static void composeObjectTests(String object1Mb, String object6Mb, String object6MbSsec)
+      throws Exception {
+    testComposeObject(
+        "[single source]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder().bucket(bucketName).object(object1Mb).build()))
+            .build());
+
+    testComposeObject(
+        "[single source with offset]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder()
+                        .bucket(bucketName)
+                        .object(object1Mb)
+                        .offset(2L * KB)
+                        .build()))
+            .build());
+
+    testComposeObject(
+        "[single source with offset and length]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder()
+                        .bucket(bucketName)
+                        .object(object1Mb)
+                        .offset(2L * KB)
+                        .length(5L * KB)
+                        .build()))
+            .build());
+
+    testComposeObject(
+        "[single multipart source]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder().bucket(bucketName).object(object6Mb).build()))
+            .build());
+
+    testComposeObject(
+        "[two multipart source]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder().bucket(bucketName).object(object6Mb).build(),
+                    ComposeSource.builder().bucket(bucketName).object(object6Mb).build()))
+            .build());
+
+    testComposeObject(
+        "[two multipart sources with offset and length]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder()
+                        .bucket(bucketName)
+                        .object(object6Mb)
+                        .offset(10L)
+                        .length(6291436L)
+                        .build(),
+                    ComposeSource.builder().bucket(bucketName).object(object6Mb).build()))
+            .build());
+
+    if (isQuickTest) {
+      return;
+    }
+
+    if (!isSecureEndpoint) {
+      return;
+    }
+
+    testComposeObject(
+        "[two SSE-C multipart sources]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sse(ssec)
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder()
+                        .bucket(bucketName)
+                        .object(object6MbSsec)
+                        .ssec(ssec)
+                        .build(),
+                    ComposeSource.builder()
+                        .bucket(bucketName)
+                        .object(object6MbSsec)
+                        .ssec(ssec)
+                        .build()))
+            .build());
+
+    testComposeObject(
+        "[two multipart sources with one SSE-C]",
+        ComposeObjectArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .sources(
+                createComposeSourceList(
+                    ComposeSource.builder()
+                        .bucket(bucketName)
+                        .object(object6MbSsec)
+                        .ssec(ssec)
+                        .build(),
+                    ComposeSource.builder().bucket(bucketName).object(object6Mb).build()))
+            .build());
+  }
+
+  public static void composeObject_test() throws Exception {
+    String methodName = "composeObject()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
-    long startTime = System.currentTimeMillis();
-    String mintArgs = "size: 6 MB & 6 MB ";
-
-    try {
-      List<ObjectWriteResponse> results = new LinkedList<>();
-      String destinationObjectName = getRandomName();
-      String objectName1 = getRandomName();
-      String objectName2 = getRandomName();
-
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(objectName1).build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
-      listSourceObjects.add(s1);
-      listSourceObjects.add(s2);
-      try {
-        client.composeObject(
-            ComposeObjectArgs.builder()
-                .bucket(bucketName)
-                .object(destinationObjectName)
-                .sources(listSourceObjects)
-                .build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-      } finally {
-        removeObjects(bucketName, results);
-      }
-      mintSuccessLog(methodName, mintArgs, startTime);
-    } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
-    }
-  }
-
-  /** Test: composeObject(ComposeObjectArgs args) with offset and length. */
-  public static void composeObject_test2() throws Exception {
-    String methodName = "composeObject(ComposeObjectArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " with offset and length.");
-    }
 
     long startTime = System.currentTimeMillis();
-    final long partialLength = 6291436L;
-    final long offset = 10L;
-    String mintArgs = String.format("offset: %d, length: %d bytes", offset, partialLength);
+    List<ObjectWriteResponse> createdObjects = new LinkedList<>();
 
     try {
-      List<ObjectWriteResponse> results = new LinkedList<>();
-      String destinationObjectName = getRandomName();
-      String objectName1 = getRandomName();
-      String objectName2 = getRandomName();
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-      ComposeSource s1 =
-          ComposeSource.builder()
-              .bucket(bucketName)
-              .object(objectName1)
-              .offset(10L)
-              .length(6291436L)
-              .build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
-
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
-      listSourceObjects.add(s1);
-      listSourceObjects.add(s2);
+      String object1Mb = null;
+      String object6Mb = null;
+      String object6MbSsec = null;
       try {
-        client.composeObject(
-            ComposeObjectArgs.builder()
-                .bucket(bucketName)
-                .object(destinationObjectName)
-                .sources(listSourceObjects)
-                .build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-      } finally {
-        removeObjects(bucketName, results);
+        ObjectWriteResponse response;
+        response =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                        new ContentInputStream(1 * MB), 1 * MB, -1)
+                    .build());
+        createdObjects.add(response);
+        object1Mb = response.object();
+
+        response =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                        new ContentInputStream(6 * MB), 6 * MB, -1)
+                    .build());
+        createdObjects.add(response);
+        object6Mb = response.object();
+
+        if (isSecureEndpoint) {
+          response =
+              client.putObject(
+                  PutObjectArgs.builder().bucket(bucketName).object(getRandomName()).stream(
+                          new ContentInputStream(6 * MB), 6 * MB, -1)
+                      .sse(ssec)
+                      .build());
+          createdObjects.add(response);
+          object6MbSsec = response.object();
+        }
+      } catch (Exception e) {
+        handleException(methodName, null, startTime, e);
       }
-      mintSuccessLog(methodName, mintArgs, startTime);
-    } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
-    }
-  }
 
-  /** Test: composeObject(ComposeObjectArgs args) with one source. */
-  public static void composeObject_test3() throws Exception {
-    String methodName = "composeObject(ComposeObjectArgs args)";
-    String testTags = "with one source";
-
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-    long startTime = System.currentTimeMillis();
-
-    try {
-      List<ObjectWriteResponse> results = new LinkedList<>();
-      String destinationObjectName = getRandomName();
-      String objectName1 = getRandomName();
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-
-      ComposeSource s1 =
-          ComposeSource.builder()
-              .bucket(bucketName)
-              .object(objectName1)
-              .offset(10L)
-              .length(6291436L)
-              .build();
-
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
-      listSourceObjects.add(s1);
-      try {
-        client.composeObject(
-            ComposeObjectArgs.builder()
-                .bucket(bucketName)
-                .object(destinationObjectName)
-                .sources(listSourceObjects)
-                .build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-      } finally {
-        removeObjects(bucketName, results);
-      }
-      mintSuccessLog(methodName, testTags, startTime);
-    } catch (Exception e) {
-      handleException(methodName, testTags, startTime, e);
-    }
-  }
-
-  /** Test: composeObject(ComposeObjectArgs args) with SSE_C and SSE_C Target. */
-  public static void composeObject_test4() throws Exception {
-    String methodName = "composeObject(ComposeObjectArgs args)";
-    String testTags = "[with SSE_C and SSE_C Target]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
-    long startTime = System.currentTimeMillis();
-
-    try {
-      List<ObjectWriteResponse> results = new LinkedList<>();
-      String destinationObjectName = getRandomName();
-      String objectName1 = getRandomName();
-      String objectName2 = getRandomName();
-
-      // Generate a new 256 bit AES key - This key must be remembered by the client.
-      byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
-      SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-
-      ServerSideEncryptionCustomerKey ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
-
-      byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
-      SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
-
-      ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
-
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .sse(ssePut)
-                  .build()));
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .sse(ssePut)
-                  .build()));
-
-      ComposeSource s1 =
-          ComposeSource.builder().bucket(bucketName).object(objectName1).ssec(ssePut).build();
-      ComposeSource s2 =
-          ComposeSource.builder().bucket(bucketName).object(objectName2).ssec(ssePut).build();
-
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
-      listSourceObjects.add(s1);
-      listSourceObjects.add(s2);
-      try {
-        client.composeObject(
-            ComposeObjectArgs.builder()
-                .bucket(bucketName)
-                .object(destinationObjectName)
-                .sources(listSourceObjects)
-                .sse(sseTarget)
-                .build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-      } finally {
-        removeObjects(bucketName, results);
-      }
-      mintSuccessLog(methodName, testTags, startTime);
-    } catch (Exception e) {
-      handleException(methodName, testTags, startTime, e);
-    }
-  }
-
-  /** Test: composeObject(ComposeObjectArgs args) with SSE_C on one source object. */
-  public static void composeObject_test5() throws Exception {
-    String methodName = "composeObject(ComposeObjectArgs args)";
-    String testTags = "[with SSE_C on one source object]";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " " + testTags);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      List<ObjectWriteResponse> results = new LinkedList<>();
-      String destinationObjectName = getRandomName();
-      String objectName1 = getRandomName();
-      String objectName2 = getRandomName();
-
-      // Generate a new 256 bit AES key - This key must be remembered by the client.
-      byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
-      SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-
-      ServerSideEncryptionCustomerKey ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
-
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .sse(ssePut)
-                  .build()));
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-
-      ComposeSource s1 =
-          ComposeSource.builder().bucket(bucketName).object(objectName1).ssec(ssePut).build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
-
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
-      listSourceObjects.add(s1);
-      listSourceObjects.add(s2);
-      try {
-        client.composeObject(
-            ComposeObjectArgs.builder()
-                .bucket(bucketName)
-                .object(destinationObjectName)
-                .sources(listSourceObjects)
-                .build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-      } finally {
-        removeObjects(bucketName, results);
-      }
-      mintSuccessLog(methodName, testTags, startTime);
-    } catch (Exception e) {
-      handleException(methodName, testTags, startTime, e);
-    }
-  }
-
-  /**
-   * Test: composeObject(String bucketName, String objectName, List&lt;ComposeSource&gt;
-   * composeSources,Map &lt;String, String&gt; headerMap, ServerSideEncryption sseTarget).
-   */
-  public static void composeObject_test6() throws Exception {
-    String methodName = "composeObject(ComposeObjectArgs args)";
-    String testTags = "[with SSE_C on one source object]";
-    if (!mintEnv) {
-      System.out.println(methodName + " " + testTags);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      List<ObjectWriteResponse> results = new LinkedList<>();
-      String destinationObjectName = getRandomName();
-      String objectName1 = getRandomName();
-      String objectName2 = getRandomName();
-      byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
-      SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
-
-      ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
-
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName1).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-      results.add(
-          client.putObject(
-              PutObjectArgs.builder().bucket(bucketName).object(objectName2).stream(
-                      new ContentInputStream(6 * MB), 6 * MB, -1)
-                  .contentType(customContentType)
-                  .build()));
-      ComposeSource s1 = ComposeSource.builder().bucket(bucketName).object(objectName1).build();
-      ComposeSource s2 = ComposeSource.builder().bucket(bucketName).object(objectName2).build();
-
-      List<ComposeSource> listSourceObjects = new ArrayList<ComposeSource>();
-      listSourceObjects.add(s1);
-      listSourceObjects.add(s2);
-      try {
-        client.composeObject(
-            ComposeObjectArgs.builder()
-                .bucket(bucketName)
-                .object(destinationObjectName)
-                .sources(listSourceObjects)
-                .sse(sseTarget)
-                .build());
-        client.removeObject(
-            RemoveObjectArgs.builder().bucket(bucketName).object(destinationObjectName).build());
-      } finally {
-        removeObjects(bucketName, results);
-      }
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
+      composeObjectTests(object1Mb, object6Mb, object6MbSsec);
+    } finally {
+      removeObjects(bucketName, createdObjects);
     }
   }
 
@@ -3820,9 +3662,7 @@ public class FunctionalTest {
     presignedPostPolicy_test();
 
     copyObject_test();
-    composeObject_test1();
-    composeObject_test2();
-    composeObject_test3();
+    composeObject_test();
 
     enableObjectLegalHold_test();
     disableObjectLegalHold_test();
@@ -3844,13 +3684,6 @@ public class FunctionalTest {
     setObjectTags_test();
     getObjectTags_test();
     deleteObjectTags_test();
-
-    // SSE_C tests will only work over TLS connection
-    if (isSecureEndpoint) {
-      composeObject_test4();
-      composeObject_test5();
-      composeObject_test6();
-    }
 
     // SSE_S3 and SSE_KMS only work with Amazon AWS endpoint.
     String requestUrl = endpoint;
