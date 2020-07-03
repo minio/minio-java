@@ -747,9 +747,7 @@ public class MinioClient {
 
   /** Create new HashMultimap with copy of Multimap. */
   private Multimap<String, String> newMultimap(Multimap<String, String> map) {
-    Multimap<String, String> multimap = HashMultimap.create();
-    if (map != null) multimap.putAll(map);
-    return multimap;
+    return (map != null) ? HashMultimap.create(map) : HashMultimap.create();
   }
 
   private HttpUrl buildUrl(
@@ -1707,10 +1705,13 @@ public class MinioClient {
       offset = 0L;
     }
 
-    String range =
-        (offset != null)
-            ? ("bytes=" + offset + "-" + (length != null ? offset + length - 1 : ""))
-            : null;
+    String range = null;
+    if (offset != null) {
+      range = "bytes=" + offset + "-";
+      if (length != null) {
+        range = range + (offset + length - 1);
+      }
+    }
 
     Multimap<String, String> headers = HashMultimap.create();
     if (range != null) headers.put("Range", range);
@@ -3806,7 +3807,7 @@ public class MinioClient {
             region,
             merge(args.extraHeaders(), headers),
             args.extraQueryParams(),
-            (!region.equals(US_EAST_1)) ? new CreateBucketConfiguration(region) : null,
+            region.equals(US_EAST_1) ? null : new CreateBucketConfiguration(region),
             0)) {
       if (isAwsHost) {
         AwsRegionCache.INSTANCE.set(args.bucket(), region);
