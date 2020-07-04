@@ -3536,9 +3536,39 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    try (Response response =
-        execute(
-            Method.GET, null, null, (region != null) ? region : US_EAST_1, null, null, null, 0)) {
+    return listBuckets(ListBucketsArgs.builder().build());
+  }
+
+  /**
+   * Lists bucket information of all buckets.
+   *
+   * <pre>Example:{@code
+   * List<Bucket> bucketList =
+   *     minioClient.listBuckets(ListBucketsArgs.builder().extraHeaders(headers).build());
+   * for (Bucket bucket : bucketList) {
+   *   System.out.println(bucket.creationDate() + ", " + bucket.name());
+   * }
+   * }</pre>
+   *
+   * @return List&ltBucket&gt - List of bucket information.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws IllegalArgumentException throws to indicate invalid argument passed.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public List<Bucket> listBuckets(ListBucketsArgs args)
+      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
+          InternalException, InvalidBucketNameException, InvalidKeyException,
+          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
+    try (Response response = executeGet(args, null, null)) {
       ListAllMyBucketsResult result =
           Xml.unmarshal(ListAllMyBucketsResult.class, response.body().charStream());
       return result.buckets();
