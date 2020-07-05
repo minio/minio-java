@@ -16,222 +16,233 @@
 
 package io.minio;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.ListIterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
 
-/** Post policy information to be used to generate presigned post policy form-data. */
+/**
+ * Post policy information to be used to generate presigned post policy form-data. Condition
+ * elements and respective condition for Post policy is available <a
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-HTTPPOSTConstructPolicy.html#sigv4-PolicyConditions">here</a>.
+ */
 public class PostPolicy {
+  private static final List<String> RESERVED_ELEMENTS =
+      Arrays.asList(
+          new String[] {
+            "bucket",
+            "x-amz-algorithm",
+            "x-amz-credential",
+            "x-amz-date",
+            "policy",
+            "x-amz-signature"
+          });
   private static final String ALGORITHM = "AWS4-HMAC-SHA256";
+  private static final String EQ = "eq";
+  private static final String STARTS_WITH = "starts-with";
 
-  private final String bucketName;
-  private final String objectName;
-  private final boolean startsWith;
-  private final ZonedDateTime expirationDate;
-  private String contentType;
-  private int successActionStatus;
-  private String contentEncoding;
-  private long contentRangeStart;
-  private long contentRangeEnd;
+  private String bucketName;
+  private ZonedDateTime expiration;
+  private Map<String, Map<String, String>> conditions;
+  private Integer lowerLimit = null;
+  private Integer upperLimit = null;
 
-  public PostPolicy(String bucketName, String objectName, ZonedDateTime expirationDate)
-      throws IllegalArgumentException {
-    this(bucketName, objectName, false, expirationDate);
+  public PostPolicy(@Nonnull String bucketName, @Nonnull ZonedDateTime expiration) {
+    if (bucketName.isEmpty()) {
+      throw new IllegalArgumentException("bucket name cannot be empty");
+    }
+
+    Map<String, Map<String, String>> conditions = new LinkedHashMap<>();
+    conditions.put(EQ, new LinkedHashMap<>());
+    conditions.put(STARTS_WITH, new LinkedHashMap<>());
+    this.bucketName = bucketName;
+    this.expiration = expiration;
+    this.conditions = conditions;
+  }
+
+  private String trimDollar(String element) {
+    return element.startsWith("$") ? element.substring(1, element.length()) : element;
+  }
+
+  /** Add equals condition of an element and value. */
+  public void addEqualsCondition(@Nonnull String element, @Nonnull String value) {
+    if (element.isEmpty()) {
+      throw new IllegalArgumentException("condition element cannot be empty");
+    }
+
+    element = trimDollar(element);
+
+    if ("success_action_redirect".equals(element)
+        || "redirect".equals(element)
+        || "content-length-range".equals(element)) {
+      throw new IllegalArgumentException(element + " is unsupported for equals condition");
+    }
+
+    if (RESERVED_ELEMENTS.contains(element)) {
+      throw new IllegalArgumentException(element + " cannot be set");
+    }
+
+    conditions.get(EQ).put(element, value);
+  }
+
+  /** Remove previously set equals condition of an element. */
+  public void removeEqualsCondition(@Nonnull String element) {
+    if (element.isEmpty()) {
+      throw new IllegalArgumentException("condition element cannot be empty");
+    }
+
+    conditions.get(EQ).remove(trimDollar(element));
   }
 
   /**
-   * Creates PostPolicy for given bucket name, object name, string to match object name starting
-   * with and expiration time.
+   * Add starts-with condition of an element and value. Value set to empty string does matching any
+   * content condition.
    */
-  public PostPolicy(
-      String bucketName, String objectName, boolean startsWith, ZonedDateTime expirationDate)
-      throws IllegalArgumentException {
-    if (bucketName == null) {
-      throw new IllegalArgumentException("null bucket name");
+  public void addStartsWithCondition(@Nonnull String element, @Nonnull String value) {
+    if (element.isEmpty()) {
+      throw new IllegalArgumentException("condition element cannot be empty");
     }
-    this.bucketName = bucketName;
 
-    if (objectName == null) {
-      throw new IllegalArgumentException("null object name or prefix");
+    element = trimDollar(element);
+
+    if ("success_action_status".equals(element)
+        || "content-length-range".equals(element)
+        || (element.startsWith("x-amz-") && !element.startsWith("x-amz-meta-"))) {
+      throw new IllegalArgumentException(element + " is unsupported for starts-with condition");
     }
-    this.objectName = objectName;
 
-    this.startsWith = startsWith;
-
-    if (expirationDate == null) {
-      throw new IllegalArgumentException("null expiration date");
+    if (RESERVED_ELEMENTS.contains(element)) {
+      throw new IllegalArgumentException(element + " cannot be set");
     }
-    this.expirationDate = expirationDate;
+
+    conditions.get(STARTS_WITH).put(element, value);
   }
 
-  /** Sets content type. */
-  public void setContentType(String contentType) throws IllegalArgumentException {
-    if (Strings.isNullOrEmpty(contentType)) {
-      throw new IllegalArgumentException("empty content type");
+  /** Remove previously set starts-with condition of an element. */
+  public void removeStartsWithCondition(String element) {
+    if (element.isEmpty()) {
+      throw new IllegalArgumentException("condition element cannot be empty");
     }
 
-    this.contentType = contentType;
+    conditions.get(STARTS_WITH).remove(trimDollar(element));
   }
 
-  /** Sets success action status. */
-  public void setSuccessActionStatus(int successActionStatus) throws IllegalArgumentException {
-    if (!(successActionStatus == 200 || successActionStatus == 201 || successActionStatus == 204)) {
-      throw new IllegalArgumentException(
-          "Invalid action status, acceptable values are 200, 201, or 204");
+  /** Add content-length-range condition with lower and upper limits. */
+  public void addContentLengthRangeCondition(int lowerLimit, int upperLimit) {
+    if (lowerLimit < 0) {
+      throw new IllegalArgumentException("lower limit cannot be negative number");
     }
 
-    this.successActionStatus = successActionStatus;
+    if (upperLimit < 0) {
+      throw new IllegalArgumentException("upper limit cannot be negative number");
+    }
+
+    if (lowerLimit > upperLimit) {
+      throw new IllegalArgumentException("lower limit cannot be greater than upper limit");
+    }
+
+    this.lowerLimit = lowerLimit;
+    this.upperLimit = upperLimit;
   }
 
-  /** Sets content encoding. */
-  public void setContentEncoding(String contentEncoding) throws IllegalArgumentException {
-    if (Strings.isNullOrEmpty(contentEncoding)) {
-      throw new IllegalArgumentException("empty content encoding");
-    }
-
-    this.contentEncoding = contentEncoding;
+  /** Remove previously set content-length-range condition. */
+  public void removeContentLengthRangeCondition() {
+    this.lowerLimit = null;
+    this.upperLimit = null;
   }
 
-  /** Sets content length. */
-  public void setContentLength(long contentLength) throws IllegalArgumentException {
-    if (contentLength <= 0) {
-      throw new IllegalArgumentException("negative content length");
-    }
-
-    this.setContentRange(contentLength, contentLength);
+  private String quote(String value) {
+    return "\"" + value + "\"";
   }
 
-  /** Sets content range. */
-  public void setContentRange(long startRange, long endRange) throws IllegalArgumentException {
-    if (startRange <= 0 || endRange <= 0) {
-      throw new IllegalArgumentException("negative start/end range");
-    }
-
-    if (startRange > endRange) {
-      throw new IllegalArgumentException("start range is higher than end range");
-    }
-
-    this.contentRangeStart = startRange;
-    this.contentRangeEnd = endRange;
+  private StringBuilder addCondition(
+      StringBuilder sb, String condition, String element, String value, boolean isEnd) {
+    sb.append("    [")
+        .append(quote(condition))
+        .append(", ")
+        .append(quote("$" + element))
+        .append(", ")
+        .append(quote(value))
+        .append("]");
+    return isEnd ? sb : sb.append(",\n");
   }
 
-  /** Returns bucket name. */
-  public String bucketName() {
-    return this.bucketName;
-  }
-
-  private byte[] marshalJson(ArrayList<String[]> conditions) {
-    StringBuilder sb = new StringBuilder();
-    Joiner joiner = Joiner.on("\",\"");
-
-    sb.append("{");
-
-    if (expirationDate != null) {
-      sb.append(
-          "\"expiration\":" + "\"" + expirationDate.format(Time.EXPIRATION_DATE_FORMAT) + "\"");
-    }
-
-    if (!conditions.isEmpty()) {
-      sb.append(",\"conditions\":[");
-
-      ListIterator<String[]> iterator = conditions.listIterator();
-      while (iterator.hasNext()) {
-        sb.append("[\"" + joiner.join(iterator.next()) + "\"]");
-        if (iterator.hasNext()) {
-          sb.append(",");
-        }
-      }
-
-      sb.append("]");
-    }
-
-    sb.append("}");
-
-    return sb.toString().getBytes(StandardCharsets.UTF_8);
-  }
-
-  /** Returns form data of this post policy setting the provided region. */
-  public Map<String, String> formData(String accessKey, String secretKey, String region)
-      throws NoSuchAlgorithmException, InvalidKeyException, IllegalArgumentException {
-
-    if (Strings.isNullOrEmpty(region)) {
-      throw new IllegalArgumentException("empty region");
-    }
-
-    return Collections.unmodifiableMap(makeFormData(accessKey, secretKey, region));
-  }
-
-  protected Map<String, String> makeFormData(String accessKey, String secretKey, String region)
+  /**
+   * Return form-data of this post policy. The returned map contains x-amz-algorithm,
+   * x-amz-credential, x-amz-date, policy and x-amz-signature.
+   */
+  public Map<String, String> formData(
+      @Nonnull String accessKey, @Nonnull String secretKey, @Nonnull String region)
       throws NoSuchAlgorithmException, InvalidKeyException {
-
-    ArrayList<String[]> conditions = new ArrayList<>();
-    Map<String, String> formData = new HashMap<>();
-
-    conditions.add(new String[] {"eq", "$bucket", this.bucketName});
-    formData.put("bucket", this.bucketName);
-
-    if (this.startsWith) {
-      conditions.add(new String[] {"starts-with", "$key", this.objectName});
-      formData.put("key", this.objectName);
-    } else {
-      conditions.add(new String[] {"eq", "$key", this.objectName});
-      formData.put("key", this.objectName);
+    if (accessKey.isEmpty()) {
+      throw new IllegalArgumentException("access key cannot be empty");
     }
 
-    if (this.contentType != null) {
-      conditions.add(new String[] {"eq", "$Content-Type", this.contentType});
-      formData.put("Content-Type", this.contentType);
+    if (secretKey.isEmpty()) {
+      throw new IllegalArgumentException("secret key cannot be empty");
     }
 
-    if (this.contentEncoding != null) {
-      conditions.add(new String[] {"eq", "$Content-Encoding", this.contentEncoding});
-      formData.put("Content-Encoding", this.contentEncoding);
+    if (region.isEmpty()) {
+      throw new IllegalArgumentException("region cannot be empty");
     }
 
-    if (this.successActionStatus > 0) {
-      conditions.add(
-          new String[] {
-            "eq", "$success_action_status", Integer.toString(this.successActionStatus)
-          });
-      formData.put("success_action_status", Integer.toString(this.successActionStatus));
+    if (!conditions.get(EQ).containsKey("key") && conditions.get(STARTS_WITH).containsKey("key")) {
+      throw new IllegalArgumentException("key condition must be set");
     }
 
-    if (this.contentRangeStart > 0 && this.contentRangeEnd > 0) {
-      conditions.add(
-          new String[] {
-            "content-length-range",
-            Long.toString(this.contentRangeStart),
-            Long.toString(this.contentRangeEnd)
-          });
+    StringBuilder sb = new StringBuilder().append("{\n");
+    sb.append("  ")
+        .append(quote("expiration"))
+        .append(": ")
+        .append(quote(expiration.format(Time.EXPIRATION_DATE_FORMAT)))
+        .append(",\n");
+    sb.append("  ").append(quote("conditions")).append(": [\n");
+    addCondition(sb, "eq", "bucket", bucketName, false);
+    for (Map.Entry<String, Map<String, String>> condition : conditions.entrySet()) {
+      for (Map.Entry<String, String> entry : condition.getValue().entrySet()) {
+        addCondition(sb, condition.getKey(), entry.getKey(), entry.getValue(), false);
+      }
     }
-
-    conditions.add(new String[] {"eq", "$x-amz-algorithm", ALGORITHM});
-    formData.put("x-amz-algorithm", ALGORITHM);
+    if (lowerLimit != null && upperLimit != null) {
+      sb.append("    [")
+          .append(quote("content-length-range"))
+          .append(", ")
+          .append(lowerLimit.toString())
+          .append(", ")
+          .append(upperLimit.toString())
+          .append("],\n");
+    }
 
     ZonedDateTime utcNow = ZonedDateTime.now(Time.UTC);
     String credential = Signer.credential(accessKey, utcNow, region);
-    conditions.add(new String[] {"eq", "$x-amz-credential", credential});
-    formData.put("x-amz-credential", credential);
-
     String amzDate = utcNow.format(Time.AMZ_DATE_FORMAT);
-    conditions.add(new String[] {"eq", "$x-amz-date", amzDate});
+
+    addCondition(sb, "eq", "x-amz-algorithm", ALGORITHM, false);
+    addCondition(sb, "eq", "x-amz-credential", credential, false);
+    addCondition(sb, "eq", "x-amz-date", amzDate, true);
+    sb.append("  ]\n");
+    sb.append("}");
+
+    String policy = BaseEncoding.base64().encode(sb.toString().getBytes(StandardCharsets.UTF_8));
+    String signature = Signer.postPresignV4(policy, secretKey, utcNow, region);
+
+    Map<String, String> formData = new HashMap<>();
+    formData.put("x-amz-algorithm", ALGORITHM);
+    formData.put("x-amz-credential", credential);
     formData.put("x-amz-date", amzDate);
-
-    String policybase64 = BaseEncoding.base64().encode(this.marshalJson(conditions));
-    String signature = Signer.postPresignV4(policybase64, secretKey, utcNow, region);
-
-    formData.put("policy", policybase64);
+    formData.put("policy", policy);
     formData.put("x-amz-signature", signature);
-
     return formData;
+  }
+
+  public String bucket() {
+    return this.bucketName;
   }
 }
