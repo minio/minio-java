@@ -1,6 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2020 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +16,20 @@
 
 package io.minio;
 
-public class RemoveIncompleteUploadArgs extends ObjectVersionArgs {
+import io.minio.messages.ListBucketResultV2;
+import okhttp3.Headers;
 
-  public static Builder builder() {
-    return new Builder();
+/** Response class of MinioClient.listObjectsV2(). */
+public class ListObjectsV2Response extends GenericResponse {
+  private ListBucketResultV2 result;
+
+  public ListObjectsV2Response(
+      Headers headers, String bucket, String region, ListBucketResultV2 result) {
+    super(headers, bucket, region, null);
+    this.result = result;
   }
 
-  public static final class Builder
-      extends ObjectVersionArgs.Builder<Builder, RemoveIncompleteUploadArgs> {}
+  public ListBucketResultV2 result() {
+    return result;
+  }
 }

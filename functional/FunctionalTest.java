@@ -52,7 +52,6 @@ import io.minio.GetObjectTagsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.IsObjectLegalHoldEnabledArgs;
 import io.minio.IsVersioningEnabledArgs;
-import io.minio.ListIncompleteUploadsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
@@ -62,7 +61,6 @@ import io.minio.ObjectWriteResponse;
 import io.minio.PostPolicy;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveBucketArgs;
-import io.minio.RemoveIncompleteUploadArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
 import io.minio.Result;
@@ -83,7 +81,6 @@ import io.minio.Time;
 import io.minio.UploadObjectArgs;
 import io.minio.Xml;
 import io.minio.errors.ErrorResponseException;
-import io.minio.errors.InsufficientDataException;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.DeleteObject;
@@ -108,7 +105,6 @@ import io.minio.messages.SseConfiguration;
 import io.minio.messages.SseConfigurationRule;
 import io.minio.messages.Stats;
 import io.minio.messages.Tags;
-import io.minio.messages.Upload;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1533,178 +1529,6 @@ public class FunctionalTest {
         }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: listIncompleteUploads(ListIncompleteUploadsArgs args). */
-  public static void listIncompleteUploads_test1() throws Exception {
-    String methodName = "listIncompleteUploads(ListIncompleteUploadsArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-
-      try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(6 * MB), 9 * MB, -1)
-                .build());
-      } catch (ErrorResponseException e) {
-        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
-          throw e;
-        }
-      } catch (InsufficientDataException e) {
-        ignore();
-      }
-      int i = 0;
-      for (Result<Upload> r :
-          client.listIncompleteUploads(
-              ListIncompleteUploadsArgs.builder().bucket(bucketName).build())) {
-        ignore(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-      client.removeIncompleteUpload(
-          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: listIncompleteUploads(ListIncompleteUploadsArgs args). */
-  public static void listIncompleteUploads_test2() throws Exception {
-    String methodName = "listIncompleteUploads(ListIncompleteUploadsArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + "with prefix.");
-    }
-
-    long startTime = System.currentTimeMillis();
-    String mintArgs = "prefix :minio";
-    try {
-      String objectName = getRandomName();
-      try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(6 * MB), 9 * MB, -1)
-                .build());
-      } catch (ErrorResponseException e) {
-        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
-          throw e;
-        }
-      } catch (InsufficientDataException e) {
-        ignore();
-      }
-
-      int i = 0;
-      for (Result<Upload> r :
-          client.listIncompleteUploads(
-              ListIncompleteUploadsArgs.builder().bucket(bucketName).prefix("minio").build())) {
-        ignore(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-
-      client.removeIncompleteUpload(
-          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, mintArgs, startTime);
-    } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
-    }
-  }
-
-  /**
-   * Test: listIncompleteUploads(final String bucketName, final String prefix, final boolean
-   * recursive).
-   */
-  public static void listIncompleteUploads_test3() throws Exception {
-    String methodName = "listIncompleteUploads(ListIncompleteUploadsArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + "with prefix and recursive as true.");
-    }
-
-    long startTime = System.currentTimeMillis();
-    String mintArgs = "prefix: minio, recursive: true";
-    try {
-      String objectName = getRandomName();
-      try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(6 * MB), 9 * MB, -1)
-                .build());
-      } catch (ErrorResponseException e) {
-        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
-          throw e;
-        }
-      } catch (InsufficientDataException e) {
-        ignore();
-      }
-
-      int i = 0;
-      for (Result<Upload> r :
-          client.listIncompleteUploads(
-              ListIncompleteUploadsArgs.builder()
-                  .bucket(bucketName)
-                  .prefix("minio")
-                  .recursive(true)
-                  .build())) {
-        ignore(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-
-      client.removeIncompleteUpload(
-          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, mintArgs, startTime);
-    } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
-    }
-  }
-
-  /** Test: removeIncompleteUpload(String bucketName, String objectName). */
-  public static void removeIncompleteUploads_test() throws Exception {
-    String methodName = "removeIncompleteUpload(RemoveIncompleteUploadArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      try {
-        client.putObject(
-            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(6 * MB), 9 * MB, -1)
-                .build());
-      } catch (ErrorResponseException e) {
-        if (e.errorResponse().errorCode() != ErrorCode.INCOMPLETE_BODY) {
-          throw e;
-        }
-      } catch (InsufficientDataException e) {
-        ignore();
-      }
-
-      int i = 0;
-      for (Result<Upload> r :
-          client.listIncompleteUploads(
-              ListIncompleteUploadsArgs.builder().bucket(bucketName).build())) {
-        ignore(i++, r.get());
-        if (i == 10) {
-          break;
-        }
-      }
-
-      client.removeIncompleteUpload(
-          RemoveIncompleteUploadArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3653,12 +3477,6 @@ public class FunctionalTest {
     removeObject_test1();
     removeObjects_test1();
 
-    listIncompleteUploads_test1();
-    listIncompleteUploads_test2();
-    listIncompleteUploads_test3();
-
-    removeIncompleteUploads_test();
-
     presignedPostPolicy_test();
 
     copyObject_test();
@@ -3722,8 +3540,6 @@ public class FunctionalTest {
     downloadObject_test();
     listObjects_test();
     removeObject_test1();
-    listIncompleteUploads_test1();
-    removeIncompleteUploads_test();
     getPresignedObjectUrl_test1();
     getPresignedObjectUrl_test2();
     presignedPostPolicy_test();
