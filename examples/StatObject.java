@@ -15,10 +15,10 @@
  */
 
 import io.minio.MinioClient;
-import io.minio.ObjectStat;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -53,39 +53,39 @@ public class StatObject {
 
       {
         // Get information of an object.
-        ObjectStat objectStat =
+        StatObjectResponse stat =
             minioClient.statObject(
                 StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
-        System.out.println(objectStat);
+        System.out.println(stat);
       }
 
       {
         // Get information of SSE-C encrypted object.
-        ObjectStat objectStat =
+        StatObjectResponse stat =
             minioClient.statObject(
                 StatObjectArgs.builder()
                     .bucket("my-bucketname")
                     .object("my-encrypted-objectname")
                     .ssec(ssec) // Replace with actual key.
                     .build());
-        System.out.println(objectStat);
+        System.out.println(stat);
       }
 
       {
         // Get information of a versioned object.
-        ObjectStat objectStat =
+        StatObjectResponse stat =
             minioClient.statObject(
                 StatObjectArgs.builder()
                     .bucket("my-bucketname")
                     .object("my-versioned-objectname")
                     .versionId(versionId) // Replace with actual version ID.
                     .build());
-        System.out.println(objectStat);
+        System.out.println(stat);
       }
 
       {
         // Get information of a SSE-C encrypted versioned object.
-        ObjectStat objectStat =
+        StatObjectResponse stat =
             minioClient.statObject(
                 StatObjectArgs.builder()
                     .bucket("my-bucketname")
@@ -93,7 +93,7 @@ public class StatObject {
                     .versionId(versionId) // Replace with actual version ID.
                     .ssec(ssec) // Replace with actual key.
                     .build());
-        System.out.println(objectStat);
+        System.out.println(stat);
       }
 
       {
@@ -103,7 +103,7 @@ public class StatObject {
         HashMap<String, String> queryParams = new HashMap<>();
         queryParams.put("partNumber", "1");
 
-        ObjectStat objectStat =
+        StatObjectResponse stat =
             minioClient.statObject(
                 StatObjectArgs.builder()
                     .bucket("my-bucketname")
@@ -111,7 +111,7 @@ public class StatObject {
                     .extraHeaders(headers) // Replace with actual headers.
                     .extraQueryParams(queryParams) // Replace with actual query parameters.
                     .build());
-        System.out.println(objectStat);
+        System.out.println(stat);
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

@@ -56,7 +56,6 @@ import io.minio.ListObjectsArgs;
 import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
-import io.minio.ObjectStat;
 import io.minio.ObjectWriteResponse;
 import io.minio.PostPolicy;
 import io.minio.PutObjectArgs;
@@ -77,6 +76,7 @@ import io.minio.SetDefaultRetentionArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
 import io.minio.Time;
 import io.minio.UploadObjectArgs;
 import io.minio.Xml;
@@ -917,8 +917,8 @@ public class FunctionalTest {
         null);
   }
 
-  public static void testStatObject(String testTags, PutObjectArgs args, ObjectStat expectedStat)
-      throws Exception {
+  public static void testStatObject(
+      String testTags, PutObjectArgs args, StatObjectResponse expectedStat) throws Exception {
     String methodName = "statObject()";
     long startTime = System.currentTimeMillis();
     try {
@@ -928,7 +928,7 @@ public class FunctionalTest {
         if (args.sse() instanceof ServerSideEncryptionCustomerKey) {
           ssec = (ServerSideEncryptionCustomerKey) args.sse();
         }
-        ObjectStat stat =
+        StatObjectResponse stat =
             client.statObject(
                 StatObjectArgs.builder()
                     .bucket(args.bucket())
@@ -936,22 +936,19 @@ public class FunctionalTest {
                     .ssec(ssec)
                     .build());
 
-        if (!expectedStat.bucketName().equals(stat.bucketName())) {
+        if (!expectedStat.bucket().equals(stat.bucket())) {
           throw new Exception(
-              "bucket name: expected = "
-                  + expectedStat.bucketName()
-                  + ", got = "
-                  + stat.bucketName());
+              "bucket name: expected = " + expectedStat.bucket() + ", got = " + stat.bucket());
         }
 
-        if (!expectedStat.name().equals(stat.name())) {
+        if (!expectedStat.object().equals(stat.object())) {
           throw new Exception(
-              "object name: expected = " + expectedStat.name() + ", got = " + stat.name());
+              "object name: expected = " + expectedStat.object() + ", got = " + stat.object());
         }
 
-        if (expectedStat.length() != stat.length()) {
+        if (expectedStat.size() != stat.size()) {
           throw new Exception(
-              "length: expected = " + expectedStat.length() + ", got = " + stat.length());
+              "length: expected = " + expectedStat.size() + ", got = " + stat.size());
         }
 
         if (!expectedStat.contentType().equals(stat.contentType())) {
@@ -962,27 +959,19 @@ public class FunctionalTest {
                   + stat.contentType());
         }
 
-        for (String key : expectedStat.httpHeaders().keySet()) {
-          if (!key.startsWith("x-amz-meta-")) {
-            continue;
-          }
-
-          if (!stat.httpHeaders().containsKey(key)) {
+        for (String key : expectedStat.userMetadata().keySet()) {
+          if (!stat.userMetadata().containsKey(key)) {
             throw new Exception("metadata " + key + " not found");
           }
 
-          if (!expectedStat
-              .httpHeaders()
-              .get(key)
-              .get(0)
-              .equals(stat.httpHeaders().get(key).get(0))) {
+          if (!expectedStat.userMetadata().get(key).equals(stat.userMetadata().get(key))) {
             throw new Exception(
                 "metadata "
                     + key
                     + " value: expected: "
-                    + expectedStat.httpHeaders().get(key).get(0)
+                    + expectedStat.userMetadata().get(key)
                     + ", got: "
-                    + stat.httpHeaders().get(key).get(0));
+                    + stat.userMetadata().get(key));
           }
         }
 
@@ -1016,7 +1005,7 @@ public class FunctionalTest {
     testStatObject(
         "[basic check]",
         builder.build(),
-        new ObjectStat(bucketName, objectName, headersBuilder.build()));
+        new StatObjectResponse(headersBuilder.build(), bucketName, null, objectName));
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Content-Type", customContentType);
@@ -1025,14 +1014,15 @@ public class FunctionalTest {
     builder = builder.headers(headers).userMetadata(userMetadata);
     builder = builder.stream(new ContentInputStream(1024), 1024, -1);
 
-    ObjectStat stat =
-        new ObjectStat(
-            bucketName,
-            objectName,
+    StatObjectResponse stat =
+        new StatObjectResponse(
             headersBuilder
                 .set("Content-Type", customContentType)
                 .add("X-Amz-Meta-My-Project: Project One")
-                .build());
+                .build(),
+            bucketName,
+            null,
+            objectName);
 
     testStatObject("[user metadata]", builder.build(), stat);
 
@@ -1814,7 +1804,7 @@ public class FunctionalTest {
                 .metadataDirective(Directive.REPLACE)
                 .build());
 
-        ObjectStat stat =
+        StatObjectResponse stat =
             client.statObject(
                 StatObjectArgs.builder()
                     .bucket(bucketName)
@@ -1867,13 +1857,13 @@ public class FunctionalTest {
                 .metadataDirective(Directive.REPLACE)
                 .build());
 
-        ObjectStat stat =
+        StatObjectResponse stat =
             client.statObject(
                 StatObjectArgs.builder()
                     .bucket(bucketName)
                     .object(srcObjectName + "-copy")
                     .build());
-        if (stat.httpHeaders().containsKey("X-Amz-Meta-My-Project")) {
+        if (stat.userMetadata().containsKey("My-Project")) {
           throw new Exception("expected user metadata to be removed in new object");
         }
 
