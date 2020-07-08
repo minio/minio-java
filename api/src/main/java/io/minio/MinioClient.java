@@ -1700,7 +1700,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public InputStream getObject(GetObjectArgs args)
+  public GetObjectResponse getObject(GetObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -1730,7 +1730,12 @@ public class MinioClient {
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     Response response = executeGet(args, headers, queryParams);
-    return response.body().byteStream();
+    return new GetObjectResponse(
+        response.headers(),
+        args.bucket(),
+        args.region(),
+        args.object(),
+        response.body().byteStream());
   }
 
   /**
