@@ -70,7 +70,6 @@ public class ClientGrants {
     }
   }
 
-  @SuppressWarnings({"SameParameterValue", "squid:S1192"})
   static ClientGrantsToken getTokenAndExpiry(
       @Nonnull String clientId,
       @Nonnull String clientSecret,
@@ -105,7 +104,6 @@ public class ClientGrants {
     }
   }
 
-  @SuppressWarnings("squid:S106")
   public static void main(String[] args) throws Exception {
     final String clientId = "user";
     final String clientSecret = "password";

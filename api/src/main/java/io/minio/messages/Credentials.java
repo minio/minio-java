@@ -25,8 +25,6 @@ import org.simpleframework.xml.Root;
 @Root(name = "Credentials", strict = false)
 public class Credentials {
 
-  public static final Credentials EMPTY = new Credentials();
-
   @Element(name = "AccessKeyId")
   private final String accessKey;
 
@@ -39,32 +37,6 @@ public class Credentials {
   @Element(name = "SessionToken")
   private final String sessionToken;
 
-  private Credentials() {
-    accessKey = null;
-    secretKey = null;
-    expiredAt = null;
-    sessionToken = null;
-  }
-
-  public Credentials(@Nonnull String accessKey, @Nonnull String secretKey) {
-    this(accessKey, secretKey, null);
-  }
-
-  public Credentials(
-      @Nonnull String accessKey, @Nonnull String secretKey, @Nullable ZonedDateTime expiredAt) {
-    this(accessKey, secretKey, expiredAt, null);
-  }
-
-  public Credentials(
-      @Nonnull String accessKey,
-      @Nonnull String secretKey,
-      @Nullable ZonedDateTime expiredAt,
-      @Nullable String sessionToken) {
-    this(accessKey, secretKey, new ResponseDate(expiredAt), sessionToken);
-  }
-
-  // deserialization constructor
-  @SuppressWarnings("unused")
   public Credentials(
       @Nonnull @Element(name = "AccessKeyId") String accessKey,
       @Nonnull @Element(name = "SecretAccessKey") String secretKey,
@@ -95,18 +67,7 @@ public class Credentials {
     return sessionToken;
   }
 
-  public boolean isAnonymous() {
+  public boolean isEmpty() {
     return accessKey == null || secretKey == null;
-  }
-
-  @Override
-  public String toString() {
-    final StringBuilder sb = new StringBuilder(getClass().getSimpleName() + " [");
-    sb.append("accessKey: ").append(accessKey);
-    sb.append(", secretKey: ").append(secretKey);
-    sb.append(", expiredAt: ").append(expiredAt);
-    sb.append(", sessionToken: ").append(sessionToken);
-    sb.append(']');
-    return sb.toString();
   }
 }

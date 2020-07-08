@@ -52,7 +52,6 @@ public class WebIdentity {
     }
   }
 
-  @SuppressWarnings({"SameParameterValue", "squid:S1192"})
   static WebIdentityToken getTokenAndExpiry(
       @Nonnull String clientId,
       @Nonnull String clientSecret,
@@ -81,13 +80,12 @@ public class WebIdentity {
 
       final JwtToken jwtToken =
           mapper.readValue(Objects.requireNonNull(response.body()).charStream(), JwtToken.class);
-      return new WebIdentityToken(jwtToken.accessToken, jwtToken.expiredAfter);
+      return new WebIdentityToken(jwtToken.accessToken, jwtToken.expiredAfter, null);
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
   }
 
-  @SuppressWarnings("squid:S106")
   public static void main(String[] args) throws Exception {
     final String clientId = "user";
     final String clientSecret = "password";

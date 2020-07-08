@@ -16,6 +16,7 @@
 package io.minio.credentials;
 
 import io.minio.messages.Credentials;
+import io.minio.messages.ResponseDate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,7 +57,7 @@ public class AwsEnvironmentProvider extends EnvironmentProvider {
     final String secretKey = readFirst(SECRET_KEY_ALIASES);
     final ZonedDateTime lifeTime = ZonedDateTime.now().plus(REFRESHED_AFTER);
     final String sessionToken = readProperty(SESSION_TOKEN_ALIAS);
-    return new Credentials(accessKey, secretKey, lifeTime, sessionToken);
+    return new Credentials(accessKey, secretKey, new ResponseDate(lifeTime), sessionToken);
   }
 
   private String readFirst(@Nonnull Collection<String> propertyKeys) {

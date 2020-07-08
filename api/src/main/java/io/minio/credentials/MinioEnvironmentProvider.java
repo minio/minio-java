@@ -16,6 +16,7 @@
 package io.minio.credentials;
 
 import io.minio.messages.Credentials;
+import io.minio.messages.ResponseDate;
 import java.time.ZonedDateTime;
 
 @SuppressWarnings("unused")
@@ -49,6 +50,6 @@ public class MinioEnvironmentProvider extends EnvironmentProvider {
     final String secretKey = readProperty(SECRET_KEY_ALIAS);
     final ZonedDateTime lifeTime = ZonedDateTime.now().plus(REFRESHED_AFTER);
     //noinspection ConstantConditions
-    return new Credentials(accessKey, secretKey, lifeTime);
+    return new Credentials(accessKey, secretKey, new ResponseDate(lifeTime), null);
   }
 }

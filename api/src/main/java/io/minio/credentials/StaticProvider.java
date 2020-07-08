@@ -24,7 +24,7 @@ public class StaticProvider implements Provider {
   private final Credentials credentials;
 
   public StaticProvider(@Nonnull String accessKey, @Nonnull String secretKey) {
-    this.credentials = new Credentials(accessKey, secretKey);
+    this.credentials = new Credentials(accessKey, secretKey, null, null);
   }
 
   @Override

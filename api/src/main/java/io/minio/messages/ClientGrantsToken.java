@@ -19,22 +19,16 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class ClientGrantsToken {
+public class ClientGrantsToken extends StsRequestToken {
 
   private final String jwtAccessToken;
   private final long expiredAfter;
-  private final String policy;
-
-  @SuppressWarnings("unused")
-  public ClientGrantsToken(@Nonnull String jwtAccessToken, long expiredAfter) {
-    this(jwtAccessToken, expiredAfter, null);
-  }
 
   public ClientGrantsToken(
       @Nonnull String jwtAccessToken, long expiredAfter, @Nullable String policy) {
+    super(policy);
     this.jwtAccessToken = Objects.requireNonNull(jwtAccessToken);
     this.expiredAfter = expiredAfter;
-    this.policy = policy;
   }
 
   public String token() {
@@ -43,9 +37,5 @@ public class ClientGrantsToken {
 
   public long expiredAfter() {
     return expiredAfter;
-  }
-
-  public String policy() {
-    return policy;
   }
 }

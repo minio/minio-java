@@ -28,6 +28,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.minio.credentials.Provider;
+import io.minio.credentials.StaticProvider;
 import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -41,9 +43,7 @@ import io.minio.errors.RegionConflictException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
-import io.minio.messages.AssumeRoleWithClientGrantsResponse;
 import io.minio.messages.Bucket;
-import io.minio.messages.ClientGrantsToken;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CompleteMultipartUploadOutput;
 import io.minio.messages.CopyObjectResult;
@@ -115,7 +115,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -123,8 +122,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -235,43 +232,34 @@ public class MinioClient {
   private PrintWriter traceStream;
 
   private HttpUrl baseUrl;
-  private HttpUrl stsUrl;
   private String region;
   private boolean isAwsHost;
   private boolean isAcceleratedHost;
   private boolean isDualStackHost;
   private boolean useVirtualStyle;
-  private String accessKey;
-  private String secretKey;
-  private String sessionToken;
-  private ZonedDateTime tokenExpiredAt;
+  private Provider provider;
   private OkHttpClient httpClient;
 
   private MinioClient(
       HttpUrl baseUrl,
-      HttpUrl stsUrl,
       String region,
       boolean isAwsHost,
       boolean isAcceleratedHost,
       boolean isDualStackHost,
       boolean useVirtualStyle,
-      String accessKey,
-      String secretKey,
+      Provider provider,
       OkHttpClient httpClient) {
     this.baseUrl = baseUrl;
-    this.stsUrl = stsUrl;
     this.region = region;
     this.isAwsHost = isAwsHost;
     this.isAcceleratedHost = isAcceleratedHost;
     this.isDualStackHost = isDualStackHost;
     this.useVirtualStyle = useVirtualStyle;
-    this.accessKey = accessKey;
-    this.secretKey = secretKey;
+    this.provider = provider;
     this.httpClient = httpClient;
   }
 
   /** Remove this constructor when all deprecated contructors are removed. */
-  @SuppressWarnings({"IncompleteCopyConstructor", "CopyConstructorMissesField"})
   private MinioClient(MinioClient client) {
     this.baseUrl = client.baseUrl;
     this.region = client.region;
@@ -279,8 +267,7 @@ public class MinioClient {
     this.isAcceleratedHost = client.isAcceleratedHost;
     this.isDualStackHost = client.isDualStackHost;
     this.useVirtualStyle = client.useVirtualStyle;
-    this.accessKey = client.accessKey;
-    this.secretKey = client.secretKey;
+    this.provider = client.provider;
     this.httpClient = client.httpClient;
   }
 
@@ -868,7 +855,8 @@ public class MinioClient {
 
     String sha256Hash = null;
     String md5Hash = null;
-    if (this.accessKey != null && this.secretKey != null) {
+    Credentials creds = provider != null ? provider.fetch() : null;
+    if (creds != null && !creds.isEmpty()) {
       if (url.isHttps()) {
         // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
         sha256Hash = "UNSIGNED-PAYLOAD";
@@ -902,8 +890,8 @@ public class MinioClient {
       requestBuilder.header("x-amz-content-sha256", sha256Hash);
     }
 
-    if (sessionToken != null && !isCredentialsExpired()) {
-      requestBuilder.header("X-Amz-Security-Token", sessionToken);
+    if (creds != null && creds.sessionToken() != null) {
+      requestBuilder.header("X-Amz-Security-Token", creds.sessionToken());
     }
 
     ZonedDateTime date = ZonedDateTime.now();
@@ -996,8 +984,9 @@ public class MinioClient {
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
     Request request = createRequest(url, method, headerMap, body, length);
 
-    if (this.accessKey != null && this.secretKey != null) {
-      request = Signer.signV4(request, region, accessKey, secretKey);
+    Credentials creds = provider != null ? provider.fetch() : null;
+    if (creds != null && !creds.isEmpty()) {
+      request = Signer.signV4(request, region, creds.accessKey(), creds.secretKey());
     }
 
     if (this.traceStream != null) {
@@ -1138,48 +1127,6 @@ public class MinioClient {
     throw new ErrorResponseException(errorResponse, response);
   }
 
-  private Response executeSTSPost(Multimap<String, String> queryParamMap)
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException, IOException,
-          InvalidResponseException {
-    final HttpUrl.Builder urlBuilder = stsUrl.newBuilder();
-    for (Map.Entry<String, String> entry : queryParamMap.entries()) {
-      urlBuilder.addEncodedQueryParameter(
-          S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
-    }
-    final Request request = createRequest(urlBuilder.build(), Method.POST, null, EMPTY_BODY, 0);
-    // todo: mb extract all tracing related login into separate component?
-    if (this.traceStream != null) {
-      traceRequest(request);
-    }
-    final OkHttpClient client =
-        this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
-
-    final Response response = client.newCall(request).execute();
-    if (this.traceStream != null) {
-      this.traceStream.println(
-          response.protocol().toString().toUpperCase(Locale.US) + " " + response.code());
-      this.traceStream.println(response.headers());
-    }
-
-    if (response.isSuccessful()) {
-      if (this.traceStream != null) {
-        this.traceStream.println(END_HTTP);
-      }
-      return response;
-    }
-
-    String errorXml;
-    try (ResponseBody responseBody = response.body()) {
-      final byte[] content = responseBody != null ? responseBody.bytes() : new byte[] {};
-      errorXml = new String(content, StandardCharsets.UTF_8);
-    }
-
-    if (this.traceStream != null && !errorXml.isEmpty()) {
-      this.traceStream.println(errorXml);
-    }
-    throw new InvalidResponseException(request);
-  }
-
   private void traceRequest(Request request) {
     this.traceStream.println("---------START-HTTP---------");
     String encodedPath = request.url().encodedPath();
@@ -1216,7 +1163,7 @@ public class MinioClient {
       return this.region;
     }
 
-    if (!isAwsHost || bucketName == null || this.accessKey == null) {
+    if (!isAwsHost || bucketName == null || this.provider == null) {
       return US_EAST_1;
     }
 
@@ -2583,6 +2530,9 @@ public class MinioClient {
     HttpUrl url =
         buildUrl(args.method(), args.bucket(), args.object(), region, args.extraQueryParams());
     Request request = createRequest(url, args.method(), null, body, 0);
+    Credentials creds = provider != null ? provider.fetch() : null;
+    String accessKey = creds != null ? creds.accessKey() : null;
+    String secretKey = creds != null ? creds.secretKey() : null;
     url = Signer.presignV4(request, region, accessKey, secretKey, args.expiry());
     return url.toString();
   }
@@ -2842,7 +2792,11 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName(), null));
+
+    Credentials creds = provider != null ? provider.fetch() : null;
+    String accessKey = creds != null ? creds.accessKey() : null;
+    String secretKey = creds != null ? creds.secretKey() : null;
+    return policy.formData(accessKey, secretKey, getRegion(policy.bucketName(), null));
   }
 
   /**
@@ -6894,96 +6848,6 @@ public class MinioClient {
   }
 
   /**
-   * Returns a pointer to a new, temporary credentials, obtained via STS assume role with client
-   * grants api.
-   *
-   * @param grantsToken contains a jwt access token, and seconds until token expiration.
-   *     customPolicy} and a static policy on minio server, defined for a given user.
-   * @return temporary credentials to access minio api.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   */
-  public Credentials newSTSClientGrants(@Nonnull ClientGrantsToken grantsToken)
-      throws InsufficientDataException, NoSuchAlgorithmException, IOException, InternalException,
-          InvalidResponseException, XmlParserException {
-    return this.newSTSClientGrants(grantsToken, null);
-  }
-
-  /**
-   * Returns a pointer to a new, temporary credentials, obtained via STS assume role with client
-   * grants api.
-   *
-   * @param grantsToken contains a jwt access token, and seconds until token expiration.
-   * @param customPolicy is a new policy to apply. Note that resulting policy will be the
-   *     intersection of {@literal customPolicy} and a static policy on minio server, defined for a
-   *     given user.
-   * @return temporary credentials to access minio api.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   */
-  public Credentials newSTSClientGrants(
-      @Nonnull ClientGrantsToken grantsToken, @Nullable String customPolicy)
-      throws IOException, InvalidResponseException, InsufficientDataException,
-          NoSuchAlgorithmException, InternalException, XmlParserException {
-    Objects.requireNonNull(stsUrl, "STS endpoint cannot be empty");
-    Objects.requireNonNull(grantsToken, "Client grants access token and expiry should be defined");
-
-    final HashMultimap<String, String> queryParams = HashMultimap.create();
-    queryParams.put("Action", "AssumeRoleWithClientGrants");
-    queryParams.put("DurationSeconds", String.valueOf(grantsToken.expiredAfter()));
-    queryParams.put("Token", grantsToken.token());
-    queryParams.put("Version", "2011-06-15");
-    if (customPolicy != null) {
-      queryParams.put("Policy", customPolicy);
-    }
-
-    try (Response response = executeSTSPost(queryParams)) {
-      if (response.body() == null) {
-        throw new InvalidResponseException();
-      }
-      final AssumeRoleWithClientGrantsResponse clientGransResponse =
-          Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class, response.body().charStream());
-      return clientGransResponse.credentials();
-    }
-  }
-
-  /**
-   * Updates a minio client to use obtained via {@link #newSTSClientGrants(ClientGrantsToken)} or
-   * {@link #newSTSClientGrants(ClientGrantsToken, String)} STS token (temp credentials).
-   *
-   * @param credentials is a STS temporary credentials to use.
-   */
-  public void withCredentials(@Nonnull Credentials credentials) {
-    Objects.requireNonNull(credentials, "STS credentials must not be null");
-    this.accessKey = Objects.requireNonNull(credentials.accessKey());
-    this.secretKey = Objects.requireNonNull(credentials.secretKey());
-    this.sessionToken = Objects.requireNonNull(credentials.sessionToken());
-    this.tokenExpiredAt = Objects.requireNonNull(credentials.expiredAt());
-  }
-
-  /**
-   * Checks if STS credentials is expired.
-   *
-   * @return true if and only if a minio client use STS credentials and that credentials is expired.
-   */
-  public boolean isCredentialsExpired() {
-    if (tokenExpiredAt == null) {
-      return false;
-    }
-    return ZonedDateTime.now().isAfter(tokenExpiredAt);
-  }
-
-  /**
    * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values
    * must be between 1 and Integer.MAX_VALUE when converted to milliseconds.
    *
@@ -8025,10 +7889,7 @@ public class MinioClient {
 
   public static final class Builder {
     HttpUrl baseUrl;
-    HttpUrl stsUrl;
     String region;
-    String accessKey;
-    String secretKey;
     OkHttpClient httpClient;
     boolean isAwsHost;
     boolean isAwsChinaHost;
@@ -8036,6 +7897,7 @@ public class MinioClient {
     boolean isDualStackHost;
     boolean useVirtualStyle;
     String regionInUrl;
+    Provider provider;
 
     public Builder() {}
 
@@ -8219,11 +8081,6 @@ public class MinioClient {
       return this;
     }
 
-    public Builder stsEndpoint(String endpoint) {
-      stsUrl = HttpUrl.parse(Objects.requireNonNull(endpoint, "STS endpoint cannot be empty"));
-      return this;
-    }
-
     public Builder endpoint(String endpoint, int port, boolean secure) {
       HttpUrl url = getBaseUrl(endpoint);
       if (port < 1 || port > 65535) {
@@ -8274,8 +8131,12 @@ public class MinioClient {
     }
 
     public Builder credentials(String accessKey, String secretKey) {
-      this.accessKey = accessKey;
-      this.secretKey = secretKey;
+      this.provider = new StaticProvider(accessKey, secretKey);
+      return this;
+    }
+
+    public Builder credentialsProvider(Provider provider) {
+      this.provider = provider;
       return this;
     }
 
@@ -8312,14 +8173,12 @@ public class MinioClient {
 
       return new MinioClient(
           baseUrl,
-          stsUrl,
           (region != null) ? region : regionInUrl,
           isAwsHost,
           isAcceleratedHost,
           isDualStackHost,
           useVirtualStyle,
-          accessKey,
-          secretKey,
+          provider,
           httpClient);
     }
   }
