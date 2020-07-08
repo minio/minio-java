@@ -750,7 +750,8 @@ public class MinioClient {
     return (map != null) ? HashMultimap.create(map) : HashMultimap.create();
   }
 
-  private HttpUrl buildUrl(
+  /** Build URL for given parameters. */
+  protected HttpUrl buildUrl(
       Method method,
       String bucketName,
       String objectName,
@@ -851,7 +852,8 @@ public class MinioClient {
     return url.host() + ":" + url.port();
   }
 
-  private Request createRequest(
+  /** Create HTTP request for given paramaters. */
+  protected Request createRequest(
       HttpUrl url, Method method, Multimap<String, String> headerMap, Object body, int length)
       throws IllegalArgumentException, InsufficientDataException, InternalException, IOException,
           NoSuchAlgorithmException {
@@ -940,7 +942,8 @@ public class MinioClient {
     return requestBuilder.build();
   }
 
-  private Response execute(
+  /** Execute HTTP request for given args and parameters. */
+  protected Response execute(
       Method method,
       BaseArgs args,
       Multimap<String, String> headers,
@@ -975,7 +978,8 @@ public class MinioClient {
         length);
   }
 
-  private Response execute(
+  /** Execute HTTP request for given parameters. */
+  protected Response execute(
       Method method,
       String bucketName,
       String objectName,
@@ -1171,7 +1175,7 @@ public class MinioClient {
   }
 
   /** Returns region of given bucket either from region cache or set in constructor. */
-  private String getRegion(String bucketName, String region)
+  protected String getRegion(String bucketName, String region)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -1442,7 +1446,9 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @see #buildUrl
    */
+  @Deprecated
   public String getObjectUrl(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,

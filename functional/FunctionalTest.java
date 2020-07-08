@@ -1780,7 +1780,14 @@ public class FunctionalTest {
       }
 
       Request.Builder requestBuilder = new Request.Builder();
-      String urlString = client.getObjectUrl(bucketName, "x");
+      String urlString =
+          client.getPresignedObjectUrl(
+              GetPresignedObjectUrlArgs.builder()
+                  .method(Method.GET)
+                  .bucket(bucketName)
+                  .object("x")
+                  .build());
+      urlString = urlString.split("\\?")[0]; // Remove query parameters.
       // remove last two characters to get clean url string of bucket.
       urlString = urlString.substring(0, urlString.length() - 2);
       Request request = requestBuilder.url(urlString).post(multipartBuilder.build()).build();
