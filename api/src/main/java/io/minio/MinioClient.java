@@ -1293,12 +1293,12 @@ public class MinioClient {
    * Gets object information and metadata of an object.
    *
    * <pre>Example:{@code
-   * ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
+   * StatObjectResponse stat = minioClient.statObject("my-bucketname", "my-objectname");
    * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @return {@link StatObjectResponse} - Populated object information and metadata.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -1313,7 +1313,7 @@ public class MinioClient {
    * @deprecated use {@link #statObject(StatObjectArgs)}
    */
   @Deprecated
-  public ObjectStat statObject(String bucketName, String objectName)
+  public StatObjectResponse statObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -1325,14 +1325,13 @@ public class MinioClient {
    * Gets object information and metadata of a SSE-C encrypted object.
    *
    * <pre>Example:{@code
-   * ObjectStat objectStat =
-   *     minioClient.statObject("my-bucketname", "my-objectname", ssec);
+   * StatObjectResponse stat = minioClient.statObject("my-bucketname", "my-objectname", ssec);
    * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
    * @param ssec SSE-C type server-side encryption.
-   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @return {@link StatObjectResponse} - Populated object information and metadata.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -1347,7 +1346,7 @@ public class MinioClient {
    * @deprecated use {@link #statObject(StatObjectArgs)}
    */
   @Deprecated
-  public ObjectStat statObject(
+  public StatObjectResponse statObject(
       String bucketName, String objectName, ServerSideEncryptionCustomerKey ssec)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
@@ -1362,12 +1361,12 @@ public class MinioClient {
    *
    * <pre>Example:{@code
    * // Get information of an object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
    *
    * // Get information of SSE-C encrypted object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder()
    *             .bucket("my-bucketname")
@@ -1376,7 +1375,7 @@ public class MinioClient {
    *             .build());
    *
    * // Get information of a versioned object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder()
    *             .bucket("my-bucketname")
@@ -1385,7 +1384,7 @@ public class MinioClient {
    *             .build());
    *
    * // Get information of a SSE-C encrypted versioned object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder()
    *             .bucket("my-bucketname")
@@ -1396,7 +1395,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args {@link StatObjectArgs} object.
-   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @return {@link StatObjectResponse} - Populated object information and metadata.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -1408,9 +1407,9 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
-   * @see ObjectStat
+   * @see StatObjectResponse
    */
-  public ObjectStat statObject(StatObjectArgs args)
+  public StatObjectResponse statObject(StatObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -1422,7 +1421,7 @@ public class MinioClient {
             args,
             (args.ssec() != null) ? newMultimap(args.ssec().headers()) : null,
             (args.versionId() != null) ? newMultimap("versionId", args.versionId()) : null);
-    return new ObjectStat(args.bucket(), args.object(), response.headers());
+    return new StatObjectResponse(response.headers(), args.bucket(), args.region(), args.object());
   }
 
   /**
@@ -1850,11 +1849,9 @@ public class MinioClient {
     Path filePath = Paths.get(filename);
     boolean fileExists = Files.exists(filePath);
 
-    ObjectStat objectStat = statObject(new StatObjectArgs(args));
-    long length = objectStat.length();
-    String etag = objectStat.etag();
+    StatObjectResponse stat = statObject(new StatObjectArgs(args));
 
-    String tempFilename = filename + "." + etag + ".part.minio";
+    String tempFilename = filename + "." + stat.etag() + ".part.minio";
     Path tempFilePath = Paths.get(tempFilename);
     boolean tempFileExists = Files.exists(tempFilePath);
 
@@ -1865,7 +1862,7 @@ public class MinioClient {
     long tempFileSize = 0;
     if (tempFileExists) {
       tempFileSize = Files.size(tempFilePath);
-      if (tempFileSize > length) {
+      if (tempFileSize > stat.size()) {
         Files.delete(tempFilePath);
         tempFileExists = false;
         tempFileSize = 0;
@@ -1874,15 +1871,15 @@ public class MinioClient {
 
     if (fileExists) {
       long fileSize = Files.size(filePath);
-      if (fileSize == length) {
+      if (fileSize == stat.size()) {
         // already downloaded. nothing to do
         return;
-      } else if (fileSize > length) {
+      } else if (fileSize > stat.size()) {
         throw new IllegalArgumentException(
             "Source object, '"
                 + args.object()
                 + "', size:"
-                + length
+                + stat.size()
                 + " is smaller than the destination file, '"
                 + filename
                 + "', size:"
@@ -1905,11 +1902,11 @@ public class MinioClient {
       is.close();
       os.close();
 
-      if (bytesWritten != length - tempFileSize) {
+      if (bytesWritten != stat.size() - tempFileSize) {
         throw new IOException(
             tempFilename
                 + ": unexpected data written.  expected = "
-                + (length - tempFileSize)
+                + (stat.size() - tempFileSize)
                 + ", written = "
                 + bytesWritten);
       }
@@ -2106,8 +2103,8 @@ public class MinioClient {
       return composeObject(new ComposeObjectArgs(args));
     }
 
-    ObjectStat stat = statObject(new StatObjectArgs(args.source()));
-    if (stat.length() > ObjectWriteArgs.MAX_PART_SIZE) {
+    StatObjectResponse stat = statObject(new StatObjectArgs(args.source()));
+    if (stat.size() > ObjectWriteArgs.MAX_PART_SIZE) {
       if (args.metadataDirective() != null && args.metadataDirective() == Directive.COPY) {
         throw new IllegalArgumentException(
             "COPY metadata directive is not applicable to source object size greater than 5 GiB");
@@ -2217,11 +2214,11 @@ public class MinioClient {
     int i = 0;
     for (ComposeSource src : sources) {
       i++;
-      ObjectStat stat = statObject(new StatObjectArgs(src));
+      StatObjectResponse stat = statObject(new StatObjectArgs(src));
 
-      src.buildHeaders(stat.length(), stat.etag());
+      src.buildHeaders(stat.size(), stat.etag());
 
-      long size = stat.length();
+      long size = stat.size();
       if (src.length() != null) {
         size = src.length();
       } else if (src.offset() != null) {
