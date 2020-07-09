@@ -42,6 +42,12 @@ public abstract class ObjectArgs extends BucketArgs {
       extends BucketArgs.Builder<B, A> {
     protected void validateObjectName(String name) {
       validateNotEmptyString(name, "object name");
+      for (String token : name.split("/")) {
+        if (token.equals(".") || token.equals("..")) {
+          throw new IllegalArgumentException(
+              "object name with '.' or '..' path segment is not supported");
+        }
+      }
     }
 
     protected void validate(A args) {

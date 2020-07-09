@@ -18,6 +18,18 @@ package io.minio;
 
 /** Argument class of MinioClient.getObject(). */
 public class GetObjectArgs extends ObjectConditionalReadArgs {
+  protected GetObjectArgs() {}
+
+  public GetObjectArgs(DownloadObjectArgs args) {
+    this.extraHeaders = args.extraHeaders;
+    this.extraQueryParams = args.extraQueryParams;
+    this.bucketName = args.bucketName;
+    this.region = args.region;
+    this.objectName = args.objectName;
+    this.versionId = args.versionId;
+    this.ssec = args.ssec;
+  }
+
   public static Builder builder() {
     return new Builder();
   }

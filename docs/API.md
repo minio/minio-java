@@ -568,6 +568,30 @@ for (Bucket bucket : bucketList) {
 }
 ```
 
+<a name="listBuckets"></a>
+### listBuckets(ListBucketsArgs args)
+`public List<Bucket> listBuckets(ListBucketsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listBuckets-io.minio.ListBucketsArgs-)_
+
+Lists bucket information of all buckets.
+
+__Parameters__
+| Parameter | Type                | Description |
+|:----------|:--------------------|:------------|
+| ``args``  | _[ListBucketsArgs]_ | Arguments.  |
+
+| Returns                                        |
+|:-----------------------------------------------|
+| _List<[Bucket]>_ - List of bucket information. |
+
+__Example__
+```java
+List<Bucket> bucketList =
+    minioClient.listBuckets(ListBuckets.builder().extraHeaders(headers).build());
+for (Bucket bucket : bucketList) {
+  System.out.println(bucket.creationDate() + ", " + bucket.name());
+}
+```
+
 <a name="listenBucketNotification"></a>
 ### listenBucketNotification(ListenBucketNotificationArgs args)
 `public CloseableIterator<Result<NotificationRecords>> listenBucketNotification(ListenBucketNotificationArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listenBucketNotification-io.minio.ListenBucketNotificationArgs-)_
@@ -1818,3 +1842,4 @@ ObjectStat objectStat =
 [UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
 [ComposeObjectArgs]: http://minio.github.io/minio-java/io/minio/ComposeObjectArgs.html
 [ObjectWriteResponse]: http://minio.github.io/minio-java/io/minio/ObjectWriteResponse.html
+[ListBucketsArgs]: http://minio.github.io/minio-java/io/minio/ListBucketsArgs.html

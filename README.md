@@ -15,19 +15,19 @@ Java 1.8 or above, with one of the following environments:
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>7.0.2</version>
+    <version>7.1.0</version>
 </dependency>
 ```
 
 ## Download from gradle
 ```xml
 dependencies {
-    compile 'io.minio:minio:7.0.2'
+    compile 'io.minio:minio:7.1.0'
 }
 ```
 
 ## Download from JAR
-You can download the latest [JAR](https://repo1.maven.org/maven2/io/minio/minio/7.0.2/) directly from maven.
+You can download the latest [JAR](https://repo1.maven.org/maven2/io/minio/minio/7.1.0/) directly from maven.
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
@@ -57,7 +57,10 @@ public class FileUploader {
   public static void main(String[] args) throws NoSuchAlgorithmException, IOException, InvalidKeyException, XmlPullParserException {
     try {
       // Create a minioClient with the MinIO Server name, Port, Access key and Secret key.
-      MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
+      MinioClient minioClient = MinioClient.builder()
+              .endpoint("https://play.min.io")
+              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+              .build();
 
       // Check if the bucket already exists.
       boolean isExist = 
@@ -81,12 +84,12 @@ public class FileUploader {
 
 #### Compile FileUploader
 ```sh
-javac -cp "minio-7.0.2-all.jar"  FileUploader.java
+javac -cp "minio-7.1.0-all.jar"  FileUploader.java
 ```
 
 #### Run FileUploader
 ```sh
-java -cp "minio-7.0.2-all.jar:." FileUploader
+java -cp "minio-7.1.0-all.jar:." FileUploader
 /home/user/Photos/asiaphotos.zip is successfully uploaded as asiaphotos.zip to `asiatrip` bucket.
 
 mc ls play/asiatrip/

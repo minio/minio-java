@@ -18,33 +18,35 @@ package io.minio;
 
 import okhttp3.Headers;
 
-/** Generic response class of any APIs. */
-public class GenericResponse {
-  private Headers headers;
-  private String bucket;
-  private String region;
-  private String object;
+/** Response class of MinioClient.uploadPart(). */
+public class UploadPartResponse extends GenericResponse {
+  private String uploadId;
+  private int partNumber;
+  private String etag;
 
-  public GenericResponse(Headers headers, String bucket, String region, String object) {
-    this.headers = headers;
-    this.bucket = bucket;
-    this.region = region;
-    this.object = object;
+  public UploadPartResponse(
+      Headers headers,
+      String bucket,
+      String region,
+      String object,
+      String uploadId,
+      int partNumber,
+      String etag) {
+    super(headers, bucket, region, object);
+    this.uploadId = uploadId;
+    this.partNumber = partNumber;
+    this.etag = etag;
   }
 
-  public Headers headers() {
-    return headers;
+  public String uploadId() {
+    return uploadId;
   }
 
-  public String bucket() {
-    return bucket;
+  public int partNumber() {
+    return partNumber;
   }
 
-  public String region() {
-    return region;
-  }
-
-  public String object() {
-    return object;
+  public String etag() {
+    return etag;
   }
 }

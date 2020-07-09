@@ -24,6 +24,23 @@ public class CopyObjectArgs extends ObjectWriteArgs {
   private Directive metadataDirective;
   private Directive taggingDirective;
 
+  protected CopyObjectArgs() {}
+
+  public CopyObjectArgs(ComposeObjectArgs args) {
+    this.extraHeaders = args.extraHeaders;
+    this.extraQueryParams = args.extraQueryParams;
+    this.bucketName = args.bucketName;
+    this.region = args.region;
+    this.objectName = args.objectName;
+    this.headers = args.headers;
+    this.userMetadata = args.userMetadata;
+    this.sse = args.sse;
+    this.tags = args.tags;
+    this.retention = args.retention;
+    this.legalHold = args.legalHold;
+    this.source = new CopySource(args.sources().get(0));
+  }
+
   public CopySource source() {
     return source;
   }
