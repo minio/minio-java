@@ -477,10 +477,10 @@ public class FunctionalTest {
         removeCheck);
   }
 
-  public static void makeBucket_test() throws Exception {
+  public static void makeBucket() throws Exception {
     String methodName = "makeBucket()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testBucketApiCases(methodName, false, false);
@@ -513,10 +513,10 @@ public class FunctionalTest {
         false);
   }
 
-  public static void listBuckets_test() throws Exception {
+  public static void listBuckets() throws Exception {
     String methodName = "listBuckets()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -558,28 +558,28 @@ public class FunctionalTest {
     }
   }
 
-  public static void bucketExists_test() throws Exception {
+  public static void bucketExists() throws Exception {
     String methodName = "bucketExists()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testBucketApiCases(methodName, true, false);
   }
 
-  public static void removeBucket_test() throws Exception {
+  public static void removeBucket() throws Exception {
     String methodName = "removeBucket()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testBucketApiCases(methodName, false, true);
   }
 
-  public static void enableVersioning_test() throws Exception {
+  public static void enableVersioning() throws Exception {
     String methodName = "enableVersioning()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -597,10 +597,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void disableVersioning_test() throws Exception {
+  public static void disableVersioning() throws Exception {
     String methodName = "disableVersioning()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -624,10 +624,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void isVersioningEnabled_test() throws Exception {
+  public static void isVersioningEnabled() throws Exception {
     String methodName = "isVersioningEnabled()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -713,10 +713,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void uploadObject_test() throws Exception {
+  public static void uploadObject() throws Exception {
     String methodName = "uploadObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testUploadObject("[single upload]", createFile1Kb(), null);
@@ -777,10 +777,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void putObject_test() throws Exception {
+  public static void putObject() throws Exception {
     String methodName = "putObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testPutObject(
@@ -998,10 +998,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void statObject_test() throws Exception {
+  public static void statObject() throws Exception {
     String methodName = "statObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     String objectName = getRandomName();
@@ -1097,10 +1097,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getObject_test() throws Exception {
+  public static void getObject() throws Exception {
     String methodName = "getObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testGetObject(
@@ -1232,10 +1232,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void downloadObject_test() throws Exception {
+  public static void downloadObject() throws Exception {
     String methodName = "downloadObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     String objectName = getRandomName();
@@ -1363,9 +1363,9 @@ public class FunctionalTest {
     }
   }
 
-  public static void listObjects_test() throws Exception {
+  public static void listObjects() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listObjects()");
+      System.out.println("listObjects()");
     }
 
     testListObjects("[bucket]", ListObjectsArgs.builder().bucket(getRandomName()).build(), 3, 0);
@@ -1427,10 +1427,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void removeObject_test() throws Exception {
+  public static void removeObject() throws Exception {
     String methodName = "removeObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testRemoveObject(
@@ -1473,10 +1473,10 @@ public class FunctionalTest {
         RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
   }
 
-  public static void removeObjects_test() throws Exception {
+  public static void removeObjects() throws Exception {
     String methodName = "removeObjects()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1619,19 +1619,19 @@ public class FunctionalTest {
             .build());
   }
 
-  public static void getPresignedObjectUrl_test() throws Exception {
+  public static void getPresignedObjectUrl() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: getPresignedObjectUrl()");
+      System.out.println("getPresignedObjectUrl()");
     }
 
     testGetPresignedObjectUrlForGet();
     testGetPresignedObjectUrlForPut();
   }
 
-  public static void presignedPostPolicy_test() throws Exception {
+  public static void presignedPostPolicy() throws Exception {
     String methodName = "presignedPostPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1890,10 +1890,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void copyObject_test() throws Exception {
+  public static void copyObject() throws Exception {
     String methodName = "copyObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     String objectName = getRandomName();
@@ -2165,10 +2165,10 @@ public class FunctionalTest {
             .build());
   }
 
-  public static void composeObject_test() throws Exception {
+  public static void composeObject() throws Exception {
     String methodName = "composeObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2234,10 +2234,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void enableObjectLegalHold_test() throws Exception {
+  public static void enableObjectLegalHold() throws Exception {
     String methodName = "enableObjectLegalHold()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
     long startTime = System.currentTimeMillis();
     String objectName = getRandomName();
@@ -2272,10 +2272,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void disableObjectLegalHold_test() throws Exception {
+  public static void disableObjectLegalHold() throws Exception {
     String methodName = "disableObjectLegalHold()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
     long startTime = System.currentTimeMillis();
     String objectName = getRandomName();
@@ -2312,10 +2312,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void isObjectLegalHoldEnabled_test() throws Exception {
+  public static void isObjectLegalHoldEnabled() throws Exception {
     String methodName = "isObjectLegalHoldEnabled()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
     long startTime = System.currentTimeMillis();
     String objectName = getRandomName();
@@ -2356,11 +2356,11 @@ public class FunctionalTest {
     }
   }
 
-  public static void setDefaultRetention_test() throws Exception {
+  public static void setDefaultRetention() throws Exception {
     String methodName = "setDefaultRetention()";
     String testTags = "[COMPLIANCE, 10 days]";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2401,10 +2401,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getDefaultRetention_test() throws Exception {
+  public static void getDefaultRetention() throws Exception {
     String methodName = "getDefaultRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2426,10 +2426,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteDefaultRetention_test() throws Exception {
+  public static void deleteDefaultRetention() throws Exception {
     String methodName = "deleteDefaultRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2454,10 +2454,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setObjectRetention_test() throws Exception {
+  public static void setObjectRetention() throws Exception {
     String methodName = "setObjectRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2534,10 +2534,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getObjectRetention_test() throws Exception {
+  public static void getObjectRetention() throws Exception {
     String methodName = "getObjectRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2597,10 +2597,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketPolicy_test() throws Exception {
+  public static void getBucketPolicy() throws Exception {
     String methodName = "getBucketPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2632,10 +2632,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketPolicy_test() throws Exception {
+  public static void setBucketPolicy() throws Exception {
     String methodName = "setBucketPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2660,10 +2660,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketPolicy_test() throws Exception {
+  public static void deleteBucketPolicy() throws Exception {
     String methodName = "deleteBucketPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2700,10 +2700,10 @@ public class FunctionalTest {
         SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
   }
 
-  public static void setBucketLifeCycle_test() throws Exception {
+  public static void setBucketLifeCycle() throws Exception {
     String methodName = "setBucketLifeCycle()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2721,10 +2721,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketLifeCycle_test() throws Exception {
+  public static void deleteBucketLifeCycle() throws Exception {
     String methodName = "deleteBucketLifeCycle()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2746,10 +2746,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketLifeCycle_test() throws Exception {
+  public static void getBucketLifeCycle() throws Exception {
     String methodName = "getBucketLifeCycle()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2769,7 +2769,7 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketNotification_test() throws Exception {
+  public static void setBucketNotification() throws Exception {
     String methodName = "setBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
@@ -2778,7 +2778,7 @@ public class FunctionalTest {
     }
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     try {
@@ -2811,7 +2811,7 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketNotification_test() throws Exception {
+  public static void getBucketNotification() throws Exception {
     String methodName = "getBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
@@ -2820,7 +2820,7 @@ public class FunctionalTest {
     }
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     try {
@@ -2863,7 +2863,7 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketNotification_test() throws Exception {
+  public static void deleteBucketNotification() throws Exception {
     String methodName = "deleteBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
@@ -2872,7 +2872,7 @@ public class FunctionalTest {
     }
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     try {
@@ -2915,10 +2915,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void listenBucketNotification_test() throws Exception {
+  public static void listenBucketNotification() throws Exception {
     String methodName = "listenBucketNotification()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2979,13 +2979,13 @@ public class FunctionalTest {
     }
   }
 
-  public static void selectObjectContent_test() throws Exception {
+  public static void selectObjectContent() throws Exception {
     String methodName = "selectObjectContent()";
     String sqlExpression = "select * from S3Object";
     String testArgs = "[sqlExpression: " + sqlExpression + ", requestProgress: true]";
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3059,10 +3059,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketEncryption_test() throws Exception {
+  public static void setBucketEncryption() throws Exception {
     String methodName = "setBucketEncryption()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3084,10 +3084,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketEncryption_test() throws Exception {
+  public static void getBucketEncryption() throws Exception {
     String methodName = "getBucketEncryption()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3129,10 +3129,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketEncryption_test() throws Exception {
+  public static void deleteBucketEncryption() throws Exception {
     String methodName = "deleteBucketEncryption()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3165,10 +3165,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketTags_test() throws Exception {
+  public static void setBucketTags() throws Exception {
     String methodName = "setBucketTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3189,10 +3189,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketTags_test() throws Exception {
+  public static void getBucketTags() throws Exception {
     String methodName = "getBucketTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3222,10 +3222,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketTags_test() throws Exception {
+  public static void deleteBucketTags() throws Exception {
     String methodName = "deleteBucketTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3253,10 +3253,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setObjectTags_test() throws Exception {
+  public static void setObjectTags() throws Exception {
     String methodName = "setObjectTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3282,10 +3282,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getObjectTags_test() throws Exception {
+  public static void getObjectTags() throws Exception {
     String methodName = "getObjectTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3324,10 +3324,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteObjectTags_test() throws Exception {
+  public static void deleteObjectTags() throws Exception {
     String methodName = "deleteObjectTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3365,72 +3365,72 @@ public class FunctionalTest {
   }
 
   public static void runBucketTests() throws Exception {
-    makeBucket_test();
-    bucketExists_test();
-    removeBucket_test();
-    listBuckets_test();
+    makeBucket();
+    bucketExists();
+    removeBucket();
+    listBuckets();
 
-    enableVersioning_test();
-    disableVersioning_test();
-    isVersioningEnabled_test();
+    enableVersioning();
+    disableVersioning();
+    isVersioningEnabled();
 
-    setDefaultRetention_test();
-    getDefaultRetention_test();
+    setDefaultRetention();
+    getDefaultRetention();
 
-    setBucketEncryption_test();
-    getBucketEncryption_test();
-    deleteBucketEncryption_test();
+    setBucketEncryption();
+    getBucketEncryption();
+    deleteBucketEncryption();
 
-    setBucketTags_test();
-    getBucketTags_test();
-    deleteBucketTags_test();
+    setBucketTags();
+    getBucketTags();
+    deleteBucketTags();
 
-    setBucketPolicy_test();
-    getBucketPolicy_test();
-    deleteBucketPolicy_test();
+    setBucketPolicy();
+    getBucketPolicy();
+    deleteBucketPolicy();
 
-    setBucketLifeCycle_test();
-    getBucketLifeCycle_test();
-    deleteBucketLifeCycle_test();
+    setBucketLifeCycle();
+    getBucketLifeCycle();
+    deleteBucketLifeCycle();
 
-    setBucketNotification_test();
-    getBucketNotification_test();
-    deleteBucketNotification_test();
+    setBucketNotification();
+    getBucketNotification();
+    deleteBucketNotification();
 
-    listenBucketNotification_test();
+    listenBucketNotification();
   }
 
   public static void runObjectTests() throws Exception {
-    listObjects_test();
+    listObjects();
 
     setup();
 
-    putObject_test();
-    getObject_test();
-    removeObject_test();
-    removeObjects_test();
-    statObject_test();
+    putObject();
+    getObject();
+    removeObject();
+    removeObjects();
+    statObject();
 
-    copyObject_test();
-    composeObject_test();
-    uploadObject_test();
-    downloadObject_test();
+    copyObject();
+    composeObject();
+    uploadObject();
+    downloadObject();
 
-    setObjectRetention_test();
-    getObjectRetention_test();
+    setObjectRetention();
+    getObjectRetention();
 
-    getPresignedObjectUrl_test();
-    presignedPostPolicy_test();
+    getPresignedObjectUrl();
+    presignedPostPolicy();
 
-    enableObjectLegalHold_test();
-    disableObjectLegalHold_test();
-    isObjectLegalHoldEnabled_test();
+    enableObjectLegalHold();
+    disableObjectLegalHold();
+    isObjectLegalHoldEnabled();
 
-    selectObjectContent_test();
+    selectObjectContent();
 
-    setObjectTags_test();
-    getObjectTags_test();
-    deleteObjectTags_test();
+    setObjectTags();
+    getObjectTags();
+    deleteObjectTags();
 
     teardown();
   }
@@ -3577,12 +3577,15 @@ public class FunctionalTest {
       client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
       // Enable trace for debugging.
       // client.traceOn(System.out);
-
+      if (!mintEnv) System.out.println(">>> Running tests:");
       FunctionalTest.runTests();
       if (!mintEnv) {
+        System.out.println();
+        System.out.println(">>> Running tests for region:");
         isQuickTest = true;
         // Get new bucket name to avoid minio azure gateway failure.
         bucketName = getRandomName();
+        bucketNameWithLock = getRandomName();
         client =
             MinioClient.builder()
                 .endpoint(endpoint)
