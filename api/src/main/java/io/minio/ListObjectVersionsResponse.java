@@ -16,35 +16,20 @@
 
 package io.minio;
 
+import io.minio.messages.ListVersionsResult;
 import okhttp3.Headers;
 
-/** Generic response class of any APIs. */
-public class GenericResponse {
-  private Headers headers;
-  private String bucket;
-  private String region;
-  private String object;
+/** Response class of MinioClient.listObjectVersions(). */
+public class ListObjectVersionsResponse extends GenericResponse {
+  private ListVersionsResult result;
 
-  public GenericResponse(Headers headers, String bucket, String region, String object) {
-    this.headers = headers;
-    this.bucket = bucket;
-    this.region = region;
-    this.object = object;
+  public ListObjectVersionsResponse(
+      Headers headers, String bucket, String region, ListVersionsResult result) {
+    super(headers, bucket, region, null);
+    this.result = result;
   }
 
-  public Headers headers() {
-    return headers;
-  }
-
-  public String bucket() {
-    return bucket;
-  }
-
-  public String region() {
-    return region;
-  }
-
-  public String object() {
-    return object;
+  public ListVersionsResult result() {
+    return result;
   }
 }

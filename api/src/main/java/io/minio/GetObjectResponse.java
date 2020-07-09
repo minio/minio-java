@@ -16,35 +16,32 @@
 
 package io.minio;
 
+import java.io.FilterInputStream;
+import java.io.InputStream;
 import okhttp3.Headers;
 
-/** Generic response class of any APIs. */
-public class GenericResponse {
-  private Headers headers;
-  private String bucket;
-  private String region;
-  private String object;
+public class GetObjectResponse extends FilterInputStream {
+  private GenericResponse response;
 
-  public GenericResponse(Headers headers, String bucket, String region, String object) {
-    this.headers = headers;
-    this.bucket = bucket;
-    this.region = region;
-    this.object = object;
+  public GetObjectResponse(
+      Headers headers, String bucket, String region, String object, InputStream body) {
+    super(body);
+    this.response = new GenericResponse(headers, bucket, region, object);
   }
 
   public Headers headers() {
-    return headers;
+    return response.headers();
   }
 
   public String bucket() {
-    return bucket;
+    return response.bucket();
   }
 
   public String region() {
-    return region;
+    return response.region();
   }
 
   public String object() {
-    return object;
+    return response.object();
   }
 }

@@ -63,7 +63,9 @@ public abstract class StsProvider implements Provider {
     if (response.isSuccessful()) {
       return response;
     }
-    throw new InvalidResponseException(request);
+    final String body = response.body() != null ? response.body().string() : null;
+    final String contentType = response.headers().get("content-type");
+    throw new InvalidResponseException(response.code(), contentType, body);
   }
 
   protected String tokenDuration(long requiredSeconds) {

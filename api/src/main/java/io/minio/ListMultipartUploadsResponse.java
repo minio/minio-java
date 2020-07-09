@@ -16,35 +16,20 @@
 
 package io.minio;
 
+import io.minio.messages.ListMultipartUploadsResult;
 import okhttp3.Headers;
 
-/** Generic response class of any APIs. */
-public class GenericResponse {
-  private Headers headers;
-  private String bucket;
-  private String region;
-  private String object;
+/** Response class of MinioClient.listMultipartUploads(). */
+public class ListMultipartUploadsResponse extends GenericResponse {
+  private ListMultipartUploadsResult result;
 
-  public GenericResponse(Headers headers, String bucket, String region, String object) {
-    this.headers = headers;
-    this.bucket = bucket;
-    this.region = region;
-    this.object = object;
+  public ListMultipartUploadsResponse(
+      Headers headers, String bucket, String region, ListMultipartUploadsResult result) {
+    super(headers, bucket, region, null);
+    this.result = result;
   }
 
-  public Headers headers() {
-    return headers;
-  }
-
-  public String bucket() {
-    return bucket;
-  }
-
-  public String region() {
-    return region;
-  }
-
-  public String object() {
-    return object;
+  public ListMultipartUploadsResult result() {
+    return result;
   }
 }

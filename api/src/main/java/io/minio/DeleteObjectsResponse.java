@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2019 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package io.minio.errors;
+package io.minio;
 
-/** Thrown to indicate that non-xml response thrown from server. */
-public class InvalidResponseException extends MinioException {
-  public InvalidResponseException(int responseCode, String contentType, String body) {
-    super(
-        "Non-XML response from server. Response code: "
-            + responseCode
-            + ", Content-Type: "
-            + contentType
-            + ", body: "
-            + body);
+import io.minio.messages.DeleteResult;
+import okhttp3.Headers;
+
+/** Response class of MinioClient.listObjectsV1(). */
+public class DeleteObjectsResponse extends GenericResponse {
+  private DeleteResult result;
+
+  public DeleteObjectsResponse(Headers headers, String bucket, String region, DeleteResult result) {
+    super(headers, bucket, region, null);
+    this.result = result;
+  }
+
+  public DeleteResult result() {
+    return result;
   }
 }
