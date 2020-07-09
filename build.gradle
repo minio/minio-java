@@ -257,7 +257,7 @@ project(':functional') {
         main = 'FunctionalTest'
         classpath = sourceSets.main.runtimeClasspath
 
-        ext.endpoint = 'https://play.min.io'
+        ext.endpoint = 'https://play.min.io:9000'
         if (rootProject.hasProperty('endpoint')) {
             ext.endpoint = rootProject.properties['endpoint']
         }

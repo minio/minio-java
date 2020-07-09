@@ -84,7 +84,6 @@ import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.DeleteObject;
-import io.minio.messages.ErrorResponse;
 import io.minio.messages.Event;
 import io.minio.messages.EventType;
 import io.minio.messages.FileHeaderInfo;
@@ -131,6 +130,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.crypto.KeyGenerator;
+import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
@@ -417,252 +417,244 @@ public class FunctionalTest {
     throw e;
   }
 
-  /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucket_test1() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: makeBucket(MakeBucketArgs args)");
-    }
-
+  public static void testBucketApi(
+      String methodName,
+      String testTags,
+      MakeBucketArgs args,
+      boolean existCheck,
+      boolean removeCheck)
+      throws Exception {
     long startTime = System.currentTimeMillis();
     try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("makeBucket(MakeBucketArgs args)", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucket_test2() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with region and object lock : makeBucket(MakeBucketArgs args)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(
-          MakeBucketArgs.builder().bucket(name).region("eu-west-1").objectLock(true).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(
-          "makeBucket(MakeBucketArgs args)", "region: eu-west-1, objectLock: true", startTime);
-    } catch (Exception e) {
-      ErrorResponse errorResponse = null;
-      if (e instanceof ErrorResponseException) {
-        ErrorResponseException exp = (ErrorResponseException) e;
-        errorResponse = exp.errorResponse();
-      }
-      // Ignore NotImplemented error
-      if (errorResponse != null && errorResponse.errorCode() == ErrorCode.NOT_IMPLEMENTED) {
-        mintIgnoredLog(
-            "makeBucket(MakeBucketArgs args)", "region: eu-west-1, objectLock: true", startTime);
-      } else {
-        mintFailedLog(
-            "makeBucket(MakeBucketArgs args)",
-            "region: eu-west-1, objectLock: true",
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    }
-  }
-
-  /** Test: makeBucket(MakeBucketArgs args). */
-  public static void makeBucket_test3() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with region: makeBucket(MakeBucketArgs args)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).region("eu-west-1").build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("makeBucket(MakeBucketArgs args) ", "region: eu-west-1", startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args) ",
-          "region: eu-west-1",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /** Test: makeBucket(MakeBucketArgs args) where bucketName has periods in its name. */
-  public static void makeBucket_test4() throws Exception {
-    if (!mintEnv) {
-      System.out.println(
-          "Test: with bucket name having periods in its name:  makeBucket(MakeBucketArgs args)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    String name = getRandomName() + ".withperiod";
-    try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).region("eu-central-1").build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(
-          "makeBucket(MakeBucketArgs args) bucketname having periods in its name",
-          "name: " + name + ", region: eu-central-1",
-          startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "makeBucket(MakeBucketArgs args) bucketname having periods in its name",
-          "name: " + name + ", region: eu-central-1",
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /** Test: enableVersioning(EnableVersioningArgs args). */
-  public static void enableVersioning_test() throws Exception {
-    String methodName = "enableVersioning(EnableVersioningArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
-      if (!client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] isVersioningEnabled(): expected: true, got: false");
-      }
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: disableVersioning(DisableVersioningArgs args). */
-  public static void disableVersioning_test() throws Exception {
-    String methodName = "disableVersioning(DisableVersioningArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
-      if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] isVersioningEnabled(): expected: false, got: true");
-      }
-
-      client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
-      client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
-      if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] isVersioningEnabled(): expected: false, got: true");
-      }
-
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: listBuckets(). */
-  public static void listBuckets_test() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: listBuckets()");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      long nowSeconds = ZonedDateTime.now().toEpochSecond();
-      String bucketName = getRandomName();
-      boolean found = false;
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-      for (Bucket bucket : client.listBuckets()) {
-        if (bucket.name().equals(bucketName)) {
-          if (found) {
-            throw new Exception(
-                "[FAILED] duplicate entry " + bucketName + " found in list buckets");
-          }
-
-          found = true;
-          // excuse 15 minutes
-          if ((bucket.creationDate().toEpochSecond() - nowSeconds) > (15 * 60)) {
-            throw new Exception(
-                "[FAILED] bucket creation time too apart in "
-                    + (bucket.creationDate().toEpochSecond() - nowSeconds)
-                    + " seconds");
-          }
+      client.makeBucket(args);
+      try {
+        if (existCheck
+            && !client.bucketExists(
+                BucketExistsArgs.builder().bucket(args.bucket()).region(args.region()).build())) {
+          throw new Exception(methodName + " failed after bucket creation");
+        }
+        if (removeCheck) {
+          client.removeBucket(
+              RemoveBucketArgs.builder().bucket(args.bucket()).region(args.region()).build());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        if (!removeCheck) {
+          client.removeBucket(
+              RemoveBucketArgs.builder().bucket(args.bucket()).region(args.region()).build());
         }
       }
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-      if (!found) {
-        throw new Exception("[FAILED] created bucket not found in list buckets");
-      }
-      mintSuccessLog("listBuckets()", null, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "listBuckets()",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: bucketExists(BucketExistsArgs args). */
-  public static void bucketExists_test() throws Exception {
-    String methodName = "bucketExists(BucketExistsArgs args)";
+  public static void testBucketApiCases(String methodName, boolean existCheck, boolean removeCheck)
+      throws Exception {
+    testBucketApi(
+        methodName,
+        "[basic check]",
+        MakeBucketArgs.builder().bucket(getRandomName()).build(),
+        existCheck,
+        removeCheck);
+
+    if (isQuickTest) {
+      return;
+    }
+
+    testBucketApi(
+        methodName,
+        "[object lock]",
+        MakeBucketArgs.builder().bucket(getRandomName()).objectLock(true).build(),
+        existCheck,
+        removeCheck);
+    testBucketApi(
+        methodName,
+        "[name contains period]",
+        MakeBucketArgs.builder().bucket(getRandomName() + ".withperiod").build(),
+        existCheck,
+        removeCheck);
+  }
+
+  public static void makeBucket_test() throws Exception {
+    String methodName = "makeBucket()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    testBucketApiCases(methodName, false, false);
+
+    if (isQuickTest) {
+      return;
+    }
+
+    if (!endpoint.contains(".amazonaws.com")) {
+      mintIgnoredLog(methodName, "[region]", System.currentTimeMillis());
+      mintIgnoredLog(methodName, "[region, object lock]", System.currentTimeMillis());
+      return;
+    }
+
+    testBucketApi(
+        methodName,
+        "[region]",
+        MakeBucketArgs.builder().bucket(getRandomName()).region("eu-west-1").build(),
+        false,
+        false);
+    testBucketApi(
+        methodName,
+        "[region, object lock]",
+        MakeBucketArgs.builder()
+            .bucket(getRandomName())
+            .region("eu-central-1")
+            .objectLock(true)
+            .build(),
+        false,
+        false);
+  }
+
+  public static void listBuckets_test() throws Exception {
+    String methodName = "listBuckets()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    List<String> expectedBucketNames = new LinkedList<>();
     try {
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      if (!client.bucketExists(BucketExistsArgs.builder().bucket(name).build())) {
-        throw new Exception("[FAILED] bucket does not exist");
+      try {
+        String bucketName = getRandomName();
+        client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        expectedBucketNames.add(bucketName);
+
+        bucketName = getRandomName();
+        client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+        expectedBucketNames.add(bucketName);
+
+        bucketName = getRandomName() + ".withperiod";
+        client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        expectedBucketNames.add(bucketName);
+
+        List<String> bucketNames = new LinkedList<>();
+        for (Bucket bucket : client.listBuckets()) {
+          if (expectedBucketNames.contains(bucket.name())) {
+            bucketNames.add(bucket.name());
+          }
+        }
+
+        if (!expectedBucketNames.containsAll(bucketNames)) {
+          throw new Exception(
+              "bucket names differ; expected = " + expectedBucketNames + ", got = " + bucketNames);
+        }
+
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        for (String bucketName : expectedBucketNames) {
+          client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+        }
       }
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: removeBucket(RemoveBucketArgs args). */
-  public static void removeBucket_test() throws Exception {
+  public static void bucketExists_test() throws Exception {
+    String methodName = "bucketExists()";
     if (!mintEnv) {
-      System.out.println("Test: removeBucket(RemoveBucketArgs args)");
+      System.out.println("Test: " + methodName);
+    }
+
+    testBucketApiCases(methodName, true, false);
+  }
+
+  public static void removeBucket_test() throws Exception {
+    String methodName = "removeBucket()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    testBucketApiCases(methodName, false, true);
+  }
+
+  public static void enableVersioning_test() throws Exception {
+    String methodName = "enableVersioning()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String name = getRandomName();
     try {
-      String name = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog("removeBucket(RemoveBucketArgs args)", null, startTime);
+      try {
+        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
+      }
     } catch (Exception e) {
-      mintFailedLog(
-          "removeBucket(RemoveBucketArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void disableVersioning_test() throws Exception {
+    String methodName = "disableVersioning()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String name = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
+      try {
+        // disableVersioning() should succeed on fresh bucket.
+        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+
+        // disableVersioning() should succeed on version enabled bucket.
+        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void isVersioningEnabled_test() throws Exception {
+    String methodName = "isVersioningEnabled()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String name = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
+      try {
+        if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+          throw new Exception("isVersioningEnabled() should return false on fresh bucket");
+        }
+
+        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+        if (!client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+          throw new Exception("isVersioningEnabled() should return true on versioned bucket");
+        }
+
+        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
+        if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+          throw new Exception(
+              "isVersioningEnabled() should return false on version disabled bucket");
+        }
+
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
     }
   }
 
@@ -708,7 +700,6 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: uploadObject() [single upload] */
   public static void uploadObject_test() throws Exception {
     String methodName = "uploadObject()";
     if (!mintEnv) {
@@ -926,211 +917,147 @@ public class FunctionalTest {
         null);
   }
 
-  /** Test: statObject(StatObjectArgs args). */
-  public static void statObject_test1() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: statObject(StatObjectArgs args)");
-    }
-
+  public static void testStatObject(String testTags, PutObjectArgs args, ObjectStat expectedStat)
+      throws Exception {
+    String methodName = "statObject()";
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("my-custom-data", "foo");
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .contentType(customContentType)
-              .userMetadata(headerMap)
-              .build());
+      client.putObject(args);
+      try {
+        ServerSideEncryptionCustomerKey ssec = null;
+        if (args.sse() instanceof ServerSideEncryptionCustomerKey) {
+          ssec = (ServerSideEncryptionCustomerKey) args.sse();
+        }
+        ObjectStat stat =
+            client.statObject(
+                StatObjectArgs.builder()
+                    .bucket(args.bucket())
+                    .object(args.object())
+                    .ssec(ssec)
+                    .build());
 
-      ObjectStat objectStat =
-          client.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build());
+        if (!expectedStat.bucketName().equals(stat.bucketName())) {
+          throw new Exception(
+              "bucket name: expected = "
+                  + expectedStat.bucketName()
+                  + ", got = "
+                  + stat.bucketName());
+        }
 
-      if (!(objectName.equals(objectStat.name())
-          && (objectStat.length() == 1)
-          && bucketName.equals(objectStat.bucketName())
-          && objectStat.contentType().equals(customContentType))) {
-        throw new Exception("[FAILED] object stat differs");
-      }
+        if (!expectedStat.name().equals(stat.name())) {
+          throw new Exception(
+              "object name: expected = " + expectedStat.name() + ", got = " + stat.name());
+        }
 
-      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
-      if (!httpHeaders.containsKey("x-amz-meta-my-custom-data")) {
-        throw new Exception("[FAILED] metadata not found in object stat");
-      }
-      List<String> values = httpHeaders.get("x-amz-meta-my-custom-data");
-      if (values.size() != 1) {
-        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
-      }
-      if (!values.get(0).equals("foo")) {
-        throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
-      }
+        if (expectedStat.length() != stat.length()) {
+          throw new Exception(
+              "length: expected = " + expectedStat.length() + ", got = " + stat.length());
+        }
 
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("statObject(StatObjectArgs args)", null, startTime);
+        if (!expectedStat.contentType().equals(stat.contentType())) {
+          throw new Exception(
+              "content-type: expected = "
+                  + expectedStat.contentType()
+                  + ", got = "
+                  + stat.contentType());
+        }
+
+        for (String key : expectedStat.httpHeaders().keySet()) {
+          if (!key.startsWith("x-amz-meta-")) {
+            continue;
+          }
+
+          if (!stat.httpHeaders().containsKey(key)) {
+            throw new Exception("metadata " + key + " not found");
+          }
+
+          if (!expectedStat
+              .httpHeaders()
+              .get(key)
+              .get(0)
+              .equals(stat.httpHeaders().get(key).get(0))) {
+            throw new Exception(
+                "metadata "
+                    + key
+                    + " value: expected: "
+                    + expectedStat.httpHeaders().get(key).get(0)
+                    + ", got: "
+                    + stat.httpHeaders().get(key).get(0));
+          }
+        }
+
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+      }
     } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: with SSE-C: statObject(StatObjectArgs args). */
-  public static void statObject_test2() throws Exception {
-    long startTime = System.currentTimeMillis();
-    if (!isSecureEndpoint) {
-      mintIgnoredLog("statObject(StatObjectArgs args) using SSE_C.", null, startTime);
+  public static void statObject_test() throws Exception {
+    String methodName = "statObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    String objectName = getRandomName();
+
+    PutObjectArgs.Builder builder =
+        PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+            new ContentInputStream(1024), 1024, -1);
+    Headers.Builder headersBuilder =
+        new Headers.Builder()
+            .add("Content-Type: application/octet-stream")
+            .add("Content-Length: 1024")
+            .add("Last-Modified", ZonedDateTime.now().format(Time.HTTP_HEADER_DATE_FORMAT));
+
+    testStatObject(
+        "[basic check]",
+        builder.build(),
+        new ObjectStat(bucketName, objectName, headersBuilder.build()));
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put("Content-Type", customContentType);
+    Map<String, String> userMetadata = new HashMap<>();
+    userMetadata.put("My-Project", "Project One");
+    builder = builder.headers(headers).userMetadata(userMetadata);
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+
+    ObjectStat stat =
+        new ObjectStat(
+            bucketName,
+            objectName,
+            headersBuilder
+                .set("Content-Type", customContentType)
+                .add("X-Amz-Meta-My-Project: Project One")
+                .build());
+
+    testStatObject("[user metadata]", builder.build(), stat);
+
+    if (isQuickTest) {
       return;
     }
 
-    if (!mintEnv) {
-      System.out.println("Test: with SSE-C: statObject(StatObjectArgs args)");
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+    testStatObject("[SSE-S3]", builder.sse(sseS3).build(), stat);
+
+    if (!isSecureEndpoint) {
+      mintIgnoredLog(methodName, "[SSE-C]", System.currentTimeMillis());
+      return;
     }
 
-    try {
-      String objectName = getRandomName();
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+    testStatObject("[SSE-C]", builder.sse(ssec).build(), stat);
 
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .sse(ssec)
-              .build());
-
-      ObjectStat objectStat =
-          client.statObject(
-              StatObjectArgs.builder().bucket(bucketName).object(objectName).ssec(ssec).build());
-
-      if (!(objectName.equals(objectStat.name())
-          && (objectStat.length() == 1)
-          && bucketName.equals(objectStat.bucketName()))) {
-        throw new Exception("[FAILED] object stat differs");
-      }
-
-      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
-      if (!httpHeaders.containsKey("X-Amz-Server-Side-Encryption-Customer-Algorithm")) {
-        throw new Exception("[FAILED] metadata not found in object stat");
-      }
-      List<String> values = httpHeaders.get("X-Amz-Server-Side-Encryption-Customer-Algorithm");
-      if (values.size() != 1) {
-        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
-      }
-      if (!values.get(0).equals("AES256")) {
-        throw new Exception(
-            "[FAILED] wrong metadata value. expected: AES256, got: " + values.get(0));
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("statObject(StatObjectArgs args) using SSE_C.", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args) using SSE_C.",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
-  }
-
-  /** Test: wtth non-existing objecth: statObject(StatObjectArgs args). */
-  public static void statObject_test3() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with non-existing object: statObject(StatObjectArgs args)");
+    if (sseKms == null) {
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
+      return;
     }
 
-    long startTime = System.currentTimeMillis();
-    try {
-      client.statObject(
-          StatObjectArgs.builder().bucket(bucketName).object(getRandomName() + "/").build());
-    } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_KEY) {
-        mintFailedLog(
-            "statObject(StatObjectArgs args) with non-existing object",
-            null,
-            startTime,
-            null,
-            e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-        throw e;
-      }
-    } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args) with non-existing object",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    } finally {
-      mintSuccessLog("statObject(StatObjectArgs args) with non-existing object", null, startTime);
-    }
-  }
-
-  /** Test: with extra headers/query params: statObject(StatObjectArgs args). */
-  public static void statObject_test4() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: with extra headers/query params: statObject(StatObjectArgs args)");
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String objectName = getRandomName();
-      Map<String, String> headerMap = new HashMap<>();
-      headerMap.put("my-custom-data", "foo");
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .contentType(customContentType)
-              .userMetadata(headerMap)
-              .build());
-
-      HashMap<String, String> headers = new HashMap<>();
-      headers.put("x-amz-request-payer", "requester");
-      HashMap<String, String> queryParams = new HashMap<>();
-      queryParams.put("partNumber", "1");
-      ObjectStat objectStat =
-          client.statObject(
-              StatObjectArgs.builder()
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .extraHeaders(headers)
-                  .extraQueryParams(queryParams)
-                  .build());
-
-      if (!(objectName.equals(objectStat.name())
-          && (objectStat.length() == 1)
-          && bucketName.equals(objectStat.bucketName())
-          && objectStat.contentType().equals(customContentType))) {
-        throw new Exception("[FAILED] object stat differs");
-      }
-
-      Map<String, List<String>> httpHeaders = objectStat.httpHeaders();
-      if (!httpHeaders.containsKey("x-amz-meta-my-custom-data")) {
-        throw new Exception("[FAILED] metadata not found in object stat");
-      }
-      List<String> values = httpHeaders.get("x-amz-meta-my-custom-data");
-      if (values.size() != 1) {
-        throw new Exception("[FAILED] too many metadata value. expected: 1, got: " + values.size());
-      }
-      if (!values.get(0).equals("foo")) {
-        throw new Exception("[FAILED] wrong metadata value. expected: foo, got: " + values.get(0));
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(
-          "statObject(StatObjectArgs args) with extra headers/query params", null, startTime);
-    } catch (Exception e) {
-      mintFailedLog(
-          "statObject(StatObjectArgs args) with extra headers/query params",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
-    }
+    builder = builder.stream(new ContentInputStream(1024), 1024, -1);
+    testStatObject("[SSE-KMS]", builder.sse(sseKms).build(), stat);
   }
 
   public static void testGetObject(
@@ -1478,36 +1405,73 @@ public class FunctionalTest {
         0);
   }
 
-  /** Test: removeObject(String bucketName, String objectName). */
-  public static void removeObject_test1() throws Exception {
-    if (!mintEnv) {
-      System.out.println("Test: removeObject(String bucketName, String objectName)");
-    }
-
+  public static void testRemoveObject(
+      String testTags, ServerSideEncryption sse, RemoveObjectArgs args) throws Exception {
+    String methodName = "removeObject()";
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1), 1, -1)
-              .build());
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog("removeObject(String bucketName, String objectName)", null, startTime);
+      PutObjectArgs.Builder builder =
+          PutObjectArgs.builder().bucket(args.bucket()).object(args.object()).stream(
+              new ContentInputStream(1), 1, -1);
+      if (sse != null) {
+        builder.sse(sse);
+      }
+      client.putObject(builder.build());
+      client.removeObject(args);
+      mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
-      mintFailedLog(
-          "removeObject(String bucketName, String objectName)",
-          null,
-          startTime,
-          null,
-          e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
-      throw e;
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: removeObjects(RemoveObjectsArgs args). */
-  public static void removeObjects_test1() throws Exception {
-    String methodName = "removeObjects(RemoveObjectsArgs args)";
+  public static void removeObject_test() throws Exception {
+    String methodName = "removeObject()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    testRemoveObject(
+        "[base check]",
+        null,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
+    testRemoveObject(
+        "[multiple path segments]",
+        null,
+        RemoveObjectArgs.builder().bucket(bucketName).object("path/to/" + getRandomName()).build());
+
+    if (isQuickTest) {
+      return;
+    }
+
+    testRemoveObject(
+        "[SSE-S3]",
+        sseS3,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
+
+    if (!isSecureEndpoint) {
+      mintIgnoredLog(methodName, "[SSE-C]", System.currentTimeMillis());
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
+      return;
+    }
+
+    testRemoveObject(
+        "[SSE-C]",
+        ssec,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
+
+    if (sseKms == null) {
+      mintIgnoredLog(methodName, "[SSE-KMS]", System.currentTimeMillis());
+      return;
+    }
+
+    testRemoveObject(
+        "[SSE-KMS]",
+        sseKms,
+        RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
+  }
+
+  public static void removeObjects_test() throws Exception {
+    String methodName = "removeObjects()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -1534,230 +1498,138 @@ public class FunctionalTest {
     }
   }
 
-  /** public String getPresignedObjectUrl(GetPresignedObjectUrlArgs args). */
-  public static void getPresignedObjectUrl_test1() throws Exception {
-    String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " presigned get");
+  public static void testGetPresignedUrl(GetPresignedObjectUrlArgs args, String expectedChecksum)
+      throws Exception {
+    String urlString = client.getPresignedObjectUrl(args);
+    byte[] data = readObject(urlString);
+    String checksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
+    if (!expectedChecksum.equals(checksum)) {
+      throw new Exception(
+          "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum);
     }
+  }
 
+  public static void testGetPresignedObjectUrlForGet() throws Exception {
+    String methodName = "getPresignedObjectUrl()";
+    String testTags = null;
     long startTime = System.currentTimeMillis();
     try {
+      String expectedChecksum = getSha256Sum(new ContentInputStream(1 * KB), 1 * KB);
       String objectName = getRandomName();
       client.putObject(
           PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
                   new ContentInputStream(1 * KB), 1 * KB, -1)
               .build());
 
-      byte[] inBytes;
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        inBytes = readAllBytes(is);
+      try {
+        testTags = "[GET]";
+        testGetPresignedUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket(bucketName)
+                .object(objectName)
+                .build(),
+            expectedChecksum);
+
+        testTags = "[GET, expiry]";
+        testGetPresignedUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket(bucketName)
+                .object(objectName)
+                .expiry(1, TimeUnit.DAYS)
+                .build(),
+            expectedChecksum);
+
+        testTags = "[GET, expiry, query params]";
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("response-content-type", "application/json");
+        testGetPresignedUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket(bucketName)
+                .object(objectName)
+                .expiry(1, TimeUnit.DAYS)
+                .extraQueryParams(queryParams)
+                .build(),
+            expectedChecksum);
+
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
       }
-
-      String urlString =
-          client.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.GET)
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .build());
-
-      byte[] outBytes = readObject(urlString);
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: getPresignedObjectUrl(GetPresignedObjectUrlArgs args). */
-  public static void getPresignedObjectUrl_test2() throws Exception {
-    String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " presigned get with expiry");
-    }
-
-    long startTime = System.currentTimeMillis();
-    String mintArgs = "expiry: 3600 sec";
-    try {
-      String objectName = getRandomName();
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1 * KB), 1 * KB, -1)
-              .build());
-
-      byte[] inBytes;
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        inBytes = readAllBytes(is);
-      }
-
-      String urlString =
-          client.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.GET)
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .expiry(3600)
-                  .build());
-      byte[] outBytes = readObject(urlString);
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, mintArgs, startTime);
-    } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
-    }
-  }
-
-  /** public String getPresignedObjectUrl(GetPresignedObjectUrlArgs args). */
-  public static void getPresignedObjectUrl_test3() throws Exception {
-    String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " presigned get with expiry and params");
-    }
-
-    long startTime = System.currentTimeMillis();
-    String mintArgs =
-        "presigned get object expiry : 3600 sec, reqParams : response-content-type as application/json";
-    try {
-      String objectName = getRandomName();
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1 * KB), 1 * KB, -1)
-              .build());
-
-      byte[] inBytes;
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        inBytes = readAllBytes(is);
-      }
-
-      Map<String, String> reqParams = new HashMap<>();
-      reqParams.put("response-content-type", "application/json");
-
-      String urlString =
-          client.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.GET)
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .expiry(3600)
-                  .extraQueryParams(reqParams)
-                  .build());
-
-      byte[] outBytes = readObject(urlString);
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, mintArgs, startTime);
-    } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
-    }
-  }
-
-  /** public String getPresignedObjectUrl(GetPresignedObjectUrlArgs args). */
-  public static void getPresignedObjectUrl_test4() throws Exception {
-    String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " presigned put");
-    }
-
+  public static void testPutPresignedUrl(
+      String testTags, byte[] data, String expectedChecksum, GetPresignedObjectUrlArgs args)
+      throws Exception {
+    String methodName = "getPresignedObjectUrl()";
     long startTime = System.currentTimeMillis();
     try {
-      String objectName = getRandomName();
-      String urlString =
-          client.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.PUT)
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .build());
-      byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
-      writeObject(urlString, data);
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: getPresignedObjectUrl(GetPresignedObjectUrlArgs args). */
-  public static void getPresignedObjectUrl_test5() throws Exception {
-    String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " presigned put with expiry");
-    }
-
-    long startTime = System.currentTimeMillis();
-    String mintArgs = "expiry: 3600 sec";
-    try {
-      String objectName = getRandomName();
-
-      String urlString =
-          client.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.PUT)
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .expiry(3600)
-                  .build());
-      byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
-      writeObject(urlString, data);
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, mintArgs, startTime);
-    } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
-    }
-  }
-
-  /** Test: getPresignedObjectUrl(GetPresignedObjectUrlArgs args). */
-  public static void getPresignedObjectUrl_test6() throws Exception {
-    String methodName = "getPresignedObjectUrl(GetPresignedObjectUrlArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName + " presigned get with expiry in TimeUnit");
-    }
-
-    long startTime = System.currentTimeMillis();
-    String mintArgs = "expiry: 2 TimeUnit.DAYS";
-    try {
-      String objectName = getRandomName();
-      client.putObject(
-          PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                  new ContentInputStream(1 * KB), 1 * KB, -1)
-              .build());
-
-      byte[] inBytes;
-      try (final InputStream is = new ContentInputStream(1 * KB)) {
-        inBytes = readAllBytes(is);
+      String urlString = client.getPresignedObjectUrl(args);
+      try {
+        writeObject(urlString, data);
+        InputStream is =
+            client.getObject(
+                GetObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+        data = readAllBytes(is);
+        String checksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
+        if (!expectedChecksum.equals(checksum)) {
+          throw new Exception(
+              "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum);
+        }
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
       }
-
-      String urlString =
-          client.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.GET)
-                  .bucket(bucketName)
-                  .object(objectName)
-                  .expiry(2, TimeUnit.DAYS)
-                  .build());
-      byte[] outBytes = readObject(urlString);
-      if (!Arrays.equals(inBytes, outBytes)) {
-        throw new Exception("object content differs");
-      }
-      client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-      mintSuccessLog(methodName, mintArgs, startTime);
     } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
-  /** Test: presignedPostPolicy(PostPolicy policy). */
+  public static void testGetPresignedObjectUrlForPut() throws Exception {
+    byte[] data = "hello, world".getBytes(StandardCharsets.UTF_8);
+    String expectedChecksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
+    String objectName = getRandomName();
+
+    testPutPresignedUrl(
+        "[PUT]",
+        data,
+        expectedChecksum,
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.PUT)
+            .bucket(bucketName)
+            .object(objectName)
+            .build());
+
+    testPutPresignedUrl(
+        "[PUT, expiry]",
+        data,
+        expectedChecksum,
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.PUT)
+            .bucket(bucketName)
+            .object(objectName)
+            .expiry(1, TimeUnit.DAYS)
+            .build());
+  }
+
+  public static void getPresignedObjectUrl_test() throws Exception {
+    if (!mintEnv) {
+      System.out.println("Test: getPresignedObjectUrl()");
+    }
+
+    testGetPresignedObjectUrlForGet();
+    testGetPresignedObjectUrlForPut();
+  }
+
   public static void presignedPostPolicy_test() throws Exception {
-    String methodName = "presignedPostPolicy(PostPolicy policy)";
+    String methodName = "presignedPostPolicy()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -2344,6 +2216,24 @@ public class FunctionalTest {
     }
   }
 
+  public static void checkObjectLegalHold(String bucketName, String objectName, boolean enableCheck)
+      throws Exception {
+    if (enableCheck) {
+      client.enableObjectLegalHold(
+          EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+    } else {
+      client.disableObjectLegalHold(
+          DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+    }
+
+    boolean result =
+        client.isObjectLegalHoldEnabled(
+            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build());
+    if (result != enableCheck) {
+      throw new Exception("object legal hold: expected: " + enableCheck + ", got: " + result);
+    }
+  }
+
   public static void enableObjectLegalHold_test() throws Exception {
     String methodName = "enableObjectLegalHold()";
     if (!mintEnv) {
@@ -2363,12 +2253,7 @@ public class FunctionalTest {
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        client.enableObjectLegalHold(
-            EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        if (!client.isObjectLegalHoldEnabled(
-            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build())) {
-          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: true, got: false");
-        }
+        checkObjectLegalHold(bucketName, objectName, true);
         client.disableObjectLegalHold(
             DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
         mintSuccessLog(methodName, null, startTime);
@@ -2405,14 +2290,12 @@ public class FunctionalTest {
                 PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
+
+        checkObjectLegalHold(bucketName, objectName, false);
         client.enableObjectLegalHold(
             EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        client.disableObjectLegalHold(
-            DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        if (client.isObjectLegalHoldEnabled(
-            IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build())) {
-          throw new Exception("[FAILED] isObjectLegalHoldEnabled(): expected: false, got: true");
-        }
+        checkObjectLegalHold(bucketName, objectName, false);
+        mintSuccessLog(methodName, null, startTime);
       } finally {
         if (objectInfo != null) {
           client.removeObject(
@@ -2430,16 +2313,62 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setDefaultRetention(SetDefaultRetentionArgs args). */
+  public static void isObjectLegalHoldEnabled_test() throws Exception {
+    String methodName = "isObjectLegalHoldEnabled()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    String objectName = getRandomName();
+    ObjectWriteResponse objectInfo = null;
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
+      try {
+        objectInfo =
+            client.putObject(
+                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                        new ContentInputStream(1 * KB), 1 * KB, -1)
+                    .build());
+
+        boolean result =
+            client.isObjectLegalHoldEnabled(
+                IsObjectLegalHoldEnabledArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .build());
+        if (result != false) {
+          throw new Exception("object legal hold: expected: false, got: " + result);
+        }
+        checkObjectLegalHold(bucketName, objectName, true);
+        checkObjectLegalHold(bucketName, objectName, false);
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        if (objectInfo != null) {
+          client.removeObject(
+              RemoveObjectArgs.builder()
+                  .bucket(bucketName)
+                  .object(objectName)
+                  .versionId(objectInfo.versionId())
+                  .build());
+        }
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
   public static void setDefaultRetention_test() throws Exception {
-    String methodName = "setDefaultRetention(SetDefaultRetentionArgs args)";
+    String methodName = "setDefaultRetention()";
+    String testTags = "[COMPLIANCE, 10 days]";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
     String bucketName = getRandomName();
-    String mintArgs = "config={COMPLIANCE, 10 days}";
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
@@ -2450,9 +2379,9 @@ public class FunctionalTest {
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-      mintSuccessLog(methodName, mintArgs, startTime);
+      mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
-      handleException(methodName, mintArgs, startTime, e);
+      handleException(methodName, testTags, startTime, e);
     }
   }
 
@@ -2466,19 +2395,18 @@ public class FunctionalTest {
 
     if (config.mode() != expectedConfig.mode()) {
       throw new Exception(
-          "[FAILED] mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
+          "retention mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
     }
 
     if (config.duration().unit() != expectedConfig.duration().unit()
         || config.duration().duration() != expectedConfig.duration().duration()) {
       throw new Exception(
-          "[FAILED] duration: " + expectedConfig.duration() + ", got: " + config.duration());
+          "retention duration: " + expectedConfig.duration() + ", got: " + config.duration());
     }
   }
 
-  /** Test: getDefaultRetention(GetDefaultRetentionArgs args). */
   public static void getDefaultRetention_test() throws Exception {
-    String methodName = "getDefaultRetention(GetDefaultRetentionArgs args)";
+    String methodName = "getDefaultRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -2502,9 +2430,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: deleteDefaultRetention(DeleteDefaultRetentionArgs args). */
   public static void deleteDefaultRetention_test() throws Exception {
-    String methodName = "deleteDefaultRetention(DeleteDefaultRetentionArgs args)";
+    String methodName = "deleteDefaultRetention()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -2550,24 +2477,22 @@ public class FunctionalTest {
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
-        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(expectedConfig)
+                .config(
+                    new Retention(
+                        RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
                 .build());
 
-        Retention emptyConfig = new Retention();
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(emptyConfig)
+                .config(new Retention())
                 .bypassGovernanceMode(true)
                 .build());
-
       } finally {
         if (objectInfo != null) {
           client.removeObject(
@@ -2582,6 +2507,37 @@ public class FunctionalTest {
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void testGetObjectRetention(SetObjectRetentionArgs args) throws Exception {
+    client.setObjectRetention(args);
+    Retention config =
+        client.getObjectRetention(
+            GetObjectRetentionArgs.builder().bucket(args.bucket()).object(args.object()).build());
+
+    if (args.config().mode() == null) {
+      if (config != null && config.mode() != null) {
+        throw new Exception("retention mode: expected: <null>, got: " + config.mode());
+      }
+    } else if (config.mode() != args.config().mode()) {
+      throw new Exception(
+          "retention mode: expected: " + args.config().mode() + ", got: " + config.mode());
+    }
+
+    ZonedDateTime expectedDate = args.config().retainUntilDate();
+    ZonedDateTime date = (config == null) ? null : config.retainUntilDate();
+
+    if (expectedDate == null) {
+      if (date != null) {
+        throw new Exception("retention retain-until-date: expected: <null>, got: " + date);
+      }
+    } else if (!date.withNano(0).equals(expectedDate.withNano(0))) {
+      throw new Exception(
+          "retention retain-until-date: expected: "
+              + expectedDate.withNano(0)
+              + ", got: "
+              + date.withNano(0));
     }
   }
 
@@ -2604,82 +2560,35 @@ public class FunctionalTest {
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3);
-        Retention expectedConfig = new Retention(RetentionMode.GOVERNANCE, retentionUntil);
-        client.setObjectRetention(
+        testGetObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(expectedConfig)
+                .config(
+                    new Retention(
+                        RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(3)))
                 .build());
-
-        Retention config =
-            client.getObjectRetention(
-                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
-
-        if (!(config
-            .retainUntilDate()
-            .withNano(0)
-            .equals(expectedConfig.retainUntilDate().withNano(0)))) {
-          throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.retainUntilDate()
-                  + ", got: "
-                  + config.retainUntilDate());
-        }
-
-        if (config.mode() != expectedConfig.mode()) {
-          throw new Exception(
-              "[FAILED] Expected: expected mode: "
-                  + " expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
-        }
 
         // Check shortening retention until period
-        ZonedDateTime shortenedRetentionUntil = ZonedDateTime.now(Time.UTC).plusDays(1);
-        expectedConfig = new Retention(RetentionMode.GOVERNANCE, shortenedRetentionUntil);
-        client.setObjectRetention(
+        testGetObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(bucketName)
                 .object(objectName)
-                .config(expectedConfig)
+                .config(
+                    new Retention(
+                        RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
                 .bypassGovernanceMode(true)
                 .build());
 
-        config =
-            client.getObjectRetention(
-                GetObjectRetentionArgs.builder().bucket(bucketName).object(objectName).build());
-
-        if (!(config
-            .retainUntilDate()
-            .withNano(0)
-            .equals(expectedConfig.retainUntilDate().withNano(0)))) {
-          throw new Exception(
-              "[FAILED] Expected: expected duration : "
-                  + expectedConfig.retainUntilDate()
-                  + ", got: "
-                  + config.retainUntilDate());
-        }
-
-        if (config.mode() != expectedConfig.mode()) {
-          throw new Exception(
-              " [FAILED] Expected: Expected mode :"
-                  + expectedConfig.mode()
-                  + ", got: "
-                  + config.mode());
-        }
-
-        Retention emptyConfig = new Retention();
-        client.setObjectRetention(
-            SetObjectRetentionArgs.builder()
-                .bucket(bucketName)
-                .object(objectName)
-                .config(emptyConfig)
-                .bypassGovernanceMode(true)
-                .build());
-
+        // Check empty retention.
+        // Enable below test when minio server release has a fix.
+        // testGetObjectRetention(
+        //     SetObjectRetentionArgs.builder()
+        //         .bucket(bucketName)
+        //         .object(objectName)
+        //         .config(new Retention())
+        //         .bypassGovernanceMode(true)
+        //         .build());
       } finally {
         if (objectInfo != null) {
           client.removeObject(
@@ -2687,6 +2596,7 @@ public class FunctionalTest {
                   .bucket(bucketName)
                   .object(objectName)
                   .versionId(objectInfo.versionId())
+                  .bypassGovernanceMode(true)
                   .build());
         }
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -2697,224 +2607,180 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getBucketPolicy(GetBucketPolicyArgs args). */
-  public static void getBucketPolicy_test1() throws Exception {
-    String methodName = "getBucketPolicy(GetBucketPolicyArgs args)";
+  public static void getBucketPolicy_test() throws Exception {
+    String methodName = "getBucketPolicy()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
     try {
-      String policy =
-          "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
-              + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::"
-              + bucketName
-              + "/myobject*\"],\"Sid\":\"\"}]}";
-      client.setBucketPolicy(
-          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
-      client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        String config =
+            client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
+        if (!config.isEmpty()) {
+          throw new Exception("policy: expected: \"\", got: " + config);
+        }
 
-  /** Test: setBucketPolicy(SetBucketPolicyArgs args). */
-  public static void setBucketPolicy_test1() throws Exception {
-    String methodName = "setBucketPolicy(SetBucketPolicyArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String policy =
-          "{\"Statement\":[{\"Action\":\"s3:GetObject\",\"Effect\":\"Allow\",\"Principal\":"
-              + "\"*\",\"Resource\":\"arn:aws:s3:::"
-              + bucketName
-              + "/myobject*\"}],\"Version\": \"2012-10-17\"}";
-      client.setBucketPolicy(
-          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: deleteBucketPolicy(deleteBucketPolicyArgs args). */
-  public static void deleteBucketPolicy_test1() throws Exception {
-    String methodName = "deleteBucketPolicy(DeleteBucketPolicyArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String policy =
-          "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\"],\"Effect\":\"Allow\","
-              + "\"Principal\":{\"AWS\":[\"*\"]},\"Resource\":[\"arn:aws:s3:::"
-              + bucketName
-              + "/myobject*\"],\"Sid\":\"\"}]}";
-      client.setBucketPolicy(
-          SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
-      client.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: setBucketLifeCycle(SetBucketLifeCycleArgs args). */
-  public static void setBucketLifeCycle_test1() throws Exception {
-    String methodName = "setBucketLifeCycle(SetBucketLifeCycleArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      String lifeCycle =
-          "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
-              + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
-              + "</Rule></LifecycleConfiguration>";
-      client.setBucketLifeCycle(
-          SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args). */
-  public static void deleteBucketLifeCycle_test1() throws Exception {
-    String methodName = "deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      client.deleteBucketLifeCycle(DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: getBucketLifeCycle(GetBucketLifeCycleArgs args). */
-  public static void getBucketLifeCycle_test1() throws Exception {
-    String methodName = "getBucketLifeCycle(GetBucketLifeCycleArgs args)";
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: setBucketNotification(SetBucketNotificationArgs args). */
-  public static void setBucketNotification_test1() throws Exception {
-    String methodName = "setBucketNotification(SetBucketNotificationArgs args)";
-    long startTime = System.currentTimeMillis();
-    if (sqsArn == null) {
-      mintIgnoredLog(methodName, null, startTime);
-      return;
-    }
-
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    try {
-      String bucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
-
-      List<EventType> eventList = new LinkedList<>();
-      eventList.add(EventType.OBJECT_CREATED_PUT);
-      eventList.add(EventType.OBJECT_CREATED_COPY);
-      QueueConfiguration queueConfig = new QueueConfiguration();
-      queueConfig.setQueue(sqsArn);
-      queueConfig.setEvents(eventList);
-      queueConfig.setPrefixRule("images");
-      queueConfig.setSuffixRule("pg");
-
-      List<QueueConfiguration> queueConfigList = new LinkedList<>();
-      queueConfigList.add(queueConfig);
-
-      NotificationConfiguration config = new NotificationConfiguration();
-      config.setQueueConfigurationList(queueConfigList);
-
-      client.setBucketNotification(
-          SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
-
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  /** Test: getBucketNotification(GetBucketNotificationArgs args). */
-  public static void getBucketNotification_test1() throws Exception {
-    String methodName = "getBucketNotification(GetBucketNotificationArgs args)";
-    long startTime = System.currentTimeMillis();
-    if (sqsArn == null) {
-      mintIgnoredLog(methodName, null, startTime);
-      return;
-    }
-
-    if (!mintEnv) {
-      System.out.println("Test: " + methodName);
-    }
-
-    try {
-      String bucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
-
-      List<EventType> eventList = new LinkedList<>();
-      eventList.add(EventType.OBJECT_CREATED_PUT);
-      QueueConfiguration queueConfig = new QueueConfiguration();
-      queueConfig.setQueue(sqsArn);
-      queueConfig.setEvents(eventList);
-
-      List<QueueConfiguration> queueConfigList = new LinkedList<>();
-      queueConfigList.add(queueConfig);
-
-      NotificationConfiguration expectedConfig = new NotificationConfiguration();
-      expectedConfig.setQueueConfigurationList(queueConfigList);
-
-      client.setBucketNotification(
-          SetBucketNotificationArgs.builder().bucket(bucketName).config(expectedConfig).build());
-
-      NotificationConfiguration config =
-          client.getBucketNotification(
-              GetBucketNotificationArgs.builder().bucket(bucketName).build());
-
-      if (config.queueConfigurationList().size() != 1
-          || !sqsArn.equals(config.queueConfigurationList().get(0).queue())
-          || config.queueConfigurationList().get(0).events().size() != 1
-          || config.queueConfigurationList().get(0).events().get(0)
-              != EventType.OBJECT_CREATED_PUT) {
-        System.out.println(
-            "FAILED. expected: " + Xml.marshal(expectedConfig) + ", got: " + Xml.marshal(config));
+        String policy =
+            "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
+                + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
+                + bucketName
+                + "/myobject*'],'Sid':''}]}";
+        policy = policy.replaceAll("'", "\"");
+        client.setBucketPolicy(
+            SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+        client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: deleteBucketNotification(DeleteBucketNotificationArgs args). */
-  public static void deleteBucketNotification_test1() throws Exception {
-    String methodName = "deleteBucketNotification(DeleteBucketNotificationArgs args)";
+  public static void setBucketPolicy_test() throws Exception {
+    String methodName = "setBucketPolicy()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        String policy =
+            "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
+                + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
+                + bucketName
+                + "/myobject*'],'Sid':''}]}";
+        policy = policy.replaceAll("'", "\"");
+        client.setBucketPolicy(
+            SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void deleteBucketPolicy_test() throws Exception {
+    String methodName = "deleteBucketPolicy()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket(bucketName).build());
+
+        String policy =
+            "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
+                + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
+                + bucketName
+                + "/myobject*'],'Sid':''}]}";
+        policy = policy.replaceAll("'", "\"");
+        client.setBucketPolicy(
+            SetBucketPolicyArgs.builder().bucket(bucketName).config(policy).build());
+        client.deleteBucketPolicy(DeleteBucketPolicyArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void testSetBucketLifeCycle(String bucketName) throws Exception {
+    String lifeCycle =
+        "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
+            + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
+            + "</Rule></LifecycleConfiguration>";
+    client.setBucketLifeCycle(
+        SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
+  }
+
+  public static void setBucketLifeCycle_test() throws Exception {
+    String methodName = "setBucketLifeCycle()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        testSetBucketLifeCycle(bucketName);
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void deleteBucketLifeCycle_test() throws Exception {
+    String methodName = "deleteBucketLifeCycle()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.deleteBucketLifeCycle(
+            DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        testSetBucketLifeCycle(bucketName);
+        client.deleteBucketLifeCycle(
+            DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void getBucketLifeCycle_test() throws Exception {
+    String methodName = "getBucketLifeCycle()";
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        testSetBucketLifeCycle(bucketName);
+        client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void setBucketNotification_test() throws Exception {
+    String methodName = "setBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
       mintIgnoredLog(methodName, null, startTime);
@@ -2928,45 +2794,139 @@ public class FunctionalTest {
     try {
       String bucketName = getRandomName();
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
+      try {
+        List<EventType> eventList = new LinkedList<>();
+        eventList.add(EventType.OBJECT_CREATED_PUT);
+        eventList.add(EventType.OBJECT_CREATED_COPY);
+        QueueConfiguration queueConfig = new QueueConfiguration();
+        queueConfig.setQueue(sqsArn);
+        queueConfig.setEvents(eventList);
+        queueConfig.setPrefixRule("images");
+        queueConfig.setSuffixRule("pg");
 
-      List<EventType> eventList = new LinkedList<>();
-      eventList.add(EventType.OBJECT_CREATED_PUT);
-      eventList.add(EventType.OBJECT_CREATED_COPY);
-      QueueConfiguration queueConfig = new QueueConfiguration();
-      queueConfig.setQueue(sqsArn);
-      queueConfig.setEvents(eventList);
-      queueConfig.setPrefixRule("images");
-      queueConfig.setSuffixRule("pg");
+        List<QueueConfiguration> queueConfigList = new LinkedList<>();
+        queueConfigList.add(queueConfig);
 
-      List<QueueConfiguration> queueConfigList = new LinkedList<>();
-      queueConfigList.add(queueConfig);
+        NotificationConfiguration config = new NotificationConfiguration();
+        config.setQueueConfigurationList(queueConfigList);
 
-      NotificationConfiguration config = new NotificationConfiguration();
-      config.setQueueConfigurationList(queueConfigList);
-
-      client.setBucketNotification(
-          SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
-
-      client.deleteBucketNotification(
-          DeleteBucketNotificationArgs.builder().bucket(bucketName).build());
-
-      config =
-          client.getBucketNotification(
-              GetBucketNotificationArgs.builder().bucket(bucketName).build());
-      if (config.queueConfigurationList().size() != 0) {
-        System.out.println("FAILED. expected: <empty>, got: " + Xml.marshal(config));
+        client.setBucketNotification(
+            SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
-
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** Test: listenBucketNotification(ListenBucketNotificationArgs args). */
-  public static void listenBucketNotification_test1() throws Exception {
-    String methodName = "listenBucketNotification(ListenBucketNotificationArgs args)";
+  public static void getBucketNotification_test() throws Exception {
+    String methodName = "getBucketNotification()";
+    long startTime = System.currentTimeMillis();
+    if (sqsArn == null) {
+      mintIgnoredLog(methodName, null, startTime);
+      return;
+    }
+
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    try {
+      String bucketName = getRandomName();
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
+      try {
+        List<EventType> eventList = new LinkedList<>();
+        eventList.add(EventType.OBJECT_CREATED_PUT);
+        QueueConfiguration queueConfig = new QueueConfiguration();
+        queueConfig.setQueue(sqsArn);
+        queueConfig.setEvents(eventList);
+
+        List<QueueConfiguration> queueConfigList = new LinkedList<>();
+        queueConfigList.add(queueConfig);
+
+        NotificationConfiguration expectedConfig = new NotificationConfiguration();
+        expectedConfig.setQueueConfigurationList(queueConfigList);
+
+        client.setBucketNotification(
+            SetBucketNotificationArgs.builder().bucket(bucketName).config(expectedConfig).build());
+
+        NotificationConfiguration config =
+            client.getBucketNotification(
+                GetBucketNotificationArgs.builder().bucket(bucketName).build());
+
+        if (config.queueConfigurationList().size() != 1
+            || !sqsArn.equals(config.queueConfigurationList().get(0).queue())
+            || config.queueConfigurationList().get(0).events().size() != 1
+            || config.queueConfigurationList().get(0).events().get(0)
+                != EventType.OBJECT_CREATED_PUT) {
+          System.out.println(
+              "config: expected: " + Xml.marshal(expectedConfig) + ", got: " + Xml.marshal(config));
+        }
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void deleteBucketNotification_test() throws Exception {
+    String methodName = "deleteBucketNotification()";
+    long startTime = System.currentTimeMillis();
+    if (sqsArn == null) {
+      mintIgnoredLog(methodName, null, startTime);
+      return;
+    }
+
+    if (!mintEnv) {
+      System.out.println("Test: " + methodName);
+    }
+
+    try {
+      String bucketName = getRandomName();
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).region(region).build());
+      try {
+        List<EventType> eventList = new LinkedList<>();
+        eventList.add(EventType.OBJECT_CREATED_PUT);
+        eventList.add(EventType.OBJECT_CREATED_COPY);
+        QueueConfiguration queueConfig = new QueueConfiguration();
+        queueConfig.setQueue(sqsArn);
+        queueConfig.setEvents(eventList);
+        queueConfig.setPrefixRule("images");
+        queueConfig.setSuffixRule("pg");
+
+        List<QueueConfiguration> queueConfigList = new LinkedList<>();
+        queueConfigList.add(queueConfig);
+
+        NotificationConfiguration config = new NotificationConfiguration();
+        config.setQueueConfigurationList(queueConfigList);
+
+        client.setBucketNotification(
+            SetBucketNotificationArgs.builder().bucket(bucketName).config(config).build());
+
+        client.deleteBucketNotification(
+            DeleteBucketNotificationArgs.builder().bucket(bucketName).build());
+
+        config =
+            client.getBucketNotification(
+                GetBucketNotificationArgs.builder().bucket(bucketName).build());
+        if (config.queueConfigurationList().size() != 0) {
+          System.out.println("config: expected: <empty>, got: " + Xml.marshal(config));
+        }
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+      mintSuccessLog(methodName, null, startTime);
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void listenBucketNotification_test() throws Exception {
+    String methodName = "listenBucketNotification()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3029,18 +2989,13 @@ public class FunctionalTest {
     }
   }
 
-  /**
-   * Test: selectObjectContent(String bucketName, String objectName, String sqlExpression,
-   * InputSerialization is, OutputSerialization os, boolean requestProgress, Long scanStartRange,
-   * Long scanEndRange, ServerSideEncryption sse).
-   */
-  public static void selectObjectContent_test1() throws Exception {
-    String methodName = "selectObjectContent(SelectObjectContentArgs args)";
+  public static void selectObjectContent_test() throws Exception {
+    String methodName = "selectObjectContent()";
     String sqlExpression = "select * from S3Object";
-    String args = "sqlExpression: " + sqlExpression + ", requestProgress: true";
+    String testArgs = "[sqlExpression: " + sqlExpression + ", requestProgress: true]";
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName + ", " + args);
+      System.out.println("Test: " + methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3103,9 +3058,9 @@ public class FunctionalTest {
             "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
       }
 
-      mintSuccessLog(methodName, args, startTime);
+      mintSuccessLog(methodName, testArgs, startTime);
     } catch (Exception e) {
-      handleException(methodName, args, startTime, e);
+      handleException(methodName, testArgs, startTime, e);
     } finally {
       if (responseStream != null) {
         responseStream.close();
@@ -3114,9 +3069,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setBucketEncryption(SetBucketEncryptionArgs args). */
   public static void setBucketEncryption_test() throws Exception {
-    String methodName = "setBucketEncryption(SetBucketEncryptionArgs args)";
+    String methodName = "setBucketEncryption()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3140,9 +3094,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getBucketEncryption(GetBucketEncryptionArgs args). */
   public static void getBucketEncryption_test() throws Exception {
-    String methodName = "getBucketEncryption(GetBucketEncryptionArgs args)";
+    String methodName = "getBucketEncryption()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3156,7 +3109,7 @@ public class FunctionalTest {
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
         if (config.rules().size() != 0) {
-          throw new Exception("expected: <empty rules>, got: " + config.rules());
+          throw new Exception("rules: expected: <empty>, got: " + config.rules());
         }
 
         List<SseConfigurationRule> ruleList = new LinkedList<>();
@@ -3168,11 +3121,11 @@ public class FunctionalTest {
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
         if (config.rules().size() != 1) {
-          throw new Exception("expected: 1, got: " + config.rules().size());
+          throw new Exception("rules count: expected: 1, got: " + config.rules().size());
         }
         if (config.rules().get(0).sseAlgorithm() != expectedConfig.rules().get(0).sseAlgorithm()) {
           throw new Exception(
-              "expected: "
+              "sse algorithm: expected: "
                   + expectedConfig.rules().get(0).sseAlgorithm()
                   + ", got: "
                   + config.rules().get(0).sseAlgorithm());
@@ -3186,9 +3139,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: deleteBucketEncryption(DeleteBucketEncryptionArgs args). */
   public static void deleteBucketEncryption_test() throws Exception {
-    String methodName = "deleteBucketEncryption(DeleteBucketEncryptionArgs args)";
+    String methodName = "deleteBucketEncryption()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3198,7 +3150,6 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        // Delete should succeed.
         client.deleteBucketEncryption(
             DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
 
@@ -3213,7 +3164,7 @@ public class FunctionalTest {
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
         if (config.rules().size() != 0) {
-          throw new Exception("expected: <empty rules>, got: " + config.rules());
+          throw new Exception("rules: expected: <empty>, got: " + config.rules());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -3224,9 +3175,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setBucketTags(SetBucketTagsArgs args). */
   public static void setBucketTags_test() throws Exception {
-    String methodName = "setBucketTags(SetBucketTagsArgs args)";
+    String methodName = "setBucketTags()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3249,9 +3199,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getBucketTags(GetBucketTagsArgs args). */
   public static void getBucketTags_test() throws Exception {
-    String methodName = "getBucketTags(GetBucketTagsArgs args)";
+    String methodName = "getBucketTags()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3264,7 +3213,7 @@ public class FunctionalTest {
         Map<String, String> map = new HashMap<>();
         Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
         if (!map.equals(tags.get())) {
-          throw new Exception("expected: " + map + ", got: " + tags.get());
+          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
         }
 
         map.put("Project", "Project One");
@@ -3272,7 +3221,7 @@ public class FunctionalTest {
         client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
         tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
         if (!map.equals(tags.get())) {
-          throw new Exception("expected: " + map + ", got: " + tags.get());
+          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -3283,9 +3232,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: deleteBucketTags(DeleteBucketTagsArgs args). */
   public static void deleteBucketTags_test() throws Exception {
-    String methodName = "deleteBucketTags(DeleteBucketTagsArgs args)";
+    String methodName = "deleteBucketTags()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3295,7 +3243,6 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        // Delete should succeed.
         client.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket(bucketName).build());
 
         Map<String, String> map = new HashMap<>();
@@ -3305,7 +3252,7 @@ public class FunctionalTest {
         client.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket(bucketName).build());
         Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
         if (tags.get().size() != 0) {
-          throw new Exception("expected: <empty map>" + ", got: " + tags.get());
+          throw new Exception("tags: expected: <empty>" + ", got: " + tags.get());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -3316,9 +3263,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: setObjectTags(String bucketName, Tags tags). */
   public static void setObjectTags_test() throws Exception {
-    String methodName = "setObjectTags(String bucketName, String bucketName, Tags tags)";
+    String methodName = "setObjectTags()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3349,9 +3295,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: getObjectTags(String bucketName). */
   public static void getObjectTags_test() throws Exception {
-    String methodName = "getObjectTags(String bucketName, String bucketName)";
+    String methodName = "getObjectTags()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3371,7 +3316,7 @@ public class FunctionalTest {
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
         if (!map.equals(tags.get())) {
-          throw new Exception("expected: " + map + ", got: " + tags.get());
+          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
         }
 
         map.put("Project", "Project One");
@@ -3382,7 +3327,7 @@ public class FunctionalTest {
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
         if (!map.equals(tags.get())) {
-          throw new Exception("expected: " + map + ", got: " + tags.get());
+          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -3395,9 +3340,8 @@ public class FunctionalTest {
     }
   }
 
-  /** Test: deleteObjectTags(String bucketName). */
   public static void deleteObjectTags_test() throws Exception {
-    String methodName = "deleteObjectTags(String bucketName, String objectName)";
+    String methodName = "deleteObjectTags()";
     if (!mintEnv) {
       System.out.println("Test: " + methodName);
     }
@@ -3412,7 +3356,6 @@ public class FunctionalTest {
             PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
                     new ContentInputStream(1 * KB), 1 * KB, -1)
                 .build());
-        // Delete should succeed.
         client.deleteObjectTags(
             DeleteObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
 
@@ -3427,7 +3370,7 @@ public class FunctionalTest {
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
         if (tags.get().size() != 0) {
-          throw new Exception("expected: <empty map>" + ", got: " + tags.get());
+          throw new Exception("tags: expected: <empty>, got: " + tags.get());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -3442,20 +3385,14 @@ public class FunctionalTest {
 
   /** runTests: runs as much as possible of test combinations. */
   public static void runTests() throws Exception {
-    makeBucket_test1();
-    makeBucket_test2();
-    if (endpoint.toLowerCase(Locale.US).contains("s3")) {
-      makeBucket_test3();
-      makeBucket_test4();
-    }
-
+    makeBucket_test();
     listBuckets_test();
-
     bucketExists_test();
+    removeBucket_test();
+
     enableVersioning_test();
     disableVersioning_test();
-
-    removeBucket_test();
+    isVersioningEnabled_test();
 
     setup();
 
@@ -3467,22 +3404,14 @@ public class FunctionalTest {
     setObjectRetention_test();
     getObjectRetention_test();
 
-    statObject_test1();
-    statObject_test2();
-    statObject_test3();
-    statObject_test4();
+    statObject_test();
 
-    getPresignedObjectUrl_test1();
-    getPresignedObjectUrl_test2();
-    getPresignedObjectUrl_test3();
-    getPresignedObjectUrl_test4();
-    getPresignedObjectUrl_test5();
-    getPresignedObjectUrl_test6();
+    getPresignedObjectUrl_test();
 
     listObjects_test();
 
-    removeObject_test1();
-    removeObjects_test1();
+    removeObject_test();
+    removeObjects_test();
 
     presignedPostPolicy_test();
 
@@ -3491,13 +3420,14 @@ public class FunctionalTest {
 
     enableObjectLegalHold_test();
     disableObjectLegalHold_test();
+    isObjectLegalHoldEnabled_test();
     setDefaultRetention_test();
     getDefaultRetention_test();
 
     setObjectRetention_test();
     getObjectRetention_test();
 
-    selectObjectContent_test1();
+    selectObjectContent_test();
 
     setBucketEncryption_test();
     getBucketEncryption_test();
@@ -3510,30 +3440,26 @@ public class FunctionalTest {
     getObjectTags_test();
     deleteObjectTags_test();
 
-    // SSE_S3 and SSE_KMS only work with Amazon AWS endpoint.
-    String requestUrl = endpoint;
-    if (requestUrl.contains(".amazonaws.com")) {
-      setBucketLifeCycle_test1();
-      getBucketLifeCycle_test1();
-      deleteBucketLifeCycle_test1();
-    }
+    getBucketPolicy_test();
+    setBucketPolicy_test();
+    deleteBucketPolicy_test();
 
-    getBucketPolicy_test1();
-    setBucketPolicy_test1();
-    deleteBucketPolicy_test1();
+    setBucketLifeCycle_test();
+    getBucketLifeCycle_test();
+    deleteBucketLifeCycle_test();
 
-    listenBucketNotification_test1();
+    listenBucketNotification_test();
 
     teardown();
 
-    setBucketNotification_test1();
-    getBucketNotification_test1();
-    deleteBucketNotification_test1();
+    setBucketNotification_test();
+    getBucketNotification_test();
+    deleteBucketNotification_test();
   }
 
   /** runQuickTests: runs tests those completely quicker. */
   public static void runQuickTests() throws Exception {
-    makeBucket_test1();
+    makeBucket_test();
     listBuckets_test();
     bucketExists_test();
     removeBucket_test();
@@ -3542,20 +3468,19 @@ public class FunctionalTest {
 
     uploadObject_test();
     putObject_test();
-    statObject_test1();
+    statObject_test();
     getObject_test();
     downloadObject_test();
     listObjects_test();
-    removeObject_test1();
-    getPresignedObjectUrl_test1();
-    getPresignedObjectUrl_test2();
+    removeObject_test();
+    getPresignedObjectUrl_test();
     presignedPostPolicy_test();
     copyObject_test();
-    getBucketPolicy_test1();
-    setBucketPolicy_test1();
-    deleteBucketPolicy_test1();
-    selectObjectContent_test1();
-    listenBucketNotification_test1();
+    getBucketPolicy_test();
+    setBucketPolicy_test();
+    deleteBucketPolicy_test();
+    selectObjectContent_test();
+    listenBucketNotification_test();
     setBucketTags_test();
     getBucketTags_test();
     deleteBucketTags_test();
