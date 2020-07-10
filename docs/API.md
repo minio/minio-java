@@ -213,18 +213,18 @@ MinioClient s3Client =
 ## Common Exceptions
 All APIs throw below exceptions in addition to specific to API.
 
-| Exception                  | Cause                                                                |
-|:---------------------------|:---------------------------------------------------------------------|
-| ErrorResponseException     | Thrown to indicate S3 service returned an error response.            |
-| IllegalArgumentException   | Throws to indicate invalid argument passed.                          |
-| InsufficientDataException  | Thrown to indicate not enough data available in InputStream.         |
-| InternalException          | Thrown to indicate internal library error.                           |
-| InvalidBucketNameException | Thrown to indicate invalid bucket name passed.                       |
-| InvalidKeyException        | Thrown to indicate missing of HMAC SHA-256 library.                  |
-| InvalidResponseException   | Thrown to indicate S3 service returned invalid or no error response. |
-| IOException                | Thrown to indicate I/O error on S3 operation.                        |
-| NoSuchAlgorithmException   | Thrown to indicate missing of MD5 or SHA-256 digest library.         |
-| XmlParserException         | Thrown to indicate XML parsing error.                                |
+| Exception                 | Cause                                                                |
+|:--------------------------|:---------------------------------------------------------------------|
+| ErrorResponseException    | Thrown to indicate S3 service returned an error response.            |
+| IllegalArgumentException  | Throws to indicate invalid argument passed.                          |
+| InsufficientDataException | Thrown to indicate not enough data available in InputStream.         |
+| InternalException         | Thrown to indicate internal library error.                           |
+| InvalidKeyException       | Thrown to indicate missing of HMAC SHA-256 library.                  |
+| InvalidResponseException  | Thrown to indicate S3 service returned invalid or no error response. |
+| IOException               | Thrown to indicate I/O error on S3 operation.                        |
+| NoSuchAlgorithmException  | Thrown to indicate missing of MD5 or SHA-256 digest library.         |
+| ServerException           | Thrown to indicate HTTP server error.                                |
+| XmlParserException        | Thrown to indicate XML parsing error.                                |
 
 ## 2. Bucket operations
 

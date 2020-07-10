@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
-import io.minio.errors.InvalidBucketNameException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
@@ -47,9 +46,9 @@ public class Result<T> {
   /** Returns given Type if exception is null, else respective exception is thrown. */
   public T get()
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, JsonMappingException, JsonParseException,
-          NoSuchAlgorithmException, ServerException, XmlParserException {
+          InternalException, InvalidKeyException, InvalidResponseException, IOException,
+          JsonMappingException, JsonParseException, NoSuchAlgorithmException, ServerException,
+          XmlParserException {
     if (ex == null) {
       return type;
     }
@@ -68,10 +67,6 @@ public class Result<T> {
 
     if (ex instanceof InternalException) {
       throw (InternalException) ex;
-    }
-
-    if (ex instanceof InvalidBucketNameException) {
-      throw (InvalidBucketNameException) ex;
     }
 
     if (ex instanceof InvalidKeyException) {
