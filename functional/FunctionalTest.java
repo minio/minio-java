@@ -155,6 +155,7 @@ public class FunctionalTest {
   private static final String customContentType = "application/javascript";
   private static final String nullContentType = null;
   private static String bucketName = getRandomName();
+  private static String bucketNameWithLock = getRandomName();
   private static boolean mintEnv = false;
   private static boolean isQuickTest = false;
   private static Path dataFile1Kb;
@@ -476,10 +477,10 @@ public class FunctionalTest {
         removeCheck);
   }
 
-  public static void makeBucket_test() throws Exception {
+  public static void makeBucket() throws Exception {
     String methodName = "makeBucket()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testBucketApiCases(methodName, false, false);
@@ -512,10 +513,10 @@ public class FunctionalTest {
         false);
   }
 
-  public static void listBuckets_test() throws Exception {
+  public static void listBuckets() throws Exception {
     String methodName = "listBuckets()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -557,28 +558,28 @@ public class FunctionalTest {
     }
   }
 
-  public static void bucketExists_test() throws Exception {
+  public static void bucketExists() throws Exception {
     String methodName = "bucketExists()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testBucketApiCases(methodName, true, false);
   }
 
-  public static void removeBucket_test() throws Exception {
+  public static void removeBucket() throws Exception {
     String methodName = "removeBucket()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testBucketApiCases(methodName, false, true);
   }
 
-  public static void enableVersioning_test() throws Exception {
+  public static void enableVersioning() throws Exception {
     String methodName = "enableVersioning()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -596,10 +597,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void disableVersioning_test() throws Exception {
+  public static void disableVersioning() throws Exception {
     String methodName = "disableVersioning()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -623,10 +624,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void isVersioningEnabled_test() throws Exception {
+  public static void isVersioningEnabled() throws Exception {
     String methodName = "isVersioningEnabled()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -658,23 +659,35 @@ public class FunctionalTest {
     }
   }
 
-  /** Tear down test setup. */
   public static void setup() throws Exception {
     long startTime = System.currentTimeMillis();
+
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
     } catch (Exception e) {
-      handleException("makeBucket(MakeBucketArgs args)", null, startTime, e);
+      handleException("makeBucket()", null, startTime, e);
+    }
+
+    try {
+      client.makeBucket(
+          MakeBucketArgs.builder().bucket(bucketNameWithLock).objectLock(true).build());
+    } catch (Exception e) {
+      handleException("makeBucket()", "[object lock]", startTime, e);
     }
   }
 
-  /** Tear down test setup. */
   public static void teardown() throws Exception {
     long startTime = System.currentTimeMillis();
     try {
-      client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      if (bucketName != null) {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+
+      if (bucketNameWithLock != null) {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketNameWithLock).build());
+      }
     } catch (Exception e) {
-      handleException("removeBucket(RemoveBucketArgs args)", null, startTime, e);
+      handleException("removeBucket()", null, startTime, e);
     }
   }
 
@@ -700,10 +713,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void uploadObject_test() throws Exception {
+  public static void uploadObject() throws Exception {
     String methodName = "uploadObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testUploadObject("[single upload]", createFile1Kb(), null);
@@ -764,10 +777,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void putObject_test() throws Exception {
+  public static void putObject() throws Exception {
     String methodName = "putObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testPutObject(
@@ -985,10 +998,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void statObject_test() throws Exception {
+  public static void statObject() throws Exception {
     String methodName = "statObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     String objectName = getRandomName();
@@ -1084,10 +1097,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getObject_test() throws Exception {
+  public static void getObject() throws Exception {
     String methodName = "getObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testGetObject(
@@ -1219,10 +1232,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void downloadObject_test() throws Exception {
+  public static void downloadObject() throws Exception {
     String methodName = "downloadObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     String objectName = getRandomName();
@@ -1350,9 +1363,9 @@ public class FunctionalTest {
     }
   }
 
-  public static void listObjects_test() throws Exception {
+  public static void listObjects() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: listObjects()");
+      System.out.println("listObjects()");
     }
 
     testListObjects("[bucket]", ListObjectsArgs.builder().bucket(getRandomName()).build(), 3, 0);
@@ -1414,10 +1427,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void removeObject_test() throws Exception {
+  public static void removeObject() throws Exception {
     String methodName = "removeObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     testRemoveObject(
@@ -1460,16 +1473,14 @@ public class FunctionalTest {
         RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
   }
 
-  public static void removeObjects_test() throws Exception {
+  public static void removeObjects() throws Exception {
     String methodName = "removeObjects()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
     try {
-      String bucketName = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       List<ObjectWriteResponse> results = null;
       try {
         results = createObjects(bucketName, 3, 0);
@@ -1481,7 +1492,6 @@ public class FunctionalTest {
         if (results != null) {
           removeObjects(bucketName, results);
         }
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
@@ -1609,19 +1619,19 @@ public class FunctionalTest {
             .build());
   }
 
-  public static void getPresignedObjectUrl_test() throws Exception {
+  public static void getPresignedObjectUrl() throws Exception {
     if (!mintEnv) {
-      System.out.println("Test: getPresignedObjectUrl()");
+      System.out.println("getPresignedObjectUrl()");
     }
 
     testGetPresignedObjectUrlForGet();
     testGetPresignedObjectUrlForPut();
   }
 
-  public static void presignedPostPolicy_test() throws Exception {
+  public static void presignedPostPolicy() throws Exception {
     String methodName = "presignedPostPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -1880,10 +1890,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void copyObject_test() throws Exception {
+  public static void copyObject() throws Exception {
     String methodName = "copyObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     String objectName = getRandomName();
@@ -2155,10 +2165,10 @@ public class FunctionalTest {
             .build());
   }
 
-  public static void composeObject_test() throws Exception {
+  public static void composeObject() throws Exception {
     String methodName = "composeObject()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2224,78 +2234,77 @@ public class FunctionalTest {
     }
   }
 
-  public static void enableObjectLegalHold_test() throws Exception {
+  public static void enableObjectLegalHold() throws Exception {
     String methodName = "enableObjectLegalHold()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     ObjectWriteResponse objectInfo = null;
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
-
       try {
         objectInfo =
             client.putObject(
-                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                PutObjectArgs.builder().bucket(bucketNameWithLock).object(objectName).stream(
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        checkObjectLegalHold(bucketName, objectName, true);
+        checkObjectLegalHold(bucketNameWithLock, objectName, true);
         client.disableObjectLegalHold(
-            DisableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
+            DisableObjectLegalHoldArgs.builder()
+                .bucket(bucketNameWithLock)
+                .object(objectName)
+                .build());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         if (objectInfo != null) {
           client.removeObject(
               RemoveObjectArgs.builder()
-                  .bucket(bucketName)
+                  .bucket(bucketNameWithLock)
                   .object(objectName)
                   .versionId(objectInfo.versionId())
                   .build());
         }
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  public static void disableObjectLegalHold_test() throws Exception {
+  public static void disableObjectLegalHold() throws Exception {
     String methodName = "disableObjectLegalHold()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     ObjectWriteResponse objectInfo = null;
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
         objectInfo =
             client.putObject(
-                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                PutObjectArgs.builder().bucket(bucketNameWithLock).object(objectName).stream(
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
-        checkObjectLegalHold(bucketName, objectName, false);
+        checkObjectLegalHold(bucketNameWithLock, objectName, false);
         client.enableObjectLegalHold(
-            EnableObjectLegalHoldArgs.builder().bucket(bucketName).object(objectName).build());
-        checkObjectLegalHold(bucketName, objectName, false);
+            EnableObjectLegalHoldArgs.builder()
+                .bucket(bucketNameWithLock)
+                .object(objectName)
+                .build());
+        checkObjectLegalHold(bucketNameWithLock, objectName, false);
         mintSuccessLog(methodName, null, startTime);
       } finally {
         if (objectInfo != null) {
           client.removeObject(
               RemoveObjectArgs.builder()
-                  .bucket(bucketName)
+                  .bucket(bucketNameWithLock)
                   .object(objectName)
                   .versionId(objectInfo.versionId())
                   .build());
         }
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
@@ -2303,46 +2312,43 @@ public class FunctionalTest {
     }
   }
 
-  public static void isObjectLegalHoldEnabled_test() throws Exception {
+  public static void isObjectLegalHoldEnabled() throws Exception {
     String methodName = "isObjectLegalHoldEnabled()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     ObjectWriteResponse objectInfo = null;
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
         objectInfo =
             client.putObject(
-                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                PutObjectArgs.builder().bucket(bucketNameWithLock).object(objectName).stream(
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
         boolean result =
             client.isObjectLegalHoldEnabled(
                 IsObjectLegalHoldEnabledArgs.builder()
-                    .bucket(bucketName)
+                    .bucket(bucketNameWithLock)
                     .object(objectName)
                     .build());
         if (result != false) {
           throw new Exception("object legal hold: expected: false, got: " + result);
         }
-        checkObjectLegalHold(bucketName, objectName, true);
-        checkObjectLegalHold(bucketName, objectName, false);
+        checkObjectLegalHold(bucketNameWithLock, objectName, true);
+        checkObjectLegalHold(bucketNameWithLock, objectName, false);
         mintSuccessLog(methodName, null, startTime);
       } finally {
         if (objectInfo != null) {
           client.removeObject(
               RemoveObjectArgs.builder()
-                  .bucket(bucketName)
+                  .bucket(bucketNameWithLock)
                   .object(objectName)
                   .versionId(objectInfo.versionId())
                   .build());
         }
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
@@ -2350,11 +2356,11 @@ public class FunctionalTest {
     }
   }
 
-  public static void setDefaultRetention_test() throws Exception {
+  public static void setDefaultRetention() throws Exception {
     String methodName = "setDefaultRetention()";
     String testTags = "[COMPLIANCE, 10 days]";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2395,10 +2401,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getDefaultRetention_test() throws Exception {
+  public static void getDefaultRetention() throws Exception {
     String methodName = "getDefaultRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2420,10 +2426,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteDefaultRetention_test() throws Exception {
+  public static void deleteDefaultRetention() throws Exception {
     String methodName = "deleteDefaultRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2448,28 +2454,26 @@ public class FunctionalTest {
     }
   }
 
-  public static void setObjectRetention_test() throws Exception {
+  public static void setObjectRetention() throws Exception {
     String methodName = "setObjectRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     ObjectWriteResponse objectInfo = null;
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
         objectInfo =
             client.putObject(
-                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                PutObjectArgs.builder().bucket(bucketNameWithLock).object(objectName).stream(
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
-                .bucket(bucketName)
+                .bucket(bucketNameWithLock)
                 .object(objectName)
                 .config(
                     new Retention(
@@ -2478,7 +2482,7 @@ public class FunctionalTest {
 
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
-                .bucket(bucketName)
+                .bucket(bucketNameWithLock)
                 .object(objectName)
                 .config(new Retention())
                 .bypassGovernanceMode(true)
@@ -2487,12 +2491,11 @@ public class FunctionalTest {
         if (objectInfo != null) {
           client.removeObject(
               RemoveObjectArgs.builder()
-                  .bucket(bucketName)
+                  .bucket(bucketNameWithLock)
                   .object(objectName)
                   .versionId(objectInfo.versionId())
                   .build());
         }
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
@@ -2531,28 +2534,26 @@ public class FunctionalTest {
     }
   }
 
-  public static void getObjectRetention_test() throws Exception {
+  public static void getObjectRetention() throws Exception {
     String methodName = "getObjectRetention()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     ObjectWriteResponse objectInfo = null;
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
         objectInfo =
             client.putObject(
-                PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                PutObjectArgs.builder().bucket(bucketNameWithLock).object(objectName).stream(
                         new ContentInputStream(1 * KB), 1 * KB, -1)
                     .build());
 
         testGetObjectRetention(
             SetObjectRetentionArgs.builder()
-                .bucket(bucketName)
+                .bucket(bucketNameWithLock)
                 .object(objectName)
                 .config(
                     new Retention(
@@ -2562,7 +2563,7 @@ public class FunctionalTest {
         // Check shortening retention until period
         testGetObjectRetention(
             SetObjectRetentionArgs.builder()
-                .bucket(bucketName)
+                .bucket(bucketNameWithLock)
                 .object(objectName)
                 .config(
                     new Retention(
@@ -2574,7 +2575,7 @@ public class FunctionalTest {
         // Enable below test when minio server release has a fix.
         // testGetObjectRetention(
         //     SetObjectRetentionArgs.builder()
-        //         .bucket(bucketName)
+        //         .bucket(bucketNameWithLock)
         //         .object(objectName)
         //         .config(new Retention())
         //         .bypassGovernanceMode(true)
@@ -2583,13 +2584,12 @@ public class FunctionalTest {
         if (objectInfo != null) {
           client.removeObject(
               RemoveObjectArgs.builder()
-                  .bucket(bucketName)
+                  .bucket(bucketNameWithLock)
                   .object(objectName)
                   .versionId(objectInfo.versionId())
                   .bypassGovernanceMode(true)
                   .build());
         }
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
@@ -2597,10 +2597,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketPolicy_test() throws Exception {
+  public static void getBucketPolicy() throws Exception {
     String methodName = "getBucketPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2632,10 +2632,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketPolicy_test() throws Exception {
+  public static void setBucketPolicy() throws Exception {
     String methodName = "setBucketPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2660,10 +2660,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketPolicy_test() throws Exception {
+  public static void deleteBucketPolicy() throws Exception {
     String methodName = "deleteBucketPolicy()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2700,10 +2700,10 @@ public class FunctionalTest {
         SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
   }
 
-  public static void setBucketLifeCycle_test() throws Exception {
+  public static void setBucketLifeCycle() throws Exception {
     String methodName = "setBucketLifeCycle()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2721,10 +2721,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketLifeCycle_test() throws Exception {
+  public static void deleteBucketLifeCycle() throws Exception {
     String methodName = "deleteBucketLifeCycle()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2746,10 +2746,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketLifeCycle_test() throws Exception {
+  public static void getBucketLifeCycle() throws Exception {
     String methodName = "getBucketLifeCycle()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2769,7 +2769,7 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketNotification_test() throws Exception {
+  public static void setBucketNotification() throws Exception {
     String methodName = "setBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
@@ -2778,7 +2778,7 @@ public class FunctionalTest {
     }
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     try {
@@ -2811,7 +2811,7 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketNotification_test() throws Exception {
+  public static void getBucketNotification() throws Exception {
     String methodName = "getBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
@@ -2820,7 +2820,7 @@ public class FunctionalTest {
     }
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     try {
@@ -2863,7 +2863,7 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketNotification_test() throws Exception {
+  public static void deleteBucketNotification() throws Exception {
     String methodName = "deleteBucketNotification()";
     long startTime = System.currentTimeMillis();
     if (sqsArn == null) {
@@ -2872,7 +2872,7 @@ public class FunctionalTest {
     }
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     try {
@@ -2915,10 +2915,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void listenBucketNotification_test() throws Exception {
+  public static void listenBucketNotification() throws Exception {
     String methodName = "listenBucketNotification()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -2979,13 +2979,13 @@ public class FunctionalTest {
     }
   }
 
-  public static void selectObjectContent_test() throws Exception {
+  public static void selectObjectContent() throws Exception {
     String methodName = "selectObjectContent()";
     String sqlExpression = "select * from S3Object";
     String testArgs = "[sqlExpression: " + sqlExpression + ", requestProgress: true]";
 
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3059,10 +3059,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketEncryption_test() throws Exception {
+  public static void setBucketEncryption() throws Exception {
     String methodName = "setBucketEncryption()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3084,10 +3084,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketEncryption_test() throws Exception {
+  public static void getBucketEncryption() throws Exception {
     String methodName = "getBucketEncryption()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3129,10 +3129,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketEncryption_test() throws Exception {
+  public static void deleteBucketEncryption() throws Exception {
     String methodName = "deleteBucketEncryption()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3165,10 +3165,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void setBucketTags_test() throws Exception {
+  public static void setBucketTags() throws Exception {
     String methodName = "setBucketTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3189,10 +3189,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketTags_test() throws Exception {
+  public static void getBucketTags() throws Exception {
     String methodName = "getBucketTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3222,10 +3222,10 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketTags_test() throws Exception {
+  public static void deleteBucketTags() throws Exception {
     String methodName = "deleteBucketTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
@@ -3253,17 +3253,15 @@ public class FunctionalTest {
     }
   }
 
-  public static void setObjectTags_test() throws Exception {
+  public static void setObjectTags() throws Exception {
     String methodName = "setObjectTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
         client.putObject(
             PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
@@ -3278,24 +3276,21 @@ public class FunctionalTest {
       } finally {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  public static void getObjectTags_test() throws Exception {
+  public static void getObjectTags() throws Exception {
     String methodName = "getObjectTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
         client.putObject(
             PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
@@ -3323,24 +3318,21 @@ public class FunctionalTest {
       } finally {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  public static void deleteObjectTags_test() throws Exception {
+  public static void deleteObjectTags() throws Exception {
     String methodName = "deleteObjectTags()";
     if (!mintEnv) {
-      System.out.println("Test: " + methodName);
+      System.out.println(methodName);
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     String objectName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
         client.putObject(
             PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
@@ -3366,119 +3358,86 @@ public class FunctionalTest {
       } finally {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
   }
 
-  /** runTests: runs as much as possible of test combinations. */
-  public static void runTests() throws Exception {
-    makeBucket_test();
-    listBuckets_test();
-    bucketExists_test();
-    removeBucket_test();
+  public static void runBucketTests() throws Exception {
+    makeBucket();
+    bucketExists();
+    removeBucket();
+    listBuckets();
 
-    enableVersioning_test();
-    disableVersioning_test();
-    isVersioningEnabled_test();
+    enableVersioning();
+    disableVersioning();
+    isVersioningEnabled();
 
-    setup();
+    setDefaultRetention();
+    getDefaultRetention();
 
-    putObject_test();
-    getObject_test();
-    uploadObject_test();
-    downloadObject_test();
+    setBucketEncryption();
+    getBucketEncryption();
+    deleteBucketEncryption();
 
-    setObjectRetention_test();
-    getObjectRetention_test();
+    setBucketTags();
+    getBucketTags();
+    deleteBucketTags();
 
-    statObject_test();
+    setBucketPolicy();
+    getBucketPolicy();
+    deleteBucketPolicy();
 
-    getPresignedObjectUrl_test();
+    setBucketLifeCycle();
+    getBucketLifeCycle();
+    deleteBucketLifeCycle();
 
-    listObjects_test();
+    setBucketNotification();
+    getBucketNotification();
+    deleteBucketNotification();
 
-    removeObject_test();
-    removeObjects_test();
-
-    presignedPostPolicy_test();
-
-    copyObject_test();
-    composeObject_test();
-
-    enableObjectLegalHold_test();
-    disableObjectLegalHold_test();
-    isObjectLegalHoldEnabled_test();
-    setDefaultRetention_test();
-    getDefaultRetention_test();
-
-    setObjectRetention_test();
-    getObjectRetention_test();
-
-    selectObjectContent_test();
-
-    setBucketEncryption_test();
-    getBucketEncryption_test();
-    deleteBucketEncryption_test();
-
-    setBucketTags_test();
-    getBucketTags_test();
-    deleteBucketTags_test();
-    setObjectTags_test();
-    getObjectTags_test();
-    deleteObjectTags_test();
-
-    getBucketPolicy_test();
-    setBucketPolicy_test();
-    deleteBucketPolicy_test();
-
-    setBucketLifeCycle_test();
-    getBucketLifeCycle_test();
-    deleteBucketLifeCycle_test();
-
-    listenBucketNotification_test();
-
-    teardown();
-
-    setBucketNotification_test();
-    getBucketNotification_test();
-    deleteBucketNotification_test();
+    listenBucketNotification();
   }
 
-  /** runQuickTests: runs tests those completely quicker. */
-  public static void runQuickTests() throws Exception {
-    makeBucket_test();
-    listBuckets_test();
-    bucketExists_test();
-    removeBucket_test();
+  public static void runObjectTests() throws Exception {
+    listObjects();
 
     setup();
 
-    uploadObject_test();
-    putObject_test();
-    statObject_test();
-    getObject_test();
-    downloadObject_test();
-    listObjects_test();
-    removeObject_test();
-    getPresignedObjectUrl_test();
-    presignedPostPolicy_test();
-    copyObject_test();
-    getBucketPolicy_test();
-    setBucketPolicy_test();
-    deleteBucketPolicy_test();
-    selectObjectContent_test();
-    listenBucketNotification_test();
-    setBucketTags_test();
-    getBucketTags_test();
-    deleteBucketTags_test();
-    setObjectTags_test();
-    getObjectTags_test();
-    deleteObjectTags_test();
+    putObject();
+    getObject();
+    removeObject();
+    removeObjects();
+    statObject();
+
+    copyObject();
+    composeObject();
+    uploadObject();
+    downloadObject();
+
+    setObjectRetention();
+    getObjectRetention();
+
+    getPresignedObjectUrl();
+    presignedPostPolicy();
+
+    enableObjectLegalHold();
+    disableObjectLegalHold();
+    isObjectLegalHoldEnabled();
+
+    selectObjectContent();
+
+    setObjectTags();
+    getObjectTags();
+    deleteObjectTags();
 
     teardown();
+  }
+
+  public static void runTests() throws Exception {
+    runBucketTests();
+    runObjectTests();
   }
 
   public static boolean downloadMinio() throws IOException {
@@ -3618,27 +3577,22 @@ public class FunctionalTest {
       client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
       // Enable trace for debugging.
       // client.traceOn(System.out);
-
-      // For mint environment, run tests based on mint mode
-      if (mintEnv) {
-        if (isQuickTest) {
-          FunctionalTest.runQuickTests();
-        } else {
-          FunctionalTest.runTests();
-        }
-      } else {
-        FunctionalTest.runTests();
+      if (!mintEnv) System.out.println(">>> Running tests:");
+      FunctionalTest.runTests();
+      if (!mintEnv) {
+        System.out.println();
+        System.out.println(">>> Running tests for region:");
         isQuickTest = true;
         // Get new bucket name to avoid minio azure gateway failure.
         bucketName = getRandomName();
-        // Quick tests with passed region.
+        bucketNameWithLock = getRandomName();
         client =
             MinioClient.builder()
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
                 .region(region)
                 .build();
-        FunctionalTest.runQuickTests();
+        FunctionalTest.runTests();
       }
     } catch (Exception e) {
       if (!mintEnv) {
