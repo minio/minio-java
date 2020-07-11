@@ -67,6 +67,8 @@ import io.minio.SelectObjectContentArgs;
 import io.minio.SelectResponseStream;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
+import io.minio.ServerSideEncryptionKms;
+import io.minio.ServerSideEncryptionS3;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.SetBucketLifeCycleArgs;
 import io.minio.SetBucketNotificationArgs;
@@ -169,7 +171,7 @@ public class FunctionalTest {
   private static MinioClient client = null;
 
   private static ServerSideEncryptionCustomerKey ssec = null;
-  private static ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+  private static ServerSideEncryption sseS3 = new ServerSideEncryptionS3();
   private static ServerSideEncryption sseKms = null;
 
   static {
@@ -183,7 +185,7 @@ public class FunctionalTest {
     try {
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
       keyGen.init(256);
-      ssec = ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+      ssec = new ServerSideEncryptionCustomerKey(keyGen.generateKey());
     } catch (InvalidKeyException | NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     }
@@ -3569,7 +3571,7 @@ public class FunctionalTest {
     if (kmsKeyName != null) {
       Map<String, String> myContext = new HashMap<>();
       myContext.put("key1", "value1");
-      sseKms = ServerSideEncryption.withManagedKeys(kmsKeyName, myContext);
+      sseKms = new ServerSideEncryptionKms(kmsKeyName, myContext);
     }
 
     int exitValue = 0;

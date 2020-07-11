@@ -71,7 +71,7 @@ public class StatObjectArgsTest {
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
     ServerSideEncryptionCustomerKey ssec =
-        ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+        new ServerSideEncryptionCustomerKey(keyGen.generateKey());
     StatObjectArgs args =
         StatObjectArgs.builder()
             .bucket("mybucket")

@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2018 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,17 +20,27 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ServerSideEncryption {
-  private static final Map<String, String> emptyHeaders =
-      Collections.unmodifiableMap(new HashMap<>());
+public class ServerSideEncryptionS3 extends ServerSideEncryption {
+  private static final Map<String, String> headers;
 
-  public abstract Map<String, String> headers();
-
-  public boolean tlsRequired() {
-    return true;
+  static {
+    Map<String, String> map = new HashMap<>();
+    map.put("X-Amz-Server-Side-Encryption", "AES256");
+    headers = Collections.unmodifiableMap(map);
   }
 
-  public Map<String, String> copySourceHeaders() {
-    return emptyHeaders;
+  @Override
+  public final Map<String, String> headers() {
+    return headers;
+  }
+
+  @Override
+  public final boolean tlsRequired() {
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return "SSE-S3";
   }
 }

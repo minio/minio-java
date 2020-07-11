@@ -18,6 +18,8 @@ import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
+import io.minio.ServerSideEncryptionKms;
+import io.minio.ServerSideEncryptionS3;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -94,7 +96,7 @@ public class PutObject {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256);
         ServerSideEncryptionCustomerKey ssec =
-            ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+            new ServerSideEncryptionCustomerKey(keyGen.generateKey());
 
         // Create encrypted object 'my-objectname' using SSE-C in 'my-bucketname' with content from
         // the input stream.
@@ -113,7 +115,7 @@ public class PutObject {
 
         Map<String, String> myContext = new HashMap<>();
         myContext.put("key1", "value1");
-        ServerSideEncryption sseKms = ServerSideEncryption.withManagedKeys("Key-Id", myContext);
+        ServerSideEncryption sseKms = new ServerSideEncryptionKms("Key-Id", myContext);
 
         // Create encrypted object 'my-objectname' using SSE-KMS in 'my-bucketname' with content
         // from the input stream.
@@ -130,7 +132,7 @@ public class PutObject {
         // Create a InputStream for object upload.
         ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
 
-        ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+        ServerSideEncryption sseS3 = new ServerSideEncryptionS3();
 
         // Create encrypted object 'my-objectname' using SSE-S3 in 'my-bucketname' with content
         // from the input stream.

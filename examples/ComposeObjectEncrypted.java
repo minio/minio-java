@@ -51,12 +51,12 @@ public class ComposeObjectEncrypted {
       byte[] key = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
 
-      ServerSideEncryptionCustomerKey ssePut = ServerSideEncryption.withCustomerKey(secretKeySpec);
+      ServerSideEncryptionCustomerKey ssePut = new ServerSideEncryptionCustomerKey(secretKeySpec);
 
       byte[] keyTarget = "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8);
       SecretKeySpec secretKeySpecTarget = new SecretKeySpec(keyTarget, "AES");
 
-      ServerSideEncryption sseTarget = ServerSideEncryption.withCustomerKey(secretKeySpecTarget);
+      ServerSideEncryption sseTarget = new ServerSideEncryptionCustomerKey(secretKeySpecTarget);
 
       String sourceObject1 = "my-objectname1";
       String sourceObject2 = "my-objectname2";
