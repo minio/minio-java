@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.statObject(). */
+/** Argument class of {@link MinioClient#statObject}. */
 public class StatObjectArgs extends ObjectConditionalReadArgs {
   protected StatObjectArgs() {}
 

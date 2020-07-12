@@ -20,7 +20,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-/** Argument class of MinioClient.putObject(). */
+/** Argument class of {@link MinioClient#putObject}. */
 public class PutObjectArgs extends PutObjectBaseArgs {
   private BufferedInputStream stream;
 

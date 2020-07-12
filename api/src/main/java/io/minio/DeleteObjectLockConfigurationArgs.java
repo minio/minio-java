@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.deleteObjectLockConfiguration(). */
+/** Argument class of {@link MinioClient#deleteObjectLockConfiguration}. */
 public class DeleteObjectLockConfigurationArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

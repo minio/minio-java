@@ -18,7 +18,7 @@ package io.minio;
 
 import io.minio.messages.SseConfiguration;
 
-/** Argument class of MinioClient.setBucketEncryption(). */
+/** Argument class of {@link MinioClient#setBucketEncryption}. */
 public class SetBucketEncryptionArgs extends BucketArgs {
   private SseConfiguration config;
 

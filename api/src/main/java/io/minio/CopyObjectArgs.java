@@ -18,7 +18,7 @@ package io.minio;
 
 import okhttp3.HttpUrl;
 
-/** Argument class of MinioClient.copyObject(). */
+/** Argument class of {@link MinioClient#copyObject}. */
 public class CopyObjectArgs extends ObjectWriteArgs {
   private CopySource source = null;
   private Directive metadataDirective;

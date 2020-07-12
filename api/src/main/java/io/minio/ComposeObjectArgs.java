@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import okhttp3.HttpUrl;
 
+/** Argument class of {@link MinioClient#composeObject}. */
 public class ComposeObjectArgs extends ObjectWriteArgs {
   List<ComposeSource> sources;
 
@@ -57,6 +58,7 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
     }
   }
 
+  /** Argument builder of {@link ComposeObjectArgs}. */
   public static final class Builder extends ObjectWriteArgs.Builder<Builder, ComposeObjectArgs> {
     private void validateSources(List<ComposeSource> sources) {
       if (sources == null || sources.isEmpty()) {

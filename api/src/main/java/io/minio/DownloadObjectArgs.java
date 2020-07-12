@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/** Argument class of {@link MinioClient#downloadObject}. */
 public class DownloadObjectArgs extends ObjectReadArgs {
   private String filename;
 
@@ -31,6 +32,7 @@ public class DownloadObjectArgs extends ObjectReadArgs {
     return new Builder();
   }
 
+  /** Argument class of {@link DownloadObjectArgs}. */
   public static final class Builder extends ObjectReadArgs.Builder<Builder, DownloadObjectArgs> {
     public Builder filename(String filename) {
       validateFileName(filename);

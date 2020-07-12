@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/** S3 type of Server-side encryption. */
 public class ServerSideEncryptionS3 extends ServerSideEncryption {
   private static final Map<String, String> headers;
 

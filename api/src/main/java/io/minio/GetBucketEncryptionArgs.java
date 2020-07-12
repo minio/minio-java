@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getBucketEncryption(). */
+/** Argument class of {@link MinioClient#getBucketEncryption}. */
 public class GetBucketEncryptionArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

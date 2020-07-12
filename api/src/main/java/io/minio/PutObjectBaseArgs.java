@@ -18,6 +18,7 @@ package io.minio;
 
 import java.io.IOException;
 
+/** Base argument class for {@link PutObjectArgs} and {@link UploadObjectArgs}. */
 public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
   protected long objectSize;
   protected long partSize;
@@ -49,6 +50,7 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
     return null;
   }
 
+  /** Base argument builder class for {@link PutObjectBaseArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends PutObjectBaseArgs>
       extends ObjectWriteArgs.Builder<B, A> {}
 }

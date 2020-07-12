@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.removeObject(). */
+/** Argument class of {@link MinioClient#removeObject}. */
 public class RemoveObjectArgs extends ObjectVersionArgs {
   private boolean bypassGovernanceMode;
 

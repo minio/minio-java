@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.ListMultipartUploadsResult;
 import okhttp3.Headers;
 
-/** Response class of MinioClient.listMultipartUploads(). */
+/** Response class of {@link MinioClient#listMultipartUploads}. */
 public class ListMultipartUploadsResponse extends GenericResponse {
   private ListMultipartUploadsResult result;
 

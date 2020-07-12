@@ -18,7 +18,7 @@ package io.minio;
 
 import io.minio.messages.NotificationConfiguration;
 
-/** Argument class of MinioClient.setBucketNotification(). */
+/** Argument class of {@link MinioClient#setBucketNotification}. */
 public class SetBucketNotificationArgs extends BucketArgs {
   private NotificationConfiguration config;
 

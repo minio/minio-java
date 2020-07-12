@@ -20,6 +20,7 @@ package io.minio;
 import io.minio.messages.InputSerialization;
 import io.minio.messages.OutputSerialization;
 
+/** Argument class of {@link MinioClient#selectObjectContent}. */
 public class SelectObjectContentArgs extends ObjectReadArgs {
   private String sqlExpression;
   private InputSerialization inputSerialization;
@@ -56,6 +57,7 @@ public class SelectObjectContentArgs extends ObjectReadArgs {
     return new Builder();
   }
 
+  /** Argument builder of {@link SelectObjectContentArgs}. */
   public static final class Builder
       extends ObjectReadArgs.Builder<Builder, SelectObjectContentArgs> {
     private void validateSqlExpression(String se) {

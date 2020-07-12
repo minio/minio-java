@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getBucketVersioning(). */
+/** Argument class of {@link MinioClient#getBucketVersioning}. */
 public class GetBucketVersioningArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
