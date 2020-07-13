@@ -3411,18 +3411,20 @@ public class MinioClient {
         return this.error;
       }
 
+      Item item = null;
       if (this.itemIterator.hasNext()) {
-        Item item = this.itemIterator.next();
+        item = this.itemIterator.next();
+        item.setEncodingType(this.listObjectsResult.encodingType());
         this.lastObjectName = item.objectName();
+      } else if (this.deleteMarkerIterator.hasNext()) {
+        item = this.deleteMarkerIterator.next();
+      } else if (this.prefixIterator.hasNext()) {
+        item = this.prefixIterator.next().toItem();
+      }
+
+      if (item != null) {
+        item.setEncodingType(this.listObjectsResult.encodingType());
         return new Result<>(item);
-      }
-
-      if (this.deleteMarkerIterator.hasNext()) {
-        return new Result<>(this.deleteMarkerIterator.next());
-      }
-
-      if (this.prefixIterator.hasNext()) {
-        return new Result<>(this.prefixIterator.next().toItem());
       }
 
       this.completed = true;

@@ -55,8 +55,8 @@ public abstract class ListObjectsResult {
     return name;
   }
 
-  public boolean useUrlEncodingType() {
-    return (encodingType != null && encodingType.equals("url"));
+  public String encodingType() {
+    return encodingType;
   }
 
   /** Returns prefix. */
