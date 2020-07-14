@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2018 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,21 @@ import javax.crypto.SecretKey;
 import javax.security.auth.DestroyFailedException;
 
 public class ServerSideEncryptionCustomerKey extends ServerSideEncryption {
-  final SecretKey secretKey;
-  final Map<String, String> headers;
-  final Map<String, String> copySourceHeaders;
+  private boolean isDestroyed = false;
+  private final SecretKey secretKey;
+  private final Map<String, String> headers;
+  private final Map<String, String> copySourceHeaders;
 
   public ServerSideEncryptionCustomerKey(SecretKey key)
       throws InvalidKeyException, NoSuchAlgorithmException {
+    if (key == null || !key.getAlgorithm().equals("AES") || key.getEncoded().length != 32) {
+      throw new IllegalArgumentException("Secret key must be 256 bit AES key");
+    }
+
+    if (key.isDestroyed()) {
+      throw new IllegalArgumentException("Secret key already destroyed");
+    }
+
     this.secretKey = key;
 
     byte[] keyBytes = key.getEncoded();
@@ -55,14 +64,9 @@ public class ServerSideEncryptionCustomerKey extends ServerSideEncryption {
   }
 
   @Override
-  public final Type type() {
-    return Type.SSE_C;
-  }
-
-  @Override
   public final Map<String, String> headers() {
-    if (this.isDestroyed()) {
-      throw new IllegalStateException("object is already destroyed");
+    if (isDestroyed) {
+      throw new IllegalStateException("Secret key was destroyed");
     }
 
     return headers;
@@ -70,16 +74,20 @@ public class ServerSideEncryptionCustomerKey extends ServerSideEncryption {
 
   @Override
   public final Map<String, String> copySourceHeaders() {
-    if (this.isDestroyed()) {
-      throw new IllegalStateException("object is already destroyed");
+    if (isDestroyed) {
+      throw new IllegalStateException("Secret key was destroyed");
     }
 
     return copySourceHeaders;
   }
 
-  @Override
   public final void destroy() throws DestroyFailedException {
     secretKey.destroy();
-    this.destroyed = true;
+    isDestroyed = true;
+  }
+
+  @Override
+  public String toString() {
+    return "SSE-C";
   }
 }

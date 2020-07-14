@@ -709,13 +709,13 @@ public class MinioClient {
       return;
     }
 
-    if (sse.type() != ServerSideEncryption.Type.SSE_C) {
+    if (!(sse instanceof ServerSideEncryptionCustomerKey)) {
       throw new IllegalArgumentException("only SSE_C is supported for all read requests.");
     }
 
-    if (sse.type().requiresTls() && !this.baseUrl.isHttps()) {
+    if (sse.tlsRequired() && !this.baseUrl.isHttps()) {
       throw new IllegalArgumentException(
-          sse.type().name() + "operations must be performed over a secure connection.");
+          sse + "operations must be performed over a secure connection.");
     }
   }
 
@@ -2360,7 +2360,7 @@ public class MinioClient {
     String uploadId = createMultipartUploadResponse.result().uploadId();
 
     Multimap<String, String> ssecHeaders = HashMultimap.create();
-    if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
+    if (args.sse() != null && args.sse() instanceof ServerSideEncryptionCustomerKey) {
       ssecHeaders.putAll(newMultimap(args.sse().headers()));
     }
 
@@ -4762,7 +4762,7 @@ public class MinioClient {
 
         Map<String, String> ssecHeaders = null;
         // set encryption headers in the case of SSE-C.
-        if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
+        if (args.sse() != null && args.sse() instanceof ServerSideEncryptionCustomerKey) {
           ssecHeaders = args.sse().headers();
         }
 

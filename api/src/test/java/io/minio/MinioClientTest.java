@@ -451,7 +451,7 @@ public class MinioClientTest {
         StatObjectArgs.builder()
             .bucket("mybucket")
             .object("myobject")
-            .ssec(ServerSideEncryption.withCustomerKey(keyGen.generateKey()))
+            .ssec(new ServerSideEncryptionCustomerKey(keyGen.generateKey()))
             .build());
     Assert.fail("exception should be thrown");
   }
@@ -465,7 +465,7 @@ public class MinioClientTest {
     client.putObject(
         PutObjectArgs.builder().bucket("mybucket").object("myobject").stream(
                 new ByteArrayInputStream(new byte[] {}), 0, -1)
-            .sse(ServerSideEncryption.withCustomerKey(keyGen.generateKey()))
+            .sse(new ServerSideEncryptionCustomerKey(keyGen.generateKey()))
             .build());
     Assert.fail("exception should be thrown");
   }
@@ -479,7 +479,7 @@ public class MinioClientTest {
     client.putObject(
         PutObjectArgs.builder().bucket("mybucket").object("myobject").stream(
                 new ByteArrayInputStream(new byte[] {}), 0, -1)
-            .sse(ServerSideEncryption.withManagedKeys("keyId", myContext))
+            .sse(new ServerSideEncryptionKms("keyId", myContext))
             .build());
     Assert.fail("exception should be thrown");
   }
