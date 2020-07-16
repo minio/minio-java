@@ -41,31 +41,16 @@ public class ObjectLockConfiguration {
   /** Constructs a new ObjectLockConfiguration object with given retention. */
   public ObjectLockConfiguration(RetentionMode mode, RetentionDuration duration)
       throws IllegalArgumentException {
-    if (mode != null && duration != null) {
-      this.rule = new Rule(mode, duration);
-    } else if (mode != null || duration != null) {
-      if (mode == null) {
-        throw new IllegalArgumentException("mode is null");
-      }
-      throw new IllegalArgumentException("duration is null");
-    }
+    this.rule = new Rule(mode, duration);
   }
 
   /** Returns retention mode. */
   public RetentionMode mode() {
-    if (rule == null) {
-      return null;
-    }
-
-    return rule.mode();
+    return (rule != null) ? rule.mode() : null;
   }
 
   /** Returns retention duration. */
   public RetentionDuration duration() {
-    if (rule == null) {
-      return null;
-    }
-
-    return rule.duration();
+    return (rule != null) ? rule.duration() : null;
   }
 }
