@@ -18,6 +18,7 @@ package io.minio.messages;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Path;
 import org.simpleframework.xml.Root;
 
 /** Helper class to denote Rule information for {@link SseConfiguration}. */
@@ -25,29 +26,31 @@ import org.simpleframework.xml.Root;
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class SseConfigurationRule {
-  @Element(name = "ApplyServerSideEncryptionByDefault")
-  ApplySseByDefault sseDefault;
+  @Path(value = "ApplyServerSideEncryptionByDefault")
+  @Element(name = "KMSMasterKeyID", required = false)
+  private String kmsMasterKeyId;
 
-  public SseConfigurationRule() {}
+  @Path(value = "ApplyServerSideEncryptionByDefault")
+  @Element(name = "SSEAlgorithm")
+  private SseAlgorithm sseAlgorithm;
 
   /** Constructs new server-side encryption configuration rule. */
-  public SseConfigurationRule(String kmsMasterKeyId, SseAlgorithm sseAlgorithm) {
-    this.sseDefault = new ApplySseByDefault(kmsMasterKeyId, sseAlgorithm);
+  public SseConfigurationRule(
+      @Element(name = "KMSMasterKeyID", required = false) String kmsMasterKeyId,
+      @Element(name = "SSEAlgorithm") SseAlgorithm sseAlgorithm) {
+    if (sseAlgorithm == null) {
+      throw new IllegalArgumentException("SSE Algorithm cannot be null");
+    }
+
+    this.kmsMasterKeyId = kmsMasterKeyId;
+    this.sseAlgorithm = sseAlgorithm;
   }
 
   public String kmsMasterKeyId() {
-    if (this.sseDefault == null) {
-      return null;
-    }
-
-    return this.sseDefault.kmsMasterKeyId();
+    return this.kmsMasterKeyId;
   }
 
   public SseAlgorithm sseAlgorithm() {
-    if (this.sseDefault == null) {
-      return null;
-    }
-
-    return this.sseDefault.sseAlgorithm();
+    return this.sseAlgorithm;
   }
 }
