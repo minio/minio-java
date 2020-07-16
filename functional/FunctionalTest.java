@@ -3497,7 +3497,7 @@ public class FunctionalTest {
   public static Process runMinio() throws Exception {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
     ProcessBuilder pb =
-        new ProcessBuilder(binaryPath.getPath(), "server", ".d1", ".d2", ".d3", ".d4");
+        new ProcessBuilder(binaryPath.getPath(), "server", "--config-dir", ".cfg", ".d{1...4}");
 
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");
