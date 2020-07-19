@@ -3497,11 +3497,12 @@ public class FunctionalTest {
   public static Process runMinio() throws Exception {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
     ProcessBuilder pb =
-        new ProcessBuilder(binaryPath.getPath(), "server", "--config-dir", ".cfg", ".d{1...4}");
+        new ProcessBuilder(binaryPath.getPath(), "server", "--certs-dir", ".certs", ".d{1...4}");
 
     Map<String, String> env = pb.environment();
     env.put("MINIO_ACCESS_KEY", "minio");
     env.put("MINIO_SECRET_KEY", "minio123");
+    env.put("MINIO_REGION_NAME", "");
     env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
     env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
     env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
@@ -3536,7 +3537,7 @@ public class FunctionalTest {
 
     String kmsKeyName = "my-minio-key";
     if (args.length != 4) {
-      endpoint = "http://localhost:9000";
+      endpoint = "https://localhost:9000";
       accessKey = "minio";
       secretKey = "minio123";
       region = "us-east-1";

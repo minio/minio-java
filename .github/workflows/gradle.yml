@@ -31,6 +31,7 @@ jobs:
       - name: Gradle build on ${{ matrix.java-version }}
         if: matrix.os == 'ubuntu-latest'
         run: |
+          keytool -import -trustcacerts -keystore $JAVA_HOME/lib/security/cacerts -storepass changeit -noprompt -alias Root -import -file functional/.certs/public.crt
           ./gradlew build
           ./gradlew runFunctionalTest
           javac -cp api/build/libs/minio-${DEV_VERSION}-all.jar functional/TestUserAgent.java
@@ -42,5 +43,6 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           $Env:Path += ';.'
+          keytool -import -trustcacerts -keystore $env:JAVA_HOME/lib/security/cacerts -storepass changeit -noprompt -alias Root -import -file $env:functional/.certs/public.crt
           gradlew.bat build
           gradlew.bat runFunctionalTest
