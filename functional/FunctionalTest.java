@@ -846,6 +846,8 @@ public class FunctionalTest {
 
     Map<String, String> userMetadata = new HashMap<>();
     userMetadata.put("My-Project", "Project One");
+    userMetadata.put("My-header1", "    a   b   c  ");
+    userMetadata.put("My-Header2", "\"a   b   c\"");
 
     testPutObject(
         "[user metadata]",
