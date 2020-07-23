@@ -45,10 +45,6 @@ public class SseConfiguration {
   }
 
   public List<SseConfigurationRule> rules() {
-    if (ruleList == null) {
-      return Collections.unmodifiableList(new LinkedList<>());
-    }
-
-    return Collections.unmodifiableList(ruleList);
+    return Collections.unmodifiableList(ruleList == null ? new LinkedList<>() : ruleList);
   }
 }

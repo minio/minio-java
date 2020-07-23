@@ -708,13 +708,13 @@ public class MinioClient {
       return;
     }
 
-    if (sse.type() != ServerSideEncryption.Type.SSE_C) {
+    if (!(sse instanceof ServerSideEncryptionCustomerKey)) {
       throw new IllegalArgumentException("only SSE_C is supported for all read requests.");
     }
 
-    if (sse.type().requiresTls() && !this.baseUrl.isHttps()) {
+    if (sse.tlsRequired() && !this.baseUrl.isHttps()) {
       throw new IllegalArgumentException(
-          sse.type().name() + "operations must be performed over a secure connection.");
+          sse + "operations must be performed over a secure connection.");
     }
   }
 
@@ -1298,12 +1298,12 @@ public class MinioClient {
    * Gets object information and metadata of an object.
    *
    * <pre>Example:{@code
-   * ObjectStat objectStat = minioClient.statObject("my-bucketname", "my-objectname");
+   * StatObjectResponse stat = minioClient.statObject("my-bucketname", "my-objectname");
    * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @return {@link StatObjectResponse} - Populated object information and metadata.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -1318,7 +1318,7 @@ public class MinioClient {
    * @deprecated use {@link #statObject(StatObjectArgs)}
    */
   @Deprecated
-  public ObjectStat statObject(String bucketName, String objectName)
+  public StatObjectResponse statObject(String bucketName, String objectName)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -1330,14 +1330,13 @@ public class MinioClient {
    * Gets object information and metadata of a SSE-C encrypted object.
    *
    * <pre>Example:{@code
-   * ObjectStat objectStat =
-   *     minioClient.statObject("my-bucketname", "my-objectname", ssec);
+   * StatObjectResponse stat = minioClient.statObject("my-bucketname", "my-objectname", ssec);
    * }</pre>
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
    * @param ssec SSE-C type server-side encryption.
-   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @return {@link StatObjectResponse} - Populated object information and metadata.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -1352,7 +1351,7 @@ public class MinioClient {
    * @deprecated use {@link #statObject(StatObjectArgs)}
    */
   @Deprecated
-  public ObjectStat statObject(
+  public StatObjectResponse statObject(
       String bucketName, String objectName, ServerSideEncryptionCustomerKey ssec)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
@@ -1367,12 +1366,12 @@ public class MinioClient {
    *
    * <pre>Example:{@code
    * // Get information of an object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
    *
    * // Get information of SSE-C encrypted object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder()
    *             .bucket("my-bucketname")
@@ -1381,7 +1380,7 @@ public class MinioClient {
    *             .build());
    *
    * // Get information of a versioned object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder()
    *             .bucket("my-bucketname")
@@ -1390,7 +1389,7 @@ public class MinioClient {
    *             .build());
    *
    * // Get information of a SSE-C encrypted versioned object.
-   * ObjectStat objectStat =
+   * StatObjectResponse stat =
    *     minioClient.statObject(
    *         StatObjectArgs.builder()
    *             .bucket("my-bucketname")
@@ -1401,7 +1400,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args {@link StatObjectArgs} object.
-   * @return {@link ObjectStat} - Populated object information and metadata.
+   * @return {@link StatObjectResponse} - Populated object information and metadata.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -1413,9 +1412,9 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
-   * @see ObjectStat
+   * @see StatObjectResponse
    */
-  public ObjectStat statObject(StatObjectArgs args)
+  public StatObjectResponse statObject(StatObjectArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -1427,7 +1426,7 @@ public class MinioClient {
             args,
             (args.ssec() != null) ? newMultimap(args.ssec().headers()) : null,
             (args.versionId() != null) ? newMultimap("versionId", args.versionId()) : null);
-    return new ObjectStat(args.bucket(), args.object(), response.headers());
+    return new StatObjectResponse(response.headers(), args.bucket(), args.region(), args.object());
   }
 
   /**
@@ -1855,11 +1854,9 @@ public class MinioClient {
     Path filePath = Paths.get(filename);
     boolean fileExists = Files.exists(filePath);
 
-    ObjectStat objectStat = statObject(new StatObjectArgs(args));
-    long length = objectStat.length();
-    String etag = objectStat.etag();
+    StatObjectResponse stat = statObject(new StatObjectArgs(args));
 
-    String tempFilename = filename + "." + etag + ".part.minio";
+    String tempFilename = filename + "." + stat.etag() + ".part.minio";
     Path tempFilePath = Paths.get(tempFilename);
     boolean tempFileExists = Files.exists(tempFilePath);
 
@@ -1870,7 +1867,7 @@ public class MinioClient {
     long tempFileSize = 0;
     if (tempFileExists) {
       tempFileSize = Files.size(tempFilePath);
-      if (tempFileSize > length) {
+      if (tempFileSize > stat.size()) {
         Files.delete(tempFilePath);
         tempFileExists = false;
         tempFileSize = 0;
@@ -1879,15 +1876,15 @@ public class MinioClient {
 
     if (fileExists) {
       long fileSize = Files.size(filePath);
-      if (fileSize == length) {
+      if (fileSize == stat.size()) {
         // already downloaded. nothing to do
         return;
-      } else if (fileSize > length) {
+      } else if (fileSize > stat.size()) {
         throw new IllegalArgumentException(
             "Source object, '"
                 + args.object()
                 + "', size:"
-                + length
+                + stat.size()
                 + " is smaller than the destination file, '"
                 + filename
                 + "', size:"
@@ -1910,11 +1907,11 @@ public class MinioClient {
       is.close();
       os.close();
 
-      if (bytesWritten != length - tempFileSize) {
+      if (bytesWritten != stat.size() - tempFileSize) {
         throw new IOException(
             tempFilename
                 + ": unexpected data written.  expected = "
-                + (length - tempFileSize)
+                + (stat.size() - tempFileSize)
                 + ", written = "
                 + bytesWritten);
       }
@@ -2111,8 +2108,8 @@ public class MinioClient {
       return composeObject(new ComposeObjectArgs(args));
     }
 
-    ObjectStat stat = statObject(new StatObjectArgs(args.source()));
-    if (stat.length() > ObjectWriteArgs.MAX_PART_SIZE) {
+    StatObjectResponse stat = statObject(new StatObjectArgs(args.source()));
+    if (stat.size() > ObjectWriteArgs.MAX_PART_SIZE) {
       if (args.metadataDirective() != null && args.metadataDirective() == Directive.COPY) {
         throw new IllegalArgumentException(
             "COPY metadata directive is not applicable to source object size greater than 5 GiB");
@@ -2222,11 +2219,11 @@ public class MinioClient {
     int i = 0;
     for (ComposeSource src : sources) {
       i++;
-      ObjectStat stat = statObject(new StatObjectArgs(src));
+      StatObjectResponse stat = statObject(new StatObjectArgs(src));
 
-      src.buildHeaders(stat.length(), stat.etag());
+      src.buildHeaders(stat.size(), stat.etag());
 
-      long size = stat.length();
+      long size = stat.size();
       if (src.length() != null) {
         size = src.length();
       } else if (src.offset() != null) {
@@ -2368,7 +2365,7 @@ public class MinioClient {
     String uploadId = createMultipartUploadResponse.result().uploadId();
 
     Multimap<String, String> ssecHeaders = HashMultimap.create();
-    if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
+    if (args.sse() != null && args.sse() instanceof ServerSideEncryptionCustomerKey) {
       ssecHeaders.putAll(newMultimap(args.sse().headers()));
     }
 
@@ -2805,23 +2802,45 @@ public class MinioClient {
    * Gets form-data of {@link PostPolicy} of an object to upload its data using POST method.
    *
    * <pre>Example:{@code
-   * PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname",
-   *     ZonedDateTime.now().plusDays(7));
+   * // Create new post policy for 'my-bucketname' with 7 days expiry from now.
+   * PostPolicy policy = new PostPolicy("my-bucketname", ZonedDateTime.now().plusDays(7));
    *
-   * // 'my-objectname' should be 'image/png' content type
-   * policy.setContentType("image/png");
+   * // Add condition that 'key' (object name) equals to 'my-objectname'.
+   * policy.addEqualsCondition("key", "my-objectname");
    *
-   * // set success action status to 201 to receive XML document
-   * policy.setSuccessActionStatus(201);
+   * // Add condition that 'Content-Type' starts with 'image/'.
+   * policy.addStartsWithCondition("Content-Type", "image/");
    *
-   * Map<String,String> formData = minioClient.presignedPostPolicy(policy);
+   * // Add condition that 'content-length-range' is between 64kiB to 10MiB.
+   * policy.addContentLengthRangeCondition(64 * 1024, 10 * 1024 * 1024);
    *
-   * // Print curl command to be executed by anonymous user to upload /tmp/userpic.png.
-   * System.out.print("curl -X POST ");
-   * for (Map.Entry<String,String> entry : formData.entrySet()) {
-   *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+   * Map<String, String> formData = minioClient.getPresignedPostFormData(policy);
+   *
+   * // Upload an image using POST object with form-data.
+   * MultipartBody.Builder multipartBuilder = new MultipartBody.Builder();
+   * multipartBuilder.setType(MultipartBody.FORM);
+   * for (Map.Entry<String, String> entry : formData.entrySet()) {
+   *   multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
    * }
-   * System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname");
+   * multipartBuilder.addFormDataPart("key", "my-objectname");
+   * multipartBuilder.addFormDataPart("Content-Type", "image/png");
+   *
+   * // "file" must be added at last.
+   * multipartBuilder.addFormDataPart(
+   *     "file", "my-objectname", RequestBody.create(null, new File("Pictures/avatar.png")));
+   *
+   * Request request =
+   *     new Request.Builder()
+   *         .url("https://play.min.io/my-bucketname")
+   *         .post(multipartBuilder.build())
+   *         .build();
+   * OkHttpClient httpClient = new OkHttpClient().newBuilder().build();
+   * Response response = httpClient.newCall(request).execute();
+   * if (response.isSuccessful()) {
+   *   System.out.println("Pictures/avatar.png is uploaded successfully using POST object");
+   * } else {
+   *   System.out.println("Failed to upload Pictures/avatar.png");
+   * }
    * }</pre>
    *
    * @param policy Post policy of an object.
@@ -2840,16 +2859,18 @@ public class MinioClient {
    * @throws XmlParserException thrown to indicate XML parsing error.
    * @see PostPolicy
    */
-  public Map<String, String> presignedPostPolicy(PostPolicy policy)
+  public Map<String, String> getPresignedPostFormData(PostPolicy policy)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
 
-    Credentials creds = provider != null ? provider.fetch() : null;
-    String accessKey = creds != null ? creds.accessKey() : null;
-    String secretKey = creds != null ? creds.secretKey() : null;
-    return policy.formData(accessKey, secretKey, getRegion(policy.bucketName(), null));
+    if (provider == null) {
+      throw new IllegalArgumentException("credentials provider cannot be null");
+    }
+
+    Credentials creds = provider.fetch();
+    return policy.formData(creds.accessKey(), creds.secretKey(), getRegion(policy.bucket(), null));
   }
 
   /**
@@ -3426,18 +3447,20 @@ public class MinioClient {
         return this.error;
       }
 
+      Item item = null;
       if (this.itemIterator.hasNext()) {
-        Item item = this.itemIterator.next();
+        item = this.itemIterator.next();
+        item.setEncodingType(this.listObjectsResult.encodingType());
         this.lastObjectName = item.objectName();
+      } else if (this.deleteMarkerIterator.hasNext()) {
+        item = this.deleteMarkerIterator.next();
+      } else if (this.prefixIterator.hasNext()) {
+        item = this.prefixIterator.next().toItem();
+      }
+
+      if (item != null) {
+        item.setEncodingType(this.listObjectsResult.encodingType());
         return new Result<>(item);
-      }
-
-      if (this.deleteMarkerIterator.hasNext()) {
-        return new Result<>(this.deleteMarkerIterator.next());
-      }
-
-      if (this.prefixIterator.hasNext()) {
-        return new Result<>(this.prefixIterator.next().toItem());
       }
 
       this.completed = true;
@@ -4775,7 +4798,7 @@ public class MinioClient {
 
         Map<String, String> ssecHeaders = null;
         // set encryption headers in the case of SSE-C.
-        if (args.sse() != null && args.sse().type() == ServerSideEncryption.Type.SSE_C) {
+        if (args.sse() != null && args.sse() instanceof ServerSideEncryptionCustomerKey) {
           ssecHeaders = args.sse().headers();
         }
 

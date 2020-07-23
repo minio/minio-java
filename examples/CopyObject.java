@@ -20,6 +20,8 @@ import io.minio.CopySource;
 import io.minio.MinioClient;
 import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
+import io.minio.ServerSideEncryptionKms;
+import io.minio.ServerSideEncryptionS3;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -50,13 +52,13 @@ public class CopyObject {
       KeyGenerator keyGen = KeyGenerator.getInstance("AES");
       keyGen.init(256);
       ServerSideEncryptionCustomerKey ssec =
-          ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+          new ServerSideEncryptionCustomerKey(keyGen.generateKey());
 
       Map<String, String> myContext = new HashMap<>();
       myContext.put("key1", "value1");
-      ServerSideEncryption sseKms = ServerSideEncryption.withManagedKeys("Key-Id", myContext);
+      ServerSideEncryption sseKms = new ServerSideEncryptionKms("Key-Id", myContext);
 
-      ServerSideEncryption sseS3 = ServerSideEncryption.atRest();
+      ServerSideEncryption sseS3 = new ServerSideEncryptionS3();
 
       String versionId = "ac38316c-fe14-4f96-9f76-8f675ae5a79e";
 

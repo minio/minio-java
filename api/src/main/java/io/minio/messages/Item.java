@@ -16,6 +16,9 @@
 
 package io.minio.messages;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import org.simpleframework.xml.Element;
@@ -25,6 +28,8 @@ import org.simpleframework.xml.Element;
  * ListBucketResultV2} and {@link ListVersionsResult}.
  */
 public abstract class Item {
+  private static final String UTF_8 = StandardCharsets.UTF_8.toString();
+
   @Element(name = "ETag", required = false)
   private String etag; // except DeleteMarker
 
@@ -53,6 +58,7 @@ public abstract class Item {
   private Metadata userMetadata;
 
   private boolean isDir = false;
+  private String encodingType = null;
 
   public Item() {}
 
@@ -62,9 +68,17 @@ public abstract class Item {
     this.isDir = true;
   }
 
+  public void setEncodingType(String encodingType) {
+    this.encodingType = encodingType;
+  }
+
   /** Returns object name. */
   public String objectName() {
-    return objectName;
+    try {
+      return "url".equals(encodingType) ? URLDecoder.decode(objectName, UTF_8) : objectName;
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /** Returns last modified time of the object. */

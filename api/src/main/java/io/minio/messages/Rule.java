@@ -17,38 +17,47 @@
 package io.minio.messages;
 
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementUnion;
+import org.simpleframework.xml.Path;
 import org.simpleframework.xml.Root;
 
 /** Helper class to denote Rule information for {@link ObjectLockConfiguration}. */
 @Root(name = "Rule", strict = false)
 public class Rule {
-  @Element(name = "DefaultRetention", required = false)
-  private DefaultRetention defaultRetention;
+  @Path(value = "DefaultRetention")
+  @Element(name = "Mode", required = false)
+  private RetentionMode mode;
 
-  public Rule() {}
+  @Path(value = "DefaultRetention")
+  @ElementUnion({
+    @Element(name = "Days", type = RetentionDurationDays.class, required = false),
+    @Element(name = "Years", type = RetentionDurationYears.class, required = false)
+  })
+  private RetentionDuration duration;
 
-  /** Constructs a new Rule object with given retention. */
-  public Rule(RetentionMode mode, RetentionDuration duration) {
+  public Rule(
+      @Element(name = "Mode", required = false) RetentionMode mode,
+      @ElementUnion({
+            @Element(name = "Days", type = RetentionDurationDays.class, required = false),
+            @Element(name = "Years", type = RetentionDurationYears.class, required = false)
+          })
+          RetentionDuration duration) {
     if (mode != null && duration != null) {
-      this.defaultRetention = new DefaultRetention(mode, duration);
+      this.mode = mode;
+      this.duration = duration;
+    } else if (mode != null || duration != null) {
+      if (mode == null) {
+        throw new IllegalArgumentException("mode is null");
+      }
+      throw new IllegalArgumentException("duration is null");
     }
   }
 
-  /** Returns retention mode. */
   public RetentionMode mode() {
-    if (defaultRetention == null) {
-      return null;
-    }
-
-    return defaultRetention.mode();
+    return mode;
   }
 
-  /** Returns retention duration. */
   public RetentionDuration duration() {
-    if (defaultRetention == null) {
-      return null;
-    }
-
-    return defaultRetention.duration();
+    return duration;
   }
 }

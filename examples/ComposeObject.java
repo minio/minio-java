@@ -17,12 +17,16 @@
 import io.minio.ComposeObjectArgs;
 import io.minio.ComposeSource;
 import io.minio.MinioClient;
+import io.minio.ServerSideEncryption;
+import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.errors.MinioException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.crypto.spec.SecretKeySpec;
 
 public class ComposeObject {
   /** MinioClient.composeObject() example. */
@@ -43,30 +47,64 @@ public class ComposeObject {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      // Create a ComposeSource to compose Object.
-      ComposeSource s1 =
-          ComposeSource.builder().bucket("my-bucketname-one").object("my-objectname-one").build();
-      ComposeSource s2 =
-          ComposeSource.builder().bucket("my-bucketname-two").object("my-objectname-two").build();
-      ComposeSource s3 =
-          ComposeSource.builder()
-              .bucket("my-bucketname-three")
-              .object("my-objectname-three")
-              .build();
+      {
+        // Create a ComposeSource to compose Object.
+        List<ComposeSource> sources = new ArrayList<ComposeSource>();
+        sources.add(
+            ComposeSource.builder()
+                .bucket("my-bucketname-one")
+                .object("my-objectname-one")
+                .build());
+        sources.add(
+            ComposeSource.builder()
+                .bucket("my-bucketname-two")
+                .object("my-objectname-two")
+                .build());
 
-      // Adding the ComposeSource to an ArrayList
-      List<ComposeSource> sourceObjectList = new ArrayList<ComposeSource>();
-      sourceObjectList.add(s1);
-      sourceObjectList.add(s2);
-      sourceObjectList.add(s3);
+        minioClient.composeObject(
+            ComposeObjectArgs.builder()
+                .bucket("my-destination-bucket")
+                .object("my-destination-object")
+                .sources(sources)
+                .build());
+        System.out.println("Object Composed successfully");
+      }
 
-      minioClient.composeObject(
-          ComposeObjectArgs.builder()
-              .bucket("my-destination-bucket")
-              .object("my-destination-object")
-              .sources(sourceObjectList)
-              .build());
-      System.out.println("Object Composed successfully");
+      {
+        ServerSideEncryptionCustomerKey srcSsec =
+            new ServerSideEncryptionCustomerKey(
+                new SecretKeySpec(
+                    "01234567890123456789012345678901".getBytes(StandardCharsets.UTF_8), "AES"));
+
+        ServerSideEncryption sse =
+            new ServerSideEncryptionCustomerKey(
+                new SecretKeySpec(
+                    "12345678912345678912345678912345".getBytes(StandardCharsets.UTF_8), "AES"));
+
+        List<ComposeSource> sources = new ArrayList<ComposeSource>();
+        sources.add(
+            ComposeSource.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname-one")
+                .ssec(srcSsec)
+                .build());
+        sources.add(
+            ComposeSource.builder()
+                .bucket("my-bucketname")
+                .object("my-objectname-two")
+                .ssec(srcSsec)
+                .build());
+
+        minioClient.composeObject(
+            ComposeObjectArgs.builder()
+                .bucket("my-destination-bucket")
+                .object("my-destination-object")
+                .sources(sources)
+                .sse(sse)
+                .build());
+        System.out.println("Object Composed successfully");
+      }
+
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
