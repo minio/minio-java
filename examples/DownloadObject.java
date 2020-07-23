@@ -16,7 +16,6 @@
 
 import io.minio.DownloadObjectArgs;
 import io.minio.MinioClient;
-import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.errors.MinioException;
 import java.io.IOException;
@@ -58,7 +57,7 @@ public class DownloadObject {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256);
         ServerSideEncryptionCustomerKey ssec =
-            ServerSideEncryption.withCustomerKey(keyGen.generateKey());
+            new ServerSideEncryptionCustomerKey(keyGen.generateKey());
 
         // Download SSE-C encrypted 'my-objectname' from 'my-bucketname' to 'my-filename'
         minioClient.downloadObject(

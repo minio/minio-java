@@ -17,8 +17,8 @@
 import com.google.common.io.ByteStreams;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
-import io.minio.ObjectStat;
 import io.minio.StatObjectArgs;
+import io.minio.StatObjectResponse;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,7 +55,7 @@ public class GetObjectProgressBar {
       // execution is successful.
 
       // Get object stat information.
-      ObjectStat objectStat =
+      StatObjectResponse stat =
           minioClient.statObject(
               StatObjectArgs.builder()
                   .bucket("testbucket")
@@ -67,7 +67,7 @@ public class GetObjectProgressBar {
           new ProgressStream(
               "Downloading .. ",
               ProgressBarStyle.ASCII,
-              objectStat.length(),
+              stat.size(),
               minioClient.getObject(
                   GetObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build()));
 
@@ -78,11 +78,11 @@ public class GetObjectProgressBar {
       is.close();
       os.close();
 
-      if (bytesWritten != objectStat.length()) {
+      if (bytesWritten != stat.size()) {
         throw new IOException(
             path
                 + ": unexpected data written.  expected = "
-                + objectStat.length()
+                + stat.size()
                 + ", written = "
                 + bytesWritten);
       }
