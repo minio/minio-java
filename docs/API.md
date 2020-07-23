@@ -35,9 +35,9 @@ MinioClient minioClient =
 | [`enableVersioning`](#enableVersioning)                 | [`getObjectTags`](#getObjectTags)                       |
 | [`getBucketEncryption`](#getBucketEncryption)           | [`getObjectUrl`](#getObjectUrl)                         |
 | [`getBucketLifeCycle`](#getBucketLifeCycle)             | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketNotification`](#getBucketNotification)       | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`getBucketPolicy`](#getBucketPolicy)                   | [`listObjects`](#listObjects)                           |
-| [`getBucketTags`](#getBucketTags)                       | [`presignedPostPolicy`](#presignedPostPolicy)           |
+| [`getBucketNotification`](#getBucketNotification)       | [`getPresignedPostFormData`](#getPresignedPostFormData) |
+| [`getBucketPolicy`](#getBucketPolicy)                   | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getBucketTags`](#getBucketTags)                       | [`listObjects`](#listObjects)                           |
 | [`getDefaultRetention`](#getDefaultRetention)           | [`putObject`](#putObject)                               |
 | [`isVersioningEnabled`](#isVersioningEnabled)           | [`removeObject`](#removeObject)                         |
 | [`listBuckets`](#listBuckets)                           | [`removeObjects`](#removeObjects)                       |
@@ -1429,9 +1429,9 @@ else {
 }
 ```
 
-<a name="presignedPostPolicy"></a>
-### presignedPostPolicy(PostPolicy policy)
-`public Map<String,String> presignedPostPolicy(PostPolicy policy)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#presignedPostPolicy-io.minio.PostPolicy-)_
+<a name="getPresignedPostFormData"></a>
+### getPresignedPostFormData(PostPolicy policy)
+`public Map<String,String> getPresignedPostFormData(PostPolicy policy)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getPresignedPostFormData-io.minio.PostPolicy-)_
 
 Gets form-data of [PostPolicy] of an object to upload its data using POST method.
 
@@ -1446,22 +1446,45 @@ __Parameters__
 
 __Example__
 ```java
-PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname", ZonedDateTime.now().plusDays(7));
+// Create new post policy for 'my-bucketname' with 7 days expiry from now.
+PostPolicy policy = new PostPolicy("my-bucketname", ZonedDateTime.now().plusDays(7));
 
-// 'my-objectname' should be 'image/png' content type
-policy.setContentType("image/png");
+// Add condition that 'key' (object name) equals to 'my-objectname'.
+policy.addEqualsCondition("key", "my-objectname");
 
-// set success action status to 201 to receive XML document
-policy.setSuccessActionStatus(201);
+// Add condition that 'Content-Type' starts with 'image/'.
+policy.addStartsWithCondition("Content-Type", "image/");
 
-Map<String,String> formData = minioClient.presignedPostPolicy(policy);
+// Add condition that 'content-length-range' is between 64kiB to 10MiB.
+policy.addContentLengthRangeCondition(64 * 1024, 10 * 1024 * 1024);
 
-// Print curl command to be executed by anonymous user to upload /tmp/userpic.png.
-System.out.print("curl -X POST ");
-for (Map.Entry<String,String> entry : formData.entrySet()) {
-  System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+Map<String, String> formData = minioClient.getPresignedPostFormData(policy);
+
+// Upload an image using POST object with form-data.
+MultipartBody.Builder multipartBuilder = new MultipartBody.Builder();
+multipartBuilder.setType(MultipartBody.FORM);
+for (Map.Entry<String, String> entry : formData.entrySet()) {
+  multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
 }
-System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname");
+multipartBuilder.addFormDataPart("key", "my-objectname");
+multipartBuilder.addFormDataPart("Content-Type", "image/png");
+
+// "file" must be added at last.
+multipartBuilder.addFormDataPart(
+    "file", "my-objectname", RequestBody.create(null, new File("Pictures/avatar.png")));
+
+Request request =
+    new Request.Builder()
+        .url("https://play.min.io/my-bucketname")
+        .post(multipartBuilder.build())
+        .build();
+OkHttpClient httpClient = new OkHttpClient().newBuilder().build();
+Response response = httpClient.newCall(request).execute();
+if (response.isSuccessful()) {
+  System.out.println("Pictures/avatar.png is uploaded successfully using POST object");
+} else {
+  System.out.println("Failed to upload Pictures/avatar.png");
+}
 ```
 
 <a name="putObject"></a>

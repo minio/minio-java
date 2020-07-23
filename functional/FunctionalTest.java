@@ -1632,8 +1632,8 @@ public class FunctionalTest {
     testGetPresignedObjectUrlForPut();
   }
 
-  public static void presignedPostPolicy() throws Exception {
-    String methodName = "presignedPostPolicy()";
+  public static void getPresignedPostFormData() throws Exception {
+    String methodName = "getPresignedPostFormData()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -1641,19 +1641,23 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       String objectName = getRandomName();
-      PostPolicy policy = new PostPolicy(bucketName, objectName, ZonedDateTime.now().plusDays(7));
-      policy.setContentRange(1 * MB, 4 * MB);
-      Map<String, String> formData = client.presignedPostPolicy(policy);
+
+      PostPolicy policy = new PostPolicy(bucketName, ZonedDateTime.now().plusDays(7));
+      policy.addEqualsCondition("key", objectName);
+      policy.addContentLengthRangeCondition(1 * MB, 4 * MB);
+      Map<String, String> formData = client.getPresignedPostFormData(policy);
 
       MultipartBody.Builder multipartBuilder = new MultipartBody.Builder();
       multipartBuilder.setType(MultipartBody.FORM);
       for (Map.Entry<String, String> entry : formData.entrySet()) {
         multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
       }
-      try (final InputStream is = new ContentInputStream(1 * MB)) {
-        multipartBuilder.addFormDataPart(
-            "file", objectName, RequestBody.create(null, readAllBytes(is)));
-      }
+      multipartBuilder.addFormDataPart("key", objectName);
+      multipartBuilder.addFormDataPart("Content-Type", "image/png");
+      multipartBuilder.addFormDataPart(
+          "file",
+          objectName,
+          RequestBody.create(null, readAllBytes(new ContentInputStream(1 * MB))));
 
       Request.Builder requestBuilder = new Request.Builder();
       String urlString =
@@ -3424,7 +3428,7 @@ public class FunctionalTest {
     getObjectRetention();
 
     getPresignedObjectUrl();
-    presignedPostPolicy();
+    getPresignedPostFormData();
 
     enableObjectLegalHold();
     disableObjectLegalHold();

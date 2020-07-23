@@ -2794,23 +2794,45 @@ public class MinioClient {
    * Gets form-data of {@link PostPolicy} of an object to upload its data using POST method.
    *
    * <pre>Example:{@code
-   * PostPolicy policy = new PostPolicy("my-bucketname", "my-objectname",
-   *     ZonedDateTime.now().plusDays(7));
+   * // Create new post policy for 'my-bucketname' with 7 days expiry from now.
+   * PostPolicy policy = new PostPolicy("my-bucketname", ZonedDateTime.now().plusDays(7));
    *
-   * // 'my-objectname' should be 'image/png' content type
-   * policy.setContentType("image/png");
+   * // Add condition that 'key' (object name) equals to 'my-objectname'.
+   * policy.addEqualsCondition("key", "my-objectname");
    *
-   * // set success action status to 201 to receive XML document
-   * policy.setSuccessActionStatus(201);
+   * // Add condition that 'Content-Type' starts with 'image/'.
+   * policy.addStartsWithCondition("Content-Type", "image/");
    *
-   * Map<String,String> formData = minioClient.presignedPostPolicy(policy);
+   * // Add condition that 'content-length-range' is between 64kiB to 10MiB.
+   * policy.addContentLengthRangeCondition(64 * 1024, 10 * 1024 * 1024);
    *
-   * // Print curl command to be executed by anonymous user to upload /tmp/userpic.png.
-   * System.out.print("curl -X POST ");
-   * for (Map.Entry<String,String> entry : formData.entrySet()) {
-   *   System.out.print(" -F " + entry.getKey() + "=" + entry.getValue());
+   * Map<String, String> formData = minioClient.getPresignedPostFormData(policy);
+   *
+   * // Upload an image using POST object with form-data.
+   * MultipartBody.Builder multipartBuilder = new MultipartBody.Builder();
+   * multipartBuilder.setType(MultipartBody.FORM);
+   * for (Map.Entry<String, String> entry : formData.entrySet()) {
+   *   multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
    * }
-   * System.out.println(" -F file=@/tmp/userpic.png https://play.min.io/my-bucketname");
+   * multipartBuilder.addFormDataPart("key", "my-objectname");
+   * multipartBuilder.addFormDataPart("Content-Type", "image/png");
+   *
+   * // "file" must be added at last.
+   * multipartBuilder.addFormDataPart(
+   *     "file", "my-objectname", RequestBody.create(null, new File("Pictures/avatar.png")));
+   *
+   * Request request =
+   *     new Request.Builder()
+   *         .url("https://play.min.io/my-bucketname")
+   *         .post(multipartBuilder.build())
+   *         .build();
+   * OkHttpClient httpClient = new OkHttpClient().newBuilder().build();
+   * Response response = httpClient.newCall(request).execute();
+   * if (response.isSuccessful()) {
+   *   System.out.println("Pictures/avatar.png is uploaded successfully using POST object");
+   * } else {
+   *   System.out.println("Failed to upload Pictures/avatar.png");
+   * }
    * }</pre>
    *
    * @param policy Post policy of an object.
@@ -2829,12 +2851,12 @@ public class MinioClient {
    * @throws XmlParserException thrown to indicate XML parsing error.
    * @see PostPolicy
    */
-  public Map<String, String> presignedPostPolicy(PostPolicy policy)
+  public Map<String, String> getPresignedPostFormData(PostPolicy policy)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucketName(), null));
+    return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucket(), null));
   }
 
   /**
