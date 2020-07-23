@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import okhttp3.Headers;
@@ -142,7 +143,18 @@ class Signer {
     for (String name : headers.names()) {
       String signedHeader = name.toLowerCase(Locale.US);
       if (!IGNORED_HEADERS.contains(signedHeader)) {
-        this.canonicalHeaders.put(signedHeader, headers.get(name));
+        // Convert and add header values as per
+        // https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+        // * Header having multiple values should be converted to comma separated values.
+        // * Multi-spaced value of header should be trimmed to single spaced value.
+        this.canonicalHeaders.put(
+            signedHeader,
+            headers.values(name).stream()
+                .map(
+                    value -> {
+                      return value.replaceAll("( +)", " ");
+                    })
+                .collect(Collectors.joining(",")));
       }
     }
 
