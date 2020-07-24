@@ -19,13 +19,8 @@ package io.minio;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 
-public class S3Escaper {
-
+class S3Escaper {
   private static final Escaper ESCAPER = UrlEscapers.urlPathSegmentEscaper();
-
-  private S3Escaper() {
-    throw new IllegalAccessError();
-  }
 
   /** Returns S3 encoded string. */
   public static String encode(String str) {

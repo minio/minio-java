@@ -17,6 +17,7 @@
 package io.minio;
 
 import com.google.common.io.BaseEncoding;
+import io.minio.credentials.Credentials;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -176,17 +177,12 @@ public class PostPolicy {
 
   /**
    * Return form-data of this post policy. The returned map contains x-amz-algorithm,
-   * x-amz-credential, x-amz-date, policy and x-amz-signature.
+   * x-amz-credential, x-amz-security-token, x-amz-date, policy and x-amz-signature.
    */
-  public Map<String, String> formData(
-      @Nonnull String accessKey, @Nonnull String secretKey, @Nonnull String region)
+  public Map<String, String> formData(@Nonnull Credentials creds, @Nonnull String region)
       throws NoSuchAlgorithmException, InvalidKeyException {
-    if (accessKey.isEmpty()) {
-      throw new IllegalArgumentException("access key cannot be empty");
-    }
-
-    if (secretKey.isEmpty()) {
-      throw new IllegalArgumentException("secret key cannot be empty");
+    if (creds == null) {
+      throw new IllegalArgumentException("credentials cannot be null");
     }
 
     if (region.isEmpty()) {
@@ -221,21 +217,27 @@ public class PostPolicy {
     }
 
     ZonedDateTime utcNow = ZonedDateTime.now(Time.UTC);
-    String credential = Signer.credential(accessKey, utcNow, region);
+    String credential = Signer.credential(creds.accessKey(), utcNow, region);
     String amzDate = utcNow.format(Time.AMZ_DATE_FORMAT);
 
     addCondition(sb, "eq", "x-amz-algorithm", ALGORITHM, false);
     addCondition(sb, "eq", "x-amz-credential", credential, false);
+    if (creds.sessionToken() != null) {
+      addCondition(sb, "eq", "x-amz-security-token", creds.sessionToken(), false);
+    }
     addCondition(sb, "eq", "x-amz-date", amzDate, true);
     sb.append("  ]\n");
     sb.append("}");
 
     String policy = BaseEncoding.base64().encode(sb.toString().getBytes(StandardCharsets.UTF_8));
-    String signature = Signer.postPresignV4(policy, secretKey, utcNow, region);
+    String signature = Signer.postPresignV4(policy, creds.secretKey(), utcNow, region);
 
     Map<String, String> formData = new HashMap<>();
     formData.put("x-amz-algorithm", ALGORITHM);
     formData.put("x-amz-credential", credential);
+    if (creds.sessionToken() != null) {
+      formData.put("x-amz-security-token", creds.sessionToken());
+    }
     formData.put("x-amz-date", amzDate);
     formData.put("policy", policy);
     formData.put("x-amz-signature", signature);

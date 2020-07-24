@@ -13,43 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.minio.credentials;
 
-import io.minio.messages.Credentials;
-import io.minio.messages.ResponseDate;
-import java.time.ZonedDateTime;
-
-@SuppressWarnings("unused")
+/** Credential provider using MinIO server specific environment variables. */
 public class MinioEnvironmentProvider extends EnvironmentProvider {
-
-  private static final String ACCESS_KEY_ALIAS = "MINIO_ACCESS_KEY";
-  private static final String SECRET_KEY_ALIAS = "MINIO_SECRET_KEY";
-
-  private Credentials credentials;
-
-  public MinioEnvironmentProvider() {
-    credentials = readCredentials();
-  }
-
   @Override
   public Credentials fetch() {
-    if (!isExpired(credentials)) {
-      return credentials;
-    }
-    // avoid race conditions with credentials rewriting
-    synchronized (this) {
-      if (isExpired(credentials)) {
-        credentials = readCredentials();
-      }
-    }
-    return credentials;
-  }
-
-  private Credentials readCredentials() {
-    final String accessKey = readProperty(ACCESS_KEY_ALIAS);
-    final String secretKey = readProperty(SECRET_KEY_ALIAS);
-    final ZonedDateTime lifeTime = ZonedDateTime.now().plus(REFRESHED_AFTER);
-    //noinspection ConstantConditions
-    return new Credentials(accessKey, secretKey, new ResponseDate(lifeTime), null);
+    return new Credentials(
+        getProperty("MINIO_ACCESS_KEY"), getProperty("MINIO_SECRET_KEY"), null, null);
   }
 }

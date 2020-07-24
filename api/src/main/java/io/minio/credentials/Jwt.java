@@ -13,29 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.minio.messages;
 
+package io.minio.credentials;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.beans.ConstructorProperties;
 import java.util.Objects;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
-public class WebIdentityToken extends StsRequestToken {
+/** JSON web token used in WebIdentity and ClientGrants providers. */
+public class Jwt {
+  @JsonProperty("access_token")
+  private final String token;
 
-  private final String jwtAccessToken;
-  private final long expiredAfter;
+  @JsonProperty("expires_in")
+  private final int expiry;
 
-  public WebIdentityToken(
-      @Nonnull String jwtAccessToken, long expiredAfter, @Nullable String policy) {
-    super(policy);
-    this.jwtAccessToken = Objects.requireNonNull(jwtAccessToken);
-    this.expiredAfter = expiredAfter;
+  @ConstructorProperties({"access_token", "expires_in"})
+  public Jwt(@Nonnull String token, int expiry) {
+    this.token = Objects.requireNonNull(token);
+    this.expiry = expiry;
   }
 
   public String token() {
-    return jwtAccessToken;
+    return token;
   }
 
-  public long expiredAfter() {
-    return expiredAfter;
+  public int expiry() {
+    return expiry;
   }
 }

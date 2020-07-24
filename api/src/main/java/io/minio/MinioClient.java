@@ -28,6 +28,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;
 import io.minio.errors.BucketPolicyTooLargeException;
@@ -49,7 +50,6 @@ import io.minio.messages.CompleteMultipartUploadOutput;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CopyPartResult;
 import io.minio.messages.CreateBucketConfiguration;
-import io.minio.messages.Credentials;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteMarker;
 import io.minio.messages.DeleteObject;
@@ -853,7 +853,12 @@ public class MinioClient {
 
   /** Create HTTP request for given paramaters. */
   protected Request createRequest(
-      HttpUrl url, Method method, Multimap<String, String> headerMap, Object body, int length)
+      HttpUrl url,
+      Method method,
+      Multimap<String, String> headerMap,
+      Object body,
+      int length,
+      Credentials creds)
       throws IllegalArgumentException, InsufficientDataException, InternalException, IOException,
           NoSuchAlgorithmException {
     Request.Builder requestBuilder = new Request.Builder();
@@ -889,8 +894,7 @@ public class MinioClient {
 
     String sha256Hash = null;
     String md5Hash = null;
-    Credentials creds = provider != null ? provider.fetch() : null;
-    if (creds != null && !creds.isEmpty()) {
+    if (creds != null) {
       if (url.isHttps()) {
         // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
         sha256Hash = "UNSIGNED-PAYLOAD";
@@ -1018,10 +1022,9 @@ public class MinioClient {
     }
 
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
-    Request request = createRequest(url, method, headerMap, body, length);
-
-    Credentials creds = provider != null ? provider.fetch() : null;
-    if (creds != null && !creds.isEmpty()) {
+    Credentials creds = (provider == null) ? null : provider.fetch();
+    Request request = createRequest(url, method, headerMap, body, length, creds);
+    if (creds != null) {
       request = Signer.signV4(request, region, creds.accessKey(), creds.secretKey());
     }
 
@@ -2579,11 +2582,13 @@ public class MinioClient {
 
     String region = getRegion(args.bucket(), args.region());
     HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
-    Request request = createRequest(url, args.method(), null, body, 0);
-    Credentials creds = provider != null ? provider.fetch() : null;
-    String accessKey = creds != null ? creds.accessKey() : null;
-    String secretKey = creds != null ? creds.secretKey() : null;
-    url = Signer.presignV4(request, region, accessKey, secretKey, args.expiry());
+    if (provider == null) {
+      return url.toString();
+    }
+
+    Credentials creds = provider.fetch();
+    Request request = createRequest(url, args.method(), null, body, 0, creds);
+    url = Signer.presignV4(request, region, creds.accessKey(), creds.secretKey(), args.expiry());
     return url.toString();
   }
 
@@ -2864,13 +2869,12 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-
     if (provider == null) {
-      throw new IllegalArgumentException("credentials provider cannot be null");
+      throw new IllegalArgumentException(
+          "Anonymous access does not require presigned post form-data");
     }
 
-    Credentials creds = provider.fetch();
-    return policy.formData(creds.accessKey(), creds.secretKey(), getRegion(policy.bucket(), null));
+    return policy.formData(provider.fetch(), getRegion(policy.bucket(), null));
   }
 
   /**

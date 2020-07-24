@@ -13,76 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.minio.credentials;
 
-import io.minio.Xml;
-import io.minio.errors.InvalidResponseException;
-import io.minio.errors.XmlParserException;
-import io.minio.messages.AssumeRoleWithWebIdentityResponse;
-import io.minio.messages.Credentials;
-import io.minio.messages.WebIdentityToken;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import javax.annotation.Nullable;
+import okhttp3.OkHttpClient;
 
-@SuppressWarnings("unused")
-public class WebIdentityProvider extends StsProvider {
-
-  private Credentials credentials;
-  private final Supplier<WebIdentityToken> tokenProducer;
+/**
+ * Credential provider using <a
+ * href="https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html">AssumeRoleWithWebIdentity
+ * API</a>.
+ */
+public class WebIdentityProvider extends WebIdentityClientGrantsProvider {
+  private final String roleArn;
+  private final String roleSessionName;
 
   public WebIdentityProvider(
-      @Nonnull String stsEndpoint, @Nonnull Supplier<WebIdentityToken> tokenProducer) {
-    super(stsEndpoint);
-    this.tokenProducer = Objects.requireNonNull(tokenProducer, "Token producer must not be null");
+      @Nonnull Supplier<Jwt> supplier,
+      @Nonnull String stsEndpoint,
+      @Nullable Integer durationSeconds,
+      @Nullable String policy,
+      @Nullable String roleArn,
+      @Nullable String roleSessionName,
+      @Nullable OkHttpClient customHttpClient) {
+    super(supplier, stsEndpoint, durationSeconds, policy, customHttpClient);
+    this.roleArn = roleArn;
+    this.roleSessionName = roleSessionName;
   }
 
-  /**
-   * Returns a pointer to a new, temporary credentials, obtained via STS assume role with web
-   * identity api.
-   *
-   * @return temporary credentials to access minio api.
-   */
-  @Override
-  public Credentials fetch() {
-    if (credentials != null && !isExpired(credentials)) {
-      return credentials;
-    }
-    synchronized (this) {
-      if (credentials == null || isExpired(credentials)) {
-        try (Response response = callSecurityTokenService()) {
-          final ResponseBody body = response.body();
-          if (body == null) {
-            // should not happen
-            throw new IllegalStateException("Received empty response");
-          }
-          credentials =
-              Xml.unmarshal(AssumeRoleWithWebIdentityResponse.class, body.charStream())
-                  .credentials();
-        } catch (XmlParserException | IOException | InvalidResponseException e) {
-          throw new IllegalStateException("Failed to process STS call", e);
-        }
-      }
-    }
-    return credentials;
+  protected boolean isWebIdentity() {
+    return true;
   }
 
   @Override
-  protected Map<String, String> queryParams() {
-    final WebIdentityToken grantsToken = tokenProducer.get();
-    final Map<String, String> queryParamenters = new HashMap<>();
-    queryParamenters.put("Action", "AssumeRoleWithWebIdentity");
-    queryParamenters.put("DurationSeconds", tokenDuration(grantsToken.expiredAfter()));
-    queryParamenters.put("WebIdentityToken", grantsToken.token());
-    queryParamenters.put("Version", "2011-06-15");
-    if (grantsToken.policy() != null) {
-      queryParamenters.put("Policy", grantsToken.policy());
-    }
-    return queryParamenters;
+  protected String roleArn() {
+    return roleArn;
+  }
+
+  @Override
+  protected String roleSessionName() {
+    return (roleSessionName != null) ? roleSessionName : String.valueOf(System.currentTimeMillis());
   }
 }

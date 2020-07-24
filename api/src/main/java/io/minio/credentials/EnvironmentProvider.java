@@ -13,31 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.minio.credentials;
 
-import java.time.Duration;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+/** Base class of credential providers using environment variables. */
 public abstract class EnvironmentProvider implements Provider {
-
-  // it's ok to re-read values from env.variables every 5 min.
-  protected static final Duration REFRESHED_AFTER = Duration.ofMinutes(5);
-
-  /**
-   * Method used to read system/env properties. If property not found through system properties it
-   * will search the property in environment properties.
-   *
-   * @param propertyName name of the property to retrieve.
-   * @return property value.
-   * @throws NullPointerException if {@literal propertyName} is null.
-   */
+  /** Get value of a property from system property or environment variable. */
   @Nullable
-  protected String readProperty(@Nonnull String propertyName) {
-    final String systemProperty = System.getProperty(propertyName);
-    if (systemProperty != null) {
-      return systemProperty;
-    }
-    return System.getenv(propertyName);
+  protected String getProperty(@Nonnull String name) {
+    final String value = System.getProperty(name);
+    return (value != null) ? value : System.getenv(name);
   }
 }
