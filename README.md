@@ -155,6 +155,10 @@ The full API Reference is available here.
 * [SetBucketPolicy.java](https://github.com/minio/minio-java/tree/master/examples/SetBucketPolicy.java)
 * [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 
+#### Full Examples: STS Operations
+* [ClientGrants.java](https://github.com/minio/minio-java/tree/master/examples/ClientGrants.java)
+* [WebIdentity.java](https://github.com/minio/minio-java/tree/master/examples/WebIdentity.java)
+
 #### Full Examples: Server Side Encryption
 * [CopyObjectEncrypted.java](https://github.com/minio/minio-java/tree/master/examples/CopyObjectEncrypted.java)
 * [CopyObjectEncryptedKms.java](https://github.com/minio/minio-java/tree/master/examples/CopyObjectEncryptedKms.java)

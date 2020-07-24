@@ -28,6 +28,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.minio.credentials.Provider;
+import io.minio.credentials.StaticProvider;
 import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -47,6 +49,7 @@ import io.minio.messages.CompleteMultipartUploadOutput;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CopyPartResult;
 import io.minio.messages.CreateBucketConfiguration;
+import io.minio.messages.Credentials;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteMarker;
 import io.minio.messages.DeleteObject;
@@ -234,8 +237,7 @@ public class MinioClient {
   private boolean isAcceleratedHost;
   private boolean isDualStackHost;
   private boolean useVirtualStyle;
-  private String accessKey;
-  private String secretKey;
+  private Provider provider;
   private OkHttpClient httpClient;
 
   private MinioClient(
@@ -245,8 +247,7 @@ public class MinioClient {
       boolean isAcceleratedHost,
       boolean isDualStackHost,
       boolean useVirtualStyle,
-      String accessKey,
-      String secretKey,
+      Provider provider,
       OkHttpClient httpClient) {
     this.baseUrl = baseUrl;
     this.region = region;
@@ -254,8 +255,7 @@ public class MinioClient {
     this.isAcceleratedHost = isAcceleratedHost;
     this.isDualStackHost = isDualStackHost;
     this.useVirtualStyle = useVirtualStyle;
-    this.accessKey = accessKey;
-    this.secretKey = secretKey;
+    this.provider = provider;
     this.httpClient = httpClient;
   }
 
@@ -267,8 +267,7 @@ public class MinioClient {
     this.isAcceleratedHost = client.isAcceleratedHost;
     this.isDualStackHost = client.isDualStackHost;
     this.useVirtualStyle = client.useVirtualStyle;
-    this.accessKey = client.accessKey;
-    this.secretKey = client.secretKey;
+    this.provider = client.provider;
     this.httpClient = client.httpClient;
   }
 
@@ -890,7 +889,8 @@ public class MinioClient {
 
     String sha256Hash = null;
     String md5Hash = null;
-    if (this.accessKey != null && this.secretKey != null) {
+    Credentials creds = provider != null ? provider.fetch() : null;
+    if (creds != null && !creds.isEmpty()) {
       if (url.isHttps()) {
         // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
         sha256Hash = "UNSIGNED-PAYLOAD";
@@ -922,6 +922,10 @@ public class MinioClient {
 
     if (sha256Hash != null) {
       requestBuilder.header("x-amz-content-sha256", sha256Hash);
+    }
+
+    if (creds != null && creds.sessionToken() != null) {
+      requestBuilder.header("X-Amz-Security-Token", creds.sessionToken());
     }
 
     ZonedDateTime date = ZonedDateTime.now();
@@ -1016,8 +1020,9 @@ public class MinioClient {
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
     Request request = createRequest(url, method, headerMap, body, length);
 
-    if (this.accessKey != null && this.secretKey != null) {
-      request = Signer.signV4(request, region, accessKey, secretKey);
+    Credentials creds = provider != null ? provider.fetch() : null;
+    if (creds != null && !creds.isEmpty()) {
+      request = Signer.signV4(request, region, creds.accessKey(), creds.secretKey());
     }
 
     if (this.traceStream != null) {
@@ -1193,7 +1198,7 @@ public class MinioClient {
       return this.region;
     }
 
-    if (!isAwsHost || bucketName == null || this.accessKey == null) {
+    if (!isAwsHost || bucketName == null || this.provider == null) {
       return US_EAST_1;
     }
 
@@ -2575,6 +2580,9 @@ public class MinioClient {
     String region = getRegion(args.bucket(), args.region());
     HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
     Request request = createRequest(url, args.method(), null, body, 0);
+    Credentials creds = provider != null ? provider.fetch() : null;
+    String accessKey = creds != null ? creds.accessKey() : null;
+    String secretKey = creds != null ? creds.secretKey() : null;
     url = Signer.presignV4(request, region, accessKey, secretKey, args.expiry());
     return url.toString();
   }
@@ -2856,7 +2864,13 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidExpiresRangeException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return policy.formData(this.accessKey, this.secretKey, getRegion(policy.bucket(), null));
+
+    if (provider == null) {
+      throw new IllegalArgumentException("credentials provider cannot be null");
+    }
+
+    Credentials creds = provider.fetch();
+    return policy.formData(creds.accessKey(), creds.secretKey(), getRegion(policy.bucket(), null));
   }
 
   /**
@@ -7768,8 +7782,6 @@ public class MinioClient {
   public static final class Builder {
     HttpUrl baseUrl;
     String region;
-    String accessKey;
-    String secretKey;
     OkHttpClient httpClient;
     boolean isAwsHost;
     boolean isAwsChinaHost;
@@ -7777,6 +7789,7 @@ public class MinioClient {
     boolean isDualStackHost;
     boolean useVirtualStyle;
     String regionInUrl;
+    Provider provider;
 
     public Builder() {}
 
@@ -8010,8 +8023,12 @@ public class MinioClient {
     }
 
     public Builder credentials(String accessKey, String secretKey) {
-      this.accessKey = accessKey;
-      this.secretKey = secretKey;
+      this.provider = new StaticProvider(accessKey, secretKey);
+      return this;
+    }
+
+    public Builder credentialsProvider(Provider provider) {
+      this.provider = provider;
       return this;
     }
 
@@ -8053,8 +8070,7 @@ public class MinioClient {
           isAcceleratedHost,
           isDualStackHost,
           useVirtualStyle,
-          accessKey,
-          secretKey,
+          provider,
           httpClient);
     }
   }

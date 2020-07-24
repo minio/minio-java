@@ -19,8 +19,13 @@ package io.minio;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 
-class S3Escaper {
+public class S3Escaper {
+
   private static final Escaper ESCAPER = UrlEscapers.urlPathSegmentEscaper();
+
+  private S3Escaper() {
+    throw new IllegalAccessError();
+  }
 
   /** Returns S3 encoded string. */
   public static String encode(String str) {
@@ -50,23 +55,23 @@ class S3Escaper {
 
   /** Returns S3 encoded string of given path where multiple '/' are trimmed. */
   public static String encodePath(String path) {
-    StringBuffer encodedPathBuf = new StringBuffer();
+    final StringBuilder encodedPath = new StringBuilder();
     for (String pathSegment : path.split("/")) {
       if (!pathSegment.isEmpty()) {
-        if (encodedPathBuf.length() > 0) {
-          encodedPathBuf.append("/");
+        if (encodedPath.length() > 0) {
+          encodedPath.append("/");
         }
-        encodedPathBuf.append(S3Escaper.encode(pathSegment));
+        encodedPath.append(S3Escaper.encode(pathSegment));
       }
     }
 
     if (path.startsWith("/")) {
-      encodedPathBuf.insert(0, "/");
+      encodedPath.insert(0, "/");
     }
     if (path.endsWith("/")) {
-      encodedPathBuf.append("/");
+      encodedPath.append("/");
     }
 
-    return encodedPathBuf.toString();
+    return encodedPath.toString();
   }
 }
