@@ -39,7 +39,6 @@ import io.minio.DisableVersioningArgs;
 import io.minio.DownloadObjectArgs;
 import io.minio.EnableObjectLegalHoldArgs;
 import io.minio.EnableVersioningArgs;
-import io.minio.ErrorCode;
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.GetBucketLifeCycleArgs;
 import io.minio.GetBucketNotificationArgs;
@@ -400,7 +399,7 @@ public class FunctionalTest {
   private static void handleException(String methodName, String args, long startTime, Exception e)
       throws Exception {
     if (e instanceof ErrorResponseException) {
-      if (((ErrorResponseException) e).errorResponse().errorCode() == ErrorCode.NOT_IMPLEMENTED) {
+      if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
         mintIgnoredLog(methodName, args, startTime);
         return;
       }
@@ -731,7 +730,7 @@ public class FunctionalTest {
     testUploadObject("[custom content-type]", createFile1Kb(), customContentType);
   }
 
-  public static void testPutObject(String testTags, PutObjectArgs args, ErrorCode errorCode)
+  public static void testPutObject(String testTags, PutObjectArgs args, String errorCode)
       throws Exception {
     String methodName = "putObject()";
     long startTime = System.currentTimeMillis();
@@ -739,7 +738,7 @@ public class FunctionalTest {
       try {
         client.putObject(args);
       } catch (ErrorResponseException e) {
-        if (errorCode == null || e.errorResponse().errorCode() != errorCode) {
+        if (errorCode == null || !e.errorResponse().code().equals(errorCode)) {
           throw e;
         }
       }
@@ -884,7 +883,7 @@ public class FunctionalTest {
                 new ContentInputStream(1 * KB), 1 * KB, -1)
             .headers(headers)
             .build(),
-        ErrorCode.INVALID_STORAGE_CLASS);
+        "InvalidStorageClass");
 
     testPutObject(
         "[SSE-S3]",
@@ -1719,7 +1718,7 @@ public class FunctionalTest {
           try {
             client.copyObject(args);
           } catch (ErrorResponseException e) {
-            if (e.errorResponse().errorCode() != ErrorCode.PRECONDITION_FAILED) {
+            if (!e.errorResponse().code().equals("PreconditionFailed")) {
               throw e;
             }
           }
