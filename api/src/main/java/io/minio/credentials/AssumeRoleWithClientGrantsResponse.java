@@ -13,18 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.minio.messages;
+
+package io.minio.credentials;
 
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Path;
 import org.simpleframework.xml.Root;
 
-@Root(name = "AssumeRoleWithWebIdentityResponse", strict = false)
+/**
+ * Object representation of response XML of <a
+ * href="https://github.com/minio/minio/blob/master/docs/sts/client-grants.md">AssumeRoleWithClientGrants
+ * API</a>.
+ */
+@Root(name = "AssumeRoleWithClientGrantsResponse", strict = false)
 @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-public class AssumeRoleWithWebIdentityResponse {
-
-  @Path(value = "AssumeRoleWithWebIdentityResult")
+public class AssumeRoleWithClientGrantsResponse {
+  @Path(value = "AssumeRoleWithClientGrantsResult")
   @Element(name = "Credentials")
   private Credentials credentials;
 

@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.minio.messages;
 
+package io.minio.credentials;
+
+import io.minio.messages.ResponseDate;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -22,33 +25,33 @@ import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
+/** Object representation of credentials access key, secret key and session token. */
 @Root(name = "Credentials", strict = false)
 public class Credentials {
-
   @Element(name = "AccessKeyId")
   private final String accessKey;
 
   @Element(name = "SecretAccessKey")
   private final String secretKey;
 
-  @Element(name = "Expiration")
-  private final ResponseDate expiredAt;
-
   @Element(name = "SessionToken")
   private final String sessionToken;
+
+  @Element(name = "Expiration")
+  private final ResponseDate expiration;
 
   public Credentials(
       @Nonnull @Element(name = "AccessKeyId") String accessKey,
       @Nonnull @Element(name = "SecretAccessKey") String secretKey,
-      @Nullable @Element(name = "Expiration") ResponseDate expiredAt,
-      @Nullable @Element(name = "SessionToken") String sessionToken) {
+      @Nullable @Element(name = "SessionToken") String sessionToken,
+      @Nullable @Element(name = "Expiration") ResponseDate expiration) {
     this.accessKey = Objects.requireNonNull(accessKey, "AccessKey must not be null");
     this.secretKey = Objects.requireNonNull(secretKey, "SecretKey must not be null");
     if (accessKey.isEmpty() || secretKey.isEmpty()) {
       throw new IllegalArgumentException("AccessKey and SecretKey must not be empty");
     }
     this.sessionToken = sessionToken;
-    this.expiredAt = expiredAt;
+    this.expiration = expiration;
   }
 
   public String accessKey() {
@@ -59,15 +62,15 @@ public class Credentials {
     return secretKey;
   }
 
-  public ZonedDateTime expiredAt() {
-    return expiredAt.zonedDateTime();
-  }
-
   public String sessionToken() {
     return sessionToken;
   }
 
-  public boolean isEmpty() {
-    return accessKey == null || secretKey == null;
+  public boolean isExpired() {
+    if (expiration == null) {
+      return false;
+    }
+
+    return ZonedDateTime.now().plus(Duration.ofSeconds(30)).isAfter(expiration.zonedDateTime());
   }
 }

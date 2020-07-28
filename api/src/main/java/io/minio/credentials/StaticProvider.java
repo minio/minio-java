@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.minio.credentials;
 
-import io.minio.messages.Credentials;
 import javax.annotation.Nonnull;
 
-@SuppressWarnings("unused")
+/** Fixed credential provider. */
 public class StaticProvider implements Provider {
-
   private final Credentials credentials;
 
   public StaticProvider(@Nonnull String accessKey, @Nonnull String secretKey) {
