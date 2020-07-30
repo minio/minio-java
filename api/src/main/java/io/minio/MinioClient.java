@@ -5745,6 +5745,132 @@ public class MinioClient {
   }
 
   /**
+   * Gets bucket replication configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * String config =
+   *     minioClient.getBucketReplication(
+   *         GetBucketReplicationArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketReplicationArgs} object.
+   * @return String - Bucket replication configuration as JSON string.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public String getBucketReplication(GetBucketReplicationArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidBucketNameException, InvalidKeyException, InvalidResponseException, IOException,
+          NoSuchAlgorithmException, ServerException, XmlParserException {
+    checkArgs(args);
+    try (Response response = executeGet(args, null, newMultimap("replication", ""))) {
+      return response.body().string();
+    }
+  }
+
+  /**
+   * Sets bucket replication configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * // Lets consider variable 'config' contains below XML String;
+   * // <ReplicationConfiguration>
+   * //   <Role>arn:aws:iam::35667example:role/CrossRegionReplicationRoleForS3</Role>
+   * //   <Rule>
+   * //     <ID>rule1</ID>
+   * //     <Status>Enabled</Status>
+   * //     <Priority>1</Priority>
+   * //     <DeleteMarkerReplication>
+   * //        <Status>Disabled</Status>
+   * //     </DeleteMarkerReplication>
+   * //     <Filter>
+   * //        <And>
+   * //            <Prefix>TaxDocs</Prefix>
+   * //            <Tag>
+   * //              <Key>key1</Key>
+   * //              <Value>value1</Value>
+   * //            </Tag>
+   * //            <Tag>
+   * //              <Key>key1</Key>
+   * //              <Value>value1</Value>
+   * //            </Tag>
+   * //        </And>
+   * //     </Filter>
+   * //     <Destination>
+   * //       <Bucket>arn:aws:s3:::exampletargetbucket</Bucket>
+   * //     </Destination>
+   * //   </Rule>
+   * // </ReplicationConfiguration>
+   *
+   * minioClient.setBucketReplication(
+   *     SetBucketReplicationArgs.builder().bucket("my-bucketname").config(config).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketReplicationArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketReplication(SetBucketReplicationArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidBucketNameException, InvalidKeyException, InvalidResponseException, IOException,
+          NoSuchAlgorithmException, ServerException, XmlParserException {
+    checkArgs(args);
+    Response response =
+        executePut(
+            args,
+            (args.objectLockToken() != null)
+                ? newMultimap("x-amz-bucket-object-lock-token", args.objectLockToken())
+                : null,
+            newMultimap("replication", ""),
+            args.config(),
+            0);
+    response.close();
+  }
+
+  /**
+   * Deletes bucket replication configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteBucketReplication(
+   *     DeleteBucketReplicationArgs.builder().bucket("my-bucketname"));
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketReplicationArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketReplication(DeleteBucketReplicationArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidBucketNameException, InvalidKeyException, InvalidResponseException, IOException,
+          NoSuchAlgorithmException, ServerException, XmlParserException {
+    checkArgs(args);
+    executeDelete(args, null, newMultimap("replication", ""));
+  }
+
+  /**
    * Lists incomplete object upload information of a bucket.
    *
    * <pre>Example:{@code
