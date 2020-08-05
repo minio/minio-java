@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2019 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,32 +42,33 @@ public class SetBucketReplication {
 
       String config =
           "<ReplicationConfiguration>"
-              + "  <Role>arn:aws:iam::35667example:role/CrossRegionReplicationRoleForS3</Role>"
+              + "  <Role>REPLACE-WITH-ACTUAL-REPLICATION-ROLE</Role>"
               + "  <Rule>"
               + "    <ID>rule1</ID>"
               + "    <Status>Enabled</Status>"
               + "    <Priority>1</Priority>"
               + "    <DeleteMarkerReplication>"
-              + "       <Status>Disabled</Status>"
+              + "      <Status>Disabled</Status>"
               + "    </DeleteMarkerReplication>"
               + "    <Filter>"
-              + "       <And>"
-              + "           <Prefix>TaxDocs</Prefix>"
-              + "           <Tag>"
-              + "             <Key>key1</Key>"
-              + "             <Value>value1</Value>"
-              + "           </Tag>"
-              + "           <Tag>"
-              + "             <Key>key1</Key>"
-              + "             <Value>value1</Value>"
-              + "           </Tag>"
-              + "       </And>"
+              + "      <And>"
+              + "        <Prefix>TaxDocs</Prefix>"
+              + "        <Tag>"
+              + "          <Key>key1</Key>"
+              + "          <Value>value1</Value>"
+              + "        </Tag>"
+              + "        <Tag>"
+              + "          <Key>key2</Key>"
+              + "          <Value>value2</Value>"
+              + "        </Tag>"
+              + "      </And>"
               + "    </Filter>"
               + "    <Destination>"
-              + "      <Bucket>arn:aws:s3:::exampletargetbucket</Bucket>"
+              + "      <Bucket>REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN</Bucket>"
               + "    </Destination>"
               + "  </Rule>"
               + "</ReplicationConfiguration>";
+
       minioClient.setBucketReplication(
           SetBucketReplicationArgs.builder().bucket("my-bucketname").config(config).build());
     } catch (MinioException e) {

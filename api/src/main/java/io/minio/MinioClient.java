@@ -5773,7 +5773,13 @@ public class MinioClient {
     checkArgs(args);
     try (Response response = executeGet(args, null, newMultimap("replication", ""))) {
       return response.body().string();
+    } catch (ErrorResponseException e) {
+      if (!e.errorResponse().code().equals("ReplicationConfigurationNotFoundError")) {
+        throw e;
+      }
     }
+
+    return "";
   }
 
   /**
@@ -5782,31 +5788,31 @@ public class MinioClient {
    * <pre>Example:{@code
    * // Lets consider variable 'config' contains below XML String;
    * // <ReplicationConfiguration>
-   * //   <Role>arn:aws:iam::35667example:role/CrossRegionReplicationRoleForS3</Role>
-   * //   <Rule>
-   * //     <ID>rule1</ID>
-   * //     <Status>Enabled</Status>
-   * //     <Priority>1</Priority>
-   * //     <DeleteMarkerReplication>
+   * //    <Role>REPLACE-WITH-ACTUAL-REPLICATION-ROLE</Role>
+   * //    <Rule>
+   * //      <ID>rule1</ID>
+   * //      <Status>Enabled</Status>
+   * //      <Priority>1</Priority>
+   * //      <DeleteMarkerReplication>
    * //        <Status>Disabled</Status>
-   * //     </DeleteMarkerReplication>
-   * //     <Filter>
+   * //      </DeleteMarkerReplication>
+   * //      <Filter>
    * //        <And>
-   * //            <Prefix>TaxDocs</Prefix>
-   * //            <Tag>
-   * //              <Key>key1</Key>
-   * //              <Value>value1</Value>
-   * //            </Tag>
-   * //            <Tag>
-   * //              <Key>key1</Key>
-   * //              <Value>value1</Value>
-   * //            </Tag>
+   * //          <Prefix>TaxDocs</Prefix>
+   * //          <Tag>
+   * //            <Key>key1</Key>
+   * //            <Value>value1</Value>
+   * //          </Tag>
+   * //          <Tag>
+   * //            <Key>key2</Key>
+   * //            <Value>value2</Value>
+   * //          </Tag>
    * //        </And>
-   * //     </Filter>
-   * //     <Destination>
-   * //       <Bucket>arn:aws:s3:::exampletargetbucket</Bucket>
-   * //     </Destination>
-   * //   </Rule>
+   * //      </Filter>
+   * //      <Destination>
+   * //        <Bucket>REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN</Bucket>
+   * //      </Destination>
+   * //    </Rule>
    * // </ReplicationConfiguration>
    *
    * minioClient.setBucketReplication(
@@ -5843,7 +5849,7 @@ public class MinioClient {
   }
 
   /**
-   * Deletes bucket replication configuration to a bucket.
+   * Deletes bucket replication configuration from a bucket.
    *
    * <pre>Example:{@code
    * minioClient.deleteBucketReplication(

@@ -315,7 +315,7 @@ Deletes bucket policy configuration of a bucket.
 __Parameters__
 | Parameter | Type                       | Description |
 |:----------|:---------------------------|:------------|
-| ``args``  | _[DeleteBucketPolicyArgs]_ | Argumnets.  |
+| ``args``  | _[DeleteBucketPolicyArgs]_ | Arguments.  |
 
 __Example__
 ```java
@@ -331,7 +331,7 @@ Deletes bucket replication configuration of a bucket.
 __Parameters__
 | Parameter | Type                            | Description |
 |:----------|:--------------------------------|:------------|
-| ``args``  | _[DeleteBucketReplicationArgs]_ | Argumnets.  |
+| ``args``  | _[DeleteBucketReplicationArgs]_ | Arguments.  |
 
 __Example__
 ```java
@@ -994,31 +994,31 @@ __Example__
 ```java
 // Lets consider variable 'config' contains below XML String;
 // <ReplicationConfiguration>
-//   <Role>arn:aws:iam::35667example:role/CrossRegionReplicationRoleForS3</Role>
-//   <Rule>
-//     <ID>rule1</ID>
-//     <Status>Enabled</Status>
-//     <Priority>1</Priority>
-//     <DeleteMarkerReplication>
+//    <Role>REPLACE-WITH-ACTUAL-REPLICATION-ROLE</Role>
+//    <Rule>
+//      <ID>rule1</ID>
+//      <Status>Enabled</Status>
+//      <Priority>1</Priority>
+//      <DeleteMarkerReplication>
 //        <Status>Disabled</Status>
-//     </DeleteMarkerReplication>
-//     <Filter>
+//      </DeleteMarkerReplication>
+//      <Filter>
 //        <And>
-//            <Prefix>TaxDocs</Prefix>
-//            <Tag>
-//              <Key>key1</Key>
-//              <Value>value1</Value>
-//            </Tag>
-//            <Tag>
-//              <Key>key1</Key>
-//              <Value>value1</Value>
-//            </Tag>
+//          <Prefix>TaxDocs</Prefix>
+//          <Tag>
+//            <Key>key1</Key>
+//            <Value>value1</Value>
+//          </Tag>
+//          <Tag>
+//            <Key>key2</Key>
+//            <Value>value2</Value>
+//          </Tag>
 //        </And>
-//     </Filter>
-//     <Destination>
-//       <Bucket>arn:aws:s3:::exampletargetbucket</Bucket>
-//     </Destination>
-//   </Rule>
+//      </Filter>
+//      <Destination>
+//        <Bucket>REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN</Bucket>
+//      </Destination>
+//    </Rule>
 // </ReplicationConfiguration>
 
 minioClient.setBucketReplication(
