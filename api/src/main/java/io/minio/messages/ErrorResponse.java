@@ -16,7 +16,6 @@
 
 package io.minio.messages;
 
-import io.minio.ErrorCode;
 import java.io.Serializable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
@@ -29,7 +28,7 @@ public class ErrorResponse implements Serializable {
   private static final long serialVersionUID = 1905162041950251407L; // fix SE_BAD_FIELD
 
   @Element(name = "Code")
-  protected ErrorCode errorCode;
+  protected String code;
 
   @Element(name = "Message", required = false)
   protected String message;
@@ -56,13 +55,15 @@ public class ErrorResponse implements Serializable {
    * request ID and host ID.
    */
   public ErrorResponse(
-      ErrorCode errorCode,
+      String code,
+      String message,
       String bucketName,
       String objectName,
       String resource,
       String requestId,
       String hostId) {
-    this.errorCode = errorCode;
+    this.code = code;
+    this.message = message;
     this.bucketName = bucketName;
     this.objectName = objectName;
     this.resource = resource;
@@ -71,17 +72,13 @@ public class ErrorResponse implements Serializable {
   }
 
   /** Returns error code. */
-  public ErrorCode errorCode() {
-    return this.errorCode;
+  public String code() {
+    return this.code;
   }
 
   /** Returns error message. */
   public String message() {
-    if (this.message != null) {
-      return this.message;
-    }
-
-    return this.errorCode.message();
+    return this.message;
   }
 
   /** Returns bucket name. */
@@ -112,10 +109,10 @@ public class ErrorResponse implements Serializable {
   /** Returns string representation of this object. */
   public String toString() {
     return "ErrorResponse(code = "
-        + errorCode.code()
+        + code
         + ", "
         + "message = "
-        + message()
+        + message
         + ", "
         + "bucketName = "
         + bucketName

@@ -185,6 +185,14 @@ import okhttp3.ResponseBody;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 public class MinioClient {
+  private static final String NO_SUCH_BUCKET_MESSAGE = "Bucket does not exist";
+  private static final String NO_SUCH_BUCKET = "NoSuchBucket";
+  private static final String NO_SUCH_BUCKET_POLICY = "NoSuchBucketPolicy";
+  private static final String NO_SUCH_OBJECT_LOCK_CONFIGURATION = "NoSuchObjectLockConfiguration";
+  private static final String RETRY_HEAD_BUCKET = "RetryHeadBucket";
+  private static final String SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR =
+      "ServerSideEncryptionConfigurationNotFoundError";
+
   private static final byte[] EMPTY_BODY = new byte[] {};
   // default network I/O timeout is 5 minutes
   private static final long DEFAULT_CONNECTION_TIMEOUT = 5;
@@ -1107,10 +1115,12 @@ public class MinioClient {
     }
 
     if (errorResponse == null) {
-      ErrorCode ec;
+      String code = null;
+      String message = null;
       switch (response.code()) {
         case 307:
-          ec = ErrorCode.REDIRECT;
+          code = "Redirect";
+          message = "Temporary redirect";
           break;
         case 400:
           // HEAD bucket with wrong region gives 400 without body.
@@ -1119,33 +1129,41 @@ public class MinioClient {
               && objectName == null
               && isAwsHost
               && AwsRegionCache.INSTANCE.get(bucketName) != null) {
-            ec = ErrorCode.RETRY_HEAD_BUCKET;
+            code = RETRY_HEAD_BUCKET;
           } else {
-            ec = ErrorCode.INVALID_URI;
+            code = "BadRequest";
+            message = "Bad request";
           }
           break;
         case 404:
           if (objectName != null) {
-            ec = ErrorCode.NO_SUCH_KEY;
+            code = "NoSuchKey";
+            message = "Object does not exist";
           } else if (bucketName != null) {
-            ec = ErrorCode.NO_SUCH_BUCKET;
+            code = NO_SUCH_BUCKET;
+            message = NO_SUCH_BUCKET_MESSAGE;
           } else {
-            ec = ErrorCode.RESOURCE_NOT_FOUND;
+            code = "ResourceNotFound";
+            message = "Request resource not found";
           }
           break;
         case 501:
         case 405:
-          ec = ErrorCode.METHOD_NOT_ALLOWED;
+          code = "MethodNotAllowed";
+          message = "The specified method is not allowed against this resource";
           break;
         case 409:
           if (bucketName != null) {
-            ec = ErrorCode.NO_SUCH_BUCKET;
+            code = NO_SUCH_BUCKET;
+            message = NO_SUCH_BUCKET_MESSAGE;
           } else {
-            ec = ErrorCode.RESOURCE_CONFLICT;
+            code = "ResourceConflict";
+            message = "Request resource conflicts";
           }
           break;
         case 403:
-          ec = ErrorCode.ACCESS_DENIED;
+          code = "AccessDenied";
+          message = "Access denied";
           break;
         default:
           if (response.code() >= 500) {
@@ -1161,7 +1179,8 @@ public class MinioClient {
 
       errorResponse =
           new ErrorResponse(
-              ec,
+              code,
+              message,
               bucketName,
               objectName,
               request.url().encodedPath(),
@@ -1170,8 +1189,8 @@ public class MinioClient {
     }
 
     // invalidate region cache if needed
-    if (errorResponse.errorCode() == ErrorCode.NO_SUCH_BUCKET
-        || errorResponse.errorCode() == ErrorCode.RETRY_HEAD_BUCKET) {
+    if (errorResponse.code().equals(NO_SUCH_BUCKET)
+        || errorResponse.code().equals(RETRY_HEAD_BUCKET)) {
       if (isAwsHost) {
         AwsRegionCache.INSTANCE.remove(bucketName);
       }
@@ -1250,7 +1269,7 @@ public class MinioClient {
       response.body().close();
       return response;
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.RETRY_HEAD_BUCKET) {
+      if (!e.errorResponse().code().equals(RETRY_HEAD_BUCKET)) {
         throw e;
       }
     }
@@ -3734,7 +3753,7 @@ public class MinioClient {
       executeHead(args, null, null);
       return true;
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET) {
+      if (!e.errorResponse().code().equals(NO_SUCH_BUCKET)) {
         throw e;
       }
     }
@@ -4431,7 +4450,7 @@ public class MinioClient {
     try (Response response = executeGet(args, null, queryParams)) {
       return Xml.unmarshal(Retention.class, response.body().charStream());
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
+      if (!e.errorResponse().code().equals(NO_SUCH_OBJECT_LOCK_CONFIGURATION)) {
         throw e;
       }
     }
@@ -4675,7 +4694,7 @@ public class MinioClient {
       LegalHold result = Xml.unmarshal(LegalHold.class, response.body().charStream());
       return result.status();
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_OBJECT_LOCK_CONFIGURATION) {
+      if (!e.errorResponse().code().equals(NO_SUCH_OBJECT_LOCK_CONFIGURATION)) {
         throw e;
       }
     }
@@ -5126,7 +5145,7 @@ public class MinioClient {
 
       return new String(buf, 0, bytesRead, StandardCharsets.UTF_8);
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
+      if (!e.errorResponse().code().equals(NO_SUCH_BUCKET_POLICY)) {
         throw e;
       }
     }
@@ -5275,7 +5294,7 @@ public class MinioClient {
     try {
       executeDelete(args, null, newMultimap("policy", ""));
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_BUCKET_POLICY) {
+      if (!e.errorResponse().code().equals(NO_SUCH_BUCKET_POLICY)) {
         throw e;
       }
     }
@@ -5490,7 +5509,7 @@ public class MinioClient {
     try (Response response = executeGet(args, null, newMultimap("lifecycle", ""))) {
       return new String(response.body().bytes(), StandardCharsets.UTF_8);
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_LIFECYCLE_CONFIGURATION) {
+      if (!e.errorResponse().code().equals("NoSuchLifecycleConfiguration")) {
         throw e;
       }
     }
@@ -6451,8 +6470,7 @@ public class MinioClient {
     try (Response response = executeGet(args, null, newMultimap("encryption", ""))) {
       return Xml.unmarshal(SseConfiguration.class, response.body().charStream());
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode()
-          != ErrorCode.SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR) {
+      if (!e.errorResponse().code().equals(SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR)) {
         throw e;
       }
     }
@@ -6490,8 +6508,7 @@ public class MinioClient {
     try {
       executeDelete(args, null, newMultimap("encryption", ""));
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode()
-          != ErrorCode.SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR) {
+      if (!e.errorResponse().code().equals(SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR)) {
         throw e;
       }
     }
@@ -6528,7 +6545,7 @@ public class MinioClient {
     try (Response response = executeGet(args, null, newMultimap("tagging", ""))) {
       return Xml.unmarshal(Tags.class, response.body().charStream());
     } catch (ErrorResponseException e) {
-      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_TAG_SET) {
+      if (!e.errorResponse().code().equals("NoSuchTagSet")) {
         throw e;
       }
     }
