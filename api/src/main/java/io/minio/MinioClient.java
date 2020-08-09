@@ -74,6 +74,7 @@ import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.OutputSerialization;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
+import io.minio.messages.ReplicationConfiguration;
 import io.minio.messages.Retention;
 import io.minio.messages.SelectObjectContentRequest;
 import io.minio.messages.SseConfiguration;
@@ -5748,13 +5749,13 @@ public class MinioClient {
    * Gets bucket replication configuration of a bucket.
    *
    * <pre>Example:{@code
-   * String config =
+   * ReplicationConfiguration config =
    *     minioClient.getBucketReplication(
    *         GetBucketReplicationArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
    * @param args {@link GetBucketReplicationArgs} object.
-   * @return String - Bucket replication configuration as JSON string.
+   * @return {@link ReplicationConfiguration} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws InternalException thrown to indicate internal library error.
@@ -5766,54 +5767,48 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public String getBucketReplication(GetBucketReplicationArgs args)
+  public ReplicationConfiguration getBucketReplication(GetBucketReplicationArgs args)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidBucketNameException, InvalidKeyException, InvalidResponseException, IOException,
           NoSuchAlgorithmException, ServerException, XmlParserException {
     checkArgs(args);
     try (Response response = executeGet(args, null, newMultimap("replication", ""))) {
-      return response.body().string();
+      return Xml.unmarshal(ReplicationConfiguration.class, response.body().charStream());
     } catch (ErrorResponseException e) {
       if (!e.errorResponse().code().equals("ReplicationConfigurationNotFoundError")) {
         throw e;
       }
     }
 
-    return "";
+    return null;
   }
 
   /**
    * Sets bucket replication configuration to a bucket.
    *
    * <pre>Example:{@code
-   * // Lets consider variable 'config' contains below XML String;
-   * // <ReplicationConfiguration>
-   * //    <Role>REPLACE-WITH-ACTUAL-REPLICATION-ROLE</Role>
-   * //    <Rule>
-   * //      <ID>rule1</ID>
-   * //      <Status>Enabled</Status>
-   * //      <Priority>1</Priority>
-   * //      <DeleteMarkerReplication>
-   * //        <Status>Disabled</Status>
-   * //      </DeleteMarkerReplication>
-   * //      <Filter>
-   * //        <And>
-   * //          <Prefix>TaxDocs</Prefix>
-   * //          <Tag>
-   * //            <Key>key1</Key>
-   * //            <Value>value1</Value>
-   * //          </Tag>
-   * //          <Tag>
-   * //            <Key>key2</Key>
-   * //            <Value>value2</Value>
-   * //          </Tag>
-   * //        </And>
-   * //      </Filter>
-   * //      <Destination>
-   * //        <Bucket>REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN</Bucket>
-   * //      </Destination>
-   * //    </Rule>
-   * // </ReplicationConfiguration>
+   * Map<String, String> tags = new HashMap<>();
+   * tags.put("key1", "value1");
+   * tags.put("key2", "value2");
+   *
+   * ReplicationRule rule =
+   *     new ReplicationRule(
+   *         new DeleteMarkerReplication(Status.DISABLED),
+   *         new ReplicationDestination(
+   *             null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
+   *         null,
+   *         new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+   *         "rule1",
+   *         null,
+   *         1,
+   *         null,
+   *         Status.ENABLED);
+   *
+   * List<ReplicationRule> rules = new LinkedList<>();
+   * rules.add(rule);
+   *
+   * ReplicationConfiguration config =
+   *     new ReplicationConfiguration("REPLACE-WITH-ACTUAL-ROLE", rules);
    *
    * minioClient.setBucketReplication(
    *     SetBucketReplicationArgs.builder().bucket("my-bucketname").config(config).build());

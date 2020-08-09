@@ -16,12 +16,14 @@
 
 package io.minio;
 
+import io.minio.messages.ReplicationConfiguration;
+
 /** Argument class of {@link MinioClient#setBucketReplication}. */
 public class SetBucketReplicationArgs extends BucketArgs {
-  private String config;
+  private ReplicationConfiguration config;
   private String objectLockToken;
 
-  public String config() {
+  public ReplicationConfiguration config() {
     return config;
   }
 
@@ -35,7 +37,7 @@ public class SetBucketReplicationArgs extends BucketArgs {
 
   /** Argument builder of {@link SetBucketReplicationArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketReplicationArgs> {
-    private void validateConfig(String config) {
+    private void validateConfig(ReplicationConfiguration config) {
       validateNotNull(config, "replication configuration");
     }
 
@@ -50,7 +52,7 @@ public class SetBucketReplicationArgs extends BucketArgs {
       validateObjectLockToken(args.objectLockToken);
     }
 
-    public Builder config(String config) {
+    public Builder config(ReplicationConfiguration config) {
       validateConfig(config);
       operations.add(args -> args.config = config);
       return this;

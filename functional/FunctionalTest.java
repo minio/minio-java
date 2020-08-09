@@ -86,7 +86,9 @@ import io.minio.UploadObjectArgs;
 import io.minio.Xml;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
+import io.minio.messages.AndOperator;
 import io.minio.messages.Bucket;
+import io.minio.messages.DeleteMarkerReplication;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Event;
 import io.minio.messages.EventType;
@@ -98,6 +100,10 @@ import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.OutputSerialization;
 import io.minio.messages.QueueConfiguration;
 import io.minio.messages.QuoteFields;
+import io.minio.messages.ReplicationConfiguration;
+import io.minio.messages.ReplicationDestination;
+import io.minio.messages.ReplicationRule;
+import io.minio.messages.ReplicationRuleFilter;
 import io.minio.messages.Retention;
 import io.minio.messages.RetentionDuration;
 import io.minio.messages.RetentionDurationDays;
@@ -107,6 +113,7 @@ import io.minio.messages.SseAlgorithm;
 import io.minio.messages.SseConfiguration;
 import io.minio.messages.SseConfigurationRule;
 import io.minio.messages.Stats;
+import io.minio.messages.Status;
 import io.minio.messages.Tags;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -170,6 +177,7 @@ public class FunctionalTest {
   private static String region;
   private static boolean isSecureEndpoint = false;
   private static String sqsArn = null;
+  private static String replicationSrcBucket = null;
   private static String replicationRole = null;
   private static String replicationBucketArn = null;
   private static MinioClient client = null;
@@ -3382,55 +3390,39 @@ public class FunctionalTest {
       System.out.println(methodName);
     }
 
-    if (replicationRole == null || replicationBucketArn == null) {
+    if (replicationSrcBucket == null || replicationRole == null || replicationBucketArn == null) {
       mintIgnoredLog(methodName, "", System.currentTimeMillis());
       return;
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-      client.enableVersioning(EnableVersioningArgs.builder().bucket(bucketName).build());
-      try {
-        String config =
-            "<ReplicationConfiguration>"
-                + "  <Role>"
-                + replicationRole
-                + "</Role>"
-                + "  <Rule>"
-                + "    <ID>rule1</ID>"
-                + "    <Status>Enabled</Status>"
-                + "    <Priority>1</Priority>"
-                + "    <DeleteMarkerReplication>"
-                + "      <Status>Disabled</Status>"
-                + "    </DeleteMarkerReplication>"
-                + "    <Filter>"
-                + "      <And>"
-                + "        <Prefix>TaxDocs</Prefix>"
-                + "        <Tag>"
-                + "          <Key>key1</Key>"
-                + "          <Value>value1</Value>"
-                + "        </Tag>"
-                + "        <Tag>"
-                + "          <Key>key2</Key>"
-                + "          <Value>value2</Value>"
-                + "        </Tag>"
-                + "      </And>"
-                + "    </Filter>"
-                + "    <Destination>"
-                + "      <Bucket>"
-                + replicationBucketArn
-                + "</Bucket>"
-                + "    </Destination>"
-                + "  </Rule>"
-                + "</ReplicationConfiguration>";
-        client.setBucketReplication(
-            SetBucketReplicationArgs.builder().bucket(bucketName).config(config).build());
-        mintSuccessLog(methodName, null, startTime);
-      } finally {
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-      }
+      Map<String, String> tags = new HashMap<>();
+      tags.put("key1", "value1");
+      tags.put("key2", "value2");
+
+      ReplicationRule rule =
+          new ReplicationRule(
+              new DeleteMarkerReplication(Status.DISABLED),
+              new ReplicationDestination(null, null, replicationBucketArn, null, null, null, null),
+              null,
+              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              "rule1",
+              null,
+              1,
+              null,
+              Status.ENABLED);
+
+      List<ReplicationRule> rules = new LinkedList<>();
+      rules.add(rule);
+
+      ReplicationConfiguration config = new ReplicationConfiguration(replicationRole, rules);
+
+      client.setBucketReplication(
+          SetBucketReplicationArgs.builder().bucket(replicationSrcBucket).config(config).build());
+      client.deleteBucketReplication(
+          DeleteBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3442,68 +3434,51 @@ public class FunctionalTest {
       System.out.println(methodName);
     }
 
-    if (replicationRole == null || replicationBucketArn == null) {
+    if (replicationSrcBucket == null || replicationRole == null || replicationBucketArn == null) {
       mintIgnoredLog(methodName, "", System.currentTimeMillis());
       return;
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-      client.enableVersioning(EnableVersioningArgs.builder().bucket(bucketName).build());
-      try {
-        String config =
-            client.getBucketReplication(
-                GetBucketReplicationArgs.builder().bucket(bucketName).build());
-        if (!"".equals(config)) {
-          throw new Exception("config: expected: <empty>, got: " + config);
-        }
-
-        config =
-            "<ReplicationConfiguration>"
-                + "  <Role>"
-                + replicationRole
-                + "</Role>"
-                + "  <Rule>"
-                + "    <ID>rule1</ID>"
-                + "    <Status>Enabled</Status>"
-                + "    <Priority>1</Priority>"
-                + "    <DeleteMarkerReplication>"
-                + "      <Status>Disabled</Status>"
-                + "    </DeleteMarkerReplication>"
-                + "    <Filter>"
-                + "      <And>"
-                + "        <Prefix>TaxDocs</Prefix>"
-                + "        <Tag>"
-                + "          <Key>key1</Key>"
-                + "          <Value>value1</Value>"
-                + "        </Tag>"
-                + "        <Tag>"
-                + "          <Key>key2</Key>"
-                + "          <Value>value2</Value>"
-                + "        </Tag>"
-                + "      </And>"
-                + "    </Filter>"
-                + "    <Destination>"
-                + "      <Bucket>"
-                + replicationBucketArn
-                + "</Bucket>"
-                + "    </Destination>"
-                + "  </Rule>"
-                + "</ReplicationConfiguration>";
-        client.setBucketReplication(
-            SetBucketReplicationArgs.builder().bucket(bucketName).config(config).build());
-        config =
-            client.getBucketReplication(
-                GetBucketReplicationArgs.builder().bucket(bucketName).build());
-        if (config.isEmpty()) {
-          throw new Exception("config: expected: <non-empty>, got: " + config);
-        }
-        mintSuccessLog(methodName, null, startTime);
-      } finally {
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      ReplicationConfiguration config =
+          client.getBucketReplication(
+              GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
+      if (config != null) {
+        throw new Exception("config: expected: <null>, got: <non-null>");
       }
+
+      Map<String, String> tags = new HashMap<>();
+      tags.put("key1", "value1");
+      tags.put("key2", "value2");
+
+      ReplicationRule rule =
+          new ReplicationRule(
+              new DeleteMarkerReplication(Status.DISABLED),
+              new ReplicationDestination(null, null, replicationBucketArn, null, null, null, null),
+              null,
+              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              "rule1",
+              null,
+              1,
+              null,
+              Status.ENABLED);
+
+      List<ReplicationRule> rules = new LinkedList<>();
+      rules.add(rule);
+
+      config = new ReplicationConfiguration(replicationRole, rules);
+      client.setBucketReplication(
+          SetBucketReplicationArgs.builder().bucket(replicationSrcBucket).config(config).build());
+      config =
+          client.getBucketReplication(
+              GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
+      if (config == null) {
+        throw new Exception("config: expected: <non-null>, got: <null>");
+      }
+      client.deleteBucketReplication(
+          DeleteBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3515,67 +3490,47 @@ public class FunctionalTest {
       System.out.println(methodName);
     }
 
-    if (replicationRole == null || replicationBucketArn == null) {
+    if (replicationSrcBucket == null || replicationRole == null || replicationBucketArn == null) {
       mintIgnoredLog(methodName, "", System.currentTimeMillis());
       return;
     }
 
     long startTime = System.currentTimeMillis();
-    String bucketName = getRandomName();
-    String destBucketName = null;
     try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-      client.enableVersioning(EnableVersioningArgs.builder().bucket(bucketName).build());
-      try {
-        client.deleteBucketReplication(
-            DeleteBucketReplicationArgs.builder().bucket(bucketName).build());
+      client.deleteBucketReplication(
+          DeleteBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
 
-        String config =
-            "<ReplicationConfiguration>"
-                + "  <Role>"
-                + replicationRole
-                + "</Role>"
-                + "  <Rule>"
-                + "    <ID>rule1</ID>"
-                + "    <Status>Enabled</Status>"
-                + "    <Priority>1</Priority>"
-                + "    <DeleteMarkerReplication>"
-                + "      <Status>Disabled</Status>"
-                + "    </DeleteMarkerReplication>"
-                + "    <Filter>"
-                + "      <And>"
-                + "        <Prefix>TaxDocs</Prefix>"
-                + "        <Tag>"
-                + "          <Key>key1</Key>"
-                + "          <Value>value1</Value>"
-                + "        </Tag>"
-                + "        <Tag>"
-                + "          <Key>key2</Key>"
-                + "          <Value>value2</Value>"
-                + "        </Tag>"
-                + "      </And>"
-                + "    </Filter>"
-                + "    <Destination>"
-                + "      <Bucket>"
-                + replicationBucketArn
-                + "</Bucket>"
-                + "    </Destination>"
-                + "  </Rule>"
-                + "</ReplicationConfiguration>";
-        client.setBucketReplication(
-            SetBucketReplicationArgs.builder().bucket(bucketName).config(config).build());
-        client.deleteBucketReplication(
-            DeleteBucketReplicationArgs.builder().bucket(bucketName).build());
-        config =
-            client.getBucketReplication(
-                GetBucketReplicationArgs.builder().bucket(bucketName).build());
-        if (!"".equals(config)) {
-          throw new Exception("config: expected: <empty>, got: " + config);
-        }
-        mintSuccessLog(methodName, null, startTime);
-      } finally {
-        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      Map<String, String> tags = new HashMap<>();
+      tags.put("key1", "value1");
+      tags.put("key2", "value2");
+
+      ReplicationRule rule =
+          new ReplicationRule(
+              new DeleteMarkerReplication(Status.DISABLED),
+              new ReplicationDestination(null, null, replicationBucketArn, null, null, null, null),
+              null,
+              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              "rule1",
+              null,
+              1,
+              null,
+              Status.ENABLED);
+
+      List<ReplicationRule> rules = new LinkedList<>();
+      rules.add(rule);
+
+      ReplicationConfiguration config = new ReplicationConfiguration(replicationRole, rules);
+      client.setBucketReplication(
+          SetBucketReplicationArgs.builder().bucket(replicationSrcBucket).config(config).build());
+      client.deleteBucketReplication(
+          DeleteBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
+      config =
+          client.getBucketReplication(
+              GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
+      if (config != null) {
+        throw new Exception("config: expected: <null>, got: <non-null>");
       }
+      mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3750,6 +3705,7 @@ public class FunctionalTest {
         dataFile6Mb = Paths.get(dataDir, "datafile-6-MB");
       }
     }
+    replicationSrcBucket = System.getenv("MINIO_JAVA_TEST_REPLICATION_SRC_BUCKET");
     replicationRole = System.getenv("MINIO_JAVA_TEST_REPLICATION_ROLE");
     replicationBucketArn = System.getenv("MINIO_JAVA_TEST_REPLICATION_BUCKET_ARN");
 
