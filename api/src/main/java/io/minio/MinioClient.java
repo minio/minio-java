@@ -3818,6 +3818,10 @@ public class MinioClient {
   /**
    * Enables object versioning feature in a bucket.
    *
+   * Versioning feature is available only for erasure coded and distributed erasure coded setups
+   * For further information:
+   * @see <a href="https://docs.minio.io/docs/minio-bucket-versioning-guide.html">Minio bucket versioning guide</a>
+   *
    * <pre>Example:{@code
    * minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucketname").build());
    * }</pre>
