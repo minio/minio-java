@@ -37,7 +37,7 @@ import okhttp3.HttpUrl;
 import okhttp3.Request;
 
 /** Amazon AWS S3 signature V4 signer. */
-class Signer {
+public class Signer {
   //
   // Excerpts from @lsegal - https://github.com/aws/aws-sdk-js/issues/659#issuecomment-120477258
   //
@@ -115,7 +115,7 @@ class Signer {
    * @param secretKey Secret Key string.
    * @param prevSignature Previous signature of chunk upload.
    */
-  public Signer(
+  private Signer(
       Request request,
       String contentSha256,
       ZonedDateTime date,
@@ -132,8 +132,14 @@ class Signer {
     this.prevSignature = prevSignature;
   }
 
-  private void setScope() {
-    this.scope = this.date.format(Time.SIGNER_DATE_FORMAT) + "/" + this.region + "/s3/aws4_request";
+  private void setScope(String serviceName) {
+    this.scope =
+        this.date.format(Time.SIGNER_DATE_FORMAT)
+            + "/"
+            + this.region
+            + "/"
+            + serviceName
+            + "/aws4_request";
   }
 
   private void setCanonicalHeaders() {
@@ -240,7 +246,8 @@ class Signer {
             + this.contentSha256;
   }
 
-  private void setSigningKey() throws NoSuchAlgorithmException, InvalidKeyException {
+  private void setSigningKey(String serviceName)
+      throws NoSuchAlgorithmException, InvalidKeyException {
     String aws4SecretKey = "AWS4" + this.secretKey;
 
     byte[] dateKey =
@@ -250,7 +257,8 @@ class Signer {
 
     byte[] dateRegionKey = sumHmac(dateKey, this.region.getBytes(StandardCharsets.UTF_8));
 
-    byte[] dateRegionServiceKey = sumHmac(dateRegionKey, "s3".getBytes(StandardCharsets.UTF_8));
+    byte[] dateRegionServiceKey =
+        sumHmac(dateRegionKey, serviceName.getBytes(StandardCharsets.UTF_8));
 
     this.signingKey =
         sumHmac(dateRegionServiceKey, "aws4_request".getBytes(StandardCharsets.UTF_8));
@@ -278,9 +286,9 @@ class Signer {
       String chunkSha256, ZonedDateTime date, String region, String secretKey, String prevSignature)
       throws NoSuchAlgorithmException, InvalidKeyException {
     Signer signer = new Signer(null, chunkSha256, date, region, null, secretKey, prevSignature);
-    signer.setScope();
+    signer.setScope("s3");
     signer.setChunkStringToSign();
-    signer.setSigningKey();
+    signer.setSigningKey("s3");
     signer.setSignature();
 
     return signer.signature;
@@ -293,30 +301,49 @@ class Signer {
     ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
 
     Signer signer = new Signer(request, contentSha256, date, region, null, secretKey, null);
-    signer.setScope();
+    signer.setScope("s3");
     signer.setCanonicalRequest();
     signer.setStringToSign();
-    signer.setSigningKey();
+    signer.setSigningKey("s3");
     signer.setSignature();
 
     return signer.signature;
   }
 
   /** Returns signed request object for given request, region, access key and secret key. */
-  public static Request signV4(Request request, String region, String accessKey, String secretKey)
+  private static Request signV4(
+      String serviceName,
+      Request request,
+      String region,
+      String accessKey,
+      String secretKey,
+      String contentSha256)
       throws NoSuchAlgorithmException, InvalidKeyException {
-    String contentSha256 = request.header("x-amz-content-sha256");
     ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
 
     Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
-    signer.setScope();
+    signer.setScope(serviceName);
     signer.setCanonicalRequest();
     signer.setStringToSign();
-    signer.setSigningKey();
+    signer.setSigningKey(serviceName);
     signer.setSignature();
     signer.setAuthorization();
 
     return request.newBuilder().header("Authorization", signer.authorization).build();
+  }
+
+  /** Returns signed request of given request for S3 service. */
+  public static Request signV4S3(
+      Request request, String region, String accessKey, String secretKey, String contentSha256)
+      throws NoSuchAlgorithmException, InvalidKeyException {
+    return signV4("s3", request, region, accessKey, secretKey, contentSha256);
+  }
+
+  /** Returns signed request of given request for STS service. */
+  public static Request signV4Sts(
+      Request request, String region, String accessKey, String secretKey, String contentSha256)
+      throws NoSuchAlgorithmException, InvalidKeyException {
+    return signV4("sts", request, region, accessKey, secretKey, contentSha256);
   }
 
   private void setPresignCanonicalRequest(int expires) throws NoSuchAlgorithmException {
@@ -367,10 +394,10 @@ class Signer {
     ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
 
     Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
-    signer.setScope();
+    signer.setScope("s3");
     signer.setPresignCanonicalRequest(expires);
     signer.setStringToSign();
-    signer.setSigningKey();
+    signer.setSigningKey("s3");
     signer.setSignature();
 
     return signer
@@ -397,7 +424,7 @@ class Signer {
       throws NoSuchAlgorithmException, InvalidKeyException {
     Signer signer = new Signer(null, null, date, region, null, secretKey, null);
     signer.stringToSign = stringToSign;
-    signer.setSigningKey();
+    signer.setSigningKey("s3");
     signer.setSignature();
 
     return signer.signature;
