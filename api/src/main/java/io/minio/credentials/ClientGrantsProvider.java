@@ -33,7 +33,7 @@ public class ClientGrantsProvider extends WebIdentityClientGrantsProvider {
       @Nullable Integer durationSeconds,
       @Nullable String policy,
       @Nullable OkHttpClient customHttpClient) {
-    super(supplier, stsEndpoint, durationSeconds, policy, customHttpClient);
+    super(supplier, stsEndpoint, durationSeconds, policy, null, null, customHttpClient);
   }
 
   protected boolean isWebIdentity() {
