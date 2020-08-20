@@ -18,14 +18,14 @@ import io.minio.MinioClient;
 import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
 import io.minio.credentials.AwsEnvironmentProvider;
-import io.minio.credentials.ChainProvider;
+import io.minio.credentials.ChainedProvider;
 import io.minio.credentials.MinioEnvironmentProvider;
 import io.minio.credentials.Provider;
 
-public class MinioClientWithChainProvider {
+public class MinioClientWithChainedProvider {
   public static void main(String[] args) throws Exception {
     Provider provider =
-        new ChainProvider(new AwsEnvironmentProvider(), new MinioEnvironmentProvider());
+        new ChainedProvider(new AwsEnvironmentProvider(), new MinioEnvironmentProvider());
 
     MinioClient minioClient =
         MinioClient.builder()

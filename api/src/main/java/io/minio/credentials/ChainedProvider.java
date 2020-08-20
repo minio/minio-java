@@ -21,59 +21,40 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 /** Chained credential provider work with list of credential providers. */
-public class ChainProvider implements Provider {
+public class ChainedProvider implements Provider {
   private final List<Provider> providers;
   private Provider currentProvider;
   private Credentials credentials;
 
-  public ChainProvider(@Nonnull Provider... providers) {
+  public ChainedProvider(@Nonnull Provider... providers) {
     this.providers = Arrays.asList(providers);
   }
 
   @Override
-  public Credentials fetch() {
-    if (this.credentials != null && !this.credentials.isExpired()) {
-      return this.credentials;
+  public synchronized Credentials fetch() {
+    if (credentials != null && !credentials.isExpired()) {
+      return credentials;
     }
-
-    Credentials credentials = null;
 
     if (currentProvider != null) {
       try {
         credentials = currentProvider.fetch();
+        return credentials;
       } catch (IllegalStateException e) {
         // Ignore and fallback to iteration.
       }
     }
 
-    if (credentials != null) {
-      synchronized (this) {
-        this.credentials = credentials;
-      }
-
-      return this.credentials;
-    }
-
     for (Provider provider : providers) {
       try {
         credentials = provider.fetch();
-        synchronized (this) {
-          this.currentProvider = provider;
-        }
-        break;
+        currentProvider = provider;
+        return credentials;
       } catch (IllegalStateException e) {
         // Ignore and continue to next iteration.
       }
     }
 
-    if (credentials == null) {
-      throw new IllegalStateException("All providers fail to fetch credentials");
-    }
-
-    synchronized (this) {
-      this.credentials = credentials;
-    }
-
-    return this.credentials;
+    throw new IllegalStateException("All providers fail to fetch credentials");
   }
 }
