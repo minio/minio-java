@@ -17,9 +17,20 @@
 import io.minio.MinioClient;
 import io.minio.SetBucketReplicationArgs;
 import io.minio.errors.MinioException;
+import io.minio.messages.AndOperator;
+import io.minio.messages.DeleteMarkerReplication;
+import io.minio.messages.ReplicationConfiguration;
+import io.minio.messages.ReplicationDestination;
+import io.minio.messages.ReplicationRule;
+import io.minio.messages.ReplicationRuleFilter;
+import io.minio.messages.Status;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class SetBucketReplication {
   /** MinioClient.setBucketReplication() example. */
@@ -40,34 +51,28 @@ public class SetBucketReplication {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      String config =
-          "<ReplicationConfiguration>"
-              + "  <Role>REPLACE-WITH-ACTUAL-REPLICATION-ROLE</Role>"
-              + "  <Rule>"
-              + "    <ID>rule1</ID>"
-              + "    <Status>Enabled</Status>"
-              + "    <Priority>1</Priority>"
-              + "    <DeleteMarkerReplication>"
-              + "      <Status>Disabled</Status>"
-              + "    </DeleteMarkerReplication>"
-              + "    <Filter>"
-              + "      <And>"
-              + "        <Prefix>TaxDocs</Prefix>"
-              + "        <Tag>"
-              + "          <Key>key1</Key>"
-              + "          <Value>value1</Value>"
-              + "        </Tag>"
-              + "        <Tag>"
-              + "          <Key>key2</Key>"
-              + "          <Value>value2</Value>"
-              + "        </Tag>"
-              + "      </And>"
-              + "    </Filter>"
-              + "    <Destination>"
-              + "      <Bucket>REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN</Bucket>"
-              + "    </Destination>"
-              + "  </Rule>"
-              + "</ReplicationConfiguration>";
+      Map<String, String> tags = new HashMap<>();
+      tags.put("key1", "value1");
+      tags.put("key2", "value2");
+
+      ReplicationRule rule =
+          new ReplicationRule(
+              new DeleteMarkerReplication(Status.DISABLED),
+              new ReplicationDestination(
+                  null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
+              null,
+              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              "rule1",
+              null,
+              1,
+              null,
+              Status.ENABLED);
+
+      List<ReplicationRule> rules = new LinkedList<>();
+      rules.add(rule);
+
+      ReplicationConfiguration config =
+          new ReplicationConfiguration("REPLACE-WITH-ACTUAL-ROLE", rules);
 
       minioClient.setBucketReplication(
           SetBucketReplicationArgs.builder().bucket("my-bucketname").config(config).build());

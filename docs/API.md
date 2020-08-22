@@ -526,7 +526,7 @@ String config =
 
 <a name="getBucketReplication"></a>
 ### getBucketReplication(GetBucketReplicationArgs args)
-`public String getBucketReplication(GetBucketReplicationArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketReplication-io.minio.GetBucketReplicationArgs-)_
+`public ReplicationConfiguration getBucketReplication(GetBucketReplicationArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketReplication-io.minio.GetBucketReplicationArgs-)_
 
 Gets bucket replication configuration of a bucket.
 
@@ -536,13 +536,13 @@ __Parameters__
 | ``args``  | _[GetBucketReplicationArgs]_ | Arguments.  |
 
 
-| Returns                                                    |
-|:-----------------------------------------------------------|
-| _String_ - Bucket replication configuration as XML string. |
+| Returns                                                          |
+|:-----------------------------------------------------------------|
+| _[ReplicationConfiguration]_ - Bucket replication configuration. |
 
 __Example__
 ```java
-String config =
+ReplicationConfiguration config =
     minioClient.getBucketReplication(
 	    GetBucketReplicationArgs.builder().bucket("my-bucketname").build());
 ```
@@ -992,34 +992,28 @@ __Parameters__
 
 __Example__
 ```java
-// Lets consider variable 'config' contains below XML String;
-// <ReplicationConfiguration>
-//    <Role>REPLACE-WITH-ACTUAL-REPLICATION-ROLE</Role>
-//    <Rule>
-//      <ID>rule1</ID>
-//      <Status>Enabled</Status>
-//      <Priority>1</Priority>
-//      <DeleteMarkerReplication>
-//        <Status>Disabled</Status>
-//      </DeleteMarkerReplication>
-//      <Filter>
-//        <And>
-//          <Prefix>TaxDocs</Prefix>
-//          <Tag>
-//            <Key>key1</Key>
-//            <Value>value1</Value>
-//          </Tag>
-//          <Tag>
-//            <Key>key2</Key>
-//            <Value>value2</Value>
-//          </Tag>
-//        </And>
-//      </Filter>
-//      <Destination>
-//        <Bucket>REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN</Bucket>
-//      </Destination>
-//    </Rule>
-// </ReplicationConfiguration>
+Map<String, String> tags = new HashMap<>();
+tags.put("key1", "value1");
+tags.put("key2", "value2");
+
+ReplicationRule rule =
+    new ReplicationRule(
+        new DeleteMarkerReplication(Status.DISABLED),
+        new ReplicationDestination(
+            null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
+        null,
+        new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+        "rule1",
+        null,
+        1,
+        null,
+        Status.ENABLED);
+
+List<ReplicationRule> rules = new LinkedList<>();
+rules.add(rule);
+
+ReplicationConfiguration config =
+    new ReplicationConfiguration("REPLACE-WITH-ACTUAL-ROLE", rules);
 
 minioClient.setBucketReplication(
     SetBucketReplicationArgs.builder().bucket("my-bucketname").config(config).build());
@@ -1959,3 +1953,4 @@ ObjectStat objectStat =
 [DeleteBucketReplicationArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketReplicationArgs.html
 [GetBucketReplicationArgs]: http://minio.github.io/minio-java/io/minio/GetBucketReplicationArgs.html
 [SetBucketReplicationArgs]: http://minio.github.io/minio-java/io/minio/SetBucketReplicationArgs.html
+[ReplicationConfiguration]: http://minio.github.io/minio-java/io/minio/messages/ReplicationConfiguration.html

@@ -17,6 +17,7 @@
 import io.minio.GetBucketReplicationArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import io.minio.messages.ReplicationConfiguration;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -40,7 +41,7 @@ public class GetBucketReplication {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      String config =
+      ReplicationConfiguration config =
           minioClient.getBucketReplication(
               GetBucketReplicationArgs.builder().bucket("my-bucketname").build());
       System.out.println(" Replication configuration is: " + config);
