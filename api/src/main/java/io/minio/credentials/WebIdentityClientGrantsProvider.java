@@ -30,6 +30,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Path;
+import org.simpleframework.xml.Root;
 
 /** Base class of WebIdentity and ClientGrants providers. */
 public abstract class WebIdentityClientGrantsProvider implements Provider {
@@ -41,6 +45,8 @@ public abstract class WebIdentityClientGrantsProvider implements Provider {
   private final HttpUrl stsEndpoint;
   private final Integer durationSeconds;
   private final String policy;
+  private final String roleArn;
+  private final String roleSessionName;
   private final OkHttpClient httpClient;
   private Credentials credentials;
 
@@ -49,12 +55,16 @@ public abstract class WebIdentityClientGrantsProvider implements Provider {
       @Nonnull String stsEndpoint,
       @Nullable Integer durationSeconds,
       @Nullable String policy,
+      @Nullable String roleArn,
+      @Nullable String roleSessionName,
       @Nullable OkHttpClient customHttpClient) {
     this.supplier = Objects.requireNonNull(supplier, "JWT token supplier must not be null");
     stsEndpoint = Objects.requireNonNull(stsEndpoint, "STS endpoint cannot be empty");
     this.stsEndpoint = Objects.requireNonNull(HttpUrl.parse(stsEndpoint), "Invalid STS endpoint");
     this.durationSeconds = durationSeconds;
     this.policy = policy;
+    this.roleArn = roleArn;
+    this.roleSessionName = roleSessionName;
     this.httpClient = (customHttpClient != null) ? customHttpClient : new OkHttpClient();
   }
 
@@ -75,79 +85,93 @@ public abstract class WebIdentityClientGrantsProvider implements Provider {
   }
 
   @Override
-  public Credentials fetch() {
+  public synchronized Credentials fetch() {
     if (credentials != null && !credentials.isExpired()) {
       return credentials;
     }
 
-    synchronized (this) {
-      Jwt jwt = supplier.get();
+    Jwt jwt = supplier.get();
 
-      HttpUrl.Builder urlBuilder =
-          stsEndpoint.newBuilder().addQueryParameter("Version", "2011-06-15");
+    HttpUrl.Builder urlBuilder =
+        stsEndpoint.newBuilder().addQueryParameter("Version", "2011-06-15");
 
-      int durationSeconds = getDurationSeconds(jwt.expiry());
-      if (durationSeconds > 0) {
-        urlBuilder.addQueryParameter("DurationSeconds", String.valueOf(durationSeconds));
+    int durationSeconds = getDurationSeconds(jwt.expiry());
+    if (durationSeconds > 0) {
+      urlBuilder.addQueryParameter("DurationSeconds", String.valueOf(durationSeconds));
+    }
+
+    if (policy != null) {
+      urlBuilder.addQueryParameter("Policy", policy);
+    }
+
+    if (isWebIdentity()) {
+      urlBuilder
+          .addQueryParameter("Action", "AssumeRoleWithWebIdentity")
+          .addQueryParameter("WebIdentityToken", jwt.token());
+      if (roleArn != null) {
+        urlBuilder
+            .addQueryParameter("RoleArn", roleArn)
+            .addQueryParameter(
+                "RoleSessionName",
+                (roleSessionName != null)
+                    ? roleSessionName
+                    : String.valueOf(System.currentTimeMillis()));
       }
+    } else {
+      urlBuilder
+          .addQueryParameter("Action", "AssumeRoleWithClientGrants")
+          .addQueryParameter("Token", jwt.token());
+    }
 
-      if (policy != null) {
-        urlBuilder.addQueryParameter("Policy", policy);
+    Request request =
+        new Request.Builder().url(urlBuilder.build()).method("POST", EMPTY_BODY).build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        throw new IllegalStateException(
+            "STS service failed with HTTP status code " + response.code());
       }
 
       if (isWebIdentity()) {
-        urlBuilder
-            .addQueryParameter("Action", "AssumeRoleWithWebIdentity")
-            .addQueryParameter("WebIdentityToken", jwt.token());
-        if (roleArn() != null) {
-          urlBuilder
-              .addQueryParameter("RoleArn", roleArn())
-              .addQueryParameter("RoleSessionName", roleSessionName());
-        }
+        WebIdentityResponse result =
+            Xml.unmarshal(WebIdentityResponse.class, response.body().charStream());
+        credentials = result.credentials();
       } else {
-        urlBuilder
-            .addQueryParameter("Action", "AssumeRoleWithClientGrants")
-            .addQueryParameter("Token", jwt.token());
+        ClientGrantsResponse result =
+            Xml.unmarshal(ClientGrantsResponse.class, response.body().charStream());
+        credentials = result.credentials();
       }
 
-      Request request =
-          new Request.Builder().url(urlBuilder.build()).method("POST", EMPTY_BODY).build();
-      Response response = null;
-      try {
-        response = httpClient.newCall(request).execute();
-        if (!response.isSuccessful()) {
-          throw new IllegalStateException(
-              "STS service failed with HTTP status code " + response.code());
-        }
-
-        if (isWebIdentity()) {
-          AssumeRoleWithWebIdentityResponse result =
-              Xml.unmarshal(AssumeRoleWithWebIdentityResponse.class, response.body().charStream());
-          this.credentials = result.credentials();
-        } else {
-          AssumeRoleWithClientGrantsResponse result =
-              Xml.unmarshal(AssumeRoleWithClientGrantsResponse.class, response.body().charStream());
-          this.credentials = result.credentials();
-        }
-      } catch (XmlParserException | IOException e) {
-        throw new IllegalStateException("Unable to parse STS response", e);
-      } finally {
-        if (response != null) {
-          response.close();
-        }
-      }
+      return credentials;
+    } catch (XmlParserException | IOException e) {
+      throw new IllegalStateException("Unable to parse STS response", e);
     }
-
-    return this.credentials;
-  }
-
-  protected String roleArn() {
-    return null;
-  }
-
-  protected String roleSessionName() {
-    return null;
   }
 
   protected abstract boolean isWebIdentity();
+
+  /** Object representation of response XML of AssumeRoleWithWebIdentity API. */
+  @Root(name = "AssumeRoleWithWebIdentityResponse", strict = false)
+  @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
+  public static class WebIdentityResponse {
+    @Path(value = "AssumeRoleWithWebIdentityResult")
+    @Element(name = "Credentials")
+    private Credentials credentials;
+
+    public Credentials credentials() {
+      return credentials;
+    }
+  }
+
+  /** Object representation of response XML of AssumeRoleWithClientGrants API. */
+  @Root(name = "AssumeRoleWithClientGrantsResponse", strict = false)
+  @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
+  public static class ClientGrantsResponse {
+    @Path(value = "AssumeRoleWithClientGrantsResult")
+    @Element(name = "Credentials")
+    private Credentials credentials;
+
+    public Credentials credentials() {
+      return credentials;
+    }
+  }
 }

@@ -27,9 +27,6 @@ import okhttp3.OkHttpClient;
  * API</a>.
  */
 public class WebIdentityProvider extends WebIdentityClientGrantsProvider {
-  private final String roleArn;
-  private final String roleSessionName;
-
   public WebIdentityProvider(
       @Nonnull Supplier<Jwt> supplier,
       @Nonnull String stsEndpoint,
@@ -38,22 +35,11 @@ public class WebIdentityProvider extends WebIdentityClientGrantsProvider {
       @Nullable String roleArn,
       @Nullable String roleSessionName,
       @Nullable OkHttpClient customHttpClient) {
-    super(supplier, stsEndpoint, durationSeconds, policy, customHttpClient);
-    this.roleArn = roleArn;
-    this.roleSessionName = roleSessionName;
+    super(
+        supplier, stsEndpoint, durationSeconds, policy, roleArn, roleSessionName, customHttpClient);
   }
 
   protected boolean isWebIdentity() {
     return true;
-  }
-
-  @Override
-  protected String roleArn() {
-    return roleArn;
-  }
-
-  @Override
-  protected String roleSessionName() {
-    return (roleSessionName != null) ? roleSessionName : String.valueOf(System.currentTimeMillis());
   }
 }
