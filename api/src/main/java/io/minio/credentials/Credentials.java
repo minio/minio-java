@@ -71,6 +71,6 @@ public class Credentials {
       return false;
     }
 
-    return ZonedDateTime.now().plus(Duration.ofSeconds(30)).isAfter(expiration.zonedDateTime());
+    return ZonedDateTime.now().plus(Duration.ofSeconds(10)).isAfter(expiration.zonedDateTime());
   }
 }

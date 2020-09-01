@@ -17,13 +17,15 @@
 package io.minio.credentials;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /** Fixed credential provider. */
 public class StaticProvider implements Provider {
   private final Credentials credentials;
 
-  public StaticProvider(@Nonnull String accessKey, @Nonnull String secretKey) {
-    this.credentials = new Credentials(accessKey, secretKey, null, null);
+  public StaticProvider(
+      @Nonnull String accessKey, @Nonnull String secretKey, @Nullable String sessionToken) {
+    this.credentials = new Credentials(accessKey, secretKey, sessionToken, null);
   }
 
   @Override

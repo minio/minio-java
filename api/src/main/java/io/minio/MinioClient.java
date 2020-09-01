@@ -8171,7 +8171,7 @@ public class MinioClient {
     }
 
     public Builder credentials(String accessKey, String secretKey) {
-      this.provider = new StaticProvider(accessKey, secretKey);
+      this.provider = new StaticProvider(accessKey, secretKey, null);
       return this;
     }
 
