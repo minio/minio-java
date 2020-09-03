@@ -16,10 +16,19 @@
 
 package io.minio.credentials;
 
+import io.minio.Xml;
+import io.minio.errors.XmlParserException;
+import java.io.IOException;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Path;
+import org.simpleframework.xml.Root;
 
 /**
  * Credential provider using <a
@@ -39,7 +48,38 @@ public class WebIdentityProvider extends WebIdentityClientGrantsProvider {
         supplier, stsEndpoint, durationSeconds, policy, roleArn, roleSessionName, customHttpClient);
   }
 
-  protected boolean isWebIdentity() {
-    return true;
+  @Override
+  protected HttpUrl.Builder newUrlBuilder(Jwt jwt) {
+    HttpUrl.Builder urlBuilder =
+        newUrlBuilder(
+            stsEndpoint,
+            "AssumeRoleWithWebIdentity",
+            getDurationSeconds(jwt.expiry()),
+            policy,
+            roleArn,
+            (roleArn != null && roleSessionName == null)
+                ? String.valueOf(System.currentTimeMillis())
+                : roleSessionName);
+    return urlBuilder.addQueryParameter("WebIdentityToken", jwt.token());
+  }
+
+  @Override
+  protected Credentials parseResponse(Response response) throws XmlParserException, IOException {
+    WebIdentityResponse result =
+        Xml.unmarshal(WebIdentityResponse.class, response.body().charStream());
+    return result.credentials();
+  }
+
+  /** Object representation of response XML of AssumeRoleWithWebIdentity API. */
+  @Root(name = "AssumeRoleWithWebIdentityResponse", strict = false)
+  @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
+  public static class WebIdentityResponse {
+    @Path(value = "AssumeRoleWithWebIdentityResult")
+    @Element(name = "Credentials")
+    private Credentials credentials;
+
+    public Credentials credentials() {
+      return credentials;
+    }
   }
 }

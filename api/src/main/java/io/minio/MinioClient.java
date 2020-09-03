@@ -1034,7 +1034,13 @@ public class MinioClient {
     Credentials creds = (provider == null) ? null : provider.fetch();
     Request request = createRequest(url, method, headerMap, body, length, creds);
     if (creds != null) {
-      request = Signer.signV4(request, region, creds.accessKey(), creds.secretKey());
+      request =
+          Signer.signV4S3(
+              request,
+              region,
+              creds.accessKey(),
+              creds.secretKey(),
+              request.header("x-amz-content-sha256"));
     }
 
     if (this.traceStream != null) {

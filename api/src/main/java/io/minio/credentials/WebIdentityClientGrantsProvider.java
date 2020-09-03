@@ -16,9 +16,6 @@
 
 package io.minio.credentials;
 
-import io.minio.Xml;
-import io.minio.errors.XmlParserException;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -29,26 +26,19 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.simpleframework.xml.Element;
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Path;
-import org.simpleframework.xml.Root;
 
 /** Base class of WebIdentity and ClientGrants providers. */
-public abstract class WebIdentityClientGrantsProvider implements Provider {
+public abstract class WebIdentityClientGrantsProvider extends AssumeRoleBaseProvider {
   public static final int MIN_DURATION_SECONDS = (int) TimeUnit.MINUTES.toSeconds(15);
   public static final int MAX_DURATION_SECONDS = (int) TimeUnit.DAYS.toSeconds(7);
   private static final RequestBody EMPTY_BODY =
       RequestBody.create(MediaType.parse("application/octet-stream"), new byte[] {});
   private final Supplier<Jwt> supplier;
-  private final HttpUrl stsEndpoint;
-  private final Integer durationSeconds;
-  private final String policy;
-  private final String roleArn;
-  private final String roleSessionName;
-  private final OkHttpClient httpClient;
-  private Credentials credentials;
+  protected final HttpUrl stsEndpoint;
+  protected final Integer durationSeconds;
+  protected final String policy;
+  protected final String roleArn;
+  protected final String roleSessionName;
 
   public WebIdentityClientGrantsProvider(
       @Nonnull Supplier<Jwt> supplier,
@@ -58,6 +48,7 @@ public abstract class WebIdentityClientGrantsProvider implements Provider {
       @Nullable String roleArn,
       @Nullable String roleSessionName,
       @Nullable OkHttpClient customHttpClient) {
+    super(customHttpClient);
     this.supplier = Objects.requireNonNull(supplier, "JWT token supplier must not be null");
     stsEndpoint = Objects.requireNonNull(stsEndpoint, "STS endpoint cannot be empty");
     this.stsEndpoint = Objects.requireNonNull(HttpUrl.parse(stsEndpoint), "Invalid STS endpoint");
@@ -65,10 +56,9 @@ public abstract class WebIdentityClientGrantsProvider implements Provider {
     this.policy = policy;
     this.roleArn = roleArn;
     this.roleSessionName = roleSessionName;
-    this.httpClient = (customHttpClient != null) ? customHttpClient : new OkHttpClient();
   }
 
-  private int getDurationSeconds(int expiry) {
+  protected int getDurationSeconds(int expiry) {
     if (durationSeconds != null && durationSeconds > 0) {
       expiry = durationSeconds;
     }
@@ -85,93 +75,11 @@ public abstract class WebIdentityClientGrantsProvider implements Provider {
   }
 
   @Override
-  public synchronized Credentials fetch() {
-    if (credentials != null && !credentials.isExpired()) {
-      return credentials;
-    }
-
+  protected Request getRequest() {
     Jwt jwt = supplier.get();
-
-    HttpUrl.Builder urlBuilder =
-        stsEndpoint.newBuilder().addQueryParameter("Version", "2011-06-15");
-
-    int durationSeconds = getDurationSeconds(jwt.expiry());
-    if (durationSeconds > 0) {
-      urlBuilder.addQueryParameter("DurationSeconds", String.valueOf(durationSeconds));
-    }
-
-    if (policy != null) {
-      urlBuilder.addQueryParameter("Policy", policy);
-    }
-
-    if (isWebIdentity()) {
-      urlBuilder
-          .addQueryParameter("Action", "AssumeRoleWithWebIdentity")
-          .addQueryParameter("WebIdentityToken", jwt.token());
-      if (roleArn != null) {
-        urlBuilder
-            .addQueryParameter("RoleArn", roleArn)
-            .addQueryParameter(
-                "RoleSessionName",
-                (roleSessionName != null)
-                    ? roleSessionName
-                    : String.valueOf(System.currentTimeMillis()));
-      }
-    } else {
-      urlBuilder
-          .addQueryParameter("Action", "AssumeRoleWithClientGrants")
-          .addQueryParameter("Token", jwt.token());
-    }
-
-    Request request =
-        new Request.Builder().url(urlBuilder.build()).method("POST", EMPTY_BODY).build();
-    try (Response response = httpClient.newCall(request).execute()) {
-      if (!response.isSuccessful()) {
-        throw new IllegalStateException(
-            "STS service failed with HTTP status code " + response.code());
-      }
-
-      if (isWebIdentity()) {
-        WebIdentityResponse result =
-            Xml.unmarshal(WebIdentityResponse.class, response.body().charStream());
-        credentials = result.credentials();
-      } else {
-        ClientGrantsResponse result =
-            Xml.unmarshal(ClientGrantsResponse.class, response.body().charStream());
-        credentials = result.credentials();
-      }
-
-      return credentials;
-    } catch (XmlParserException | IOException e) {
-      throw new IllegalStateException("Unable to parse STS response", e);
-    }
+    HttpUrl.Builder urlBuilder = newUrlBuilder(jwt);
+    return new Request.Builder().url(urlBuilder.build()).method("POST", EMPTY_BODY).build();
   }
 
-  protected abstract boolean isWebIdentity();
-
-  /** Object representation of response XML of AssumeRoleWithWebIdentity API. */
-  @Root(name = "AssumeRoleWithWebIdentityResponse", strict = false)
-  @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class WebIdentityResponse {
-    @Path(value = "AssumeRoleWithWebIdentityResult")
-    @Element(name = "Credentials")
-    private Credentials credentials;
-
-    public Credentials credentials() {
-      return credentials;
-    }
-  }
-
-  /** Object representation of response XML of AssumeRoleWithClientGrants API. */
-  @Root(name = "AssumeRoleWithClientGrantsResponse", strict = false)
-  @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class ClientGrantsResponse {
-    @Path(value = "AssumeRoleWithClientGrantsResult")
-    @Element(name = "Credentials")
-    private Credentials credentials;
-
-    public Credentials credentials() {
-      return credentials;
-    }
-  }
+  protected abstract HttpUrl.Builder newUrlBuilder(Jwt jwt);
 }

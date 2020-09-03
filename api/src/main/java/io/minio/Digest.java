@@ -28,7 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
 /** Various global static functions used. */
-class Digest {
+public class Digest {
   /** Private constructor. */
   private Digest() {}
 
