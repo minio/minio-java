@@ -320,7 +320,7 @@ public class FunctionalTest {
         return response.body().bytes();
       }
 
-      String errorXml = new String(response.body().bytes(), StandardCharsets.UTF_8);
+      String errorXml = response.body().string();
       throw new Exception(
           "failed to create object. Response: " + response + ", Response body: " + errorXml);
     } finally {
@@ -350,7 +350,7 @@ public class FunctionalTest {
 
     try {
       if (!response.isSuccessful()) {
-        String errorXml = new String(response.body().bytes(), StandardCharsets.UTF_8);
+        String errorXml = response.body().string();
         throw new Exception(
             "failed to create object. Response: " + response + ", Response body: " + errorXml);
       }
@@ -1698,7 +1698,7 @@ public class FunctionalTest {
 
       try {
         if (!response.isSuccessful()) {
-          String errorXml = new String(response.body().bytes(), StandardCharsets.UTF_8);
+          String errorXml = response.body().string();
           throw new Exception(
               "failed to upload object. Response: " + response + ", Error: " + errorXml);
         }
