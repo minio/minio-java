@@ -68,12 +68,43 @@ public class IamAwsProvider extends EnvironmentProvider {
     try {
       for (InetAddress addr : InetAddress.getAllByName(url.host())) {
         if (!addr.isLoopbackAddress()) {
-          throw new IllegalArgumentException(url.host() + " is not loopback only host");
+          throw new IllegalStateException(url.host() + " is not loopback only host");
         }
       }
     } catch (UnknownHostException e) {
       throw new IllegalStateException("Host in " + url + " is not loopback address");
     }
+  }
+
+  private Credentials fetchCredentials(String tokenFile) {
+    HttpUrl url = this.customEndpoint;
+    if (url == null) {
+      String region = getProperty("AWS_REGION");
+      url =
+          HttpUrl.parse(
+              (region == null)
+                  ? "https://sts.amazonaws.com"
+                  : "https://sts." + region + ".amazonaws.com");
+    }
+
+    Provider provider =
+        new WebIdentityProvider(
+            () -> {
+              try {
+                byte[] data = Files.readAllBytes(Paths.get(tokenFile));
+                return new Jwt(new String(data, StandardCharsets.UTF_8), 0);
+              } catch (IOException e) {
+                throw new IllegalStateException("Error in reading file " + tokenFile, e);
+              }
+            },
+            url.toString(),
+            null,
+            null,
+            getProperty("AWS_ROLE_ARN"),
+            getProperty("AWS_ROLE_SESSION_NAME"),
+            httpClient);
+    credentials = provider.fetch();
+    return credentials;
   }
 
   private Credentials fetchCredentials(HttpUrl url) {
@@ -93,14 +124,41 @@ public class IamAwsProvider extends EnvironmentProvider {
     }
   }
 
-  private Jwt getToken() {
-    String tokenFile = getProperty("AWS_WEB_IDENTITY_TOKEN_FILE");
-    try {
-      byte[] data = Files.readAllBytes(Paths.get(tokenFile));
-      return new Jwt(new String(data, StandardCharsets.UTF_8), 0);
+  private String getIamRoleName(HttpUrl url) {
+    String[] roleNames = null;
+    try (Response response =
+        httpClient.newCall(new Request.Builder().url(url).method("GET", null).build()).execute()) {
+      if (!response.isSuccessful()) {
+        throw new IllegalStateException(url + " failed with HTTP status code " + response.code());
+      }
+
+      roleNames = response.body().string().split("\\R");
     } catch (IOException e) {
-      throw new IllegalStateException("Error in reading file " + tokenFile, e);
+      throw new IllegalStateException("Unable to parse response", e);
     }
+
+    if (roleNames.length == 0) {
+      throw new IllegalStateException("No IAM roles attached to EC2 service " + url);
+    }
+
+    return roleNames[0];
+  }
+
+  private HttpUrl getIamRoleNamedUrl() {
+    HttpUrl url = this.customEndpoint;
+    if (url == null) {
+      url = HttpUrl.parse("http://169.254.169.254/latest/meta-data/iam/security-credentials/");
+    } else {
+      url =
+          new HttpUrl.Builder()
+              .scheme(url.scheme())
+              .host(url.host())
+              .addPathSegments("latest/meta-data/iam/security-credentials/")
+              .build();
+    }
+
+    String roleName = getIamRoleName(url);
+    return url.newBuilder().addPathSegment(roleName).build();
   }
 
   @Override
@@ -110,26 +168,9 @@ public class IamAwsProvider extends EnvironmentProvider {
     }
 
     HttpUrl url = this.customEndpoint;
-    if (getProperty("AWS_WEB_IDENTITY_TOKEN_FILE") != null) {
-      if (url == null) {
-        String region = getProperty("AWS_REGION");
-        url =
-            HttpUrl.parse(
-                (region == null)
-                    ? "https://sts.amazonaws.com"
-                    : "https://sts." + region + ".amazonaws.com");
-      }
-
-      Provider provider =
-          new WebIdentityProvider(
-              () -> getToken(),
-              url.toString(),
-              null,
-              null,
-              getProperty("AWS_ROLE_ARN"),
-              getProperty("AWS_ROLE_SESSION_NAME"),
-              httpClient);
-      credentials = provider.fetch();
+    String tokenFile = getProperty("AWS_WEB_IDENTITY_TOKEN_FILE");
+    if (tokenFile != null) {
+      credentials = fetchCredentials(tokenFile);
       return credentials;
     }
 
@@ -148,36 +189,7 @@ public class IamAwsProvider extends EnvironmentProvider {
       }
       checkLoopbackHost(url);
     } else {
-      if (url == null) {
-        url = HttpUrl.parse("http://169.254.169.254/latest/meta-data/iam/security-credentials/");
-      } else {
-        url =
-            new HttpUrl.Builder()
-                .scheme(url.scheme())
-                .host(url.host())
-                .addPathSegments("latest/meta-data/iam/security-credentials/")
-                .build();
-      }
-
-      String[] roleNames = null;
-      try (Response response =
-          httpClient
-              .newCall(new Request.Builder().url(url).method("GET", null).build())
-              .execute()) {
-        if (!response.isSuccessful()) {
-          throw new IllegalStateException(url + " failed with HTTP status code " + response.code());
-        }
-
-        roleNames = response.body().string().split("\\R");
-      } catch (IOException e) {
-        throw new IllegalStateException("Unable to parse response", e);
-      }
-
-      if (roleNames.length == 0) {
-        throw new IllegalStateException("No IAM roles attached to EC2 service " + url);
-      }
-
-      url = url.newBuilder().addPathSegment(roleNames[0]).build();
+      url = getIamRoleNamedUrl();
     }
 
     credentials = fetchCredentials(url);
