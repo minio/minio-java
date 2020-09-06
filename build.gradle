@@ -46,6 +46,7 @@ subprojects {
     apply plugin: "com.diffplug.gradle.spotless"
 
     repositories {
+        mavenLocal()
         mavenCentral()
     }
 
@@ -165,6 +166,7 @@ project(':api') {
     publishing {
         publications {
             mavenJava(MavenPublication) {
+                artifactId archivesBaseName
 	        from components.java
 		artifact sourcesJar
 		artifact shadowJar
