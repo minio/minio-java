@@ -2874,7 +2874,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param policy Post policy of an object.
-   * @return Map&ltString, String&gt - Contains form-data to upload an object using POST method.
+   * @return {@code Map<String, String>} - Contains form-data to upload an object using POST method.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3006,7 +3006,7 @@ public class MinioClient {
    *
    * @param bucketName Name of the bucket.
    * @param objectNames List of Object names in the bucket.
-   * @return Iterable&ltResult&ltDeleteError&gt&gt - Lazy iterator contains object removal status.
+   * @return {@code Iterable<Result<DeleteError>>} - Lazy iterator contains object removal status.
    * @deprecated use {@link #removeObjects(RemoveObjectsArgs)}
    */
   @Deprecated
@@ -3042,7 +3042,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args {@link RemoveObjectsArgs} object.
-   * @return Iterable&ltResult&ltDeleteError&gt&gt - Lazy iterator contains object removal status.
+   * @return {@code Iterable<Result<DeleteError>>} - Lazy iterator contains object removal status.
    */
   public Iterable<Result<DeleteError>> removeObjects(RemoveObjectsArgs args) {
     checkArgs(args);
@@ -3174,7 +3174,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param bucketName Name of the bucket.
-   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
+   * @return {@code Iterable<Result<Item>>} - Lazy iterator contains object information.
    * @throws XmlParserException upon parsing response xml
    * @deprecated use {@link #listObjects(ListObjectsArgs)}
    */
@@ -3197,7 +3197,7 @@ public class MinioClient {
    *
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
-   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
+   * @return {@code Iterable<Result<Item>>} - Lazy iterator contains object information.
    * @throws XmlParserException upon parsing response xml
    * @deprecated use {@link #listObjects(ListObjectsArgs)}
    */
@@ -3224,7 +3224,7 @@ public class MinioClient {
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
    * @param recursive List recursively than directory structure emulation.
-   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
+   * @return {@code Iterable<Result<Item>>} - Lazy iterator contains object information.
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
    * @see #listObjects(String bucketName, String prefix, boolean recursive, boolean useVersion1)
@@ -3253,7 +3253,7 @@ public class MinioClient {
    * @param prefix Object name starts with prefix.
    * @param recursive List recursively than directory structure emulation.
    * @param useVersion1 when true, version 1 of REST API is used.
-   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
+   * @return {@code Iterable<Result<Item>>} - Lazy iterator contains object information.
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
    * @see #listObjects(String bucketName, String prefix, boolean recursive)
@@ -3288,7 +3288,7 @@ public class MinioClient {
    * @param includeUserMetadata include user metadata of each object. This is MinIO specific
    *     extension to ListObjectsV2.
    * @param useVersion1 when true, version 1 of REST API is used.
-   * @return Iterable&ltResult&ltItem&gt&gt - Lazy iterator contains object information.
+   * @return {@code Iterable<Result<Item>>} - Lazy iterator contains object information.
    * @see #listObjects(String bucketName)
    * @see #listObjects(String bucketName, String prefix)
    * @see #listObjects(String bucketName, String prefix, boolean recursive)
@@ -3351,7 +3351,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args Instance of {@link ListObjectsArgs} built using the builder
-   * @return Iterable&lt;Result&lt;Item&gt;&gt; - Lazy iterator contains object information.
+   * @return {@code Iterable<Result<Item>>} - Lazy iterator contains object information.
    * @throws XmlParserException upon parsing response xml
    */
   public Iterable<Result<Item>> listObjects(ListObjectsArgs args) {
@@ -3629,7 +3629,7 @@ public class MinioClient {
    * }
    * }</pre>
    *
-   * @return List&ltBucket&gt - List of bucket information.
+   * @return {@code List<Bucket>} - List of bucket information.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3661,7 +3661,7 @@ public class MinioClient {
    * }
    * }</pre>
    *
-   * @return List&ltBucket&gt - List of bucket information.
+   * @return {@code List<Bucket>} - List of bucket information.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -5887,7 +5887,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param bucketName Name of the bucket.
-   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
+   * @return {@code Iterable<Result<Upload>>} - Lazy iterator contains object upload information.
    * @see #listIncompleteUploads(String, String, boolean)
    */
   @Deprecated
@@ -5910,7 +5910,7 @@ public class MinioClient {
    *
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
-   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
+   * @return {@code Iterable<Result<Upload>>} - Lazy iterator contains object upload information.
    * @throws XmlParserException upon parsing response xml
    * @see #listIncompleteUploads(String, String, boolean)
    */
@@ -5935,7 +5935,7 @@ public class MinioClient {
    * @param bucketName Name of the bucket.
    * @param prefix Object name starts with prefix.
    * @param recursive List recursively than directory structure emulation.
-   * @return Iterable&ltResult&ltUpload&gt&gt - Lazy iterator contains object upload information.
+   * @return {@code Iterable<Result<Upload>>} - Lazy iterator contains object upload information.
    * @see #listIncompleteUploads(String bucketName)
    * @see #listIncompleteUploads(String bucketName, String prefix)
    */
@@ -6300,7 +6300,7 @@ public class MinioClient {
    * @param prefix Listen events of object starts with prefix.
    * @param suffix Listen events of object ends with suffix.
    * @param events Events to listen.
-   * @return CloseableIterator&ltResult&ltNotificationRecords&gt&gt - Lazy closable iterator
+   * @return {@code CloseableIterator<Result<NotificationRecords>>} - Lazy closable iterator
    *     contains event records.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -6358,7 +6358,7 @@ public class MinioClient {
    * }</pre>
    *
    * @param args {@link ListenBucketNotificationArgs} object.
-   * @return CloseableIterator&ltResult&ltNotificationRecords&gt&gt - Lazy closable iterator
+   * @return {@code CloseableIterator<Result<NotificationRecords>>} - Lazy closable iterator
    *     contains event records.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
