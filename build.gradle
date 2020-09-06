@@ -52,11 +52,11 @@ subprojects {
 
     dependencies {
         compile "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
-        compile "com.google.guava:guava:25.1-jre"
+        compile "com.google.guava:guava:29.0-jre"
         compile "com.squareup.okhttp3:okhttp:4.8.1"
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.10.3"
-        compile "com.fasterxml.jackson.core:jackson-core:2.10.3"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.10.3"
+        compile "com.fasterxml.jackson.core:jackson-annotations:2.11.2"
+        compile "com.fasterxml.jackson.core:jackson-core:2.11.2"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.11.2"
         compile 'com.github.spotbugs:spotbugs-annotations:4.1.2'
         compile 'net.jcip:jcip-annotations:1.0'
         compile 'com.google.code.findbugs:jsr305:3.0.2'
