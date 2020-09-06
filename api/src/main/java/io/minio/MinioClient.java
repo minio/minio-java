@@ -1086,7 +1086,7 @@ public class MinioClient {
 
     String errorXml = null;
     try (ResponseBody responseBody = response.body()) {
-      errorXml = new String(responseBody.bytes(), StandardCharsets.UTF_8);
+      errorXml = responseBody.string();
     }
 
     if (this.traceStream != null && !("".equals(errorXml) && method.equals(Method.HEAD))) {
@@ -5514,7 +5514,7 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
     try (Response response = executeGet(args, null, newMultimap("lifecycle", ""))) {
-      return new String(response.body().bytes(), StandardCharsets.UTF_8);
+      return response.body().string();
     } catch (ErrorResponseException e) {
       if (!e.errorResponse().code().equals("NoSuchLifecycleConfiguration")) {
         throw e;
@@ -7220,7 +7220,7 @@ public class MinioClient {
             queryParams,
             new CompleteMultipartUpload(parts),
             0)) {
-      String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
+      String bodyContent = response.body().string();
       bodyContent = bodyContent.trim();
       if (!bodyContent.isEmpty()) {
         try {
@@ -7375,7 +7375,7 @@ public class MinioClient {
             merge(extraQueryParams, newMultimap("delete", "")),
             new DeleteRequest(objectList, quiet),
             0)) {
-      String bodyContent = new String(response.body().bytes(), StandardCharsets.UTF_8);
+      String bodyContent = response.body().string();
       try {
         if (Xml.validate(DeleteError.class, bodyContent)) {
           DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
