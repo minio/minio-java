@@ -32,7 +32,7 @@ public abstract class WebIdentityClientGrantsProvider extends AssumeRoleBaseProv
   public static final int MIN_DURATION_SECONDS = (int) TimeUnit.MINUTES.toSeconds(15);
   public static final int MAX_DURATION_SECONDS = (int) TimeUnit.DAYS.toSeconds(7);
   private static final RequestBody EMPTY_BODY =
-      RequestBody.create(MediaType.parse("application/octet-stream"), new byte[] {});
+      RequestBody.create(new byte[] {}, MediaType.parse("application/octet-stream"));
   private final Supplier<Jwt> supplier;
   protected final HttpUrl stsEndpoint;
   protected final Integer durationSeconds;

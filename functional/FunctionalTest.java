@@ -336,7 +336,7 @@ public class FunctionalTest {
     Request request =
         requestBuilder
             .url(HttpUrl.parse(urlString))
-            .method("PUT", RequestBody.create(null, dataBytes))
+            .method("PUT", RequestBody.create(dataBytes, null))
             .addHeader("x-amz-acl", "bucket-owner-full-control")
             .build();
     OkHttpClient transport =
@@ -1670,7 +1670,7 @@ public class FunctionalTest {
       multipartBuilder.addFormDataPart(
           "file",
           objectName,
-          RequestBody.create(null, readAllBytes(new ContentInputStream(1 * MB))));
+          RequestBody.create(readAllBytes(new ContentInputStream(1 * MB)), null));
 
       Request.Builder requestBuilder = new Request.Builder();
       String urlString =

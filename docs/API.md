@@ -1555,7 +1555,7 @@ multipartBuilder.addFormDataPart("Content-Type", "image/png");
 
 // "file" must be added at last.
 multipartBuilder.addFormDataPart(
-    "file", "my-objectname", RequestBody.create(null, new File("Pictures/avatar.png")));
+    "file", "my-objectname", RequestBody.create(new File("Pictures/avatar.png"), null));
 
 Request request =
     new Request.Builder()
