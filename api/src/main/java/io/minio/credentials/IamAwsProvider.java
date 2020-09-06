@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.ProviderException;
 import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -68,11 +69,11 @@ public class IamAwsProvider extends EnvironmentProvider {
     try {
       for (InetAddress addr : InetAddress.getAllByName(url.host())) {
         if (!addr.isLoopbackAddress()) {
-          throw new IllegalStateException(url.host() + " is not loopback only host");
+          throw new ProviderException(url.host() + " is not loopback only host");
         }
       }
     } catch (UnknownHostException e) {
-      throw new IllegalStateException("Host in " + url + " is not loopback address");
+      throw new ProviderException("Host in " + url + " is not loopback address");
     }
   }
 
@@ -94,7 +95,7 @@ public class IamAwsProvider extends EnvironmentProvider {
                 byte[] data = Files.readAllBytes(Paths.get(tokenFile));
                 return new Jwt(new String(data, StandardCharsets.UTF_8), 0);
               } catch (IOException e) {
-                throw new IllegalStateException("Error in reading file " + tokenFile, e);
+                throw new ProviderException("Error in reading file " + tokenFile, e);
               }
             },
             url.toString(),
@@ -111,16 +112,16 @@ public class IamAwsProvider extends EnvironmentProvider {
     try (Response response =
         httpClient.newCall(new Request.Builder().url(url).method("GET", null).build()).execute()) {
       if (!response.isSuccessful()) {
-        throw new IllegalStateException(url + " failed with HTTP status code " + response.code());
+        throw new ProviderException(url + " failed with HTTP status code " + response.code());
       }
 
       EcsCredentials creds = mapper.readValue(response.body().charStream(), EcsCredentials.class);
       if (!"Success".equals(creds.code())) {
-        throw new IllegalStateException(url + " failed with message " + creds.message());
+        throw new ProviderException(url + " failed with message " + creds.message());
       }
       return creds.toCredentials();
     } catch (IOException e) {
-      throw new IllegalStateException("Unable to parse response", e);
+      throw new ProviderException("Unable to parse response", e);
     }
   }
 
@@ -129,16 +130,16 @@ public class IamAwsProvider extends EnvironmentProvider {
     try (Response response =
         httpClient.newCall(new Request.Builder().url(url).method("GET", null).build()).execute()) {
       if (!response.isSuccessful()) {
-        throw new IllegalStateException(url + " failed with HTTP status code " + response.code());
+        throw new ProviderException(url + " failed with HTTP status code " + response.code());
       }
 
       roleNames = response.body().string().split("\\R");
     } catch (IOException e) {
-      throw new IllegalStateException("Unable to parse response", e);
+      throw new ProviderException("Unable to parse response", e);
     }
 
     if (roleNames.length == 0) {
-      throw new IllegalStateException("No IAM roles attached to EC2 service " + url);
+      throw new ProviderException("No IAM roles attached to EC2 service " + url);
     }
 
     return roleNames[0];

@@ -25,6 +25,7 @@ import io.minio.credentials.ClientGrantsProvider;
 import io.minio.credentials.Jwt;
 import io.minio.credentials.Provider;
 import java.io.IOException;
+import java.security.ProviderException;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import okhttp3.FormBody;
@@ -61,7 +62,7 @@ public class MinioClientWithClientGrantsProvider {
               .withFieldVisibility(JsonAutoDetect.Visibility.ANY));
       return mapper.readValue(response.body().charStream(), Jwt.class);
     } catch (IOException e) {
-      throw new IllegalStateException(e);
+      throw new ProviderException(e);
     }
   }
 

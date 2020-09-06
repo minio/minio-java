@@ -16,6 +16,7 @@
 
 package io.minio.credentials;
 
+import java.security.ProviderException;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -40,7 +41,7 @@ public class ChainedProvider implements Provider {
       try {
         credentials = currentProvider.fetch();
         return credentials;
-      } catch (IllegalStateException e) {
+      } catch (ProviderException e) {
         // Ignore and fallback to iteration.
       }
     }
@@ -50,11 +51,11 @@ public class ChainedProvider implements Provider {
         credentials = provider.fetch();
         currentProvider = provider;
         return credentials;
-      } catch (IllegalStateException e) {
+      } catch (ProviderException e) {
         // Ignore and continue to next iteration.
       }
     }
 
-    throw new IllegalStateException("All providers fail to fetch credentials");
+    throw new ProviderException("All providers fail to fetch credentials");
   }
 }
