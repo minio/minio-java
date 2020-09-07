@@ -18,6 +18,7 @@ package io.minio.credentials;
 
 import io.minio.errors.XmlParserException;
 import java.io.IOException;
+import java.security.ProviderException;
 import java.util.Arrays;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -47,14 +48,13 @@ public abstract class AssumeRoleBaseProvider implements Provider {
 
     try (Response response = httpClient.newCall(getRequest()).execute()) {
       if (!response.isSuccessful()) {
-        throw new IllegalStateException(
-            "STS service failed with HTTP status code " + response.code());
+        throw new ProviderException("STS service failed with HTTP status code " + response.code());
       }
 
       credentials = parseResponse(response);
       return credentials;
     } catch (XmlParserException | IOException e) {
-      throw new IllegalStateException("Unable to parse STS response", e);
+      throw new ProviderException("Unable to parse STS response", e);
     }
   }
 

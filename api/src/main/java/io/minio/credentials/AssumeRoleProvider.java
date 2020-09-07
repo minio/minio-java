@@ -24,6 +24,7 @@ import io.minio.errors.XmlParserException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.ProviderException;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -123,7 +124,7 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
           secretKey,
           contentSha256);
     } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-      throw new IllegalStateException("Signature calculation failed", e);
+      throw new ProviderException("Signature calculation failed", e);
     }
   }
 

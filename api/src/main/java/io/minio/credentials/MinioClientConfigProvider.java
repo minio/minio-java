@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.security.ProviderException;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -84,7 +85,7 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
           mapper.readValue(new InputStreamReader(is, StandardCharsets.UTF_8), McConfig.class);
       Map<String, String> values = config.get(alias);
       if (values == null) {
-        throw new IllegalStateException(
+        throw new ProviderException(
             "Alias " + alias + " does not exist in MinioClient configuration file");
       }
 
@@ -92,18 +93,18 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
       String secretKey = values.get("secretKey");
 
       if (accessKey == null) {
-        throw new IllegalStateException(
+        throw new ProviderException(
             "Access key does not exist in alias " + alias + " in MinioClient configuration file");
       }
 
       if (secretKey == null) {
-        throw new IllegalStateException(
+        throw new ProviderException(
             "Secret key does not exist in alias " + alias + " in MinioClient configuration file");
       }
 
       return new Credentials(accessKey, secretKey, null, null);
     } catch (IOException e) {
-      throw new IllegalStateException("Unable to read MinioClient configuration file", e);
+      throw new ProviderException("Unable to read MinioClient configuration file", e);
     }
   }
 

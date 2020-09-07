@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.security.ProviderException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -73,7 +74,7 @@ public class AwsConfigProvider extends EnvironmentProvider {
       Map<String, Properties> result = unmarshal(new InputStreamReader(is, StandardCharsets.UTF_8));
       Properties values = result.get(profile);
       if (values == null) {
-        throw new IllegalStateException(
+        throw new ProviderException(
             "Profile " + profile + " does not exist in AWS credential file");
       }
 
@@ -82,18 +83,18 @@ public class AwsConfigProvider extends EnvironmentProvider {
       String sessionToken = values.getProperty("aws_session_token");
 
       if (accessKey == null) {
-        throw new IllegalStateException(
+        throw new ProviderException(
             "Access key does not exist in profile " + profile + " in AWS credential file");
       }
 
       if (secretKey == null) {
-        throw new IllegalStateException(
+        throw new ProviderException(
             "Secret key does not exist in profile " + profile + " in AWS credential file");
       }
 
       return new Credentials(accessKey, secretKey, sessionToken, null);
     } catch (IOException e) {
-      throw new IllegalStateException("Unable to read AWS credential file", e);
+      throw new ProviderException("Unable to read AWS credential file", e);
     }
   }
 
