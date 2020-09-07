@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import io.minio.EnableVersioningArgs;
 import io.minio.MinioClient;
+import io.minio.SetBucketVersioningArgs;
 import io.minio.errors.MinioException;
+import io.minio.messages.VersioningConfiguration;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class EnableVersioning {
-  /** MinioClient.enableVersioning() example. */
+public class SetBucketVersioning {
+  /** MinioClient.setBucketVersioning() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -41,10 +42,20 @@ public class EnableVersioning {
       //         .build();
 
       // Enable versioning on 'my-bucketname'.
-      minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucketname").build());
-
+      minioClient.setBucketVersioning(
+          SetBucketVersioningArgs.builder()
+              .bucket("my-bucketname")
+              .config(new VersioningConfiguration(VersioningConfiguration.Status.ENABLED, null))
+              .build());
       System.out.println("Bucket versioning is enabled successfully");
 
+      // Suspend versioning on 'my-bucketname'.
+      minioClient.setBucketVersioning(
+          SetBucketVersioningArgs.builder()
+              .bucket("my-bucketname")
+              .config(new VersioningConfiguration(VersioningConfiguration.Status.SUSPENDED, null))
+              .build());
+      System.out.println("Bucket versioning is suspended successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

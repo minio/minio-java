@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-import io.minio.BucketExistsArgs;
-import io.minio.EnableVersioningArgs;
-import io.minio.IsVersioningEnabledArgs;
-import io.minio.MakeBucketArgs;
+import io.minio.GetBucketVersioningArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import io.minio.messages.VersioningConfiguration;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class IsVersioningEnabled {
-  /** MinioClient.isVersioningEnabled() example. */
+public class GetBucketVersioning {
+  /** MinioClient.getBucketVersioning() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -43,33 +41,16 @@ public class IsVersioningEnabled {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      // Create bucket 'my-bucketname' if it doesn`t exist.
-      if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build())) {
-        minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
-        System.out.println("my-bucketname is created successfully");
+      VersioningConfiguration config =
+          minioClient.getBucketVersioning(
+              GetBucketVersioningArgs.builder().bucket("my-bucketname").build());
+      if (config.status() == VersioningConfiguration.Status.OFF) {
+        System.out.println("Versioning on bucket 'my-bucketname' is not enabled");
+      } else if (config.status() == VersioningConfiguration.Status.ENABLED) {
+        System.out.println("Versioning on bucket 'my-bucketname' is enabled");
+      } else if (config.status() == VersioningConfiguration.Status.SUSPENDED) {
+        System.out.println("Versioning on bucket 'my-bucketname' is suspended");
       }
-
-      boolean isVersioningEnabled =
-          minioClient.isVersioningEnabled(
-              IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
-      if (isVersioningEnabled) {
-        System.out.println("Bucket versioning is enabled");
-      } else {
-        System.out.println("Bucket versioning is disabled");
-      }
-      // Enable versioning on 'my-bucketname'.
-      minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucketname").build());
-      System.out.println("Bucket versioning is enabled successfully");
-
-      isVersioningEnabled =
-          minioClient.isVersioningEnabled(
-              IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
-      if (isVersioningEnabled) {
-        System.out.println("Bucket versioning is enabled");
-      } else {
-        System.out.println("Bucket versioning is disabled");
-      }
-
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

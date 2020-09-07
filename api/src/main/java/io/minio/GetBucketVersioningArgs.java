@@ -16,12 +16,12 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.enableVersioning(). */
-public class EnableVersioningArgs extends BucketArgs {
+/** Argument class of MinioClient.getBucketVersioning(). */
+public class GetBucketVersioningArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link EnableVersioningArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, EnableVersioningArgs> {}
+  /** Argument builder of {@link GetBucketVersioningArgs}. */
+  public static final class Builder extends BucketArgs.Builder<Builder, GetBucketVersioningArgs> {}
 }

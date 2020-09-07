@@ -3984,43 +3984,14 @@ public class MinioClient {
   }
 
   /**
-   * Enables object versioning feature in a bucket.
+   * Sets versioning configuration of a bucket.
    *
    * <pre>Example:{@code
-   * minioClient.enableVersioning("my-bucketname");
+   * minioClient.setBucketVersioning(
+   *     SetBucketVersioningArgs.builder().bucket("my-bucketname").config(config).build());
    * }</pre>
    *
-   * @param bucketName Name of the bucket.
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws IllegalArgumentException throws to indicate invalid argument passed.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   * @deprecated use {@link #enableVersioning(EnableVersioningArgs)}
-   */
-  @Deprecated
-  public void enableVersioning(String bucketName)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    this.enableVersioning(EnableVersioningArgs.builder().bucket(bucketName).build());
-  }
-
-  /**
-   * Enables object versioning feature in a bucket.
-   *
-   * <pre>Example:{@code
-   * minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucketname").build());
-   * }</pre>
-   *
-   * @param args {@link EnableVersioningArgs} object.
+   * @param args {@link SetBucketVersioningArgs} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -4033,56 +4004,27 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void enableVersioning(EnableVersioningArgs args)
+  public void setBucketVersioning(SetBucketVersioningArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     checkArgs(args);
-    Response response =
-        executePut(args, null, newMultimap("versioning", ""), new VersioningConfiguration(true), 0);
+    Response response = executePut(args, null, newMultimap("versioning", ""), args.config(), 0);
     response.close();
   }
 
   /**
-   * Disables object versioning feature in a bucket.
+   * Gets versioning configuration of a bucket.
    *
    * <pre>Example:{@code
-   * minioClient.disableVersioning("my-bucketname");
+   * VersioningConfiguration config =
+   *     minioClient.getBucketVersioning(
+   *         GetBucketVersioningArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
-   * @param bucketName Name of the bucket.
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws IllegalArgumentException throws to indicate invalid argument passed.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   * @deprecated use {@link #disableVersioning(DisableVersioningArgs)}
-   */
-  @Deprecated
-  public void disableVersioning(String bucketName)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    this.disableVersioning(DisableVersioningArgs.builder().bucket(bucketName).build());
-  }
-
-  /**
-   * Disables object versioning feature in a bucket.
-   *
-   * <pre>Example:{@code
-   * minioClient.disableVersioning(
-   *     DisableVersioningArgs.builder().bucket("my-bucketname").build());
-   * }</pre>
-   *
-   * @param args {@link DisableVersioningArgs} object.
+   * @param args {@link GetBucketVersioningArgs} object.
+   * @return {@link VersioningConfiguration} - Versioning configuration.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -4095,55 +4037,14 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void disableVersioning(DisableVersioningArgs args)
-      throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
-          InternalException, InvalidBucketNameException, InvalidKeyException,
-          InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
-          XmlParserException {
-    checkArgs(args);
-    Response response =
-        executePut(
-            args, null, newMultimap("versioning", ""), new VersioningConfiguration(false), 0);
-    response.close();
-  }
-
-  /**
-   * Returns true if versioning is enabled on the bucket.
-   *
-   * <pre>Example:{@code
-   * boolean isVersioningEnabled =
-   *  minioClient.isVersioningEnabled(
-   *       IsVersioningEnabledArgs.builder().bucket("my-bucketname").build());
-   * if (isVersioningEnabled) {
-   *   System.out.println("Bucket versioning is enabled");
-   * } else {
-   *   System.out.println("Bucket versioning is disabled");
-   * }
-   * }</pre>
-   *
-   * @param args {@link IsVersioningEnabledArgs} object.
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws IllegalArgumentException throws to indicate invalid argument passed.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidBucketNameException thrown to indicate invalid bucket name passed.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
-   */
-  public boolean isVersioningEnabled(IsVersioningEnabledArgs args)
+  public VersioningConfiguration getBucketVersioning(GetBucketVersioningArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
     checkArgs(args);
     try (Response response = executeGet(args, null, newMultimap("versioning", ""))) {
-      VersioningConfiguration result =
-          Xml.unmarshal(VersioningConfiguration.class, response.body().charStream());
-      return result.status();
+      return Xml.unmarshal(VersioningConfiguration.class, response.body().charStream());
     }
   }
 
