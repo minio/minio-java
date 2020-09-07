@@ -18,8 +18,8 @@ package io.minio;
 
 import io.minio.messages.ObjectLockConfiguration;
 
-/** Argument class of MinioClient.setDefaultRetention(). */
-public class SetDefaultRetentionArgs extends BucketArgs {
+/** Argument class of MinioClient.setObjectLockConfiguration(). */
+public class SetObjectLockConfigurationArgs extends BucketArgs {
   private ObjectLockConfiguration config;
 
   public ObjectLockConfiguration config() {
@@ -30,14 +30,15 @@ public class SetDefaultRetentionArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetDefaultRetentionArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, SetDefaultRetentionArgs> {
+  /** Argument builder of {@link SetObjectLockConfigurationArgs}. */
+  public static final class Builder
+      extends BucketArgs.Builder<Builder, SetObjectLockConfigurationArgs> {
     private void validateConfig(ObjectLockConfiguration config) {
       validateNotNull(config, "object-lock configuration");
     }
 
     @Override
-    protected void validate(SetDefaultRetentionArgs args) {
+    protected void validate(SetObjectLockConfigurationArgs args) {
       super.validate(args);
       validateConfig(args.config);
     }

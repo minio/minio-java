@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
+import io.minio.GetObjectLockConfigurationArgs;
 import io.minio.MinioClient;
-import io.minio.SetDefaultRetentionArgs;
 import io.minio.errors.MinioException;
 import io.minio.messages.ObjectLockConfiguration;
-import io.minio.messages.RetentionDurationDays;
-import io.minio.messages.RetentionMode;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class SetDefaultRetention {
-  /** MinioClient.setDefaultRetention() exanple. */
+public class GetObjectLockConfiguration {
+  /** MinioClient.getObjectLockConfiguration() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -43,17 +41,15 @@ public class SetDefaultRetention {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      // Declaring config with Retention mode as Compliance and duration as 100 days
       ObjectLockConfiguration config =
-          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
+          minioClient.getObjectLockConfiguration(
+              GetObjectLockConfigurationArgs.builder()
+                  .bucket("my-lock-enabled-bucketname")
+                  .build());
 
-      minioClient.setDefaultRetention(
-          SetDefaultRetentionArgs.builder()
-              .bucket("my-lock-enabled-bucketname")
-              .config(config)
-              .build());
-
-      System.out.println("Default retention configuration is set successfully");
+      System.out.println("Object-lock configuration of bucket");
+      System.out.println("Mode: " + config.mode());
+      System.out.println("Duration: " + config.duration());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

@@ -4131,7 +4131,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
-   * @deprecated use {@link #setDefaultRetention(SetDefaultRetentionArgs)}
+   * @deprecated use {@link #setObjectLockConfiguration(SetObjectLockConfigurationArgs)}
    */
   @Deprecated
   public void setDefaultRetention(String bucketName, ObjectLockConfiguration config)
@@ -4139,8 +4139,8 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    setDefaultRetention(
-        SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
+    setObjectLockConfiguration(
+        SetObjectLockConfigurationArgs.builder().bucket(bucketName).config(config).build());
   }
 
   /**
@@ -4149,11 +4149,11 @@ public class MinioClient {
    * <pre>Example:{@code
    * ObjectLockConfiguration config = new ObjectLockConfiguration(
    *     RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
-   * minioClient.setDefaultRetention(
-   *     SetDefaultRetentionArgs.builder().bucket("my-bucketname").config(config).build());
+   * minioClient.setObjectLockConfiguration(
+   *     SetObjectLockConfigurationArgs.builder().bucket("my-bucketname").config(config).build());
    * }</pre>
    *
-   * @param args {@link SetDefaultRetentionArgs} object.
+   * @param args {@link SetObjectLockConfigurationArgs} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -4166,7 +4166,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void setDefaultRetention(SetDefaultRetentionArgs args)
+  public void setObjectLockConfiguration(SetObjectLockConfigurationArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -4180,11 +4180,11 @@ public class MinioClient {
    * Deletes default object retention in a bucket.
    *
    * <pre>Example:{@code
-   * minioClient.deleteDefaultRetention(
-   *     DeleteDefaultRetentionArgs.builder().bucket("my-bucketname").build());
+   * minioClient.deleteObjectLockConfiguration(
+   *     DeleteObjectLockConfigurationArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
-   * @param args {@link DeleteDefaultRetentionArgs} object.
+   * @param args {@link DeleteObjectLockConfigurationArgs} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -4197,7 +4197,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void deleteDefaultRetention(DeleteDefaultRetentionArgs args)
+  public void deleteObjectLockConfiguration(DeleteObjectLockConfigurationArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
@@ -4231,7 +4231,7 @@ public class MinioClient {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
-   * @deprecated use {@link #getDefaultRetention(GetDefaultRetentionArgs)}
+   * @deprecated use {@link #getObjectLockConfiguration(GetObjectLockConfigurationArgs)}
    */
   @Deprecated
   public ObjectLockConfiguration getDefaultRetention(String bucketName)
@@ -4239,7 +4239,8 @@ public class MinioClient {
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,
           XmlParserException {
-    return getDefaultRetention(GetDefaultRetentionArgs.builder().bucket(bucketName).build());
+    return getObjectLockConfiguration(
+        GetObjectLockConfigurationArgs.builder().bucket(bucketName).build());
   }
 
   /**
@@ -4247,14 +4248,14 @@ public class MinioClient {
    *
    * <pre>Example:{@code
    * ObjectLockConfiguration config =
-   *     minioClient.getDefaultRetention(
-   *         GetDefaultRetentionArgs.builder().bucket("my-bucketname").build());
+   *     minioClient.getObjectLockConfiguration(
+   *         GetObjectLockConfigurationArgs.builder().bucket("my-bucketname").build());
    * System.out.println("Mode: " + config.mode());
    * System.out.println(
    *     "Duration: " + config.duration().duration() + " " + config.duration().unit());
    * }</pre>
    *
-   * @param args {@link GetDefaultRetentionArgs} object.
+   * @param args {@link GetObjectLockConfigurationArgs} object.
    * @return {@link ObjectLockConfiguration} - Default retention configuration.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws IllegalArgumentException throws to indicate invalid argument passed.
@@ -4268,7 +4269,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public ObjectLockConfiguration getDefaultRetention(GetDefaultRetentionArgs args)
+  public ObjectLockConfiguration getObjectLockConfiguration(GetObjectLockConfigurationArgs args)
       throws ErrorResponseException, IllegalArgumentException, InsufficientDataException,
           InternalException, InvalidBucketNameException, InvalidKeyException,
           InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException,

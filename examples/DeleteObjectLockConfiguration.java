@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2019 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import io.minio.GetDefaultRetentionArgs;
+import io.minio.DeleteObjectLockConfigurationArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import io.minio.messages.ObjectLockConfiguration;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class GetDefaultRetention {
-  /** MinioClient.getDefaultRetention() example. */
+public class DeleteObjectLockConfiguration {
+  /** MinioClient.deleteObjectLockConfiguration() exanple. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -41,13 +40,10 @@ public class GetDefaultRetention {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      ObjectLockConfiguration config =
-          minioClient.getDefaultRetention(
-              GetDefaultRetentionArgs.builder().bucket("my-lock-enabled-bucketname").build());
+      minioClient.deleteObjectLockConfiguration(
+          DeleteObjectLockConfigurationArgs.builder().bucket("my-lock-enabled-bucketname").build());
 
-      System.out.println("Default retention configuration of bucket");
-      System.out.println("Mode: " + config.mode());
-      System.out.println("Duration: " + config.duration());
+      System.out.println("Object-lock configuration is deleted successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
