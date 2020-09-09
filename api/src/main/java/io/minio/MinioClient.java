@@ -118,6 +118,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -237,6 +238,7 @@ public class MinioClient {
     standardHeaders.add("range");
   }
 
+  private final Map<String, String> regionCache = new ConcurrentHashMap<>();
   private String userAgent = DEFAULT_USER_AGENT;
   private PrintWriter traceStream;
 
@@ -1134,8 +1136,7 @@ public class MinioClient {
           if (method.equals(Method.HEAD)
               && bucketName != null
               && objectName == null
-              && isAwsHost
-              && AwsRegionCache.INSTANCE.get(bucketName) != null) {
+              && regionCache.get(bucketName) != null) {
             code = RETRY_HEAD_BUCKET;
           } else {
             code = "BadRequest";
@@ -1198,9 +1199,7 @@ public class MinioClient {
     // invalidate region cache if needed
     if (errorResponse.code().equals(NO_SUCH_BUCKET)
         || errorResponse.code().equals(RETRY_HEAD_BUCKET)) {
-      if (isAwsHost) {
-        AwsRegionCache.INSTANCE.remove(bucketName);
-      }
+      regionCache.remove(bucketName);
 
       // TODO: handle for other cases as well
     }
@@ -1227,11 +1226,11 @@ public class MinioClient {
       return this.region;
     }
 
-    if (!isAwsHost || bucketName == null || this.provider == null) {
+    if (bucketName == null || this.provider == null) {
       return US_EAST_1;
     }
 
-    region = AwsRegionCache.INSTANCE.get(bucketName);
+    region = regionCache.get(bucketName);
     if (region != null) {
       return region;
     }
@@ -1252,7 +1251,7 @@ public class MinioClient {
       }
     }
 
-    AwsRegionCache.INSTANCE.set(bucketName, region);
+    regionCache.put(bucketName, region);
     return region;
   }
 
@@ -3939,9 +3938,7 @@ public class MinioClient {
             args.extraQueryParams(),
             region.equals(US_EAST_1) ? null : new CreateBucketConfiguration(region),
             0)) {
-      if (isAwsHost) {
-        AwsRegionCache.INSTANCE.set(args.bucket(), region);
-      }
+      regionCache.put(args.bucket(), region);
     }
   }
 
