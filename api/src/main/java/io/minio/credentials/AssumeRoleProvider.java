@@ -107,7 +107,7 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
             .header("Host", host)
             .method(
                 "POST",
-                RequestBody.create(MediaType.parse("application/x-www-form-urlencoded"), data))
+                RequestBody.create(data, MediaType.parse("application/x-www-form-urlencoded")))
             .build();
   }
 
