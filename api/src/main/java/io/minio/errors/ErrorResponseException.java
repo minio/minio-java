@@ -43,6 +43,10 @@ public class ErrorResponseException extends MinioException {
     return this.errorResponse;
   }
 
+  public Response response() {
+    return this.response;
+  }
+
   @Override
   public String toString() {
     Request request = response.request();
