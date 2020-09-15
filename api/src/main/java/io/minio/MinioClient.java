@@ -191,7 +191,7 @@ public class MinioClient {
   private static final String NO_SUCH_BUCKET = "NoSuchBucket";
   private static final String NO_SUCH_BUCKET_POLICY = "NoSuchBucketPolicy";
   private static final String NO_SUCH_OBJECT_LOCK_CONFIGURATION = "NoSuchObjectLockConfiguration";
-  private static final String RETRY_HEAD_BUCKET = "RetryHeadBucket";
+  private static final String RETRY_HEAD = "RetryHead";
   private static final String SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR =
       "ServerSideEncryptionConfigurationNotFoundError";
 
@@ -760,6 +760,39 @@ public class MinioClient {
     return (map != null) ? HashMultimap.create(map) : HashMultimap.create();
   }
 
+  private String[] handleRediectResponse(
+      Method method, String bucketName, Response response, boolean retry) {
+    String code = null;
+    String message = null;
+
+    if (response.code() == 301) {
+      code = "PermanentRedirect";
+      message = "Moved Permanently";
+    } else if (response.code() == 307) {
+      code = "Redirect";
+      message = "Temporary redirect";
+    } else if (response.code() == 400) {
+      code = "BadRequest";
+      message = "Bad request";
+    }
+
+    String region = response.headers().get("x-amz-bucket-region");
+    if (message != null && region != null) {
+      message += ". Use region " + region;
+    }
+
+    if (retry
+        && region != null
+        && method.equals(Method.HEAD)
+        && bucketName != null
+        && regionCache.get(bucketName) != null) {
+      code = RETRY_HEAD;
+      message = null;
+    }
+
+    return new String[] {code, message};
+  }
+
   /** Build URL for given parameters. */
   protected HttpUrl buildUrl(
       Method method,
@@ -1127,21 +1160,12 @@ public class MinioClient {
       String code = null;
       String message = null;
       switch (response.code()) {
+        case 301:
         case 307:
-          code = "Redirect";
-          message = "Temporary redirect";
-          break;
         case 400:
-          // HEAD bucket with wrong region gives 400 without body.
-          if (method.equals(Method.HEAD)
-              && bucketName != null
-              && objectName == null
-              && regionCache.get(bucketName) != null) {
-            code = RETRY_HEAD_BUCKET;
-          } else {
-            code = "BadRequest";
-            message = "Bad request";
-          }
+          String[] result = handleRediectResponse(method, bucketName, response, true);
+          code = result[0];
+          message = result[1];
           break;
         case 404:
           if (objectName != null) {
@@ -1197,11 +1221,8 @@ public class MinioClient {
     }
 
     // invalidate region cache if needed
-    if (errorResponse.code().equals(NO_SUCH_BUCKET)
-        || errorResponse.code().equals(RETRY_HEAD_BUCKET)) {
+    if (errorResponse.code().equals(NO_SUCH_BUCKET) || errorResponse.code().equals(RETRY_HEAD)) {
       regionCache.remove(bucketName);
-
-      // TODO: handle for other cases as well
     }
 
     throw new ErrorResponseException(errorResponse, response);
@@ -1275,15 +1296,35 @@ public class MinioClient {
       response.body().close();
       return response;
     } catch (ErrorResponseException e) {
-      if (!e.errorResponse().code().equals(RETRY_HEAD_BUCKET)) {
+      if (!e.errorResponse().code().equals(RETRY_HEAD)) {
         throw e;
       }
     }
 
-    // Retry once for RETRY_HEAD_BUCKET error.
-    Response response = execute(Method.HEAD, args, headers, queryParams, null, 0);
-    response.body().close();
-    return response;
+    try {
+      // Retry once for RETRY_HEAD error.
+      Response response = execute(Method.HEAD, args, headers, queryParams, null, 0);
+      response.body().close();
+      return response;
+    } catch (ErrorResponseException e) {
+      ErrorResponse errorResponse = e.errorResponse();
+      if (!errorResponse.code().equals(RETRY_HEAD)) {
+        throw e;
+      }
+
+      String[] result =
+          handleRediectResponse(Method.HEAD, errorResponse.bucketName(), e.response(), false);
+      throw new ErrorResponseException(
+          new ErrorResponse(
+              result[0],
+              result[1],
+              errorResponse.bucketName(),
+              errorResponse.objectName(),
+              errorResponse.resource(),
+              errorResponse.requestId(),
+              errorResponse.hostId()),
+          e.response());
+    }
   }
 
   private Response executeDelete(
@@ -4762,6 +4803,7 @@ public class MinioClient {
           XmlParserException {
     checkArgs(args);
     executeDelete(args, null, null);
+    regionCache.remove(args.bucket());
   }
 
   private ObjectWriteResponse putObject(
