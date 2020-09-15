@@ -16,15 +16,11 @@
 
 package io.minio.credentials;
 
-import io.minio.Xml;
-import io.minio.errors.XmlParserException;
-import java.io.IOException;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
-import okhttp3.Response;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Path;
@@ -59,21 +55,19 @@ public class ClientGrantsProvider extends WebIdentityClientGrantsProvider {
   }
 
   @Override
-  protected Credentials parseResponse(Response response) throws XmlParserException, IOException {
-    ClientGrantsResponse result =
-        Xml.unmarshal(ClientGrantsResponse.class, response.body().charStream());
-    return result.credentials();
+  protected Class<? extends AssumeRoleBaseProvider.Response> getResponseClass() {
+    return ClientGrantsResponse.class;
   }
 
   /** Object representation of response XML of AssumeRoleWithClientGrants API. */
   @Root(name = "AssumeRoleWithClientGrantsResponse", strict = false)
   @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class ClientGrantsResponse {
+  public static class ClientGrantsResponse implements AssumeRoleBaseProvider.Response {
     @Path(value = "AssumeRoleWithClientGrantsResult")
     @Element(name = "Credentials")
     private Credentials credentials;
 
-    public Credentials credentials() {
+    public Credentials getCredentials() {
       return credentials;
     }
   }

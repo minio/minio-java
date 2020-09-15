@@ -16,9 +16,6 @@
 
 package io.minio.credentials;
 
-import io.minio.Xml;
-import io.minio.errors.XmlParserException;
-import java.io.IOException;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +24,6 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
-import okhttp3.Response;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Path;
@@ -51,9 +47,8 @@ public class LdapIdentityProvider extends AssumeRoleBaseProvider {
     super(customHttpClient);
     stsEndpoint = Objects.requireNonNull(stsEndpoint, "STS endpoint cannot be empty");
     HttpUrl url = Objects.requireNonNull(HttpUrl.parse(stsEndpoint), "Invalid STS endpoint");
-    Objects.requireNonNull(ldapUsername, "LDAP username must not be null");
-    if (ldapUsername.isEmpty()) {
-      throw new IllegalArgumentException("LDAP username must not be empty");
+    if (ldapUsername == null || ldapUsername.isEmpty()) {
+      throw new IllegalArgumentException("LDAP username must be provided");
     }
     Objects.requireNonNull(ldapPassword, "LDAP password must not be null");
 
@@ -73,21 +68,19 @@ public class LdapIdentityProvider extends AssumeRoleBaseProvider {
   }
 
   @Override
-  protected Credentials parseResponse(Response response) throws XmlParserException, IOException {
-    AssumeRoleWithLdapIdentityResponse result =
-        Xml.unmarshal(AssumeRoleWithLdapIdentityResponse.class, response.body().charStream());
-    return result.credentials();
+  protected Class<? extends AssumeRoleBaseProvider.Response> getResponseClass() {
+    return LdapIdentityResponse.class;
   }
 
   /** Object representation of response XML of AssumeRoleWithLDAPIdentity API. */
   @Root(name = "AssumeRoleWithLDAPIdentityResponse", strict = false)
   @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class AssumeRoleWithLdapIdentityResponse {
+  public static class LdapIdentityResponse implements AssumeRoleBaseProvider.Response {
     @Path(value = "AssumeRoleWithLDAPIdentityResult")
     @Element(name = "Credentials")
     private Credentials credentials;
 
-    public Credentials credentials() {
+    public Credentials getCredentials() {
       return credentials;
     }
   }
