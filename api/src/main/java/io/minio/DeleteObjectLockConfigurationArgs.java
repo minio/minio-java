@@ -16,13 +16,13 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.deleteDefaultRetention(). */
-public class DeleteDefaultRetentionArgs extends BucketArgs {
+/** Argument class of MinioClient.deleteObjectLockConfiguration(). */
+public class DeleteObjectLockConfigurationArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link DeleteDefaultRetentionArgs}. */
+  /** Argument builder of {@link DeleteObjectLockConfigurationArgs}. */
   public static final class Builder
-      extends BucketArgs.Builder<Builder, DeleteDefaultRetentionArgs> {}
+      extends BucketArgs.Builder<Builder, DeleteObjectLockConfigurationArgs> {}
 }

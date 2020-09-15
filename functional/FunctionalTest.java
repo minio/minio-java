@@ -32,7 +32,7 @@ import io.minio.DeleteBucketNotificationArgs;
 import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketReplicationArgs;
 import io.minio.DeleteBucketTagsArgs;
-import io.minio.DeleteDefaultRetentionArgs;
+import io.minio.DeleteObjectLockConfigurationArgs;
 import io.minio.DeleteObjectTagsArgs;
 import io.minio.Directive;
 import io.minio.DisableObjectLegalHoldArgs;
@@ -46,8 +46,8 @@ import io.minio.GetBucketNotificationArgs;
 import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketReplicationArgs;
 import io.minio.GetBucketTagsArgs;
-import io.minio.GetDefaultRetentionArgs;
 import io.minio.GetObjectArgs;
+import io.minio.GetObjectLockConfigurationArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
@@ -76,7 +76,7 @@ import io.minio.SetBucketNotificationArgs;
 import io.minio.SetBucketPolicyArgs;
 import io.minio.SetBucketReplicationArgs;
 import io.minio.SetBucketTagsArgs;
-import io.minio.SetDefaultRetentionArgs;
+import io.minio.SetObjectLockConfigurationArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
 import io.minio.StatObjectArgs;
@@ -2377,8 +2377,8 @@ public class FunctionalTest {
     }
   }
 
-  public static void setDefaultRetention() throws Exception {
-    String methodName = "setDefaultRetention()";
+  public static void setObjectLockConfiguration() throws Exception {
+    String methodName = "setObjectLockConfiguration()";
     String testTags = "[COMPLIANCE, 10 days]";
     if (!mintEnv) {
       System.out.println(methodName);
@@ -2391,8 +2391,8 @@ public class FunctionalTest {
       try {
         ObjectLockConfiguration config =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        client.setDefaultRetention(
-            SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
+        client.setObjectLockConfiguration(
+            SetObjectLockConfigurationArgs.builder().bucket(bucketName).config(config).build());
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
@@ -2402,13 +2402,14 @@ public class FunctionalTest {
     }
   }
 
-  public static void testGetDefaultRetention(
+  public static void testGetObjectLockConfiguration(
       String bucketName, RetentionMode mode, RetentionDuration duration) throws Exception {
     ObjectLockConfiguration expectedConfig = new ObjectLockConfiguration(mode, duration);
-    client.setDefaultRetention(
-        SetDefaultRetentionArgs.builder().bucket(bucketName).config(expectedConfig).build());
+    client.setObjectLockConfiguration(
+        SetObjectLockConfigurationArgs.builder().bucket(bucketName).config(expectedConfig).build());
     ObjectLockConfiguration config =
-        client.getDefaultRetention(GetDefaultRetentionArgs.builder().bucket(bucketName).build());
+        client.getObjectLockConfiguration(
+            GetObjectLockConfigurationArgs.builder().bucket(bucketName).build());
 
     if (config.mode() != expectedConfig.mode()) {
       throw new Exception(
@@ -2422,8 +2423,8 @@ public class FunctionalTest {
     }
   }
 
-  public static void getDefaultRetention() throws Exception {
-    String methodName = "getDefaultRetention()";
+  public static void getObjectLockConfiguration() throws Exception {
+    String methodName = "getObjectLockConfiguration()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -2433,9 +2434,9 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        testGetDefaultRetention(
+        testGetObjectLockConfiguration(
             bucketName, RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        testGetDefaultRetention(
+        testGetObjectLockConfiguration(
             bucketName, RetentionMode.GOVERNANCE, new RetentionDurationYears(1));
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -2447,8 +2448,8 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteDefaultRetention() throws Exception {
-    String methodName = "deleteDefaultRetention()";
+  public static void deleteObjectLockConfiguration() throws Exception {
+    String methodName = "deleteObjectLockConfiguration()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -2458,14 +2459,14 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).objectLock(true).build());
       try {
-        client.deleteDefaultRetention(
-            DeleteDefaultRetentionArgs.builder().bucket(bucketName).build());
+        client.deleteObjectLockConfiguration(
+            DeleteObjectLockConfigurationArgs.builder().bucket(bucketName).build());
         ObjectLockConfiguration config =
             new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(10));
-        client.setDefaultRetention(
-            SetDefaultRetentionArgs.builder().bucket(bucketName).config(config).build());
-        client.deleteDefaultRetention(
-            DeleteDefaultRetentionArgs.builder().bucket(bucketName).build());
+        client.setObjectLockConfiguration(
+            SetObjectLockConfigurationArgs.builder().bucket(bucketName).config(config).build());
+        client.deleteObjectLockConfiguration(
+            DeleteObjectLockConfigurationArgs.builder().bucket(bucketName).build());
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
       }
@@ -3581,8 +3582,8 @@ public class FunctionalTest {
     disableVersioning();
     isVersioningEnabled();
 
-    setDefaultRetention();
-    getDefaultRetention();
+    setObjectLockConfiguration();
+    getObjectLockConfiguration();
 
     setBucketEncryption();
     getBucketEncryption();

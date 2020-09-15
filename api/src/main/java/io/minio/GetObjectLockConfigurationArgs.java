@@ -16,12 +16,13 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getDefaultRetention(). */
-public class GetDefaultRetentionArgs extends BucketArgs {
+/** Argument class of MinioClient.getObjectLockConfiguration(). */
+public class GetObjectLockConfigurationArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetDefaultRetentionArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, GetDefaultRetentionArgs> {}
+  /** Argument builder of {@link GetObjectLockConfigurationArgs}. */
+  public static final class Builder
+      extends BucketArgs.Builder<Builder, GetObjectLockConfigurationArgs> {}
 }

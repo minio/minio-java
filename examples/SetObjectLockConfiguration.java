@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2019 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-import io.minio.DeleteDefaultRetentionArgs;
 import io.minio.MinioClient;
+import io.minio.SetObjectLockConfigurationArgs;
 import io.minio.errors.MinioException;
+import io.minio.messages.ObjectLockConfiguration;
+import io.minio.messages.RetentionDurationDays;
+import io.minio.messages.RetentionMode;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class DeleteDefaultRetention {
-  /** MinioClient.deleteDefaultRetention() exanple. */
+public class SetObjectLockConfiguration {
+  /** MinioClient.setObjectLockConfiguration() exanple. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -40,10 +43,17 @@ public class DeleteDefaultRetention {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      minioClient.deleteDefaultRetention(
-          DeleteDefaultRetentionArgs.builder().bucket("my-lock-enabled-bucketname").build());
+      // Declaring config with Retention mode as Compliance and duration as 100 days
+      ObjectLockConfiguration config =
+          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
 
-      System.out.println("Default retention configuration is deleted successfully");
+      minioClient.setObjectLockConfiguration(
+          SetObjectLockConfigurationArgs.builder()
+              .bucket("my-lock-enabled-bucketname")
+              .config(config)
+              .build());
+
+      System.out.println("object-lock configuration is set successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
