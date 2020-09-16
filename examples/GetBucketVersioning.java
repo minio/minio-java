@@ -44,13 +44,7 @@ public class GetBucketVersioning {
       VersioningConfiguration config =
           minioClient.getBucketVersioning(
               GetBucketVersioningArgs.builder().bucket("my-bucketname").build());
-      if (config.status() == VersioningConfiguration.Status.OFF) {
-        System.out.println("Versioning on bucket 'my-bucketname' is not enabled");
-      } else if (config.status() == VersioningConfiguration.Status.ENABLED) {
-        System.out.println("Versioning on bucket 'my-bucketname' is enabled");
-      } else if (config.status() == VersioningConfiguration.Status.SUSPENDED) {
-        System.out.println("Versioning on bucket 'my-bucketname' is suspended");
-      }
+      System.out.println("Versioning on bucket 'my-bucketname' is " + config.status());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
