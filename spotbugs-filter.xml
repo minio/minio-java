@@ -4,4 +4,8 @@
   <Match>
     <Bug code="NP" />
   </Match>
+  <!-- False positive in java 11: Redundant nullcheck of value known to be non-null. -->
+  <Match>
+    <Bug code="RCN" />
+  </Match>
 </FindBugsFilter>

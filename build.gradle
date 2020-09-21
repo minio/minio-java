@@ -168,7 +168,11 @@ project(':api') {
 
     javadoc.options {
         encoding = 'UTF-8'
-        links 'https://docs.oracle.com/javase/8/docs/api/'
+        if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
+            links 'https://docs.oracle.com/javase/8/docs/api/'
+        } else {
+            links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+        }
     }
 
     // Disable JavaDoc doclint on Java 8. It's annoying.
