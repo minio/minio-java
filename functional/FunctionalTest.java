@@ -36,23 +36,21 @@ import io.minio.DeleteObjectLockConfigurationArgs;
 import io.minio.DeleteObjectTagsArgs;
 import io.minio.Directive;
 import io.minio.DisableObjectLegalHoldArgs;
-import io.minio.DisableVersioningArgs;
 import io.minio.DownloadObjectArgs;
 import io.minio.EnableObjectLegalHoldArgs;
-import io.minio.EnableVersioningArgs;
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.GetBucketLifeCycleArgs;
 import io.minio.GetBucketNotificationArgs;
 import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketReplicationArgs;
 import io.minio.GetBucketTagsArgs;
+import io.minio.GetBucketVersioningArgs;
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectLockConfigurationArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.IsObjectLegalHoldEnabledArgs;
-import io.minio.IsVersioningEnabledArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
@@ -76,6 +74,7 @@ import io.minio.SetBucketNotificationArgs;
 import io.minio.SetBucketPolicyArgs;
 import io.minio.SetBucketReplicationArgs;
 import io.minio.SetBucketTagsArgs;
+import io.minio.SetBucketVersioningArgs;
 import io.minio.SetObjectLockConfigurationArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
@@ -116,6 +115,7 @@ import io.minio.messages.SseConfigurationRule;
 import io.minio.messages.Stats;
 import io.minio.messages.Status;
 import io.minio.messages.Tags;
+import io.minio.messages.VersioningConfiguration;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -591,8 +591,8 @@ public class FunctionalTest {
     testBucketApiCases(methodName, false, true);
   }
 
-  public static void enableVersioning() throws Exception {
-    String methodName = "enableVersioning()";
+  public static void setBucketVersioning() throws Exception {
+    String methodName = "setBucketVersioning()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -602,7 +602,16 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
       try {
-        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
+        client.setBucketVersioning(
+            SetBucketVersioningArgs.builder()
+                .bucket(name)
+                .config(new VersioningConfiguration(VersioningConfiguration.Status.ENABLED, null))
+                .build());
+        client.setBucketVersioning(
+            SetBucketVersioningArgs.builder()
+                .bucket(name)
+                .config(new VersioningConfiguration(VersioningConfiguration.Status.SUSPENDED, null))
+                .build());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
@@ -612,8 +621,8 @@ public class FunctionalTest {
     }
   }
 
-  public static void disableVersioning() throws Exception {
-    String methodName = "disableVersioning()";
+  public static void getBucketVersioning() throws Exception {
+    String methodName = "getBucketVersioning()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -623,46 +632,38 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
       try {
-        // disableVersioning() should succeed on fresh bucket.
-        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
-
-        // disableVersioning() should succeed on version enabled bucket.
-        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
-        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
-
-        mintSuccessLog(methodName, null, startTime);
-      } finally {
-        client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      }
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void isVersioningEnabled() throws Exception {
-    String methodName = "isVersioningEnabled()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    String name = getRandomName();
-    try {
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      try {
-        if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-          throw new Exception("isVersioningEnabled() should return false on fresh bucket");
+        VersioningConfiguration config =
+            client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
+        if (config.status() != VersioningConfiguration.Status.OFF) {
+          throw new Exception("getBucketVersioning(); expected = \"\", got = " + config.status());
         }
 
-        client.enableVersioning(EnableVersioningArgs.builder().bucket(name).build());
-        if (!client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
-          throw new Exception("isVersioningEnabled() should return true on versioned bucket");
-        }
-
-        client.disableVersioning(DisableVersioningArgs.builder().bucket(name).build());
-        if (client.isVersioningEnabled(IsVersioningEnabledArgs.builder().bucket(name).build())) {
+        client.setBucketVersioning(
+            SetBucketVersioningArgs.builder()
+                .bucket(name)
+                .config(new VersioningConfiguration(VersioningConfiguration.Status.ENABLED, null))
+                .build());
+        config = client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
+        if (config.status() != VersioningConfiguration.Status.ENABLED) {
           throw new Exception(
-              "isVersioningEnabled() should return false on version disabled bucket");
+              "getBucketVersioning(); expected = "
+                  + VersioningConfiguration.Status.ENABLED
+                  + ", got = "
+                  + config.status());
+        }
+
+        client.setBucketVersioning(
+            SetBucketVersioningArgs.builder()
+                .bucket(name)
+                .config(new VersioningConfiguration(VersioningConfiguration.Status.SUSPENDED, null))
+                .build());
+        config = client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
+        if (config.status() != VersioningConfiguration.Status.SUSPENDED) {
+          throw new Exception(
+              "getBucketVersioning(); expected = "
+                  + VersioningConfiguration.Status.SUSPENDED
+                  + ", got = "
+                  + config.status());
         }
 
         mintSuccessLog(methodName, null, startTime);
@@ -1349,7 +1350,11 @@ public class FunctionalTest {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
         if (versions > 0) {
-          client.enableVersioning(EnableVersioningArgs.builder().bucket(bucketName).build());
+          client.setBucketVersioning(
+              SetBucketVersioningArgs.builder()
+                  .bucket(bucketName)
+                  .config(new VersioningConfiguration(VersioningConfiguration.Status.ENABLED, null))
+                  .build());
         }
 
         results = createObjects(bucketName, objCount, versions);
@@ -3578,9 +3583,8 @@ public class FunctionalTest {
     removeBucket();
     listBuckets();
 
-    enableVersioning();
-    disableVersioning();
-    isVersioningEnabled();
+    setBucketVersioning();
+    getBucketVersioning();
 
     setObjectLockConfiguration();
     getObjectLockConfiguration();

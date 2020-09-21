@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import io.minio.EnableVersioningArgs;
+import io.minio.GetBucketVersioningArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import io.minio.messages.VersioningConfiguration;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class EnableVersioning {
-  /** MinioClient.enableVersioning() example. */
+public class GetBucketVersioning {
+  /** MinioClient.getBucketVersioning() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -40,11 +41,10 @@ public class EnableVersioning {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      // Enable versioning on 'my-bucketname'.
-      minioClient.enableVersioning(EnableVersioningArgs.builder().bucket("my-bucketname").build());
-
-      System.out.println("Bucket versioning is enabled successfully");
-
+      VersioningConfiguration config =
+          minioClient.getBucketVersioning(
+              GetBucketVersioningArgs.builder().bucket("my-bucketname").build());
+      System.out.println("Versioning on bucket 'my-bucketname' is " + config.status());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }
