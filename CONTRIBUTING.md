@@ -1,9 +1,9 @@
 # Contributors Guide
-* Fork minio-java.
-* Create your feature branch (`$ git checkout -b my-new-feature`).
+* Fork this minio-java repository into your account.
+* Create a feature branch in your fork (`$ git checkout -b my-new-feature`).
 * Hack, hack, hack...
-* Commit your changes (`$ git commit -am 'Add some feature'`).
 * Do test build (`$ ./gradlew build`).
 * Do functional test (`$ ./gradlew runFunctionalTest`).
-* Push to the branch (`$ git push origin my-new-feature`).
-* Create new Pull Request.
+* Commit your changes (`$ git commit -am 'Add some feature'`).
+* Push the feature branch into your fork (`$ git push origin -u my-new-feature`).
+* Create new pull request to `master` branch.
