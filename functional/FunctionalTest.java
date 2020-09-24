@@ -749,8 +749,8 @@ public class FunctionalTest {
       throws Exception {
     String methodName = "putObject()";
     long startTime = System.currentTimeMillis();
-    ObjectWriteResponse objectInfo = null;
     try {
+      ObjectWriteResponse objectInfo = null;
       try {
         objectInfo = client.putObject(args);
       } catch (ErrorResponseException e) {
@@ -758,7 +758,7 @@ public class FunctionalTest {
           throw e;
         }
       }
-      if (testTags.equals("[With Retention]")) {
+      if (args.retention() != null) {
         client.setObjectRetention(
             SetObjectRetentionArgs.builder()
                 .bucket(args.bucket())
@@ -924,10 +924,9 @@ public class FunctionalTest {
             .build(),
         null);
 
-    String retainedObjectName = getRandomName();
     testPutObject(
-        "[With Retention]",
-        PutObjectArgs.builder().bucket(bucketNameWithLock).object(retainedObjectName).stream(
+        "[with retention]",
+        PutObjectArgs.builder().bucket(bucketNameWithLock).object(getRandomName()).stream(
                 new ContentInputStream(1 * KB), 1 * KB, -1)
             .retention(
                 new Retention(RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
