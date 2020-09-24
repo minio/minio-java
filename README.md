@@ -15,19 +15,19 @@ Java 1.8 or above, with one of the following environments:
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>7.1.2</version>
+    <version>7.1.3</version>
 </dependency>
 ```
 
 ## Download from gradle
 ```xml
 dependencies {
-    compile 'io.minio:minio:7.1.2'
+    compile 'io.minio:minio:7.1.3'
 }
 ```
 
 ## Download from JAR
-You can download the latest [JAR](https://repo1.maven.org/maven2/io/minio/minio/7.1.2/) directly from maven.
+You can download the latest [JAR](https://repo1.maven.org/maven2/io/minio/minio/7.1.3/) directly from maven.
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
@@ -60,7 +60,7 @@ public class FileUploader {
       MinioClient minioClient = new MinioClient("https://play.min.io", "Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG");
 
       // Check if the bucket already exists.
-      boolean isExist = 
+      boolean isExist =
         minioClient.bucketExists(BucketExistsArgs.builder().bucket("asiatrip").build());
       if(isExist) {
         System.out.println("Bucket already exists.");
@@ -81,12 +81,12 @@ public class FileUploader {
 
 #### Compile FileUploader
 ```sh
-javac -cp "minio-7.1.2-all.jar"  FileUploader.java
+javac -cp "minio-7.1.3-all.jar"  FileUploader.java
 ```
 
 #### Run FileUploader
 ```sh
-java -cp "minio-7.1.2-all.jar:." FileUploader
+java -cp "minio-7.1.3-all.jar:." FileUploader
 /home/user/Photos/asiaphotos.zip is successfully uploaded as asiaphotos.zip to `asiatrip` bucket.
 
 mc ls play/asiatrip/
