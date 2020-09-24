@@ -90,7 +90,7 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
       headers.put("x-amz-object-lock-mode", retention.mode().name());
       headers.put(
           "x-amz-object-lock-retain-until-date",
-          retention.retainUntilDate().format(Time.HTTP_HEADER_DATE_FORMAT));
+          retention.retainUntilDate().format(Time.RESPONSE_DATE_FORMAT));
     }
 
     if (legalHold) {

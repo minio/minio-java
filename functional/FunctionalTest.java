@@ -749,16 +749,31 @@ public class FunctionalTest {
       throws Exception {
     String methodName = "putObject()";
     long startTime = System.currentTimeMillis();
+    ObjectWriteResponse objectInfo = null;
     try {
       try {
-        client.putObject(args);
+        objectInfo = client.putObject(args);
       } catch (ErrorResponseException e) {
         if (errorCode == null || !e.errorResponse().code().equals(errorCode)) {
           throw e;
         }
       }
+      if (testTags.equals("[With Retention]")) {
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(args.bucket())
+                .object(args.object())
+                .config(new Retention())
+                .bypassGovernanceMode(true)
+                .build());
+      }
       client.removeObject(
-          RemoveObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
+          RemoveObjectArgs.builder()
+              .bucket(args.bucket())
+              .object(args.object())
+              .versionId(objectInfo != null ? objectInfo.versionId() : null)
+              .build());
+
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
       handleException(methodName, testTags, startTime, e);
@@ -906,6 +921,16 @@ public class FunctionalTest {
                 new ContentInputStream(1 * KB), 1 * KB, -1)
             .contentType(customContentType)
             .sse(sseS3)
+            .build(),
+        null);
+
+    String retainedObjectName = getRandomName();
+    testPutObject(
+        "[With Retention]",
+        PutObjectArgs.builder().bucket(bucketNameWithLock).object(retainedObjectName).stream(
+                new ContentInputStream(1 * KB), 1 * KB, -1)
+            .retention(
+                new Retention(RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
             .build(),
         null);
 
