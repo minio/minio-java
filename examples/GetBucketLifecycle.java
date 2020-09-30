@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-import io.minio.DeleteBucketLifeCycleArgs;
+import io.minio.GetBucketLifecycleArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import io.minio.messages.LifecycleConfiguration;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
-public class DeleteBucketLifeCycle {
-  /** MinioClient.DeleteBucketLifeCycle() example. */
+public class GetBucketLifecycle {
+  /** MinioClient.getBucketLifecycle() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -40,9 +41,10 @@ public class DeleteBucketLifeCycle {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      // Pass blank as life cycle in setBucketLifeCycle method.
-      minioClient.deleteBucketLifeCycle(
-          DeleteBucketLifeCycleArgs.builder().bucket("my-bucketName").build());
+      LifecycleConfiguration config =
+          minioClient.getBucketLifecycle(
+              GetBucketLifecycleArgs.builder().bucket("my-bucketName").build());
+      System.out.println("Lifecycle configuration is " + config);
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

@@ -35,7 +35,7 @@ public class ReplicationRule {
   private ExistingObjectReplication existingObjectReplication;
 
   @Element(name = "Filter", required = false)
-  private ReplicationRuleFilter filter;
+  private RuleFilter filter;
 
   @Element(name = "ID", required = false)
   private String id;
@@ -59,7 +59,7 @@ public class ReplicationRule {
       @Nonnull @Element(name = "Destination") ReplicationDestination destination,
       @Nullable @Element(name = "ExistingObjectReplication", required = false)
           ExistingObjectReplication existingObjectReplication,
-      @Nullable @Element(name = "Filter", required = false) ReplicationRuleFilter filter,
+      @Nullable @Element(name = "Filter", required = false) RuleFilter filter,
       @Nullable @Element(name = "ID", required = false) String id,
       @Nullable @Element(name = "Prefix", required = false) String prefix,
       @Nullable @Element(name = "Priority", required = false) Integer priority,
@@ -100,7 +100,7 @@ public class ReplicationRule {
     return this.existingObjectReplication;
   }
 
-  public ReplicationRuleFilter filter() {
+  public RuleFilter filter() {
     return this.filter;
   }
 

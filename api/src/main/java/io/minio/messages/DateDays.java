@@ -14,14 +14,29 @@
  * limitations under the License.
  */
 
-package io.minio;
+package io.minio.messages;
 
-/** Argument class of {@link MinioClient#getBucketLifeCycle}. */
-public class GetBucketLifeCycleArgs extends BucketArgs {
-  public static Builder builder() {
-    return new Builder();
+import java.time.ZonedDateTime;
+import org.simpleframework.xml.Element;
+
+/** Helper class to {@link Transition} and {@link Expiration}. */
+public abstract class DateDays {
+  @Element(name = "Date", required = false)
+  private ResponseDate date;
+
+  @Element(name = "Days", required = false)
+  private Integer days;
+
+  public DateDays(ResponseDate date, Integer days) {
+    this.date = date;
+    this.days = days;
   }
 
-  /** Argument builder of {@link GetBucketLifeCycleArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, GetBucketLifeCycleArgs> {}
+  public ZonedDateTime date() {
+    return (date != null) ? date.zonedDateTime() : null;
+  }
+
+  public Integer days() {
+    return days;
+  }
 }

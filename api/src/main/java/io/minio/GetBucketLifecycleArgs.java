@@ -16,13 +16,12 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#deleteBucketLifeCycle}. */
-public class DeleteBucketLifeCycleArgs extends BucketArgs {
+/** Argument class of {@link MinioClient#getBucketLifecycle}. */
+public class GetBucketLifecycleArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link DeleteBucketLifeCycleArgs}. */
-  public static final class Builder
-      extends BucketArgs.Builder<Builder, DeleteBucketLifeCycleArgs> {}
+  /** Argument builder of {@link GetBucketLifecycleArgs}. */
+  public static final class Builder extends BucketArgs.Builder<Builder, GetBucketLifecycleArgs> {}
 }
