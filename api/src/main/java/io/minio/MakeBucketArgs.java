@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
+
 /** Argument class of MinioClient.makeBucket(). */
 public class MakeBucketArgs extends BucketArgs {
   private boolean objectLock;
@@ -34,5 +36,19 @@ public class MakeBucketArgs extends BucketArgs {
       operations.add(args -> args.objectLock = objectLock);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof MakeBucketArgs)) return false;
+    if (!super.equals(o)) return false;
+    MakeBucketArgs that = (MakeBucketArgs) o;
+    return objectLock == that.objectLock;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), objectLock);
   }
 }

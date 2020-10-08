@@ -18,6 +18,8 @@ package io.minio;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import com.google.common.base.Objects;
 import okhttp3.HttpUrl;
 
 public class ComposeObjectArgs extends ObjectWriteArgs {
@@ -75,5 +77,19 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
       operations.add(args -> args.sources = sources);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ComposeObjectArgs)) return false;
+    if (!super.equals(o)) return false;
+    ComposeObjectArgs that = (ComposeObjectArgs) o;
+    return Objects.equal(sources, that.sources);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), sources);
   }
 }

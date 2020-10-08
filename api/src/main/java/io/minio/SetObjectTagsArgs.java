@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.messages.Tags;
 import java.util.Map;
 
@@ -53,5 +54,19 @@ public class SetObjectTagsArgs extends ObjectVersionArgs {
       operations.add(args -> args.tags = tags);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof SetObjectTagsArgs)) return false;
+    if (!super.equals(o)) return false;
+    SetObjectTagsArgs that = (SetObjectTagsArgs) o;
+    return Objects.equal(tags, that.tags);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), tags);
   }
 }

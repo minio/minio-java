@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.messages.VersioningConfiguration;
 
 /** Argument class of MinioClient.setBucketVersioning(). */
@@ -46,5 +47,19 @@ public class SetBucketVersioningArgs extends BucketArgs {
       operations.add(args -> args.config = config);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof SetBucketVersioningArgs)) return false;
+    if (!super.equals(o)) return false;
+    SetBucketVersioningArgs that = (SetBucketVersioningArgs) o;
+    return Objects.equal(config, that.config);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), config);
   }
 }

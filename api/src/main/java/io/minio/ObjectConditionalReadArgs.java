@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -138,5 +139,24 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
       operations.add(args -> args.unmodifiedSince = unmodifiedTime);
       return (B) this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ObjectConditionalReadArgs)) return false;
+    if (!super.equals(o)) return false;
+    ObjectConditionalReadArgs that = (ObjectConditionalReadArgs) o;
+    return Objects.equal(offset, that.offset) &&
+            Objects.equal(length, that.length) &&
+            Objects.equal(matchETag, that.matchETag) &&
+            Objects.equal(notMatchETag, that.notMatchETag) &&
+            Objects.equal(modifiedSince, that.modifiedSince) &&
+            Objects.equal(unmodifiedSince, that.unmodifiedSince);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), offset, length, matchETag, notMatchETag, modifiedSince, unmodifiedSince);
   }
 }

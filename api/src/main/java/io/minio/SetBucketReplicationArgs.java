@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.messages.ReplicationConfiguration;
 
 /** Argument class of {@link MinioClient#setBucketReplication}. */
@@ -63,5 +64,20 @@ public class SetBucketReplicationArgs extends BucketArgs {
       operations.add(args -> args.objectLockToken = token);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof SetBucketReplicationArgs)) return false;
+    if (!super.equals(o)) return false;
+    SetBucketReplicationArgs that = (SetBucketReplicationArgs) o;
+    return Objects.equal(config, that.config) &&
+            Objects.equal(objectLockToken, that.objectLockToken);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), config, objectLockToken);
   }
 }

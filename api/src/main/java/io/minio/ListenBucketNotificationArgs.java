@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
+
 import java.util.Arrays;
 
 /** Argument class of MinioClient.ListenBucketNotification(). */
@@ -68,5 +70,21 @@ public class ListenBucketNotificationArgs extends BucketArgs {
       operations.add(args -> args.events = eventsCopy);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ListenBucketNotificationArgs)) return false;
+    if (!super.equals(o)) return false;
+    ListenBucketNotificationArgs that = (ListenBucketNotificationArgs) o;
+    return Objects.equal(prefix, that.prefix) &&
+            Objects.equal(suffix, that.suffix) &&
+            Arrays.equals(events, that.events);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), prefix, suffix, events);
   }
 }

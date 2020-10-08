@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.http.Method;
 import java.util.concurrent.TimeUnit;
 
@@ -78,5 +79,20 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
       super.validate(args);
       validateMethod(args.method);
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof GetPresignedObjectUrlArgs)) return false;
+    if (!super.equals(o)) return false;
+    GetPresignedObjectUrlArgs that = (GetPresignedObjectUrlArgs) o;
+    return expiry == that.expiry &&
+            method == that.method;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), method, expiry);
   }
 }
