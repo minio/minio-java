@@ -149,8 +149,7 @@ public class ComposeSource extends ObjectConditionalReadArgs {
     if (!(o instanceof ComposeSource)) return false;
     if (!super.equals(o)) return false;
     ComposeSource that = (ComposeSource) o;
-    return Objects.equal(objectSize, that.objectSize) &&
-            Objects.equal(headers, that.headers);
+    return Objects.equal(objectSize, that.objectSize) && Objects.equal(headers, that.headers);
   }
 
   @Override

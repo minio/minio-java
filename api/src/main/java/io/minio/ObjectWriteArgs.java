@@ -174,16 +174,17 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
     if (!(o instanceof ObjectWriteArgs)) return false;
     if (!super.equals(o)) return false;
     ObjectWriteArgs that = (ObjectWriteArgs) o;
-    return legalHold == that.legalHold &&
-            Objects.equal(headers, that.headers) &&
-            Objects.equal(userMetadata, that.userMetadata) &&
-            Objects.equal(sse, that.sse) &&
-            Objects.equal(tags, that.tags) &&
-            Objects.equal(retention, that.retention);
+    return legalHold == that.legalHold
+        && Objects.equal(headers, that.headers)
+        && Objects.equal(userMetadata, that.userMetadata)
+        && Objects.equal(sse, that.sse)
+        && Objects.equal(tags, that.tags)
+        && Objects.equal(retention, that.retention);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), headers, userMetadata, sse, tags, retention, legalHold);
+    return Objects.hashCode(
+        super.hashCode(), headers, userMetadata, sse, tags, retention, legalHold);
   }
 }

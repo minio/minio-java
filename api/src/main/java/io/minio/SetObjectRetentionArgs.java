@@ -66,8 +66,7 @@ public class SetObjectRetentionArgs extends ObjectVersionArgs {
     if (!(o instanceof SetObjectRetentionArgs)) return false;
     if (!super.equals(o)) return false;
     SetObjectRetentionArgs that = (SetObjectRetentionArgs) o;
-    return bypassGovernanceMode == that.bypassGovernanceMode &&
-            Objects.equal(config, that.config);
+    return bypassGovernanceMode == that.bypassGovernanceMode && Objects.equal(config, that.config);
   }
 
   @Override

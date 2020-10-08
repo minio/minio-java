@@ -67,9 +67,9 @@ public class RemoveObjectsArgs extends BucketArgs {
     if (!(o instanceof RemoveObjectsArgs)) return false;
     if (!super.equals(o)) return false;
     RemoveObjectsArgs that = (RemoveObjectsArgs) o;
-    return bypassGovernanceMode == that.bypassGovernanceMode &&
-            quiet == that.quiet &&
-            Objects.equal(objects, that.objects);
+    return bypassGovernanceMode == that.bypassGovernanceMode
+        && quiet == that.quiet
+        && Objects.equal(objects, that.objects);
   }
 
   @Override

@@ -17,7 +17,6 @@
 package io.minio;
 
 import com.google.common.base.Objects;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

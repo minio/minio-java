@@ -72,8 +72,8 @@ public class SetBucketReplicationArgs extends BucketArgs {
     if (!(o instanceof SetBucketReplicationArgs)) return false;
     if (!super.equals(o)) return false;
     SetBucketReplicationArgs that = (SetBucketReplicationArgs) o;
-    return Objects.equal(config, that.config) &&
-            Objects.equal(objectLockToken, that.objectLockToken);
+    return Objects.equal(config, that.config)
+        && Objects.equal(objectLockToken, that.objectLockToken);
   }
 
   @Override

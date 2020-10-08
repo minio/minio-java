@@ -88,8 +88,7 @@ public abstract class BucketArgs extends BaseArgs {
     if (!(o instanceof BucketArgs)) return false;
     if (!super.equals(o)) return false;
     BucketArgs that = (BucketArgs) o;
-    return Objects.equal(bucketName, that.bucketName) &&
-            Objects.equal(region, that.region);
+    return Objects.equal(bucketName, that.bucketName) && Objects.equal(region, that.region);
   }
 
   @Override

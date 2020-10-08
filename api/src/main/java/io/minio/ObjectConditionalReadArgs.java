@@ -147,16 +147,17 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
     if (!(o instanceof ObjectConditionalReadArgs)) return false;
     if (!super.equals(o)) return false;
     ObjectConditionalReadArgs that = (ObjectConditionalReadArgs) o;
-    return Objects.equal(offset, that.offset) &&
-            Objects.equal(length, that.length) &&
-            Objects.equal(matchETag, that.matchETag) &&
-            Objects.equal(notMatchETag, that.notMatchETag) &&
-            Objects.equal(modifiedSince, that.modifiedSince) &&
-            Objects.equal(unmodifiedSince, that.unmodifiedSince);
+    return Objects.equal(offset, that.offset)
+        && Objects.equal(length, that.length)
+        && Objects.equal(matchETag, that.matchETag)
+        && Objects.equal(notMatchETag, that.notMatchETag)
+        && Objects.equal(modifiedSince, that.modifiedSince)
+        && Objects.equal(unmodifiedSince, that.unmodifiedSince);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), offset, length, matchETag, notMatchETag, modifiedSince, unmodifiedSince);
+    return Objects.hashCode(
+        super.hashCode(), offset, length, matchETag, notMatchETag, modifiedSince, unmodifiedSince);
   }
 }

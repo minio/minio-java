@@ -157,8 +157,8 @@ public abstract class BaseArgs {
     if (this == o) return true;
     if (!(o instanceof BaseArgs)) return false;
     BaseArgs baseArgs = (BaseArgs) o;
-    return Objects.equal(extraHeaders, baseArgs.extraHeaders) &&
-            Objects.equal(extraQueryParams, baseArgs.extraQueryParams);
+    return Objects.equal(extraHeaders, baseArgs.extraHeaders)
+        && Objects.equal(extraQueryParams, baseArgs.extraQueryParams);
   }
 
   @Override

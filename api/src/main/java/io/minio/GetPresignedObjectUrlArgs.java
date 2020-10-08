@@ -87,8 +87,7 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
     if (!(o instanceof GetPresignedObjectUrlArgs)) return false;
     if (!super.equals(o)) return false;
     GetPresignedObjectUrlArgs that = (GetPresignedObjectUrlArgs) o;
-    return expiry == that.expiry &&
-            method == that.method;
+    return expiry == that.expiry && method == that.method;
   }
 
   @Override

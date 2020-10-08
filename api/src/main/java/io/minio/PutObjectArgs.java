@@ -17,7 +17,6 @@
 package io.minio;
 
 import com.google.common.base.Objects;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;

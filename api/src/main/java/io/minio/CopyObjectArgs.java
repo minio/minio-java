@@ -105,9 +105,9 @@ public class CopyObjectArgs extends ObjectWriteArgs {
     if (!(o instanceof CopyObjectArgs)) return false;
     if (!super.equals(o)) return false;
     CopyObjectArgs that = (CopyObjectArgs) o;
-    return Objects.equal(source, that.source) &&
-            metadataDirective == that.metadataDirective &&
-            taggingDirective == that.taggingDirective;
+    return Objects.equal(source, that.source)
+        && metadataDirective == that.metadataDirective
+        && taggingDirective == that.taggingDirective;
   }
 
   @Override

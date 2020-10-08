@@ -17,7 +17,6 @@
 package io.minio;
 
 import com.google.common.base.Objects;
-
 import java.io.IOException;
 
 public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
@@ -60,10 +59,10 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
     if (!(o instanceof PutObjectBaseArgs)) return false;
     if (!super.equals(o)) return false;
     PutObjectBaseArgs that = (PutObjectBaseArgs) o;
-    return objectSize == that.objectSize &&
-            partSize == that.partSize &&
-            partCount == that.partCount &&
-            Objects.equal(contentType, that.contentType);
+    return objectSize == that.objectSize
+        && partSize == that.partSize
+        && partCount == that.partCount
+        && Objects.equal(contentType, that.contentType);
   }
 
   @Override

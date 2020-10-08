@@ -16,10 +16,9 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import java.util.LinkedList;
 import java.util.List;
-
-import com.google.common.base.Objects;
 import okhttp3.HttpUrl;
 
 public class ComposeObjectArgs extends ObjectWriteArgs {
