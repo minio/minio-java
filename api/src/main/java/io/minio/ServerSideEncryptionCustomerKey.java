@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.crypto.SecretKey;
 import javax.security.auth.DestroyFailedException;
 
+/** Customer-key type of Server-side encryption. */
 public class ServerSideEncryptionCustomerKey extends ServerSideEncryption {
   private boolean isDestroyed = false;
   private final SecretKey secretKey;

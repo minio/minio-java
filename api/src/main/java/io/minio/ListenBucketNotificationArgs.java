@@ -18,7 +18,7 @@ package io.minio;
 
 import java.util.Arrays;
 
-/** Argument class of MinioClient.ListenBucketNotification(). */
+/** Argument class of {@link MinioClient#listenBucketNotification}. */
 public class ListenBucketNotificationArgs extends BucketArgs {
   private String prefix;
   private String suffix;

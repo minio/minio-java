@@ -21,6 +21,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.time.ZonedDateTime;
 
+/** Base argument class holds condition properties for reading object. */
 public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
   protected Long offset;
   protected Long length;
@@ -90,6 +91,7 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
     return headers;
   }
 
+  /** Base argument builder class for {@link ObjectConditionalReadArgs}. */
   @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectConditionalReadArgs>
       extends ObjectReadArgs.Builder<B, A> {

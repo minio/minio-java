@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/** KMS type of Server-side encryption. */
 public class ServerSideEncryptionKms extends ServerSideEncryption {
   private static final ObjectMapper objectMapper = new ObjectMapper();
   private final Map<String, String> headers;

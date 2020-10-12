@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getBucketNotification(). */
+/** Argument class of {@link MinioClient#getBucketNotification}. */
 public class GetBucketNotificationArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.bucketExists(). */
+/** Argument class of {@link MinioClient#bucketExists}. */
 public class BucketExistsArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of @see #listObjects(ListObjectsArgs args). */
+/** Argument class of {@link MinioClient#listObjects}. */
 public class ListObjectsArgs extends BucketArgs {
   private String delimiter = "";
   private boolean useUrlEncodingType = true;
@@ -95,7 +95,7 @@ public class ListObjectsArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of @see MinioClient#listObjects(ListObjectArgs args). */
+  /** Argument builder of {@link ListObjectsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, ListObjectsArgs> {
     @Override
     protected void validate(ListObjectsArgs args) {

@@ -1846,7 +1846,7 @@ public class MinioClient {
    * Iterable<Result<Item>> results = minioClient.listObjects(
    *     ListObjectsArgs.builder().bucket("my-bucketname").recursive(true).build());
    *
-   * // Lists maximum 100 objects information those names starts with 'E' and after
+   * // Lists maximum 100 objects information whose names starts with 'E' and after
    * // 'ExampleGuide.pdf'.
    * Iterable<Result<Item>> results = minioClient.listObjects(
    *     ListObjectsArgs.builder()
@@ -1856,7 +1856,7 @@ public class MinioClient {
    *         .maxKeys(100)
    *         .build());
    *
-   * // Lists maximum 100 objects information with version those names starts with 'E' and after
+   * // Lists maximum 100 objects information with version whose names starts with 'E' and after
    * // 'ExampleGuide.pdf'.
    * Iterable<Result<Item>> results = minioClient.listObjects(
    *     ListObjectsArgs.builder()

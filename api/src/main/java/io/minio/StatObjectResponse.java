@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import okhttp3.Headers;
 
-/** Response of MinioClient.statObject(). */
+/** Response of {@link MinioClient#statObject}. */
 public class StatObjectResponse extends GenericResponse {
   private String etag;
   private long size;

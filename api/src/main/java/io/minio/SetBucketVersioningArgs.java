@@ -18,7 +18,7 @@ package io.minio;
 
 import io.minio.messages.VersioningConfiguration;
 
-/** Argument class of MinioClient.setBucketVersioning(). */
+/** Argument class of {@link MinioClient#setBucketVersioning}. */
 public class SetBucketVersioningArgs extends BucketArgs {
   private VersioningConfiguration config;
 

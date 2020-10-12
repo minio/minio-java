@@ -18,7 +18,7 @@ package io.minio;
 
 import okhttp3.Headers;
 
-/** Response class of MinioClient.uploadPart(). */
+/** Response class of {@link MinioClient#uploadPart}. */
 public class UploadPartResponse extends GenericResponse {
   private String uploadId;
   private int partNumber;
