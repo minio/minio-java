@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import okhttp3.HttpUrl;
 
+/** Base argument class for writing object. */
 public abstract class ObjectWriteArgs extends ObjectArgs {
   // allowed maximum object size is 5TiB.
   public static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
@@ -105,6 +106,7 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
     checkSse(sse, url);
   }
 
+  /** Base argument builder class for {@link ObjectWriteArgs}. */
   @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectWriteArgs>
       extends ObjectArgs.Builder<B, A> {

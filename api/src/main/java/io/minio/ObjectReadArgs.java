@@ -19,6 +19,7 @@ package io.minio;
 import com.google.common.base.Objects;
 import okhttp3.HttpUrl;
 
+/** Base argument class for reading object. */
 public abstract class ObjectReadArgs extends ObjectVersionArgs {
   protected ServerSideEncryptionCustomerKey ssec;
 
@@ -30,6 +31,7 @@ public abstract class ObjectReadArgs extends ObjectVersionArgs {
     checkSse(ssec, url);
   }
 
+  /** Base argument builder class for {@link ObjectReadArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectReadArgs>
       extends ObjectVersionArgs.Builder<B, A> {
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class

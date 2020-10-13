@@ -20,7 +20,7 @@ import com.google.common.base.Objects;
 import io.minio.messages.Tags;
 import java.util.Map;
 
-/** Argument class of MinioClient.setBucketTags(). */
+/** Argument class of {@link MinioClient#setBucketTags}. */
 public class SetBucketTagsArgs extends BucketArgs {
   private Tags tags;
 

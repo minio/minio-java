@@ -18,7 +18,7 @@ package io.minio;
 
 import com.google.common.base.Objects;
 
-/** Argument class of MinioClient.removeObject(). */
+/** Argument class of {@link MinioClient#removeObject}. */
 public class RemoveObjectArgs extends ObjectVersionArgs {
   private boolean bypassGovernanceMode;
 

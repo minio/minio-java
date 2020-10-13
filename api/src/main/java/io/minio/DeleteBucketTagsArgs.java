@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.deleteBucketTags(). */
+/** Argument class of {@link MinioClient#deleteBucketTags}. */
 public class DeleteBucketTagsArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

@@ -18,7 +18,7 @@ package io.minio;
 
 import com.google.common.base.Objects;
 
-/** Argument class of MinioClient.setBucketLifeCycle(). */
+/** Argument class of {@link MinioClient#setBucketLifeCycle}. */
 public class SetBucketLifeCycleArgs extends BucketArgs {
   private String config;
 

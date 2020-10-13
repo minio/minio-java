@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getObjectLockConfiguration(). */
+/** Argument class of {@link MinioClient#getObjectLockConfiguration}. */
 public class GetObjectLockConfigurationArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

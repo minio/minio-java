@@ -19,7 +19,7 @@ package io.minio;
 import com.google.common.base.Objects;
 import io.minio.messages.Retention;
 
-/** Argument class of MinioClient.setObjectRetention(). */
+/** Argument class of {@link MinioClient#setObjectRetention}. */
 public class SetObjectRetentionArgs extends ObjectVersionArgs {
   private Retention config;
   private boolean bypassGovernanceMode;

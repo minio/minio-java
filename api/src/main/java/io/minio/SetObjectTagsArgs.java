@@ -20,7 +20,7 @@ import com.google.common.base.Objects;
 import io.minio.messages.Tags;
 import java.util.Map;
 
-/** Argument class of MinioClient.setObjectTags(). */
+/** Argument class of {@link MinioClient#setObjectTags}. */
 public class SetObjectTagsArgs extends ObjectVersionArgs {
   private Tags tags;
 

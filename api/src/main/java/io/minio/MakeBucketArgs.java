@@ -18,7 +18,7 @@ package io.minio;
 
 import com.google.common.base.Objects;
 
-/** Argument class of MinioClient.makeBucket(). */
+/** Argument class of {@link MinioClient#makeBucket}. */
 public class MakeBucketArgs extends BucketArgs {
   private boolean objectLock;
 

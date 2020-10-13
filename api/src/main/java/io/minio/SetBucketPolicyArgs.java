@@ -18,7 +18,7 @@ package io.minio;
 
 import com.google.common.base.Objects;
 
-/** Argument class of MinioClient.setBucketPolicy(). */
+/** Argument class of {@link MinioClient#setBucketPolicy}. */
 public class SetBucketPolicyArgs extends BucketArgs {
   private String config;
 

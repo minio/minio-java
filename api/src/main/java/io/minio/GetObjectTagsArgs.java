@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of MinioClient.getObjectTags(). */
+/** Argument class of {@link MinioClient#getObjectTags}. */
 public class GetObjectTagsArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();

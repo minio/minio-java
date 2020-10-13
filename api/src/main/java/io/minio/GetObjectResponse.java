@@ -20,6 +20,7 @@ import java.io.FilterInputStream;
 import java.io.InputStream;
 import okhttp3.Headers;
 
+/** Response class of {@link MinioClient#getObject}. */
 public class GetObjectResponse extends FilterInputStream {
   private GenericResponse response;
 

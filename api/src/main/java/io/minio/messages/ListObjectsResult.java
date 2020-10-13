@@ -23,6 +23,10 @@ import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
+/**
+ * Base class of {@link ListBucketResultV1}, {@link ListBucketResultV2} and {@link
+ * ListVersionsResult}.
+ */
 public abstract class ListObjectsResult {
   @Element(name = "Name")
   private String name;

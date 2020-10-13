@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-/** Argument class of MinioClient.uploadObject(). */
+/** Argument class of {@link MinioClient#uploadObject}. */
 public class UploadObjectArgs extends PutObjectBaseArgs {
   private String filename;
 
