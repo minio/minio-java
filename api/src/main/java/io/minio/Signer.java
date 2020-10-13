@@ -41,43 +41,35 @@ public class Signer {
   //
   // Excerpts from @lsegal - https://github.com/aws/aws-sdk-js/issues/659#issuecomment-120477258
   //
-  //  User-Agent:
+  // * User-Agent
+  // This is ignored from signing because signing this causes problems with generating pre-signed
+  // URLs (that are executed by other agents) or when customers pass requests through proxies, which
+  // may modify the user-agent.
   //
-  //      This is ignored from signing because signing this causes problems with generating
-  // pre-signed URLs
-  //      (that are executed by other agents) or when customers pass requests through proxies, which
-  // may
-  //      modify the user-agent.
+  // * Content-Length
+  // This is ignored from signing because generating a pre-signed URL should not provide a
+  // content-length constraint, specifically when vending a S3 pre-signed PUT URL. The corollary to
+  // this is that when sending regular requests (non-pre-signed), the signature contains a checksum
+  // of the body, which implicitly validates the payload length (since changing the number of bytes
+  // would change the checksum) and therefore this header is not valuable in the signature.
   //
-  //  Content-Length:
+  // * Content-Type
+  // Signing this header causes quite a number of problems in browser environments, where browsers
+  // like to modify and normalize the content-type header in different ways. There is more
+  // information on this in https://github.com/aws/aws-sdk-js/issues/244. Avoiding this field
+  // simplifies logic and reduces the possibility of future bugs.
   //
-  //      This is ignored from signing because generating a pre-signed URL should not provide a
-  // content-length
-  //      constraint, specifically when vending a S3 pre-signed PUT URL. The corollary to this is
-  // that when
-  //      sending regular requests (non-pre-signed), the signature contains a checksum of the body,
-  // which
-  //      implicitly validates the payload length (since changing the number of bytes would change
-  // the checksum)
-  //      and therefore this header is not valuable in the signature.
+  // * Authorization
+  // Is skipped for obvious reasons.
   //
-  //  Content-Type:
-  //
-  //      Signing this header causes quite a number of problems in browser environments, where
-  // browsers
-  //      like to modify and normalize the content-type header in different ways. There is more
-  // information
-  //      on this in https://github.com/aws/aws-sdk-js/issues/244. Avoiding this field simplifies
-  // logic
-  //      and reduces the possibility of future bugs
-  //
-  //  Authorization:
-  //
-  //      Is skipped for obvious reasons
+  // * Accept-Encoding
+  // Some S3 servers like Hitachi Content Platform do not honour this header for signature
+  // calculation.
   //
   private static final Set<String> IGNORED_HEADERS = new HashSet<>();
 
   static {
+    IGNORED_HEADERS.add("accept-encoding");
     IGNORED_HEADERS.add("authorization");
     IGNORED_HEADERS.add("content-type");
     IGNORED_HEADERS.add("content-length");
