@@ -17,14 +17,10 @@
 import io.minio.MinioClient;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.errors.MinioException;
-import io.minio.messages.SseAlgorithm;
 import io.minio.messages.SseConfiguration;
-import io.minio.messages.SseConfigurationRule;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.LinkedList;
-import java.util.List;
 
 public class SetBucketEncryption {
   /** MinioClient.setBucketEncryption() example. */
@@ -45,12 +41,11 @@ public class SetBucketEncryption {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      List<SseConfigurationRule> rules = new LinkedList<>();
-      rules.add(new SseConfigurationRule(null, SseAlgorithm.AES256));
-      SseConfiguration config = new SseConfiguration(rules);
-
       minioClient.setBucketEncryption(
-          SetBucketEncryptionArgs.builder().bucket("my-bucketname").config(config).build());
+          SetBucketEncryptionArgs.builder()
+              .bucket("my-bucketname")
+              .config(SseConfiguration.newConfigWithSseS3Rule())
+              .build());
       System.out.println("Encryption configuration of my-bucketname is set successfully");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

@@ -3562,7 +3562,7 @@ public class MinioClient {
       }
     }
 
-    return new SseConfiguration();
+    return new SseConfiguration(null);
   }
 
   /**
