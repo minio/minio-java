@@ -58,12 +58,11 @@ public class RemoveObjectsArgs extends BucketArgs {
     if (!super.equals(o)) return false;
     RemoveObjectsArgs that = (RemoveObjectsArgs) o;
     return bypassGovernanceMode == that.bypassGovernanceMode
-        && quiet == that.quiet
         && Objects.equal(objects, that.objects);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), bypassGovernanceMode, objects, quiet);
+    return Objects.hashCode(super.hashCode(), bypassGovernanceMode, objects);
   }
 }
