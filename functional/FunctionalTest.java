@@ -877,6 +877,7 @@ public class FunctionalTest {
     userMetadata.put("My-Project", "Project One");
     userMetadata.put("My-header1", "    a   b   c  ");
     userMetadata.put("My-Header2", "\"a   b   c\"");
+    userMetadata.put("My-Unicode-Tag", "商品");
 
     testPutObject(
         "[user metadata]",

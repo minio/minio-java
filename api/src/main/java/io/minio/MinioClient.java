@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -123,6 +122,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -441,41 +441,36 @@ public class MinioClient {
     return url.host() + ":" + url.port();
   }
 
+  private Headers httpHeaders(Multimap<String, String> headerMap) {
+    Headers.Builder builder = new Headers.Builder();
+    if (headerMap == null) return builder.build();
+
+    if (headerMap.containsKey("Content-Encoding")) {
+      builder.add(
+          "Content-Encoding",
+          headerMap.get("Content-Encoding").stream()
+              .distinct()
+              .filter(encoding -> !encoding.isEmpty())
+              .collect(Collectors.joining(",")));
+    }
+
+    for (Map.Entry<String, String> entry : headerMap.entries()) {
+      if (!entry.getKey().equals("Content-Encoding")) {
+        builder.addUnsafeNonAscii(entry.getKey(), entry.getValue());
+      }
+    }
+
+    return builder.build();
+  }
+
   /** Create HTTP request for given paramaters. */
   protected Request createRequest(
-      HttpUrl url,
-      Method method,
-      Multimap<String, String> headerMap,
-      Object body,
-      int length,
-      Credentials creds)
+      HttpUrl url, Method method, Headers headers, Object body, int length, Credentials creds)
       throws InsufficientDataException, InternalException, IOException, NoSuchAlgorithmException {
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
 
-    String contentType = null;
-    String contentEncoding = null;
-    if (headerMap != null) {
-      contentEncoding =
-          headerMap.get("Content-Encoding").stream()
-              .distinct()
-              .filter(encoding -> !encoding.isEmpty())
-              .collect(Collectors.joining(","));
-      for (Map.Entry<String, String> entry : headerMap.entries()) {
-        if (entry.getKey().equals("Content-Type")) {
-          contentType = entry.getValue();
-        }
-
-        if (!entry.getKey().equals("Content-Encoding")) {
-          requestBuilder.header(entry.getKey(), entry.getValue());
-        }
-      }
-    }
-
-    if (!Strings.isNullOrEmpty(contentEncoding)) {
-      requestBuilder.header("Content-Encoding", contentEncoding);
-    }
-
+    if (headers != null) requestBuilder.headers(headers);
     requestBuilder.header("Host", getHostHeader(url));
     // Disable default gzip compression by okhttp library.
     requestBuilder.header("Accept-Encoding", "identity");
@@ -526,6 +521,7 @@ public class MinioClient {
 
     RequestBody requestBody = null;
     if (body != null) {
+      String contentType = (headers != null) ? headers.get("Content-Type") : null;
       if (body instanceof RandomAccessFile) {
         requestBody = new HttpRequestBody((RandomAccessFile) body, length, contentType);
       } else if (body instanceof BufferedInputStream) {
@@ -568,7 +564,7 @@ public class MinioClient {
         bucketName,
         objectName,
         getRegion(bucketName, region),
-        merge(args.extraHeaders(), headers),
+        httpHeaders(merge(args.extraHeaders(), headers)),
         merge(args.extraQueryParams(), queryParams),
         body,
         length);
@@ -580,7 +576,7 @@ public class MinioClient {
       String bucketName,
       String objectName,
       String region,
-      Multimap<String, String> headerMap,
+      Headers headers,
       Multimap<String, String> queryParamMap,
       Object body,
       int length)
@@ -610,7 +606,7 @@ public class MinioClient {
 
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
     Credentials creds = (provider == null) ? null : provider.fetch();
-    Request request = createRequest(url, method, headerMap, body, length, creds);
+    Request request = createRequest(url, method, headers, body, length, creds);
     if (creds != null) {
       request =
           Signer.signV4S3(
@@ -629,13 +625,12 @@ public class MinioClient {
         encodedPath += "?" + encodedQuery;
       }
       this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
-      String headers =
+      this.traceStream.println(
           request
               .headers()
               .toString()
               .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*");
-      this.traceStream.println(headers);
+              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
       if (traceRequestBody) {
         this.traceStream.println(new String((byte[]) body, StandardCharsets.UTF_8));
       }
@@ -2299,7 +2294,7 @@ public class MinioClient {
             args.bucket(),
             null,
             region,
-            merge(args.extraHeaders(), headers),
+            httpHeaders(merge(args.extraHeaders(), headers)),
             args.extraQueryParams(),
             region.equals(US_EAST_1) ? null : new CreateBucketConfiguration(region),
             0)) {
@@ -4093,7 +4088,7 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             merge(extraQueryParams, newMultimap(UPLOAD_ID, uploadId)),
             null,
             0)) {
@@ -4145,7 +4140,7 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             queryParams,
             new CompleteMultipartUpload(parts),
             0)) {
@@ -4235,7 +4230,7 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName, region),
-            headersCopy,
+            httpHeaders(headersCopy),
             queryParams,
             null,
             0)) {
@@ -4296,7 +4291,7 @@ public class MinioClient {
             bucketName,
             null,
             getRegion(bucketName, region),
-            headers,
+            httpHeaders(headers),
             merge(extraQueryParams, newMultimap("delete", "")),
             new DeleteRequest(objectList, quiet),
             0)) {
@@ -4390,7 +4385,7 @@ public class MinioClient {
             bucketName,
             null,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             queryParams,
             null,
             0)) {
@@ -4449,7 +4444,7 @@ public class MinioClient {
             bucketName,
             null,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             queryParams,
             null,
             0)) {
@@ -4513,7 +4508,7 @@ public class MinioClient {
             bucketName,
             null,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             queryParams,
             null,
             0)) {
@@ -4569,7 +4564,7 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName, region),
-            headers,
+            httpHeaders(headers),
             extraQueryParams,
             data,
             length)) {
@@ -4647,7 +4642,7 @@ public class MinioClient {
             bucketName,
             null,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             queryParams,
             null,
             0)) {
@@ -4709,7 +4704,7 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             queryParams,
             null,
             0)) {
@@ -4769,7 +4764,7 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName, region),
-            extraHeaders,
+            httpHeaders(extraHeaders),
             merge(
                 extraQueryParams,
                 newMultimap("partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
@@ -4826,7 +4821,7 @@ public class MinioClient {
             bucketName,
             objectName,
             getRegion(bucketName, region),
-            headers,
+            httpHeaders(headers),
             merge(
                 extraQueryParams,
                 newMultimap("partNumber", Integer.toString(partNumber), "uploadId", uploadId)),
