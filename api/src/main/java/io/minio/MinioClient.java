@@ -1721,13 +1721,16 @@ public class MinioClient {
       @Override
       public Iterator<Result<DeleteError>> iterator() {
         return new Iterator<Result<DeleteError>>() {
-          private Result<DeleteError> error;
-          private Iterator<DeleteError> errorIterator;
+          private Result<DeleteError> error = null;
+          private Iterator<DeleteError> errorIterator = null;
           private boolean completed = false;
           private Iterator<DeleteObject> objectIter = args.objects().iterator();
 
           private synchronized void populate() {
-            List<DeleteError> errorList = null;
+            if (completed) {
+              return;
+            }
+
             try {
               List<DeleteObject> objectList = new LinkedList<>();
               int i = 0;
@@ -1736,17 +1739,21 @@ public class MinioClient {
                 i++;
               }
 
-              if (objectList.size() > 0) {
+              completed = objectList.size() == 0;
+              if (!completed) {
                 DeleteObjectsResponse response =
                     deleteObjects(
                         args.bucket(),
                         args.region(),
                         objectList,
-                        args.quiet(),
+                        true,
                         args.bypassGovernanceMode(),
                         args.extraHeaders(),
                         args.extraQueryParams());
-                errorList = response.result().errorList();
+                if (response.result().errorList().size() > 0) {
+                  errorIterator = response.result().errorList().iterator();
+                  completed = true;
+                }
               }
             } catch (ErrorResponseException
                 | InsufficientDataException
@@ -1757,66 +1764,35 @@ public class MinioClient {
                 | NoSuchAlgorithmException
                 | ServerException
                 | XmlParserException e) {
-              this.error = new Result<>(e);
-            } finally {
-              if (errorList != null) {
-                this.errorIterator = errorList.iterator();
-              } else {
-                this.errorIterator = new LinkedList<DeleteError>().iterator();
-              }
+              error = new Result<>(e);
+              completed = true;
             }
           }
 
           @Override
           public boolean hasNext() {
-            if (this.completed) {
-              return false;
-            }
-
-            if (this.error == null && this.errorIterator == null) {
+            while (error == null && errorIterator == null && !completed) {
               populate();
             }
 
-            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
-              populate();
-            }
-
-            if (this.error != null) {
+            if (error != null || (errorIterator != null && errorIterator.hasNext())) {
               return true;
             }
 
-            if (this.errorIterator.hasNext()) {
-              return true;
-            }
-
-            this.completed = true;
-            return false;
+            return !completed;
           }
 
           @Override
           public Result<DeleteError> next() {
-            if (this.completed) {
-              throw new NoSuchElementException();
+            if (!hasNext()) throw new NoSuchElementException();
+
+            if (error != null) {
+              return error;
+            } else if (errorIterator != null && errorIterator.hasNext()) {
+              return new Result<>(errorIterator.next());
             }
 
-            if (this.error == null && this.errorIterator == null) {
-              populate();
-            }
-
-            if (this.error == null && this.errorIterator != null && !this.errorIterator.hasNext()) {
-              populate();
-            }
-
-            if (this.error != null) {
-              this.completed = true;
-              return this.error;
-            }
-
-            if (this.errorIterator.hasNext()) {
-              return new Result<>(this.errorIterator.next());
-            }
-
-            this.completed = true;
+            // This never happens.
             throw new NoSuchElementException();
           }
 

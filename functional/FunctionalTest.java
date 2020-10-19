@@ -1519,28 +1519,54 @@ public class FunctionalTest {
         RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
   }
 
+  public static void testRemoveObjects(String testTags, List<ObjectWriteResponse> results)
+      throws Exception {
+    String methodName = "removeObjects()";
+    long startTime = System.currentTimeMillis();
+    try {
+      removeObjects(bucketName, results);
+      mintSuccessLog(methodName, testTags, startTime);
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    } finally {
+      removeObjects(bucketName, results);
+    }
+  }
+
   public static void removeObjects() throws Exception {
     String methodName = "removeObjects()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
 
+    testRemoveObjects("[basic]", createObjects(bucketName, 3, 0));
+
+    String testTags = "[3005 objects]";
     long startTime = System.currentTimeMillis();
+    String objectName = getRandomName();
+    List<ObjectWriteResponse> results = new LinkedList<>();
+    for (int i = 0; i < 3004; i++) {
+      results.add(
+          new ObjectWriteResponse(null, bucketName, null, objectName + "-" + i, null, null));
+    }
+    List<ObjectWriteResponse> existingObject = createObjects(bucketName, 1, 0);
+    results.addAll(existingObject);
+    testRemoveObjects(testTags, results);
     try {
-      List<ObjectWriteResponse> results = null;
-      try {
-        results = createObjects(bucketName, 3, 0);
-        results.add(
-            new ObjectWriteResponse(null, bucketName, null, "nonexistent-object", null, null));
-        removeObjects(bucketName, results);
-        mintSuccessLog(methodName, null, startTime);
-      } finally {
-        if (results != null) {
-          removeObjects(bucketName, results);
-        }
+      client.statObject(
+          StatObjectArgs.builder()
+              .bucket(bucketName)
+              .object(existingObject.get(0).object())
+              .build());
+      handleException(
+          methodName,
+          testTags,
+          startTime,
+          new Exception("object " + existingObject.get(0).object() + " still exist"));
+    } catch (ErrorResponseException e) {
+      if (!e.errorResponse().code().equals("NoSuchKey")) {
+        throw e;
       }
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
     }
   }
 

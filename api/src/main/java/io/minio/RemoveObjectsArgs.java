@@ -24,7 +24,6 @@ import java.util.LinkedList;
 public class RemoveObjectsArgs extends BucketArgs {
   private boolean bypassGovernanceMode;
   private Iterable<DeleteObject> objects = new LinkedList<>();
-  private boolean quiet;
 
   public boolean bypassGovernanceMode() {
     return bypassGovernanceMode;
@@ -32,10 +31,6 @@ public class RemoveObjectsArgs extends BucketArgs {
 
   public Iterable<DeleteObject> objects() {
     return objects;
-  }
-
-  public boolean quiet() {
-    return quiet;
   }
 
   public static Builder builder() {
@@ -52,11 +47,6 @@ public class RemoveObjectsArgs extends BucketArgs {
     public Builder objects(Iterable<DeleteObject> objects) {
       validateNotNull(objects, "objects");
       operations.add(args -> args.objects = objects);
-      return this;
-    }
-
-    public Builder quiet(boolean flag) {
-      operations.add(args -> args.quiet = flag);
       return this;
     }
   }
