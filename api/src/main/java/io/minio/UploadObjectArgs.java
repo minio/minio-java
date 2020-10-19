@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -89,5 +90,19 @@ public class UploadObjectArgs extends PutObjectBaseArgs {
       operations.add(args -> args.contentType = contentType);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof UploadObjectArgs)) return false;
+    if (!super.equals(o)) return false;
+    UploadObjectArgs that = (UploadObjectArgs) o;
+    return Objects.equal(filename, that.filename);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), filename);
   }
 }

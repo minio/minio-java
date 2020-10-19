@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
+
 /** Base argument class holds bucket name and region. */
 public abstract class BucketArgs extends BaseArgs {
   protected String bucketName;
@@ -78,5 +80,19 @@ public abstract class BucketArgs extends BaseArgs {
       operations.add(args -> args.region = region);
       return (B) this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof BucketArgs)) return false;
+    if (!super.equals(o)) return false;
+    BucketArgs that = (BucketArgs) o;
+    return Objects.equal(bucketName, that.bucketName) && Objects.equal(region, that.region);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), bucketName, region);
   }
 }

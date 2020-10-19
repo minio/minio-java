@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -149,5 +150,19 @@ public abstract class BaseArgs {
       validate(args);
       return args;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof BaseArgs)) return false;
+    BaseArgs baseArgs = (BaseArgs) o;
+    return Objects.equal(extraHeaders, baseArgs.extraHeaders)
+        && Objects.equal(extraQueryParams, baseArgs.extraQueryParams);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(extraHeaders, extraQueryParams);
   }
 }

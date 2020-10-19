@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
+
 /** Argument class of {@link MinioClient#removeObject}. */
 public class RemoveObjectArgs extends ObjectVersionArgs {
   private boolean bypassGovernanceMode;
@@ -34,5 +36,19 @@ public class RemoveObjectArgs extends ObjectVersionArgs {
       operations.add(args -> args.bypassGovernanceMode = flag);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof RemoveObjectArgs)) return false;
+    if (!super.equals(o)) return false;
+    RemoveObjectArgs that = (RemoveObjectArgs) o;
+    return bypassGovernanceMode == that.bypassGovernanceMode;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), bypassGovernanceMode);
   }
 }

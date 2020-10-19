@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,5 +51,19 @@ public class DownloadObjectArgs extends ObjectReadArgs {
         throw new IllegalArgumentException(filename + ": not a regular file");
       }
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof DownloadObjectArgs)) return false;
+    if (!super.equals(o)) return false;
+    DownloadObjectArgs that = (DownloadObjectArgs) o;
+    return Objects.equal(filename, that.filename);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), filename);
   }
 }

@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.messages.ObjectLockConfiguration;
 
 /** Argument class of {@link MinioClient#setObjectLockConfiguration}. */
@@ -48,5 +49,19 @@ public class SetObjectLockConfigurationArgs extends BucketArgs {
       operations.add(args -> args.config = config);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof SetObjectLockConfigurationArgs)) return false;
+    if (!super.equals(o)) return false;
+    SetObjectLockConfigurationArgs that = (SetObjectLockConfigurationArgs) o;
+    return Objects.equal(config, that.config);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), config);
   }
 }

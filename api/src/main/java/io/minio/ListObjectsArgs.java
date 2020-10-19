@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
+
 /** Argument class of {@link MinioClient#listObjects}. */
 public class ListObjectsArgs extends BucketArgs {
   private String delimiter = "";
@@ -191,5 +193,43 @@ public class ListObjectsArgs extends BucketArgs {
       operations.add(args -> args.includeVersions = includeVersions);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ListObjectsArgs)) return false;
+    if (!super.equals(o)) return false;
+    ListObjectsArgs that = (ListObjectsArgs) o;
+    return useUrlEncodingType == that.useUrlEncodingType
+        && maxKeys == that.maxKeys
+        && fetchOwner == that.fetchOwner
+        && includeUserMetadata == that.includeUserMetadata
+        && recursive == that.recursive
+        && useApiVersion1 == that.useApiVersion1
+        && includeVersions == that.includeVersions
+        && Objects.equal(delimiter, that.delimiter)
+        && Objects.equal(keyMarker, that.keyMarker)
+        && Objects.equal(prefix, that.prefix)
+        && Objects.equal(continuationToken, that.continuationToken)
+        && Objects.equal(versionIdMarker, that.versionIdMarker);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        super.hashCode(),
+        delimiter,
+        useUrlEncodingType,
+        keyMarker,
+        maxKeys,
+        prefix,
+        continuationToken,
+        fetchOwner,
+        versionIdMarker,
+        includeUserMetadata,
+        recursive,
+        useApiVersion1,
+        includeVersions);
   }
 }

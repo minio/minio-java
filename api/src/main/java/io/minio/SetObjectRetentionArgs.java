@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.messages.Retention;
 
 /** Argument class of {@link MinioClient#setObjectRetention}. */
@@ -57,5 +58,19 @@ public class SetObjectRetentionArgs extends ObjectVersionArgs {
       operations.add(args -> args.bypassGovernanceMode = bypassGovernanceMode);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof SetObjectRetentionArgs)) return false;
+    if (!super.equals(o)) return false;
+    SetObjectRetentionArgs that = (SetObjectRetentionArgs) o;
+    return bypassGovernanceMode == that.bypassGovernanceMode && Objects.equal(config, that.config);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), config, bypassGovernanceMode);
   }
 }

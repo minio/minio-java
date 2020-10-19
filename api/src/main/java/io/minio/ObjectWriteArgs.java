@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -167,5 +168,25 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
       operations.add(args -> args.legalHold = flag);
       return (B) this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ObjectWriteArgs)) return false;
+    if (!super.equals(o)) return false;
+    ObjectWriteArgs that = (ObjectWriteArgs) o;
+    return legalHold == that.legalHold
+        && Objects.equal(headers, that.headers)
+        && Objects.equal(userMetadata, that.userMetadata)
+        && Objects.equal(sse, that.sse)
+        && Objects.equal(tags, that.tags)
+        && Objects.equal(retention, that.retention);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        super.hashCode(), headers, userMetadata, sse, tags, retention, legalHold);
   }
 }

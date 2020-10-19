@@ -16,6 +16,8 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
+
 /** Argument class of {@link MinioClient#setBucketPolicy}. */
 public class SetBucketPolicyArgs extends BucketArgs {
   private String config;
@@ -45,5 +47,19 @@ public class SetBucketPolicyArgs extends BucketArgs {
       operations.add(args -> args.config = config);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof SetBucketPolicyArgs)) return false;
+    if (!super.equals(o)) return false;
+    SetBucketPolicyArgs that = (SetBucketPolicyArgs) o;
+    return Objects.equal(config, that.config);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), config);
   }
 }

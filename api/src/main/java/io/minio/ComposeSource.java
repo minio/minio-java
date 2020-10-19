@@ -17,6 +17,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -141,4 +142,18 @@ public class ComposeSource extends ObjectConditionalReadArgs {
   /** Argument builder of {@link ComposeSource}. */
   public static final class Builder
       extends ObjectConditionalReadArgs.Builder<Builder, ComposeSource> {}
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ComposeSource)) return false;
+    if (!super.equals(o)) return false;
+    ComposeSource that = (ComposeSource) o;
+    return Objects.equal(objectSize, that.objectSize) && Objects.equal(headers, that.headers);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), objectSize, headers);
+  }
 }

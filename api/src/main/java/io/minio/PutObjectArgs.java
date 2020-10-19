@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -153,5 +154,19 @@ public class PutObjectArgs extends PutObjectBaseArgs {
       operations.add(args -> args.contentType = contentType);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof PutObjectArgs)) return false;
+    if (!super.equals(o)) return false;
+    PutObjectArgs that = (PutObjectArgs) o;
+    return Objects.equal(stream, that.stream);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), stream);
   }
 }

@@ -16,6 +16,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.messages.DeleteObject;
 import java.util.LinkedList;
 
@@ -58,5 +59,21 @@ public class RemoveObjectsArgs extends BucketArgs {
       operations.add(args -> args.quiet = flag);
       return this;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof RemoveObjectsArgs)) return false;
+    if (!super.equals(o)) return false;
+    RemoveObjectsArgs that = (RemoveObjectsArgs) o;
+    return bypassGovernanceMode == that.bypassGovernanceMode
+        && quiet == that.quiet
+        && Objects.equal(objects, that.objects);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), bypassGovernanceMode, objects, quiet);
   }
 }

@@ -17,6 +17,7 @@
 
 package io.minio;
 
+import com.google.common.base.Objects;
 import io.minio.messages.InputSerialization;
 import io.minio.messages.OutputSerialization;
 
@@ -112,5 +113,31 @@ public class SelectObjectContentArgs extends ObjectReadArgs {
       validateInputSerialization(args.inputSerialization());
       validateOutputSerialization(args.outputSerialization());
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof SelectObjectContentArgs)) return false;
+    if (!super.equals(o)) return false;
+    SelectObjectContentArgs that = (SelectObjectContentArgs) o;
+    return Objects.equal(sqlExpression, that.sqlExpression)
+        && Objects.equal(inputSerialization, that.inputSerialization)
+        && Objects.equal(outputSerialization, that.outputSerialization)
+        && Objects.equal(requestProgress, that.requestProgress)
+        && Objects.equal(scanStartRange, that.scanStartRange)
+        && Objects.equal(scanEndRange, that.scanEndRange);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        super.hashCode(),
+        sqlExpression,
+        inputSerialization,
+        outputSerialization,
+        requestProgress,
+        scanStartRange,
+        scanEndRange);
   }
 }
