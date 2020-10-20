@@ -19,7 +19,7 @@ package io.minio.messages;
 import java.time.ZonedDateTime;
 import org.simpleframework.xml.Element;
 
-/** Helper class to {@link Transition} and {@link Expiration}. */
+/** Base class for {@link Transition} and {@link Expiration}. */
 public abstract class DateDays {
   @Element(name = "Date", required = false)
   private ResponseDate date;

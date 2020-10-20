@@ -2846,9 +2846,43 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
+        LifecycleConfiguration config =
+            client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
+        if (config != null) {
+          throw new Exception("config: expected: <null>, got: <non-null>");
+        }
         testSetBucketLifecycle(bucketName);
-        client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
+        config =
+            client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
+        if (config == null) {
+          throw new Exception("config: expected: <non-null>, got: <null>");
+        }
+        List<LifecycleRule> rules = config.rules();
+        if (config.rules().size() != 1) {
+          throw new Exception("config.rules().size(): expected: 1, got: " + config.rules().size());
+        }
+        LifecycleRule rule = rules.get(0);
+        if (rule.status() != Status.ENABLED) {
+          throw new Exception(
+              "rule.status(): expected: " + Status.ENABLED + ", got: " + rule.status());
+        }
+        if (rule.expiration() == null) {
+          throw new Exception("rule.expiration(): expected: <non-null>, got: <null>");
+        }
+        if (rule.expiration().days() != 365) {
+          throw new Exception(
+              "rule.expiration().days(): expected: 365, got: " + rule.expiration().days());
+        }
+        if (rule.filter() == null) {
+          throw new Exception("rule.filter(): expected: <non-null>, got: <null>");
+        }
+        if (!"logs/".equals(rule.filter().prefix())) {
+          throw new Exception(
+              "rule.filter().prefix(): expected: logs/, got: " + rule.filter().prefix());
+        }
+        if (!"rule2".equals(rule.id())) {
+          throw new Exception("rule.id(): expected: rule2, got: " + rule.id());
+        }
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
