@@ -114,6 +114,3 @@ $ mc ls play/asiatrip/
 
 ## Contribute
 Please refer [Contributors Guide](https://github.com/minio/minio-java/blob/release/CONTRIBUTING.md)
-
-[![Build Status](https://travis-ci.org/minio/minio-java.svg)](https://travis-ci.org/minio/minio-java)
-[![Build status](https://ci.appveyor.com/api/projects/status/1d05e6nvxcelmrak?svg=true)](https://ci.appveyor.com/project/harshavardhana/minio-java)
