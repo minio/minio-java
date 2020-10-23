@@ -16,6 +16,9 @@
 
 package io.minio.messages;
 
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Path;
@@ -36,14 +39,10 @@ public class SseConfigurationRule {
 
   /** Constructs new server-side encryption configuration rule. */
   public SseConfigurationRule(
-      @Element(name = "KMSMasterKeyID", required = false) String kmsMasterKeyId,
-      @Element(name = "SSEAlgorithm") SseAlgorithm sseAlgorithm) {
-    if (sseAlgorithm == null) {
-      throw new IllegalArgumentException("SSE Algorithm cannot be null");
-    }
-
+      @Nonnull @Element(name = "SSEAlgorithm") SseAlgorithm sseAlgorithm,
+      @Nullable @Element(name = "KMSMasterKeyID", required = false) String kmsMasterKeyId) {
+    this.sseAlgorithm = Objects.requireNonNull(sseAlgorithm, "SSE Algorithm must be provided");
     this.kmsMasterKeyId = kmsMasterKeyId;
-    this.sseAlgorithm = sseAlgorithm;
   }
 
   public String kmsMasterKeyId() {

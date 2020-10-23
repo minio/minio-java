@@ -16,10 +16,8 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import org.simpleframework.xml.ElementList;
+import javax.annotation.Nullable;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
@@ -34,17 +32,23 @@ import org.simpleframework.xml.Root;
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class SseConfiguration {
-  @ElementList(name = "Rule", inline = true, required = false)
-  private List<SseConfigurationRule> ruleList;
+  @Element(name = "Rule", required = false)
+  private SseConfigurationRule rule;
 
-  public SseConfiguration() {}
-
-  /** Constructs new server-side encryption configuration for given rules. */
-  public SseConfiguration(List<SseConfigurationRule> ruleList) {
-    this.ruleList = Collections.unmodifiableList(ruleList);
+  public SseConfiguration(
+      @Nullable @Element(name = "Rule", required = false) SseConfigurationRule rule) {
+    this.rule = rule;
   }
 
-  public List<SseConfigurationRule> rules() {
-    return Collections.unmodifiableList(ruleList == null ? new LinkedList<>() : ruleList);
+  public static SseConfiguration newConfigWithSseS3Rule() {
+    return new SseConfiguration(new SseConfigurationRule(SseAlgorithm.AES256, null));
+  }
+
+  public static SseConfiguration newConfigWithSseKmsRule(@Nullable String kmsMasterKeyId) {
+    return new SseConfiguration(new SseConfigurationRule(SseAlgorithm.AWS_KMS, kmsMasterKeyId));
+  }
+
+  public SseConfigurationRule rule() {
+    return this.rule;
   }
 }

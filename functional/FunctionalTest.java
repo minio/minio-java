@@ -111,7 +111,6 @@ import io.minio.messages.RetentionDurationYears;
 import io.minio.messages.RetentionMode;
 import io.minio.messages.SseAlgorithm;
 import io.minio.messages.SseConfiguration;
-import io.minio.messages.SseConfigurationRule;
 import io.minio.messages.Stats;
 import io.minio.messages.Status;
 import io.minio.messages.Tags;
@@ -3148,11 +3147,11 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        List<SseConfigurationRule> ruleList = new LinkedList<>();
-        ruleList.add(new SseConfigurationRule(null, SseAlgorithm.AES256));
-        SseConfiguration config = new SseConfiguration(ruleList);
         client.setBucketEncryption(
-            SetBucketEncryptionArgs.builder().bucket(bucketName).config(config).build());
+            SetBucketEncryptionArgs.builder()
+                .bucket(bucketName)
+                .config(SseConfiguration.newConfigWithSseS3Rule())
+                .build());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3176,27 +3175,27 @@ public class FunctionalTest {
         SseConfiguration config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        if (config.rules().size() != 0) {
-          throw new Exception("rules: expected: <empty>, got: " + config.rules());
+        if (config.rule() != null) {
+          throw new Exception("rule: expected: <null>, got: " + config.rule().sseAlgorithm());
         }
 
-        List<SseConfigurationRule> ruleList = new LinkedList<>();
-        ruleList.add(new SseConfigurationRule(null, SseAlgorithm.AES256));
-        SseConfiguration expectedConfig = new SseConfiguration(ruleList);
         client.setBucketEncryption(
-            SetBucketEncryptionArgs.builder().bucket(bucketName).config(expectedConfig).build());
+            SetBucketEncryptionArgs.builder()
+                .bucket(bucketName)
+                .config(SseConfiguration.newConfigWithSseS3Rule())
+                .build());
         config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        if (config.rules().size() != 1) {
-          throw new Exception("rules count: expected: 1, got: " + config.rules().size());
+        if (config.rule() == null) {
+          throw new Exception("rule: expected: <non-null>, got: <null>");
         }
-        if (config.rules().get(0).sseAlgorithm() != expectedConfig.rules().get(0).sseAlgorithm()) {
+        if (config.rule().sseAlgorithm() != SseAlgorithm.AES256) {
           throw new Exception(
               "sse algorithm: expected: "
-                  + expectedConfig.rules().get(0).sseAlgorithm()
+                  + SseAlgorithm.AES256
                   + ", got: "
-                  + config.rules().get(0).sseAlgorithm());
+                  + config.rule().sseAlgorithm());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -3221,18 +3220,18 @@ public class FunctionalTest {
         client.deleteBucketEncryption(
             DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
 
-        List<SseConfigurationRule> ruleList = new LinkedList<>();
-        ruleList.add(new SseConfigurationRule(null, SseAlgorithm.AES256));
-        SseConfiguration config = new SseConfiguration(ruleList);
         client.setBucketEncryption(
-            SetBucketEncryptionArgs.builder().bucket(bucketName).config(config).build());
+            SetBucketEncryptionArgs.builder()
+                .bucket(bucketName)
+                .config(SseConfiguration.newConfigWithSseS3Rule())
+                .build());
         client.deleteBucketEncryption(
             DeleteBucketEncryptionArgs.builder().bucket(bucketName).build());
-        config =
+        SseConfiguration config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        if (config.rules().size() != 0) {
-          throw new Exception("rules: expected: <empty>, got: " + config.rules());
+        if (config.rule() != null) {
+          throw new Exception("rule: expected: <null>, got: " + config.rule().sseAlgorithm());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {

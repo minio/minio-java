@@ -17,8 +17,8 @@
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
+import io.minio.messages.SseAlgorithm;
 import io.minio.messages.SseConfiguration;
-import io.minio.messages.SseConfigurationRule;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -45,10 +45,13 @@ public class GetBucketEncryption {
       SseConfiguration config =
           minioClient.getBucketEncryption(
               GetBucketEncryptionArgs.builder().bucket("my-bucketname").build());
-      for (SseConfigurationRule rule : config.rules()) {
-        System.out.println("Rule:");
-        System.out.println("KMS master key ID: " + rule.kmsMasterKeyId());
-        System.out.println("SSE Algorithm: " + rule.sseAlgorithm());
+      if (config.rule() != null) {
+        System.out.println("Rule SSE algorithm: " + config.rule().sseAlgorithm());
+        if (config.rule().sseAlgorithm() == SseAlgorithm.AWS_KMS) {
+          System.out.println("Rule KMS master key ID: " + config.rule().kmsMasterKeyId());
+        }
+      } else {
+        System.out.println("No rule is set in SSE configuration.");
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
