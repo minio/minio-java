@@ -43,55 +43,46 @@ enum MinioProperties {
 
   public String getVersion() {
     String result = version.get();
-    if (result == null) {
-      synchronized (INSTANCE) {
-        if (version.get() == null) {
-          try {
-            ClassLoader classLoader = getClass().getClassLoader();
-            setMinioClientJavaVersion(classLoader);
-            setDevelopmentVersion();
-          } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "IOException occured", e);
-            version.set("unknown");
-          }
-          result = version.get();
-        }
-      }
+    if (result != null) {
+      return result;
     }
-    return result;
+    setVersion();
+    return version.get();
   }
 
-  private void setDevelopmentVersion() {
-    if (version.get() == null) {
+  private synchronized void setVersion() {
+    ClassLoader classLoader = getClass().getClassLoader();
+    if (classLoader == null) {
       version.set("dev");
+      return;
     }
-  }
 
-  private void setMinioClientJavaVersion(ClassLoader classLoader) throws IOException {
-    if (classLoader != null) {
+    try {
       Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
-      boolean minioManifestFound = false;
-      boolean minioVersionFound = false;
       while (resources.hasMoreElements()) {
         try (InputStream is = resources.nextElement().openStream()) {
           Manifest manifest = new Manifest(is);
+          boolean minioManifestFound;
           for (Map.Entry<Object, Object> entry : manifest.getMainAttributes().entrySet()) {
-            if (entry.getKey().toString().equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE)
-                && entry.getValue().toString().equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE)) {
-              minioManifestFound = true;
-            }
-            if (minioManifestFound
-                && entry.getKey().toString().equals(META_INF_ATTRIB_IMPLEMENTATION_VERSION)) {
-              version.set(entry.getValue().toString());
-              minioVersionFound = true;
-              break;
+            String key = entry.getKey().toString();
+            String value = entry.getValue().toString();
+            minioManifestFound =
+                key.equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE)
+                    && value.equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE);
+
+            if (minioManifestFound) {
+              version.set(
+                  manifest.getMainAttributes().getValue(META_INF_ATTRIB_IMPLEMENTATION_VERSION));
+              return;
             }
           }
         }
-        if (minioVersionFound) {
-          break;
-        }
       }
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "IOException occured", e);
+      version.set("unknown");
+      return;
     }
+    version.set("dev");
   }
 }
