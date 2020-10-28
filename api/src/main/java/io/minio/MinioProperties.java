@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -31,13 +30,6 @@ enum MinioProperties {
   INSTANCE;
 
   private static final Logger LOGGER = Logger.getLogger(MinioProperties.class.getName());
-
-  // These attributes are checked from the manifests in classpath.
-  private static final String META_INF_ATTRIB_IMPLEMENTATION_TITLE = "Implementation-Title";
-  private static final String META_INF_ATTRIB_IMPLEMENTATION_VERSION = "Implementation-Version";
-
-  // this is set from gradle
-  private static final String META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE = "minio";
 
   private final AtomicReference<String> version = new AtomicReference<>(null);
 
@@ -51,9 +43,12 @@ enum MinioProperties {
   }
 
   private synchronized void setVersion() {
+    if (version.get() != null) {
+      return;
+    }
+    version.set("dev");
     ClassLoader classLoader = getClass().getClassLoader();
     if (classLoader == null) {
-      version.set("dev");
       return;
     }
 
@@ -62,27 +57,17 @@ enum MinioProperties {
       while (resources.hasMoreElements()) {
         try (InputStream is = resources.nextElement().openStream()) {
           Manifest manifest = new Manifest(is);
-          boolean minioManifestFound;
-          for (Map.Entry<Object, Object> entry : manifest.getMainAttributes().entrySet()) {
-            String key = entry.getKey().toString();
-            String value = entry.getValue().toString();
-            minioManifestFound =
-                key.equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE)
-                    && value.equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE);
-
-            if (minioManifestFound) {
-              version.set(
-                  manifest.getMainAttributes().getValue(META_INF_ATTRIB_IMPLEMENTATION_VERSION));
-              return;
-            }
+          String implementationTitleValue =
+              manifest.getMainAttributes().getValue("Implementation-Title");
+          if (implementationTitleValue != null && implementationTitleValue.equals("minio")) {
+            version.set(manifest.getMainAttributes().getValue("Implementation-Version"));
+            return;
           }
         }
       }
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "IOException occured", e);
       version.set("unknown");
-      return;
     }
-    version.set("dev");
   }
 }
