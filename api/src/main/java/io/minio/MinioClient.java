@@ -191,7 +191,7 @@ public class MinioClient {
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT =
       "MinIO ("
-          + System.getProperty("os.arch")
+          + System.getProperty("os.name")
           + "; "
           + System.getProperty("os.arch")
           + ") minio-java/"
