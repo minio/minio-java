@@ -36,7 +36,8 @@ enum MinioProperties {
   private static final String META_INF_ATTRIB_IMPLEMENTATION_TITLE = "Implementation-Title";
   private static final String META_INF_ATTRIB_IMPLEMENTATION_VERSION = "Implementation-Version";
 
-  private static final String META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE = "minio"; // this is set from gradle
+  // this is set from gradle
+  private static final String META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE = "minio";
 
   private final AtomicReference<String> version = new AtomicReference<>(null);
 
