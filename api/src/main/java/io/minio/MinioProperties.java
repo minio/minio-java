@@ -17,10 +17,11 @@
 package io.minio;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,6 +31,12 @@ enum MinioProperties {
   INSTANCE;
 
   private static final Logger LOGGER = Logger.getLogger(MinioProperties.class.getName());
+
+  // These attributes are checked from the manifests in classpath.
+  private static final String META_INF_ATTRIB_IMPLEMENTATION_TITLE = "Implementation-Title";
+  private static final String META_INF_ATTRIB_IMPLEMENTATION_VERSION = "Implementation-Version";
+
+  private static final String META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE = "minio"; // this is set from gradle
 
   private final AtomicReference<String> version = new AtomicReference<>(null);
 
@@ -62,13 +69,26 @@ enum MinioProperties {
   private void setMinioClientJavaVersion(ClassLoader classLoader) throws IOException {
     if (classLoader != null) {
       Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
+      boolean minioManifestFound = false;
+      boolean minioVersionFound = false;
       while (resources.hasMoreElements()) {
-        Manifest manifest = new Manifest(resources.nextElement().openStream());
-        for (Object k : manifest.getMainAttributes().keySet()) {
-          String versionString = "Implementation-Version";
-          if (k.toString().equals(versionString)) {
-            version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
+        try (InputStream is = resources.nextElement().openStream()) {
+          Manifest manifest = new Manifest(is);
+          for (Map.Entry<Object, Object> entry : manifest.getMainAttributes().entrySet()) {
+            if (entry.getKey().toString().equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE)
+                && entry.getValue().toString().equals(META_INF_ATTRIB_IMPLEMENTATION_TITLE_VALUE)) {
+              minioManifestFound = true;
+            }
+            if (minioManifestFound
+                && entry.getKey().toString().equals(META_INF_ATTRIB_IMPLEMENTATION_VERSION)) {
+              version.set(entry.getValue().toString());
+              minioVersionFound = true;
+              break;
+            }
           }
+        }
+        if (minioVersionFound) {
+          break;
         }
       }
     }
