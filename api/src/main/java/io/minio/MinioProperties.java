@@ -57,16 +57,14 @@ enum MinioProperties {
       while (resources.hasMoreElements()) {
         try (InputStream is = resources.nextElement().openStream()) {
           Manifest manifest = new Manifest(is);
-          String implementationTitleValue =
-              manifest.getMainAttributes().getValue("Implementation-Title");
-          if (implementationTitleValue != null && implementationTitleValue.equals("minio")) {
+          if ("minio".equals(manifest.getMainAttributes().getValue("Implementation-Title"))) {
             version.set(manifest.getMainAttributes().getValue("Implementation-Version"));
             return;
           }
         }
       }
     } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "IOException occured", e);
+      LOGGER.log(Level.SEVERE, "IOException occurred", e);
       version.set("unknown");
     }
   }
