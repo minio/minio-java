@@ -17,10 +17,10 @@
 package io.minio;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,42 +35,37 @@ enum MinioProperties {
 
   public String getVersion() {
     String result = version.get();
-    if (result == null) {
-      synchronized (INSTANCE) {
-        if (version.get() == null) {
-          try {
-            ClassLoader classLoader = getClass().getClassLoader();
-            setMinioClientJavaVersion(classLoader);
-            setDevelopmentVersion();
-          } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "IOException occured", e);
-            version.set("unknown");
-          }
-          result = version.get();
-        }
-      }
+    if (result != null) {
+      return result;
     }
-    return result;
+    setVersion();
+    return version.get();
   }
 
-  private void setDevelopmentVersion() {
-    if (version.get() == null) {
-      version.set("dev");
+  private synchronized void setVersion() {
+    if (version.get() != null) {
+      return;
     }
-  }
+    version.set("dev");
+    ClassLoader classLoader = getClass().getClassLoader();
+    if (classLoader == null) {
+      return;
+    }
 
-  private void setMinioClientJavaVersion(ClassLoader classLoader) throws IOException {
-    if (classLoader != null) {
+    try {
       Enumeration<URL> resources = classLoader.getResources("META-INF/MANIFEST.MF");
       while (resources.hasMoreElements()) {
-        Manifest manifest = new Manifest(resources.nextElement().openStream());
-        for (Object k : manifest.getMainAttributes().keySet()) {
-          String versionString = "Implementation-Version";
-          if (k.toString().equals(versionString)) {
-            version.set(manifest.getMainAttributes().getValue((Attributes.Name) k));
+        try (InputStream is = resources.nextElement().openStream()) {
+          Manifest manifest = new Manifest(is);
+          if ("minio".equals(manifest.getMainAttributes().getValue("Implementation-Title"))) {
+            version.set(manifest.getMainAttributes().getValue("Implementation-Version"));
+            return;
           }
         }
       }
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "IOException occurred", e);
+      version.set("unknown");
     }
   }
 }
