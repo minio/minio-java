@@ -27,7 +27,7 @@ import io.minio.ComposeSource;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.DeleteBucketEncryptionArgs;
-import io.minio.DeleteBucketLifeCycleArgs;
+import io.minio.DeleteBucketLifecycleArgs;
 import io.minio.DeleteBucketNotificationArgs;
 import io.minio.DeleteBucketPolicyArgs;
 import io.minio.DeleteBucketReplicationArgs;
@@ -39,7 +39,7 @@ import io.minio.DisableObjectLegalHoldArgs;
 import io.minio.DownloadObjectArgs;
 import io.minio.EnableObjectLegalHoldArgs;
 import io.minio.GetBucketEncryptionArgs;
-import io.minio.GetBucketLifeCycleArgs;
+import io.minio.GetBucketLifecycleArgs;
 import io.minio.GetBucketNotificationArgs;
 import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketReplicationArgs;
@@ -69,7 +69,7 @@ import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.ServerSideEncryptionKms;
 import io.minio.ServerSideEncryptionS3;
 import io.minio.SetBucketEncryptionArgs;
-import io.minio.SetBucketLifeCycleArgs;
+import io.minio.SetBucketLifecycleArgs;
 import io.minio.SetBucketNotificationArgs;
 import io.minio.SetBucketPolicyArgs;
 import io.minio.SetBucketReplicationArgs;
@@ -92,8 +92,11 @@ import io.minio.messages.DeleteMarkerReplication;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Event;
 import io.minio.messages.EventType;
+import io.minio.messages.Expiration;
 import io.minio.messages.FileHeaderInfo;
 import io.minio.messages.InputSerialization;
+import io.minio.messages.LifecycleConfiguration;
+import io.minio.messages.LifecycleRule;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.messages.NotificationRecords;
 import io.minio.messages.ObjectLockConfiguration;
@@ -103,12 +106,12 @@ import io.minio.messages.QuoteFields;
 import io.minio.messages.ReplicationConfiguration;
 import io.minio.messages.ReplicationDestination;
 import io.minio.messages.ReplicationRule;
-import io.minio.messages.ReplicationRuleFilter;
 import io.minio.messages.Retention;
 import io.minio.messages.RetentionDuration;
 import io.minio.messages.RetentionDurationDays;
 import io.minio.messages.RetentionDurationYears;
 import io.minio.messages.RetentionMode;
+import io.minio.messages.RuleFilter;
 import io.minio.messages.SseAlgorithm;
 import io.minio.messages.SseConfiguration;
 import io.minio.messages.Stats;
@@ -2768,17 +2771,25 @@ public class FunctionalTest {
     }
   }
 
-  public static void testSetBucketLifeCycle(String bucketName) throws Exception {
-    String lifeCycle =
-        "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
-            + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
-            + "</Rule></LifecycleConfiguration>";
-    client.setBucketLifeCycle(
-        SetBucketLifeCycleArgs.builder().bucket(bucketName).config(lifeCycle).build());
+  public static void testSetBucketLifecycle(String bucketName) throws Exception {
+    List<LifecycleRule> rules = new LinkedList<>();
+    rules.add(
+        new LifecycleRule(
+            Status.ENABLED,
+            null,
+            new Expiration((ZonedDateTime) null, 365, null),
+            new RuleFilter("logs/"),
+            "rule2",
+            null,
+            null,
+            null));
+    LifecycleConfiguration config = new LifecycleConfiguration(rules);
+    client.setBucketLifecycle(
+        SetBucketLifecycleArgs.builder().bucket(bucketName).config(config).build());
   }
 
-  public static void setBucketLifeCycle() throws Exception {
-    String methodName = "setBucketLifeCycle()";
+  public static void setBucketLifecycle() throws Exception {
+    String methodName = "setBucketLifecycle()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -2788,7 +2799,7 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        testSetBucketLifeCycle(bucketName);
+        testSetBucketLifecycle(bucketName);
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -2798,8 +2809,8 @@ public class FunctionalTest {
     }
   }
 
-  public static void deleteBucketLifeCycle() throws Exception {
-    String methodName = "deleteBucketLifeCycle()";
+  public static void deleteBucketLifecycle() throws Exception {
+    String methodName = "deleteBucketLifecycle()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -2809,11 +2820,11 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        client.deleteBucketLifeCycle(
-            DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
-        testSetBucketLifeCycle(bucketName);
-        client.deleteBucketLifeCycle(
-            DeleteBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        client.deleteBucketLifecycle(
+            DeleteBucketLifecycleArgs.builder().bucket(bucketName).build());
+        testSetBucketLifecycle(bucketName);
+        client.deleteBucketLifecycle(
+            DeleteBucketLifecycleArgs.builder().bucket(bucketName).build());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -2823,8 +2834,8 @@ public class FunctionalTest {
     }
   }
 
-  public static void getBucketLifeCycle() throws Exception {
-    String methodName = "getBucketLifeCycle()";
+  public static void getBucketLifecycle() throws Exception {
+    String methodName = "getBucketLifecycle()";
     if (!mintEnv) {
       System.out.println(methodName);
     }
@@ -2834,9 +2845,43 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
-        testSetBucketLifeCycle(bucketName);
-        client.getBucketLifeCycle(GetBucketLifeCycleArgs.builder().bucket(bucketName).build());
+        LifecycleConfiguration config =
+            client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
+        if (config != null) {
+          throw new Exception("config: expected: <null>, got: <non-null>");
+        }
+        testSetBucketLifecycle(bucketName);
+        config =
+            client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
+        if (config == null) {
+          throw new Exception("config: expected: <non-null>, got: <null>");
+        }
+        List<LifecycleRule> rules = config.rules();
+        if (config.rules().size() != 1) {
+          throw new Exception("config.rules().size(): expected: 1, got: " + config.rules().size());
+        }
+        LifecycleRule rule = rules.get(0);
+        if (rule.status() != Status.ENABLED) {
+          throw new Exception(
+              "rule.status(): expected: " + Status.ENABLED + ", got: " + rule.status());
+        }
+        if (rule.expiration() == null) {
+          throw new Exception("rule.expiration(): expected: <non-null>, got: <null>");
+        }
+        if (rule.expiration().days() != 365) {
+          throw new Exception(
+              "rule.expiration().days(): expected: 365, got: " + rule.expiration().days());
+        }
+        if (rule.filter() == null) {
+          throw new Exception("rule.filter(): expected: <non-null>, got: <null>");
+        }
+        if (!"logs/".equals(rule.filter().prefix())) {
+          throw new Exception(
+              "rule.filter().prefix(): expected: logs/, got: " + rule.filter().prefix());
+        }
+        if (!"rule2".equals(rule.id())) {
+          throw new Exception("rule.id(): expected: rule2, got: " + rule.id());
+        }
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3463,7 +3508,7 @@ public class FunctionalTest {
               new DeleteMarkerReplication(Status.DISABLED),
               new ReplicationDestination(null, null, replicationBucketArn, null, null, null, null),
               null,
-              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              new RuleFilter(new AndOperator("TaxDocs", tags)),
               "rule1",
               null,
               1,
@@ -3514,7 +3559,7 @@ public class FunctionalTest {
               new DeleteMarkerReplication(Status.DISABLED),
               new ReplicationDestination(null, null, replicationBucketArn, null, null, null, null),
               null,
-              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              new RuleFilter(new AndOperator("TaxDocs", tags)),
               "rule1",
               null,
               1,
@@ -3566,7 +3611,7 @@ public class FunctionalTest {
               new DeleteMarkerReplication(Status.DISABLED),
               new ReplicationDestination(null, null, replicationBucketArn, null, null, null, null),
               null,
-              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              new RuleFilter(new AndOperator("TaxDocs", tags)),
               "rule1",
               null,
               1,
@@ -3651,9 +3696,9 @@ public class FunctionalTest {
     getBucketPolicy();
     deleteBucketPolicy();
 
-    setBucketLifeCycle();
-    getBucketLifeCycle();
-    deleteBucketLifeCycle();
+    setBucketLifecycle();
+    getBucketLifecycle();
+    deleteBucketLifecycle();
 
     setBucketNotification();
     getBucketNotification();

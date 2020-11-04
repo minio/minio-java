@@ -53,6 +53,7 @@ import io.minio.messages.ErrorResponse;
 import io.minio.messages.InitiateMultipartUploadResult;
 import io.minio.messages.Item;
 import io.minio.messages.LegalHold;
+import io.minio.messages.LifecycleConfiguration;
 import io.minio.messages.ListAllMyBucketsResult;
 import io.minio.messages.ListBucketResultV1;
 import io.minio.messages.ListBucketResultV2;
@@ -3019,26 +3020,26 @@ public class MinioClient {
   }
 
   /**
-   * Sets life-cycle configuration to a bucket.
+   * Sets lifecycle configuration to a bucket.
    *
    * <pre>Example:{@code
-   * // Lets consider variable 'lifeCycleXml' contains below XML String;
-   * // <LifecycleConfiguration>
-   * //   <Rule>
-   * //     <ID>expire-bucket</ID>
-   * //     <Prefix></Prefix>
-   * //     <Status>Enabled</Status>
-   * //     <Expiration>
-   * //       <Days>365</Days>
-   * //     </Expiration>
-   * //   </Rule>
-   * // </LifecycleConfiguration>
-   * //
-   * minioClient.setBucketLifeCycle(
-   *     SetBucketLifeCycleArgs.builder().bucket("my-bucketname").config(lifeCycleXml).build());
+   * List<LifecycleRule> rules = new LinkedList<>();
+   * rules.add(
+   *     new LifecycleRule(
+   *         Status.ENABLED,
+   *         null,
+   *         new Expiration((ZonedDateTime) null, 365, null),
+   *         new RuleFilter("logs/"),
+   *         "rule2",
+   *         null,
+   *         null,
+   *         null));
+   * LifecycleConfiguration config = new LifecycleConfiguration(rules);
+   * minioClient.setBucketLifecycle(
+   *     SetBucketLifecycleArgs.builder().bucket("my-bucketname").config(config).build());
    * }</pre>
    *
-   * @param args {@link SetBucketLifeCycleArgs} object.
+   * @param args {@link SetBucketLifecycleArgs} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws InternalException thrown to indicate internal library error.
@@ -3049,7 +3050,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void setBucketLifeCycle(SetBucketLifeCycleArgs args)
+  public void setBucketLifecycle(SetBucketLifecycleArgs args)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
@@ -3059,13 +3060,13 @@ public class MinioClient {
   }
 
   /**
-   * Deletes life-cycle configuration of a bucket.
+   * Deletes lifecycle configuration of a bucket.
    *
    * <pre>Example:{@code
-   * deleteBucketLifeCycle(DeleteBucketLifeCycleArgs.builder().bucket("my-bucketname").build());
+   * deleteBucketLifecycle(DeleteBucketLifecycleArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
-   * @param args {@link DeleteBucketLifeCycleArgs} object.
+   * @param args {@link DeleteBucketLifecycleArgs} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws InternalException thrown to indicate internal library error.
@@ -3076,7 +3077,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public void deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args)
+  public void deleteBucketLifecycle(DeleteBucketLifecycleArgs args)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
@@ -3085,15 +3086,16 @@ public class MinioClient {
   }
 
   /**
-   * Gets life-cycle configuration of a bucket.
+   * Gets lifecycle configuration of a bucket.
    *
    * <pre>Example:{@code
-   * String lifecycle =
-   *     minioClient.getBucketLifeCycle(
-   *         GetBucketLifeCycleArgs.builder().bucket("my-bucketname").build());
+   * LifecycleConfiguration config =
+   *     minioClient.getBucketLifecycle(
+   *         GetBucketLifecycleArgs.builder().bucket("my-bucketname").build());
    * }</pre>
    *
-   * @param args {@link GetBucketLifeCycleArgs} object.
+   * @param args {@link GetBucketLifecycleArgs} object.
+   * @return {@link LifecycleConfiguration} object.
    * @return String - Life cycle configuration as XML string.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
@@ -3105,20 +3107,20 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public String getBucketLifeCycle(GetBucketLifeCycleArgs args)
+  public LifecycleConfiguration getBucketLifecycle(GetBucketLifecycleArgs args)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
     checkArgs(args);
     try (Response response = executeGet(args, null, newMultimap("lifecycle", ""))) {
-      return response.body().string();
+      return Xml.unmarshal(LifecycleConfiguration.class, response.body().charStream());
     } catch (ErrorResponseException e) {
       if (!e.errorResponse().code().equals("NoSuchLifecycleConfiguration")) {
         throw e;
       }
     }
 
-    return "";
+    return null;
   }
 
   /**
@@ -3276,7 +3278,7 @@ public class MinioClient {
    *         new ReplicationDestination(
    *             null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
    *         null,
-   *         new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+   *         new RuleFilter(new AndOperator("TaxDocs", tags)),
    *         "rule1",
    *         null,
    *         1,

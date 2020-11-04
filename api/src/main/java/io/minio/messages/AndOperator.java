@@ -23,7 +23,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
 
-/** Helper class to and operator information for {@link ReplicationRuleFilter}. */
+/** Helper class to denote AND operator information for {@link RuleFilter}. */
 @Root(name = "And")
 public class AndOperator {
   @Element(name = "Prefix", required = false)

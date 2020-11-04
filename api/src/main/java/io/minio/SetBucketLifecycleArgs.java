@@ -17,12 +17,13 @@
 package io.minio;
 
 import com.google.common.base.Objects;
+import io.minio.messages.LifecycleConfiguration;
 
-/** Argument class of {@link MinioClient#setBucketLifeCycle}. */
-public class SetBucketLifeCycleArgs extends BucketArgs {
-  private String config;
+/** Argument class of {@link MinioClient#setBucketLifecycle}. */
+public class SetBucketLifecycleArgs extends BucketArgs {
+  private LifecycleConfiguration config;
 
-  public String config() {
+  public LifecycleConfiguration config() {
     return config;
   }
 
@@ -30,18 +31,18 @@ public class SetBucketLifeCycleArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketLifeCycleArgs}. */
-  public static final class Builder extends BucketArgs.Builder<Builder, SetBucketLifeCycleArgs> {
-    private void validateConfig(String config) {
-      validateNotEmptyString(config, "life-cycle configuration");
+  /** Argument builder of {@link SetBucketLifecycleArgs}. */
+  public static final class Builder extends BucketArgs.Builder<Builder, SetBucketLifecycleArgs> {
+    private void validateConfig(LifecycleConfiguration config) {
+      validateNotNull(config, "lifecycle configuration");
     }
 
-    protected void validate(SetBucketLifeCycleArgs args) {
+    protected void validate(SetBucketLifecycleArgs args) {
       super.validate(args);
       validateConfig(args.config);
     }
 
-    public Builder config(String config) {
+    public Builder config(LifecycleConfiguration config) {
       validateConfig(config);
       operations.add(args -> args.config = config);
       return this;
@@ -51,9 +52,9 @@ public class SetBucketLifeCycleArgs extends BucketArgs {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof SetBucketLifeCycleArgs)) return false;
+    if (!(o instanceof SetBucketLifecycleArgs)) return false;
     if (!super.equals(o)) return false;
-    SetBucketLifeCycleArgs that = (SetBucketLifeCycleArgs) o;
+    SetBucketLifecycleArgs that = (SetBucketLifecycleArgs) o;
     return Objects.equal(config, that.config);
   }
 

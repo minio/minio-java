@@ -16,36 +16,22 @@
 
 package io.minio.messages;
 
-import java.util.Objects;
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class to denote tag information for {@link RuleFilter}. */
-@Root(name = "Tag")
-public class Tag {
-  @Element(name = "Key")
-  private String key;
+/** Helper class to denote noncurrent version expiration information for {@link LifecycleRule}. */
+@Root(name = "NoncurrentVersionExpiration")
+public class NoncurrentVersionExpiration {
+  @Element(name = "NoncurrentDays", required = false)
+  private Integer noncurrentDays;
 
-  @Element(name = "Value")
-  private String value;
-
-  public Tag(
-      @Nonnull @Element(name = "Key") String key, @Nonnull @Element(name = "Value") String value) {
-    Objects.requireNonNull(key, "Key must not be null");
-    if (key.isEmpty()) {
-      throw new IllegalArgumentException("Key must not be empty");
-    }
-
-    this.key = key;
-    this.value = Objects.requireNonNull(value, "Value must not be null");
+  public NoncurrentVersionExpiration(
+      @Nullable @Element(name = "NoncurrentDays", required = false) Integer noncurrentDays) {
+    this.noncurrentDays = noncurrentDays;
   }
 
-  public String key() {
-    return this.key;
-  }
-
-  public String value() {
-    return this.value;
+  public Integer noncurrentDays() {
+    return noncurrentDays;
   }
 }

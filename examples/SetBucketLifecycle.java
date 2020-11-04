@@ -15,14 +15,22 @@
  */
 
 import io.minio.MinioClient;
-import io.minio.SetBucketLifeCycleArgs;
+import io.minio.SetBucketLifecycleArgs;
 import io.minio.errors.MinioException;
+import io.minio.messages.Expiration;
+import io.minio.messages.LifecycleConfiguration;
+import io.minio.messages.LifecycleRule;
+import io.minio.messages.RuleFilter;
+import io.minio.messages.Status;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
+import java.util.LinkedList;
+import java.util.List;
 
-public class SetBucketLifeCycle {
-  /** MinioClient.SetBucketLifeCycle() example. */
+public class SetBucketLifecycle {
+  /** MinioClient.SetBucketLifecycle() example. */
   public static void main(String[] args)
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try {
@@ -40,13 +48,21 @@ public class SetBucketLifeCycle {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      String lifeCycle =
-          "<LifecycleConfiguration><Rule><ID>expire-bucket</ID><Prefix></Prefix>"
-              + "<Status>Enabled</Status><Expiration><Days>365</Days></Expiration>"
-              + "</Rule></LifecycleConfiguration>";
+      List<LifecycleRule> rules = new LinkedList<>();
+      rules.add(
+          new LifecycleRule(
+              Status.ENABLED,
+              null,
+              new Expiration((ZonedDateTime) null, 365, null),
+              new RuleFilter("logs/"),
+              "rule2",
+              null,
+              null,
+              null));
+      LifecycleConfiguration config = new LifecycleConfiguration(rules);
 
-      minioClient.setBucketLifeCycle(
-          SetBucketLifeCycleArgs.builder().bucket("my-bucketName").config(lifeCycle).build());
+      minioClient.setBucketLifecycle(
+          SetBucketLifecycleArgs.builder().bucket("my-bucketname").config(config).build());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

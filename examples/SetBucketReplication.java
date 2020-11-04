@@ -22,7 +22,7 @@ import io.minio.messages.DeleteMarkerReplication;
 import io.minio.messages.ReplicationConfiguration;
 import io.minio.messages.ReplicationDestination;
 import io.minio.messages.ReplicationRule;
-import io.minio.messages.ReplicationRuleFilter;
+import io.minio.messages.RuleFilter;
 import io.minio.messages.Status;
 import java.io.IOException;
 import java.security.InvalidKeyException;
@@ -61,7 +61,7 @@ public class SetBucketReplication {
               new ReplicationDestination(
                   null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
               null,
-              new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+              new RuleFilter(new AndOperator("TaxDocs", tags)),
               "rule1",
               null,
               1,

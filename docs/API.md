@@ -26,14 +26,14 @@ MinioClient minioClient =
 |-------------------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                                   | [`composeObject`](#composeObject)                       |
 | [`deleteBucketEncryption`](#deleteBucketEncryption)               | [`copyObject`](#copyObject)                             |
-| [`deleteBucketLifeCycle`](#deleteBucketLifeCycle)                 | [`deleteObjectTags`](#deleteObjectTags)                 |
+| [`deleteBucketLifecycle`](#deleteBucketLifecycle)                 | [`deleteObjectTags`](#deleteObjectTags)                 |
 | [`deleteBucketNotification`](#deleteBucketNotification)           | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
 | [`deleteBucketPolicy`](#deleteBucketPolicy)                       | [`downloadObject`](#downloadObject)                     |
 | [`deleteBucketReplication`](#deleteBucketReplication)             | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
 | [`deleteBucketTags`](#deleteBucketTags)                           | [`getObject`](#getObject)                               |
 | [`deleteObjectLockConfiguration`](#deleteObjectLockConfiguration) | [`getObjectRetention`](#getObjectRetention)             |
 | [`getBucketEncryption`](#getBucketEncryption)                     | [`getObjectTags`](#getObjectTags)                       |
-| [`getBucketLifeCycle`](#getBucketLifeCycle)                       | [`getObjectUrl`](#getObjectUrl)                         |
+| [`getBucketLifecycle`](#getBucketLifecycle)                       | [`getObjectUrl`](#getObjectUrl)                         |
 | [`getBucketNotification`](#getBucketNotification)                 | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
 | [`getBucketPolicy`](#getBucketPolicy)                             | [`getPresignedPostFormData`](#getPresignedPostFormData) |
 | [`getBucketReplication`](#getBucketReplication)                   | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
@@ -47,7 +47,7 @@ MinioClient minioClient =
 | [`removeBucket`](#removeBucket)                                   | [`statObject`](#statObject)                             |
 | [`removeIncompleteUpload`](#removeIncompleteUpload)               | [`uploadObject`](#uploadObject)                         |
 | [`setBucketEncryption`](#setBucketEncryption)                     |                                                         |
-| [`setBucketLifeCycle`](#setBucketLifeCycle)                       |                                                         |
+| [`setBucketLifecycle`](#setBucketLifecycle)                       |                                                         |
 | [`setBucketNotification`](#setBucketNotification)                 |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                             |                                                         |
 | [`setBucketReplication`](#setBucketReplication)                   |                                                         |
@@ -272,21 +272,21 @@ minioClient.deleteBucketEncryption(
     DeleteBucketEncryptionArgs.builder().bucket("my-bucketname").build());
 ```
 
-<a name="deleteBucketLifeCycle"></a>
-### deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args)
-`private void deleteBucketLifeCycle(DeleteBucketLifeCycleArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketLifeCycle-io.minio.DeleteBucketLifeCycleArgs-)_
+<a name="deleteBucketLifecycle"></a>
+### deleteBucketLifecycle(DeleteBucketLifecycleArgs args)
+`private void deleteBucketLifecycle(DeleteBucketLifecycleArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketLifecycle-io.minio.DeleteBucketLifecycleArgs-)_
 
-Deletes life-cycle configuration of a bucket.
+Deletes lifecycle configuration of a bucket.
 
 __Parameters__
 | Parameter | Type                          | Description |
 |:----------|:------------------------------|:------------|
-| ``args``  | _[DeleteBucketLifeCycleArgs]_ | Arguments.  |
+| ``args``  | _[DeleteBucketLifecycleArgs]_ | Arguments.  |
 
 __Example__
 ```java
-minioClient.deleteBucketLifeCycle(
-    DeleteBucketLifeCycleArgs.builder().bucket("my-bucketname").build());
+minioClient.deleteBucketLifecycle(
+    DeleteBucketLifecycleArgs.builder().bucket("my-bucketname").build());
 ```
 
 <a name="deleteBucketTags"></a>
@@ -394,27 +394,27 @@ SseConfiguration config =
         GetBucketEncryptionArgs.builder().bucket("my-bucketname").build());
 ```
 
-<a name="getBucketLifeCycle"></a>
-### getBucketLifeCycle(GetBucketLifeCycleArgs args)
-`public String getBucketLifeCycle(GetBucketLifeCycleArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketLifeCycle-io.minio.GetBucketLifeCycleArgs-)_
+<a name="getBucketLifecycle"></a>
+### getBucketLifecycle(GetBucketLifecycleArgs args)
+`public LifecycleConfiguration getBucketLifecycle(GetBucketLifecycleArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getBucketLifecycle-io.minio.GetBucketLifecycleArgs-)_
 
-Gets life-cycle configuration of a bucket.
+Gets lifecycle configuration of a bucket.
 
 __Parameters__
 | Parameter | Type                       | Description |
 |:----------|:---------------------------|:------------|
-| ``args``  | _[GetBucketLifeCycleArgs]_ | Arguments.  |
+| ``args``  | _[GetBucketLifecycleArgs]_ | Arguments.  |
 
-| Returns                                            |
-|:---------------------------------------------------|
-| _String_ - Life-cycle configuration as XML string. |
+| Returns                                               |
+|:------------------------------------------------------|
+| _[LifecycleConfiguration]_ - lifecycle configuration. |
 
 __Example__
 ```java
-String lifecycle =
+LifecycleConfiguration config =
     minioClient.getBucketLifecycle(
-	    GetBucketLifeCycleArgs.builder().bucket("my-bucketname").build());
-System.out.println("Life cycle settings: " + lifecycle);
+	    GetBucketLifecycleArgs.builder().bucket("my-bucketname").build());
+System.out.println("Lifecycle configuration: " + config);
 ```
 
 <a name="getBucketNotification"></a>
@@ -834,33 +834,43 @@ minioClient.setBucketEncryption(
     SetBucketEncryptionArgs.builder().bucket("my-bucketname").config(config).build());
  ```
 
-<a name="setBucketLifeCycle"></a>
-### setBucketLifeCycle(SetBucketLifeCycleArgs args)
-`public void setBucketLifeCycle(SetBucketLifeCycleArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketLifeCycle-io.minio.SetBucketLifeCycleArgs-)_
+<a name="setBucketLifecycle"></a>
+### setBucketLifecycle(SetBucketLifecycleArgs args)
+`public void setBucketLifecycle(SetBucketLifecycleArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketLifecycle-io.minio.SetBucketLifecycleArgs-)_
 
-Sets life-cycle configuration to a bucket.
+Sets lifecycle configuration to a bucket.
 
 __Parameters__
 | Parameter | Type                       | Description |
 |:----------|:---------------------------|:------------|
-| ``args``  | _[SetBucketLifeCycleArgs]_ | Arguments.  |
+| ``args``  | _[SetBucketLifecycleArgs]_ | Arguments.  |
 
 __Example__
 ```java
-// Lets consider variable 'lifeCycleXml' contains below XML String;
-// <LifecycleConfiguration>
-//   <Rule>
-//     <ID>expire-bucket</ID>
-//     <Prefix></Prefix>
-//     <Status>Enabled</Status>
-//     <Expiration>
-//       <Days>365</Days>
-//     </Expiration>
-//   </Rule>
-// </LifecycleConfiguration>
-//
+List<LifecycleRule> rules = new LinkedList<>();
+rules.add(
+    new LifecycleRule(
+        Status.ENABLED,
+        null,
+        null,
+        new RuleFilter("documents/"),
+        "rule1",
+        null,
+        null,
+        new Transition(null, 30, "GLACIER")));
+rules.add(
+    new LifecycleRule(
+        Status.ENABLED,
+        null,
+        new Expiration(null, 365, null),
+        new RuleFilter("logs/"),
+        "rule2",
+        null,
+        null,
+        null));
+config = new LifecycleConfiguraton(rules);
 minioClient.setBucketLifecycle(
-    SetBucketLifecycleArgs.builder().bucket("my-bucketname").config(lifeCycleXml).build());
+    SetBucketLifecycleArgs.builder().bucket("my-bucketname").config(config).build());
 ```
 
 <a name="setBucketNotification"></a>
@@ -961,7 +971,7 @@ ReplicationRule rule =
         new ReplicationDestination(
             null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
         null,
-        new ReplicationRuleFilter(new AndOperator("TaxDocs", tags)),
+        new RuleFilter(new AndOperator("TaxDocs", tags)),
         "rule1",
         null,
         1,
@@ -1893,9 +1903,10 @@ ObjectStat objectStat =
 [DeleteObjectTagsArgs]: http://minio.github.io/minio-java/io/minio/DeleteObjectTagsArgs.html
 [GetObjectTagsArgs]: http://minio.github.io/minio-java/io/minio/GetObjectTagsArgs.html
 [SetObjectTagsArgs]: http://minio.github.io/minio-java/io/minio/SetObjectTagsArgs.html
-[DeleteBucketLifeCycleArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketLifeCycleArgs.html
-[GetBucketLifeCycleArgs]: http://minio.github.io/minio-java/io/minio/GetBucketLifeCycleArgs.html
-[SetBucketLifeCycleArgs]: http://minio.github.io/minio-java/io/minio/SetBucketLifeCycleArgs.html
+[LifecycleConfiguration]: http://minio.github.io/minio-java/io/minio/messages/LifecycleConfiguration.html
+[DeleteBucketLifecycleArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketLifecycleArgs.html
+[GetBucketLifecycleArgs]: http://minio.github.io/minio-java/io/minio/GetBucketLifecycleArgs.html
+[SetBucketLifecycleArgs]: http://minio.github.io/minio-java/io/minio/SetBucketLifecycleArgs.html
 [GetBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/GetBucketPolicyArgs.html
 [SetBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/SetBucketPolicyArgs.html
 [DeleteBucketPolicyArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketPolicyArgs.html
