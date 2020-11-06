@@ -38,17 +38,15 @@ public class MinioClientWithClientGrantsProvider {
   static Jwt getJwt(
       @Nonnull String clientId,
       @Nonnull String clientSecret,
-      @Nonnull String idpClientId,
       @Nonnull String idpEndpoint) {
     Objects.requireNonNull(clientId, "Client id must not be null");
     Objects.requireNonNull(clientSecret, "ClientSecret must not be null");
 
     RequestBody requestBody =
         new FormBody.Builder()
-            .add("username", clientId)
-            .add("password", clientSecret)
-            .add("grant_type", "password")
-            .add("client_id", idpClientId)
+            .add("client_id", clientId)
+            .add("client_secret", clientSecret)
+            .add("grant_type", "client_credentials")
             .build();
 
     Request request = new Request.Builder().url(idpEndpoint).post(requestBody).build();
@@ -72,42 +70,20 @@ public class MinioClientWithClientGrantsProvider {
         "https://IDP-HOST:IDP-PORT/auth/realms/master/protocol/openid-connect/token";
 
     // Client-ID to fetch JWT.
-    String clientId = "USER-ID";
+    String clientId = "CLIENT-ID";
 
     // Client secret to fetch JWT.
-    String clientSecret = "PASSWORD";
-
-    // Client-ID of MinIO service on IDP.
-    String idpClientId = "MINIO-CLIENT-ID";
+    String clientSecret = "CLIENT-SECRET";
 
     // STS endpoint usually point to MinIO server.
     String stsEndpoint = "http://STS-HOST:STS-PORT/";
 
-    // Policy to Credentials.
-    String policy =
-        new StringBuilder()
-            .append("{\n")
-            .append("    \"Statement\": [\n")
-            .append("       " + " {\n")
-            .append("            \"Action\": [\n")
-            .append("                \"s3:GetBucketLocation\",\n")
-            .append("                \"s3:ListBucket\"\n")
-            .append("            ],\n")
-            .append("            \"Effect\": \"Allow\",\n")
-            .append("            \"Principal\": \"*\",\n")
-            .append("            \"Resource\": \"arn:aws:s3:::test\"\n")
-            .append("        }\n")
-            .append("    ],\n")
-            .append("    \"Version\": \"2012-10-17\"\n")
-            .append("}\n")
-            .toString();
-
     Provider provider =
         new ClientGrantsProvider(
-            () -> getJwt(clientId, clientSecret, idpClientId, idpEndpoint),
+            () -> getJwt(clientId, clientSecret, idpEndpoint),
             stsEndpoint,
             null,
-            policy,
+            null,
             null);
 
     MinioClient minioClient =
