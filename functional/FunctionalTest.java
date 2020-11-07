@@ -2771,19 +2771,9 @@ public class FunctionalTest {
     }
   }
 
-  public static void testSetBucketLifecycle(String bucketName) throws Exception {
-    List<LifecycleRule> rules = new LinkedList<>();
-    rules.add(
-        new LifecycleRule(
-            Status.ENABLED,
-            null,
-            new Expiration((ZonedDateTime) null, 365, null),
-            new RuleFilter("logs/"),
-            "rule2",
-            null,
-            null,
-            null));
-    LifecycleConfiguration config = new LifecycleConfiguration(rules);
+  public static void testSetBucketLifecycle(String bucketName, LifecycleRule... rules)
+      throws Exception {
+    LifecycleConfiguration config = new LifecycleConfiguration(Arrays.asList(rules));
     client.setBucketLifecycle(
         SetBucketLifecycleArgs.builder().bucket(bucketName).config(config).build());
   }
@@ -2799,7 +2789,17 @@ public class FunctionalTest {
     try {
       client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
       try {
-        testSetBucketLifecycle(bucketName);
+        testSetBucketLifecycle(
+            bucketName,
+            new LifecycleRule(
+                Status.ENABLED,
+                null,
+                new Expiration((ZonedDateTime) null, 365, null),
+                new RuleFilter("logs/"),
+                "rule2",
+                null,
+                null,
+                null));
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -2822,7 +2822,17 @@ public class FunctionalTest {
       try {
         client.deleteBucketLifecycle(
             DeleteBucketLifecycleArgs.builder().bucket(bucketName).build());
-        testSetBucketLifecycle(bucketName);
+        testSetBucketLifecycle(
+            bucketName,
+            new LifecycleRule(
+                Status.ENABLED,
+                null,
+                new Expiration((ZonedDateTime) null, 365, null),
+                new RuleFilter("logs/"),
+                "rule2",
+                null,
+                null,
+                null));
         client.deleteBucketLifecycle(
             DeleteBucketLifecycleArgs.builder().bucket(bucketName).build());
         mintSuccessLog(methodName, null, startTime);
@@ -2850,7 +2860,17 @@ public class FunctionalTest {
         if (config != null) {
           throw new Exception("config: expected: <null>, got: <non-null>");
         }
-        testSetBucketLifecycle(bucketName);
+        testSetBucketLifecycle(
+            bucketName,
+            new LifecycleRule(
+                Status.ENABLED,
+                null,
+                new Expiration((ZonedDateTime) null, 365, null),
+                new RuleFilter("logs/"),
+                "rule2",
+                null,
+                null,
+                null));
         config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
         if (config == null) {
@@ -2881,6 +2901,27 @@ public class FunctionalTest {
         }
         if (!"rule2".equals(rule.id())) {
           throw new Exception("rule.id(): expected: rule2, got: " + rule.id());
+        }
+
+        testSetBucketLifecycle(
+            bucketName,
+            new LifecycleRule(
+                Status.ENABLED, null, null, new RuleFilter(""), null, null, null, null));
+        config =
+            client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
+        if (config == null) {
+          throw new Exception("config: expected: <non-null>, got: <null>");
+        }
+        if (config.rules().size() != 1) {
+          throw new Exception("config.rules().size(): expected: 1, got: " + config.rules().size());
+        }
+        if (config.rules().get(0).filter() == null) {
+          throw new Exception("rule.filter(): expected: <non-null>, got: <null>");
+        }
+        if (!"".equals(config.rules().get(0).filter().prefix())) {
+          throw new Exception(
+              "rule.filter().prefix(): expected: <empty>, got: "
+                  + config.rules().get(0).filter().prefix());
         }
         mintSuccessLog(methodName, null, startTime);
       } finally {
