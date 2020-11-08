@@ -28,8 +28,12 @@ public abstract class DateDays {
   private Integer days;
 
   public DateDays(ResponseDate date, Integer days) {
-    this.date = date;
-    this.days = days;
+    if (date != null ^ days != null) {
+      this.date = date;
+      this.days = days;
+    } else {
+      throw new IllegalArgumentException("Only one of date or days must be set");
+    }
   }
 
   public ZonedDateTime date() {

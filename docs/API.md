@@ -857,18 +857,18 @@ rules.add(
         "rule1",
         null,
         null,
-        new Transition(null, 30, "GLACIER")));
+        new Transition((ZonedDateTime) null, 30, "GLACIER")));
 rules.add(
     new LifecycleRule(
         Status.ENABLED,
         null,
-        new Expiration(null, 365, null),
+        new Expiration((ZonedDateTime) null, 365, null),
         new RuleFilter("logs/"),
         "rule2",
         null,
         null,
         null));
-config = new LifecycleConfiguraton(rules);
+LifecycleConfiguration config = new LifecycleConfiguration(rules);
 minioClient.setBucketLifecycle(
     SetBucketLifecycleArgs.builder().bucket("my-bucketname").config(config).build());
 ```

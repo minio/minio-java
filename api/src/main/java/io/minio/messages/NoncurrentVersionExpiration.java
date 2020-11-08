@@ -16,22 +16,21 @@
 
 package io.minio.messages;
 
-import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /** Helper class to denote noncurrent version expiration information for {@link LifecycleRule}. */
 @Root(name = "NoncurrentVersionExpiration")
 public class NoncurrentVersionExpiration {
-  @Element(name = "NoncurrentDays", required = false)
-  private Integer noncurrentDays;
+  @Element(name = "NoncurrentDays")
+  private int noncurrentDays;
 
   public NoncurrentVersionExpiration(
-      @Nullable @Element(name = "NoncurrentDays", required = false) Integer noncurrentDays) {
+      @Element(name = "NoncurrentDays", required = false) int noncurrentDays) {
     this.noncurrentDays = noncurrentDays;
   }
 
-  public Integer noncurrentDays() {
+  public int noncurrentDays() {
     return noncurrentDays;
   }
 }

@@ -16,7 +16,6 @@
 
 package io.minio.messages;
 
-import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
@@ -25,16 +24,15 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "AbortIncompleteMultipartUpload")
 public class AbortIncompleteMultipartUpload {
-  @Element(name = "DaysAfterInitiation", required = false)
-  private Integer daysAfterInitiation;
+  @Element(name = "DaysAfterInitiation")
+  private int daysAfterInitiation;
 
   public AbortIncompleteMultipartUpload(
-      @Nullable @Element(name = "DaysAfterInitiation", required = false)
-          Integer daysAfterInitiation) {
+      @Element(name = "DaysAfterInitiation") int daysAfterInitiation) {
     this.daysAfterInitiation = daysAfterInitiation;
   }
 
-  public Integer daysAfterInitiation() {
+  public int daysAfterInitiation() {
     return daysAfterInitiation;
   }
 }
