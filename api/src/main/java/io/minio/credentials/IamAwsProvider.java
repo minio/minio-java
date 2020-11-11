@@ -116,8 +116,9 @@ public class IamAwsProvider extends EnvironmentProvider {
       }
 
       EcsCredentials creds = mapper.readValue(response.body().charStream(), EcsCredentials.class);
-      if (!"Success".equals(creds.code())) {
-        throw new ProviderException(url + " failed with message " + creds.message());
+      if (creds.code() != null && !creds.code().equals("Success")) {
+        throw new ProviderException(
+            url + " failed with code " + creds.code() + " and message " + creds.message());
       }
       return creds.toCredentials();
     } catch (IOException e) {
