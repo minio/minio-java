@@ -98,7 +98,7 @@ public class PutObjectArgs extends PutObjectBaseArgs {
         }
 
         long partCount = (long) Math.ceil((double) objectSize / partSize);
-        return new long[] {partSize, partCount};
+        return new long[] {partSize, partCount == 0 ? 1 : partCount};
       }
 
       double pSize = Math.ceil((double) objectSize / MAX_MULTIPART_COUNT);
