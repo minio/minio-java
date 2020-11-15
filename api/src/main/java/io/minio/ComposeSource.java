@@ -18,7 +18,6 @@
 package io.minio;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import io.minio.errors.InternalException;
@@ -84,36 +83,10 @@ public class ComposeSource extends ObjectConditionalReadArgs {
   public void buildHeaders(long objectSize, String etag) {
     validateSize(objectSize);
     this.objectSize = Long.valueOf(objectSize);
-
-    String copySource = S3Escaper.encodePath(bucketName + "/" + objectName);
-    if (versionId != null) {
-      copySource += "?versionId=" + S3Escaper.encode(versionId);
+    Multimap<String, String> headers = genCopyHeaders();
+    if (!headers.containsKey("x-amz-copy-source-if-match")) {
+      headers.put("x-amz-copy-source-if-match", etag);
     }
-
-    Multimap<String, String> headers = HashMultimap.create();
-    headers.put("x-amz-copy-source", copySource);
-    headers.put("x-amz-copy-source-if-match", (matchETag != null) ? matchETag : etag);
-
-    if (notMatchETag != null) {
-      headers.put("x-amz-copy-source-if-none-match", notMatchETag);
-    }
-
-    if (modifiedSince != null) {
-      headers.put(
-          "x-amz-copy-source-if-modified-since",
-          modifiedSince.format(Time.HTTP_HEADER_DATE_FORMAT));
-    }
-
-    if (unmodifiedSince != null) {
-      headers.put(
-          "x-amz-copy-source-if-unmodified-since",
-          unmodifiedSince.format(Time.HTTP_HEADER_DATE_FORMAT));
-    }
-
-    if (ssec != null) {
-      headers.putAll(Multimaps.forMap(ssec.copySourceHeaders()));
-    }
-
     this.headers = Multimaps.unmodifiableMultimap(headers);
   }
 
