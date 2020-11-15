@@ -179,6 +179,10 @@ project(':api') {
         }
     }
 
+    artifacts {
+        archives javadocJar, sourcesJar, shadowJar
+    }
+
     publishing {
         publications {
             mavenJava(MavenPublication) {
