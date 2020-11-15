@@ -55,6 +55,40 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
     return unmodifiedSince;
   }
 
+  public Multimap<String, String> getHeaders() {
+    Long offset = this.offset;
+    Long length = this.length;
+    if (length != null && offset == null) {
+      offset = 0L;
+    }
+
+    String range = null;
+    if (offset != null) {
+      range = "bytes=" + offset + "-";
+      if (length != null) {
+        range = range + (offset + length - 1);
+      }
+    }
+
+    Multimap<String, String> headers = HashMultimap.create();
+
+    if (range != null) headers.put("Range", range);
+    if (matchETag != null) headers.put("if-match", matchETag);
+    if (notMatchETag != null) headers.put("if-none-match", notMatchETag);
+
+    if (modifiedSince != null) {
+      headers.put("if-modified-since", modifiedSince.format(Time.HTTP_HEADER_DATE_FORMAT));
+    }
+
+    if (unmodifiedSince != null) {
+      headers.put("if-unmodified-since", unmodifiedSince.format(Time.HTTP_HEADER_DATE_FORMAT));
+    }
+
+    if (ssec != null) headers.putAll(Multimaps.forMap(ssec.headers()));
+
+    return headers;
+  }
+
   public Multimap<String, String> genCopyHeaders() {
     Multimap<String, String> headers = HashMultimap.create();
 
