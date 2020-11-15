@@ -19,7 +19,7 @@
 /***************************/
 
 plugins {
-  id "com.github.johnrengelman.shadow" version "5.2.0"
+  id "com.github.johnrengelman.shadow" version "6.1.0"
   id "com.github.spotbugs" version "4.5.0"
   id "io.codearte.nexus-staging" version "0.22.0"
   id "de.marcphilipp.nexus-publish" version "0.4.0"
@@ -156,14 +156,9 @@ project(':api') {
         }
     }
 
-    task sourcesJar(type: Jar) {
-        classifier = 'sources'
-        from sourceSets.main.allJava
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
+    java {
+        withJavadocJar()
+        withSourcesJar()
     }
 
     javadoc.options {
@@ -193,9 +188,6 @@ project(':api') {
             mavenJava(MavenPublication) {
                 artifactId archivesBaseName
                 from components.java
-                artifact sourcesJar
-                artifact shadowJar
-                artifact javadocJar
                 pom {
                     name = 'minio'
                     packaging = 'jar'
