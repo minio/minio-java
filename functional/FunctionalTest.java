@@ -83,7 +83,6 @@ import io.minio.StatObjectResponse;
 import io.minio.Time;
 import io.minio.UploadObjectArgs;
 import io.minio.Xml;
-import io.minio.credentials.AssumeRoleProvider;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import io.minio.messages.AndOperator;
@@ -3638,40 +3637,6 @@ public class FunctionalTest {
     }
   }
 
-  public static void assumeRoleProvider() throws Exception {
-    if (mintEnv) {
-      return;
-    }
-
-    String methodName = "credentialProvider(AssumeRoleProvider)";
-    System.out.println(methodName);
-    long startTime = System.currentTimeMillis();
-    try {
-      MinioClient client =
-          MinioClient.builder()
-              .endpoint("https://play.minio.io:9000")
-              .credentialsProvider(
-                  new AssumeRoleProvider(
-                      "https://play.minio.io:9000/",
-                      "minio",
-                      "minio123",
-                      null,
-                      null,
-                      null,
-                      null,
-                      null,
-                      null,
-                      null))
-              .build();
-      String name = getRandomName();
-      client.makeBucket(MakeBucketArgs.builder().bucket(name).build());
-      client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
-      mintSuccessLog(methodName, null, startTime);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
   public static void runBucketTests() throws Exception {
     makeBucket();
     bucketExists();
@@ -3746,14 +3711,9 @@ public class FunctionalTest {
     teardown();
   }
 
-  public static void runCrdentialProviderTests() throws Exception {
-    assumeRoleProvider();
-  }
-
   public static void runTests() throws Exception {
     runBucketTests();
     runObjectTests();
-    runCrdentialProviderTests();
   }
 
   public static boolean downloadMinio() throws IOException {
