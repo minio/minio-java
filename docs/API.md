@@ -33,19 +33,19 @@ MinioClient minioClient =
 | [`deleteBucketTags`](#deleteBucketTags)                           | [`getObject`](#getObject)                               |
 | [`deleteObjectLockConfiguration`](#deleteObjectLockConfiguration) | [`getObjectRetention`](#getObjectRetention)             |
 | [`getBucketEncryption`](#getBucketEncryption)                     | [`getObjectTags`](#getObjectTags)                       |
-| [`getBucketLifecycle`](#getBucketLifecycle)                       | [`getObjectUrl`](#getObjectUrl)                         |
-| [`getBucketNotification`](#getBucketNotification)                 | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketPolicy`](#getBucketPolicy)                             | [`getPresignedPostFormData`](#getPresignedPostFormData) |
-| [`getBucketReplication`](#getBucketReplication)                   | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`getBucketTags`](#getBucketTags)                                 | [`listObjects`](#listObjects)                           |
-| [`getBucketVersioning`](#getBucketVersioning)                     | [`putObject`](#putObject)                               |
-| [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`removeObject`](#removeObject)                         |
-| [`listBuckets`](#listBuckets)                                     | [`removeObjects`](#removeObjects)                       |
-| [`listenBucketNotification`](#listenBucketNotification)           | [`selectObjectContent`](#selectObjectContent)           |
-| [`listIncompleteUploads`](#listIncompleteUploads)                 | [`setObjectRetention`](#setObjectRetention)             |
-| [`makeBucket`](#makeBucket)                                       | [`setObjectTags`](#setObjectTags)                       |
-| [`removeBucket`](#removeBucket)                                   | [`statObject`](#statObject)                             |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)               | [`uploadObject`](#uploadObject)                         |
+| [`getBucketLifecycle`](#getBucketLifecycle)                       | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketNotification`](#getBucketNotification)                 | [`getPresignedPostFormData`](#getPresignedPostFormData) |
+| [`getBucketPolicy`](#getBucketPolicy)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getBucketReplication`](#getBucketReplication)                   | [`listObjects`](#listObjects)                           |
+| [`getBucketTags`](#getBucketTags)                                 | [`putObject`](#putObject)                               |
+| [`getBucketVersioning`](#getBucketVersioning)                     | [`removeObject`](#removeObject)                         |
+| [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`removeObjects`](#removeObjects)                       |
+| [`listBuckets`](#listBuckets)                                     | [`selectObjectContent`](#selectObjectContent)           |
+| [`listenBucketNotification`](#listenBucketNotification)           | [`setObjectRetention`](#setObjectRetention)             |
+| [`listIncompleteUploads`](#listIncompleteUploads)                 | [`setObjectTags`](#setObjectTags)                       |
+| [`makeBucket`](#makeBucket)                                       | [`statObject`](#statObject)                             |
+| [`removeBucket`](#removeBucket)                                   | [`uploadObject`](#uploadObject)                         |
+| [`removeIncompleteUpload`](#removeIncompleteUpload)               |                                                         |
 | [`setBucketEncryption`](#setBucketEncryption)                     |                                                         |
 | [`setBucketLifecycle`](#setBucketLifecycle)                       |                                                         |
 | [`setBucketNotification`](#setBucketNotification)                 |                                                         |
@@ -1384,28 +1384,6 @@ __Example__
 ```java
 Tags tags = minioClient.getObjectTags(
     GetObjectTagsArgs.builder().bucket("my-bucketname").object("my-objectname").build());
-```
-
- <a name="getObjectUrl"></a>
-### getObjectUrl(String bucketName, String objectName)
-`public String getObjectUrl(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectUrl-java.lang.String-java.lang.String-)_
-
-Gets URL of an object useful when this object has public read access.
-
- __Parameters__
-| Parameter      | Type     | Description                |
-|:---------------|:---------|:---------------------------|
-| ``bucketName`` | _String_ | Name of the bucket.        |
-| ``objectName`` | _String_ | Object name in the bucket. |
-
-| Returns                |
-|:-----------------------|
-| _String_ - URL string. |
-
- __Example__
- ```java
-String url = minioClient.getObjectUrl("my-bucketname", "my-objectname");
-System.out.println("my-bucketname/my-objectname can be downloaded by " + url);
 ```
 
  <a name="getPresignedObjectUrl"></a>
