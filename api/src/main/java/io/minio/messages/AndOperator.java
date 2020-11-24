@@ -22,11 +22,13 @@ import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
 
 /** Helper class to denote AND operator information for {@link RuleFilter}. */
 @Root(name = "And")
 public class AndOperator {
   @Element(name = "Prefix", required = false)
+  @Convert(PrefixConverter.class)
   private String prefix;
 
   @ElementMap(

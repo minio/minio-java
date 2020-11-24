@@ -21,6 +21,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
 
 /**
  * Helper class to denote filter information for {@link ReplicationRule} and {@link LifecycleRule}.
@@ -31,6 +32,7 @@ public class RuleFilter {
   private AndOperator andOperator;
 
   @Element(name = "Prefix", required = false)
+  @Convert(PrefixConverter.class)
   private String prefix;
 
   @Element(name = "Tag", required = false)
@@ -41,10 +43,6 @@ public class RuleFilter {
       @Nullable @Element(name = "Prefix", required = false) String prefix,
       @Nullable @Element(name = "Tag", required = false) Tag tag) {
     if (andOperator != null ^ prefix != null ^ tag != null) {
-      if (prefix != null && prefix.isEmpty()) {
-        throw new IllegalArgumentException("Prefix must not be empty");
-      }
-
       this.andOperator = andOperator;
       this.prefix = prefix;
       this.tag = tag;
@@ -59,9 +57,6 @@ public class RuleFilter {
 
   public RuleFilter(@Nonnull String prefix) {
     this.prefix = Objects.requireNonNull(prefix, "Prefix must not be null");
-    if (prefix.isEmpty()) {
-      throw new IllegalArgumentException("Prefix must not be empty");
-    }
   }
 
   public RuleFilter(@Nonnull Tag tag) {
