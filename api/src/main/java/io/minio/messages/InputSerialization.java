@@ -45,6 +45,7 @@ public class InputSerialization {
       Character quoteCharacter,
       Character quoteEscapeCharacter,
       Character recordDelimiter) {
+    this.compressionType = compressionType;
     this.csv =
         new CsvInputSerialization(
             allowQuotedRecordDelimiter,
@@ -58,6 +59,7 @@ public class InputSerialization {
 
   /** Constructs a new InputSerialization object with JSON. */
   public InputSerialization(CompressionType compressionType, JsonType type) {
+    this.compressionType = compressionType;
     this.json = new JsonInputSerialization(type);
   }
 
