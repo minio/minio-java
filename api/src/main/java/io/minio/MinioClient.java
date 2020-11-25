@@ -736,6 +736,14 @@ public class MinioClient {
           code = "AccessDenied";
           message = "Access denied";
           break;
+        case 412:
+          code = "PreconditionFailed";
+          message = "At least one of the preconditions you specified did not hold";
+          break;
+        case 416:
+          code = "InvalidRange";
+          message = "The requested range cannot be satisfied";
+          break;
         default:
           if (response.code() >= 500) {
             throw new ServerException("server failed with HTTP status code " + response.code());
@@ -956,7 +964,7 @@ public class MinioClient {
     Response response =
         executeHead(
             args,
-            (args.ssec() != null) ? newMultimap(args.ssec().headers()) : null,
+            args.getHeaders(),
             (args.versionId() != null) ? newMultimap("versionId", args.versionId()) : null);
     return new StatObjectResponse(response.headers(), args.bucket(), args.region(), args.object());
   }
@@ -997,29 +1005,11 @@ public class MinioClient {
           ServerException, XmlParserException {
     checkArgs(args);
     args.validateSsec(this.baseUrl);
-
-    Long offset = args.offset();
-    Long length = args.length();
-    if (length != null && offset == null) {
-      offset = 0L;
-    }
-
-    String range = null;
-    if (offset != null) {
-      range = "bytes=" + offset + "-";
-      if (length != null) {
-        range = range + (offset + length - 1);
-      }
-    }
-
-    Multimap<String, String> headers = HashMultimap.create();
-    if (range != null) headers.put("Range", range);
-    if (args.ssec() != null) headers.putAll(newMultimap(args.ssec().headers()));
-
-    Multimap<String, String> queryParams = HashMultimap.create();
-    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
-
-    Response response = executeGet(args, headers, queryParams);
+    Response response =
+        executeGet(
+            args,
+            args.getHeaders(),
+            (args.versionId() != null) ? newMultimap("versionId", args.versionId()) : null);
     return new GetObjectResponse(
         response.headers(),
         args.bucket(),
@@ -1209,7 +1199,7 @@ public class MinioClient {
       return composeObject(new ComposeObjectArgs(args));
     }
 
-    StatObjectResponse stat = statObject(new StatObjectArgs(args.source()));
+    StatObjectResponse stat = statObject(new StatObjectArgs((ObjectReadArgs) args.source()));
     if (stat.size() > ObjectWriteArgs.MAX_PART_SIZE) {
       if (args.metadataDirective() != null && args.metadataDirective() == Directive.COPY) {
         throw new IllegalArgumentException(
@@ -1256,7 +1246,7 @@ public class MinioClient {
     int i = 0;
     for (ComposeSource src : sources) {
       i++;
-      StatObjectResponse stat = statObject(new StatObjectArgs(src));
+      StatObjectResponse stat = statObject(new StatObjectArgs((ObjectReadArgs) src));
 
       src.buildHeaders(stat.size(), stat.etag());
 

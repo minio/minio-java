@@ -20,20 +20,6 @@ package io.minio;
 public class StatObjectArgs extends ObjectConditionalReadArgs {
   protected StatObjectArgs() {}
 
-  public StatObjectArgs(ObjectConditionalReadArgs args) {
-    this.extraHeaders = args.extraHeaders;
-    this.extraQueryParams = args.extraQueryParams;
-    this.bucketName = args.bucketName;
-    this.region = args.region;
-    this.objectName = args.objectName;
-    this.versionId = args.versionId;
-    this.ssec = args.ssec;
-    this.matchETag = args.matchETag;
-    this.notMatchETag = args.notMatchETag;
-    this.modifiedSince = args.modifiedSince;
-    this.unmodifiedSince = args.unmodifiedSince;
-  }
-
   public StatObjectArgs(ObjectReadArgs args) {
     this.extraHeaders = args.extraHeaders;
     this.extraQueryParams = args.extraQueryParams;
