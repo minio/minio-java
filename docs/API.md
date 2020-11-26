@@ -1081,12 +1081,14 @@ minioClient.composeObject(
 
 // Create my-bucketname/my-objectname with user metadata by combining source object
 // list.
+Map<String, String> userMetadata = new HashMap<>();
+userMetadata.put("My-Project", "Project One");
 minioClient.composeObject(
     ComposeObjectArgs.builder()
       .bucket("my-bucketname")
       .object("my-objectname")
       .sources(sourceObjectList)
-      .headers(Multimaps.forMap(userMetadata))
+      .userMetadata(userMetadata)
       .build());
 
 // Create my-bucketname/my-objectname with user metadata and server-side encryption
@@ -1096,7 +1098,7 @@ minioClient.composeObject(
       .bucket("my-bucketname")
       .object("my-objectname")
       .sources(sourceObjectList)
-      .headers(Multimaps.forMap(userMetadata))
+      .userMetadata(userMetadata)
       .ssec(sse)
       .build());
 ```

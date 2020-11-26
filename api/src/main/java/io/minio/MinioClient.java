@@ -1195,12 +1195,16 @@ public class MinioClient {
           ServerException, XmlParserException {
     checkArgs(args);
     args.validateSse(this.baseUrl);
-    if (args.source().offset() != null || args.source().length() != null) {
-      return composeObject(new ComposeObjectArgs(args));
+
+    long size = -1;
+    if (args.source().offset() != null && args.source().length() != null) {
+      StatObjectResponse stat = statObject(new StatObjectArgs((ObjectReadArgs) args.source()));
+      size = stat.size();
     }
 
-    StatObjectResponse stat = statObject(new StatObjectArgs((ObjectReadArgs) args.source()));
-    if (stat.size() > ObjectWriteArgs.MAX_PART_SIZE) {
+    if (args.source().offset() != null
+        || args.source().length() != null
+        || size > ObjectWriteArgs.MAX_PART_SIZE) {
       if (args.metadataDirective() != null && args.metadataDirective() == Directive.COPY) {
         throw new IllegalArgumentException(
             "COPY metadata directive is not applicable to source object size greater than 5 GiB");
@@ -1336,11 +1340,14 @@ public class MinioClient {
    *
    * // Create my-bucketname/my-objectname with user metadata by combining source object
    * // list.
+   * Map<String, String> userMetadata = new HashMap<>();
+   * userMetadata.put("My-Project", "Project One");
    * minioClient.composeObject(
    *     ComposeObjectArgs.builder()
    *        .bucket("my-bucketname")
    *        .object("my-objectname")
    *        .sources(sourceObjectList)
+   *        .userMetadata(userMetadata)
    *        .build());
    *
    * // Create my-bucketname/my-objectname with user metadata and server-side encryption
@@ -1350,9 +1357,9 @@ public class MinioClient {
    *        .bucket("my-bucketname")
    *        .object("my-objectname")
    *        .sources(sourceObjectList)
+   *        .userMetadata(userMetadata)
    *        .ssec(sse)
    *        .build());
-   *
    * }</pre>
    *
    * @param args {@link ComposeObjectArgs} object.
