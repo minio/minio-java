@@ -2905,7 +2905,14 @@ public class FunctionalTest {
         testSetBucketLifecycle(
             bucketName,
             new LifecycleRule(
-                Status.ENABLED, null, null, new RuleFilter(""), null, null, null, null));
+                Status.ENABLED,
+                null,
+                new Expiration((ZonedDateTime) null, 365, null),
+                new RuleFilter(""),
+                null,
+                null,
+                null,
+                null));
         config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
         if (config == null) {

@@ -55,13 +55,24 @@ public class LifecycleRule {
       @Nullable @Element(name = "AbortIncompleteMultipartUpload", required = false)
           AbortIncompleteMultipartUpload abortIncompleteMultipartUpload,
       @Nullable @Element(name = "Expiration", required = false) Expiration expiration,
-      @Nullable @Element(name = "Filter", required = false) RuleFilter filter,
+      @Nonnull @Element(name = "Filter", required = false) RuleFilter filter,
       @Nullable @Element(name = "ID", required = false) String id,
       @Nullable @Element(name = "NoncurrentVersionExpiration", required = false)
           NoncurrentVersionExpiration noncurrentVersionExpiration,
       @Nullable @Element(name = "NoncurrentVersionTransition", required = false)
           NoncurrentVersionTransition noncurrentVersionTransition,
       @Nullable @Element(name = "Transition", required = false) Transition transition) {
+    if (abortIncompleteMultipartUpload == null
+        && expiration == null
+        && noncurrentVersionExpiration == null
+        && noncurrentVersionTransition == null
+        && transition == null) {
+      throw new IllegalArgumentException(
+          "At least one of action (AbortIncompleteMultipartUpload, Expiration, "
+              + "NoncurrentVersionExpiration, NoncurrentVersionTransition or Transition) must be "
+              + "specified in a rule");
+    }
+
     if (id != null) {
       id = id.trim();
       if (id.isEmpty()) throw new IllegalArgumentException("ID must be non-empty string");
@@ -70,7 +81,7 @@ public class LifecycleRule {
 
     this.abortIncompleteMultipartUpload = abortIncompleteMultipartUpload;
     this.expiration = expiration;
-    this.filter = filter;
+    this.filter = Objects.requireNonNull(filter, "Filter must not be null");
     this.id = id;
     this.noncurrentVersionExpiration = noncurrentVersionExpiration;
     this.noncurrentVersionTransition = noncurrentVersionTransition;

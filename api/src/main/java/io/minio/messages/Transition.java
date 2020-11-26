@@ -17,6 +17,7 @@
 package io.minio.messages;
 
 import java.time.ZonedDateTime;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -24,14 +25,17 @@ import org.simpleframework.xml.Root;
 /** Helper class to denote transition information for {@link LifecycleRule}. */
 @Root(name = "Transition")
 public class Transition extends DateDays {
-  @Element(name = "StorageClass", required = false)
+  @Element(name = "StorageClass")
   private String storageClass;
 
   public Transition(
       @Nullable @Element(name = "Date", required = false) ResponseDate date,
       @Nullable @Element(name = "Days", required = false) Integer days,
-      @Nullable @Element(name = "StorageClass", required = false) String storageClass) {
+      @Nonnull @Element(name = "StorageClass", required = false) String storageClass) {
     super(date, days);
+    if (storageClass == null || storageClass.isEmpty()) {
+      throw new IllegalArgumentException("StorageClass must be provided");
+    }
     this.storageClass = storageClass;
   }
 
