@@ -69,8 +69,8 @@ public class LifecycleRule {
         && transition == null) {
       throw new IllegalArgumentException(
           "At least one of action (AbortIncompleteMultipartUpload, Expiration, "
-              + "NoncurrentVersionExpiration, NoncurrentVersionTransition or Transition) must to "
-              + "be specified in a rule");
+              + "NoncurrentVersionExpiration, NoncurrentVersionTransition or Transition) must be "
+              + "specified in a rule");
     }
 
     if (id != null) {
