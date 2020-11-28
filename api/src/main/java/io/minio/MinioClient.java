@@ -1719,6 +1719,17 @@ public class MinioClient {
           private boolean completed = false;
           private Iterator<DeleteObject> objectIter = args.objects().iterator();
 
+          private void setError() {
+            error = null;
+            while (errorIterator.hasNext()) {
+              DeleteError deleteError = errorIterator.next();
+              if (!"NoSuchVersion".equals(deleteError.code())) {
+                error = new Result<>(deleteError);
+                break;
+              }
+            }
+          }
+
           private synchronized void populate() {
             if (completed) {
               return;
@@ -1726,27 +1737,25 @@ public class MinioClient {
 
             try {
               List<DeleteObject> objectList = new LinkedList<>();
-              int i = 0;
-              while (objectIter.hasNext() && i < 1000) {
+              while (objectIter.hasNext() && objectList.size() < 1000) {
                 objectList.add(objectIter.next());
-                i++;
               }
 
-              completed = objectList.size() == 0;
-              if (!completed) {
-                DeleteObjectsResponse response =
-                    deleteObjects(
-                        args.bucket(),
-                        args.region(),
-                        objectList,
-                        true,
-                        args.bypassGovernanceMode(),
-                        args.extraHeaders(),
-                        args.extraQueryParams());
-                if (response.result().errorList().size() > 0) {
-                  errorIterator = response.result().errorList().iterator();
-                  completed = true;
-                }
+              completed = objectList.isEmpty();
+              if (completed) return;
+              DeleteObjectsResponse response =
+                  deleteObjects(
+                      args.bucket(),
+                      args.region(),
+                      objectList,
+                      true,
+                      args.bypassGovernanceMode(),
+                      args.extraHeaders(),
+                      args.extraQueryParams());
+              if (!response.result().errorList().isEmpty()) {
+                errorIterator = response.result().errorList().iterator();
+                setError();
+                completed = true;
               }
             } catch (ErrorResponseException
                 | InsufficientDataException
@@ -1768,21 +1777,22 @@ public class MinioClient {
               populate();
             }
 
-            if (error != null || (errorIterator != null && errorIterator.hasNext())) {
-              return true;
-            }
+            if (error == null && errorIterator != null) setError();
+            if (error != null) return true;
+            if (completed) return false;
 
-            return !completed;
+            errorIterator = null;
+            return hasNext();
           }
 
           @Override
           public Result<DeleteError> next() {
             if (!hasNext()) throw new NoSuchElementException();
 
-            if (error != null) {
+            if (this.error != null) {
+              Result<DeleteError> error = this.error;
+              this.error = null;
               return error;
-            } else if (errorIterator != null && errorIterator.hasNext()) {
-              return new Result<>(errorIterator.next());
             }
 
             // This never happens.
