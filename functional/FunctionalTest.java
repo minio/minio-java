@@ -689,6 +689,13 @@ public class FunctionalTest {
       client.makeBucket(
           MakeBucketArgs.builder().bucket(bucketNameWithLock).objectLock(true).build());
     } catch (Exception e) {
+      if (e instanceof ErrorResponseException) {
+        if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
+          bucketNameWithLock = null;
+          return;
+        }
+      }
+
       handleException("makeBucket()", "[object lock]", startTime, e);
     }
   }
@@ -926,14 +933,16 @@ public class FunctionalTest {
             .build(),
         null);
 
-    testPutObject(
-        "[with retention]",
-        PutObjectArgs.builder().bucket(bucketNameWithLock).object(getRandomName()).stream(
-                new ContentInputStream(1 * KB), 1 * KB, -1)
-            .retention(
-                new Retention(RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
-            .build(),
-        null);
+    if (bucketNameWithLock != null) {
+      testPutObject(
+          "[with retention]",
+          PutObjectArgs.builder().bucket(bucketNameWithLock).object(getRandomName()).stream(
+                  new ContentInputStream(1 * KB), 1 * KB, -1)
+              .retention(
+                  new Retention(RetentionMode.GOVERNANCE, ZonedDateTime.now(Time.UTC).plusDays(1)))
+              .build(),
+          null);
+    }
 
     testThreadedPutObject();
 
@@ -2313,6 +2322,8 @@ public class FunctionalTest {
   }
 
   public static void enableObjectLegalHold() throws Exception {
+    if (bucketNameWithLock == null) return;
+
     String methodName = "enableObjectLegalHold()";
     if (!mintEnv) {
       System.out.println(methodName);
@@ -2351,6 +2362,8 @@ public class FunctionalTest {
   }
 
   public static void disableObjectLegalHold() throws Exception {
+    if (bucketNameWithLock == null) return;
+
     String methodName = "disableObjectLegalHold()";
     if (!mintEnv) {
       System.out.println(methodName);
@@ -2391,6 +2404,8 @@ public class FunctionalTest {
   }
 
   public static void isObjectLegalHoldEnabled() throws Exception {
+    if (bucketNameWithLock == null) return;
+
     String methodName = "isObjectLegalHoldEnabled()";
     if (!mintEnv) {
       System.out.println(methodName);
@@ -2534,6 +2549,8 @@ public class FunctionalTest {
   }
 
   public static void setObjectRetention() throws Exception {
+    if (bucketNameWithLock == null) return;
+
     String methodName = "setObjectRetention()";
     if (!mintEnv) {
       System.out.println(methodName);
@@ -2614,6 +2631,8 @@ public class FunctionalTest {
   }
 
   public static void getObjectRetention() throws Exception {
+    if (bucketNameWithLock == null) return;
+
     String methodName = "getObjectRetention()";
     if (!mintEnv) {
       System.out.println(methodName);
