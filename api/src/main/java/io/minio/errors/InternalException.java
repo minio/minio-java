@@ -21,7 +21,7 @@ package io.minio.errors;
  */
 public class InternalException extends MinioException {
   /** Constructs a new InternalException with given error message. */
-  public InternalException(String message) {
-    super(message);
+  public InternalException(String message, String httpTrace) {
+    super(message, httpTrace);
   }
 }

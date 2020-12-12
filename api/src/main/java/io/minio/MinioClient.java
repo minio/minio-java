@@ -101,6 +101,7 @@ import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -189,8 +190,8 @@ public class MinioClient {
   private static final byte[] EMPTY_BODY = new byte[] {};
   // default network I/O timeout is 5 minutes
   private static final long DEFAULT_CONNECTION_TIMEOUT = 5;
-  // maximum allowed bucket policy size is 12KiB
-  private static final int MAX_BUCKET_POLICY_SIZE = 12 * 1024;
+  // maximum allowed bucket policy size is 20KiB
+  private static final int MAX_BUCKET_POLICY_SIZE = 20 * 1024;
   // default expiration for a presigned URL is 7 days in seconds
   private static final int DEFAULT_EXPIRY_TIME = 7 * 24 * 3600;
   private static final String DEFAULT_USER_AGENT =
@@ -227,6 +228,15 @@ public class MinioClient {
     standardHeaders.add("content-language");
     standardHeaders.add("expires");
     standardHeaders.add("range");
+  }
+
+  private static final Set<String> TRACE_QUERY_PARAMS = new HashSet<>();
+
+  static {
+    TRACE_QUERY_PARAMS.add("retention");
+    TRACE_QUERY_PARAMS.add("legal-hold");
+    TRACE_QUERY_PARAMS.add("tagging");
+    TRACE_QUERY_PARAMS.add(UPLOAD_ID);
   }
 
   private final Map<String, String> regionCache = new ConcurrentHashMap<>();
@@ -618,24 +628,27 @@ public class MinioClient {
               request.header("x-amz-content-sha256"));
     }
 
-    if (this.traceStream != null) {
-      this.traceStream.println("---------START-HTTP---------");
-      String encodedPath = request.url().encodedPath();
-      String encodedQuery = request.url().encodedQuery();
-      if (encodedQuery != null) {
-        encodedPath += "?" + encodedQuery;
-      }
-      this.traceStream.println(request.method() + " " + encodedPath + " HTTP/1.1");
-      this.traceStream.println(
-          request
-              .headers()
-              .toString()
-              .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
-      if (traceRequestBody) {
-        this.traceStream.println(new String((byte[]) body, StandardCharsets.UTF_8));
-      }
+    StringBuilder traceBuilder = new StringBuilder();
+    traceBuilder.append("---------START-HTTP---------\n");
+    String encodedPath = request.url().encodedPath();
+    String encodedQuery = request.url().encodedQuery();
+    if (encodedQuery != null) {
+      encodedPath += "?" + encodedQuery;
     }
+    traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
+    traceBuilder.append(
+        request
+            .headers()
+            .toString()
+            .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+            .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
+    if (traceRequestBody) {
+      traceBuilder.append("\n").append(new String((byte[]) body, StandardCharsets.UTF_8));
+    }
+
+    PrintWriter traceStream = this.traceStream;
+    if (traceStream != null) traceStream.println(traceBuilder.toString());
+    traceBuilder.append("\n");
 
     OkHttpClient httpClient = this.httpClient;
     if (method == Method.PUT || method == Method.POST) {
@@ -645,15 +658,27 @@ public class MinioClient {
     }
 
     Response response = httpClient.newCall(request).execute();
-    if (this.traceStream != null) {
-      this.traceStream.println(
-          response.protocol().toString().toUpperCase(Locale.US) + " " + response.code());
-      this.traceStream.println(response.headers());
-    }
+    String trace =
+        response.protocol().toString().toUpperCase(Locale.US)
+            + " "
+            + response.code()
+            + "\n"
+            + response.headers();
+    traceBuilder.append(trace).append("\n");
+    if (traceStream != null) traceStream.println(trace);
 
     if (response.isSuccessful()) {
-      if (this.traceStream != null) {
-        this.traceStream.println(END_HTTP);
+      if (traceStream != null) {
+        // Trace response body only if the request is not GetObject/ListenBucketNotification S3 API.
+        Set<String> keys = queryParamMap.keySet();
+        if ((method != Method.GET
+                || objectName == null
+                || !Collections.disjoint(keys, TRACE_QUERY_PARAMS))
+            && !(keys.contains("events") && (keys.contains("prefix") || keys.contains("suffix")))) {
+          ResponseBody responseBody = response.peekBody(1024 * 1024);
+          traceStream.println(responseBody.string());
+        }
+        traceStream.println(END_HTTP);
       }
       return response;
     }
@@ -663,36 +688,32 @@ public class MinioClient {
       errorXml = responseBody.string();
     }
 
-    if (this.traceStream != null && !("".equals(errorXml) && method.equals(Method.HEAD))) {
-      this.traceStream.println(errorXml);
+    if (!("".equals(errorXml) && method.equals(Method.HEAD))) {
+      traceBuilder.append(errorXml).append("\n");
+      if (traceStream != null) traceStream.println(errorXml);
     }
+
+    traceBuilder.append(END_HTTP).append("\n");
+    if (traceStream != null) traceStream.println(END_HTTP);
 
     // Error in case of Non-XML response from server for non-HEAD requests.
     String contentType = response.headers().get("content-type");
     if (!method.equals(Method.HEAD)
         && (contentType == null
             || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
-      if (this.traceStream != null) {
-        this.traceStream.println(END_HTTP);
-      }
       throw new InvalidResponseException(
           response.code(),
           contentType,
-          errorXml.substring(0, errorXml.length() > 1024 ? 1024 : errorXml.length()));
+          errorXml.substring(0, errorXml.length() > 1024 ? 1024 : errorXml.length()),
+          traceBuilder.toString());
     }
 
     ErrorResponse errorResponse = null;
     if (!"".equals(errorXml)) {
       errorResponse = Xml.unmarshal(ErrorResponse.class, errorXml);
     } else if (!method.equals(Method.HEAD)) {
-      if (this.traceStream != null) {
-        this.traceStream.println(END_HTTP);
-      }
-      throw new InvalidResponseException(response.code(), contentType, errorXml);
-    }
-
-    if (this.traceStream != null) {
-      this.traceStream.println(END_HTTP);
+      throw new InvalidResponseException(
+          response.code(), contentType, errorXml, traceBuilder.toString());
     }
 
     if (errorResponse == null) {
@@ -746,14 +767,16 @@ public class MinioClient {
           break;
         default:
           if (response.code() >= 500) {
-            throw new ServerException("server failed with HTTP status code " + response.code());
+            throw new ServerException(
+                "server failed with HTTP status code " + response.code(), traceBuilder.toString());
           }
 
           throw new InternalException(
               "unhandled HTTP code "
                   + response.code()
                   + ".  Please report this issue at "
-                  + "https://github.com/minio/minio-java/issues");
+                  + "https://github.com/minio/minio-java/issues",
+              traceBuilder.toString());
       }
 
       errorResponse =
@@ -772,7 +795,7 @@ public class MinioClient {
       regionCache.remove(bucketName);
     }
 
-    throw new ErrorResponseException(errorResponse, response);
+    throw new ErrorResponseException(errorResponse, response, traceBuilder.toString());
   }
 
   /** Returns region of given bucket either from region cache or set in constructor. */
@@ -867,7 +890,8 @@ public class MinioClient {
               errorResponse.resource(),
               errorResponse.requestId(),
               errorResponse.hostId()),
-          e.response());
+          e.response(),
+          e.httpTrace());
     }
   }
 
@@ -3777,7 +3801,8 @@ public class MinioClient {
     if (!(data instanceof BufferedInputStream)) {
       throw new InternalException(
           "data must be BufferedInputStream. This should not happen.  "
-              + "Please report to https://github.com/minio/minio-java/issues/");
+              + "Please report to https://github.com/minio/minio-java/issues/",
+          null);
     }
 
     BufferedInputStream stream = (BufferedInputStream) data;
@@ -4137,7 +4162,7 @@ public class MinioClient {
         try {
           if (Xml.validate(ErrorResponse.class, bodyContent)) {
             ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
-            throw new ErrorResponseException(errorResponse, response);
+            throw new ErrorResponseException(errorResponse, response, null);
           }
         } catch (XmlParserException e) {
           // As it is not <Error> message, fall-back to parse CompleteMultipartUploadOutput XML.

@@ -84,6 +84,7 @@ public class FileUploader {
               + "object 'asiaphotos-2015.zip' to bucket 'asiatrip'.");
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
+      System.out.println("HTTP trace: " + e.httpTrace());
     }
   }
 }

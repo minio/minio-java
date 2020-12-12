@@ -57,7 +57,8 @@ public class Digest {
     } else {
       throw new InternalException(
           "Unknown data source to calculate SHA-256 hash. This should not happen, "
-              + "please report this issue at https://github.com/minio/minio-java/issues");
+              + "please report this issue at https://github.com/minio/minio-java/issues",
+          null);
     }
 
     return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
@@ -82,7 +83,8 @@ public class Digest {
     } else {
       throw new InternalException(
           "Unknown data source to calculate SHA-256 hash. This should not happen, "
-              + "please report this issue at https://github.com/minio/minio-java/issues");
+              + "please report this issue at https://github.com/minio/minio-java/issues",
+          null);
     }
 
     return new String[] {
@@ -108,7 +110,8 @@ public class Digest {
     } else {
       throw new InternalException(
           "Unknown data source to calculate MD5 hash. This should not happen, "
-              + "please report this issue at https://github.com/minio/minio-java/issues");
+              + "please report this issue at https://github.com/minio/minio-java/issues",
+          null);
     }
 
     return BaseEncoding.base64().encode(md5Digest.digest());
