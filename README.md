@@ -76,7 +76,7 @@ public class FileUploader {
       minioClient.uploadObject(
           UploadObjectArgs.builder()
               .bucket("asiatrip")
-              .object("asiaphotos.zip")
+              .object("asiaphotos-2015.zip")
               .filename("/home/user/Photos/asiaphotos.zip")
               .build());
       System.out.println(
