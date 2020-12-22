@@ -152,6 +152,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
+import org.junit.Assert;
 
 @SuppressFBWarnings(
     value = "REC",
@@ -374,10 +375,8 @@ public class FunctionalTest {
       }
 
       bytesRead = stream.read(buf, 0, bytesToRead);
-      if (bytesRead < 0) {
-        // reached EOF
-        throw new Exception("data length mismatch. expected: " + len + ", got: " + totalBytesRead);
-      }
+      Assert.assertFalse(
+          "data length mismatch. expected: " + len + ", got: " + totalBytesRead, bytesRead < 0);
 
       if (bytesRead > 0) {
         sha256Digest.update(buf, 0, bytesRead);
@@ -400,11 +399,8 @@ public class FunctionalTest {
       }
 
       bytesRead = stream.read(buf, 0, bytesToRead);
-      if (bytesRead < 0) {
-        // reached EOF
-        throw new Exception("insufficient data. expected: " + len + ", got: " + totalBytesRead);
-      }
-
+      Assert.assertFalse(
+          "insufficient data. expected: " + len + ", got: " + totalBytesRead, bytesRead < 0);
       if (bytesRead > 0) {
         totalBytesRead += bytesRead;
       }
@@ -445,11 +441,14 @@ public class FunctionalTest {
     try {
       client.makeBucket(args);
       try {
-        if (existCheck
-            && !client.bucketExists(
-                BucketExistsArgs.builder().bucket(args.bucket()).region(args.region()).build())) {
-          throw new Exception(methodName + " failed after bucket creation");
-        }
+        Assert.assertFalse(
+            methodName + " failed after bucket creation",
+            existCheck
+                && !client.bucketExists(
+                    BucketExistsArgs.builder()
+                        .bucket(args.bucket())
+                        .region(args.region())
+                        .build()));
         if (removeCheck) {
           client.removeBucket(
               RemoveBucketArgs.builder().bucket(args.bucket()).region(args.region()).build());
@@ -558,10 +557,9 @@ public class FunctionalTest {
           }
         }
 
-        if (!expectedBucketNames.containsAll(bucketNames)) {
-          throw new Exception(
-              "bucket names differ; expected = " + expectedBucketNames + ", got = " + bucketNames);
-        }
+        Assert.assertTrue(
+            "bucket names differ; expected = " + expectedBucketNames + ", got = " + bucketNames,
+            expectedBucketNames.containsAll(bucketNames));
 
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -635,23 +633,23 @@ public class FunctionalTest {
       try {
         VersioningConfiguration config =
             client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
-        if (config.status() != VersioningConfiguration.Status.OFF) {
-          throw new Exception("getBucketVersioning(); expected = \"\", got = " + config.status());
-        }
-
+        Assert.assertEquals(
+            "getBucketVersioning(); expected = \"\", got = " + config.status(),
+            config.status(),
+            VersioningConfiguration.Status.OFF);
         client.setBucketVersioning(
             SetBucketVersioningArgs.builder()
                 .bucket(name)
                 .config(new VersioningConfiguration(VersioningConfiguration.Status.ENABLED, null))
                 .build());
         config = client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
-        if (config.status() != VersioningConfiguration.Status.ENABLED) {
-          throw new Exception(
-              "getBucketVersioning(); expected = "
-                  + VersioningConfiguration.Status.ENABLED
-                  + ", got = "
-                  + config.status());
-        }
+        Assert.assertEquals(
+            "getBucketVersioning(); expected = "
+                + VersioningConfiguration.Status.ENABLED
+                + ", got = "
+                + config.status(),
+            config.status(),
+            VersioningConfiguration.Status.ENABLED);
 
         client.setBucketVersioning(
             SetBucketVersioningArgs.builder()
@@ -659,14 +657,13 @@ public class FunctionalTest {
                 .config(new VersioningConfiguration(VersioningConfiguration.Status.SUSPENDED, null))
                 .build());
         config = client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
-        if (config.status() != VersioningConfiguration.Status.SUSPENDED) {
-          throw new Exception(
-              "getBucketVersioning(); expected = "
-                  + VersioningConfiguration.Status.SUSPENDED
-                  + ", got = "
-                  + config.status());
-        }
-
+        Assert.assertEquals(
+            "getBucketVersioning(); expected = "
+                + VersioningConfiguration.Status.SUSPENDED
+                + ", got = "
+                + config.status(),
+            config.status(),
+            VersioningConfiguration.Status.SUSPENDED);
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
@@ -1002,43 +999,40 @@ public class FunctionalTest {
                     .ssec(ssec)
                     .build());
 
-        if (!expectedStat.bucket().equals(stat.bucket())) {
-          throw new Exception(
-              "bucket name: expected = " + expectedStat.bucket() + ", got = " + stat.bucket());
-        }
+        Assert.assertEquals(
+            "bucket name: expected = " + expectedStat.bucket() + ", got = " + stat.bucket(),
+            expectedStat.bucket(),
+            stat.bucket());
 
-        if (!expectedStat.object().equals(stat.object())) {
-          throw new Exception(
-              "object name: expected = " + expectedStat.object() + ", got = " + stat.object());
-        }
+        Assert.assertEquals(
+            "object name: expected = " + expectedStat.object() + ", got = " + stat.object(),
+            expectedStat.object(),
+            stat.object());
 
-        if (expectedStat.size() != stat.size()) {
-          throw new Exception(
-              "length: expected = " + expectedStat.size() + ", got = " + stat.size());
-        }
+        Assert.assertEquals(
+            "length: expected = " + expectedStat.size() + ", got = " + stat.size(),
+            expectedStat.size(),
+            stat.size());
 
-        if (!expectedStat.contentType().equals(stat.contentType())) {
-          throw new Exception(
-              "content-type: expected = "
-                  + expectedStat.contentType()
-                  + ", got = "
-                  + stat.contentType());
-        }
+        Assert.assertEquals(
+            "content-type: expected = "
+                + expectedStat.contentType()
+                + ", got = "
+                + stat.contentType(),
+            expectedStat.contentType(),
+            stat.contentType());
 
         for (String key : expectedStat.userMetadata().keySet()) {
-          if (!stat.userMetadata().containsKey(key)) {
-            throw new Exception("metadata " + key + " not found");
-          }
-
-          if (!expectedStat.userMetadata().get(key).equals(stat.userMetadata().get(key))) {
-            throw new Exception(
-                "metadata "
-                    + key
-                    + " value: expected: "
-                    + expectedStat.userMetadata().get(key)
-                    + ", got: "
-                    + stat.userMetadata().get(key));
-          }
+          Assert.assertTrue("metadata " + key + " not found", stat.userMetadata().containsKey(key));
+          Assert.assertEquals(
+              "metadata "
+                  + key
+                  + " value: expected: "
+                  + expectedStat.userMetadata().get(key)
+                  + ", got: "
+                  + stat.userMetadata().get(key),
+              expectedStat.userMetadata().get(key),
+              stat.userMetadata().get(key));
         }
 
         mintSuccessLog(methodName, testTags, startTime);
@@ -1137,9 +1131,10 @@ public class FunctionalTest {
 
       try (InputStream is = client.getObject(args)) {
         String checksum = getSha256Sum(is, length);
-        if (!checksum.equals(sha256sum)) {
-          throw new Exception("checksum mismatch. expected: " + sha256sum + ", got: " + checksum);
-        }
+        Assert.assertEquals(
+            "checksum mismatch. expected: " + sha256sum + ", got: " + checksum,
+            checksum,
+            sha256sum);
       }
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
@@ -1404,10 +1399,7 @@ public class FunctionalTest {
           objCount *= versions;
         }
 
-        if (i != objCount) {
-          throw new Exception("object count; expected=" + objCount + ", got=" + i);
-        }
-
+        Assert.assertEquals("object count; expected=" + objCount + ", got=" + i, i, objCount);
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         if (results != null) {
@@ -1586,10 +1578,10 @@ public class FunctionalTest {
     String urlString = client.getPresignedObjectUrl(args);
     byte[] data = readObject(urlString);
     String checksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
-    if (!expectedChecksum.equals(checksum)) {
-      throw new Exception(
-          "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum);
-    }
+    Assert.assertEquals(
+        "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum,
+        expectedChecksum,
+        checksum);
   }
 
   public static void testGetPresignedObjectUrlForGet() throws Exception {
@@ -1661,10 +1653,10 @@ public class FunctionalTest {
                 GetObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
         data = readAllBytes(is);
         String checksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
-        if (!expectedChecksum.equals(checksum)) {
-          throw new Exception(
-              "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum);
-        }
+        Assert.assertEquals(
+            "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum,
+            expectedChecksum,
+            checksum);
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
@@ -1758,9 +1750,7 @@ public class FunctionalTest {
               .readTimeout(20, TimeUnit.SECONDS)
               .build();
       Response response = transport.newCall(request).execute();
-      if (response == null) {
-        throw new Exception("no response from server");
-      }
+      Assert.assertNotNull("no response from server", response);
 
       try {
         if (!response.isSuccessful()) {
@@ -1907,14 +1897,10 @@ public class FunctionalTest {
                     .bucket(bucketName)
                     .object(srcObjectName + "-copy")
                     .build());
-        if (!customContentType.equals(stat.contentType())) {
-          throw new Exception(
-              "content type differs. expected: "
-                  + customContentType
-                  + ", got: "
-                  + stat.contentType());
-        }
-
+        Assert.assertEquals(
+            "content type differs. expected: " + customContentType + ", got: " + stat.contentType(),
+            customContentType,
+            stat.contentType());
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
@@ -1960,10 +1946,9 @@ public class FunctionalTest {
                     .bucket(bucketName)
                     .object(srcObjectName + "-copy")
                     .build());
-        if (stat.userMetadata().containsKey("My-Project")) {
-          throw new Exception("expected user metadata to be removed in new object");
-        }
-
+        Assert.assertFalse(
+            "expected user metadata to be removed in new object",
+            stat.userMetadata().containsKey("My-Project"));
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
@@ -2316,9 +2301,8 @@ public class FunctionalTest {
     boolean result =
         client.isObjectLegalHoldEnabled(
             IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build());
-    if (result != enableCheck) {
-      throw new Exception("object legal hold: expected: " + enableCheck + ", got: " + result);
-    }
+    Assert.assertEquals(
+        "object legal hold: expected: " + enableCheck + ", got: " + result, result, enableCheck);
   }
 
   public static void enableObjectLegalHold() throws Exception {
@@ -2427,9 +2411,7 @@ public class FunctionalTest {
                     .bucket(bucketNameWithLock)
                     .object(objectName)
                     .build());
-        if (result != false) {
-          throw new Exception("object legal hold: expected: false, got: " + result);
-        }
+        Assert.assertFalse("object legal hold: expected: false, got: " + result, result);
         checkObjectLegalHold(bucketNameWithLock, objectName, true);
         checkObjectLegalHold(bucketNameWithLock, objectName, false);
         mintSuccessLog(methodName, null, startTime);
@@ -2482,17 +2464,14 @@ public class FunctionalTest {
     ObjectLockConfiguration config =
         client.getObjectLockConfiguration(
             GetObjectLockConfigurationArgs.builder().bucket(bucketName).build());
-
-    if (config.mode() != expectedConfig.mode()) {
-      throw new Exception(
-          "retention mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
-    }
-
-    if (config.duration().unit() != expectedConfig.duration().unit()
-        || config.duration().duration() != expectedConfig.duration().duration()) {
-      throw new Exception(
-          "retention duration: " + expectedConfig.duration() + ", got: " + config.duration());
-    }
+    Assert.assertEquals(
+        "retention mode: expected: " + expectedConfig.mode() + ", got: " + config.mode(),
+        config.mode(),
+        expectedConfig.mode());
+    Assert.assertFalse(
+        "retention duration: " + expectedConfig.duration() + ", got: " + config.duration(),
+        config.duration().unit() != expectedConfig.duration().unit()
+            || config.duration().duration() != expectedConfig.duration().duration());
   }
 
   public static void getObjectLockConfiguration() throws Exception {
@@ -2606,27 +2585,29 @@ public class FunctionalTest {
             GetObjectRetentionArgs.builder().bucket(args.bucket()).object(args.object()).build());
 
     if (args.config().mode() == null) {
-      if (config != null && config.mode() != null) {
-        throw new Exception("retention mode: expected: <null>, got: " + config.mode());
-      }
-    } else if (config.mode() != args.config().mode()) {
-      throw new Exception(
-          "retention mode: expected: " + args.config().mode() + ", got: " + config.mode());
+      Assert.assertFalse(
+          "retention mode: expected: <null>, got: " + config.mode(),
+          config != null && config.mode() != null);
+    } else {
+      Assert.assertEquals(
+          "retention mode: expected: " + args.config().mode() + ", got: " + config.mode(),
+          args.config().mode(),
+          config.mode());
     }
 
     ZonedDateTime expectedDate = args.config().retainUntilDate();
     ZonedDateTime date = (config == null) ? null : config.retainUntilDate();
 
     if (expectedDate == null) {
-      if (date != null) {
-        throw new Exception("retention retain-until-date: expected: <null>, got: " + date);
-      }
-    } else if (!date.withNano(0).equals(expectedDate.withNano(0))) {
-      throw new Exception(
+      Assert.assertNull("retention retain-until-date: expected: <null>, got: " + date, date);
+    } else {
+      Assert.assertEquals(
           "retention retain-until-date: expected: "
               + expectedDate.withNano(0)
               + ", got: "
-              + date.withNano(0));
+              + date.withNano(0),
+          date.withNano(0),
+          expectedDate.withNano(0));
     }
   }
 
@@ -2708,10 +2689,7 @@ public class FunctionalTest {
       try {
         String config =
             client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
-        if (!config.isEmpty()) {
-          throw new Exception("policy: expected: \"\", got: " + config);
-        }
-
+        Assert.assertTrue("policy: expected: \"\", got: " + config, config.isEmpty());
         String policy =
             "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
                 + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
@@ -2875,9 +2853,7 @@ public class FunctionalTest {
       try {
         LifecycleConfiguration config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
-        if (config != null) {
-          throw new Exception("config: expected: <null>, got: <non-null>");
-        }
+        Assert.assertNull("config: expected: <null>, got: <non-null>", config);
         testSetBucketLifecycle(
             bucketName,
             new LifecycleRule(
@@ -2891,35 +2867,29 @@ public class FunctionalTest {
                 null));
         config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
-        if (config == null) {
-          throw new Exception("config: expected: <non-null>, got: <null>");
-        }
+        Assert.assertNotNull("config: expected: <non-null>, got: <null>", config);
         List<LifecycleRule> rules = config.rules();
-        if (config.rules().size() != 1) {
-          throw new Exception("config.rules().size(): expected: 1, got: " + config.rules().size());
-        }
+        Assert.assertEquals(
+            "config.rules().size(): expected: 1, got: " + config.rules().size(),
+            1,
+            config.rules().size());
         LifecycleRule rule = rules.get(0);
-        if (rule.status() != Status.ENABLED) {
-          throw new Exception(
-              "rule.status(): expected: " + Status.ENABLED + ", got: " + rule.status());
-        }
-        if (rule.expiration() == null) {
-          throw new Exception("rule.expiration(): expected: <non-null>, got: <null>");
-        }
-        if (rule.expiration().days() != 365) {
-          throw new Exception(
-              "rule.expiration().days(): expected: 365, got: " + rule.expiration().days());
-        }
-        if (rule.filter() == null) {
-          throw new Exception("rule.filter(): expected: <non-null>, got: <null>");
-        }
-        if (!"logs/".equals(rule.filter().prefix())) {
-          throw new Exception(
-              "rule.filter().prefix(): expected: logs/, got: " + rule.filter().prefix());
-        }
-        if (!"rule2".equals(rule.id())) {
-          throw new Exception("rule.id(): expected: rule2, got: " + rule.id());
-        }
+        Assert.assertEquals(
+            "rule.status(): expected: " + Status.ENABLED + ", got: " + rule.status(),
+            rule.status(),
+            Status.ENABLED);
+        Assert.assertNotNull(
+            "rule.expiration(): expected: <non-null>, got: <null>", rule.expiration());
+        Assert.assertEquals(
+            "rule.expiration().days(): expected: 365, got: " + rule.expiration().days(),
+            rule.expiration().days(),
+            Integer.valueOf(365));
+        Assert.assertNotNull("rule.filter(): expected: <non-null>, got: <null>", rule.filter());
+        Assert.assertEquals(
+            "rule.filter().prefix(): expected: logs/, got: " + rule.filter().prefix(),
+            "logs/",
+            rule.filter().prefix());
+        Assert.assertEquals("rule.id(): expected: rule2, got: " + rule.id(), "rule2", rule.id());
 
         testSetBucketLifecycle(
             bucketName,
@@ -2934,20 +2904,18 @@ public class FunctionalTest {
                 null));
         config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
-        if (config == null) {
-          throw new Exception("config: expected: <non-null>, got: <null>");
-        }
-        if (config.rules().size() != 1) {
-          throw new Exception("config.rules().size(): expected: 1, got: " + config.rules().size());
-        }
-        if (config.rules().get(0).filter() == null) {
-          throw new Exception("rule.filter(): expected: <non-null>, got: <null>");
-        }
-        if (!"".equals(config.rules().get(0).filter().prefix())) {
-          throw new Exception(
-              "rule.filter().prefix(): expected: <empty>, got: "
-                  + config.rules().get(0).filter().prefix());
-        }
+        Assert.assertNotNull("config: expected: <non-null>, got: <null>", config);
+        Assert.assertEquals(
+            "config.rules().size(): expected: 1, got: " + config.rules().size(),
+            config.rules().size(),
+            1);
+        Assert.assertNotNull(
+            "rule.filter(): expected: <non-null>, got: <null>", config.rules().get(0).filter());
+        Assert.assertEquals(
+            "rule.filter().prefix(): expected: <empty>, got: "
+                + config.rules().get(0).filter().prefix(),
+            "",
+            config.rules().get(0).filter().prefix());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3211,31 +3179,25 @@ public class FunctionalTest {
                   .build());
 
       String result = new String(readAllBytes(responseStream), StandardCharsets.UTF_8);
-      if (!result.equals(expectedResult)) {
-        throw new Exception("result mismatch; expected: " + expectedResult + ", got: " + result);
-      }
+      Assert.assertEquals(
+          "result mismatch; expected: " + expectedResult + ", got: " + result,
+          result,
+          expectedResult);
 
       Stats stats = responseStream.stats();
-
-      if (stats == null) {
-        throw new Exception("stats is null");
-      }
-
-      if (stats.bytesScanned() != 256) {
-        throw new Exception(
-            "stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned());
-      }
-
-      if (stats.bytesProcessed() != 256) {
-        throw new Exception(
-            "stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed());
-      }
-
-      if (stats.bytesReturned() != 222) {
-        throw new Exception(
-            "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
-      }
-
+      Assert.assertNotNull("stats is null", stats);
+      Assert.assertEquals(
+          "stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned(),
+          stats.bytesScanned(),
+          256);
+      Assert.assertEquals(
+          "stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed(),
+          stats.bytesProcessed(),
+          256);
+      Assert.assertEquals(
+          "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned(),
+          stats.bytesReturned(),
+          222);
       mintSuccessLog(methodName, testArgs, startTime);
     } catch (Exception e) {
       handleException(methodName, testArgs, startTime, e);
@@ -3286,10 +3248,7 @@ public class FunctionalTest {
         SseConfiguration config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        if (config.rule() != null) {
-          throw new Exception("rule: expected: <null>, got: " + config.rule().sseAlgorithm());
-        }
-
+        Assert.assertNull("rule: expected: <null>, got: <non-null>", config.rule());
         client.setBucketEncryption(
             SetBucketEncryptionArgs.builder()
                 .bucket(bucketName)
@@ -3298,16 +3257,14 @@ public class FunctionalTest {
         config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        if (config.rule() == null) {
-          throw new Exception("rule: expected: <non-null>, got: <null>");
-        }
-        if (config.rule().sseAlgorithm() != SseAlgorithm.AES256) {
-          throw new Exception(
-              "sse algorithm: expected: "
-                  + SseAlgorithm.AES256
-                  + ", got: "
-                  + config.rule().sseAlgorithm());
-        }
+        Assert.assertNotNull("rule: expected: <non-null>, got: <null>", config.rule());
+        Assert.assertEquals(
+            "sse algorithm: expected: "
+                + SseAlgorithm.AES256
+                + ", got: "
+                + config.rule().sseAlgorithm(),
+            config.rule().sseAlgorithm(),
+            SseAlgorithm.AES256);
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3341,9 +3298,7 @@ public class FunctionalTest {
         SseConfiguration config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        if (config.rule() != null) {
-          throw new Exception("rule: expected: <null>, got: " + config.rule().sseAlgorithm());
-        }
+        Assert.assertNull("rule: expected: <null>, got: <non-null>", config.rule());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3390,17 +3345,13 @@ public class FunctionalTest {
       try {
         Map<String, String> map = new HashMap<>();
         Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
-        if (!map.equals(tags.get())) {
-          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
-        }
+        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
 
         map.put("Project", "Project One");
         map.put("User", "jsmith");
         client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
         tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
-        if (!map.equals(tags.get())) {
-          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
-        }
+        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3429,9 +3380,7 @@ public class FunctionalTest {
         client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
         client.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket(bucketName).build());
         Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
-        if (tags.get().size() != 0) {
-          throw new Exception("tags: expected: <empty>" + ", got: " + tags.get());
-        }
+        Assert.assertTrue("tags: expected: <empty>" + ", got: " + tags.get(), tags.get().isEmpty());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3488,9 +3437,7 @@ public class FunctionalTest {
         Tags tags =
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
-        if (!map.equals(tags.get())) {
-          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
-        }
+        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
 
         map.put("Project", "Project One");
         map.put("User", "jsmith");
@@ -3499,9 +3446,7 @@ public class FunctionalTest {
         tags =
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
-        if (!map.equals(tags.get())) {
-          throw new Exception("tags: expected: " + map + ", got: " + tags.get());
-        }
+        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
@@ -3539,9 +3484,7 @@ public class FunctionalTest {
         Tags tags =
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
-        if (tags.get().size() != 0) {
-          throw new Exception("tags: expected: <empty>, got: " + tags.get());
-        }
+        Assert.assertTrue("tags: expected: <empty>, got: " + tags.get(), tags.get().isEmpty());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
@@ -3612,9 +3555,7 @@ public class FunctionalTest {
       ReplicationConfiguration config =
           client.getBucketReplication(
               GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
-      if (config != null) {
-        throw new Exception("config: expected: <null>, got: <non-null>");
-      }
+      Assert.assertNull("config: expected: <null>, got: <non-null>", config);
 
       Map<String, String> tags = new HashMap<>();
       tags.put("key1", "value1");
@@ -3641,9 +3582,7 @@ public class FunctionalTest {
       config =
           client.getBucketReplication(
               GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
-      if (config == null) {
-        throw new Exception("config: expected: <non-null>, got: <null>");
-      }
+      Assert.assertNotNull("config: expected: <non-null>, got: <null>", config);
       client.deleteBucketReplication(
           DeleteBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
       mintSuccessLog(methodName, null, startTime);
@@ -3695,9 +3634,7 @@ public class FunctionalTest {
       config =
           client.getBucketReplication(
               GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
-      if (config != null) {
-        throw new Exception("config: expected: <null>, got: <non-null>");
-      }
+      Assert.assertNull("config: expected: <null>, got: <non-null>", config);
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
