@@ -36,12 +36,12 @@ public class DownloadObjectArgs extends ObjectReadArgs {
   /** Argument class of {@link DownloadObjectArgs}. */
   public static final class Builder extends ObjectReadArgs.Builder<Builder, DownloadObjectArgs> {
     public Builder filename(String filename) {
-      validateFileName(filename);
+      validateFilename(filename);
       operations.add(args -> args.filename = filename);
       return this;
     }
 
-    private void validateFileName(String filename) {
+    private void validateFilename(String filename) {
       validateNotEmptyString(filename, "filename");
 
       Path filePath = Paths.get(filename);

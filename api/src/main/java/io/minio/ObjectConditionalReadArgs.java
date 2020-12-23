@@ -85,6 +85,11 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
     }
 
     if (ssec != null) headers.putAll(Multimaps.forMap(ssec.headers()));
+    if (sseKmsContext != null) {
+      headers.put(
+          "X-Amz-Server-Side-Encryption-Context",
+          ServerSideEncryptionKms.contextValue(sseKmsContext));
+    }
 
     return headers;
   }
@@ -99,17 +104,15 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
 
     headers.put("x-amz-copy-source", copySource);
 
-    if (ssec != null) {
-      headers.putAll(Multimaps.forMap(ssec.copySourceHeaders()));
+    if (ssec != null) headers.putAll(Multimaps.forMap(ssec.copySourceHeaders()));
+    if (sseKmsContext != null) {
+      headers.put(
+          "X-Amz-Server-Side-Encryption-Context",
+          ServerSideEncryptionKms.contextValue(sseKmsContext));
     }
 
-    if (matchETag != null) {
-      headers.put("x-amz-copy-source-if-match", matchETag);
-    }
-
-    if (notMatchETag != null) {
-      headers.put("x-amz-copy-source-if-none-match", notMatchETag);
-    }
+    if (matchETag != null) headers.put("x-amz-copy-source-if-match", matchETag);
+    if (notMatchETag != null) headers.put("x-amz-copy-source-if-none-match", notMatchETag);
 
     if (modifiedSince != null) {
       headers.put(

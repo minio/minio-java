@@ -28,6 +28,7 @@ public class StatObjectArgs extends ObjectConditionalReadArgs {
     this.objectName = args.objectName;
     this.versionId = args.versionId;
     this.ssec = args.ssec;
+    this.sseKmsContext = args.sseKmsContext;
   }
 
   public static Builder builder() {

@@ -3465,10 +3465,20 @@ public class MinioClient {
           ServerException, XmlParserException {
     checkArgs(args);
     args.validateSsec(this.baseUrl);
+
+    Multimap<String, String> headers = null;
+    if (args.ssec() != null) headers = newMultimap(args.ssec().headers());
+    if (args.sseKmsContext() != null) {
+      headers =
+          newMultimap(
+              "X-Amz-Server-Side-Encryption-Context",
+              ServerSideEncryptionKms.contextValue(args.sseKmsContext()));
+    }
+
     Response response =
         executePost(
             args,
-            (args.ssec() != null) ? newMultimap(args.ssec().headers()) : null,
+            headers,
             newMultimap("select", "", "select-type", "2"),
             new SelectObjectContentRequest(
                 args.sqlExpression(),

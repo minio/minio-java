@@ -18,6 +18,8 @@ package io.minio;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,19 +35,31 @@ public class ServerSideEncryptionKms extends ServerSideEncryption {
       throw new IllegalArgumentException("Key ID cannot be null");
     }
 
-    String contextJson = null;
-    if (context != null) {
-      contextJson = objectMapper.writeValueAsString(context);
-    }
-
     Map<String, String> headers = new HashMap<>();
     headers.put("X-Amz-Server-Side-Encryption", "aws:kms");
     headers.put("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id", keyId);
-    if (contextJson != null) {
-      headers.put("X-Amz-Server-Side-Encryption-Context", contextJson);
+    if (context != null) {
+      headers.put("X-Amz-Server-Side-Encryption-Context", getContextValue(context));
     }
 
     this.headers = Collections.unmodifiableMap(headers);
+  }
+
+  private static String getContextValue(Map<String, String> context)
+      throws JsonProcessingException {
+    return (context == null)
+        ? null
+        : Base64.getEncoder()
+            .encodeToString(
+                objectMapper.writeValueAsString(context).getBytes(StandardCharsets.UTF_8));
+  }
+
+  public static String contextValue(Map<String, String> context) {
+    try {
+      return getContextValue(context);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
