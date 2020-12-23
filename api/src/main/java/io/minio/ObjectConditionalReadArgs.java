@@ -99,17 +99,9 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
 
     headers.put("x-amz-copy-source", copySource);
 
-    if (ssec != null) {
-      headers.putAll(Multimaps.forMap(ssec.copySourceHeaders()));
-    }
-
-    if (matchETag != null) {
-      headers.put("x-amz-copy-source-if-match", matchETag);
-    }
-
-    if (notMatchETag != null) {
-      headers.put("x-amz-copy-source-if-none-match", notMatchETag);
-    }
+    if (ssec != null) headers.putAll(Multimaps.forMap(ssec.copySourceHeaders()));
+    if (matchETag != null) headers.put("x-amz-copy-source-if-match", matchETag);
+    if (notMatchETag != null) headers.put("x-amz-copy-source-if-none-match", notMatchETag);
 
     if (modifiedSince != null) {
       headers.put(
