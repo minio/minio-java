@@ -1545,22 +1545,24 @@ public class MinioClient {
           XmlParserException, ServerException {
     checkArgs(args);
 
-    byte[] body = null;
-    if (args.method() == Method.PUT || args.method() == Method.POST) {
-      body = EMPTY_BODY;
-    }
+    byte[] body = (args.method() == Method.PUT || args.method() == Method.POST) ? EMPTY_BODY : null;
 
     Multimap<String, String> queryParams = newMultimap(args.extraQueryParams());
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     String region = getRegion(args.bucket(), args.region());
     HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
-    if (provider == null) {
-      return url.toString();
-    }
+    if (provider == null) return url.toString();
 
     Credentials creds = provider.fetch();
-    Request request = createRequest(url, args.method(), null, body, 0, creds);
+    Request request =
+        createRequest(
+            url,
+            args.method(),
+            args.extraHeaders() == null ? null : httpHeaders(args.extraHeaders()),
+            body,
+            0,
+            creds);
     url = Signer.presignV4(request, region, creds.accessKey(), creds.secretKey(), args.expiry());
     return url.toString();
   }
