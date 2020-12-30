@@ -309,7 +309,7 @@ public class MinioClient {
     return (map != null) ? HashMultimap.create(map) : HashMultimap.create();
   }
 
-  private String[] handleRediectResponse(
+  private String[] handleRedirectResponse(
       Method method, String bucketName, Response response, boolean retry) {
     String code = null;
     String message = null;
@@ -702,7 +702,7 @@ public class MinioClient {
         case 301:
         case 307:
         case 400:
-          String[] result = handleRediectResponse(method, bucketName, response, true);
+          String[] result = handleRedirectResponse(method, bucketName, response, true);
           code = result[0];
           message = result[1];
           break;
@@ -857,7 +857,7 @@ public class MinioClient {
       }
 
       String[] result =
-          handleRediectResponse(Method.HEAD, errorResponse.bucketName(), e.response(), false);
+          handleRedirectResponse(Method.HEAD, errorResponse.bucketName(), e.response(), false);
       throw new ErrorResponseException(
           new ErrorResponse(
               result[0],
