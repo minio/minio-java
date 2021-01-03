@@ -56,7 +56,7 @@ public class Digest {
       sha256Digest.update((byte[]) data, 0, len);
     } else {
       throw new InternalException(
-          "Unknown data source to calculate sha256 hash. This should not happen, "
+          "Unknown data source to calculate SHA-256 hash. This should not happen, "
               + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
@@ -81,7 +81,7 @@ public class Digest {
       md5Digest.update((byte[]) data, 0, len);
     } else {
       throw new InternalException(
-          "Unknown data source to calculate sha256 hash. This should not happen, "
+          "Unknown data source to calculate SHA-256 hash. This should not happen, "
               + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
@@ -107,7 +107,7 @@ public class Digest {
       md5Digest.update((byte[]) data, 0, len);
     } else {
       throw new InternalException(
-          "Unknown data source to calculate sha256 hash. This should not happen, "
+          "Unknown data source to calculate MD5 hash. This should not happen, "
               + "please report this issue at https://github.com/minio/minio-java/issues");
     }
 
