@@ -76,6 +76,15 @@ public class Signer {
     IGNORED_HEADERS.add("user-agent");
   }
 
+  private static final Set<String> PRESIGN_IGNORED_HEADERS = new HashSet<>();
+
+  static {
+    PRESIGN_IGNORED_HEADERS.addAll(IGNORED_HEADERS);
+    PRESIGN_IGNORED_HEADERS.add("content-md5");
+    PRESIGN_IGNORED_HEADERS.add("x-amz-content-sha256");
+    PRESIGN_IGNORED_HEADERS.add("x-amz-date");
+  }
+
   private Request request;
   private String contentSha256;
   private ZonedDateTime date;
@@ -134,13 +143,13 @@ public class Signer {
             + "/aws4_request";
   }
 
-  private void setCanonicalHeaders() {
+  private void setCanonicalHeaders(Set<String> ignored_headers) {
     this.canonicalHeaders = new TreeMap<>();
 
     Headers headers = this.request.headers();
     for (String name : headers.names()) {
       String signedHeader = name.toLowerCase(Locale.US);
-      if (!IGNORED_HEADERS.contains(signedHeader)) {
+      if (!ignored_headers.contains(signedHeader)) {
         // Convert and add header values as per
         // https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
         // * Header having multiple values should be converted to comma separated values.
@@ -185,7 +194,7 @@ public class Signer {
   }
 
   private void setCanonicalRequest() throws NoSuchAlgorithmException {
-    setCanonicalHeaders();
+    setCanonicalHeaders(IGNORED_HEADERS);
     this.url = this.request.url();
     setCanonicalQueryString();
 
@@ -339,12 +348,9 @@ public class Signer {
   }
 
   private void setPresignCanonicalRequest(int expires) throws NoSuchAlgorithmException {
-    this.canonicalHeaders = new TreeMap<>();
-    this.canonicalHeaders.put("host", this.request.headers().get("Host"));
-    this.signedHeaders = "host";
+    setCanonicalHeaders(PRESIGN_IGNORED_HEADERS);
 
     HttpUrl.Builder urlBuilder = this.request.url().newBuilder();
-    // order of queryparam addition is important ie has to be sorted.
     urlBuilder.addEncodedQueryParameter(
         S3Escaper.encode("X-Amz-Algorithm"), S3Escaper.encode("AWS4-HMAC-SHA256"));
     urlBuilder.addEncodedQueryParameter(
