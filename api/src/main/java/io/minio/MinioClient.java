@@ -546,6 +546,28 @@ public class MinioClient {
     return requestBuilder.build();
   }
 
+  private StringBuilder newTraceBuilder(Request request, String body) {
+    StringBuilder traceBuilder = new StringBuilder();
+    traceBuilder.append("---------START-HTTP---------\n");
+    String encodedPath = request.url().encodedPath();
+    String encodedQuery = request.url().encodedQuery();
+    if (encodedQuery != null) {
+      encodedPath += "?" + encodedQuery;
+    }
+    traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
+    traceBuilder.append(
+        request
+            .headers()
+            .toString()
+            .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+            .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
+    if (body != null) {
+      traceBuilder.append("\n").append(body);
+    }
+
+    return traceBuilder;
+  }
+
   /** Execute HTTP request for given args and parameters. */
   protected Response execute(
       Method method,
@@ -628,24 +650,9 @@ public class MinioClient {
               request.header("x-amz-content-sha256"));
     }
 
-    StringBuilder traceBuilder = new StringBuilder();
-    traceBuilder.append("---------START-HTTP---------\n");
-    String encodedPath = request.url().encodedPath();
-    String encodedQuery = request.url().encodedQuery();
-    if (encodedQuery != null) {
-      encodedPath += "?" + encodedQuery;
-    }
-    traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
-    traceBuilder.append(
-        request
-            .headers()
-            .toString()
-            .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-            .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
-    if (traceRequestBody) {
-      traceBuilder.append("\n").append(new String((byte[]) body, StandardCharsets.UTF_8));
-    }
-
+    StringBuilder traceBuilder =
+        newTraceBuilder(
+            request, traceRequestBody ? new String((byte[]) body, StandardCharsets.UTF_8) : null);
     PrintWriter traceStream = this.traceStream;
     if (traceStream != null) traceStream.println(traceBuilder.toString());
     traceBuilder.append("\n");
