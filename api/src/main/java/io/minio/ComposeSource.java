@@ -93,7 +93,8 @@ public class ComposeSource extends ObjectConditionalReadArgs {
   public long objectSize() throws InternalException {
     if (this.objectSize == null) {
       throw new InternalException(
-          "buildHeaders(long objectSize, String etag) must be called prior to this method invocation");
+          "buildHeaders(long objectSize, String etag) must be called prior to this method invocation",
+          null);
     }
 
     return this.objectSize;
@@ -102,7 +103,8 @@ public class ComposeSource extends ObjectConditionalReadArgs {
   public Multimap<String, String> headers() throws InternalException {
     if (this.headers == null) {
       throw new InternalException(
-          "buildHeaders(long objectSize, String etag) must be called prior to this method invocation");
+          "buildHeaders(long objectSize, String etag) must be called prior to this method invocation",
+          null);
     }
 
     return this.headers;

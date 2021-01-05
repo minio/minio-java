@@ -32,8 +32,8 @@ public class ErrorResponseException extends MinioException {
   private final Response response;
 
   /** Constructs a new ErrorResponseException with error response and HTTP response object. */
-  public ErrorResponseException(ErrorResponse errorResponse, Response response) {
-    super(errorResponse.message());
+  public ErrorResponseException(ErrorResponse errorResponse, Response response, String httpTrace) {
+    super(errorResponse.message(), httpTrace);
     this.errorResponse = errorResponse;
     this.response = response;
   }

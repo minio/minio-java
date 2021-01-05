@@ -18,7 +18,7 @@ package io.minio.errors;
 
 /** Thrown to indicate that S3 service returning HTTP server error. */
 public class ServerException extends MinioException {
-  public ServerException(String message) {
-    super(message);
+  public ServerException(String message, String httpTrace) {
+    super(message, httpTrace);
   }
 }

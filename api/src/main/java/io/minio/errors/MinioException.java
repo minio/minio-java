@@ -18,6 +18,8 @@ package io.minio.errors;
 
 /** Base Exception class for all minio-java exceptions. */
 public class MinioException extends Exception {
+  String httpTrace = null;
+
   /** Constructs a new MinioException. */
   public MinioException() {
     super();
@@ -26,5 +28,15 @@ public class MinioException extends Exception {
   /** Constructs a new MinioException with given error message. */
   public MinioException(String message) {
     super(message);
+  }
+
+  /** Constructs a new MinioException with given error message. */
+  public MinioException(String message, String httpTrace) {
+    super(message);
+    this.httpTrace = httpTrace;
+  }
+
+  public String httpTrace() {
+    return this.httpTrace;
   }
 }

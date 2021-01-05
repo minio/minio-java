@@ -18,13 +18,15 @@ package io.minio.errors;
 
 /** Thrown to indicate that non-xml response thrown from server. */
 public class InvalidResponseException extends MinioException {
-  public InvalidResponseException(int responseCode, String contentType, String body) {
+  public InvalidResponseException(
+      int responseCode, String contentType, String body, String httpTrace) {
     super(
         "Non-XML response from server. Response code: "
             + responseCode
             + ", Content-Type: "
             + contentType
             + ", body: "
-            + body);
+            + body,
+        httpTrace);
   }
 }

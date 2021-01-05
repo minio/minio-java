@@ -160,7 +160,7 @@ public class SelectResponseStream extends InputStream {
       return true;
     }
 
-    throw new InternalException("unknown event-type '" + headerMap.get(":event-type") + "'");
+    throw new InternalException("unknown event-type '" + headerMap.get(":event-type") + "'", null);
   }
 
   /** read single byte from payload. */
