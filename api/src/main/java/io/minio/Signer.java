@@ -17,6 +17,7 @@
 package io.minio;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.io.BaseEncoding;
@@ -24,7 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -66,24 +66,19 @@ public class Signer {
   // Some S3 servers like Hitachi Content Platform do not honour this header for signature
   // calculation.
   //
-  private static final Set<String> IGNORED_HEADERS = new HashSet<>();
-
-  static {
-    IGNORED_HEADERS.add("accept-encoding");
-    IGNORED_HEADERS.add("authorization");
-    IGNORED_HEADERS.add("content-type");
-    IGNORED_HEADERS.add("content-length");
-    IGNORED_HEADERS.add("user-agent");
-  }
-
-  private static final Set<String> PRESIGN_IGNORED_HEADERS = new HashSet<>();
-
-  static {
-    PRESIGN_IGNORED_HEADERS.addAll(IGNORED_HEADERS);
-    PRESIGN_IGNORED_HEADERS.add("content-md5");
-    PRESIGN_IGNORED_HEADERS.add("x-amz-content-sha256");
-    PRESIGN_IGNORED_HEADERS.add("x-amz-date");
-  }
+  private static final Set<String> IGNORED_HEADERS =
+      ImmutableSet.of(
+          "accept-encoding", "authorization", "content-type", "content-length", "user-agent");
+  private static final Set<String> PRESIGN_IGNORED_HEADERS =
+      ImmutableSet.of(
+          "accept-encoding",
+          "authorization",
+          "content-type",
+          "content-length",
+          "user-agent",
+          "content-md5",
+          "x-amz-content-sha256",
+          "x-amz-date");
 
   private Request request;
   private String contentSha256;
