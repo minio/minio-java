@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteStreams;
@@ -102,7 +103,6 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -204,40 +204,8 @@ public class MinioClient {
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String US_EAST_1 = "us-east-1";
   private static final String UPLOAD_ID = "uploadId";
-
-  private static final Set<String> amzHeaders = new HashSet<>();
-
-  static {
-    amzHeaders.add("server-side-encryption");
-    amzHeaders.add("server-side-encryption-aws-kms-key-id");
-    amzHeaders.add("server-side-encryption-context");
-    amzHeaders.add("server-side-encryption-customer-algorithm");
-    amzHeaders.add("server-side-encryption-customer-key");
-    amzHeaders.add("server-side-encryption-customer-key-md5");
-    amzHeaders.add("website-redirect-location");
-    amzHeaders.add("storage-class");
-  }
-
-  private static final Set<String> standardHeaders = new HashSet<>();
-
-  static {
-    standardHeaders.add("content-type");
-    standardHeaders.add("cache-control");
-    standardHeaders.add("content-encoding");
-    standardHeaders.add("content-disposition");
-    standardHeaders.add("content-language");
-    standardHeaders.add("expires");
-    standardHeaders.add("range");
-  }
-
-  private static final Set<String> TRACE_QUERY_PARAMS = new HashSet<>();
-
-  static {
-    TRACE_QUERY_PARAMS.add("retention");
-    TRACE_QUERY_PARAMS.add("legal-hold");
-    TRACE_QUERY_PARAMS.add("tagging");
-    TRACE_QUERY_PARAMS.add(UPLOAD_ID);
-  }
+  private static final Set<String> TRACE_QUERY_PARAMS =
+      ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID);
 
   private final Map<String, String> regionCache = new ConcurrentHashMap<>();
   private String userAgent = DEFAULT_USER_AGENT;
