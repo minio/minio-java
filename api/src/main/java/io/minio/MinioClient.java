@@ -3771,6 +3771,107 @@ public class MinioClient {
     executeDelete(args, null, queryParams);
   }
 
+  /**
+   * Gets metrics configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * MetricsConfiguration config =
+   *     minioClient.getBucketMetricsConfiguration(
+   *         GetBucketMetricsConfigurationArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .id("ImportantBlueDocuments")
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketMetricsConfigurationArgs} object.
+   * @return {@link MetricsConfiguration} - MetricsConfiguration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public MetricsConfiguration getBucketMetricsConfiguration(GetBucketMetricsConfigurationArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    checkArgs(args);
+    try (Response response = executeGet(args, null, newMultimap("metrics", "", "id", args.id()))) {
+      return Xml.unmarshal(MetricsConfiguration.class, response.body().charStream());
+    }
+  }
+
+  /**
+   * Sets metrics configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * Map<String, String> tags = new HashMap<>();
+   * tags.put("priority", "high");
+   * tags.put("class", "blue");
+   * MetricsConfiguration config =
+   *     new MetricsConfiguration(
+   *         "ImportantBlueDocuments",
+   *         new RuleFilter(new AndOperator("documents/", tags)));
+   * minioClient.setBucketMetricsConfiguration(
+   *     SetBucketMetricsConfigurationArgs.builder().bucket("my-bucketname").config(config).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketMetricsConfigurationArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketMetricsConfiguration(SetBucketMetricsConfigurationArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    checkArgs(args);
+    Response response =
+        executePut(
+            args, null, newMultimap("metrics", "", "id", args.config().id()), args.config(), 0);
+    response.close();
+  }
+
+  /**
+   * Deletes metrics configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteBucketMetricsConfiguration(
+   *     DeleteBucketMetricsConfigurationArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .id("ImportantBlueDocuments")
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketMetricsConfigurationArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketMetricsConfiguration(DeleteBucketMetricsConfigurationArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    checkArgs(args);
+    executeDelete(args, null, newMultimap("metrics", "", "id", args.id()));
+  }
+
   private long getAvailableSize(Object data, long expectedReadSize)
       throws IOException, InternalException {
     if (!(data instanceof BufferedInputStream)) {

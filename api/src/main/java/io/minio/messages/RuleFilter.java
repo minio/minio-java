@@ -24,7 +24,8 @@ import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.Convert;
 
 /**
- * Helper class to denote filter information for {@link ReplicationRule} and {@link LifecycleRule}.
+ * Helper class to denote filter information for {@link ReplicationRule}, {@link LifecycleRule} and
+ * {@link MetricsConfiguration}.
  */
 @Root(name = "Filter")
 public class RuleFilter {
