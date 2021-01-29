@@ -78,7 +78,8 @@ public class Signer {
           "user-agent",
           "content-md5",
           "x-amz-content-sha256",
-          "x-amz-date");
+          "x-amz-date",
+          "x-amz-security-token");
 
   private Request request;
   private String contentSha256;

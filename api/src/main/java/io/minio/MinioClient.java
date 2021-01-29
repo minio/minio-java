@@ -1550,10 +1550,14 @@ public class MinioClient {
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     String region = getRegion(args.bucket(), args.region());
-    HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
-    if (provider == null) return url.toString();
+    if (provider == null) {
+      HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
+      return url.toString();
+    }
 
     Credentials creds = provider.fetch();
+    if (creds.sessionToken() != null) queryParams.put("X-Amz-Security-Token", creds.sessionToken());
+    HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
     Request request =
         createRequest(
             url,
