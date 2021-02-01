@@ -189,7 +189,7 @@ public class PostPolicy {
       throw new IllegalArgumentException("region cannot be empty");
     }
 
-    if (!conditions.get(EQ).containsKey("key") && conditions.get(STARTS_WITH).containsKey("key")) {
+    if (!conditions.get(EQ).containsKey("key") && !conditions.get(STARTS_WITH).containsKey("key")) {
       throw new IllegalArgumentException("key condition must be set");
     }
 
