@@ -43,7 +43,7 @@ public class PutObjectArgs extends PutObjectBaseArgs {
   }
 
   /** Argument builder of {@link PutObjectArgs}. */
-  public static final class Builder extends ObjectWriteArgs.Builder<Builder, PutObjectArgs> {
+  public static final class Builder extends PutObjectBaseArgs.Builder<Builder, PutObjectArgs> {
     @Override
     protected void validate(PutObjectArgs args) {
       super.validate(args);

@@ -25,6 +25,7 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
   protected long partSize;
   protected int partCount;
   protected String contentType;
+  protected boolean preloadData;
 
   public long objectSize() {
     return objectSize;
@@ -51,9 +52,24 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
     return null;
   }
 
+  public boolean preloadData() {
+    return preloadData;
+  }
+
   /** Base argument builder class for {@link PutObjectBaseArgs}. */
+  @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends PutObjectBaseArgs>
-      extends ObjectWriteArgs.Builder<B, A> {}
+      extends ObjectWriteArgs.Builder<B, A> {
+    /**
+     * Sets flag to control data preload of stream/file. When this flag is enabled, entire
+     * part/object data is loaded into memory to enable connection retry on network failure in the
+     * middle of upload.
+     */
+    public B preloadData(boolean preloadData) {
+      operations.add(args -> args.preloadData = preloadData);
+      return (B) this;
+    }
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -64,11 +80,13 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
     return objectSize == that.objectSize
         && partSize == that.partSize
         && partCount == that.partCount
-        && Objects.equal(contentType, that.contentType);
+        && Objects.equal(contentType, that.contentType)
+        && preloadData == that.preloadData;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), objectSize, partSize, partCount, contentType);
+    return Objects.hashCode(
+        super.hashCode(), objectSize, partSize, partCount, contentType, preloadData);
   }
 }

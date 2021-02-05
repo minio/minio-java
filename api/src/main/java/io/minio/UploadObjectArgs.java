@@ -50,7 +50,7 @@ public class UploadObjectArgs extends PutObjectBaseArgs {
   }
 
   /** Argument builder of {@link UploadObjectArgs}. */
-  public static final class Builder extends ObjectWriteArgs.Builder<Builder, UploadObjectArgs> {
+  public static final class Builder extends PutObjectBaseArgs.Builder<Builder, UploadObjectArgs> {
     @Override
     protected void validate(UploadObjectArgs args) {
       super.validate(args);

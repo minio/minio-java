@@ -76,6 +76,7 @@ import io.minio.messages.Tags;
 import io.minio.messages.VersioningConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -626,9 +627,8 @@ public class MinioClient {
     traceBuilder.append("\n");
 
     OkHttpClient httpClient = this.httpClient;
-    if (method == Method.PUT || method == Method.POST) {
-      // Issue #924: disable connection retry for PUT and POST methods. Its safe to do
-      // retry for other methods.
+    if (!(body instanceof byte[]) && (method == Method.PUT || method == Method.POST)) {
+      // Issue #924: disable connection retry for PUT and POST methods for other than byte array.
       httpClient = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
     }
 
@@ -2676,7 +2676,7 @@ public class MinioClient {
   }
 
   private ObjectWriteResponse putObject(
-      ObjectWriteArgs args,
+      PutObjectBaseArgs args,
       Object data,
       long objectSize,
       long partSize,
@@ -2694,6 +2694,7 @@ public class MinioClient {
     String uploadId = null;
     long uploadedSize = 0L;
     Part[] parts = null;
+    ByteArrayOutputStream buffer = null;
 
     try {
       for (int partNumber = 1; partNumber <= partCount || partCount < 0; partNumber++) {
@@ -2714,12 +2715,19 @@ public class MinioClient {
           }
         }
 
+        Object body = data;
+        if (args.preloadData()) {
+          if (buffer == null) buffer = new ByteArrayOutputStream();
+          fillData(buffer, data, availableSize);
+          body = buffer.toByteArray();
+        }
+
         if (partCount == 1) {
           return putObject(
               args.bucket(),
               args.region(),
               args.object(),
-              data,
+              body,
               (int) availableSize,
               headers,
               args.extraQueryParams());
@@ -2744,7 +2752,7 @@ public class MinioClient {
                 args.bucket(),
                 args.region(),
                 args.object(),
-                data,
+                body,
                 (int) availableSize,
                 uploadId,
                 partNumber,
@@ -3805,6 +3813,25 @@ public class MinioClient {
 
     stream.reset();
     return totalBytesRead;
+  }
+
+  private void fillData(ByteArrayOutputStream buffer, Object data, long size) throws IOException {
+    buffer.reset();
+    byte[] buf = new byte[16384]; // 16KiB buffer for optimization
+    long totalBytesRead = 0;
+    while (totalBytesRead < size) {
+      long bytesToRead = size - totalBytesRead;
+      if (bytesToRead > buf.length) bytesToRead = buf.length;
+      int bytesRead = -1;
+      if (data instanceof RandomAccessFile) {
+        bytesRead = ((RandomAccessFile) data).read(buf, 0, (int) bytesToRead);
+      } else if (data instanceof BufferedInputStream) {
+        bytesRead = ((BufferedInputStream) data).read(buf, 0, (int) bytesToRead);
+      }
+      if (bytesRead < 0) throw new IOException("EOF on reading data");
+      buffer.write(buf, 0, bytesRead);
+      totalBytesRead += bytesRead;
+    }
   }
 
   /**
