@@ -93,11 +93,8 @@ public class PutObjectArgs extends PutObjectBaseArgs {
       }
 
       if (partSize > 0) {
-        if (partSize > objectSize) {
-          partSize = objectSize;
-        }
-
-        long partCount = (long) Math.ceil((double) objectSize / partSize);
+        if (partSize > objectSize) partSize = objectSize;
+        long partCount = partSize > 0 ? (long) Math.ceil((double) objectSize / partSize) : 1;
         return new long[] {partSize, partCount == 0 ? 1 : partCount};
       }
 
