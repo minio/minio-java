@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015-2021 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public abstract class Item {
   private long size; // except DeleteMarker
 
   @Element(name = "StorageClass", required = false)
-  private String storageClass; // except DeleteMarker
+  private String storageClass; // except DeleteMarker, not in case of MinIO server.
 
   @Element(name = "IsLatest", required = false)
   private boolean isLatest; // except ListObjects V1
@@ -128,6 +128,6 @@ public abstract class Item {
 
   /** Returns whether this item is a delete marker or not. */
   public boolean isDeleteMarker() {
-    return (etag == null && size == 0 && storageClass == null && versionId != null);
+    return this instanceof DeleteMarker;
   }
 }
