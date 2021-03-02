@@ -42,11 +42,9 @@ MinioClient minioClient =
 | [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`removeObjects`](#removeObjects)                       |
 | [`listBuckets`](#listBuckets)                                     | [`selectObjectContent`](#selectObjectContent)           |
 | [`listenBucketNotification`](#listenBucketNotification)           | [`setObjectRetention`](#setObjectRetention)             |
-| [`listIncompleteUploads`](#listIncompleteUploads)                 | [`setObjectTags`](#setObjectTags)                       |
-| [`makeBucket`](#makeBucket)                                       | [`statObject`](#statObject)                             |
-| [`removeBucket`](#removeBucket)                                   | [`uploadObject`](#uploadObject)                         |
-| [`removeIncompleteUpload`](#removeIncompleteUpload)               |                                                         |
-| [`setBucketEncryption`](#setBucketEncryption)                     |                                                         |
+| [`makeBucket`](#makeBucket)                                       | [`setObjectTags`](#setObjectTags)                       |
+| [`removeBucket`](#removeBucket)                                   | [`statObject`](#statObject)                             |
+| [`setBucketEncryption`](#setBucketEncryption)                     | [`uploadObject`](#uploadObject)                         |
 | [`setBucketLifecycle`](#setBucketLifecycle)                       |                                                         |
 | [`setBucketNotification`](#setBucketNotification)                 |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                             |                                                         |
@@ -630,74 +628,6 @@ try (CloseableIterator<Result<NotificationRecords>> ci =
 }
 ```
 
-<a name="listIncompleteUploads"></a>
-### listIncompleteUploads(ListIncompleteUploadsArgs args)
-`public Iterable<Result<Upload>> listIncompleteUploads(ListIncompleteUploadsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listIncompleteUploads-io.minio.ListIncompleteUploadsArgs-)_
-
-Lists incomplete object upload information of a bucket.
-
-__Parameters__
-
-| Parameter      | Type                           | Description    |
-|:---------------|:-------------------------------|:---------------|
-| ``args``       | _[ListIncompleteUploadsArgs]_  | Arguments.     |
-
-| Returns                                                                            |
-|:-----------------------------------------------------------------------------------|
-| _Iterable<[Result]<[Upload]>>_ - Lazy iterator contains object upload information. |
-
-__Example__
-```java
- // Lists incomplete object upload information of a bucket.
-Iterable<Result<Upload>> results =
-    minioClient.listIncompleteUploads(
-        ListIncompleteUploadsArgs.builder().bucket("my-bucketname").build());
-for (Result<Upload> result : results) {
-  Upload upload = result.get();
-  System.out.println(upload.uploadId() + ", " + upload.objectName());
-}
-
-// Lists incomplete object upload information of a bucket for prefix.
-Iterable<Result<Upload>> results =
-    minioClient.listIncompleteUploads(
-        ListIncompleteUploadsArgs.builder()
-            .bucket("my-bucketname")
-            .prefix("my-obj")
-            .build());
-for (Result<Upload> result : results) {
-  Upload upload = result.get();
-  System.out.println(upload.uploadId() + ", " + upload.objectName());
-}
-
-// Lists incomplete object upload information of a bucket for prefix recursively.
-Iterable<Result<Upload>> results =
-    minioClient.listIncompleteUploads(
-        ListIncompleteUploadsArgs.builder()
-            .bucket("my-bucketname")
-            .prefix("my-obj")
-            .recursive(true)
-            .build());
-for (Result<Upload> result : results) {
-  Upload upload = result.get();
-  System.out.println(upload.uploadId() + ", " + upload.objectName());
-}
-
-// Lists incomplete object upload information of a bucket for prefix, delimiter.
-// uploadIdMarker and maxUpload to 500
-Iterable<Result<Upload>> results =
-    minioClient.listIncompleteUploads(
-        ListIncompleteUploadsArgs.builder()
-            .bucket("my-bucketname")
-            .prefix("my-obj")
-            .delimiter("-")
-            .maxUploads(500)
-            .uploadIdMarker("Xgw4MJT6ZPAVxpY0SAuGN7q4uWJJM22ZYg1W99trdp4tpO88")
-            .build());
-for (Result<Upload> result : results) {
-  Upload upload = result.get();
-  System.out.println(upload.uploadId() + ", " + upload.objectName());
-```
-
 <a name="listObjects"></a>
 ### listObjects(ListObjectsArgs args)
 `public Iterable<Result<Item>> listObjects(ListObjectsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#listObjects-io.minio.ListObjectsArgs-)_
@@ -795,26 +725,6 @@ __Parameters__
 __Example__
 ```java
 minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
-```
-
-<a name="removeIncompleteUpload"></a>
-### removeIncompleteUpload(RemoveIncompleteUploadArgs args)
-`public void removeIncompleteUpload(String bucketName, String objectName)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeIncompleteUpload-io.minio.RemoveIncompleteUploadArgs-)_
-
-Removes incomplete uploads of an object.
-
-__Parameters__
-| Parameter        | Type                           | Description                  |
-|:-----------------|:-------------------------------|:-----------------------------|
-| ``args``         | _[RemoveIncompleteUploadArgs]_ | Arguments.                   |
-
-__Example__
-```java
-minioClient.removeIncompleteUpload(
-    RemoveIncompleteUploadArgs.builder()
-        .bucket("my-bucketname")
-        .object("my-objectname")
-        .build());
 ```
 
 <a name="setBucketEncryption"></a>
@@ -1904,11 +1814,9 @@ ObjectStat objectStat =
 [GetObjectLockConfigurationArgs]: http://minio.github.io/minio-java/io/minio/GetObjectLockConfigurationArgs.html
 [SetObjectLockConfigurationArgs]: http://minio.github.io/minio-java/io/minio/SetObjectLockConfigurationArgs.html
 [DeleteObjectLockConfigurationArgs]: http://minio.github.io/minio-java/io/minio/DeleteObjectLockConfigurationArgs.html
-[RemoveIncompleteUploadArgs]: http://minio.github.io/minio-java/io/minio/RemoveIncompleteUploadArgs.html
 [GetPresignedObjectUrlArgs]: http://minio.github.io/minio-java/io/minio/GetPresignedObjectUrlArgs.html
 [RemoveObjectsArgs]: http://minio.github.io/minio-java/io/minio/RemoveObjectsArgs.html
 [CopyObjectArgs]: http://minio.github.io/minio-java/io/minio/CopyObjectArgs.html
-[ListIncompleteUploadsArgs]: http://minio.github.io/minio-java/io/minio/ListIncompleteUploadsArgs.html
 [PutObjectArgs]: http://minio.github.io/minio-java/io/minio/PutObjectArgs.html
 [UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
 [ComposeObjectArgs]: http://minio.github.io/minio-java/io/minio/ComposeObjectArgs.html
