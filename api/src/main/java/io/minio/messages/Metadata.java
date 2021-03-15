@@ -16,7 +16,6 @@
 
 package io.minio.messages;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
