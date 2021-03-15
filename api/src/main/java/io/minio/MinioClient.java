@@ -1868,7 +1868,10 @@ public class MinioClient {
     return executeListObjectsV2(args);
   }
 
-  public ListBucketResultV2 listObjectsV2(ListObjectsArgs args) throws InvalidResponseException, NoSuchAlgorithmException, InvalidKeyException, ServerException, InternalException, XmlParserException, IOException, InsufficientDataException, ErrorResponseException {
+  public ListBucketResultV2 listObjectsV2(ListObjectsArgs args)
+      throws InvalidResponseException, NoSuchAlgorithmException, InvalidKeyException,
+          ServerException, InternalException, XmlParserException, IOException,
+          InsufficientDataException, ErrorResponseException {
     return executeListObjectsV2(
             args.bucket(),
             args.region(),
@@ -1881,7 +1884,8 @@ public class MinioClient {
             args.fetchOwner(),
             args.includeUserMetadata(),
             args.extraHeaders(),
-            args.extraQueryParams()).result();
+            args.extraQueryParams())
+        .result();
   }
 
   private abstract class ObjectIterator implements Iterator<Result<Item>> {

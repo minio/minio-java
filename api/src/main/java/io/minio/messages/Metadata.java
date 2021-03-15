@@ -16,8 +16,10 @@
 
 package io.minio.messages;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.Convert;
@@ -55,8 +57,11 @@ public class Metadata {
           break;
         }
 
-        String key = childNode.getName().startsWith(AWS_META_KEY_PREFIX) ? childNode.getName().substring(AWS_META_KEY_PREFIX_LENGTH) : childNode.getName();
-        map.put(key.toLowerCase(), childNode.getValue());
+        String key =
+            childNode.getName().startsWith(AWS_META_KEY_PREFIX)
+                ? childNode.getName().substring(AWS_META_KEY_PREFIX_LENGTH)
+                : childNode.getName();
+        map.put(key.toLowerCase(Locale.US), childNode.getValue());
       }
 
       if (map.size() > 0) {
