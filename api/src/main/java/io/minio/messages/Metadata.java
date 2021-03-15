@@ -29,6 +29,9 @@ import org.simpleframework.xml.stream.OutputNode;
 @Root(name = "Metadata")
 @Convert(Metadata.MetadataConverter.class)
 public class Metadata {
+  private static final String AWS_META_KEY_PREFIX = "X-Amz-Meta-";
+  private static final int AWS_META_KEY_PREFIX_LENGTH = AWS_META_KEY_PREFIX.length();
+
   Map<String, String> map;
 
   public Metadata() {}
@@ -52,7 +55,8 @@ public class Metadata {
           break;
         }
 
-        map.put(childNode.getName(), childNode.getValue());
+        String key = childNode.getName().startsWith(AWS_META_KEY_PREFIX) ? childNode.getName().substring(AWS_META_KEY_PREFIX_LENGTH) : childNode.getName();
+        map.put(key.toLowerCase(), childNode.getValue());
       }
 
       if (map.size() > 0) {

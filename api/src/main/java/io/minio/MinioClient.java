@@ -1865,7 +1865,23 @@ public class MinioClient {
       return listObjectsV1(args);
     }
 
-    return listObjectsV2(args);
+    return executeListObjectsV2(args);
+  }
+
+  public ListBucketResultV2 listObjectsV2(ListObjectsArgs args) throws InvalidResponseException, NoSuchAlgorithmException, InvalidKeyException, ServerException, InternalException, XmlParserException, IOException, InsufficientDataException, ErrorResponseException {
+    return executeListObjectsV2(
+            args.bucket(),
+            args.region(),
+            args.delimiter(),
+            args.useUrlEncodingType() ? "url" : null,
+            args.startAfter(),
+            args.maxKeys(),
+            args.prefix(),
+            args.continuationToken(),
+            args.fetchOwner(),
+            args.includeUserMetadata(),
+            args.extraHeaders(),
+            args.extraQueryParams()).result();
   }
 
   private abstract class ObjectIterator implements Iterator<Result<Item>> {
@@ -2001,7 +2017,7 @@ public class MinioClient {
     }
   }
 
-  private Iterable<Result<Item>> listObjectsV2(ListObjectsArgs args) {
+  private Iterable<Result<Item>> executeListObjectsV2(ListObjectsArgs args) {
     return new Iterable<Result<Item>>() {
       @Override
       public Iterator<Result<Item>> iterator() {
@@ -2018,7 +2034,7 @@ public class MinioClient {
             this.prefixIterator = null;
 
             ListObjectsV2Response response =
-                listObjectsV2(
+                executeListObjectsV2(
                     args.bucket(),
                     args.region(),
                     args.delimiter(),
@@ -4371,7 +4387,7 @@ public class MinioClient {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected ListObjectsV2Response listObjectsV2(
+  protected ListObjectsV2Response executeListObjectsV2(
       String bucketName,
       String region,
       String delimiter,

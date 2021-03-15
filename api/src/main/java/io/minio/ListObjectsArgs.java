@@ -38,7 +38,12 @@ public class ListObjectsArgs extends BucketArgs {
       return "";
     }
 
-    return (delimiter.isEmpty() ? "/" : delimiter);
+    if (continuationToken != null && !continuationToken.isEmpty()) {
+      // for continuation token, the delimiter has to be empty
+      return null;
+    } else {
+      return (delimiter.isEmpty() ? "/" : delimiter);
+    }
   }
 
   public boolean useUrlEncodingType() {
