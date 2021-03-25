@@ -90,6 +90,7 @@ public class PostPolicy {
       throw new IllegalArgumentException(element + " cannot be set");
     }
 
+    if ("key".equals(element)) value = S3Escaper.encodePath(value);
     conditions.get(EQ).put(element, value);
   }
 
@@ -123,6 +124,7 @@ public class PostPolicy {
       throw new IllegalArgumentException(element + " cannot be set");
     }
 
+    if ("key".equals(element)) value = S3Escaper.encodePath(value);
     conditions.get(STARTS_WITH).put(element, value);
   }
 
