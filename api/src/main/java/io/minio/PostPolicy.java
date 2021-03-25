@@ -16,15 +16,18 @@
 
 package io.minio;
 
-import com.google.common.io.BaseEncoding;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.minio.credentials.Credentials;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -48,6 +51,7 @@ public class PostPolicy {
   private static final String ALGORITHM = "AWS4-HMAC-SHA256";
   private static final String EQ = "eq";
   private static final String STARTS_WITH = "starts-with";
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
   private String bucketName;
   private ZonedDateTime expiration;
@@ -90,7 +94,6 @@ public class PostPolicy {
       throw new IllegalArgumentException(element + " cannot be set");
     }
 
-    if ("key".equals(element)) value = S3Escaper.encodePath(value);
     conditions.get(EQ).put(element, value);
   }
 
@@ -124,7 +127,6 @@ public class PostPolicy {
       throw new IllegalArgumentException(element + " cannot be set");
     }
 
-    if ("key".equals(element)) value = S3Escaper.encodePath(value);
     conditions.get(STARTS_WITH).put(element, value);
   }
 
@@ -161,22 +163,6 @@ public class PostPolicy {
     this.upperLimit = null;
   }
 
-  private String quote(String value) {
-    return "\"" + value + "\"";
-  }
-
-  private StringBuilder addCondition(
-      StringBuilder sb, String condition, String element, String value, boolean isEnd) {
-    sb.append("    [")
-        .append(quote(condition))
-        .append(", ")
-        .append(quote("$" + element))
-        .append(", ")
-        .append(quote(value))
-        .append("]");
-    return isEnd ? sb : sb.append(",\n");
-  }
-
   /**
    * Return form-data of this post policy. The returned map contains x-amz-algorithm,
    * x-amz-credential, x-amz-security-token, x-amz-date, policy and x-amz-signature.
@@ -195,43 +181,42 @@ public class PostPolicy {
       throw new IllegalArgumentException("key condition must be set");
     }
 
-    StringBuilder sb = new StringBuilder().append("{\n");
-    sb.append("  ")
-        .append(quote("expiration"))
-        .append(": ")
-        .append(quote(expiration.format(Time.EXPIRATION_DATE_FORMAT)))
-        .append(",\n");
-    sb.append("  ").append(quote("conditions")).append(": [\n");
-    addCondition(sb, "eq", "bucket", bucketName, false);
+    Map<String, Object> policyMap = new HashMap<>();
+    policyMap.put("expiration", expiration.format(Time.EXPIRATION_DATE_FORMAT));
+    List<List<Object>> conditionList = new LinkedList<>();
+    conditionList.add(Arrays.asList(new Object[] {"eq", "$bucket", bucketName}));
     for (Map.Entry<String, Map<String, String>> condition : conditions.entrySet()) {
       for (Map.Entry<String, String> entry : condition.getValue().entrySet()) {
-        addCondition(sb, condition.getKey(), entry.getKey(), entry.getValue(), false);
+        conditionList.add(
+            Arrays.asList(
+                new Object[] {condition.getKey(), "$" + entry.getKey(), entry.getValue()}));
       }
     }
     if (lowerLimit != null && upperLimit != null) {
-      sb.append("    [")
-          .append(quote("content-length-range"))
-          .append(", ")
-          .append(lowerLimit.toString())
-          .append(", ")
-          .append(upperLimit.toString())
-          .append("],\n");
+      conditionList.add(
+          Arrays.asList(new Object[] {"content-length-range", lowerLimit, upperLimit}));
     }
-
     ZonedDateTime utcNow = ZonedDateTime.now(Time.UTC);
     String credential = Signer.credential(creds.accessKey(), utcNow, region);
     String amzDate = utcNow.format(Time.AMZ_DATE_FORMAT);
 
-    addCondition(sb, "eq", "x-amz-algorithm", ALGORITHM, false);
-    addCondition(sb, "eq", "x-amz-credential", credential, false);
+    conditionList.add(Arrays.asList(new Object[] {"eq", "$x-amz-algorithm", ALGORITHM}));
+    conditionList.add(Arrays.asList(new Object[] {"eq", "$x-amz-credential", credential}));
     if (creds.sessionToken() != null) {
-      addCondition(sb, "eq", "x-amz-security-token", creds.sessionToken(), false);
+      conditionList.add(
+          Arrays.asList(new Object[] {"eq", "$x-amz-security-token", creds.sessionToken()}));
     }
-    addCondition(sb, "eq", "x-amz-date", amzDate, true);
-    sb.append("  ]\n");
-    sb.append("}");
+    conditionList.add(Arrays.asList(new Object[] {"eq", "$x-amz-date", amzDate}));
+    policyMap.put("conditions", conditionList);
 
-    String policy = BaseEncoding.base64().encode(sb.toString().getBytes(StandardCharsets.UTF_8));
+    byte[] policyBytes = null;
+    try {
+      policyBytes = objectMapper.writeValueAsString(policyMap).getBytes(StandardCharsets.UTF_8);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+
+    String policy = Base64.getEncoder().encodeToString(policyBytes);
     String signature = Signer.postPresignV4(policy, creds.secretKey(), utcNow, region);
 
     Map<String, String> formData = new HashMap<>();
