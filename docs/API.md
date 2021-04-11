@@ -1168,7 +1168,7 @@ try (InputStream stream = minioClient.getObject(
   GetObjectArgs.builder()
   .bucket("my-bucketname")
   .object("my-objectname")
-  .build()) {
+  .build())) {
   // Read data from stream
 }
 
@@ -1178,7 +1178,7 @@ try (InputStream stream = minioClient.getObject(
   .bucket("my-bucketname")
   .object("my-objectname")
   .offset(1024L)
-  .build()) {
+  .build())) {
   // Read data from stream
 }
 
@@ -1189,7 +1189,7 @@ try (InputStream stream = minioClient.getObject(
   .object("my-objectname")
   .offset(1024L)
   .length(4096L)
-  .build()) {
+  .build())) {
   // Read data from stream
 }
 
@@ -1199,7 +1199,7 @@ try (InputStream stream = minioClient.getObject(
   .bucket("my-bucketname")
   .object("my-objectname")
   .ssec(ssec)
-  .build()) {
+  .build())) {
   // Read data from stream
 }
 
@@ -1211,7 +1211,7 @@ try (InputStream stream = minioClient.getObject(
   .offset(1024L)
   .length(4096L)
   .ssec(ssec)
-  .build()) {
+  .build())) {
   // Read data from stream
 }
 ```
