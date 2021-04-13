@@ -109,8 +109,18 @@ public class IamAwsProvider extends EnvironmentProvider {
   }
 
   private Credentials fetchCredentials(HttpUrl url) {
-    try (Response response =
-        httpClient.newCall(new Request.Builder().url(url).method("GET", null).build()).execute()) {
+    Request req = null;
+    if (getProperty("AWS_CONTAINER_AUTHORIZATION_TOKEN") != null) {
+      req =
+          new Request.Builder()
+              .url(url)
+              .method("GET", null)
+              .addHeader("Authorization", getProperty("AWS_CONTAINER_AUTHORIZATION_TOKEN"))
+              .build();
+    } else {
+      req = new Request.Builder().url(url).method("GET", null).build();
+    }
+    try (Response response = httpClient.newCall(req).execute()) {
       if (!response.isSuccessful()) {
         throw new ProviderException(url + " failed with HTTP status code " + response.code());
       }
