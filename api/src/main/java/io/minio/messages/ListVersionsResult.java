@@ -49,11 +49,11 @@ public class ListVersionsResult extends ListObjectsResult {
   private List<DeleteMarker> deleteMarkers;
 
   public String keyMarker() {
-    return keyMarker;
+    return decodeIfNeeded(keyMarker);
   }
 
   public String nextKeyMarker() {
-    return nextKeyMarker;
+    return decodeIfNeeded(nextKeyMarker);
   }
 
   public String versionIdMarker() {

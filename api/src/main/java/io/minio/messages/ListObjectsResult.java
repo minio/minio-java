@@ -17,6 +17,9 @@
 package io.minio.messages;
 
 import com.google.common.base.MoreObjects;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,6 +57,17 @@ public abstract class ListObjectsResult {
 
   public ListObjectsResult() {}
 
+  protected String decodeIfNeeded(String value) {
+    try {
+      return (value != null && "url".equals(encodingType))
+          ? URLDecoder.decode(value, StandardCharsets.UTF_8.name())
+          : value;
+    } catch (UnsupportedEncodingException e) {
+      // This never happens as 'enc' name comes from JDK's own StandardCharsets.
+      throw new RuntimeException(e);
+    }
+  }
+
   /** Returns bucket name. */
   public String name() {
     return name;
@@ -65,7 +79,7 @@ public abstract class ListObjectsResult {
 
   /** Returns prefix. */
   public String prefix() {
-    return prefix;
+    return decodeIfNeeded(prefix);
   }
 
   /** Returns delimiter. */

@@ -16,6 +16,9 @@
 
 package io.minio.messages;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
@@ -47,12 +50,20 @@ public class Upload {
   private ResponseDate initiated;
 
   private long aggregatedPartSize;
+  private String encodingType = null;
 
   public Upload() {}
 
   /** Returns object name. */
   public String objectName() {
-    return objectName;
+    try {
+      return "url".equals(encodingType)
+          ? URLDecoder.decode(objectName, StandardCharsets.UTF_8.name())
+          : objectName;
+    } catch (UnsupportedEncodingException e) {
+      // This never happens as 'enc' name comes from JDK's own StandardCharsets.
+      throw new RuntimeException(e);
+    }
   }
 
   /** Returns upload ID. */
@@ -88,5 +99,9 @@ public class Upload {
   /** Sets given aggregated part size. */
   public void setAggregatedPartSize(long size) {
     this.aggregatedPartSize = size;
+  }
+
+  public void setEncodingType(String encodingType) {
+    this.encodingType = encodingType;
   }
 }
