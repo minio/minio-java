@@ -16,6 +16,9 @@
 
 package io.minio.messages;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +37,9 @@ import org.simpleframework.xml.Root;
 public class ListMultipartUploadsResult {
   @Element(name = "Bucket")
   private String bucketName;
+
+  @Element(name = "EncodingType", required = false)
+  private String encodingType;
 
   @Element(name = "KeyMarker", required = false)
   private String keyMarker;
@@ -58,6 +64,17 @@ public class ListMultipartUploadsResult {
 
   public ListMultipartUploadsResult() {}
 
+  private String decodeIfNeeded(String value) {
+    try {
+      return (value != null && "url".equals(encodingType))
+          ? URLDecoder.decode(value, StandardCharsets.UTF_8.name())
+          : value;
+    } catch (UnsupportedEncodingException e) {
+      // This never happens as 'enc' name comes from JDK's own StandardCharsets.
+      throw new RuntimeException(e);
+    }
+  }
+
   /** Returns whether the result is truncated or not. */
   public boolean isTruncated() {
     return isTruncated;
@@ -70,7 +87,7 @@ public class ListMultipartUploadsResult {
 
   /** Returns key marker. */
   public String keyMarker() {
-    return keyMarker;
+    return decodeIfNeeded(keyMarker);
   }
 
   /** Returns upload ID marker. */
@@ -80,7 +97,7 @@ public class ListMultipartUploadsResult {
 
   /** Returns next key marker. */
   public String nextKeyMarker() {
-    return nextKeyMarker;
+    return decodeIfNeeded(nextKeyMarker);
   }
 
   /** Returns next upload ID marker. */
@@ -91,6 +108,10 @@ public class ListMultipartUploadsResult {
   /** Returns max uploads received. */
   public int maxUploads() {
     return maxUploads;
+  }
+
+  public String encodingType() {
+    return encodingType;
   }
 
   /** Returns List of Upload. */

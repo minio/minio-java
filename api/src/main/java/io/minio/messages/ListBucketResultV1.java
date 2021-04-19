@@ -39,11 +39,11 @@ public class ListBucketResultV1 extends ListObjectsResult {
   private List<Contents> contents;
 
   public String marker() {
-    return marker;
+    return decodeIfNeeded(marker);
   }
 
   public String nextMarker() {
-    return nextMarker;
+    return decodeIfNeeded(nextMarker);
   }
 
   @Override

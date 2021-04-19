@@ -52,7 +52,7 @@ public class ListBucketResultV2 extends ListObjectsResult {
 
   /** Returns start after. */
   public String startAfter() {
-    return startAfter;
+    return decodeIfNeeded(startAfter);
   }
 
   /** Returns continuation token. */
