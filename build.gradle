@@ -52,7 +52,7 @@ subprojects {
 
     dependencies {
         compile "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
-        compile "com.google.guava:guava:29.0-jre"
+        compile "com.google.guava:guava:30.0-jre"
         compile "com.squareup.okhttp3:okhttp:4.8.1"
         compile "com.fasterxml.jackson.core:jackson-annotations:2.11.2"
         compile "com.fasterxml.jackson.core:jackson-core:2.11.2"
