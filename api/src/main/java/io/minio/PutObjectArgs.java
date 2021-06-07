@@ -35,7 +35,13 @@ public class PutObjectArgs extends PutObjectBaseArgs {
    */
   public String contentType() throws IOException {
     String contentType = super.contentType();
-    return (contentType != null) ? contentType : "application/octet-stream";
+    if (contentType != null) {
+      return contentType;
+    }
+
+    contentType = Files.probeContentType(Paths.get(super.object()));
+    return (contentType != null && !contentType.isEmpty()) ? contentType : "application/octet-stream";
+
   }
 
   public static Builder builder() {
