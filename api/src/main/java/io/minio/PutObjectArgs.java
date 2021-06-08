@@ -40,10 +40,10 @@ public class PutObjectArgs extends PutObjectBaseArgs {
     if (contentType != null) {
       return contentType;
     }
-
     contentType = Files.probeContentType(Paths.get(super.object()));
-    return (contentType != null && !contentType.isEmpty()) ? contentType : "application/octet-stream";
-
+    return (contentType != null && !contentType.isEmpty())
+        ? contentType
+        : "application/octet-stream";
   }
 
   public static Builder builder() {
