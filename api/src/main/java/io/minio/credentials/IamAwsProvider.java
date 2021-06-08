@@ -108,9 +108,10 @@ public class IamAwsProvider extends EnvironmentProvider {
     return credentials;
   }
 
-  private Credentials fetchCredentials(HttpUrl url) {
-    try (Response response =
-        httpClient.newCall(new Request.Builder().url(url).method("GET", null).build()).execute()) {
+  private Credentials fetchCredentials(HttpUrl url, String tokenHeader, String token) {
+    Request.Builder builder = new Request.Builder().url(url).method("GET", null);
+    if (token != null && !token.isEmpty()) builder.header(tokenHeader, token);
+    try (Response response = httpClient.newCall(builder.build()).execute()) {
       if (!response.isSuccessful()) {
         throw new ProviderException(url + " failed with HTTP status code " + response.code());
       }
@@ -126,10 +127,38 @@ public class IamAwsProvider extends EnvironmentProvider {
     }
   }
 
-  private String getIamRoleName(HttpUrl url) {
+  private String fetchImdsToken() {
+    HttpUrl url = this.customEndpoint;
+    if (url == null) {
+      url = HttpUrl.parse("http://169.254.169.254/latest/api/token");
+    } else {
+      url =
+          new HttpUrl.Builder()
+              .scheme(url.scheme())
+              .host(url.host())
+              .addPathSegments("latest/api/token")
+              .build();
+    }
+    String token = "";
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .method("PUT", null)
+            .header("X-aws-ec2-metadata-token-ttl-seconds", "21600")
+            .build();
+    try (Response response = httpClient.newCall(request).execute()) {
+      if (response.isSuccessful()) token = response.body().string();
+    } catch (IOException e) {
+      token = "";
+    }
+    return token;
+  }
+
+  private String getIamRoleName(HttpUrl url, String token) {
     String[] roleNames = null;
-    try (Response response =
-        httpClient.newCall(new Request.Builder().url(url).method("GET", null).build()).execute()) {
+    Request.Builder builder = new Request.Builder().url(url).method("GET", null);
+    if (token != null && !token.isEmpty()) builder.header("X-aws-ec2-metadata-token", token);
+    try (Response response = httpClient.newCall(builder.build()).execute()) {
       if (!response.isSuccessful()) {
         throw new ProviderException(url + " failed with HTTP status code " + response.code());
       }
@@ -146,7 +175,7 @@ public class IamAwsProvider extends EnvironmentProvider {
     return roleNames[0];
   }
 
-  private HttpUrl getIamRoleNamedUrl() {
+  private HttpUrl getIamRoleNamedUrl(String token) {
     HttpUrl url = this.customEndpoint;
     if (url == null) {
       url = HttpUrl.parse("http://169.254.169.254/latest/meta-data/iam/security-credentials/");
@@ -159,7 +188,7 @@ public class IamAwsProvider extends EnvironmentProvider {
               .build();
     }
 
-    String roleName = getIamRoleName(url);
+    String roleName = getIamRoleName(url, token);
     return url.newBuilder().addPathSegment(roleName).build();
   }
 
@@ -176,6 +205,8 @@ public class IamAwsProvider extends EnvironmentProvider {
       return credentials;
     }
 
+    String tokenHeader = "Authorization";
+    String token = getProperty("AWS_CONTAINER_AUTHORIZATION_TOKEN");
     if (getProperty("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") != null) {
       if (url == null) {
         url =
@@ -191,10 +222,12 @@ public class IamAwsProvider extends EnvironmentProvider {
       }
       checkLoopbackHost(url);
     } else {
-      url = getIamRoleNamedUrl();
+      token = fetchImdsToken();
+      tokenHeader = "X-aws-ec2-metadata-token";
+      url = getIamRoleNamedUrl(token);
     }
 
-    credentials = fetchCredentials(url);
+    credentials = fetchCredentials(url, tokenHeader, token);
     return credentials;
   }
 
