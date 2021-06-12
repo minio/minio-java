@@ -62,6 +62,7 @@ public class StatObjectResponse extends GenericResponse {
 
     Map<String, String> userMetadata = new HashMap<>();
     for (String key : headers.names()) {
+      key = key.toLowerCase();
       if (key.startsWith("x-amz-meta-")) {
         userMetadata.put(key.substring("x-amz-meta-".length(), key.length()), headers.get(key));
       }
