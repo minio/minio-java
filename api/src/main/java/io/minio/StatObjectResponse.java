@@ -22,6 +22,7 @@ import io.minio.messages.RetentionMode;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import okhttp3.Headers;
 
@@ -62,8 +63,10 @@ public class StatObjectResponse extends GenericResponse {
 
     Map<String, String> userMetadata = new HashMap<>();
     for (String key : headers.names()) {
-      if (key.startsWith("x-amz-meta-")) {
-        userMetadata.put(key.substring("x-amz-meta-".length(), key.length()), headers.get(key));
+      if (key.toLowerCase(Locale.US).startsWith("x-amz-meta-")) {
+        userMetadata.put(
+            key.toLowerCase(Locale.US).substring("x-amz-meta-".length(), key.length()),
+            headers.get(key));
       }
     }
 
