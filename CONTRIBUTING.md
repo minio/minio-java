@@ -9,3 +9,4 @@
 * Commit your changes (`$ git commit -am 'Add some feature'`).
 * Push the feature branch into your fork (`$ git push origin -u my-new-feature`).
 * Create new pull request to `master` branch.
+ 
