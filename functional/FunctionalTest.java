@@ -3738,8 +3738,6 @@ public class FunctionalTest {
       return true;
     }
 
-    System.out.println("downloading " + MINIO_BINARY + " binary");
-
     Request.Builder requestBuilder = new Request.Builder();
     Request request = requestBuilder.url(HttpUrl.parse(url)).method("GET", null).build();
     OkHttpClient transport =
@@ -3791,7 +3789,6 @@ public class FunctionalTest {
     pb.redirectErrorStream(true);
     pb.redirectOutput(ProcessBuilder.Redirect.to(new File(MINIO_BINARY + ".log")));
 
-    System.out.println("starting minio server");
     Process p = pb.start();
     Thread.sleep(10 * 1000); // wait for 10 seconds to do real start.
     return p;
