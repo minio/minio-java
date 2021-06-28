@@ -57,8 +57,6 @@ import io.minio.messages.LocationConstraint;
 import io.minio.messages.NotificationRecords;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -368,28 +366,30 @@ public abstract class S3Base {
     requestBuilder.header("Accept-Encoding", "identity");
     requestBuilder.header("User-Agent", this.userAgent);
 
+    String md5Hash = Digest.ZERO_MD5_HASH;
+    if (body != null) {
+      if (body instanceof PartSource) {
+        md5Hash = ((PartSource) body).md5Hash();
+      } else if (body instanceof byte[]) {
+        md5Hash = Digest.md5Hash((byte[]) body, length);
+      }
+    }
+
     String sha256Hash = null;
-    String md5Hash = null;
     if (creds != null) {
-      if (url.isHttps()) {
+      sha256Hash = Digest.ZERO_SHA256_HASH;
+      if (!url.isHttps()) {
+        if (body != null) {
+          if (body instanceof PartSource) {
+            sha256Hash = ((PartSource) body).sha256Hash();
+          } else if (body instanceof byte[]) {
+            sha256Hash = Digest.sha256Hash((byte[]) body, length);
+          }
+        }
+      } else {
         // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
         sha256Hash = "UNSIGNED-PAYLOAD";
-        if (body != null) md5Hash = Digest.md5Hash(body, length);
-      } else {
-        Object data = body;
-        int len = length;
-        if (data == null) {
-          data = new byte[0];
-          len = 0;
-        }
-
-        String[] hashes = Digest.sha256Md5Hashes(data, len);
-        sha256Hash = hashes[0];
-        md5Hash = hashes[1];
       }
-    } else {
-      // Fix issue #567: Compute MD5 hash only for anonymous access.
-      if (body != null) md5Hash = Digest.md5Hash(body, length);
     }
 
     if (md5Hash != null) requestBuilder.header("Content-MD5", md5Hash);
@@ -405,10 +405,8 @@ public abstract class S3Base {
     RequestBody requestBody = null;
     if (body != null) {
       String contentType = (headers != null) ? headers.get("Content-Type") : null;
-      if (body instanceof RandomAccessFile) {
-        requestBody = new HttpRequestBody((RandomAccessFile) body, length, contentType);
-      } else if (body instanceof BufferedInputStream) {
-        requestBody = new HttpRequestBody((BufferedInputStream) body, length, contentType);
+      if (body instanceof PartSource) {
+        requestBody = new HttpRequestBody((PartSource) body, contentType);
       } else {
         requestBody = new HttpRequestBody((byte[]) body, length, contentType);
       }
@@ -482,10 +480,7 @@ public abstract class S3Base {
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
     boolean traceRequestBody = false;
-    if (body != null
-        && !(body instanceof InputStream
-            || body instanceof RandomAccessFile
-            || body instanceof byte[])) {
+    if (body != null && !(body instanceof PartSource || body instanceof byte[])) {
       byte[] bytes;
       if (body instanceof CharSequence) {
         bytes = body.toString().getBytes(StandardCharsets.UTF_8);
@@ -1119,43 +1114,28 @@ public abstract class S3Base {
     if (!headers.containsKey("Content-Type")) headers.put("Content-Type", contentType);
 
     String uploadId = null;
-    long uploadedSize = 0L;
     Part[] parts = null;
-    ByteArrayOutputStream buffer = null;
+
+    PartReader partReader = null;
+    if (data instanceof RandomAccessFile) {
+      partReader = new PartReader((RandomAccessFile) data, objectSize, partSize, partCount);
+    } else if (data instanceof InputStream) {
+      partReader = new PartReader((InputStream) data, objectSize, partSize, partCount);
+    } else {
+      throw new IllegalArgumentException("data must be RandomAccessFile or InputStream");
+    }
 
     try {
-      for (int partNumber = 1; partNumber <= partCount || partCount < 0; partNumber++) {
-        long availableSize = partSize;
-        if (partCount > 0) {
-          if (partNumber == partCount) {
-            availableSize = objectSize - uploadedSize;
-          }
-        } else {
-          availableSize = getAvailableSize(data, partSize + 1);
+      while (true) {
+        PartSource partSource = partReader.getPart(!this.baseUrl.isHttps());
+        if (partSource == null) break;
 
-          // If availableSize is less or equal to partSize, then we have reached last
-          // part.
-          if (availableSize <= partSize) {
-            partCount = partNumber;
-          } else {
-            availableSize = partSize;
-          }
-        }
-
-        Object body = data;
-        if (args.preloadData()) {
-          if (buffer == null) buffer = new ByteArrayOutputStream();
-          fillData(buffer, data, availableSize);
-          body = buffer.toByteArray();
-        }
-
-        if (partCount == 1) {
+        if (partReader.partCount() == 1) {
           return putObject(
               args.bucket(),
               args.region(),
               args.object(),
-              body,
-              (int) availableSize,
+              partSource,
               headers,
               args.extraQueryParams());
         }
@@ -1174,20 +1154,19 @@ public abstract class S3Base {
           ssecHeaders = args.sse().headers();
         }
 
+        int partNumber = partSource.partNumber();
         UploadPartResponse response =
             uploadPart(
                 args.bucket(),
                 args.region(),
                 args.object(),
-                body,
-                (int) availableSize,
-                uploadId,
+                partSource,
                 partNumber,
+                uploadId,
                 (ssecHeaders != null) ? Multimaps.forMap(ssecHeaders) : null,
                 null);
         String etag = response.etag();
         parts[partNumber - 1] = new Part(partNumber, etag);
-        uploadedSize += availableSize;
       }
 
       return completeMultipartUpload(
@@ -1202,51 +1181,6 @@ public abstract class S3Base {
         abortMultipartUpload(args.bucket(), args.region(), args.object(), uploadId, null, null);
       }
       throw e;
-    }
-  }
-
-  private long getAvailableSize(Object data, long expectedReadSize)
-      throws IOException, InternalException {
-    if (!(data instanceof BufferedInputStream)) {
-      throw new InternalException(
-          "data must be BufferedInputStream. This should not happen.  "
-              + "Please report to https://github.com/minio/minio-java/issues/",
-          null);
-    }
-
-    BufferedInputStream stream = (BufferedInputStream) data;
-    stream.mark((int) expectedReadSize);
-
-    byte[] buf = new byte[16384]; // 16KiB buffer for optimization
-    long totalBytesRead = 0;
-    while (totalBytesRead < expectedReadSize) {
-      long bytesToRead = expectedReadSize - totalBytesRead;
-      if (bytesToRead > buf.length) bytesToRead = buf.length;
-      int bytesRead = stream.read(buf, 0, (int) bytesToRead);
-      if (bytesRead < 0) break; // reached EOF
-      totalBytesRead += bytesRead;
-    }
-
-    stream.reset();
-    return totalBytesRead;
-  }
-
-  private void fillData(ByteArrayOutputStream buffer, Object data, long size) throws IOException {
-    buffer.reset();
-    byte[] buf = new byte[16384]; // 16KiB buffer for optimization
-    long totalBytesRead = 0;
-    while (totalBytesRead < size) {
-      long bytesToRead = size - totalBytesRead;
-      if (bytesToRead > buf.length) bytesToRead = buf.length;
-      int bytesRead = -1;
-      if (data instanceof RandomAccessFile) {
-        bytesRead = ((RandomAccessFile) data).read(buf, 0, (int) bytesToRead);
-      } else if (data instanceof BufferedInputStream) {
-        bytesRead = ((BufferedInputStream) data).read(buf, 0, (int) bytesToRead);
-      }
-      if (bytesRead < 0) throw new IOException("EOF on reading data");
-      buffer.write(buf, 0, bytesRead);
-      totalBytesRead += bytesRead;
     }
   }
 
@@ -1955,13 +1889,43 @@ public abstract class S3Base {
     }
   }
 
+  private ObjectWriteResponse putObject(
+      String bucketName,
+      String region,
+      String objectName,
+      PartSource partSource,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
+      throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
+          ServerException, XmlParserException, ErrorResponseException, InternalException,
+          InvalidResponseException {
+    try (Response response =
+        execute(
+            Method.PUT,
+            bucketName,
+            objectName,
+            getRegion(bucketName, region),
+            httpHeaders(headers),
+            extraQueryParams,
+            partSource,
+            0)) {
+      return new ObjectWriteResponse(
+          response.headers(),
+          bucketName,
+          region,
+          objectName,
+          response.header("ETag").replaceAll("\"", ""),
+          response.header("x-amz-version-id"));
+    }
+  }
+
   /**
    * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">PutObject S3
    * API</a>.
    *
    * @param bucketName Name of the bucket.
    * @param objectName Object name in the bucket.
-   * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
+   * @param data Object data must be InputStream, RandomAccessFile, byte[] or String.
    * @param length Length of object data.
    * @param headers Additional headers.
    * @param extraQueryParams Additional query parameters if any.
@@ -1981,18 +1945,35 @@ public abstract class S3Base {
       String region,
       String objectName,
       Object data,
-      int length,
+      long length,
       Multimap<String, String> headers,
       Multimap<String, String> extraQueryParams)
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    if (!(data instanceof BufferedInputStream
+    if (!(data instanceof InputStream
         || data instanceof RandomAccessFile
         || data instanceof byte[]
         || data instanceof CharSequence)) {
       throw new IllegalArgumentException(
-          "data must be BufferedInputStream, RandomAccessFile, byte[] or String");
+          "data must be InputStream, RandomAccessFile, byte[] or String");
+    }
+
+    PartReader partReader = null;
+    if (data instanceof RandomAccessFile) {
+      partReader = new PartReader((RandomAccessFile) data, length, length, 1);
+    } else if (data instanceof InputStream) {
+      partReader = new PartReader((InputStream) data, length, length, 1);
+    }
+
+    if (partReader != null) {
+      return putObject(
+          bucketName,
+          region,
+          objectName,
+          partReader.getPart(!this.baseUrl.isHttps()),
+          headers,
+          extraQueryParams);
     }
 
     try (Response response =
@@ -2004,7 +1985,7 @@ public abstract class S3Base {
             httpHeaders(headers),
             extraQueryParams,
             data,
-            length)) {
+            (int) length)) {
       return new ObjectWriteResponse(
           response.headers(),
           bucketName,
@@ -2151,6 +2132,41 @@ public abstract class S3Base {
     }
   }
 
+  private UploadPartResponse uploadPart(
+      String bucketName,
+      String region,
+      String objectName,
+      PartSource partSource,
+      int partNumber,
+      String uploadId,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
+          ServerException, XmlParserException, ErrorResponseException, InternalException,
+          InvalidResponseException {
+    try (Response response =
+        execute(
+            Method.PUT,
+            bucketName,
+            objectName,
+            getRegion(bucketName, region),
+            httpHeaders(extraHeaders),
+            merge(
+                extraQueryParams,
+                newMultimap("partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
+            partSource,
+            0)) {
+      return new UploadPartResponse(
+          response.headers(),
+          bucketName,
+          region,
+          objectName,
+          uploadId,
+          partNumber,
+          response.header("ETag").replaceAll("\"", ""));
+    }
+  }
+
   /**
    * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html">UploadPart S3
    * API</a>.
@@ -2158,7 +2174,7 @@ public abstract class S3Base {
    * @param bucketName Name of the bucket.
    * @param region Region of the bucket (Optional).
    * @param objectName Object name in the bucket.
-   * @param data Object data must be BufferedInputStream, RandomAccessFile, byte[] or String.
+   * @param data Object data must be InputStream, RandomAccessFile, byte[] or String.
    * @param length Length of object data.
    * @param uploadId Upload ID.
    * @param partNumber Part number.
@@ -2180,7 +2196,7 @@ public abstract class S3Base {
       String region,
       String objectName,
       Object data,
-      int length,
+      long length,
       String uploadId,
       int partNumber,
       Multimap<String, String> extraHeaders,
@@ -2188,12 +2204,31 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    if (!(data instanceof BufferedInputStream
+    if (!(data instanceof InputStream
         || data instanceof RandomAccessFile
         || data instanceof byte[]
         || data instanceof CharSequence)) {
       throw new IllegalArgumentException(
-          "data must be BufferedInputStream, RandomAccessFile, byte[] or String");
+          "data must be InputStream, RandomAccessFile, byte[] or String");
+    }
+
+    PartReader partReader = null;
+    if (data instanceof RandomAccessFile) {
+      partReader = new PartReader((RandomAccessFile) data, length, length, 1);
+    } else if (data instanceof InputStream) {
+      partReader = new PartReader((InputStream) data, length, length, 1);
+    }
+
+    if (partReader != null) {
+      return uploadPart(
+          bucketName,
+          region,
+          objectName,
+          partReader.getPart(!this.baseUrl.isHttps()),
+          partNumber,
+          uploadId,
+          extraHeaders,
+          extraQueryParams);
     }
 
     try (Response response =
@@ -2207,7 +2242,7 @@ public abstract class S3Base {
                 extraQueryParams,
                 newMultimap("partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
             data,
-            length)) {
+            (int) length)) {
       return new UploadPartResponse(
           response.headers(),
           bucketName,
