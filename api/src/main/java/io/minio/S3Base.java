@@ -1098,6 +1098,18 @@ public abstract class S3Base {
     };
   }
 
+  private PartReader newPartReader(Object data, long objectSize, long partSize, int partCount) {
+    if (data instanceof RandomAccessFile) {
+      return new PartReader((RandomAccessFile) data, objectSize, partSize, partCount);
+    }
+
+    if (data instanceof InputStream) {
+      return new PartReader((InputStream) data, objectSize, partSize, partCount);
+    }
+
+    return null;
+  }
+
   /** Execute put object. */
   protected ObjectWriteResponse putObject(
       PutObjectBaseArgs args,
@@ -1116,12 +1128,8 @@ public abstract class S3Base {
     String uploadId = null;
     Part[] parts = null;
 
-    PartReader partReader = null;
-    if (data instanceof RandomAccessFile) {
-      partReader = new PartReader((RandomAccessFile) data, objectSize, partSize, partCount);
-    } else if (data instanceof InputStream) {
-      partReader = new PartReader((InputStream) data, objectSize, partSize, partCount);
-    } else {
+    PartReader partReader = newPartReader(data, objectSize, partSize, partCount);
+    if (partReader == null) {
       throw new IllegalArgumentException("data must be RandomAccessFile or InputStream");
     }
 
@@ -1959,12 +1967,7 @@ public abstract class S3Base {
           "data must be InputStream, RandomAccessFile, byte[] or String");
     }
 
-    PartReader partReader = null;
-    if (data instanceof RandomAccessFile) {
-      partReader = new PartReader((RandomAccessFile) data, length, length, 1);
-    } else if (data instanceof InputStream) {
-      partReader = new PartReader((InputStream) data, length, length, 1);
-    }
+    PartReader partReader = newPartReader(data, length, length, 1);
 
     if (partReader != null) {
       return putObject(
@@ -2212,12 +2215,7 @@ public abstract class S3Base {
           "data must be InputStream, RandomAccessFile, byte[] or String");
     }
 
-    PartReader partReader = null;
-    if (data instanceof RandomAccessFile) {
-      partReader = new PartReader((RandomAccessFile) data, length, length, 1);
-    } else if (data instanceof InputStream) {
-      partReader = new PartReader((InputStream) data, length, length, 1);
-    }
+    PartReader partReader = newPartReader(data, length, length, 1);
 
     if (partReader != null) {
       return uploadPart(
