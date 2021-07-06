@@ -25,43 +25,38 @@ import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Locale;
 
 /** Various global static functions used. */
 public class Digest {
+  // MD5 hash of zero length byte array.
+  public static final String ZERO_MD5_HASH = "1B2M2Y8AsgTpgAmY7PhCfg==";
+  // SHA-256 hash of zero length byte array.
+  public static final String ZERO_SHA256_HASH =
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
   /** Private constructor. */
   private Digest() {}
+
+  /** Returns MD5 hash of byte array. */
+  public static String md5Hash(byte[] data, int length) throws NoSuchAlgorithmException {
+    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
+    md5Digest.update(data, 0, length);
+    return Base64.getEncoder().encodeToString(md5Digest.digest());
+  }
+
+  /** Returns SHA-256 hash of byte array. */
+  public static String sha256Hash(byte[] data, int length) throws NoSuchAlgorithmException {
+    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
+    sha256Digest.update((byte[]) data, 0, length);
+    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
+  }
 
   /** Returns SHA-256 hash of given string. */
   public static String sha256Hash(String string) throws NoSuchAlgorithmException {
     byte[] data = string.getBytes(StandardCharsets.UTF_8);
-    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
-    sha256Digest.update((byte[]) data, 0, data.length);
-    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
-  }
-
-  /**
-   * Returns SHA-256 hash of given data and it's length.
-   *
-   * @param data must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
-   * @param len length of data to be read for hash calculation.
-   */
-  public static String sha256Hash(Object data, int len)
-      throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
-    MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
-
-    if (data instanceof BufferedInputStream || data instanceof RandomAccessFile) {
-      updateDigests(data, len, sha256Digest, null);
-    } else if (data instanceof byte[]) {
-      sha256Digest.update((byte[]) data, 0, len);
-    } else {
-      throw new InternalException(
-          "Unknown data source to calculate SHA-256 hash. This should not happen, "
-              + "please report this issue at https://github.com/minio/minio-java/issues",
-          null);
-    }
-
-    return BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US);
+    return sha256Hash(data, data.length);
   }
 
   /**
@@ -69,7 +64,9 @@ public class Digest {
    *
    * @param data must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
    * @param len length of data to be read for hash calculation.
+   * @deprecated This method is no longer supported.
    */
+  @Deprecated
   public static String[] sha256Md5Hashes(Object data, int len)
       throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
     MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
@@ -91,30 +88,6 @@ public class Digest {
       BaseEncoding.base16().encode(sha256Digest.digest()).toLowerCase(Locale.US),
       BaseEncoding.base64().encode(md5Digest.digest())
     };
-  }
-
-  /**
-   * Returns MD5 hash of given data and it's length.
-   *
-   * @param data must be {@link RandomAccessFile}, {@link BufferedInputStream} or byte array.
-   * @param len length of data to be read for hash calculation.
-   */
-  public static String md5Hash(Object data, int len)
-      throws NoSuchAlgorithmException, IOException, InsufficientDataException, InternalException {
-    MessageDigest md5Digest = MessageDigest.getInstance("MD5");
-
-    if (data instanceof BufferedInputStream || data instanceof RandomAccessFile) {
-      updateDigests(data, len, null, md5Digest);
-    } else if (data instanceof byte[]) {
-      md5Digest.update((byte[]) data, 0, len);
-    } else {
-      throw new InternalException(
-          "Unknown data source to calculate MD5 hash. This should not happen, "
-              + "please report this issue at https://github.com/minio/minio-java/issues",
-          null);
-    }
-
-    return BaseEncoding.base64().encode(md5Digest.digest());
   }
 
   /** Updated MessageDigest with bytes read from file and stream. */

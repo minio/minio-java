@@ -64,7 +64,10 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
      * Sets flag to control data preload of stream/file. When this flag is enabled, entire
      * part/object data is loaded into memory to enable connection retry on network failure in the
      * middle of upload.
+     *
+     * @deprecated As this behavior is enabled by default and cannot be turned off.
      */
+    @Deprecated
     public B preloadData(boolean preloadData) {
       operations.add(args -> args.preloadData = preloadData);
       return (B) this;

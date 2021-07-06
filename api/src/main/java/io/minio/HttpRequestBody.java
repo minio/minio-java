@@ -16,32 +16,20 @@
 
 package io.minio;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.channels.Channels;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
-import okio.Okio;
 
 /** RequestBody that wraps a single data object. */
 class HttpRequestBody extends RequestBody {
-  private RandomAccessFile file = null;
-  private BufferedInputStream stream = null;
-  private byte[] bytes = null;
-  private int length = -1;
-  private String contentType = null;
+  private PartSource partSource;
+  private byte[] bytes;
+  private int length;
+  private String contentType;
 
-  HttpRequestBody(final RandomAccessFile file, final int length, final String contentType) {
-    this.file = file;
-    this.length = length;
-    this.contentType = contentType;
-  }
-
-  HttpRequestBody(final BufferedInputStream stream, final int length, final String contentType) {
-    this.stream = stream;
-    this.length = length;
+  HttpRequestBody(final PartSource partSource, final String contentType) {
+    this.partSource = partSource;
     this.contentType = contentType;
   }
 
@@ -54,28 +42,19 @@ class HttpRequestBody extends RequestBody {
   @Override
   public MediaType contentType() {
     MediaType mediaType = null;
-
-    if (contentType != null) {
-      mediaType = MediaType.parse(contentType);
-    }
-    if (mediaType == null) {
-      mediaType = MediaType.parse("application/octet-stream");
-    }
-
-    return mediaType;
+    if (contentType != null) mediaType = MediaType.parse(contentType);
+    return (mediaType == null) ? MediaType.parse("application/octet-stream") : mediaType;
   }
 
   @Override
   public long contentLength() {
-    return length;
+    return (partSource != null) ? partSource.size() : length;
   }
 
   @Override
   public void writeTo(BufferedSink sink) throws IOException {
-    if (file != null) {
-      sink.write(Okio.source(Channels.newInputStream(file.getChannel())), length);
-    } else if (stream != null) {
-      sink.write(Okio.source(stream), length);
+    if (partSource != null) {
+      sink.write(partSource.source(), partSource.size());
     } else {
       sink.write(bytes, 0, length);
     }
