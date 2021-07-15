@@ -21,6 +21,7 @@ import io.minio.errors.XmlParserException;
 import java.io.IOException;
 import java.security.ProviderException;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -29,6 +30,7 @@ import okhttp3.Response;
 
 /** Base class to AssumeRole based providers. */
 public abstract class AssumeRoleBaseProvider implements Provider {
+  public static final int DEFAULT_DURATION_SECONDS = (int) TimeUnit.HOURS.toSeconds(1);
   private final OkHttpClient httpClient;
   private Credentials credentials;
 
@@ -57,6 +59,12 @@ public abstract class AssumeRoleBaseProvider implements Provider {
     } catch (XmlParserException | IOException e) {
       throw new ProviderException("Unable to parse STS response", e);
     }
+  }
+
+  protected static int getValidDurationSeconds(Integer duration) {
+    return (duration != null && duration > DEFAULT_DURATION_SECONDS)
+        ? duration
+        : DEFAULT_DURATION_SECONDS;
   }
 
   protected HttpUrl.Builder newUrlBuilder(

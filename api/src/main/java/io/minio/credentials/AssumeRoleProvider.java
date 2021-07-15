@@ -24,7 +24,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.ProviderException;
 import java.time.ZonedDateTime;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -43,7 +42,6 @@ import org.simpleframework.xml.Root;
  * API</a>.
  */
 public class AssumeRoleProvider extends AssumeRoleBaseProvider {
-  public static final int DEFAULT_DURATION_SECONDS = (int) TimeUnit.HOURS.toSeconds(1);
   private final String accessKey;
   private final String secretKey;
   private final String region;
@@ -77,11 +75,6 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
       throw new IllegalArgumentException("Length of ExternalId must be in between 2 and 1224");
     }
 
-    durationSeconds =
-        (durationSeconds != null && durationSeconds > DEFAULT_DURATION_SECONDS)
-            ? durationSeconds
-            : DEFAULT_DURATION_SECONDS;
-
     String host = url.host() + ":" + url.port();
     // ignore port when port and service matches i.e HTTP -> 80, HTTPS -> 443
     if ((url.scheme().equals("http") && url.port() == 80)
@@ -90,7 +83,13 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
     }
 
     HttpUrl.Builder urlBuilder =
-        newUrlBuilder(url, "AssumeRole", durationSeconds, policy, roleArn, roleSessionName);
+        newUrlBuilder(
+            url,
+            "AssumeRole",
+            getValidDurationSeconds(durationSeconds),
+            policy,
+            roleArn,
+            roleSessionName);
     if (externalId != null) {
       urlBuilder.addQueryParameter("ExternalId", externalId);
     }

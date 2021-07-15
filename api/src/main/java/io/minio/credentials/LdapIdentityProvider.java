@@ -43,6 +43,8 @@ public class LdapIdentityProvider extends AssumeRoleBaseProvider {
       @Nonnull String stsEndpoint,
       @Nonnull String ldapUsername,
       @Nonnull String ldapPassword,
+      @Nullable Integer durationSeconds,
+      @Nullable String policy,
       @Nullable OkHttpClient customHttpClient) {
     super(customHttpClient);
     stsEndpoint = Objects.requireNonNull(stsEndpoint, "STS endpoint cannot be empty");
@@ -53,13 +55,27 @@ public class LdapIdentityProvider extends AssumeRoleBaseProvider {
     Objects.requireNonNull(ldapPassword, "LDAP password must not be null");
 
     HttpUrl.Builder urlBuilder =
-        newUrlBuilder(url, "AssumeRoleWithLDAPIdentity", 0, null, null, null);
+        newUrlBuilder(
+            url,
+            "AssumeRoleWithLDAPIdentity",
+            getValidDurationSeconds(durationSeconds),
+            policy,
+            null,
+            null);
     url =
         urlBuilder
             .addQueryParameter("LDAPUsername", ldapUsername)
             .addQueryParameter("LDAPPassword", ldapPassword)
             .build();
     this.request = new Request.Builder().url(url).method("POST", EMPTY_BODY).build();
+  }
+
+  public LdapIdentityProvider(
+      @Nonnull String stsEndpoint,
+      @Nonnull String ldapUsername,
+      @Nonnull String ldapPassword,
+      @Nullable OkHttpClient customHttpClient) {
+    this(stsEndpoint, ldapUsername, ldapPassword, null, null, customHttpClient);
   }
 
   @Override
