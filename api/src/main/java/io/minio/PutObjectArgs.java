@@ -50,65 +50,6 @@ public class PutObjectArgs extends PutObjectBaseArgs {
       validateNotNull(args.stream, "stream");
     }
 
-    private void validateSizes(long objectSize, long partSize) {
-      if (partSize > 0) {
-        if (partSize < MIN_MULTIPART_SIZE) {
-          throw new IllegalArgumentException(
-              "part size " + partSize + " is not supported; minimum allowed 5MiB");
-        }
-
-        if (partSize > MAX_PART_SIZE) {
-          throw new IllegalArgumentException(
-              "part size " + partSize + " is not supported; maximum allowed 5GiB");
-        }
-      }
-
-      if (objectSize >= 0) {
-        if (objectSize > MAX_OBJECT_SIZE) {
-          throw new IllegalArgumentException(
-              "object size " + objectSize + " is not supported; maximum allowed 5TiB");
-        }
-      } else if (partSize <= 0) {
-        throw new IllegalArgumentException(
-            "valid part size must be provided when object size is unknown");
-      }
-    }
-
-    private void validatePartCount(int partCount, long objectSize, long partSize) {
-      if (partCount > MAX_MULTIPART_COUNT) {
-        throw new IllegalArgumentException(
-            "object size "
-                + objectSize
-                + " and part size "
-                + partSize
-                + " make more than "
-                + MAX_MULTIPART_COUNT
-                + "parts for upload");
-      }
-    }
-
-    private long[] partInfo(long objectSize, long partSize) {
-      if (objectSize < 0) {
-        return new long[] {partSize, -1};
-      }
-
-      if (partSize > 0) {
-        if (partSize > objectSize) partSize = objectSize;
-        long partCount = partSize > 0 ? (long) Math.ceil((double) objectSize / partSize) : 1;
-        return new long[] {partSize, partCount == 0 ? 1 : partCount};
-      }
-
-      double pSize = Math.ceil((double) objectSize / MAX_MULTIPART_COUNT);
-      pSize = Math.ceil(pSize / MIN_MULTIPART_SIZE) * MIN_MULTIPART_SIZE;
-      partSize = (long) pSize;
-      long partCount = 1;
-      if (pSize > 0) {
-        partCount = (long) Math.ceil(objectSize / pSize);
-      }
-
-      return new long[] {partSize, partCount};
-    }
-
     /**
      * Sets stream to upload. Two ways to provide object/part sizes.
      *
@@ -123,12 +64,10 @@ public class PutObjectArgs extends PutObjectBaseArgs {
      */
     public Builder stream(InputStream stream, long objectSize, long partSize) {
       validateNotNull(stream, "stream");
-      validateSizes(objectSize, partSize);
 
-      long[] partinfo = partInfo(objectSize, partSize);
+      long[] partinfo = getPartInfo(objectSize, partSize);
       long pSize = partinfo[0];
       int pCount = (int) partinfo[1];
-      validatePartCount(pCount, objectSize, partSize);
 
       final BufferedInputStream bis =
           (stream instanceof BufferedInputStream)
