@@ -100,6 +100,14 @@ import okhttp3.ResponseBody;
 
 /** Core S3 API client. */
 public abstract class S3Base {
+  static {
+    try {
+      RequestBody.create(new byte[] {}, null);
+    } catch (NoSuchMethodError ex) {
+      throw new RuntimeException("Unsupported OkHttp library found. Must use okhttp >= 4.8.1", ex);
+    }
+  }
+
   protected static final String NO_SUCH_BUCKET_MESSAGE = "Bucket does not exist";
   protected static final String NO_SUCH_BUCKET = "NoSuchBucket";
   protected static final String NO_SUCH_BUCKET_POLICY = "NoSuchBucketPolicy";
