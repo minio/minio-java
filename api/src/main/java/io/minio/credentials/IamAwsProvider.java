@@ -35,6 +35,7 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -143,7 +144,7 @@ public class IamAwsProvider extends EnvironmentProvider {
     Request request =
         new Request.Builder()
             .url(url)
-            .method("PUT", null)
+            .method("PUT", RequestBody.create(new byte[] {}, null))
             .header("X-aws-ec2-metadata-token-ttl-seconds", "21600")
             .build();
     try (Response response = httpClient.newCall(request).execute()) {
