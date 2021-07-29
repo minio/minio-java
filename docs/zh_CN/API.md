@@ -208,7 +208,7 @@ __示例__
 ```java
 try {
   // 如存储桶不存在，创建之。
-  boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+  boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
   if (found) {
     System.out.println("mybucket already exists");
   } else {
