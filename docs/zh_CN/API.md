@@ -208,12 +208,15 @@ __示例__
 ```java
 try {
   // 如存储桶不存在，创建之。
-  boolean found = minioClient.bucketExists("mybucket");
+  boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
   if (found) {
     System.out.println("mybucket already exists");
   } else {
     // 创建名为'my-bucketname'的存储桶。
-    minioClient.makeBucket("mybucket");
+	minioClient.makeBucket(
+		MakeBucketArgs.builder()
+		.bucket("my-bucketname")
+		.build());	
     System.out.println("mybucket is created successfully");
   }
 } catch (MinioException e) {
@@ -291,7 +294,7 @@ __示例__
 ```java
 try {
   // 检查'my-bucketname'是否存在。
-  boolean found = minioClient.bucketExists("mybucket");
+  boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket("mybucket").build())
   if (found) {
     System.out.println("mybucket exists");
   } else {
@@ -340,11 +343,11 @@ __示例__
 ```java
 try {
   // 删除之前先检查`my-bucket`是否存在。
-  boolean found = minioClient.bucketExists("mybucket");
+  boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket("mybucket").build())
   if (found) {
     // 删除`my-bucketname`存储桶，注意，只有存储桶为空时才能删除成功。
-    minioClient.removeBucket("mybucket");
-    System.out.println("mybucket is removed successfully");
+	minioClient.removeBucket(RemoveBucketArgs.builder().bucket("mybucket").build());    
+	System.out.println("mybucket is removed successfully");
   } else {
     System.out.println("mybucket does not exist");
   }
@@ -385,10 +388,11 @@ __示例__
 ```java
 try {
   // 检查'mybucket'是否存在。
-  boolean found = minioClient.bucketExists("mybucket");
+  boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket("mybucket").build());
   if (found) {
     // 列出'my-bucketname'里的对象
-    Iterable<Result<Item>> myObjects = minioClient.listObjects("mybucket");
+    Iterable<Result<Item>> myObjects = minioClient.listObjects(
+		ListObjectsArgs.builder().bucket("mybucket").build());
     for (Result<Item> result : myObjects) {
       Item item = result.get();
       System.out.println(item.lastModified() + ", " + item.size() + ", " + item.objectName());
