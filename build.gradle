@@ -57,6 +57,7 @@ subprojects {
         compile "com.fasterxml.jackson.core:jackson-annotations:2.11.2"
         compile "com.fasterxml.jackson.core:jackson-core:2.11.2"
         compile "com.fasterxml.jackson.core:jackson-databind:2.11.2"
+        compile "org.bouncycastle:bcprov-jdk15on:1.69"
         compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
 
         testCompile "com.squareup.okhttp3:mockwebserver:4.8.1"
