@@ -12,6 +12,14 @@ import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 
+/**
+ * MinIO <a href="https://github.com/minio/madmin-go/blob/main/encrypt.go#L38">encrypts/decrypts</a>
+ * any payloads containing access or secret keys. The encryption scheme used is from a library
+ * called <a href="https://github.com/secure-io/sio-go">sio-go</a>. The library encrypts/decrypts
+ * data in chunks, which allows it handle large amounts of data, without sacrificing security. In
+ * addition, MinIO itself formats the data into specific format, to allow encryption/decryption
+ * between client and server.
+ */
 public class EncryptionUtils {
 
   public static final byte argon2idAESGCM = 0x00;
@@ -19,7 +27,7 @@ public class EncryptionUtils {
   public static final int NONCE_LENGTH = 8;
   public static final int SALT_LENGTH = 32;
 
-  public static final int BUFFER_SIZE = 1 << 14; // 0x4000, 16384
+  public static final int BUFFER_SIZE = 1 << 14;
 
   private static final SecureRandom random = new SecureRandom();
 
@@ -29,6 +37,19 @@ public class EncryptionUtils {
     return data;
   }
 
+  /**
+   * Encrypts data in {@link EncryptionUtils#BUFFER_SIZE} chunks using AES-GCM using a 256-bit
+   * Argon2ID key. The format returned is compatible with MinIO servers and clients. Header format:
+   * salt [string 32] | aead id [byte 1] | nonce [byte 8] | encrypted_data [byte
+   * len(encrypted_data)] To see the original implementation in Go, check out the <a
+   * href="https://github.com/minio/madmin-go/blob/main/encrypt.go#L38">madmin-go library</a>.
+   *
+   * @param password Plaintext password
+   * @param data The data to encrypt
+   * @return Encrypted data
+   * @throws UnsupportedEncodingException
+   * @throws InvalidCipherTextException
+   */
   public static ByteBuffer encrypt(String password, byte[] data)
       throws UnsupportedEncodingException, InvalidCipherTextException {
     Preconditions.checkArgument(
@@ -38,6 +59,11 @@ public class EncryptionUtils {
         BUFFER_SIZE);
 
     byte[] nonce = random(NONCE_LENGTH);
+
+    /**
+     * NONCE is expected to be 12-bytes for AES-GCM. We add 4 empty bytes, which we increment in
+     * Little Endian format per chunk
+     */
     byte[] paddedNonce = new byte[NONCE_LENGTH + 4];
     System.arraycopy(nonce, 0, paddedNonce, 0, nonce.length);
     byte[] salt = random(SALT_LENGTH);
@@ -62,8 +88,30 @@ public class EncryptionUtils {
     return payload;
   }
 
-  public static ByteBuffer decrypt(byte[] key, byte[] nonce, byte[] cipherText)
-      throws InvalidCipherTextException {
+  /**
+   * Decrypts data in {@link EncryptionUtils#BUFFER_SIZE} chunks using AES-GCM using a 256-bit
+   * Argon2ID key.
+   *
+   * @param password Plaintext password
+   * @param payload Data to decrypt, including headers
+   * @return Decrypted data
+   * @throws UnsupportedEncodingException
+   * @throws InvalidCipherTextException
+   */
+  public static ByteBuffer decrypt(String password, byte[] payload)
+      throws UnsupportedEncodingException, InvalidCipherTextException {
+    ByteBuffer payloadBuffer = ByteBuffer.wrap(payload);
+    byte[] nonce = new byte[NONCE_LENGTH];
+    byte[] salt = new byte[SALT_LENGTH];
+    payloadBuffer.get(salt);
+    /** One byte to determine which encryption format to use. We only allow for Argon2ID AES-GCM. */
+    payloadBuffer.get();
+    payloadBuffer.get(nonce);
+    byte[] encryptedData = new byte[payloadBuffer.remaining()];
+    payloadBuffer.get(encryptedData);
+
+    byte[] key = generateKey(password.getBytes("UTF-8"), salt);
+
     /**
      * Nonce for AES-GCM is expected to be 12 bytes, but we keep it at 8-bytes to allow up to
      * 4-bytes (int32) chunks
@@ -77,30 +125,23 @@ public class EncryptionUtils {
 
     GCMBlockCipher cipher = new GCMBlockCipher(new AESEngine());
     cipher.init(false, new AEADParameters(new KeyParameter(key), 128, paddedNonce, additionalData));
-    int outputLength = cipher.getOutputSize(cipherText.length);
+    int outputLength = cipher.getOutputSize(encryptedData.length);
     byte[] decryptedData = new byte[outputLength];
-    int outputOffset = cipher.processBytes(cipherText, 0, cipherText.length, decryptedData, 0);
+    int outputOffset =
+        cipher.processBytes(encryptedData, 0, encryptedData.length, decryptedData, 0);
     cipher.doFinal(decryptedData, outputOffset);
     return ByteBuffer.wrap(decryptedData);
   }
 
-  public static ByteBuffer decrypt(String password, byte[] payload)
-      throws UnsupportedEncodingException, InvalidCipherTextException {
-    ByteBuffer payloadBuffer = ByteBuffer.wrap(payload);
-    byte[] nonce = new byte[NONCE_LENGTH];
-    byte[] salt = new byte[SALT_LENGTH];
-    payloadBuffer.get(salt);
-    byte encryptionAlgo = payloadBuffer.get();
-    payloadBuffer.get(nonce);
-    byte[] encryptedData = new byte[payloadBuffer.remaining()];
-    payloadBuffer.get(encryptedData);
-
-    byte[] key = generateKey(password.getBytes("UTF-8"), salt);
-
-    return decrypt(key, nonce, encryptedData);
-  }
-
-  public static byte[] generateAdditionalData(byte[] key, byte[] paddedNonce)
+  /**
+   * Generates the additional data which is used per chunk.
+   *
+   * @param key Encryption key
+   * @param paddedNonce 12-byte NONCE
+   * @return Additional data (128-bit) that can be used along side encryption/decryption
+   * @throws InvalidCipherTextException
+   */
+  private static byte[] generateAdditionalData(byte[] key, byte[] paddedNonce)
       throws InvalidCipherTextException {
     GCMBlockCipher cipher = new GCMBlockCipher(new AESEngine());
     cipher.init(true, new AEADParameters(new KeyParameter(key), 128, paddedNonce));
@@ -113,7 +154,14 @@ public class EncryptionUtils {
     return finalAdditionalData;
   }
 
-  public static byte[] generateKey(byte[] password, byte[] salt) {
+  /**
+   * Generates a 256-bit Argon2ID key
+   *
+   * @param password Password to derive unique key from
+   * @param salt Salt to be used for hash generation
+   * @return 256-bit key that can be used for encryption/decryption
+   */
+  private static byte[] generateKey(byte[] password, byte[] salt) {
     byte[] key = new byte[32];
     Argon2BytesGenerator generator = new Argon2BytesGenerator();
     Argon2Parameters params =

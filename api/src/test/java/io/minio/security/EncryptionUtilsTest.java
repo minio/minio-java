@@ -3,7 +3,6 @@ package io.minio.security;
 import com.google.common.io.BaseEncoding;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Random;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,7 +10,8 @@ import org.junit.Test;
 public class EncryptionUtilsTest {
 
   @Test
-  public void canEncryptDecryptText() throws UnsupportedEncodingException, InvalidCipherTextException {
+  public void canEncryptDecryptText()
+      throws UnsupportedEncodingException, InvalidCipherTextException {
     byte[] data = "bar".getBytes("UTF-8");
     ByteBuffer encryptedData = EncryptionUtils.encrypt("foo", data);
     ByteBuffer decryptedData = EncryptionUtils.decrypt("foo", encryptedData.array());

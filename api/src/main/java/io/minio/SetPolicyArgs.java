@@ -1,7 +1,5 @@
 package io.minio;
 
-import io.minio.messages.UserInfo;
-
 public class SetPolicyArgs extends BaseArgs {
 
   protected String policyName;
