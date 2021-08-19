@@ -1,5 +1,7 @@
 package io.minio;
 
+import io.minio.messages.UserInfo;
+
 public class AddUserArgs extends BaseArgs {
 
   protected String accessKey;
@@ -31,5 +33,12 @@ public class AddUserArgs extends BaseArgs {
       this.operations.add(args -> args.secretKey = secretKey);
       return this;
     }
+  }
+
+  public UserInfo toUserInfo() {
+    UserInfo userInfo = new UserInfo();
+    userInfo.setSecretKey(secretKey());
+    userInfo.setStatus(UserInfo.STATUS_ENABLED);
+    return userInfo;
   }
 }
