@@ -136,7 +136,7 @@ public class MinioClient extends S3Base {
   /**
    * Adds a user with the specified access and secret key.
    *
-   * @param addUserArgs {@link AddUserArgs} object.
+   * @param args {@link AddUserArgs} object.
    * @throws InternalException thrown to indicate internal library error.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
@@ -146,20 +146,20 @@ public class MinioClient extends S3Base {
    * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
    *     destinations.
    */
-  public void addUser(AddUserArgs addUserArgs)
+  public void addUser(AddUserArgs args)
       throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
           InvalidKeyException, IOException, InvalidCipherTextException, OnlyMinioSupportException {
     Credentials creds = provider.fetch();
     byte[] encryptedUserInfo =
         EncryptionUtils.encrypt(
-                creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(addUserArgs.toUserInfo()))
+                creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(args.toUserInfo()))
             .array();
     executeAdmin(
         Method.PUT,
         "add-user",
         region,
         null,
-        ImmutableMultimap.of("accessKey", addUserArgs.accessKey()),
+        ImmutableMultimap.of("accessKey", args.accessKey()),
         encryptedUserInfo,
         encryptedUserInfo.length);
   }
@@ -232,7 +232,7 @@ public class MinioClient extends S3Base {
    * }
    * </pre>
    *
-   * @param addPolicyArgs {@Link AddPolicyArgs} object.
+   * @param args {@Link AddPolicyArgs} object.
    * @throws InternalException thrown to indicate internal library error.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
@@ -241,16 +241,16 @@ public class MinioClient extends S3Base {
    * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
    *     destinations.
    */
-  public void addCannedPolicy(AddPolicyArgs addPolicyArgs)
+  public void addCannedPolicy(AddPolicyArgs args)
       throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
           InvalidKeyException, IOException, OnlyMinioSupportException {
-    byte[] policy = addPolicyArgs.policyString().getBytes(StandardCharsets.UTF_8);
+    byte[] policy = args.policyString().getBytes(StandardCharsets.UTF_8);
     executeAdmin(
         Method.PUT,
         "add-canned-policy",
         region,
         null,
-        ImmutableMultimap.of("name", addPolicyArgs.policyName()),
+        ImmutableMultimap.of("name", args.policyName()),
         policy,
         policy.length);
   }
@@ -258,7 +258,7 @@ public class MinioClient extends S3Base {
   /**
    * Sets a policy to a given user or group.
    *
-   * @param setPolicyArgs
+   * @param args
    * @throws InternalException thrown to indicate internal library error.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
@@ -267,16 +267,16 @@ public class MinioClient extends S3Base {
    * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
    *     destinations.
    */
-  public void setPolicy(SetPolicyArgs setPolicyArgs)
+  public void setPolicy(SetPolicyArgs args)
       throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
           InvalidKeyException, IOException, OnlyMinioSupportException {
-    String groupStr = (setPolicyArgs.isGroup()) ? "true" : "false";
+    String groupStr = (args.isGroup()) ? "true" : "false";
     Multimap<String, String> queryValues =
         ImmutableMultimap.of(
             "policyName",
-            setPolicyArgs.policyName(),
+            args.policyName(),
             "userOrGroup",
-            setPolicyArgs.userOrGroup(),
+            args.userOrGroup(),
             "isGroup",
             groupStr);
     executeAdmin(Method.PUT, "set-user-or-group-policy", region, null, queryValues, null, 0);
@@ -1715,7 +1715,7 @@ public class MinioClient extends S3Base {
    *  }
    * }</pre>
    *
-   * <p>args {@link IsObjectLegalHoldEnabledArgs} object.
+   * args {@link IsObjectLegalHoldEnabledArgs} object.
    *
    * @return boolean - True if legal hold is enabled.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
@@ -2110,6 +2110,7 @@ public class MinioClient extends S3Base {
    * }</pre>
    *
    * @param args {@link GetBucketLifecycleArgs} object.
+   * @return {@link LifecycleConfiguration} object.
    * @return String - Life cycle configuration as XML string.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.

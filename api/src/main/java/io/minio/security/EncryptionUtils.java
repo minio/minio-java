@@ -22,18 +22,18 @@ import org.bouncycastle.crypto.params.KeyParameter;
  */
 public class EncryptionUtils {
 
-  public static final byte argon2idAESGCM = 0x00;
+  public static final byte ARGON2ID_AES_GCM = 0x00;
 
   public static final int NONCE_LENGTH = 8;
   public static final int SALT_LENGTH = 32;
 
   public static final int BUFFER_SIZE = 1 << 14;
 
-  private static final SecureRandom random = new SecureRandom();
+  private static final SecureRandom RANDOM = new SecureRandom();
 
   private static byte[] random(int length) {
     byte[] data = new byte[length];
-    random.nextBytes(data);
+    RANDOM.nextBytes(data);
     return data;
   }
 
@@ -82,7 +82,7 @@ public class EncryptionUtils {
     cipher.doFinal(encryptedData, outputOffset);
     ByteBuffer payload = ByteBuffer.allocate(1 + salt.length + nonce.length + outputLength);
     payload.put(salt);
-    payload.put(argon2idAESGCM);
+    payload.put(ARGON2ID_AES_GCM);
     payload.put(nonce);
     payload.put(encryptedData);
     return payload;
