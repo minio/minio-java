@@ -1,4 +1,4 @@
-package io.minio.messages;
+package io.minio.admin;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

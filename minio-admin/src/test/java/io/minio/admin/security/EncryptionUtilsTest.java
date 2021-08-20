@@ -1,4 +1,4 @@
-package io.minio.security;
+package io.minio.admin.security;
 
 import com.google.common.io.BaseEncoding;
 import java.io.UnsupportedEncodingException;

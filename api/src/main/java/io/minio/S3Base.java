@@ -244,28 +244,6 @@ public abstract class S3Base {
   }
 
   /** Build URL for given parameters. */
-  protected HttpUrl buildAdminUrl(String action, Multimap<String, String> queryParamMap) {
-
-    HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
-    String host = this.baseUrl.host();
-
-    urlBuilder.host(host);
-    urlBuilder.addEncodedPathSegment(S3Escaper.encode("minio"));
-    urlBuilder.addEncodedPathSegment(S3Escaper.encode("admin"));
-    urlBuilder.addEncodedPathSegment(S3Escaper.encode("v3"));
-    urlBuilder.addEncodedPathSegment(S3Escaper.encode(action));
-
-    if (queryParamMap != null) {
-      for (Map.Entry<String, String> entry : queryParamMap.entries()) {
-        urlBuilder.addEncodedQueryParameter(
-            S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
-      }
-    }
-
-    return urlBuilder.build();
-  }
-
-  /** Build URL for given parameters. */
   protected HttpUrl buildUrl(
       Method method,
       String bucketName,
@@ -491,52 +469,6 @@ public abstract class S3Base {
         merge(args.extraQueryParams(), queryParams),
         body,
         length);
-  }
-
-  /** Execute HTTP request for given parameters. */
-  protected Response executeAdmin(
-      Method method,
-      String action,
-      String region,
-      Headers headers,
-      Multimap<String, String> queryParamMap,
-      Object body,
-      int length)
-      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
-          NoSuchAlgorithmException, OnlyMinioSupportException {
-
-    if (isAwsHost) {
-      throw new OnlyMinioSupportException("Admin");
-    }
-
-    if (body != null && !(body instanceof byte[])) {
-      body = OBJECT_MAPPER.writeValueAsString(body);
-    }
-
-    if (body == null && (method == Method.PUT || method == Method.POST)) body = EMPTY_BODY;
-
-    HttpUrl url = buildAdminUrl(action, queryParamMap);
-    Credentials creds = (provider == null) ? null : provider.fetch();
-    Request request = createRequest(url, method, headers, body, length, creds);
-    if (creds != null) {
-      request =
-          Signer.signV4S3(
-              request,
-              region,
-              creds.accessKey(),
-              creds.secretKey(),
-              request.header("x-amz-content-sha256"));
-    }
-
-    OkHttpClient httpClient = this.httpClient;
-
-    Response response = httpClient.newCall(request).execute();
-
-    if (response.code() != 200) {
-      throw new RuntimeException("Request failed with response: " + response.body().string());
-    }
-
-    return response;
   }
 
   /** Execute HTTP request for given parameters. */

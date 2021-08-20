@@ -1,4 +1,7 @@
-package io.minio;
+package io.minio.admin;
+
+import io.minio.BaseArgs;
+import io.minio.ListBucketsArgs;
 
 public class SetPolicyArgs extends BaseArgs {
 

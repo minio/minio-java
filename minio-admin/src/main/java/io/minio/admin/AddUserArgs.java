@@ -1,6 +1,7 @@
-package io.minio;
+package io.minio.admin;
 
-import io.minio.messages.UserInfo;
+import io.minio.BaseArgs;
+import io.minio.ListBucketsArgs;
 
 public class AddUserArgs extends BaseArgs {
 

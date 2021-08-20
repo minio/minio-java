@@ -1,4 +1,4 @@
-package io.minio.messages;
+package io.minio.admin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

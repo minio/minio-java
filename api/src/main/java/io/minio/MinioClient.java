@@ -17,9 +17,7 @@
 
 package io.minio;
 
-import com.fasterxml.jackson.databind.type.MapType;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import io.minio.credentials.Credentials;
@@ -29,7 +27,6 @@ import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.*;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
-import io.minio.security.EncryptionUtils;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,7 +59,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 
 /**
  * Simple Storage Service (aka S3) client to perform bucket and object operations.
@@ -131,204 +127,6 @@ public class MinioClient extends S3Base {
 
   protected MinioClient(MinioClient client) {
     super(client);
-  }
-
-  /**
-   * Adds a user with the specified access and secret key.
-   *
-   * @param args {@link AddUserArgs} object.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
-   * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
-   *     destinations.
-   */
-  public void addUser(AddUserArgs args)
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
-          InvalidKeyException, IOException, InvalidCipherTextException, OnlyMinioSupportException {
-    Credentials creds = provider.fetch();
-    byte[] encryptedUserInfo =
-        EncryptionUtils.encrypt(
-                creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(args.toUserInfo()))
-            .array();
-    executeAdmin(
-        Method.PUT,
-        "add-user",
-        region,
-        null,
-        ImmutableMultimap.of("accessKey", args.accessKey()),
-        encryptedUserInfo,
-        encryptedUserInfo.length);
-  }
-
-  /**
-   * Obtains a list of all MinIO users.
-   *
-   * @return List of all users.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
-   * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
-   *     destinations.
-   */
-  public Map<String, UserInfo> listUsers()
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
-          InvalidKeyException, IOException, InvalidCipherTextException, OnlyMinioSupportException {
-    Credentials creds = provider.fetch();
-    byte[] jsonData =
-        EncryptionUtils.decrypt(
-                creds.secretKey(),
-                executeAdmin(Method.GET, "list-users", region, null, null, null, 0).body().bytes())
-            .array();
-    MapType mapType =
-        OBJECT_MAPPER
-            .getTypeFactory()
-            .constructMapType(HashMap.class, String.class, UserInfo.class);
-    return OBJECT_MAPPER.readValue(jsonData, mapType);
-  }
-
-  /**
-   * Deletes a user by it's access key
-   *
-   * @param accessKey Access Key of user to delete.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
-   * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
-   *     destinations.
-   */
-  public void deleteUser(String accessKey)
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
-          InvalidKeyException, IOException, OnlyMinioSupportException {
-    executeAdmin(
-        Method.DELETE,
-        "remove-user",
-        region,
-        null,
-        ImmutableMultimap.of("accessKey", accessKey),
-        null,
-        0);
-  }
-
-  /**
-   * Creates a policy.
-   *
-   * <pre>Example:{@code
-   * client.addCannedPolicy(
-   *         AddPolicyArgs.builder()
-   *             .policyName("policy-test")
-   *             .policyString(
-   *                 "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Action\": [\"s3:GetObject\"],\"Effect\": \"Allow\",\"Resource\": [\"arn:aws:s3:::my-bucketname/*\"],\"Sid\": \"\"}]}")
-   *             .build());
-   * }
-   * </pre>
-   *
-   * @param args {@Link AddPolicyArgs} object.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
-   *     destinations.
-   */
-  public void addCannedPolicy(AddPolicyArgs args)
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
-          InvalidKeyException, IOException, OnlyMinioSupportException {
-    byte[] policy = args.policyString().getBytes(StandardCharsets.UTF_8);
-    executeAdmin(
-        Method.PUT,
-        "add-canned-policy",
-        region,
-        null,
-        ImmutableMultimap.of("name", args.policyName()),
-        policy,
-        policy.length);
-  }
-
-  /**
-   * Sets a policy to a given user or group.
-   *
-   * @param args
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
-   *     destinations.
-   */
-  public void setPolicy(SetPolicyArgs args)
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
-          InvalidKeyException, IOException, OnlyMinioSupportException {
-    String groupStr = (args.isGroup()) ? "true" : "false";
-    Multimap<String, String> queryValues =
-        ImmutableMultimap.of(
-            "policyName",
-            args.policyName(),
-            "userOrGroup",
-            args.userOrGroup(),
-            "isGroup",
-            groupStr);
-    executeAdmin(Method.PUT, "set-user-or-group-policy", region, null, queryValues, null, 0);
-  }
-
-  /**
-   * Lists all configured canned policies.
-   *
-   * @return Map of policies, keyed by their name, with their actual policy as their value.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
-   *     destinations.
-   */
-  public Map<String, String> listCannedPolicies()
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
-          InvalidKeyException, IOException, OnlyMinioSupportException {
-    byte[] body =
-        executeAdmin(Method.GET, "list-canned-policies", region, null, null, null, 0)
-            .body()
-            .bytes();
-    MapType mapType =
-        OBJECT_MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Object.class);
-    return OBJECT_MAPPER.readValue(body, mapType);
-  }
-
-  /**
-   * Removes canned policy by name.
-   *
-   * @param policyName Name of policy to remove.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws OnlyMinioSupportException thrown to indicate the method only supports MinIO
-   *     destinations.
-   */
-  public void removeCannedPolicy(String policyName)
-      throws InternalException, InsufficientDataException, NoSuchAlgorithmException,
-          InvalidKeyException, IOException, OnlyMinioSupportException {
-    executeAdmin(
-        Method.DELETE,
-        "remove-canned-policy",
-        region,
-        null,
-        ImmutableMultimap.of("name", policyName),
-        null,
-        0);
   }
 
   /**
