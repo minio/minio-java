@@ -17,8 +17,8 @@
 
 package io.minio;
 
-import com.google.common.collect.ImmutableMultimap;
-import io.minio.errors.*;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.MinioException;
 import io.minio.http.Method;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,11 +27,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.crypto.KeyGenerator;
-import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
-import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.junit.Assert;
 import org.junit.Test;
 

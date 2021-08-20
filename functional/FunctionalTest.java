@@ -20,11 +20,6 @@ import static java.nio.file.StandardOpenOption.CREATE;
 
 import com.google.common.io.BaseEncoding;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.minio.admin.MinioAdminClient;
-import io.minio.admin.AddPolicyArgs;
-import io.minio.admin.SetPolicyArgs;
-import io.minio.admin.AddUserArgs;
-import io.minio.admin.UserInfo;
 import io.minio.BucketExistsArgs;
 import io.minio.CloseableIterator;
 import io.minio.ComposeObjectArgs;
@@ -88,6 +83,11 @@ import io.minio.StatObjectResponse;
 import io.minio.Time;
 import io.minio.UploadObjectArgs;
 import io.minio.Xml;
+import io.minio.admin.AddPolicyArgs;
+import io.minio.admin.AddUserArgs;
+import io.minio.admin.MinioAdminClient;
+import io.minio.admin.SetPolicyArgs;
+import io.minio.admin.UserInfo;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import io.minio.messages.AndOperator;
@@ -3732,11 +3732,11 @@ public class FunctionalTest {
     long startTime = System.currentTimeMillis();
     try {
       adminClient.addCannedPolicy(
-              AddPolicyArgs.builder()
-                      .policyName(policyName)
-                      .policyString(
-                              "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Action\": [\"s3:GetObject\"],\"Effect\": \"Allow\",\"Resource\": [\"arn:aws:s3:::my-bucketname/*\"],\"Sid\": \"\"}]}")
-                      .build());
+          AddPolicyArgs.builder()
+              .policyName(policyName)
+              .policyString(
+                  "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Action\": [\"s3:GetObject\"],\"Effect\": \"Allow\",\"Resource\": [\"arn:aws:s3:::my-bucketname/*\"],\"Sid\": \"\"}]}")
+              .build());
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3778,7 +3778,8 @@ public class FunctionalTest {
 
     long startTime = System.currentTimeMillis();
     try {
-      adminClient.setPolicy(SetPolicyArgs.builder().userOrGroup(userAccessKey).policyName(policyName).build());
+      adminClient.setPolicy(
+          SetPolicyArgs.builder().userOrGroup(userAccessKey).policyName(policyName).build());
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3791,7 +3792,8 @@ public class FunctionalTest {
     }
     long startTime = System.currentTimeMillis();
     try {
-      adminClient.addUser(AddUserArgs.builder().accessKey(userAccessKey).secretKey(userSecretKey).build());
+      adminClient.addUser(
+          AddUserArgs.builder().accessKey(userAccessKey).secretKey(userSecretKey).build());
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
     }
@@ -3827,8 +3829,6 @@ public class FunctionalTest {
       handleException(methodName, null, startTime, e);
     }
   }
-
-
 
   public static void runAdminTests() throws Exception {
     createUser();
@@ -3983,7 +3983,8 @@ public class FunctionalTest {
     int exitValue = 0;
     try {
       client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
-      adminClient = MinioAdminClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+      adminClient =
+          MinioAdminClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
       // Enable trace for debugging.
       // client.traceOn(System.out);
       if (!mintEnv) System.out.println(">>> Running tests:");
@@ -4002,11 +4003,11 @@ public class FunctionalTest {
                 .region(region)
                 .build();
         adminClient =
-                MinioAdminClient.builder()
-                        .endpoint(endpoint)
-                        .credentials(accessKey, secretKey)
-                        .region(region)
-                        .build();
+            MinioAdminClient.builder()
+                .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
+                .region(region)
+                .build();
         FunctionalTest.runTests();
       }
     } catch (Exception e) {

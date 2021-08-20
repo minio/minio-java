@@ -29,7 +29,12 @@ import com.google.common.collect.Multimaps;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
-import io.minio.errors.*;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.ServerException;
+import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CompleteMultipartUploadOutput;
@@ -102,8 +107,6 @@ public abstract class S3Base {
       throw new RuntimeException("Unsupported OkHttp library found. Must use okhttp >= 4.8.1", ex);
     }
   }
-
-  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   protected static final String NO_SUCH_BUCKET_MESSAGE = "Bucket does not exist";
   protected static final String NO_SUCH_BUCKET = "NoSuchBucket";
@@ -1396,8 +1399,8 @@ public abstract class S3Base {
   /**
    * Disables HTTP call tracing previously enabled.
    *
-   * @throws IOException upon connection error
    * @see #traceOn
+   * @throws IOException upon connection error
    */
   public void traceOff() throws IOException {
     this.traceStream = null;
