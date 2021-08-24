@@ -15,6 +15,7 @@ hs_err_pid*
 # gradle working files
 .gradle/
 build/
+gradle/
 
 # sbt files
 lib/
