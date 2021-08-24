@@ -29,6 +29,7 @@ import com.google.common.collect.Multimaps;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
+import io.minio.credentials.StaticProvider;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
@@ -57,46 +58,23 @@ import io.minio.messages.LocationConstraint;
 import io.minio.messages.NotificationRecords;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.RandomAccessFile;
+import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
+import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import javax.net.ssl.*;
+import okhttp3.*;
 
 /** Core S3 API client. */
 public abstract class S3Base {
@@ -2310,5 +2288,269 @@ public abstract class S3Base {
       return new UploadPartCopyResponse(
           response.headers(), bucketName, region, objectName, uploadId, partNumber, result);
     }
+  }
+
+  public abstract static class BaseBuilder<T extends S3Base> {
+    protected HttpUrl baseUrl;
+    protected String region;
+    protected OkHttpClient httpClient;
+    protected boolean isAwsHost;
+    protected boolean isAwsChinaHost;
+    protected boolean isAcceleratedHost;
+    protected boolean isDualStackHost;
+    protected boolean useVirtualStyle;
+    protected String regionInUrl;
+    protected Provider provider;
+
+    public BaseBuilder() {}
+
+    protected boolean isAwsEndpoint(String endpoint) {
+      return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
+          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
+    }
+
+    protected boolean isAwsAccelerateEndpoint(String endpoint) {
+      return endpoint.startsWith("s3-accelerate.");
+    }
+
+    protected boolean isAwsDualStackEndpoint(String endpoint) {
+      return endpoint.contains(".dualstack.");
+    }
+
+    /**
+     * Extracts region from AWS endpoint if available. Region is placed at second token normal
+     * endpoints and third token for dualstack endpoints.
+     *
+     * <p>Region is marked in square brackets in below examples.
+     * <pre>
+     * https://s3.[us-east-2].amazonaws.com
+     * https://s3.dualstack.[ca-central-1].amazonaws.com
+     * https://s3.[cn-north-1].amazonaws.com.cn
+     * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
+     */
+    protected String extractRegion(String endpoint) {
+      String[] tokens = endpoint.split("\\.");
+      String token = tokens[1];
+
+      // If token is "dualstack", then region might be in next token.
+      if (token.equals("dualstack")) {
+        token = tokens[2];
+      }
+
+      // If token is equal to "amazonaws", region is not passed in the endpoint.
+      if (token.equals("amazonaws")) {
+        return null;
+      }
+
+      // Return token as region.
+      return token;
+    }
+
+    protected void setBaseUrl(HttpUrl url) {
+      String host = url.host();
+      this.isAwsHost = isAwsEndpoint(host);
+      this.isAwsChinaHost = false;
+      if (this.isAwsHost) {
+        this.isAwsChinaHost = host.endsWith(".cn");
+        url =
+            url.newBuilder()
+                .host(this.isAwsChinaHost ? "amazonaws.com.cn" : "amazonaws.com")
+                .build();
+        this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
+        this.isDualStackHost = isAwsDualStackEndpoint(host);
+        this.regionInUrl = extractRegion(host);
+        this.useVirtualStyle = true;
+      } else {
+        this.useVirtualStyle = host.endsWith("aliyuncs.com");
+      }
+
+      this.baseUrl = url;
+    }
+
+    /**
+     * copied logic from
+     * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
+     */
+    protected OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
+        throws GeneralSecurityException, IOException {
+      Collection<? extends Certificate> certificates = null;
+      try (FileInputStream fis = new FileInputStream(filename)) {
+        certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
+      }
+
+      if (certificates == null || certificates.isEmpty()) {
+        throw new IllegalArgumentException("expected non-empty set of trusted certificates");
+      }
+
+      char[] password = "password".toCharArray(); // Any password will work.
+
+      // Put the certificates a key store.
+      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+      // By convention, 'null' creates an empty key store.
+      keyStore.load(null, password);
+
+      int index = 0;
+      for (Certificate certificate : certificates) {
+        String certificateAlias = Integer.toString(index++);
+        keyStore.setCertificateEntry(certificateAlias, certificate);
+      }
+
+      // Use it to build an X509 trust manager.
+      KeyManagerFactory keyManagerFactory =
+          KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+      keyManagerFactory.init(keyStore, password);
+      TrustManagerFactory trustManagerFactory =
+          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(keyStore);
+
+      final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
+      final TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(keyManagers, trustManagers, null);
+      SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+      return httpClient
+          .newBuilder()
+          .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
+          .build();
+    }
+
+    protected void validateNotNull(Object arg, String argName) {
+      if (arg == null) {
+        throw new IllegalArgumentException(argName + " must not be null.");
+      }
+    }
+
+    protected void validateNotEmptyString(String arg, String argName) {
+      validateNotNull(arg, argName);
+      if (arg.isEmpty()) {
+        throw new IllegalArgumentException(argName + " must be a non-empty string.");
+      }
+    }
+
+    protected void validateNullOrNotEmptyString(String arg, String argName) {
+      if (arg != null && arg.isEmpty()) {
+        throw new IllegalArgumentException(argName + " must be a non-empty string.");
+      }
+    }
+
+    protected void validateUrl(HttpUrl url) {
+      if (!url.encodedPath().equals("/")) {
+        throw new IllegalArgumentException("no path allowed in endpoint " + url);
+      }
+    }
+
+    protected void validateHostnameOrIPAddress(String endpoint) {
+      // Check endpoint is IPv4 or IPv6.
+      if (InetAddressValidator.getInstance().isValid(endpoint)) {
+        return;
+      }
+
+      // Check endpoint is a hostname.
+
+      // Refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
+      // why checks are done like below
+      if (endpoint.length() < 1 || endpoint.length() > 253) {
+        throw new IllegalArgumentException("invalid hostname");
+      }
+
+      for (String label : endpoint.split("\\.")) {
+        if (label.length() < 1 || label.length() > 63) {
+          throw new IllegalArgumentException("invalid hostname");
+        }
+
+        if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
+          throw new IllegalArgumentException("invalid hostname");
+        }
+      }
+    }
+
+    protected HttpUrl getBaseUrl(String endpoint) {
+      validateNotEmptyString(endpoint, "endpoint");
+      HttpUrl url = HttpUrl.parse(endpoint);
+      if (url == null) {
+        validateHostnameOrIPAddress(endpoint);
+        url = new HttpUrl.Builder().scheme("https").host(endpoint).build();
+      } else {
+        validateUrl(url);
+      }
+
+      return url;
+    }
+
+    public BaseBuilder<T> endpoint(String endpoint) {
+      setBaseUrl(getBaseUrl(endpoint));
+      return this;
+    }
+
+    public BaseBuilder<T> endpoint(String endpoint, int port, boolean secure) {
+      HttpUrl url = getBaseUrl(endpoint);
+      if (port < 1 || port > 65535) {
+        throw new IllegalArgumentException("port must be in range of 1 to 65535");
+      }
+      url = url.newBuilder().port(port).scheme(secure ? "https" : "http").build();
+
+      setBaseUrl(url);
+      return this;
+    }
+
+    public BaseBuilder<T> endpoint(URL url) {
+      validateNotNull(url, "url");
+      return endpoint(HttpUrl.get(url));
+    }
+
+    public BaseBuilder<T> endpoint(HttpUrl url) {
+      validateNotNull(url, "url");
+      validateUrl(url);
+      setBaseUrl(url);
+      return this;
+    }
+
+    public BaseBuilder<T> region(String region) {
+      validateNullOrNotEmptyString(region, "region");
+      this.region = region;
+      this.regionInUrl = region;
+      return this;
+    }
+
+    public BaseBuilder<T> credentials(String accessKey, String secretKey) {
+      this.provider = new StaticProvider(accessKey, secretKey, null);
+      return this;
+    }
+
+    public BaseBuilder<T> credentialsProvider(Provider provider) {
+      this.provider = provider;
+      return this;
+    }
+
+    public BaseBuilder<T> httpClient(OkHttpClient httpClient) {
+      validateNotNull(httpClient, "http client");
+      this.httpClient = httpClient;
+      return this;
+    }
+
+    protected void maybeSetHttpClient() {
+      if (httpClient == null) {
+        this.httpClient =
+            new OkHttpClient()
+                .newBuilder()
+                .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+                .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+                .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
+                .protocols(Arrays.asList(Protocol.HTTP_1_1))
+                .build();
+        String filename = System.getenv("SSL_CERT_FILE");
+        if (filename != null && !filename.isEmpty()) {
+          try {
+            this.httpClient = enableExternalCertificates(this.httpClient, filename);
+          } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
+      }
+    }
+
+    public abstract T build();
   }
 }

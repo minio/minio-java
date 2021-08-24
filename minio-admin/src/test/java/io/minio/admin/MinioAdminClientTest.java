@@ -8,16 +8,6 @@ import org.junit.Test;
 
 public class MinioAdminClientTest {
 
-  @Test(expected = IllegalArgumentException.class)
-  public void testAdminClientThrowsWhenUsingAws() {
-    MinioAdminClient.builder()
-        .endpoint("https://s3.amazonaws.com")
-        .credentials("foo", "bar")
-        .region("us-east-1")
-        .build();
-    Assert.fail("exception should be thrown");
-  }
-
   @Test
   public void testAdminUrlsAreCorrect() throws NoSuchAlgorithmException {
     MinioAdminClient client =

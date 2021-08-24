@@ -83,11 +83,7 @@ import io.minio.StatObjectResponse;
 import io.minio.Time;
 import io.minio.UploadObjectArgs;
 import io.minio.Xml;
-import io.minio.admin.AddPolicyArgs;
-import io.minio.admin.AddUserArgs;
 import io.minio.admin.MinioAdminClient;
-import io.minio.admin.SetPolicyArgs;
-import io.minio.admin.UserInfo;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import io.minio.messages.AndOperator;
@@ -175,9 +171,6 @@ public class FunctionalTest {
   private static final String nullContentType = null;
   private static String bucketName = getRandomName();
   private static String bucketNameWithLock = getRandomName();
-  private static String userAccessKey = "minio-test-user";
-  private static String userSecretKey = "minio-rocks-123";
-  private static String policyName = getRandomName();
   private static boolean mintEnv = false;
   private static boolean isQuickTest = false;
   private static Path dataFile1Kb;
@@ -192,7 +185,7 @@ public class FunctionalTest {
   private static String replicationRole = null;
   private static String replicationBucketArn = null;
   private static MinioClient client = null;
-  private static MinioAdminClient adminClient = null;
+  private static TestMinioAdminClient adminClientTests;
 
   private static ServerSideEncryptionCustomerKey ssec = null;
   private static ServerSideEncryption sseS3 = new ServerSideEncryptionS3();
@@ -416,7 +409,7 @@ public class FunctionalTest {
     }
   }
 
-  private static void handleException(String methodName, String args, long startTime, Exception e)
+  static void handleException(String methodName, String args, long startTime, Exception e)
       throws Exception {
     if (e instanceof ErrorResponseException) {
       if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
@@ -3724,125 +3717,10 @@ public class FunctionalTest {
     teardown();
   }
 
-  public static void addCannedPolicy() throws Exception {
-    String methodName = "addCannedPolicy()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-    long startTime = System.currentTimeMillis();
-    try {
-      adminClient.addCannedPolicy(
-          AddPolicyArgs.builder()
-              .policyName(policyName)
-              .policyString(
-                  "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Action\": [\"s3:GetObject\"],\"Effect\": \"Allow\",\"Resource\": [\"arn:aws:s3:::my-bucketname/*\"],\"Sid\": \"\"}]}")
-              .build());
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void listCannedPolicies() throws Exception {
-    String methodName = "listCannedPolicies()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      Map<String, String> policies = adminClient.listCannedPolicies();
-      Assert.assertTrue(policies.containsKey(policyName));
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void removeCannedPolicy() throws Exception {
-    String methodName = "removeCannedPolicy()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-    long startTime = System.currentTimeMillis();
-    try {
-      adminClient.removeCannedPolicy(policyName);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void setPolicy() throws Exception {
-    String methodName = "setPolicy()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      adminClient.setPolicy(
-          SetPolicyArgs.builder().userOrGroup(userAccessKey).policyName(policyName).build());
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void createUser() throws Exception {
-    String methodName = "createUser()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-    long startTime = System.currentTimeMillis();
-    try {
-      adminClient.addUser(
-          AddUserArgs.builder().accessKey(userAccessKey).secretKey(userSecretKey).build());
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void listUsers() throws Exception {
-    String methodName = "listUsers()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      Map<String, UserInfo> users = adminClient.listUsers();
-      Assert.assertTrue(users.containsKey(userAccessKey));
-      Assert.assertEquals(users.get(userAccessKey).getStatus(), UserInfo.STATUS_ENABLED);
-      Assert.assertEquals(users.get(userAccessKey).getPolicyName(), policyName);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void deleteUser() throws Exception {
-    String methodName = "deleteUser()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      adminClient.deleteUser(userAccessKey);
-    } catch (Exception e) {
-      handleException(methodName, null, startTime, e);
-    }
-  }
-
-  public static void runAdminTests() throws Exception {
-    createUser();
-    addCannedPolicy();
-    setPolicy();
-    listUsers();
-    listCannedPolicies();
-    deleteUser();
-  }
-
   public static void runTests() throws Exception {
     runBucketTests();
     runObjectTests();
-    runAdminTests();
+    adminClientTests.runAdminTests();
   }
 
   public static boolean downloadMinio() throws IOException {
@@ -3983,8 +3861,9 @@ public class FunctionalTest {
     int exitValue = 0;
     try {
       client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
-      adminClient =
+      MinioAdminClient adminClient =
           MinioAdminClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+      adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
       // Enable trace for debugging.
       // client.traceOn(System.out);
       if (!mintEnv) System.out.println(">>> Running tests:");
@@ -4008,6 +3887,7 @@ public class FunctionalTest {
                 .credentials(accessKey, secretKey)
                 .region(region)
                 .build();
+        adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
         FunctionalTest.runTests();
       }
     } catch (Exception e) {

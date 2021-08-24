@@ -22,7 +22,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
-import io.minio.credentials.StaticProvider;
 import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -50,43 +49,25 @@ import io.minio.messages.SelectObjectContentRequest;
 import io.minio.messages.SseConfiguration;
 import io.minio.messages.Tags;
 import io.minio.messages.VersioningConfiguration;
-import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
-import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.concurrent.TimeUnit;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -2610,270 +2591,14 @@ public class MinioClient extends S3Base {
     return new Builder();
   }
 
-  public static final class Builder {
-    HttpUrl baseUrl;
-    String region;
-    OkHttpClient httpClient;
-    boolean isAwsHost;
-    boolean isAwsChinaHost;
-    boolean isAcceleratedHost;
-    boolean isDualStackHost;
-    boolean useVirtualStyle;
-    String regionInUrl;
-    Provider provider;
-
-    public Builder() {}
-
-    private boolean isAwsEndpoint(String endpoint) {
-      return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
-          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
-    }
-
-    private boolean isAwsAccelerateEndpoint(String endpoint) {
-      return endpoint.startsWith("s3-accelerate.");
-    }
-
-    private boolean isAwsDualStackEndpoint(String endpoint) {
-      return endpoint.contains(".dualstack.");
-    }
-
-    /**
-     * Extracts region from AWS endpoint if available. Region is placed at second token normal
-     * endpoints and third token for dualstack endpoints.
-     *
-     * <p>Region is marked in square brackets in below examples.
-     * <pre>
-     * https://s3.[us-east-2].amazonaws.com
-     * https://s3.dualstack.[ca-central-1].amazonaws.com
-     * https://s3.[cn-north-1].amazonaws.com.cn
-     * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
-     */
-    private String extractRegion(String endpoint) {
-      String[] tokens = endpoint.split("\\.");
-      String token = tokens[1];
-
-      // If token is "dualstack", then region might be in next token.
-      if (token.equals("dualstack")) {
-        token = tokens[2];
-      }
-
-      // If token is equal to "amazonaws", region is not passed in the endpoint.
-      if (token.equals("amazonaws")) {
-        return null;
-      }
-
-      // Return token as region.
-      return token;
-    }
-
-    private void setBaseUrl(HttpUrl url) {
-      String host = url.host();
-      this.isAwsHost = isAwsEndpoint(host);
-      this.isAwsChinaHost = false;
-      if (this.isAwsHost) {
-        this.isAwsChinaHost = host.endsWith(".cn");
-        url =
-            url.newBuilder()
-                .host(this.isAwsChinaHost ? "amazonaws.com.cn" : "amazonaws.com")
-                .build();
-        this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
-        this.isDualStackHost = isAwsDualStackEndpoint(host);
-        this.regionInUrl = extractRegion(host);
-        this.useVirtualStyle = true;
-      } else {
-        this.useVirtualStyle = host.endsWith("aliyuncs.com");
-      }
-
-      this.baseUrl = url;
-    }
-
-    /**
-     * copied logic from
-     * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
-     */
-    private OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
-        throws GeneralSecurityException, IOException {
-      Collection<? extends Certificate> certificates = null;
-      try (FileInputStream fis = new FileInputStream(filename)) {
-        certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
-      }
-
-      if (certificates == null || certificates.isEmpty()) {
-        throw new IllegalArgumentException("expected non-empty set of trusted certificates");
-      }
-
-      char[] password = "password".toCharArray(); // Any password will work.
-
-      // Put the certificates a key store.
-      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      // By convention, 'null' creates an empty key store.
-      keyStore.load(null, password);
-
-      int index = 0;
-      for (Certificate certificate : certificates) {
-        String certificateAlias = Integer.toString(index++);
-        keyStore.setCertificateEntry(certificateAlias, certificate);
-      }
-
-      // Use it to build an X509 trust manager.
-      KeyManagerFactory keyManagerFactory =
-          KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-      keyManagerFactory.init(keyStore, password);
-      TrustManagerFactory trustManagerFactory =
-          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      trustManagerFactory.init(keyStore);
-
-      final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
-      final TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
-
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(keyManagers, trustManagers, null);
-      SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-      return httpClient
-          .newBuilder()
-          .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
-          .build();
-    }
-
-    protected void validateNotNull(Object arg, String argName) {
-      if (arg == null) {
-        throw new IllegalArgumentException(argName + " must not be null.");
-      }
-    }
-
-    protected void validateNotEmptyString(String arg, String argName) {
-      validateNotNull(arg, argName);
-      if (arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    protected void validateNullOrNotEmptyString(String arg, String argName) {
-      if (arg != null && arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    private void validateUrl(HttpUrl url) {
-      if (!url.encodedPath().equals("/")) {
-        throw new IllegalArgumentException("no path allowed in endpoint " + url);
-      }
-    }
-
-    private void validateHostnameOrIPAddress(String endpoint) {
-      // Check endpoint is IPv4 or IPv6.
-      if (InetAddressValidator.getInstance().isValid(endpoint)) {
-        return;
-      }
-
-      // Check endpoint is a hostname.
-
-      // Refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
-      // why checks are done like below
-      if (endpoint.length() < 1 || endpoint.length() > 253) {
-        throw new IllegalArgumentException("invalid hostname");
-      }
-
-      for (String label : endpoint.split("\\.")) {
-        if (label.length() < 1 || label.length() > 63) {
-          throw new IllegalArgumentException("invalid hostname");
-        }
-
-        if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
-          throw new IllegalArgumentException("invalid hostname");
-        }
-      }
-    }
-
-    private HttpUrl getBaseUrl(String endpoint) {
-      validateNotEmptyString(endpoint, "endpoint");
-      HttpUrl url = HttpUrl.parse(endpoint);
-      if (url == null) {
-        validateHostnameOrIPAddress(endpoint);
-        url = new HttpUrl.Builder().scheme("https").host(endpoint).build();
-      } else {
-        validateUrl(url);
-      }
-
-      return url;
-    }
-
-    public Builder endpoint(String endpoint) {
-      setBaseUrl(getBaseUrl(endpoint));
-      return this;
-    }
-
-    public Builder endpoint(String endpoint, int port, boolean secure) {
-      HttpUrl url = getBaseUrl(endpoint);
-      if (port < 1 || port > 65535) {
-        throw new IllegalArgumentException("port must be in range of 1 to 65535");
-      }
-      url = url.newBuilder().port(port).scheme(secure ? "https" : "http").build();
-
-      setBaseUrl(url);
-      return this;
-    }
-
-    public Builder endpoint(URL url) {
-      validateNotNull(url, "url");
-      return endpoint(HttpUrl.get(url));
-    }
-
-    public Builder endpoint(HttpUrl url) {
-      validateNotNull(url, "url");
-      validateUrl(url);
-      setBaseUrl(url);
-      return this;
-    }
-
-    public Builder region(String region) {
-      validateNullOrNotEmptyString(region, "region");
-      this.region = region;
-      this.regionInUrl = region;
-      return this;
-    }
-
-    public Builder credentials(String accessKey, String secretKey) {
-      this.provider = new StaticProvider(accessKey, secretKey, null);
-      return this;
-    }
-
-    public Builder credentialsProvider(Provider provider) {
-      this.provider = provider;
-      return this;
-    }
-
-    public Builder httpClient(OkHttpClient httpClient) {
-      validateNotNull(httpClient, "http client");
-      this.httpClient = httpClient;
-      return this;
-    }
-
+  public static final class Builder extends BaseBuilder<MinioClient> {
     public MinioClient build() {
       validateNotNull(baseUrl, "endpoint");
       if (isAwsChinaHost && regionInUrl == null && region == null) {
         throw new IllegalArgumentException("Region missing in Amazon S3 China endpoint " + baseUrl);
       }
 
-      if (httpClient == null) {
-        this.httpClient =
-            new OkHttpClient()
-                .newBuilder()
-                .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-                .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-                .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-                .protocols(Arrays.asList(Protocol.HTTP_1_1))
-                .build();
-        String filename = System.getenv("SSL_CERT_FILE");
-        if (filename != null && !filename.isEmpty()) {
-          try {
-            this.httpClient = enableExternalCertificates(this.httpClient, filename);
-          } catch (GeneralSecurityException | IOException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }
+      maybeSetHttpClient();
 
       return new MinioClient(
           baseUrl,
