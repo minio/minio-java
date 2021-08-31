@@ -242,7 +242,7 @@ project(':api') {
     }
 }
 
-project(':minio-admin') {
+project(':admin') {
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
@@ -383,7 +383,7 @@ project(':functional') {
     dependencies {
         compile "junit:junit:4.13"
         compile project(':api')
-        compile project(':minio-admin')
+        compile project(':admin')
     }
 
     sourceSets {

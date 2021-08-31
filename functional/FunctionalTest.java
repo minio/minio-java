@@ -409,7 +409,7 @@ public class FunctionalTest {
     }
   }
 
-  private static void handleException(String methodName, String args, long startTime, Exception e)
+  public static void handleException(String methodName, String args, long startTime, Exception e)
       throws Exception {
     if (e instanceof ErrorResponseException) {
       if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
