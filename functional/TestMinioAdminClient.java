@@ -28,8 +28,8 @@ public class TestMinioAdminClient {
   private final MinioAdminClient adminClient;
   private final boolean mintEnv;
 
-  private static String userAccessKey = "minio-test-user";
-  private static String userSecretKey = "minio-rocks-123";
+  private static String userAccessKey = FunctionalTest.getRandomName();
+  private static String userSecretKey = FunctionalTest.getRandomName();
   private static String policyName = FunctionalTest.getRandomName();
 
   public TestMinioAdminClient(MinioAdminClient adminClient, boolean mintEnv) {
