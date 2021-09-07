@@ -1216,6 +1216,45 @@ public class MinioAsyncClient extends S3Base {
   }
 
   /**
+   * Restores an object asynchronously.
+   *
+   * <pre>Example:{@code
+   * // Restore object.
+   * CompletableFuture<Void> future = minioAsyncClient.restoreObject(
+   *     RestoreObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .request(new RestoreRequest(null, null, null, null, null, null))
+   *         .build());
+   *
+   * // Restore versioned object.
+   * CompletableFuture<Void> future = minioAsyncClient.restoreObject(
+   *     RestoreObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-versioned-objectname")
+   *         .versionId("my-versionid")
+   *         .request(new RestoreRequest(null, null, null, null, null, null))
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link RestoreObjectArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link Void}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<Void> restoreObject(RestoreObjectArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+    return executePostAsync(args, null, newMultimap("restore", ""), args.request())
+        .thenAccept(response -> response.close());
+  }
+
+  /**
    * Lists objects information optionally with versions of a bucket. Supports both the versions 1
    * and 2 of the S3 API. By default, the <a
    * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">version 2</a> API

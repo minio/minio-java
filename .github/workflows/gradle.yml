@@ -23,7 +23,7 @@ jobs:
       - name: Check limited Guava usage
         if: matrix.os == 'ubuntu-latest'
         run: |
-          if grep -I -r --exclude-dir=.github "com.google.common.base.Objects" . ; then
+          if grep --with-filename --line-number --no-messages --recursive --exclude-dir=.github "com.google.common.base.Objects" .; then
             echo "Error: use java.util.Objects instead of com.google.common.base.Objects"
             exit 1
           fi
