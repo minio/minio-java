@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import io.minio.Digest;
 import io.minio.MinioClient;
 import io.minio.S3Base;
 import io.minio.S3Escaper;
@@ -271,14 +272,9 @@ public class MinioAdminClient extends S3Base {
     HttpUrl url = buildAdminUrl(action, queryParamMap);
     Credentials creds = (provider == null) ? null : provider.fetch();
     Request request = createRequest(url, method, headers, body, length, creds);
+    String sha256Hash = Digest.sha256Hash((byte[]) body, length);
     if (creds != null) {
-      request =
-          Signer.signV4S3(
-              request,
-              region,
-              creds.accessKey(),
-              creds.secretKey(),
-              request.header("x-amz-content-sha256"));
+      request = Signer.signV4S3(request, region, creds.accessKey(), creds.secretKey(), sha256Hash);
     }
 
     OkHttpClient httpClient = this.httpClient;

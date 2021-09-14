@@ -3847,7 +3847,7 @@ public class FunctionalTest {
 
     Process minioProcess = null;
 
-    String kmsKeyName = "my-minio-key";
+    String kmsKeyName = null;
     if (args.length != 4) {
       endpoint = "https://localhost:9000";
       accessKey = "minio";
