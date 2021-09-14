@@ -3847,7 +3847,7 @@ public class FunctionalTest {
 
     Process minioProcess = null;
 
-    String kmsKeyName = null;
+    String kmsKeyName = "my-minio-key";
     if (args.length != 4) {
       endpoint = "https://localhost:9000";
       accessKey = "minio";
@@ -3889,12 +3889,8 @@ public class FunctionalTest {
 
     int exitValue = 0;
     try {
-      client =
-          MinioClient.builder()
-              .endpoint(endpoint)
-              .credentials(accessKey, secretKey)
-              .httpClient(getUnsafeOkHttpClient())
-              .build();
+      client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+      client.ignoreCertCheck();
       MinioAdminClient adminClient =
           MinioAdminClient.builder()
               .endpoint(endpoint)
@@ -3918,8 +3914,8 @@ public class FunctionalTest {
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
                 .region(region)
-                .httpClient(getUnsafeOkHttpClient())
                 .build();
+        client.ignoreCertCheck();
         adminClient =
             MinioAdminClient.builder()
                 .endpoint(endpoint)

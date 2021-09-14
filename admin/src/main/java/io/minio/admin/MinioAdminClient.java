@@ -6,9 +6,11 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import io.minio.Digest;
 import io.minio.MinioClient;
+import io.minio.MinioProperties;
 import io.minio.S3Base;
 import io.minio.S3Escaper;
 import io.minio.Signer;
+import io.minio.Time;
 import io.minio.admin.security.EncryptionUtils;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import okhttp3.*;
@@ -30,6 +33,14 @@ public class MinioAdminClient extends S3Base {
 
   // default network I/O timeout is 5 minutes
   protected static final long DEFAULT_CONNECTION_TIMEOUT = 5;
+
+  private static final String DEFAULT_USER_AGENT =
+      "MinIO ("
+          + System.getProperty("os.name")
+          + "; "
+          + System.getProperty("os.arch")
+          + ") minio-java-admin/"
+          + MinioProperties.INSTANCE.getVersion();
 
   private final String region;
   private final HttpUrl baseUrl;
@@ -251,6 +262,38 @@ public class MinioAdminClient extends S3Base {
     return urlBuilder.build();
   }
 
+  /** Create admin HTTP request for given paramaters. */
+  protected Request createAdminRequest(
+      HttpUrl url, Method method, Headers headers, Object body, int length, Credentials creds)
+      throws InsufficientDataException, InternalException, IOException, NoSuchAlgorithmException {
+    Request.Builder requestBuilder = new Request.Builder();
+    requestBuilder.url(url);
+
+    if (headers != null) requestBuilder.headers(headers);
+    requestBuilder.header("Host", getHostHeader(url));
+    // Disable default gzip compression by okhttp library.
+    requestBuilder.header("Accept-Encoding", "identity");
+    requestBuilder.header("User-Agent", DEFAULT_USER_AGENT);
+    ZonedDateTime date = ZonedDateTime.now();
+    requestBuilder.header("x-amz-date", date.format(Time.AMZ_DATE_FORMAT));
+    String contentType =
+        (headers != null) ? headers.get("Content-Type") : "application/octet-stream";
+    if (creds != null && creds.sessionToken() != null) {
+      requestBuilder.header("X-Amz-Security-Token", creds.sessionToken());
+    }
+
+    if (body == null) {
+      requestBuilder.header("x-amz-content-sha256", Digest.ZERO_SHA256_HASH);
+    }
+
+    if (body instanceof byte[]) {
+      requestBuilder.header("x-amz-content-sha256", Digest.sha256Hash((byte[]) body, length));
+      requestBuilder.method(
+          method.toString(), RequestBody.create((byte[]) body, MediaType.parse(contentType)));
+    }
+    return requestBuilder.build();
+  }
+
   /** Execute HTTP request for given parameters. */
   protected Response executeAdmin(
       Method method,
@@ -264,17 +307,22 @@ public class MinioAdminClient extends S3Base {
           NoSuchAlgorithmException {
 
     if (body != null && !(body instanceof byte[])) {
-      body = OBJECT_MAPPER.writeValueAsString(body);
+      body = OBJECT_MAPPER.writeValueAsBytes(body);
     }
 
-    if (body == null && (method == Method.PUT || method == Method.POST)) body = EMPTY_BODY;
+    if (body == null && (method != Method.GET && method != Method.HEAD)) body = EMPTY_BODY;
 
     HttpUrl url = buildAdminUrl(action, queryParamMap);
     Credentials creds = (provider == null) ? null : provider.fetch();
-    Request request = createRequest(url, method, headers, body, length, creds);
-    String sha256Hash = Digest.sha256Hash((byte[]) body, length);
+    Request request = createAdminRequest(url, method, headers, body, length, creds);
     if (creds != null) {
-      request = Signer.signV4S3(request, region, creds.accessKey(), creds.secretKey(), sha256Hash);
+      request =
+          Signer.signV4S3(
+              request,
+              region,
+              creds.accessKey(),
+              creds.secretKey(),
+              request.header("x-amz-content-sha256"));
     }
 
     OkHttpClient httpClient = this.httpClient;
