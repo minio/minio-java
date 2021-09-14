@@ -341,7 +341,7 @@ public abstract class S3Base {
     return urlBuilder.build();
   }
 
-  private String getHostHeader(HttpUrl url) {
+  protected String getHostHeader(HttpUrl url) {
     // ignore port when port and service matches i.e HTTP -> 80, HTTPS -> 443
     if ((url.scheme().equals("http") && url.port() == 80)
         || (url.scheme().equals("https") && url.port() == 443)) {
