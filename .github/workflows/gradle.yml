@@ -35,6 +35,7 @@ jobs:
           ./gradlew runFunctionalTest
           javac -cp api/build/libs/minio-${DEV_VERSION}-all.jar functional/TestUserAgent.java
           java -Dversion=${DEV_VERSION} -cp api/build/libs/minio-${DEV_VERSION}-all.jar:functional TestUserAgent
+          ./gradlew clean
           ./gradlew build -Prelease
           javac -cp api/build/libs/minio-${RELEASE_VERSION}-all.jar functional/TestUserAgent.java
           java -Dversion=${RELEASE_VERSION} -cp api/build/libs/minio-${RELEASE_VERSION}-all.jar:functional TestUserAgent
