@@ -57,6 +57,7 @@ subprojects {
         compile "com.fasterxml.jackson.core:jackson-annotations:2.11.2"
         compile "com.fasterxml.jackson.core:jackson-core:2.11.2"
         compile "com.fasterxml.jackson.core:jackson-databind:2.11.2"
+        compile "org.bouncycastle:bcprov-jdk15on:1.69"
         compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
 
         testCompile "com.squareup.okhttp3:mockwebserver:4.8.1"
@@ -146,11 +147,131 @@ project(':api') {
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
-            'Implementation-Version': version,
-            'Built-By': 'MinIO, inc',
-            'Built-JDK': System.getProperty('java.version'),
-            'Source-Compatibility': sourceCompatibility,
-            'Target-Compatibility': targetCompatibility)
+                    'Implementation-Version': version,
+                    'Built-By': 'MinIO, inc',
+                    'Built-JDK': System.getProperty('java.version'),
+                    'Source-Compatibility': sourceCompatibility,
+                    'Target-Compatibility': targetCompatibility)
+        }
+    }
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    javadoc.options {
+        encoding = 'UTF-8'
+        if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
+            links 'https://docs.oracle.com/javase/8/docs/api/'
+        } else {
+            links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+        }
+    }
+
+    // Disable JavaDoc doclint on Java 8. It's annoying.
+    if (JavaVersion.current().isJava8Compatible()) {
+        allprojects {
+            tasks.withType(Javadoc) {
+                options.addStringOption('Xdoclint:none', '-quiet')
+            }
+        }
+    }
+
+    artifacts {
+        archives javadocJar, sourcesJar, shadowJar
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId archivesBaseName
+                from components.java
+                pom {
+                    name = 'minio'
+                    packaging = 'jar'
+                    description = 'MinIO Java SDK for Amazon S3 Compatible Cloud Storage'
+                    url = 'https://github.com/minio/minio-java'
+                    inceptionYear = '2015'
+
+                    scm {
+                        connection = 'scm:git:git@github.com:minio/minio-java.git'
+                        developerConnection = 'scm:git:git@github.com:minio/minio-java.git'
+                        url = 'http://github.com/minio/minio-java'
+                    }
+
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id = 'minio'
+                            name = 'MinIO Inc.'
+                            email = 'dev@min.io'
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    signing {
+        if (project.properties.containsKey('signing.keyId')) {
+            sign publishing.publications.mavenJava
+        }
+    }
+
+    nexusStaging {
+        packageGroup = group
+        stagingProfileId = '9b746c9f8abc1'
+        username = project.properties['nexusUsername']
+        password = project.properties['nexusPassword']
+    }
+
+    nexusPublishing {
+        repositories {
+            sonatype {
+                username = project.properties['nexusUsername']
+                password = project.properties['nexusPassword']
+            }
+        }
+    }
+}
+
+project(':admin') {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: "de.marcphilipp.nexus-publish"
+
+    archivesBaseName = 'minio'
+
+    configurations.all {
+        resolutionStrategy {
+            force 'com.fasterxml.jackson.core:jackson-annotations:2.9.6'
+            failOnVersionConflict()
+        }
+    }
+
+    dependencies {
+        compile project(':api')
+        testCompile project(':api')
+    }
+
+    jar {
+        manifest {
+            attributes('Implementation-Title': archivesBaseName,
+                    'Implementation-Version': version,
+                    'Built-By': 'MinIO, inc',
+                    'Built-JDK': System.getProperty('java.version'),
+                    'Source-Compatibility': sourceCompatibility,
+                    'Target-Compatibility': targetCompatibility)
         }
     }
 
@@ -262,6 +383,7 @@ project(':functional') {
     dependencies {
         compile "junit:junit:4.13"
         compile project(':api')
+        compile project(':admin')
     }
 
     sourceSets {
@@ -298,7 +420,7 @@ project(':functional') {
 
         maxHeapSize = "4096m"
         jvmArgs "-Xms256m"
-        if (rootProject.hasProperty('endpoint') || OperatingSystem.current().isWindows()) {
+        if (rootProject.hasProperty('endpoint')) {
             args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
         }
     }

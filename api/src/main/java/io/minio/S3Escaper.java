@@ -19,7 +19,7 @@ package io.minio;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
 
-class S3Escaper {
+public class S3Escaper {
   private static final Escaper ESCAPER = UrlEscapers.urlPathSegmentEscaper();
 
   /** Returns S3 encoded string. */

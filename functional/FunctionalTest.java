@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015-2020 MinIO, Inc.
+ * (C) 2015-2021 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,7 @@ import io.minio.StatObjectResponse;
 import io.minio.Time;
 import io.minio.UploadObjectArgs;
 import io.minio.Xml;
+import io.minio.admin.MinioAdminClient;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
 import io.minio.messages.AndOperator;
@@ -132,6 +133,8 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -143,6 +146,12 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.crypto.KeyGenerator;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
@@ -184,6 +193,7 @@ public class FunctionalTest {
   private static String replicationRole = null;
   private static String replicationBucketArn = null;
   private static MinioClient client = null;
+  private static TestMinioAdminClient adminClientTests;
 
   private static ServerSideEncryptionCustomerKey ssec = null;
   private static ServerSideEncryption sseS3 = new ServerSideEncryptionS3();
@@ -202,6 +212,51 @@ public class FunctionalTest {
       keyGen.init(256);
       ssec = new ServerSideEncryptionCustomerKey(keyGen.generateKey());
     } catch (InvalidKeyException | NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static OkHttpClient getUnsafeOkHttpClient() {
+    try {
+      // Create a trust manager that does not validate certificate chains
+      final TrustManager[] trustAllCerts =
+          new TrustManager[] {
+            new X509TrustManager() {
+              @Override
+              public void checkClientTrusted(
+                  java.security.cert.X509Certificate[] chain, String authType)
+                  throws CertificateException {}
+
+              @Override
+              public void checkServerTrusted(
+                  java.security.cert.X509Certificate[] chain, String authType)
+                  throws CertificateException {}
+
+              @Override
+              public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+              }
+            }
+          };
+
+      // Install the all-trusting trust manager
+      final SSLContext sslContext = SSLContext.getInstance("SSL");
+      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+      // Create an ssl socket factory with our all-trusting manager
+      final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+      return new OkHttpClient.Builder()
+          .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
+          .hostnameVerifier(
+              new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                  return true;
+                }
+              })
+          .build();
+
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
@@ -308,13 +363,7 @@ public class FunctionalTest {
   public static byte[] readObject(String urlString) throws Exception {
     Request.Builder requestBuilder = new Request.Builder();
     Request request = requestBuilder.url(HttpUrl.parse(urlString)).method("GET", null).build();
-    OkHttpClient transport =
-        new OkHttpClient()
-            .newBuilder()
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .build();
+    OkHttpClient transport = getUnsafeOkHttpClient();
     Response response = transport.newCall(request).execute();
 
     try {
@@ -341,13 +390,7 @@ public class FunctionalTest {
             .method("PUT", RequestBody.create(dataBytes, null))
             .addHeader("x-amz-acl", "bucket-owner-full-control")
             .build();
-    OkHttpClient transport =
-        new OkHttpClient()
-            .newBuilder()
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .build();
+    OkHttpClient transport = getUnsafeOkHttpClient();
     Response response = transport.newCall(request).execute();
 
     try {
@@ -407,7 +450,7 @@ public class FunctionalTest {
     }
   }
 
-  private static void handleException(String methodName, String args, long startTime, Exception e)
+  public static void handleException(String methodName, String args, long startTime, Exception e)
       throws Exception {
     if (e instanceof ErrorResponseException) {
       if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
@@ -1742,13 +1785,7 @@ public class FunctionalTest {
       // remove last two characters to get clean url string of bucket.
       urlString = urlString.substring(0, urlString.length() - 2);
       Request request = requestBuilder.url(urlString).post(multipartBuilder.build()).build();
-      OkHttpClient transport =
-          new OkHttpClient()
-              .newBuilder()
-              .connectTimeout(20, TimeUnit.SECONDS)
-              .writeTimeout(20, TimeUnit.SECONDS)
-              .readTimeout(20, TimeUnit.SECONDS)
-              .build();
+      OkHttpClient transport = getUnsafeOkHttpClient();
       Response response = transport.newCall(request).execute();
       Assert.assertNotNull("no response from server", response);
 
@@ -3718,6 +3755,7 @@ public class FunctionalTest {
   public static void runTests() throws Exception {
     runBucketTests();
     runObjectTests();
+    adminClientTests.runAdminTests();
   }
 
   public static boolean downloadMinio() throws IOException {
@@ -3742,13 +3780,7 @@ public class FunctionalTest {
 
     Request.Builder requestBuilder = new Request.Builder();
     Request request = requestBuilder.url(HttpUrl.parse(url)).method("GET", null).build();
-    OkHttpClient transport =
-        new OkHttpClient()
-            .newBuilder()
-            .connectTimeout(20, TimeUnit.SECONDS)
-            .writeTimeout(20, TimeUnit.SECONDS)
-            .readTimeout(20, TimeUnit.SECONDS)
-            .build();
+    OkHttpClient transport = getUnsafeOkHttpClient();
     Response response = transport.newCall(request).execute();
 
     try {
@@ -3778,8 +3810,8 @@ public class FunctionalTest {
         new ProcessBuilder(binaryPath.getPath(), "server", "--config-dir", ".cfg", ".d{1...4}");
 
     Map<String, String> env = pb.environment();
-    env.put("MINIO_ACCESS_KEY", "minio");
-    env.put("MINIO_SECRET_KEY", "minio123");
+    env.put("MINIO_ROOT_USER", "minio");
+    env.put("MINIO_ROOT_PASSWORD", "minio123");
     env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
     env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
     env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
@@ -3817,7 +3849,7 @@ public class FunctionalTest {
 
     String kmsKeyName = "my-minio-key";
     if (args.length != 4) {
-      endpoint = "http://localhost:9000";
+      endpoint = "https://localhost:9000";
       accessKey = "minio";
       secretKey = "minio123";
       region = "us-east-1";
@@ -3858,6 +3890,14 @@ public class FunctionalTest {
     int exitValue = 0;
     try {
       client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+      client.ignoreCertCheck();
+      MinioAdminClient adminClient =
+          MinioAdminClient.builder()
+              .endpoint(endpoint)
+              .credentials(accessKey, secretKey)
+              .httpClient(getUnsafeOkHttpClient())
+              .build();
+      adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
       // Enable trace for debugging.
       // client.traceOn(System.out);
       if (!mintEnv) System.out.println(">>> Running tests:");
@@ -3875,6 +3915,15 @@ public class FunctionalTest {
                 .credentials(accessKey, secretKey)
                 .region(region)
                 .build();
+        client.ignoreCertCheck();
+        adminClient =
+            MinioAdminClient.builder()
+                .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
+                .region(region)
+                .httpClient(getUnsafeOkHttpClient())
+                .build();
+        adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
         FunctionalTest.runTests();
       }
     } catch (Exception e) {

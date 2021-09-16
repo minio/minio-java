@@ -291,22 +291,6 @@ public class Signer {
     return signer.signature;
   }
 
-  /** Returns seed signature for given request. */
-  public static String getChunkSeedSignature(Request request, String region, String secretKey)
-      throws NoSuchAlgorithmException, InvalidKeyException {
-    String contentSha256 = request.header("x-amz-content-sha256");
-    ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
-
-    Signer signer = new Signer(request, contentSha256, date, region, null, secretKey, null);
-    signer.setScope("s3");
-    signer.setCanonicalRequest();
-    signer.setStringToSign();
-    signer.setSigningKey("s3");
-    signer.setSignature();
-
-    return signer.signature;
-  }
-
   /** Returns signed request object for given request, region, access key and secret key. */
   private static Request signV4(
       String serviceName,
