@@ -2071,9 +2071,7 @@ public abstract class S3Base {
                 "max-uploads",
                 (maxUploads != null) ? maxUploads.toString() : "1000",
                 "prefix",
-                (prefix != null) ? prefix : "",
-                "encoding-type",
-                "url"));
+                (prefix != null) ? prefix : ""));
     if (encodingType != null) queryParams.put("encoding-type", encodingType);
     if (keyMarker != null) queryParams.put("key-marker", keyMarker);
     if (uploadIdMarker != null) queryParams.put("upload-id-marker", uploadIdMarker);

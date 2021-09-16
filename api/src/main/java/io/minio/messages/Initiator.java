@@ -25,10 +25,10 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "Initiator", strict = false)
 public class Initiator {
-  @Element(name = "ID")
+  @Element(name = "ID", required = false)
   private String id;
 
-  @Element(name = "DisplayName")
+  @Element(name = "DisplayName", required = false)
   private String displayName;
 
   public Initiator() {}
