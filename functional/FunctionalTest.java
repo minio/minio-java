@@ -85,6 +85,7 @@ import io.minio.UploadObjectArgs;
 import io.minio.Xml;
 import io.minio.admin.MinioAdminClient;
 import io.minio.errors.ErrorResponseException;
+import io.minio.http.HttpUtils;
 import io.minio.http.Method;
 import io.minio.messages.AndOperator;
 import io.minio.messages.Bucket;
@@ -130,11 +131,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -146,12 +146,6 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.crypto.KeyGenerator;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
@@ -218,45 +212,12 @@ public class FunctionalTest {
 
   public static OkHttpClient getUnsafeOkHttpClient() {
     try {
-      // Create a trust manager that does not validate certificate chains
-      final TrustManager[] trustAllCerts =
-          new TrustManager[] {
-            new X509TrustManager() {
-              @Override
-              public void checkClientTrusted(
-                  java.security.cert.X509Certificate[] chain, String authType)
-                  throws CertificateException {}
-
-              @Override
-              public void checkServerTrusted(
-                  java.security.cert.X509Certificate[] chain, String authType)
-                  throws CertificateException {}
-
-              @Override
-              public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                return new X509Certificate[0];
-              }
-            }
-          };
-
-      // Install the all-trusting trust manager
-      final SSLContext sslContext = SSLContext.getInstance("SSL");
-      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-      // Create an ssl socket factory with our all-trusting manager
-      final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-      return new OkHttpClient.Builder()
-          .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
-          .hostnameVerifier(
-              new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                  return true;
-                }
-              })
-          .build();
-
-    } catch (Exception e) {
+      return HttpUtils.disableCertCheck(
+          HttpUtils.newDefaultHttpClient(
+              TimeUnit.MINUTES.toMillis(5),
+              TimeUnit.MINUTES.toMillis(5),
+              TimeUnit.MINUTES.toMillis(5)));
+    } catch (KeyManagementException | NoSuchAlgorithmException e) {
       throw new RuntimeException(e);
     }
   }
@@ -3892,11 +3853,8 @@ public class FunctionalTest {
       client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
       client.ignoreCertCheck();
       MinioAdminClient adminClient =
-          MinioAdminClient.builder()
-              .endpoint(endpoint)
-              .credentials(accessKey, secretKey)
-              .httpClient(getUnsafeOkHttpClient())
-              .build();
+          MinioAdminClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+      adminClient.ignoreCertCheck();
       adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
       // Enable trace for debugging.
       // client.traceOn(System.out);

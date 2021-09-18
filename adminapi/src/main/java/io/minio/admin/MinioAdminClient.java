@@ -21,25 +21,32 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.Digest;
-import io.minio.MinioClient;
-import io.minio.S3Base;
+import io.minio.MinioProperties;
 import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
+import io.minio.credentials.StaticProvider;
+import io.minio.http.HttpUtils;
 import io.minio.http.Method;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -52,13 +59,44 @@ import okhttp3.ResponseBody;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 
 /** Client to perform MinIO administration operations. */
-public class MinioAdminClient extends S3Base {
+public class MinioAdminClient {
+  private enum Command {
+    ADD_USER("add-user"),
+    LIST_USERS("list-users"),
+    REMOVE_USER("remove-user"),
+    ADD_CANNED_POLICY("add-canned-policy"),
+    SET_USER_OR_GROUP_POLICY("set-user-or-group-policy"),
+    LIST_CANNED_POLICIES("list-canned-policies"),
+    REMOVE_CANNED_POLICY("remove-canned-policy");
+    private final String value;
+
+    private Command(String value) {
+      this.value = value;
+    }
+
+    public String toString() {
+      return this.value;
+    }
+  }
+
+  private static final long DEFAULT_CONNECTION_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.parse("application/octet-stream");
-  protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  private String userAgent = MinioProperties.INSTANCE.getDefaultUserAgent();
+  private PrintWriter traceStream;
+
+  private HttpUrl baseUrl;
+  private String region;
+  private Provider provider;
+  private OkHttpClient httpClient;
 
   private MinioAdminClient(
       HttpUrl baseUrl, String region, Provider provider, OkHttpClient httpClient) {
-    super(baseUrl, region, false, false, false, false, provider, httpClient);
+    this.baseUrl = baseUrl;
+    this.region = region;
+    this.provider = provider;
+    this.httpClient = httpClient;
   }
 
   private Credentials getCredentials() {
@@ -87,14 +125,16 @@ public class MinioAdminClient extends S3Base {
 
     Request.Builder requestBuilder = new Request.Builder();
     requestBuilder.url(url);
-    requestBuilder.header("Host", getHostHeader(url));
+    requestBuilder.header("Host", HttpUtils.getHostHeader(url));
     requestBuilder.header("Accept-Encoding", "identity"); // Disable default gzip compression.
     requestBuilder.header("User-Agent", this.userAgent);
     requestBuilder.header("x-amz-date", ZonedDateTime.now().format(Time.AMZ_DATE_FORMAT));
     if (creds.sessionToken() != null) {
       requestBuilder.header("X-Amz-Security-Token", creds.sessionToken());
     }
-    if (body == null && (method != Method.GET && method != Method.HEAD)) body = EMPTY_BODY;
+    if (body == null && (method != Method.GET && method != Method.HEAD)) {
+      body = HttpUtils.EMPTY_BODY;
+    }
     if (body != null) {
       requestBuilder.header("x-amz-content-sha256", Digest.sha256Hash(body, body.length));
       requestBuilder.method(method.toString(), RequestBody.create(body, DEFAULT_MEDIA_TYPE));
@@ -111,27 +151,38 @@ public class MinioAdminClient extends S3Base {
             creds.secretKey(),
             request.header("x-amz-content-sha256"));
 
-    StringBuilder traceBuilder =
-        newTraceBuilder(request, (body == null) ? null : new String(body, StandardCharsets.UTF_8));
     PrintWriter traceStream = this.traceStream;
-    if (traceStream != null) traceStream.println(traceBuilder.toString());
-    traceBuilder.append("\n");
+    if (traceStream != null) {
+      StringBuilder traceBuilder = new StringBuilder();
+      traceBuilder.append("---------START-HTTP---------\n");
+      String encodedPath = request.url().encodedPath();
+      String encodedQuery = request.url().encodedQuery();
+      if (encodedQuery != null) encodedPath += "?" + encodedQuery;
+      traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
+      traceBuilder.append(
+          request
+              .headers()
+              .toString()
+              .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
+      if (body != null) traceBuilder.append("\n").append(new String(body, StandardCharsets.UTF_8));
+      traceStream.println(traceBuilder.toString());
+    }
 
     OkHttpClient httpClient = this.httpClient;
     Response response = httpClient.newCall(request).execute();
 
-    String trace =
-        response.protocol().toString().toUpperCase(Locale.US)
-            + " "
-            + response.code()
-            + "\n"
-            + response.headers();
-    traceBuilder.append(trace).append("\n");
     if (traceStream != null) {
+      String trace =
+          response.protocol().toString().toUpperCase(Locale.US)
+              + " "
+              + response.code()
+              + "\n"
+              + response.headers();
       traceStream.println(trace);
       ResponseBody responseBody = response.peekBody(1024 * 1024);
       traceStream.println(responseBody.string());
-      traceStream.println(END_HTTP);
+      traceStream.println("----------END-HTTP----------");
     }
 
     if (response.isSuccessful()) return response;
@@ -337,36 +388,146 @@ public class MinioAdminClient extends S3Base {
             null)) {}
   }
 
-  public static MinioAdminClient.Builder builder() {
-    return new MinioAdminClient.Builder();
+  /**
+   * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values
+   * must be between 1 and Integer.MAX_VALUE when converted to milliseconds.
+   *
+   * <pre>Example:{@code
+   * minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10),
+   *     TimeUnit.SECONDS.toMillis(30));
+   * }</pre>
+   *
+   * @param connectTimeout HTTP connect timeout in milliseconds.
+   * @param writeTimeout HTTP write timeout in milliseconds.
+   * @param readTimeout HTTP read timeout in milliseconds.
+   */
+  public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
+    this.httpClient =
+        HttpUtils.setTimeout(this.httpClient, connectTimeout, writeTimeout, readTimeout);
   }
 
-  public static final class Builder extends MinioClient.BaseBuilder<MinioAdminClient> {
+  /**
+   * Ignores check on server certificate for HTTPS connection.
+   *
+   * <pre>Example:{@code
+   * client.ignoreCertCheck();
+   * }</pre>
+   *
+   * @throws KeyManagementException thrown to indicate key management error.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of SSL library.
+   */
+  @SuppressFBWarnings(value = "SIC", justification = "Should not be used in production anyways.")
+  public void ignoreCertCheck() throws KeyManagementException, NoSuchAlgorithmException {
+    this.httpClient = HttpUtils.disableCertCheck(this.httpClient);
+  }
+
+  /**
+   * Sets application's name/version to user agent. For more information about user agent refer <a
+   * href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">#rfc2616</a>.
+   *
+   * @param name Your application name.
+   * @param version Your application version.
+   */
+  @SuppressWarnings("unused")
+  public void setAppInfo(String name, String version) {
+    if (name == null || version == null) return;
+    this.userAgent =
+        MinioProperties.INSTANCE.getDefaultUserAgent() + " " + name.trim() + "/" + version.trim();
+  }
+
+  /**
+   * Enables HTTP call tracing and written to traceStream.
+   *
+   * @param traceStream {@link OutputStream} for writing HTTP call tracing.
+   * @see #traceOff
+   */
+  public void traceOn(OutputStream traceStream) {
+    if (traceStream == null) throw new IllegalArgumentException("trace stream must be provided");
+    this.traceStream =
+        new PrintWriter(new OutputStreamWriter(traceStream, StandardCharsets.UTF_8), true);
+  }
+
+  /**
+   * Disables HTTP call tracing previously enabled.
+   *
+   * @see #traceOn
+   * @throws IOException upon connection error
+   */
+  public void traceOff() throws IOException {
+    this.traceStream = null;
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  /** Argument builder of {@link MinioAdminClient}. */
+  public static final class Builder {
+    private HttpUrl baseUrl;
+    private String region = "";
+    private Provider provider;
+    private OkHttpClient httpClient;
+
+    public Builder endpoint(String endpoint) {
+      this.baseUrl = HttpUtils.getBaseUrl(endpoint);
+      return this;
+    }
+
+    public Builder endpoint(String endpoint, int port, boolean secure) {
+      HttpUrl url = HttpUtils.getBaseUrl(endpoint);
+      if (port < 1 || port > 65535) {
+        throw new IllegalArgumentException("port must be in range of 1 to 65535");
+      }
+
+      this.baseUrl = url.newBuilder().port(port).scheme(secure ? "https" : "http").build();
+      return this;
+    }
+
+    public Builder endpoint(HttpUrl url) {
+      HttpUtils.validateNotNull(url, "url");
+      HttpUtils.validateUrl(url);
+
+      this.baseUrl = url;
+      return this;
+    }
+
+    public Builder endpoint(URL url) {
+      HttpUtils.validateNotNull(url, "url");
+      return endpoint(HttpUrl.get(url));
+    }
+
+    public Builder region(String region) {
+      HttpUtils.validateNotNull(region, "region");
+      this.region = region;
+      return this;
+    }
+
+    public Builder credentials(String accessKey, String secretKey) {
+      this.provider = new StaticProvider(accessKey, secretKey, null);
+      return this;
+    }
+
+    public Builder credentialsProvider(Provider provider) {
+      HttpUtils.validateNotNull(provider, "credential provider");
+      this.provider = provider;
+      return this;
+    }
+
+    public Builder httpClient(OkHttpClient httpClient) {
+      HttpUtils.validateNotNull(httpClient, "http client");
+      this.httpClient = httpClient;
+      return this;
+    }
+
     public MinioAdminClient build() {
-      validateNotNull(baseUrl, "endpoint");
-      maybeSetHttpClient();
-
-      return new MinioAdminClient(
-          baseUrl, (region != null) ? region : US_EAST_1, provider, httpClient);
-    }
-  }
-
-  private enum Command {
-    ADD_USER("add-user"),
-    LIST_USERS("list-users"),
-    REMOVE_USER("remove-user"),
-    ADD_CANNED_POLICY("add-canned-policy"),
-    SET_USER_OR_GROUP_POLICY("set-user-or-group-policy"),
-    LIST_CANNED_POLICIES("list-canned-policies"),
-    REMOVE_CANNED_POLICY("remove-canned-policy");
-    private final String value;
-
-    private Command(String value) {
-      this.value = value;
-    }
-
-    public String toString() {
-      return this.value;
+      HttpUtils.validateNotNull(baseUrl, "base url");
+      HttpUtils.validateNotNull(provider, "credential provider");
+      if (httpClient == null) {
+        httpClient =
+            HttpUtils.newDefaultHttpClient(
+                DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+      }
+      return new MinioAdminClient(baseUrl, region, provider, httpClient);
     }
   }
 }
