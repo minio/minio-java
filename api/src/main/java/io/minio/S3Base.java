@@ -29,13 +29,13 @@ import com.google.common.collect.Multimaps;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
-import io.minio.credentials.StaticProvider;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
 import io.minio.errors.InternalException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
+import io.minio.http.HttpUtils;
 import io.minio.http.Method;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CompleteMultipartUploadOutput;
@@ -58,28 +58,18 @@ import io.minio.messages.LocationConstraint;
 import io.minio.messages.NotificationRecords;
 import io.minio.messages.Part;
 import io.minio.messages.Prefix;
-import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
-import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -93,19 +83,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -127,28 +107,19 @@ public abstract class S3Base {
   protected static final String NO_SUCH_OBJECT_LOCK_CONFIGURATION = "NoSuchObjectLockConfiguration";
   protected static final String SERVER_SIDE_ENCRYPTION_CONFIGURATION_NOT_FOUND_ERROR =
       "ServerSideEncryptionConfigurationNotFoundError";
-  protected static final byte[] EMPTY_BODY = new byte[] {};
-  // default network I/O timeout is 5 minutes
-  protected static final long DEFAULT_CONNECTION_TIMEOUT = 5;
+  protected static final long DEFAULT_CONNECTION_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
   // maximum allowed bucket policy size is 20KiB
   protected static final int MAX_BUCKET_POLICY_SIZE = 20 * 1024;
   protected static final String US_EAST_1 = "us-east-1";
   protected final Map<String, String> regionCache = new ConcurrentHashMap<>();
 
   private static final String RETRY_HEAD = "RetryHead";
-  private static final String DEFAULT_USER_AGENT =
-      "MinIO ("
-          + System.getProperty("os.name")
-          + "; "
-          + System.getProperty("os.arch")
-          + ") minio-java/"
-          + MinioProperties.INSTANCE.getVersion();
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String UPLOAD_ID = "uploadId";
   private static final Set<String> TRACE_QUERY_PARAMS =
       ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID);
-  private String userAgent = DEFAULT_USER_AGENT;
   private PrintWriter traceStream;
+  private String userAgent = MinioProperties.INSTANCE.getDefaultUserAgent();
 
   protected HttpUrl baseUrl;
   protected String region;
@@ -341,16 +312,6 @@ public abstract class S3Base {
     return urlBuilder.build();
   }
 
-  protected String getHostHeader(HttpUrl url) {
-    // ignore port when port and service matches i.e HTTP -> 80, HTTPS -> 443
-    if ((url.scheme().equals("http") && url.port() == 80)
-        || (url.scheme().equals("https") && url.port() == 443)) {
-      return url.host();
-    }
-
-    return url.host() + ":" + url.port();
-  }
-
   /** Convert Multimap to Headers. */
   protected Headers httpHeaders(Multimap<String, String> headerMap) {
     Headers.Builder builder = new Headers.Builder();
@@ -382,7 +343,7 @@ public abstract class S3Base {
     requestBuilder.url(url);
 
     if (headers != null) requestBuilder.headers(headers);
-    requestBuilder.header("Host", getHostHeader(url));
+    requestBuilder.header("Host", HttpUtils.getHostHeader(url));
     // Disable default gzip compression by okhttp library.
     requestBuilder.header("Accept-Encoding", "identity");
     requestBuilder.header("User-Agent", this.userAgent);
@@ -514,7 +475,8 @@ public abstract class S3Base {
       traceRequestBody = true;
     }
 
-    if (body == null && (method == Method.PUT || method == Method.POST)) body = EMPTY_BODY;
+    if (body == null && (method == Method.PUT || method == Method.POST))
+      body = HttpUtils.EMPTY_BODY;
 
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
     Credentials creds = (provider == null) ? null : provider.fetch();
@@ -1325,12 +1287,7 @@ public abstract class S3Base {
    */
   public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
     this.httpClient =
-        this.httpClient
-            .newBuilder()
-            .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
-            .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
-            .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
-            .build();
+        HttpUtils.setTimeout(this.httpClient, connectTimeout, writeTimeout, readTimeout);
   }
 
   /**
@@ -1345,40 +1302,7 @@ public abstract class S3Base {
    */
   @SuppressFBWarnings(value = "SIC", justification = "Should not be used in production anyways.")
   public void ignoreCertCheck() throws KeyManagementException, NoSuchAlgorithmException {
-    final TrustManager[] trustAllCerts =
-        new TrustManager[] {
-          new X509TrustManager() {
-            @Override
-            public void checkClientTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {}
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {}
-
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-              return new X509Certificate[] {};
-            }
-          }
-        };
-
-    final SSLContext sslContext = SSLContext.getInstance("SSL");
-    sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-    final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-    this.httpClient =
-        this.httpClient
-            .newBuilder()
-            .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0])
-            .hostnameVerifier(
-                new HostnameVerifier() {
-                  @Override
-                  public boolean verify(String hostname, SSLSession session) {
-                    return true;
-                  }
-                })
-            .build();
+    this.httpClient = HttpUtils.disableCertCheck(this.httpClient);
   }
 
   /**
@@ -1390,8 +1314,9 @@ public abstract class S3Base {
    */
   @SuppressWarnings("unused")
   public void setAppInfo(String name, String version) {
-    if (name == null || version == null) return; // nothing to do
-    this.userAgent = DEFAULT_USER_AGENT + " " + name.trim() + "/" + version.trim();
+    if (name == null || version == null) return;
+    this.userAgent =
+        MinioProperties.INSTANCE.getDefaultUserAgent() + " " + name.trim() + "/" + version.trim();
   }
 
   /**
@@ -1401,12 +1326,9 @@ public abstract class S3Base {
    * @see #traceOff
    */
   public void traceOn(OutputStream traceStream) {
-    if (traceStream == null) {
-      throw new NullPointerException();
-    } else {
-      this.traceStream =
-          new PrintWriter(new OutputStreamWriter(traceStream, StandardCharsets.UTF_8), true);
-    }
+    if (traceStream == null) throw new IllegalArgumentException("trace stream must be provided");
+    this.traceStream =
+        new PrintWriter(new OutputStreamWriter(traceStream, StandardCharsets.UTF_8), true);
   }
 
   /**
@@ -2321,269 +2243,5 @@ public abstract class S3Base {
       return new UploadPartCopyResponse(
           response.headers(), bucketName, region, objectName, uploadId, partNumber, result);
     }
-  }
-
-  public abstract static class BaseBuilder<T extends S3Base> {
-    protected HttpUrl baseUrl;
-    protected String region;
-    protected OkHttpClient httpClient;
-    protected boolean isAwsHost;
-    protected boolean isAwsChinaHost;
-    protected boolean isAcceleratedHost;
-    protected boolean isDualStackHost;
-    protected boolean useVirtualStyle;
-    protected String regionInUrl;
-    protected Provider provider;
-
-    public BaseBuilder() {}
-
-    protected boolean isAwsEndpoint(String endpoint) {
-      return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
-          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
-    }
-
-    protected boolean isAwsAccelerateEndpoint(String endpoint) {
-      return endpoint.startsWith("s3-accelerate.");
-    }
-
-    protected boolean isAwsDualStackEndpoint(String endpoint) {
-      return endpoint.contains(".dualstack.");
-    }
-
-    /**
-     * Extracts region from AWS endpoint if available. Region is placed at second token normal
-     * endpoints and third token for dualstack endpoints.
-     *
-     * <p>Region is marked in square brackets in below examples.
-     * <pre>
-     * https://s3.[us-east-2].amazonaws.com
-     * https://s3.dualstack.[ca-central-1].amazonaws.com
-     * https://s3.[cn-north-1].amazonaws.com.cn
-     * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
-     */
-    protected String extractRegion(String endpoint) {
-      String[] tokens = endpoint.split("\\.");
-      String token = tokens[1];
-
-      // If token is "dualstack", then region might be in next token.
-      if (token.equals("dualstack")) {
-        token = tokens[2];
-      }
-
-      // If token is equal to "amazonaws", region is not passed in the endpoint.
-      if (token.equals("amazonaws")) {
-        return null;
-      }
-
-      // Return token as region.
-      return token;
-    }
-
-    protected void setBaseUrl(HttpUrl url) {
-      String host = url.host();
-      this.isAwsHost = isAwsEndpoint(host);
-      this.isAwsChinaHost = false;
-      if (this.isAwsHost) {
-        this.isAwsChinaHost = host.endsWith(".cn");
-        url =
-            url.newBuilder()
-                .host(this.isAwsChinaHost ? "amazonaws.com.cn" : "amazonaws.com")
-                .build();
-        this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
-        this.isDualStackHost = isAwsDualStackEndpoint(host);
-        this.regionInUrl = extractRegion(host);
-        this.useVirtualStyle = true;
-      } else {
-        this.useVirtualStyle = host.endsWith("aliyuncs.com");
-      }
-
-      this.baseUrl = url;
-    }
-
-    /**
-     * copied logic from
-     * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
-     */
-    protected OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
-        throws GeneralSecurityException, IOException {
-      Collection<? extends Certificate> certificates = null;
-      try (FileInputStream fis = new FileInputStream(filename)) {
-        certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
-      }
-
-      if (certificates == null || certificates.isEmpty()) {
-        throw new IllegalArgumentException("expected non-empty set of trusted certificates");
-      }
-
-      char[] password = "password".toCharArray(); // Any password will work.
-
-      // Put the certificates a key store.
-      KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      // By convention, 'null' creates an empty key store.
-      keyStore.load(null, password);
-
-      int index = 0;
-      for (Certificate certificate : certificates) {
-        String certificateAlias = Integer.toString(index++);
-        keyStore.setCertificateEntry(certificateAlias, certificate);
-      }
-
-      // Use it to build an X509 trust manager.
-      KeyManagerFactory keyManagerFactory =
-          KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-      keyManagerFactory.init(keyStore, password);
-      TrustManagerFactory trustManagerFactory =
-          TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      trustManagerFactory.init(keyStore);
-
-      final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
-      final TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
-
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(keyManagers, trustManagers, null);
-      SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
-      return httpClient
-          .newBuilder()
-          .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
-          .build();
-    }
-
-    protected void validateNotNull(Object arg, String argName) {
-      if (arg == null) {
-        throw new IllegalArgumentException(argName + " must not be null.");
-      }
-    }
-
-    protected void validateNotEmptyString(String arg, String argName) {
-      validateNotNull(arg, argName);
-      if (arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    protected void validateNullOrNotEmptyString(String arg, String argName) {
-      if (arg != null && arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    protected void validateUrl(HttpUrl url) {
-      if (!url.encodedPath().equals("/")) {
-        throw new IllegalArgumentException("no path allowed in endpoint " + url);
-      }
-    }
-
-    protected void validateHostnameOrIPAddress(String endpoint) {
-      // Check endpoint is IPv4 or IPv6.
-      if (InetAddressValidator.getInstance().isValid(endpoint)) {
-        return;
-      }
-
-      // Check endpoint is a hostname.
-
-      // Refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
-      // why checks are done like below
-      if (endpoint.length() < 1 || endpoint.length() > 253) {
-        throw new IllegalArgumentException("invalid hostname");
-      }
-
-      for (String label : endpoint.split("\\.")) {
-        if (label.length() < 1 || label.length() > 63) {
-          throw new IllegalArgumentException("invalid hostname");
-        }
-
-        if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
-          throw new IllegalArgumentException("invalid hostname");
-        }
-      }
-    }
-
-    protected HttpUrl getBaseUrl(String endpoint) {
-      validateNotEmptyString(endpoint, "endpoint");
-      HttpUrl url = HttpUrl.parse(endpoint);
-      if (url == null) {
-        validateHostnameOrIPAddress(endpoint);
-        url = new HttpUrl.Builder().scheme("https").host(endpoint).build();
-      } else {
-        validateUrl(url);
-      }
-
-      return url;
-    }
-
-    public BaseBuilder<T> endpoint(String endpoint) {
-      setBaseUrl(getBaseUrl(endpoint));
-      return this;
-    }
-
-    public BaseBuilder<T> endpoint(String endpoint, int port, boolean secure) {
-      HttpUrl url = getBaseUrl(endpoint);
-      if (port < 1 || port > 65535) {
-        throw new IllegalArgumentException("port must be in range of 1 to 65535");
-      }
-      url = url.newBuilder().port(port).scheme(secure ? "https" : "http").build();
-
-      setBaseUrl(url);
-      return this;
-    }
-
-    public BaseBuilder<T> endpoint(URL url) {
-      validateNotNull(url, "url");
-      return endpoint(HttpUrl.get(url));
-    }
-
-    public BaseBuilder<T> endpoint(HttpUrl url) {
-      validateNotNull(url, "url");
-      validateUrl(url);
-      setBaseUrl(url);
-      return this;
-    }
-
-    public BaseBuilder<T> region(String region) {
-      validateNullOrNotEmptyString(region, "region");
-      this.region = region;
-      this.regionInUrl = region;
-      return this;
-    }
-
-    public BaseBuilder<T> credentials(String accessKey, String secretKey) {
-      this.provider = new StaticProvider(accessKey, secretKey, null);
-      return this;
-    }
-
-    public BaseBuilder<T> credentialsProvider(Provider provider) {
-      this.provider = provider;
-      return this;
-    }
-
-    public BaseBuilder<T> httpClient(OkHttpClient httpClient) {
-      validateNotNull(httpClient, "http client");
-      this.httpClient = httpClient;
-      return this;
-    }
-
-    protected void maybeSetHttpClient() {
-      if (httpClient == null) {
-        this.httpClient =
-            new OkHttpClient()
-                .newBuilder()
-                .connectTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-                .writeTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-                .readTimeout(DEFAULT_CONNECTION_TIMEOUT, TimeUnit.MINUTES)
-                .protocols(Arrays.asList(Protocol.HTTP_1_1))
-                .build();
-        String filename = System.getenv("SSL_CERT_FILE");
-        if (filename != null && !filename.isEmpty()) {
-          try {
-            this.httpClient = enableExternalCertificates(this.httpClient, filename);
-          } catch (GeneralSecurityException | IOException e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }
-    }
-
-    public abstract T build();
   }
 }

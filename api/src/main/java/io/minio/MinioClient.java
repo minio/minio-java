@@ -22,6 +22,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
+import io.minio.credentials.StaticProvider;
 import io.minio.errors.BucketPolicyTooLargeException;
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InsufficientDataException;
@@ -29,6 +30,7 @@ import io.minio.errors.InternalException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
+import io.minio.http.HttpUtils;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import io.minio.messages.CopyObjectResult;
@@ -53,6 +55,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -698,7 +701,8 @@ public class MinioClient extends S3Base {
           XmlParserException, ServerException {
     checkArgs(args);
 
-    byte[] body = (args.method() == Method.PUT || args.method() == Method.POST) ? EMPTY_BODY : null;
+    byte[] body =
+        (args.method() == Method.PUT || args.method() == Method.POST) ? HttpUtils.EMPTY_BODY : null;
 
     Multimap<String, String> queryParams = newMultimap(args.extraQueryParams());
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
@@ -2591,18 +2595,152 @@ public class MinioClient extends S3Base {
     return new Builder();
   }
 
-  public static final class Builder extends BaseBuilder<MinioClient> {
-    public MinioClient build() {
-      validateNotNull(baseUrl, "endpoint");
-      if (isAwsChinaHost && regionInUrl == null && region == null) {
-        throw new IllegalArgumentException("Region missing in Amazon S3 China endpoint " + baseUrl);
+  /** Argument builder of {@link MinioClient}. */
+  public static final class Builder {
+    private HttpUrl baseUrl;
+    private String region;
+    private boolean isAwsHost;
+    private boolean isAcceleratedHost;
+    private boolean isDualStackHost;
+    private boolean useVirtualStyle;
+    private Provider provider;
+    private OkHttpClient httpClient;
+
+    private boolean isAwsChinaHost;
+    private String regionInUrl;
+
+    private boolean isAwsEndpoint(String endpoint) {
+      return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
+          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
+    }
+
+    private boolean isAwsAccelerateEndpoint(String endpoint) {
+      return endpoint.startsWith("s3-accelerate.");
+    }
+
+    private boolean isAwsDualStackEndpoint(String endpoint) {
+      return endpoint.contains(".dualstack.");
+    }
+
+    /**
+     * Extracts region from AWS endpoint if available. Region is placed at second token normal
+     * endpoints and third token for dualstack endpoints.
+     *
+     * <p>Region is marked in square brackets in below examples.
+     * <pre>
+     * https://s3.[us-east-2].amazonaws.com
+     * https://s3.dualstack.[ca-central-1].amazonaws.com
+     * https://s3.[cn-north-1].amazonaws.com.cn
+     * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
+     */
+    private String extractRegion(String endpoint) {
+      String[] tokens = endpoint.split("\\.");
+      String token = tokens[1];
+
+      // If token is "dualstack", then region might be in next token.
+      if (token.equals("dualstack")) {
+        token = tokens[2];
       }
 
-      maybeSetHttpClient();
+      // If token is equal to "amazonaws", region is not passed in the endpoint.
+      if (token.equals("amazonaws")) {
+        return null;
+      }
+
+      // Return token as region.
+      return token;
+    }
+
+    private void setBaseUrl(HttpUrl url) {
+      String host = url.host();
+
+      this.isAwsHost = isAwsEndpoint(host);
+      this.isAwsChinaHost = false;
+      if (this.isAwsHost) {
+        this.isAwsChinaHost = host.endsWith(".cn");
+        url =
+            url.newBuilder()
+                .host(this.isAwsChinaHost ? "amazonaws.com.cn" : "amazonaws.com")
+                .build();
+        this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
+        this.isDualStackHost = isAwsDualStackEndpoint(host);
+        this.regionInUrl = extractRegion(host);
+        this.useVirtualStyle = true;
+      } else {
+        this.useVirtualStyle = host.endsWith("aliyuncs.com");
+      }
+
+      this.baseUrl = url;
+    }
+
+    public Builder endpoint(String endpoint) {
+      setBaseUrl(HttpUtils.getBaseUrl(endpoint));
+      return this;
+    }
+
+    public Builder endpoint(String endpoint, int port, boolean secure) {
+      HttpUrl url = HttpUtils.getBaseUrl(endpoint);
+      if (port < 1 || port > 65535) {
+        throw new IllegalArgumentException("port must be in range of 1 to 65535");
+      }
+      url = url.newBuilder().port(port).scheme(secure ? "https" : "http").build();
+
+      setBaseUrl(url);
+      return this;
+    }
+
+    public Builder endpoint(URL url) {
+      HttpUtils.validateNotNull(url, "url");
+      return endpoint(HttpUrl.get(url));
+    }
+
+    public Builder endpoint(HttpUrl url) {
+      HttpUtils.validateNotNull(url, "url");
+      HttpUtils.validateUrl(url);
+      setBaseUrl(url);
+      return this;
+    }
+
+    public Builder region(String region) {
+      HttpUtils.validateNullOrNotEmptyString(region, "region");
+      this.regionInUrl = region;
+      this.region = region;
+      return this;
+    }
+
+    public Builder credentials(String accessKey, String secretKey) {
+      this.provider = new StaticProvider(accessKey, secretKey, null);
+      return this;
+    }
+
+    public Builder credentialsProvider(Provider provider) {
+      this.provider = provider;
+      return this;
+    }
+
+    public Builder httpClient(OkHttpClient httpClient) {
+      HttpUtils.validateNotNull(httpClient, "http client");
+      this.httpClient = httpClient;
+      return this;
+    }
+
+    public MinioClient build() {
+      HttpUtils.validateNotNull(this.baseUrl, "endpoint");
+      if (this.isAwsChinaHost && this.regionInUrl == null && this.region == null) {
+        throw new IllegalArgumentException(
+            "Region missing in Amazon S3 China endpoint " + this.baseUrl);
+      }
+
+      if (this.httpClient == null) {
+        this.httpClient =
+            HttpUtils.newDefaultHttpClient(
+                DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+        if (this.region == null) this.region = regionInUrl;
+      }
 
       return new MinioClient(
           baseUrl,
-          (region != null) ? region : regionInUrl,
+          region,
           isAwsHost,
           isAcceleratedHost,
           isDualStackHost,
