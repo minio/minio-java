@@ -44,12 +44,10 @@ public class TestMinioAdminClient {
     }
     long startTime = System.currentTimeMillis();
     try {
-      adminClient.addCannedPolicy(
-          AddPolicyArgs.builder()
-              .policyName(policyName)
-              .policyString(
-                  "{\"Version\": \"2012-10-17\",\"Statement\": [{\"Action\": [\"s3:GetObject\"],\"Effect\": \"Allow\",\"Resource\": [\"arn:aws:s3:::my-bucketname/*\"],\"Sid\": \"\"}]}")
-              .build());
+      String policyJson =
+          "{'Version': '2012-10-17','Statement': [{'Action': ['s3:GetObject'],'Effect':"
+              + " 'Allow','Resource': ['arn:aws:s3:::my-bucketname/*'],'Sid': ''}]}";
+      adminClient.addCannedPolicy(policyName, policyJson.replaceAll("'", "\""));
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }
@@ -91,8 +89,7 @@ public class TestMinioAdminClient {
 
     long startTime = System.currentTimeMillis();
     try {
-      adminClient.setPolicy(
-          SetPolicyArgs.builder().userOrGroup(userAccessKey).policyName(policyName).build());
+      adminClient.setPolicy(userAccessKey, false, policyName);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }
@@ -105,8 +102,7 @@ public class TestMinioAdminClient {
     }
     long startTime = System.currentTimeMillis();
     try {
-      adminClient.addUser(
-          AddUserArgs.builder().accessKey(userAccessKey).secretKey(userSecretKey).build());
+      adminClient.addUser(userAccessKey, UserInfo.Status.ENABLED, userSecretKey, null, null);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }
@@ -122,8 +118,8 @@ public class TestMinioAdminClient {
     try {
       Map<String, UserInfo> users = adminClient.listUsers();
       Assert.assertTrue(users.containsKey(userAccessKey));
-      Assert.assertEquals(users.get(userAccessKey).getStatus(), UserInfo.STATUS_ENABLED);
-      Assert.assertEquals(users.get(userAccessKey).getPolicyName(), policyName);
+      Assert.assertEquals(users.get(userAccessKey).status(), UserInfo.Status.ENABLED);
+      Assert.assertEquals(users.get(userAccessKey).policyName(), policyName);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }

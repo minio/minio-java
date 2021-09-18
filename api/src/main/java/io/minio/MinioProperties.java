@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** Identifies and stores version information of minio-java package at run time. */
-public enum MinioProperties {
+enum MinioProperties {
   INSTANCE;
 
   private static final Logger LOGGER = Logger.getLogger(MinioProperties.class.getName());

@@ -3921,8 +3921,8 @@ public class FunctionalTest {
                 .endpoint(endpoint)
                 .credentials(accessKey, secretKey)
                 .region(region)
-                .httpClient(getUnsafeOkHttpClient())
                 .build();
+        adminClient.ignoreCertCheck();
         adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
         FunctionalTest.runTests();
       }

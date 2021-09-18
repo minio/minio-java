@@ -143,13 +143,13 @@ public abstract class S3Base {
           + System.getProperty("os.arch")
           + ") minio-java/"
           + MinioProperties.INSTANCE.getVersion();
-  private static final String END_HTTP = "----------END-HTTP----------";
+  protected static final String END_HTTP = "----------END-HTTP----------";
   private static final String UPLOAD_ID = "uploadId";
   private static final Set<String> TRACE_QUERY_PARAMS =
       ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID);
-  private String userAgent = DEFAULT_USER_AGENT;
-  private PrintWriter traceStream;
+  protected PrintWriter traceStream;
 
+  protected String userAgent = DEFAULT_USER_AGENT;
   protected HttpUrl baseUrl;
   protected String region;
   protected Provider provider;
@@ -158,7 +158,7 @@ public abstract class S3Base {
   private boolean isAcceleratedHost;
   private boolean isDualStackHost;
   private boolean useVirtualStyle;
-  private OkHttpClient httpClient;
+  protected OkHttpClient httpClient;
 
   protected S3Base(
       HttpUrl baseUrl,
@@ -437,7 +437,7 @@ public abstract class S3Base {
     return requestBuilder.build();
   }
 
-  private StringBuilder newTraceBuilder(Request request, String body) {
+  protected StringBuilder newTraceBuilder(Request request, String body) {
     StringBuilder traceBuilder = new StringBuilder();
     traceBuilder.append("---------START-HTTP---------\n");
     String encodedPath = request.url().encodedPath();

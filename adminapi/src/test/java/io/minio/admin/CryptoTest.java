@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2015-2021 MinIO, Inc.
+ * (C) 2021 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,28 @@
  * limitations under the License.
  */
 
-package io.minio.admin.security;
+package io.minio.admin;
 
 import com.google.common.io.BaseEncoding;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class EncryptionUtilsTest {
-
+public class CryptoTest {
   @Test
   public void canEncryptDecryptText()
       throws UnsupportedEncodingException, InvalidCipherTextException {
     byte[] data = "bar".getBytes("UTF-8");
-    ByteBuffer encryptedData = EncryptionUtils.encrypt("foo", data);
-    ByteBuffer decryptedData = EncryptionUtils.decrypt("foo", encryptedData.array());
-    Assert.assertArrayEquals(data, decryptedData.array());
+    byte[] encryptedData = Crypto.encrypt("foo", data);
+    byte[] decryptedData = Crypto.decrypt("foo", encryptedData);
+    Assert.assertArrayEquals(data, decryptedData);
   }
 
   @Test
   public void canDecryptText() throws UnsupportedEncodingException, InvalidCipherTextException {
     String hexData =
         "0c01c44abba473bae01f777f01edbf988723a60385170577d7644f1fb132b3de00bf47ea28fc00e6ca222e42538c5a5091fa64de7ed4da81c5d0b69c";
-    EncryptionUtils.decrypt("foo", BaseEncoding.base16().lowerCase().decode(hexData));
+    Crypto.decrypt("foo", BaseEncoding.base16().lowerCase().decode(hexData));
   }
 }
