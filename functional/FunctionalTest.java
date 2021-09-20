@@ -184,6 +184,7 @@ public class FunctionalTest {
   private static Path dataFile1Kb;
   private static Path dataFile6Mb;
   private static String endpoint;
+  private static String endpointTLS;
   private static String accessKey;
   private static String secretKey;
   private static String region;
@@ -3804,10 +3805,22 @@ public class FunctionalTest {
     return true;
   }
 
-  public static Process runMinio() throws Exception {
+  public static Process runMinio(boolean tls) throws Exception {
     File binaryPath = new File(new File(System.getProperty("user.dir")), MINIO_BINARY);
-    ProcessBuilder pb =
-        new ProcessBuilder(binaryPath.getPath(), "server", "--config-dir", ".cfg", ".d{1...4}");
+    ProcessBuilder pb;
+    if (tls) {
+      pb =
+          new ProcessBuilder(
+              binaryPath.getPath(),
+              "server",
+              "--address",
+              ":9001",
+              "--config-dir",
+              ".cfg",
+              ".d{1...4}");
+    } else {
+      pb = new ProcessBuilder(binaryPath.getPath(), "server", ".d{1...4}");
+    }
 
     Map<String, String> env = pb.environment();
     env.put("MINIO_ROOT_USER", "minio");
@@ -3823,10 +3836,68 @@ public class FunctionalTest {
     pb.redirectErrorStream(true);
     pb.redirectOutput(ProcessBuilder.Redirect.to(new File(MINIO_BINARY + ".log")));
 
-    System.out.println("starting minio server");
+    if (tls) {
+      System.out.println("starting minio server in TLS");
+    } else {
+      System.out.println("starting minio server");
+    }
     Process p = pb.start();
     Thread.sleep(10 * 1000); // wait for 10 seconds to do real start.
     return p;
+  }
+
+  public static void runEndpointTests(boolean automated) throws Exception {
+    client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+    MinioAdminClient adminClient =
+        MinioAdminClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
+    adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
+    // Enable trace for debugging.
+    // client.traceOn(System.out);
+    if (!mintEnv) System.out.println(">>> Running tests:");
+    FunctionalTest.runTests();
+
+    if (automated) {
+      // Run TLS tests on TLS endpoint
+      client =
+          MinioClient.builder().endpoint(endpointTLS).credentials(accessKey, secretKey).build();
+      client.ignoreCertCheck();
+      adminClient =
+          MinioAdminClient.builder()
+              .endpoint(endpointTLS)
+              .credentials(accessKey, secretKey)
+              .httpClient(getUnsafeOkHttpClient())
+              .build();
+      adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
+      // Enable trace for debugging.
+      // client.traceOn(System.out);
+      if (!mintEnv) System.out.println(">>> Running TLS tests:");
+      isSecureEndpoint = true;
+      FunctionalTest.runTests();
+    }
+
+    if (!mintEnv) {
+      System.out.println();
+      System.out.println(">>> Running tests for region:");
+      isQuickTest = true;
+      isSecureEndpoint = endpoint.toLowerCase(Locale.US).contains("https://");
+      // Get new bucket name to avoid minio azure gateway failure.
+      bucketName = getRandomName();
+      bucketNameWithLock = getRandomName();
+      client =
+          MinioClient.builder()
+              .endpoint(endpoint)
+              .credentials(accessKey, secretKey)
+              .region(region)
+              .build();
+      adminClient =
+          MinioAdminClient.builder()
+              .endpoint(endpoint)
+              .credentials(accessKey, secretKey)
+              .region(region)
+              .build();
+      adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
+      FunctionalTest.runTests();
+    }
   }
 
   /** main(). */
@@ -3846,10 +3917,13 @@ public class FunctionalTest {
     replicationBucketArn = System.getenv("MINIO_JAVA_TEST_REPLICATION_BUCKET_ARN");
 
     Process minioProcess = null;
+    Process minioProcessTLS = null;
 
+    boolean automated = true;
     String kmsKeyName = "my-minio-key";
     if (args.length != 4) {
-      endpoint = "https://localhost:9000";
+      endpoint = "http://localhost:9000";
+      endpointTLS = "https://localhost:9001";
       accessKey = "minio";
       secretKey = "minio123";
       region = "us-east-1";
@@ -3859,9 +3933,19 @@ public class FunctionalTest {
         System.exit(-1);
       }
 
-      minioProcess = runMinio();
+      minioProcess = runMinio(false);
       try {
         int exitValue = minioProcess.exitValue();
+        System.out.println("minio server process exited with " + exitValue);
+        System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
+        System.exit(-1);
+      } catch (IllegalThreadStateException e) {
+        ignore();
+      }
+
+      minioProcessTLS = runMinio(true);
+      try {
+        int exitValue = minioProcessTLS.exitValue();
         System.out.println("minio server process exited with " + exitValue);
         System.out.println("usage: FunctionalTest <ENDPOINT> <ACCESSKEY> <SECRETKEY> <REGION>");
         System.exit(-1);
@@ -3878,6 +3962,7 @@ public class FunctionalTest {
       accessKey = args[1];
       secretKey = args[2];
       region = args[3];
+      automated = false;
     }
 
     isSecureEndpoint = endpoint.toLowerCase(Locale.US).contains("https://");
@@ -3889,43 +3974,7 @@ public class FunctionalTest {
 
     int exitValue = 0;
     try {
-      client = MinioClient.builder().endpoint(endpoint).credentials(accessKey, secretKey).build();
-      client.ignoreCertCheck();
-      MinioAdminClient adminClient =
-          MinioAdminClient.builder()
-              .endpoint(endpoint)
-              .credentials(accessKey, secretKey)
-              .httpClient(getUnsafeOkHttpClient())
-              .build();
-      adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
-      // Enable trace for debugging.
-      // client.traceOn(System.out);
-      if (!mintEnv) System.out.println(">>> Running tests:");
-      FunctionalTest.runTests();
-      if (!mintEnv) {
-        System.out.println();
-        System.out.println(">>> Running tests for region:");
-        isQuickTest = true;
-        // Get new bucket name to avoid minio azure gateway failure.
-        bucketName = getRandomName();
-        bucketNameWithLock = getRandomName();
-        client =
-            MinioClient.builder()
-                .endpoint(endpoint)
-                .credentials(accessKey, secretKey)
-                .region(region)
-                .build();
-        client.ignoreCertCheck();
-        adminClient =
-            MinioAdminClient.builder()
-                .endpoint(endpoint)
-                .credentials(accessKey, secretKey)
-                .region(region)
-                .httpClient(getUnsafeOkHttpClient())
-                .build();
-        adminClientTests = new TestMinioAdminClient(adminClient, mintEnv);
-        FunctionalTest.runTests();
-      }
+      runEndpointTests(automated);
     } catch (Exception e) {
       if (!mintEnv) {
         e.printStackTrace();
@@ -3934,6 +3983,9 @@ public class FunctionalTest {
     } finally {
       if (minioProcess != null) {
         minioProcess.destroy();
+      }
+      if (minioProcessTLS != null) {
+        minioProcessTLS.destroy();
       }
     }
 
