@@ -242,7 +242,7 @@ project(':api') {
     }
 }
 
-project(':admin') {
+project(':adminapi') {
     apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
@@ -383,7 +383,7 @@ project(':functional') {
     dependencies {
         compile "junit:junit:4.13"
         compile project(':api')
-        compile project(':admin')
+        compile project(':adminapi')
     }
 
     sourceSets {

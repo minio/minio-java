@@ -68,4 +68,13 @@ public enum MinioProperties {
       version.set("unknown");
     }
   }
+
+  public String getDefaultUserAgent() {
+    return "MinIO ("
+        + System.getProperty("os.name")
+        + "; "
+        + System.getProperty("os.arch")
+        + ") minio-java/"
+        + getVersion();
+  }
 }
