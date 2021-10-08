@@ -19,9 +19,12 @@ package io.minio.credentials;
 import io.minio.Xml;
 import io.minio.errors.XmlParserException;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.ProviderException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -41,6 +44,35 @@ public abstract class AssumeRoleBaseProvider implements Provider {
         (customHttpClient != null)
             ? customHttpClient
             : new OkHttpClient().newBuilder().protocols(Arrays.asList(Protocol.HTTP_1_1)).build();
+  }
+
+  public AssumeRoleBaseProvider(
+      OkHttpClient customHttpClient,
+      SSLSocketFactory sslSocketFactory,
+      X509TrustManager trustManager)
+      throws GeneralSecurityException, IOException {
+    if (customHttpClient != null) {
+      if (sslSocketFactory != null || trustManager != null) {
+        throw new IllegalArgumentException(
+            "Either sslSocketFactory/trustManager or custom HTTP client must be provided");
+      }
+
+      this.httpClient = customHttpClient;
+    } else {
+      if (sslSocketFactory == null || trustManager == null) {
+        throw new IllegalArgumentException(
+            "Both sslSocketFactory and trustManager must be provided");
+      }
+
+      // HTTP/1.1 is only supported in default client because of HTTP/2 in OkHttpClient cause 5
+      // minutes timeout on program exit.
+      this.httpClient =
+          new OkHttpClient()
+              .newBuilder()
+              .protocols(Arrays.asList(Protocol.HTTP_1_1))
+              .sslSocketFactory(sslSocketFactory, trustManager)
+              .build();
+    }
   }
 
   @Override
