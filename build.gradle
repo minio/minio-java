@@ -398,30 +398,17 @@ project(':functional') {
         main = 'FunctionalTest'
         classpath = sourceSets.main.runtimeClasspath
 
-        ext.endpoint = 'https://play.min.io:9000'
-        if (rootProject.hasProperty('endpoint')) {
-            ext.endpoint = rootProject.properties['endpoint']
-        }
-
-        ext.accessKey = 'Q3AM3UQ867SPQQA43P2F'
-        if (project.properties.containsKey('accessKey')) {
-            ext.accessKey = rootProject.properties['accessKey']
-        }
-
-        ext.secretKey = 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
-        if (project.properties.containsKey('secretKey')) {
-            ext.secretKey = rootProject.properties['secretKey']
-        }
-
-        ext.region = 'us-east-1'
-        if (project.properties.containsKey('region')) {
-            ext.region = rootProject.properties['region']
+        // if endpoint is specified make sure to look
+        // for all configurable values.
+        if (endPoint != "") {
+            ext.endpoint = endPoint
+            ext.accessKey = accessKey
+            ext.secretKey = secretKey
+            ext.region = region
+            args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
         }
 
         maxHeapSize = "4096m"
         jvmArgs "-Xms256m"
-        if (rootProject.hasProperty('endpoint')) {
-            args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
-        }
     }
 }
