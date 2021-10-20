@@ -49,7 +49,9 @@ public class ListenBucketNotificationArgs extends BucketArgs {
     }
 
     protected void validate(ListenBucketNotificationArgs args) {
-      super.validate(args);
+      if (args.bucketName != null) {
+        super.validate(args);
+      }
       validateEvents(args.events);
     }
 
