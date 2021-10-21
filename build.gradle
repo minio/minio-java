@@ -250,7 +250,7 @@ project(':adminapi') {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: "de.marcphilipp.nexus-publish"
 
-    archivesBaseName = 'minio'
+    archivesBaseName = 'minio-admin'
 
     configurations.all {
         resolutionStrategy {
