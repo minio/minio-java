@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#listObjects}. */
 public class ListObjectsArgs extends BucketArgs {
@@ -208,16 +208,16 @@ public class ListObjectsArgs extends BucketArgs {
         && recursive == that.recursive
         && useApiVersion1 == that.useApiVersion1
         && includeVersions == that.includeVersions
-        && Objects.equal(delimiter, that.delimiter)
-        && Objects.equal(keyMarker, that.keyMarker)
-        && Objects.equal(prefix, that.prefix)
-        && Objects.equal(continuationToken, that.continuationToken)
-        && Objects.equal(versionIdMarker, that.versionIdMarker);
+        && Objects.equals(delimiter, that.delimiter)
+        && Objects.equals(keyMarker, that.keyMarker)
+        && Objects.equals(prefix, that.prefix)
+        && Objects.equals(continuationToken, that.continuationToken)
+        && Objects.equals(versionIdMarker, that.versionIdMarker);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
+    return Objects.hash(
         super.hashCode(),
         delimiter,
         useUrlEncodingType,

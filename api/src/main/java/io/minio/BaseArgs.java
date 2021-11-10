@@ -16,7 +16,6 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -25,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 /** Base argument class. */
@@ -157,12 +157,12 @@ public abstract class BaseArgs {
     if (this == o) return true;
     if (!(o instanceof BaseArgs)) return false;
     BaseArgs baseArgs = (BaseArgs) o;
-    return Objects.equal(extraHeaders, baseArgs.extraHeaders)
-        && Objects.equal(extraQueryParams, baseArgs.extraQueryParams);
+    return Objects.equals(extraHeaders, baseArgs.extraHeaders)
+        && Objects.equals(extraQueryParams, baseArgs.extraQueryParams);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(extraHeaders, extraQueryParams);
+    return Objects.hash(extraHeaders, extraQueryParams);
   }
 }

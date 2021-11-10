@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 import okhttp3.HttpUrl;
 
 /** Base argument class holds object name and version ID along with bucket information. */
@@ -70,11 +70,11 @@ public abstract class ObjectArgs extends BucketArgs {
     if (!(o instanceof ObjectArgs)) return false;
     if (!super.equals(o)) return false;
     ObjectArgs that = (ObjectArgs) o;
-    return Objects.equal(objectName, that.objectName);
+    return Objects.equals(objectName, that.objectName);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), objectName);
+    return Objects.hash(super.hashCode(), objectName);
   }
 }

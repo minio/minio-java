@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#setBucketPolicy}. */
 public class SetBucketPolicyArgs extends BucketArgs {
@@ -55,11 +55,11 @@ public class SetBucketPolicyArgs extends BucketArgs {
     if (!(o instanceof SetBucketPolicyArgs)) return false;
     if (!super.equals(o)) return false;
     SetBucketPolicyArgs that = (SetBucketPolicyArgs) o;
-    return Objects.equal(config, that.config);
+    return Objects.equals(config, that.config);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), config);
+    return Objects.hash(super.hashCode(), config);
   }
 }

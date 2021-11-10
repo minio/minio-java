@@ -16,8 +16,8 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import io.minio.messages.ObjectLockConfiguration;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#setObjectLockConfiguration}. */
 public class SetObjectLockConfigurationArgs extends BucketArgs {
@@ -57,11 +57,11 @@ public class SetObjectLockConfigurationArgs extends BucketArgs {
     if (!(o instanceof SetObjectLockConfigurationArgs)) return false;
     if (!super.equals(o)) return false;
     SetObjectLockConfigurationArgs that = (SetObjectLockConfigurationArgs) o;
-    return Objects.equal(config, that.config);
+    return Objects.equals(config, that.config);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), config);
+    return Objects.hash(super.hashCode(), config);
   }
 }

@@ -16,10 +16,10 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#uploadObject}. */
 public class UploadObjectArgs extends PutObjectBaseArgs {
@@ -96,11 +96,11 @@ public class UploadObjectArgs extends PutObjectBaseArgs {
     if (!(o instanceof UploadObjectArgs)) return false;
     if (!super.equals(o)) return false;
     UploadObjectArgs that = (UploadObjectArgs) o;
-    return Objects.equal(filename, that.filename);
+    return Objects.equals(filename, that.filename);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), filename);
+    return Objects.hash(super.hashCode(), filename);
   }
 }

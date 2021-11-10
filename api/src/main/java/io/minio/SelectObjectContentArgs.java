@@ -17,9 +17,9 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import io.minio.messages.InputSerialization;
 import io.minio.messages.OutputSerialization;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#selectObjectContent}. */
 public class SelectObjectContentArgs extends ObjectReadArgs {
@@ -121,17 +121,17 @@ public class SelectObjectContentArgs extends ObjectReadArgs {
     if (!(o instanceof SelectObjectContentArgs)) return false;
     if (!super.equals(o)) return false;
     SelectObjectContentArgs that = (SelectObjectContentArgs) o;
-    return Objects.equal(sqlExpression, that.sqlExpression)
-        && Objects.equal(inputSerialization, that.inputSerialization)
-        && Objects.equal(outputSerialization, that.outputSerialization)
-        && Objects.equal(requestProgress, that.requestProgress)
-        && Objects.equal(scanStartRange, that.scanStartRange)
-        && Objects.equal(scanEndRange, that.scanEndRange);
+    return Objects.equals(sqlExpression, that.sqlExpression)
+        && Objects.equals(inputSerialization, that.inputSerialization)
+        && Objects.equals(outputSerialization, that.outputSerialization)
+        && Objects.equals(requestProgress, that.requestProgress)
+        && Objects.equals(scanStartRange, that.scanStartRange)
+        && Objects.equals(scanEndRange, that.scanEndRange);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
+    return Objects.hash(
         super.hashCode(),
         sqlExpression,
         inputSerialization,

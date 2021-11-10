@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#makeBucket}. */
 public class MakeBucketArgs extends BucketArgs {
@@ -49,6 +49,6 @@ public class MakeBucketArgs extends BucketArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), objectLock);
+    return Objects.hash(super.hashCode(), objectLock);
   }
 }

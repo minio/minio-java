@@ -16,8 +16,8 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import io.minio.messages.NotificationConfiguration;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#setBucketNotification}. */
 public class SetBucketNotificationArgs extends BucketArgs {
@@ -55,11 +55,11 @@ public class SetBucketNotificationArgs extends BucketArgs {
     if (!(o instanceof SetBucketNotificationArgs)) return false;
     if (!super.equals(o)) return false;
     SetBucketNotificationArgs that = (SetBucketNotificationArgs) o;
-    return Objects.equal(config, that.config);
+    return Objects.equals(config, that.config);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), config);
+    return Objects.hash(super.hashCode(), config);
   }
 }

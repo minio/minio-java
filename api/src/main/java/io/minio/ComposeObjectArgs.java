@@ -16,9 +16,9 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import okhttp3.HttpUrl;
 
 /** Argument class of {@link MinioClient#composeObject}. */
@@ -86,11 +86,11 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
     if (!(o instanceof ComposeObjectArgs)) return false;
     if (!super.equals(o)) return false;
     ComposeObjectArgs that = (ComposeObjectArgs) o;
-    return Objects.equal(sources, that.sources);
+    return Objects.equals(sources, that.sources);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), sources);
+    return Objects.hash(super.hashCode(), sources);
   }
 }

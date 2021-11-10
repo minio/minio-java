@@ -16,7 +16,6 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -24,6 +23,7 @@ import io.minio.messages.Retention;
 import io.minio.messages.Tags;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import okhttp3.HttpUrl;
 
@@ -177,16 +177,15 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
     if (!super.equals(o)) return false;
     ObjectWriteArgs that = (ObjectWriteArgs) o;
     return legalHold == that.legalHold
-        && Objects.equal(headers, that.headers)
-        && Objects.equal(userMetadata, that.userMetadata)
-        && Objects.equal(sse, that.sse)
-        && Objects.equal(tags, that.tags)
-        && Objects.equal(retention, that.retention);
+        && Objects.equals(headers, that.headers)
+        && Objects.equals(userMetadata, that.userMetadata)
+        && Objects.equals(sse, that.sse)
+        && Objects.equals(tags, that.tags)
+        && Objects.equals(retention, that.retention);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
-        super.hashCode(), headers, userMetadata, sse, tags, retention, legalHold);
+    return Objects.hash(super.hashCode(), headers, userMetadata, sse, tags, retention, legalHold);
   }
 }
