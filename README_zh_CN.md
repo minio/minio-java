@@ -22,7 +22,7 @@ Java 1.8或更高版本:
 ## 使用gradle
 ```
 dependencies {
-    compile 'io.minio:minio:3.0.10'
+    implementation("io.minio:minio:3.0.10")
 }
 ```
 

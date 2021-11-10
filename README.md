@@ -19,7 +19,7 @@ Java 1.8 or above.
 ## Gradle usage
 ```
 dependencies {
-    compile 'io.minio:minio:8.3.3'
+    implementation("io.minio:minio:8.3.3")
 }
 ```
 
