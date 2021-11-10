@@ -29,7 +29,6 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import okhttp3.Request;
-import okhttp3.Response;
 
 /** Base class to AssumeRole based providers. */
 public abstract class AssumeRoleBaseProvider implements Provider {

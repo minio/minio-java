@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-import static java.nio.file.StandardOpenOption.*;
-
 import io.minio.MinioClient;
 import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.UploadObjectArgs;
 import io.minio.errors.MinioException;
 import java.io.IOException;
-import java.nio.file.*;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
