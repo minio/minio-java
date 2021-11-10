@@ -48,7 +48,7 @@ public class SetBucketNotification {
       NotificationConfiguration config = new NotificationConfiguration();
 
       // Add a new SQS configuration.
-      List<QueueConfiguration> queueConfigurationList = config.queueConfigurationList();
+      List<QueueConfiguration> queueConfigurationList = new LinkedList<>();
       QueueConfiguration queueConfiguration = new QueueConfiguration();
       queueConfiguration.setQueue("arn:minio:sqs::1:webhook");
 
