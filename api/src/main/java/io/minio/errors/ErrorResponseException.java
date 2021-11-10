@@ -22,7 +22,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 /** Thrown to indicate that error response is received when executing Amazon S3 operation. */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings("WeakerAccess")
 public class ErrorResponseException extends MinioException {
   private final ErrorResponse errorResponse;
 

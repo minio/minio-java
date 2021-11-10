@@ -143,7 +143,6 @@ public abstract class BaseArgs {
     }
 
     /** Creates derived Args class with each attribute populated. */
-    @SuppressWarnings("unchecked") // safe as B will always be the builder of the current args class
     public A build() throws IllegalArgumentException {
       A args = newInstance();
       operations.forEach(operation -> operation.accept(args));

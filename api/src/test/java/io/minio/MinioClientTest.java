@@ -33,7 +33,6 @@ import okio.Buffer;
 import org.junit.Assert;
 import org.junit.Test;
 
-@SuppressWarnings("unused")
 public class MinioClientTest {
   private static final String CONTENT_TYPE = "Content-Type";
   private static final String CONTENT_LENGTH = "Content-Length";
