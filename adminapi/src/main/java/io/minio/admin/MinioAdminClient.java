@@ -428,7 +428,6 @@ public class MinioAdminClient {
    * @param name Your application name.
    * @param version Your application version.
    */
-  @SuppressWarnings("unused")
   public void setAppInfo(String name, String version) {
     if (name == null || version == null) return;
     this.userAgent =
