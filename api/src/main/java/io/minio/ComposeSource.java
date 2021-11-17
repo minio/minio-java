@@ -17,10 +17,10 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import io.minio.errors.InternalException;
+import java.util.Objects;
 
 /** A source object defintion for {@link ComposeObjectArgs}. */
 public class ComposeSource extends ObjectConditionalReadArgs {
@@ -124,11 +124,11 @@ public class ComposeSource extends ObjectConditionalReadArgs {
     if (!(o instanceof ComposeSource)) return false;
     if (!super.equals(o)) return false;
     ComposeSource that = (ComposeSource) o;
-    return Objects.equal(objectSize, that.objectSize) && Objects.equal(headers, that.headers);
+    return Objects.equals(objectSize, that.objectSize) && Objects.equals(headers, that.headers);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), objectSize, headers);
+    return Objects.hash(super.hashCode(), objectSize, headers);
   }
 }

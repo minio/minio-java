@@ -16,10 +16,10 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#putObject}. */
 public class PutObjectArgs extends PutObjectBaseArgs {
@@ -98,11 +98,11 @@ public class PutObjectArgs extends PutObjectBaseArgs {
     if (!(o instanceof PutObjectArgs)) return false;
     if (!super.equals(o)) return false;
     PutObjectArgs that = (PutObjectArgs) o;
-    return Objects.equal(stream, that.stream);
+    return Objects.equals(stream, that.stream);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), stream);
+    return Objects.hash(super.hashCode(), stream);
   }
 }

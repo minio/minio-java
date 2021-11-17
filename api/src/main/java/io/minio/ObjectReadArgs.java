@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 import okhttp3.HttpUrl;
 
 /** Base argument class for reading object. */
@@ -47,11 +47,11 @@ public abstract class ObjectReadArgs extends ObjectVersionArgs {
     if (!(o instanceof ObjectReadArgs)) return false;
     if (!super.equals(o)) return false;
     ObjectReadArgs that = (ObjectReadArgs) o;
-    return Objects.equal(ssec, that.ssec);
+    return Objects.equals(ssec, that.ssec);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), ssec);
+    return Objects.hash(super.hashCode(), ssec);
   }
 }

@@ -16,8 +16,8 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import java.io.IOException;
+import java.util.Objects;
 
 /** Base argument class for {@link PutObjectArgs} and {@link UploadObjectArgs}. */
 public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
@@ -135,13 +135,13 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
     return objectSize == that.objectSize
         && partSize == that.partSize
         && partCount == that.partCount
-        && Objects.equal(contentType, that.contentType)
+        && Objects.equals(contentType, that.contentType)
         && preloadData == that.preloadData;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
+    return Objects.hash(
         super.hashCode(), objectSize, partSize, partCount, contentType, preloadData);
   }
 }

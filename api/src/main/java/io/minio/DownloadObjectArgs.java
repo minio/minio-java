@@ -16,10 +16,10 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 /** Argument class of {@link MinioClient#downloadObject}. */
 public class DownloadObjectArgs extends ObjectReadArgs {
@@ -59,11 +59,11 @@ public class DownloadObjectArgs extends ObjectReadArgs {
     if (!(o instanceof DownloadObjectArgs)) return false;
     if (!super.equals(o)) return false;
     DownloadObjectArgs that = (DownloadObjectArgs) o;
-    return Objects.equal(filename, that.filename);
+    return Objects.equals(filename, that.filename);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), filename);
+    return Objects.hash(super.hashCode(), filename);
   }
 }

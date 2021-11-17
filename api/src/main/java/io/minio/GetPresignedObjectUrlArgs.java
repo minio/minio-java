@@ -16,8 +16,8 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
 import io.minio.http.Method;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /** Argument class of {@link MinioClient#getPresignedObjectUrl}. */
@@ -92,6 +92,6 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), method, expiry);
+    return Objects.hash(super.hashCode(), method, expiry);
   }
 }

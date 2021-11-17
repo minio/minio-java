@@ -16,7 +16,7 @@
 
 package io.minio;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 /** Base argument class holds object name and version ID along with bucket information. */
 public abstract class ObjectVersionArgs extends ObjectArgs {
@@ -42,11 +42,11 @@ public abstract class ObjectVersionArgs extends ObjectArgs {
     if (!(o instanceof ObjectVersionArgs)) return false;
     if (!super.equals(o)) return false;
     ObjectVersionArgs that = (ObjectVersionArgs) o;
-    return Objects.equal(versionId, that.versionId);
+    return Objects.equals(versionId, that.versionId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), versionId);
+    return Objects.hash(super.hashCode(), versionId);
   }
 }
