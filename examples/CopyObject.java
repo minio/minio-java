@@ -60,8 +60,6 @@ public class CopyObject {
 
       ServerSideEncryption sseS3 = new ServerSideEncryptionS3();
 
-      String versionId = "ac38316c-fe14-4f96-9f76-8f675ae5a79e";
-
       Map<String, String> headers = new HashMap<>();
       headers.put("Content-Type", "application/json");
       headers.put("x-amz-meta-my-project", "Project One");

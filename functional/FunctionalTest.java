@@ -170,7 +170,6 @@ public class FunctionalTest {
   private static final int MB = 1024 * 1024;
   private static final Random random = new Random(new SecureRandom().nextLong());
   private static final String customContentType = "application/javascript";
-  private static final String nullContentType = null;
   private static String bucketName = getRandomName();
   private static String bucketNameWithLock = getRandomName();
   private static boolean mintEnv = false;
