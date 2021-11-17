@@ -51,6 +51,9 @@ public class ReplicationRule {
   @Element(name = "SourceSelectionCriteria", required = false)
   private SourceSelectionCriteria sourceSelectionCriteria;
 
+  @Element(name = "DeleteReplication", required = false)
+  private DeleteReplication deleteReplication; // This is MinIO specific extension.
+
   @Element(name = "Status")
   private Status status;
 
@@ -67,6 +70,8 @@ public class ReplicationRule {
       @Nullable @Element(name = "Priority", required = false) Integer priority,
       @Nullable @Element(name = "SourceSelectionCriteria", required = false)
           SourceSelectionCriteria sourceSelectionCriteria,
+      @Nullable @Element(name = "DeleteReplication", required = false)
+          DeleteReplication deleteReplication,
       @Nonnull @Element(name = "Status") Status status) {
 
     if (filter != null && deleteMarkerReplication == null) {
@@ -87,7 +92,35 @@ public class ReplicationRule {
     this.prefix = prefix;
     this.priority = priority;
     this.sourceSelectionCriteria = sourceSelectionCriteria;
+    this.deleteReplication = deleteReplication;
     this.status = Objects.requireNonNull(status, "Status must not be null");
+  }
+
+  /** Constructs new server-side encryption configuration rule. */
+  public ReplicationRule(
+      @Nullable @Element(name = "DeleteMarkerReplication", required = false)
+          DeleteMarkerReplication deleteMarkerReplication,
+      @Nonnull @Element(name = "Destination") ReplicationDestination destination,
+      @Nullable @Element(name = "ExistingObjectReplication", required = false)
+          ExistingObjectReplication existingObjectReplication,
+      @Nullable @Element(name = "Filter", required = false) RuleFilter filter,
+      @Nullable @Element(name = "ID", required = false) String id,
+      @Nullable @Element(name = "Prefix", required = false) String prefix,
+      @Nullable @Element(name = "Priority", required = false) Integer priority,
+      @Nullable @Element(name = "SourceSelectionCriteria", required = false)
+          SourceSelectionCriteria sourceSelectionCriteria,
+      @Nonnull @Element(name = "Status") Status status) {
+    this(
+        deleteMarkerReplication,
+        destination,
+        existingObjectReplication,
+        filter,
+        id,
+        prefix,
+        priority,
+        sourceSelectionCriteria,
+        null,
+        status);
   }
 
   public DeleteMarkerReplication deleteMarkerReplication() {
@@ -120,6 +153,10 @@ public class ReplicationRule {
 
   public SourceSelectionCriteria sourceSelectionCriteria() {
     return this.sourceSelectionCriteria;
+  }
+
+  public DeleteReplication deleteReplication() {
+    return this.deleteReplication;
   }
 
   public Status status() {
