@@ -24,6 +24,8 @@ import okhttp3.Response;
 /** Thrown to indicate that error response is received when executing Amazon S3 operation. */
 @SuppressWarnings("WeakerAccess")
 public class ErrorResponseException extends MinioException {
+  private static final long serialVersionUID = -2933211538346902928L;
+
   private final ErrorResponse errorResponse;
 
   @SuppressFBWarnings(

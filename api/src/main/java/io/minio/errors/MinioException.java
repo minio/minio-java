@@ -18,6 +18,8 @@ package io.minio.errors;
 
 /** Base Exception class for all minio-java exceptions. */
 public class MinioException extends Exception {
+  private static final long serialVersionUID = -7241010318779326306L;
+
   String httpTrace = null;
 
   /** Constructs a new MinioException. */
