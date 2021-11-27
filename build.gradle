@@ -60,8 +60,8 @@ subprojects {
         compile "org.bouncycastle:bcprov-jdk15on:1.69"
         compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
 
-        testCompile "com.squareup.okhttp3:mockwebserver:4.8.1"
-        testCompile "junit:junit:4.13"
+        testImplementation "com.squareup.okhttp3:mockwebserver:4.8.1"
+        testImplementation "junit:junit:4.13"
     }
 
     configurations.all() {
@@ -259,7 +259,7 @@ project(':adminapi') {
 
     dependencies {
         compile project(':api')
-        testCompile project(':api')
+        testImplementation project(':api')
     }
 
     jar {
