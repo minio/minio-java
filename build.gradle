@@ -146,7 +146,7 @@ project(':api') {
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
-                    'Implementation-Version': version,
+                    'Implementation-Version': archiveVersion.get(),
                     'Built-By': 'MinIO, inc',
                     'Built-JDK': System.getProperty('java.version'),
                     'Source-Compatibility': sourceCompatibility,
@@ -265,7 +265,7 @@ project(':adminapi') {
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
-                    'Implementation-Version': version,
+                    'Implementation-Version': archiveVersion.get(),
                     'Built-By': 'MinIO, inc',
                     'Built-JDK': System.getProperty('java.version'),
                     'Source-Compatibility': sourceCompatibility,
