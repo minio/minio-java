@@ -56,8 +56,8 @@ public class PostPolicy {
   private String bucketName;
   private ZonedDateTime expiration;
   private Map<String, Map<String, String>> conditions;
-  private Integer lowerLimit = null;
-  private Integer upperLimit = null;
+  private Long lowerLimit = null;
+  private Long upperLimit = null;
 
   public PostPolicy(@Nonnull String bucketName, @Nonnull ZonedDateTime expiration) {
     if (bucketName.isEmpty()) {
@@ -140,7 +140,7 @@ public class PostPolicy {
   }
 
   /** Add content-length-range condition with lower and upper limits. */
-  public void addContentLengthRangeCondition(int lowerLimit, int upperLimit) {
+  public void addContentLengthRangeCondition(long lowerLimit, long upperLimit) {
     if (lowerLimit < 0) {
       throw new IllegalArgumentException("lower limit cannot be negative number");
     }
@@ -155,6 +155,11 @@ public class PostPolicy {
 
     this.lowerLimit = lowerLimit;
     this.upperLimit = upperLimit;
+  }
+
+  /** Add content-length-range condition with lower and upper limits. */
+  public void addContentLengthRangeCondition(int lowerLimit, int upperLimit) {
+    this.addContentLengthRangeCondition((long) lowerLimit, (long) upperLimit);
   }
 
   /** Remove previously set content-length-range condition. */
