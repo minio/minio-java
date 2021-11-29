@@ -60,8 +60,8 @@ subprojects {
         compile "org.bouncycastle:bcprov-jdk15on:1.69"
         compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
 
-        testCompile "com.squareup.okhttp3:mockwebserver:4.8.1"
-        testCompile "junit:junit:4.13"
+        testImplementation "com.squareup.okhttp3:mockwebserver:4.8.1"
+        testImplementation "junit:junit:4.13"
     }
 
     configurations.all() {
@@ -129,7 +129,6 @@ subprojects {
 
 project(':api') {
     apply plugin: 'java'
-    apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'com.github.johnrengelman.shadow'
@@ -147,7 +146,7 @@ project(':api') {
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
-                    'Implementation-Version': version,
+                    'Implementation-Version': archiveVersion.get(),
                     'Built-By': 'MinIO, inc',
                     'Built-JDK': System.getProperty('java.version'),
                     'Source-Compatibility': sourceCompatibility,
@@ -244,7 +243,6 @@ project(':api') {
 
 project(':adminapi') {
     apply plugin: 'java'
-    apply plugin: 'maven'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'com.github.johnrengelman.shadow'
@@ -261,13 +259,13 @@ project(':adminapi') {
 
     dependencies {
         compile project(':api')
-        testCompile project(':api')
+        testImplementation project(':api')
     }
 
     jar {
         manifest {
             attributes('Implementation-Title': archivesBaseName,
-                    'Implementation-Version': version,
+                    'Implementation-Version': archiveVersion.get(),
                     'Built-By': 'MinIO, inc',
                     'Built-JDK': System.getProperty('java.version'),
                     'Source-Compatibility': sourceCompatibility,
