@@ -18,6 +18,8 @@ package io.minio.errors;
 
 /** Thrown to indicate that non-xml response thrown from server. */
 public class InvalidResponseException extends MinioException {
+  private static final long serialVersionUID = -4793742105569629274L;
+
   public InvalidResponseException(
       int responseCode, String contentType, String body, String httpTrace) {
     super(

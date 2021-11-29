@@ -18,6 +18,8 @@ package io.minio.errors;
 
 /** Thrown to indicate that S3 service returning HTTP server error. */
 public class ServerException extends MinioException {
+  private static final long serialVersionUID = 6395201577368980633L;
+
   public ServerException(String message, String httpTrace) {
     super(message, httpTrace);
   }

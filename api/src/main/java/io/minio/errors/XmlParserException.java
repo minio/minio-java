@@ -18,6 +18,8 @@ package io.minio.errors;
 
 /** Thrown to indicate that error at XML marshalling or unmarshalling. */
 public class XmlParserException extends MinioException {
+  private static final long serialVersionUID = -3877568719271880309L;
+
   Exception exception;
 
   public XmlParserException(Exception exception) {
