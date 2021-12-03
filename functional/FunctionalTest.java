@@ -78,10 +78,12 @@ import io.minio.SetBucketVersioningArgs;
 import io.minio.SetObjectLockConfigurationArgs;
 import io.minio.SetObjectRetentionArgs;
 import io.minio.SetObjectTagsArgs;
+import io.minio.SnowballObject;
 import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
 import io.minio.Time;
 import io.minio.UploadObjectArgs;
+import io.minio.UploadSnowballObjectsArgs;
 import io.minio.Xml;
 import io.minio.admin.MinioAdminClient;
 import io.minio.errors.ErrorResponseException;
@@ -3639,6 +3641,61 @@ public class FunctionalTest {
     }
   }
 
+  public static void testUploadSnowballObjects(String testTags, boolean compression)
+      throws Exception {
+    String methodName = "uploadSnowballObjects()";
+
+    long startTime = System.currentTimeMillis();
+    String objectName1 = getRandomName();
+    String objectName2 = getRandomName();
+    try {
+      try {
+        List<SnowballObject> objects = new LinkedList<SnowballObject>();
+        objects.add(
+            new SnowballObject(
+                objectName1,
+                new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8)),
+                5,
+                null));
+        objects.add(new SnowballObject(objectName2, createFile1Kb()));
+        client.uploadSnowballObjects(
+            UploadSnowballObjectsArgs.builder()
+                .bucket(bucketName)
+                .objects(objects)
+                .compression(compression)
+                .build());
+
+        StatObjectResponse stat =
+            client.statObject(
+                StatObjectArgs.builder().bucket(bucketName).object(objectName1).build());
+        Assert.assertEquals("object size: expected: 5, got: " + stat.size(), 5, stat.size());
+        stat =
+            client.statObject(
+                StatObjectArgs.builder().bucket(bucketName).object(objectName2).build());
+        Assert.assertEquals(
+            "object size: expected: " + KB + ", got: " + stat.size(), 1 * KB, stat.size());
+        mintSuccessLog(methodName, testTags, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName1).build());
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName2).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
+  }
+
+  public static void uploadSnowballObjects() throws Exception {
+    String methodName = "uploadSnowballObjects()";
+    if (!mintEnv) {
+      System.out.println(methodName);
+    }
+
+    testUploadSnowballObjects("[no compression]", false);
+    testUploadSnowballObjects("[compression]", true);
+  }
+
   public static void runBucketTests() throws Exception {
     makeBucket();
     bucketExists();
@@ -3709,6 +3766,8 @@ public class FunctionalTest {
     setObjectTags();
     getObjectTags();
     deleteObjectTags();
+
+    uploadSnowballObjects();
 
     teardown();
   }
