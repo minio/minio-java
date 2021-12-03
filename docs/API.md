@@ -244,7 +244,7 @@ __Parameters__
 __Example__
 ```java
 // Check whether 'my-bucketname' exists or not.
-boolean found = 
+boolean found =
   minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
 if (found) {
   System.out.println("my-bucketname exists");
@@ -1130,7 +1130,7 @@ minioClient.disableObjectLegalHold(
 Enables legal hold on an object.
 
  __Parameters__
- 
+
 | Parameter      | Type                          | Description  |
 |:---------------|:------------------------------|:-------------|
 | ``args``       | _[EnableObjectLegalHoldArgs]_ | Argumments.  |
@@ -1254,7 +1254,7 @@ minioClient.downloadObject(
 Gets retention configuration of an object.
 
  __Parameters__
- 
+
 | Parameter      | Type                       | Description   |
 |:---------------|:---------------------------|:--------------|
 | ``args``       | _[GetObjectRetentionArgs]_ | Arguments.    |
@@ -1304,7 +1304,7 @@ Tags tags = minioClient.getObjectTags(
 
 Gets presigned URL of an object for HTTP method, expiry time and custom request parameters.
 
- __Parameters__ 
+ __Parameters__
 | Parameter   | Type                           | Description  |
 |:------------|:-------------------------------|:-------------|
 | ``args``    | _[GetPresignedObjectUrlArgs]_  | Arguments.   |
@@ -1315,35 +1315,14 @@ Gets presigned URL of an object for HTTP method, expiry time and custom request 
 
  __Example__
  ```java
-// Get presigned URL of an object for HTTP method, expiry time and custom request parameters.
-String url =
-    minioClient.getPresignedObjectUrl(
-        GetPresignedObjectUrlArgs.builder()
-            .method(Method.DELETE)
-            .bucket("my-bucketname")
-            .object("my-objectname")
-            .expiry(24 * 60 * 60)
-            .build());
-System.out.println(url);
-
-// Get presigned URL string to upload 'my-objectname' in 'my-bucketname' 
-// with response-content-type as application/json and life time as one day.
+// Get presigned URL string to download 'my-objectname' in 'my-bucketname'
+// with an expiration of 2 hours.
+//
+// Additionally also add 'response-content-type' to dynamically set content-type
+// for the server response.
 Map<String, String> reqParams = new HashMap<String, String>();
 reqParams.put("response-content-type", "application/json");
 
-String url =
-    minioClient.getPresignedObjectUrl(
-        GetPresignedObjectUrlArgs.builder()
-            .method(Method.PUT)
-            .bucket("my-bucketname")
-            .object("my-objectname")
-            .expiry(1, TimeUnit.DAYS)
-            .extraQueryParams(reqParams)
-            .build());
-System.out.println(url);
-
-// Get presigned URL string to download 'my-objectname' in 'my-bucketname' and its life time
-// is 2 hours.
 String url =
     minioClient.getPresignedObjectUrl(
         GetPresignedObjectUrlArgs.builder()
@@ -1351,6 +1330,38 @@ String url =
             .bucket("my-bucketname")
             .object("my-objectname")
             .expiry(2, TimeUnit.HOURS)
+            .extraQueryParams(reqParams)
+            .build());
+System.out.println(url);
+
+// Get presigned URL string to upload 'my-objectname' in 'my-bucketname'
+// with an expiration of 1 day.
+String url =
+    minioClient.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.PUT)
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .expiry(1, TimeUnit.DAYS)
+            .build());
+System.out.println(url);
+
+// Get presigned URL string to lookup metadata for 'my-objectname' in 'my-bucketname'
+// with an expiration of 2 hours.
+//
+// Additionally also add 'response-content-type' to dynamically set content-type
+// for the server metadata response.
+Map<String, String> reqParams = new HashMap<String, String>();
+reqParams.put("response-content-type", "application/json");
+
+String url =
+    minioClient.getPresignedObjectUrl(
+        GetPresignedObjectUrlArgs.builder()
+            .method(Method.HEAD)
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .expiry(2, TimeUnit.HOURS)
+            .extraQueryParams(reqParams)
             .build());
 System.out.println(url);
 ```
@@ -1649,7 +1660,7 @@ stream.close();
 Sets retention configuration to an object.
 
  __Parameters__
- 
+
 | Parameter        | Type                       | Description  |
 |:-----------------|:---------------------------|:-------------|
 | ``args``         | _[SetObjectRetentionArgs]_ | Arguments.   |
