@@ -284,7 +284,7 @@ public class MinioClient extends S3Base {
 
     StatObjectResponse stat = statObject(new StatObjectArgs(args));
 
-    String tempFilename = filename + "." + stat.etag() + ".part.minio";
+    String tempFilename = filename + "." + stat.etag().replaceAll("/", "") + ".part.minio";
     Path tempFilePath = Paths.get(tempFilename);
     boolean tempFileExists = Files.exists(tempFilePath);
 
