@@ -58,6 +58,8 @@ import io.minio.MinioClient;
 import io.minio.ObjectWriteResponse;
 import io.minio.PostPolicy;
 import io.minio.PutObjectArgs;
+import io.minio.PutObjectOutputStream;
+import io.minio.PutObjectOutputStreamArgs;
 import io.minio.RemoveBucketArgs;
 import io.minio.RemoveObjectArgs;
 import io.minio.RemoveObjectsArgs;
@@ -988,6 +990,118 @@ public class FunctionalTest {
             .sse(sseKms)
             .build(),
         null);
+  }
+
+  public static void putObjectOutputStream() throws Exception {
+    String methodName = "putObjectOutputStream()";
+    if (!mintEnv) {
+      System.out.println(methodName);
+    }
+
+    testPutObjectOutputStream(
+        "[single upload]",
+        1 * MB,
+        PutObjectOutputStreamArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .size(-1, 5 * MB)
+            .contentType(customContentType)
+            .build(),
+        null);
+
+    testPutObjectOutputStream(
+        "[multi-part upload]",
+        11 * MB,
+        PutObjectOutputStreamArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .size(-1, 5 * MB)
+            .contentType(customContentType)
+            .build(),
+        null);
+
+    if (isQuickTest) {
+      return;
+    }
+
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put("X-Amz-Storage-Class", "INVALID");
+    testPutObjectOutputStream(
+        "[storage-class=INVALID negative case]",
+        KB,
+        PutObjectOutputStreamArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .size(-1, 5 * MB)
+            .contentType(customContentType)
+            .headers(headers)
+            .build(),
+        "InvalidStorageClass");
+
+    testPutObjectOutputStream(
+        "[multi-part storage-class=INVALID negative case]",
+        6 * MB,
+        PutObjectOutputStreamArgs.builder()
+            .bucket(bucketName)
+            .object(getRandomName())
+            .size(-1, 5 * MB)
+            .contentType(customContentType)
+            .headers(headers)
+            .build(),
+        "InvalidStorageClass");
+  }
+
+  public static void testPutObjectOutputStream(
+      String testTags, long contentSize, PutObjectOutputStreamArgs args, String errorCode)
+      throws Exception {
+    String methodName = "testPutObjectOutputStream()";
+    long startTime = System.currentTimeMillis();
+    try {
+      ObjectWriteResponse objectInfo = null;
+      try (OutputStream os = new PutObjectOutputStream(client, args, false)) {
+        long remains = contentSize;
+        byte[] buf = new byte[16 * 1024];
+        while (remains >= buf.length) {
+          os.write(buf);
+          remains -= buf.length;
+        }
+        if (remains > 0) {
+          os.write(buf, 0, (int) remains);
+        }
+        // Need to do os.close() here for test
+        os.close();
+      } catch (IOException e) {
+        Throwable cause = e.getCause();
+        if (cause != null && cause instanceof ErrorResponseException) {
+          ErrorResponseException e2 = (ErrorResponseException) cause;
+          if (errorCode == null || !e2.errorResponse().code().equals(errorCode)) {
+            throw e;
+          }
+        } else {
+          throw e;
+        }
+      }
+      if (args.retention() != null) {
+        client.setObjectRetention(
+            SetObjectRetentionArgs.builder()
+                .bucket(args.bucket())
+                .object(args.object())
+                .config(new Retention())
+                .bypassGovernanceMode(true)
+                .build());
+      }
+      client.removeObject(
+          RemoveObjectArgs.builder()
+              .bucket(args.bucket())
+              .object(args.object())
+              .versionId(objectInfo != null ? objectInfo.versionId() : null)
+              .build());
+
+      mintSuccessLog(methodName, testTags, startTime);
+    } catch (Exception e) {
+      handleException(methodName, testTags, startTime, e);
+    }
   }
 
   public static void testStatObject(
@@ -3754,6 +3868,7 @@ public class FunctionalTest {
     composeObject();
     uploadObject();
     downloadObject();
+    putObjectOutputStream();
 
     setObjectRetention();
     getObjectRetention();

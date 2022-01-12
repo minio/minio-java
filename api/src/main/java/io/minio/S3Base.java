@@ -79,17 +79,13 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 
 /** Core S3 API client. */
 public abstract class S3Base {
@@ -398,8 +394,7 @@ public abstract class S3Base {
     return requestBuilder.build();
   }
 
-  private StringBuilder newTraceBuilder(Request request, String body) {
-    StringBuilder traceBuilder = new StringBuilder();
+  private StringBuilder initTraceBuilder(Request request, String body, StringBuilder traceBuilder) {
     traceBuilder.append("---------START-HTTP---------\n");
     String encodedPath = request.url().encodedPath();
     String encodedQuery = request.url().encodedQuery();
@@ -448,6 +443,61 @@ public abstract class S3Base {
         length);
   }
 
+  protected CompletableFuture<Response> sendAsync(
+      Method method,
+      String bucketName,
+      String objectName,
+      String region,
+      Headers headers,
+      Multimap<String, String> queryParamMap,
+      Object body,
+      int length)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    StringBuilder traceBuilder = new StringBuilder();
+    // FutureTask<Response> future = new
+    CompletableFuture<Response> future = new CompletableFuture<>();
+    newCall(
+            method,
+            bucketName,
+            objectName,
+            region,
+            headers,
+            queryParamMap,
+            body,
+            length,
+            traceBuilder)
+        .enqueue(
+            new Callback() {
+
+              @Override
+              public void onResponse(Call call, Response response) throws IOException {
+                try {
+                  future.complete(
+                      handleResponse(
+                          response, traceBuilder, method, bucketName, objectName, queryParamMap));
+                } catch (InvalidKeyException
+                    | ErrorResponseException
+                    | InsufficientDataException
+                    | InternalException
+                    | InvalidResponseException
+                    | NoSuchAlgorithmException
+                    | ServerException
+                    | XmlParserException
+                    | IOException e) {
+                  future.completeExceptionally(e);
+                }
+              }
+
+              @Override
+              public void onFailure(Call call, IOException e) {
+                future.completeExceptionally(e);
+              }
+            });
+    return future;
+  }
+
   /** Execute HTTP request for given parameters. */
   protected Response execute(
       Method method,
@@ -461,6 +511,34 @@ public abstract class S3Base {
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
+    StringBuilder traceBuilder = new StringBuilder();
+    Response response =
+        newCall(
+                method,
+                bucketName,
+                objectName,
+                region,
+                headers,
+                queryParamMap,
+                body,
+                length,
+                traceBuilder)
+            .execute();
+    return handleResponse(response, traceBuilder, method, bucketName, objectName, queryParamMap);
+  }
+
+  private Call newCall(
+      Method method,
+      String bucketName,
+      String objectName,
+      String region,
+      Headers headers,
+      Multimap<String, String> queryParamMap,
+      Object body,
+      int length,
+      StringBuilder traceBuilder)
+      throws XmlParserException, NoSuchAlgorithmException, InsufficientDataException,
+          InternalException, IOException, InvalidKeyException {
     boolean traceRequestBody = false;
     if (body != null && !(body instanceof PartSource || body instanceof byte[])) {
       byte[] bytes;
@@ -491,9 +569,10 @@ public abstract class S3Base {
               request.header("x-amz-content-sha256"));
     }
 
-    StringBuilder traceBuilder =
-        newTraceBuilder(
-            request, traceRequestBody ? new String((byte[]) body, StandardCharsets.UTF_8) : null);
+    initTraceBuilder(
+        request,
+        traceRequestBody ? new String((byte[]) body, StandardCharsets.UTF_8) : null,
+        traceBuilder);
     PrintWriter traceStream = this.traceStream;
     if (traceStream != null) traceStream.println(traceBuilder.toString());
     traceBuilder.append("\n");
@@ -504,7 +583,19 @@ public abstract class S3Base {
       httpClient = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
     }
 
-    Response response = httpClient.newCall(request).execute();
+    return httpClient.newCall(request);
+  }
+
+  private Response handleResponse(
+      Response response,
+      StringBuilder traceBuilder,
+      Method method,
+      String bucketName,
+      String objectName,
+      Multimap<String, String> queryParamMap)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
     String trace =
         response.protocol().toString().toUpperCase(Locale.US)
             + " "
@@ -623,7 +714,7 @@ public abstract class S3Base {
               message,
               bucketName,
               objectName,
-              request.url().encodedPath(),
+              response.request().url().encodedPath(),
               response.header("x-amz-request-id"),
               response.header("x-amz-id-2"));
     }
@@ -1565,6 +1656,49 @@ public abstract class S3Base {
       return new CreateMultipartUploadResponse(
           response.headers(), bucketName, region, objectName, result);
     }
+  }
+
+  protected CompletableFuture<CreateMultipartUploadResponse> createMultipartUploadAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
+      throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
+          ServerException, XmlParserException, ErrorResponseException, InternalException,
+          InvalidResponseException {
+    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
+    queryParams.put("uploads", "");
+
+    Multimap<String, String> headersCopy = newMultimap(headers);
+    // set content type if not set already
+    if (!headersCopy.containsKey("Content-Type")) {
+      headersCopy.put("Content-Type", "application/octet-stream");
+    }
+
+    return sendAsync(
+            Method.POST,
+            bucketName,
+            objectName,
+            getRegion(bucketName, region),
+            httpHeaders(headersCopy),
+            queryParams,
+            null,
+            0)
+        .thenApply(
+            response -> {
+              try {
+                InitiateMultipartUploadResult result =
+                    Xml.unmarshal(
+                        InitiateMultipartUploadResult.class, response.body().charStream());
+                return new CreateMultipartUploadResponse(
+                    response.headers(), bucketName, region, objectName, result);
+              } catch (Exception e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
