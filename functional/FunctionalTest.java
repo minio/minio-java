@@ -176,6 +176,7 @@ public class FunctionalTest {
   private static String bucketNameWithLock = getRandomName();
   private static boolean mintEnv = false;
   private static boolean isQuickTest = false;
+  private static boolean isRunOnFail = false;
   private static Path dataFile1Kb;
   private static Path dataFile6Mb;
   private static String endpoint;
@@ -429,6 +430,9 @@ public class FunctionalTest {
           startTime,
           null,
           e.toString() + " >>> " + Arrays.toString(e.getStackTrace()));
+      if (isRunOnFail) {
+        return;
+      }
     } else {
       System.out.println("<FAILED> " + methodName + " " + ((args == null) ? "" : args));
     }
@@ -3925,6 +3929,7 @@ public class FunctionalTest {
     mintEnv = (mintMode != null);
     if (mintEnv) {
       isQuickTest = !mintMode.equals("full");
+      isRunOnFail = "1".equals(System.getenv("RUN_ON_FAIL"));
       String dataDir = System.getenv("MINT_DATA_DIR");
       if (dataDir != null && !dataDir.equals("")) {
         dataFile1Kb = Paths.get(dataDir, "datafile-1-kB");
