@@ -51,6 +51,9 @@ import io.minio.messages.SelectObjectContentRequest;
 import io.minio.messages.SseConfiguration;
 import io.minio.messages.Tags;
 import io.minio.messages.VersioningConfiguration;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -64,6 +67,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -73,6 +77,9 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.xerial.snappy.SnappyFramedOutputStream;
 
 /**
  * Simple Storage Service (aka S3) client to perform bucket and object operations.
@@ -2589,6 +2596,131 @@ public class MinioClient extends S3Base {
     Multimap<String, String> queryParams = newMultimap("tagging", "");
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
     executeDelete(args, null, queryParams);
+  }
+
+  /**
+   * Uploads multiple objects in a single put call. It is done by creating intermediate TAR file
+   * optionally compressed which is uploaded to S3 service.
+   *
+   * <pre>Example:{@code
+   * // Upload snowball objects.
+   * List<SnowballObject> objects = new ArrayList<SnowballObject>();
+   * objects.add(
+   *     new SnowballObject(
+   *         "my-object-one",
+   *         new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8)),
+   *         5,
+   *         null));
+   * objects.add(
+   *     new SnowballObject(
+   *         "my-object-two",
+   *         new ByteArrayInputStream("java".getBytes(StandardCharsets.UTF_8)),
+   *         4,
+   *         null));
+   * minioClient.uploadSnowballObjects(
+   *     UploadSnowballObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
+   * }</pre>
+   *
+   * @param args {@link UploadSnowballObjectsArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public ObjectWriteResponse uploadSnowballObjects(UploadSnowballObjectsArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    checkArgs(args);
+
+    FileOutputStream fos = null;
+    BufferedOutputStream bos = null;
+    SnappyFramedOutputStream sos = null;
+    ByteArrayOutputStream baos = null;
+    TarArchiveOutputStream tarOutputStream = null;
+
+    try {
+      OutputStream os = null;
+      if (args.stagingFilename() != null) {
+        fos = new FileOutputStream(args.stagingFilename());
+        bos = new BufferedOutputStream(fos);
+        os = bos;
+      } else {
+        baos = new ByteArrayOutputStream();
+        os = baos;
+      }
+
+      if (args.compression()) {
+        sos = new SnappyFramedOutputStream(os);
+        os = sos;
+      }
+
+      tarOutputStream = new TarArchiveOutputStream(os);
+      for (SnowballObject object : args.objects()) {
+        if (object.filename() != null) {
+          Path filePath = Paths.get(object.filename());
+          TarArchiveEntry entry = new TarArchiveEntry(filePath.toFile(), object.name());
+          tarOutputStream.putArchiveEntry(entry);
+          Files.copy(filePath, tarOutputStream);
+        } else {
+          TarArchiveEntry entry = new TarArchiveEntry(object.name());
+          if (object.modificationTime() != null) {
+            entry.setModTime(Date.from(object.modificationTime().toInstant()));
+          }
+          entry.setSize(object.size());
+          tarOutputStream.putArchiveEntry(entry);
+          ByteStreams.copy(object.stream(), tarOutputStream);
+        }
+        tarOutputStream.closeArchiveEntry();
+      }
+      tarOutputStream.finish();
+    } finally {
+      if (tarOutputStream != null) tarOutputStream.flush();
+      if (sos != null) sos.flush();
+      if (bos != null) bos.flush();
+      if (fos != null) fos.flush();
+      if (tarOutputStream != null) tarOutputStream.close();
+      if (sos != null) sos.close();
+      if (bos != null) bos.close();
+      if (fos != null) fos.close();
+    }
+
+    Multimap<String, String> headers = newMultimap(args.extraHeaders());
+    headers.putAll(args.genHeaders());
+    headers.put("X-Amz-Meta-Snowball-Auto-Extract", "true");
+
+    if (args.stagingFilename() == null) {
+      byte[] data = baos.toByteArray();
+      return putObject(
+          args.bucket(),
+          args.region(),
+          args.object(),
+          data,
+          data.length,
+          headers,
+          args.extraQueryParams());
+    }
+
+    long length = Paths.get(args.stagingFilename()).toFile().length();
+    if (length > ObjectWriteArgs.MAX_OBJECT_SIZE) {
+      throw new IllegalArgumentException(
+          "tarball size " + length + " is more than maximum allowed 5TiB");
+    }
+    try (RandomAccessFile file = new RandomAccessFile(args.stagingFilename(), "r")) {
+      return putObject(
+          args.bucket(),
+          args.region(),
+          args.object(),
+          file,
+          length,
+          headers,
+          args.extraQueryParams());
+    }
   }
 
   public static Builder builder() {

@@ -45,7 +45,7 @@ MinioClient minioClient =
 | [`makeBucket`](#makeBucket)                                       | [`setObjectTags`](#setObjectTags)                       |
 | [`removeBucket`](#removeBucket)                                   | [`statObject`](#statObject)                             |
 | [`setBucketEncryption`](#setBucketEncryption)                     | [`uploadObject`](#uploadObject)                         |
-| [`setBucketLifecycle`](#setBucketLifecycle)                       |                                                         |
+| [`setBucketLifecycle`](#setBucketLifecycle)                       | [`uploadSnowballObjects`](#uploadSnowballObjects)       |
 | [`setBucketNotification`](#setBucketNotification)                 |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                             |                                                         |
 | [`setBucketReplication`](#setBucketReplication)                   |                                                         |
@@ -1543,6 +1543,36 @@ minioClient.uploadObject(
         .build());
 ```
 
+<a name="uploadSnowballObjects"></a>
+### uploadSnowballObjects(UploadSnowballObjectsArgs args)
+`public void uploadSnowballObjects(UploadSnowballObjectsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#uploadSnowballObjects-io.minio.UploadSnowballObjectsArgs-)_
+
+Uploads multiple objects in a single put call. It is done by creating intermediate TAR file optionally compressed which is uploaded to S3 service.
+
+__Parameters__
+| Parameter | Type                          | Description |
+|:----------|:------------------------------|:------------|
+| ``args``  | _[UploadSnowballObjectsArgs]_ | Arguments.  |
+
+__Example__
+```java
+List<SnowballObject> objects = new ArrayList<SnowballObject>();
+objects.add(
+    new SnowballObject(
+        "my-object-one",
+        new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8)),
+        5,
+        null));
+objects.add(
+    new SnowballObject(
+        "my-object-two",
+        new ByteArrayInputStream("java".getBytes(StandardCharsets.UTF_8)),
+        4,
+        null));
+minioClient.uploadSnowballObjects(
+    UploadSnowballObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
+```
+
 <a name="removeObject"></a>
 ### removeObject(RemoveObjectArgs args)
 `public void removeObject(RemoveObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#removeObject-io.minio.RemoveObjectArgs-)_
@@ -1830,6 +1860,7 @@ ObjectStat objectStat =
 [CopyObjectArgs]: http://minio.github.io/minio-java/io/minio/CopyObjectArgs.html
 [PutObjectArgs]: http://minio.github.io/minio-java/io/minio/PutObjectArgs.html
 [UploadObjectArgs]: http://minio.github.io/minio-java/io/minio/UploadObjectArgs.html
+[UploadSnowballObjectsArgs]: http://minio.github.io/minio-java/io/minio/UploadSnowballObjectsArgs.html
 [ComposeObjectArgs]: http://minio.github.io/minio-java/io/minio/ComposeObjectArgs.html
 [ObjectWriteResponse]: http://minio.github.io/minio-java/io/minio/ObjectWriteResponse.html
 [ListBucketsArgs]: http://minio.github.io/minio-java/io/minio/ListBucketsArgs.html
