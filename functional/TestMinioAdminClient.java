@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.admin.*;
 import java.util.Map;
@@ -74,9 +75,9 @@ public class TestMinioAdminClient {
 
     long startTime = System.currentTimeMillis();
     try {
-      Map<String, String> policies = adminClient.listCannedPolicies();
-      String policy = policies.get(policyName);
-      Assert.assertTrue(policy != null && !policy.isEmpty());
+      Map<String, JsonNode> policies = adminClient.listCannedPolicies();
+      JsonNode policy = policies.get(policyName);
+      Assert.assertTrue(policy != null);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }

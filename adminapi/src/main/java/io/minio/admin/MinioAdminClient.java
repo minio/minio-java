@@ -17,6 +17,7 @@
 
 package io.minio.admin;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.google.common.collect.ImmutableMultimap;
@@ -355,13 +356,13 @@ public class MinioAdminClient {
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
-  public Map<String, String> listCannedPolicies()
+  public Map<String, JsonNode> listCannedPolicies()
       throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     try (Response response = execute(Method.GET, Command.LIST_CANNED_POLICIES, null, null)) {
       MapType mapType =
           OBJECT_MAPPER
               .getTypeFactory()
-              .constructMapType(HashMap.class, String.class, Object.class);
+              .constructMapType(HashMap.class, String.class, JsonNode.class);
       return OBJECT_MAPPER.readValue(response.body().bytes(), mapType);
     }
   }
