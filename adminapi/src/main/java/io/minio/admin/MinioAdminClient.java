@@ -364,7 +364,9 @@ public class MinioAdminClient {
               .getTypeFactory()
               .constructMapType(HashMap.class, String.class, JsonNode.class);
       HashMap<String, String> policies = new HashMap<>();
-      OBJECT_MAPPER.<Map<String, JsonNode>>readValue(response.body().bytes(), mapType).forEach((key, value) -> policies.put(key, value.toString()));
+      OBJECT_MAPPER
+          .<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
+          .forEach((key, value) -> policies.put(key, value.toString()));
       return policies;
     }
   }
