@@ -75,8 +75,8 @@ public class TestMinioAdminClient {
 
     long startTime = System.currentTimeMillis();
     try {
-      Map<String, JsonNode> policies = adminClient.listCannedPolicies();
-      JsonNode policy = policies.get(policyName);
+      Map<String, String> policies = adminClient.listCannedPolicies();
+      String policy = policies.get(policyName);
       Assert.assertTrue(policy != null);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
