@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.admin.*;
 import java.util.Map;
