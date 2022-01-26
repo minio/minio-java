@@ -17,6 +17,7 @@
 
 package io.minio.admin;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
 import com.google.common.collect.ImmutableMultimap;
@@ -361,8 +362,12 @@ public class MinioAdminClient {
       MapType mapType =
           OBJECT_MAPPER
               .getTypeFactory()
-              .constructMapType(HashMap.class, String.class, Object.class);
-      return OBJECT_MAPPER.readValue(response.body().bytes(), mapType);
+              .constructMapType(HashMap.class, String.class, JsonNode.class);
+      HashMap<String, String> policies = new HashMap<>();
+      OBJECT_MAPPER
+          .<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
+          .forEach((key, value) -> policies.put(key, value.toString()));
+      return policies;
     }
   }
 
