@@ -613,17 +613,8 @@ public abstract class S3Base {
           message = "The requested range cannot be satisfied";
           break;
         default:
-          if (response.code() >= 500) {
-            throw new ServerException(
-                "server failed with HTTP status code " + response.code(), traceBuilder.toString());
-          }
-
-          throw new InternalException(
-              "unhandled HTTP code "
-                  + response.code()
-                  + ".  Please report this issue at "
-                  + "https://github.com/minio/minio-java/issues",
-              traceBuilder.toString());
+          throw new ServerException(
+              "server failed with HTTP status code " + response.code(), traceBuilder.toString());
       }
 
       errorResponse =
