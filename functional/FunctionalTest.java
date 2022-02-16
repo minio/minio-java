@@ -3848,6 +3848,7 @@ public class FunctionalTest {
     Map<String, String> env = pb.environment();
     env.put("MINIO_ROOT_USER", "minio");
     env.put("MINIO_ROOT_PASSWORD", "minio123");
+    env.put("MINIO_CI_CD", "1");
     env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
     env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
     env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
