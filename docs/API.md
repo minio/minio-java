@@ -1037,7 +1037,11 @@ minioClient.copyObject(
     CopyObjectArgs.builder()
         .bucket("my-bucketname")
         .object("my-objectname")
-        .srcBucket("my-source-bucketname")
+        .source(
+            CopySource.builder()
+                .bucket("my-source-bucketname")
+                .object("my-objectname")
+                .build())
         .build());
 
 // Create object "my-objectname" in bucket "my-bucketname" by copying from object
@@ -1046,18 +1050,53 @@ minioClient.copyObject(
     CopyObjectArgs.builder()
         .bucket("my-bucketname")
         .object("my-objectname")
-        .srcBucket("my-source-bucketname")
-        .srcObject("my-source-objectname")
+        .source(
+            CopySource.builder()
+                .bucket("my-source-bucketname")
+                .object("my-source-objectname")
+                .build())
         .build());
 
-// Create object "my-objectname" in bucket "my-bucketname" with server-side encryption by
-// copying from object "my-objectname" in bucket "my-source-bucketname".
+// Create object "my-objectname" in bucket "my-bucketname" with SSE-KMS server-side
+// encryption by copying from object "my-objectname" in bucket "my-source-bucketname".
 minioClient.copyObject(
     CopyObjectArgs.builder()
         .bucket("my-bucketname")
         .object("my-objectname")
-        .srcBucket("my-source-bucketname")
-        .sse(sse)
+        .source(
+            CopySource.builder()
+                .bucket("my-source-bucketname")
+                .object("my-objectname")
+                .build())
+        .sse(sseKms) // Replace with actual key.
+        .build());
+
+// Create object "my-objectname" in bucket "my-bucketname" with SSE-S3 server-side
+// encryption by copying from object "my-objectname" in bucket "my-source-bucketname".
+minioClient.copyObject(
+    CopyObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .source(
+            CopySource.builder()
+                .bucket("my-source-bucketname")
+                .object("my-objectname")
+                .build())
+        .sse(sseS3) // Replace with actual key.
+        .build());
+
+// Create object "my-objectname" in bucket "my-bucketname" with SSE-C server-side encryption
+// by copying from object "my-objectname" in bucket "my-source-bucketname".
+minioClient.copyObject(
+    CopyObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .source(
+            CopySource.builder()
+                .bucket("my-source-bucketname")
+                .object("my-objectname")
+                .build())
+        .sse(ssec) // Replace with actual key.
         .build());
 
 // Create object "my-objectname" in bucket "my-bucketname" by copying from SSE-C encrypted
@@ -1066,20 +1105,27 @@ minioClient.copyObject(
     CopyObjectArgs.builder()
         .bucket("my-bucketname")
         .object("my-objectname")
-        .srcBucket("my-source-bucketname")
-        .srcObject("my-source-objectname")
-        .srcSsec(ssec)
+        .source(
+            CopySource.builder()
+                .bucket("my-source-bucketname")
+                .object("my-source-objectname")
+                .ssec(ssec) // Replace with actual key.
+                .build())
         .build());
 
-// Create object "my-objectname" in bucket "my-bucketname" with custom headers by copying from
-// object "my-objectname" in bucket "my-source-bucketname" using conditions.
+// Create object "my-objectname" in bucket "my-bucketname" with custom headers conditionally
+// by copying from object "my-objectname" in bucket "my-source-bucketname".
 minioClient.copyObject(
     CopyObjectArgs.builder()
         .bucket("my-bucketname")
         .object("my-objectname")
-        .srcBucket("my-source-bucketname")
-        .headers(headers)
-        .srcMatchETag(etag)
+        .source(
+            CopySource.builder()
+                .bucket("my-source-bucketname")
+                .object("my-objectname")
+                .matchETag(etag) // Replace with actual etag.
+                .build())
+        .headers(headers) // Replace with actual headers.
         .build());
 ```
 
@@ -1234,7 +1280,7 @@ minioClient.downloadObject(
   DownloadObjectArgs.builder()
   .bucket("my-bucketname")
   .object("my-objectname")
-  .fileName("my-object-file")
+  .filename("my-object-file")
   .build());
 
 // Download server-side encrypted object in bucket to given file name
@@ -1243,7 +1289,7 @@ minioClient.downloadObject(
   .bucket("my-bucketname")
   .object("my-objectname")
   .ssec(ssec)
-  .fileName("my-object-file")
+  .filename("my-object-file")
   .build());
 ```
 
