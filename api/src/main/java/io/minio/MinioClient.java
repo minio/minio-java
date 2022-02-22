@@ -287,66 +287,30 @@ public class MinioClient extends S3Base {
           ServerException, XmlParserException {
     String filename = args.filename();
     Path filePath = Paths.get(filename);
-    boolean fileExists = Files.exists(filePath);
+    if (Files.exists(filePath)) {
+      throw new IllegalArgumentException("Destination file " + filename + " already exists");
+    }
 
     StatObjectResponse stat = statObject(new StatObjectArgs(args));
 
     String tempFilename = filename + "." + S3Escaper.encode(stat.etag()) + ".part.minio";
     Path tempFilePath = Paths.get(tempFilename);
-    boolean tempFileExists = Files.exists(tempFilePath);
-
-    if (tempFileExists && !Files.isRegularFile(tempFilePath)) {
-      throw new IOException(tempFilename + ": not a regular file");
-    }
-
-    long tempFileSize = 0;
-    if (tempFileExists) {
-      tempFileSize = Files.size(tempFilePath);
-      if (tempFileSize > stat.size()) {
-        Files.delete(tempFilePath);
-        tempFileExists = false;
-        tempFileSize = 0;
-      }
-    }
-
-    if (fileExists) {
-      long fileSize = Files.size(filePath);
-      if (fileSize == stat.size()) {
-        // already downloaded. nothing to do
-        return;
-      } else if (fileSize > stat.size()) {
-        throw new IllegalArgumentException(
-            "Source object, '"
-                + args.object()
-                + "', size:"
-                + stat.size()
-                + " is smaller than the destination file, '"
-                + filename
-                + "', size:"
-                + fileSize);
-      } else if (!tempFileExists) {
-        // before resuming the download, copy filename to tempfilename
-        Files.copy(filePath, tempFilePath);
-        tempFileSize = fileSize;
-        tempFileExists = true;
-      }
-    }
+    if (Files.exists(tempFilePath)) Files.delete(tempFilePath);
 
     InputStream is = null;
     OutputStream os = null;
     try {
       is = getObject(new GetObjectArgs(args));
-      os =
-          Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+      os = Files.newOutputStream(tempFilePath, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
       long bytesWritten = ByteStreams.copy(is, os);
       is.close();
       os.close();
 
-      if (bytesWritten != stat.size() - tempFileSize) {
+      if (bytesWritten != stat.size()) {
         throw new IOException(
             tempFilename
                 + ": unexpected data written.  expected = "
-                + (stat.size() - tempFileSize)
+                + stat.size()
                 + ", written = "
                 + bytesWritten);
       }
