@@ -17,7 +17,6 @@
 package io.minio;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
@@ -44,11 +43,8 @@ public class DownloadObjectArgs extends ObjectReadArgs {
     private void validateFilename(String filename) {
       validateNotEmptyString(filename, "filename");
 
-      Path filePath = Paths.get(filename);
-      boolean fileExists = Files.exists(filePath);
-
-      if (fileExists && !Files.isRegularFile(filePath)) {
-        throw new IllegalArgumentException(filename + ": not a regular file");
+      if (Files.exists(Paths.get(filename))) {
+        throw new IllegalArgumentException("Destination file " + filename + " already exists");
       }
     }
   }
