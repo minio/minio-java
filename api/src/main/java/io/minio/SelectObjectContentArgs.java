@@ -21,7 +21,10 @@ import io.minio.messages.InputSerialization;
 import io.minio.messages.OutputSerialization;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#selectObjectContent}. */
+/**
+ * Argument class of {@link MinioAsyncClient#selectObjectContent} and {@link
+ * MinioClient#selectObjectContent}.
+ */
 public class SelectObjectContentArgs extends ObjectReadArgs {
   private String sqlExpression;
   private InputSerialization inputSerialization;

@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.ListVersionsResult;
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#listObjectVersions}. */
+/** Response class of {@link S3Base#listObjectVersionsAsync}. */
 public class ListObjectVersionsResponse extends GenericResponse {
   private ListVersionsResult result;
 

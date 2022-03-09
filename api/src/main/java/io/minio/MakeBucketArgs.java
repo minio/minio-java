@@ -18,7 +18,7 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#makeBucket}. */
+/** Argument class of {@link MinioAsyncClient#makeBucket} and {@link MinioClient#makeBucket}. */
 public class MakeBucketArgs extends BucketArgs {
   private boolean objectLock;
 

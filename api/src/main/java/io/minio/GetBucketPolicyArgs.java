@@ -16,7 +16,10 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#getBucketPolicy}. */
+/**
+ * Argument class of {@link MinioAsyncClient#getBucketPolicy} and {@link
+ * MinioClient#getBucketPolicy}.
+ */
 public class GetBucketPolicyArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

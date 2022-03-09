@@ -20,7 +20,11 @@ import java.io.FilterInputStream;
 import java.io.InputStream;
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#getObject}. */
+/**
+ * Response class of {@link MinioAsyncClient#getObject} and {@link MinioClient#getObject}. This
+ * class is {@link InputStream} interface compatible and it must be closed after use to release
+ * underneath network resources.
+ */
 public class GetObjectResponse extends FilterInputStream {
   private GenericResponse response;
 

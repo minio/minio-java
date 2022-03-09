@@ -16,7 +16,10 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#deleteBucketEncryption}. */
+/**
+ * Argument class of {@link MinioAsyncClient#deleteBucketEncryption} and {@link
+ * MinioClient#deleteBucketEncryption}.
+ */
 public class DeleteBucketEncryptionArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

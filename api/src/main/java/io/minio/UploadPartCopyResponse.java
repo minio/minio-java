@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.CopyPartResult;
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#uploadPartCopy}. */
+/** Response class of {@link S3Base#uploadPartCopyAsync}. */
 public class UploadPartCopyResponse extends GenericResponse {
   private String uploadId;
   private int partNumber;

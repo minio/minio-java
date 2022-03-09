@@ -16,7 +16,10 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#getObjectRetention}. */
+/**
+ * Argument class of {@link MinioAsyncClient#getObjectRetention} and {@link
+ * MinioClient#getObjectRetention}.
+ */
 public class GetObjectRetentionArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();

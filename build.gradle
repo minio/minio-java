@@ -68,7 +68,7 @@ subprojects {
 
     [compileJava, compileTestJava].each() {
         it.options.fork = true
-        it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options", "-Werror"]
+        it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options", "-Werror", "-Xdiags:verbose"]
         it.options.encoding = "UTF-8"
     }
 

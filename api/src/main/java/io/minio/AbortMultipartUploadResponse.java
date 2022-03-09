@@ -18,7 +18,7 @@ package io.minio;
 
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#abortMultipartUpload}. */
+/** Response class of {@link S3Base#abortMultipartUploadAsync}. */
 public class AbortMultipartUploadResponse extends GenericResponse {
   private String uploadId;
 
