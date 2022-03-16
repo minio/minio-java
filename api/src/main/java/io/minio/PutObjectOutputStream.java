@@ -43,7 +43,8 @@ public class PutObjectOutputStream extends OutputStream {
   protected int count;
 
   private final int flushSize;
-  private final PutObjectOutputStreamArgs args;
+  private long totalSize;
+  protected final PutObjectOutputStreamArgs args;
   private final Multimap<String, String> headers;
   private int partNumber;
   private String uploadId;
@@ -58,12 +59,13 @@ public class PutObjectOutputStream extends OutputStream {
   private Exception abortException;
   private int currentRequests;
   private final Object lock = new Object();
+  private long waitingDuration = 0;
 
   public PutObjectOutputStream(
       MinioClient client, PutObjectOutputStreamArgs args, boolean asyncClose) {
     this.client = client;
     this.flushSize = (int) args.partSize();
-    if (flushSize < PutObjectArgs.MIN_MULTIPART_SIZE) {
+    if (args.partCount > 1 && flushSize < PutObjectArgs.MIN_MULTIPART_SIZE) {
       throw new IllegalArgumentException("partSize too small: " + flushSize);
     }
     this.args = args;
@@ -89,20 +91,24 @@ public class PutObjectOutputStream extends OutputStream {
   /** Write method is not thread safe. */
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
-    checkState();
+    checkState(len);
     int remains = flushSize - count;
     if (remains > len) {
       doWrite(b, off, len);
     } else {
       doWrite(b, off, remains);
-      sendPut(true);
-      doWrite(b, off + remains, len - remains);
+      // Do not send PUT if total size is reached as it will be done on close
+      if (totalSize != args.objectSize || remains != len) {
+        sendPut(true);
+        doWrite(b, off + remains, len - remains);
+      }
     }
   }
 
   private void doWrite(byte[] b, int off, int len) throws IOException {
     System.arraycopy(b, off, buf, count, len);
     count += len;
+    totalSize += len;
   }
 
   private void initMultipartUpload() {
@@ -204,9 +210,11 @@ public class PutObjectOutputStream extends OutputStream {
       if (async) {
         synchronized (lock) {
           currentRequests++;
+          long startTs = System.currentTimeMillis();
           while (args.maxParallelRequests() > 0 && currentRequests >= args.maxParallelRequests()) {
             lock.wait();
           }
+          waitingDuration += System.currentTimeMillis() - startTs;
         }
         body = new byte[count];
         System.arraycopy(buf, 0, body, 0, count);
@@ -240,22 +248,23 @@ public class PutObjectOutputStream extends OutputStream {
   /** Write method is not thread safe. */
   @Override
   public void write(int b) throws IOException {
-    checkState();
+    checkState(1);
     if (flushSize == count) {
       sendPut(true);
     }
     buf[count] = (byte) b;
     count += 1;
+    totalSize += 1;
   }
 
-  private void checkState() throws IOException {
+  private void checkState(int minCapacity) throws IOException {
     if (exception != null) {
       throw new IOException(exception);
     }
     if (aborted) {
       throw new IOException("Aborted");
     }
-    ensureCapacity(count + 1);
+    ensureCapacity(count + minCapacity);
   }
 
   @Override
@@ -275,7 +284,9 @@ public class PutObjectOutputStream extends OutputStream {
       buf = null;
       try {
         if (!asyncClose) {
+          long startTs = System.currentTimeMillis();
           futureClose.get();
+          waitingDuration += System.currentTimeMillis() - startTs;
         }
       } catch (ExecutionException | InterruptedException e) {
         exception = getCause(e);
@@ -308,7 +319,19 @@ public class PutObjectOutputStream extends OutputStream {
     return abortException;
   }
 
-  private CompletableFuture<ObjectWriteResponse> initClose() {
+  public long getTotalSize() {
+    return totalSize;
+  }
+
+  /**
+   * Returns the waiting duration in ms. Wait is done when current requests has reached the maximum
+   * and in case of sync close, wait duration to received all responses.
+   */
+  public long getWaitingDuration() {
+    return waitingDuration;
+  }
+
+  protected CompletableFuture<ObjectWriteResponse> initClose() {
     try {
       if (parts == null) {
         return new PutPart(-1, count, buf).putPartObject(null).future;
@@ -412,10 +435,8 @@ public class PutObjectOutputStream extends OutputStream {
               .thenApply(
                   response -> {
                     synchronized (lock) {
-                      int current = --currentRequests;
-                      if (current < args.maxParallelRequests()) {
-                        lock.notifyAll();
-                      }
+                      --currentRequests;
+                      lock.notifyAll();
                     }
                     return new ObjectWriteResponse(
                         response.headers(),
