@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -1175,9 +1176,11 @@ public abstract class S3Base {
     public NotificationResultRecords(Response response) {
       this.response = response;
       this.scanner = new Scanner(response.body().charStream()).useDelimiter("\n");
-      this.mapper = new ObjectMapper();
-      mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-      mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+      this.mapper =
+          JsonMapper.builder()
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+              .build();
     }
 
     /** returns closeable iterator of result of notification records. */
