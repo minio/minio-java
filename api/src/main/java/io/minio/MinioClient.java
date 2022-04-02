@@ -2671,6 +2671,7 @@ public class MinioClient extends S3Base {
       }
 
       tarOutputStream = new TarArchiveOutputStream(os);
+      tarOutputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
       for (SnowballObject object : args.objects()) {
         if (object.filename() != null) {
           Path filePath = Paths.get(object.filename());
