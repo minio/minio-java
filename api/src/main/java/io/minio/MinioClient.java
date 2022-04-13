@@ -287,7 +287,7 @@ public class MinioClient extends S3Base {
           ServerException, XmlParserException {
     String filename = args.filename();
     Path filePath = Paths.get(filename);
-    if (Files.exists(filePath)) {
+    if (!args.overwrite() && Files.exists(filePath)) {
       throw new IllegalArgumentException("Destination file " + filename + " already exists");
     }
 
@@ -314,7 +314,12 @@ public class MinioClient extends S3Base {
                 + ", written = "
                 + bytesWritten);
       }
-      Files.move(tempFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
+
+      if (!args.overwrite()) {
+        Files.move(tempFilePath, filePath);
+      } else {
+        Files.move(tempFilePath, filePath, StandardCopyOption.REPLACE_EXISTING);
+      }
     } finally {
       if (is != null) {
         is.close();
