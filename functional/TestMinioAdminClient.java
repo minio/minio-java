@@ -109,6 +109,22 @@ public class TestMinioAdminClient {
     }
   }
 
+  public void getUserInfo() throws Exception {
+    String methodName = "getUserInfo()";
+    if (!mintEnv) {
+      System.out.println(methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      UserInfo userInfo = adminClient.getUserInfo(userAccessKey);
+      Assert.assertEquals(userInfo.status(), UserInfo.Status.ENABLED);
+      Assert.assertEquals(userInfo.policyName(), policyName);
+    } catch (Exception e) {
+      FunctionalTest.handleException(methodName, null, startTime, e);
+    }
+  }
+
   public void listUsers() throws Exception {
     String methodName = "listUsers()";
     if (!mintEnv) {
@@ -144,6 +160,7 @@ public class TestMinioAdminClient {
     addUser();
     addCannedPolicy();
     setPolicy();
+    getUserInfo();
     listUsers();
     listCannedPolicies();
     deleteUser();

@@ -63,6 +63,7 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 public class MinioAdminClient {
   private enum Command {
     ADD_USER("add-user"),
+    USER_INFO("user-info"),
     LIST_USERS("list-users"),
     REMOVE_USER("remove-user"),
     ADD_CANNED_POLICY("add-canned-policy"),
@@ -224,6 +225,25 @@ public class MinioAdminClient {
             Command.ADD_USER,
             ImmutableMultimap.of("accessKey", accessKey),
             Crypto.encrypt(creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(userInfo)))) {}
+  }
+
+  /**
+   * Obtains user info for a specified MinIO user.
+   *
+   * @param accessKey Access Key.
+   * @return user info for the specified accessKey.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   */
+  public UserInfo getUserInfo(String accessKey)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+    try (Response response =
+        execute(
+            Method.GET, Command.USER_INFO, ImmutableMultimap.of("accessKey", accessKey), null)) {
+      byte[] jsonData = response.body().bytes();
+      return OBJECT_MAPPER.readValue(jsonData, UserInfo.class);
+    }
   }
 
   /**
