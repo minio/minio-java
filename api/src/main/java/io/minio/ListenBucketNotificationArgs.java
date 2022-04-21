@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioClient#listenBucketNotification} and {@link
+ * Argument class of {@link MinioAsyncClient#listenBucketNotification} and {@link
  * MinioClient#listenBucketNotification}.
  */
 public class ListenBucketNotificationArgs extends BucketArgs {
