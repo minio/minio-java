@@ -18,6 +18,7 @@
 package io.minio.admin;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Collections;
@@ -28,6 +29,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /** Represents user information. */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserInfo {
   @JsonProperty("secretKey")
   private String secretKey;
