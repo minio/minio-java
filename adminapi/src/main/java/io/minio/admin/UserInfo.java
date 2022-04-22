@@ -70,8 +70,7 @@ public class UserInfo {
 
   public static enum Status {
     ENABLED("enabled"),
-    DISABLED("disabled"),
-    UNKNOWN("unknown");
+    DISABLED("disabled");
 
     private final String value;
 
@@ -94,7 +93,11 @@ public class UserInfo {
         return DISABLED;
       }
 
-      return UNKNOWN;
+      if (statusString.isEmpty()) {
+        return null;
+      }
+
+      throw new IllegalArgumentException("Unknown status " + statusString);
     }
   }
 }
