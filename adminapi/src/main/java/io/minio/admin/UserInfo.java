@@ -95,6 +95,10 @@ public class UserInfo {
         return DISABLED;
       }
 
+      if (statusString.isEmpty()) {
+        return null;
+      }
+
       throw new IllegalArgumentException("Unknown status " + statusString);
     }
   }
