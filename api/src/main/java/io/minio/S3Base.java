@@ -222,47 +222,22 @@ public abstract class S3Base {
       ex = ((ExecutionException) ex).getCause();
     }
 
-    if (ex instanceof IllegalArgumentException) {
-      throw (IllegalArgumentException) ex;
+    try {
+      throw ex;
+    } catch (IllegalArgumentException
+        | ErrorResponseException
+        | InsufficientDataException
+        | InternalException
+        | InvalidKeyException
+        | InvalidResponseException
+        | IOException
+        | NoSuchAlgorithmException
+        | ServerException
+        | XmlParserException exc) {
+      throw exc;
+    } catch (Throwable exc) {
+      throw new RuntimeException(exc.getCause());
     }
-
-    if (ex instanceof ErrorResponseException) {
-      throw (ErrorResponseException) ex;
-    }
-
-    if (ex instanceof InsufficientDataException) {
-      throw (InsufficientDataException) ex;
-    }
-
-    if (ex instanceof InternalException) {
-      throw (InternalException) ex;
-    }
-
-    if (ex instanceof InvalidKeyException) {
-      throw (InvalidKeyException) ex;
-    }
-
-    if (ex instanceof InvalidResponseException) {
-      throw (InvalidResponseException) ex;
-    }
-
-    if (ex instanceof IOException) {
-      throw (IOException) ex;
-    }
-
-    if (ex instanceof NoSuchAlgorithmException) {
-      throw (NoSuchAlgorithmException) ex;
-    }
-
-    if (ex instanceof ServerException) {
-      throw (ServerException) ex;
-    }
-
-    if (ex instanceof XmlParserException) {
-      throw (XmlParserException) ex;
-    }
-
-    throw new RuntimeException(ex);
   }
 
   private String[] handleRedirectResponse(
