@@ -19,7 +19,10 @@ package io.minio;
 import io.minio.messages.Retention;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setObjectRetention}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setObjectRetention} and {@link
+ * MinioClient#setObjectRetention}.
+ */
 public class SetObjectRetentionArgs extends ObjectVersionArgs {
   private Retention config;
   private boolean bypassGovernanceMode;

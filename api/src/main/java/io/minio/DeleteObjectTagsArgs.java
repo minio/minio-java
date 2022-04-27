@@ -16,7 +16,10 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#deleteObjectTags}. */
+/**
+ * Argument class of {@link MinioAsyncClient#deleteObjectTags} and {@link
+ * MinioClient#deleteObjectTags}.
+ */
 public class DeleteObjectTagsArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();

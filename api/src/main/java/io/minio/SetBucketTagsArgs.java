@@ -20,7 +20,9 @@ import io.minio.messages.Tags;
 import java.util.Map;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setBucketTags}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setBucketTags} and {@link MinioClient#setBucketTags}.
+ */
 public class SetBucketTagsArgs extends BucketArgs {
   private Tags tags;
 

@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.ListBucketResultV2;
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#listObjectsV2}. */
+/** Response class of {@link S3Base#listObjectsV2Async}. */
 public class ListObjectsV2Response extends GenericResponse {
   private ListBucketResultV2 result;
 

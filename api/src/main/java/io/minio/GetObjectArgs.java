@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#getObject}. */
+/** Argument class of {@link MinioAsyncClient#getObject} and {@link MinioClient#getObject}. */
 public class GetObjectArgs extends ObjectConditionalReadArgs {
   protected GetObjectArgs() {}
 

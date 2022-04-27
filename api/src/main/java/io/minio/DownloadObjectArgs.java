@@ -18,7 +18,9 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#downloadObject}. */
+/**
+ * Argument class of {@link MinioAsyncClient#downloadObject} and {@link MinioClient#downloadObject}.
+ */
 public class DownloadObjectArgs extends ObjectReadArgs {
   private String filename;
   private boolean overwrite;

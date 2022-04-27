@@ -18,7 +18,7 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#listObjects}. */
+/** Argument class of {@link MinioAsyncClient#listObjects} and {@link MinioClient#listObjects}. */
 public class ListObjectsArgs extends BucketArgs {
   private String delimiter = "";
   private boolean useUrlEncodingType = true;

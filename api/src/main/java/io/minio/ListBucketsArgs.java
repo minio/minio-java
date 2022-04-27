@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#listBuckets}. */
+/** Argument class of {@link MinioAsyncClient#listBuckets} and {@link MinioClient#listBuckets}. */
 public class ListBucketsArgs extends BaseArgs {
   public static Builder builder() {
     return new Builder();

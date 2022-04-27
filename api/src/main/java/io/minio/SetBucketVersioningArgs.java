@@ -19,7 +19,10 @@ package io.minio;
 import io.minio.messages.VersioningConfiguration;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setBucketVersioning}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setBucketVersioning} and {@link
+ * MinioClient#setBucketVersioning}.
+ */
 public class SetBucketVersioningArgs extends BucketArgs {
   private VersioningConfiguration config;
 

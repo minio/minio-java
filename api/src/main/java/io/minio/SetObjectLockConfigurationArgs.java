@@ -19,7 +19,10 @@ package io.minio;
 import io.minio.messages.ObjectLockConfiguration;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setObjectLockConfiguration}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setObjectLockConfiguration} and {@link
+ * MinioClient#setObjectLockConfiguration}.
+ */
 public class SetObjectLockConfigurationArgs extends BucketArgs {
   private ObjectLockConfiguration config;
 

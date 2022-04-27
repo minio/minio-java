@@ -16,7 +16,10 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#isObjectLegalHoldEnabled}. */
+/**
+ * Argument class of {@link MinioAsyncClient#isObjectLegalHoldEnabled} and {@link
+ * MinioClient#isObjectLegalHoldEnabled}.
+ */
 public class IsObjectLegalHoldEnabledArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();

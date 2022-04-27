@@ -19,7 +19,10 @@ package io.minio;
 import io.minio.messages.ReplicationConfiguration;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setBucketReplication}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setBucketReplication} and {@link
+ * MinioClient#setBucketReplication}.
+ */
 public class SetBucketReplicationArgs extends BucketArgs {
   private ReplicationConfiguration config;
   private String objectLockToken;

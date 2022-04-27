@@ -19,7 +19,10 @@ package io.minio;
 import io.minio.messages.LifecycleConfiguration;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setBucketLifecycle}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setBucketLifecycle} and {@link
+ * MinioClient#setBucketLifecycle}.
+ */
 public class SetBucketLifecycleArgs extends BucketArgs {
   private LifecycleConfiguration config;
 

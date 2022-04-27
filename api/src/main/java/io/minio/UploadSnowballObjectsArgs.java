@@ -20,7 +20,10 @@ import java.security.SecureRandom;
 import java.util.Objects;
 import java.util.Random;
 
-/** Argument class of {@link MinioClient#uploadSnowballObjects}. */
+/**
+ * Argument class of {@link MinioAsyncClient#uploadSnowballObjects} and {@link
+ * MinioClient#uploadSnowballObjects}.
+ */
 public class UploadSnowballObjectsArgs extends ObjectWriteArgs {
   private static final Random random = new Random(new SecureRandom().nextLong());
 

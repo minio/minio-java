@@ -80,10 +80,15 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -198,6 +203,41 @@ public abstract class S3Base {
   /** Create new HashMultimap with copy of Multimap. */
   protected Multimap<String, String> newMultimap(Multimap<String, String> map) {
     return (map != null) ? HashMultimap.create(map) : HashMultimap.create();
+  }
+
+  /** Throws encapsulated exception wrapped by {@link ExecutionException}. */
+  public void throwEncapsulatedException(ExecutionException e)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    if (e == null) return;
+
+    Throwable ex = e.getCause();
+
+    if (ex instanceof CompletionException) {
+      ex = ((CompletionException) ex).getCause();
+    }
+
+    if (ex instanceof ExecutionException) {
+      ex = ((ExecutionException) ex).getCause();
+    }
+
+    try {
+      throw ex;
+    } catch (IllegalArgumentException
+        | ErrorResponseException
+        | InsufficientDataException
+        | InternalException
+        | InvalidKeyException
+        | InvalidResponseException
+        | IOException
+        | NoSuchAlgorithmException
+        | ServerException
+        | XmlParserException exc) {
+      throw exc;
+    } catch (Throwable exc) {
+      throw new RuntimeException(exc.getCause());
+    }
   }
 
   private String[] handleRedirectResponse(
@@ -416,7 +456,318 @@ public abstract class S3Base {
     return traceBuilder;
   }
 
-  /** Execute HTTP request for given args and parameters. */
+  /** Execute HTTP request asynchronously for given parameters. */
+  protected CompletableFuture<Response> executeAsync(
+      Method method,
+      String bucketName,
+      String objectName,
+      String region,
+      Headers headers,
+      Multimap<String, String> queryParamMap,
+      Object body,
+      int length)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    boolean traceRequestBody = false;
+    if (body != null && !(body instanceof PartSource || body instanceof byte[])) {
+      byte[] bytes;
+      if (body instanceof CharSequence) {
+        bytes = body.toString().getBytes(StandardCharsets.UTF_8);
+      } else {
+        bytes = Xml.marshal(body).getBytes(StandardCharsets.UTF_8);
+      }
+
+      body = bytes;
+      length = bytes.length;
+      traceRequestBody = true;
+    }
+
+    if (body == null && (method == Method.PUT || method == Method.POST)) {
+      body = HttpUtils.EMPTY_BODY;
+    }
+
+    HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
+    Credentials creds = (provider == null) ? null : provider.fetch();
+    Request req = createRequest(url, method, headers, body, length, creds);
+    if (creds != null) {
+      req =
+          Signer.signV4S3(
+              req,
+              region,
+              creds.accessKey(),
+              creds.secretKey(),
+              req.header("x-amz-content-sha256"));
+    }
+    final Request request = req;
+
+    StringBuilder traceBuilder =
+        newTraceBuilder(
+            request, traceRequestBody ? new String((byte[]) body, StandardCharsets.UTF_8) : null);
+    PrintWriter traceStream = this.traceStream;
+    if (traceStream != null) traceStream.println(traceBuilder.toString());
+    traceBuilder.append("\n");
+
+    OkHttpClient httpClient = this.httpClient;
+    if (!(body instanceof byte[]) && (method == Method.PUT || method == Method.POST)) {
+      // Issue #924: disable connection retry for PUT and POST methods for other than byte array.
+      httpClient = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
+    }
+
+    CompletableFuture<Response> completableFuture = new CompletableFuture<>();
+    httpClient
+        .newCall(request)
+        .enqueue(
+            new Callback() {
+              @Override
+              public void onFailure(final Call call, IOException e) {
+                completableFuture.completeExceptionally(e);
+              }
+
+              @Override
+              public void onResponse(Call call, final Response response) throws IOException {
+                String trace =
+                    response.protocol().toString().toUpperCase(Locale.US)
+                        + " "
+                        + response.code()
+                        + "\n"
+                        + response.headers();
+                traceBuilder.append(trace).append("\n");
+                if (traceStream != null) traceStream.println(trace);
+
+                if (response.isSuccessful()) {
+                  if (traceStream != null) {
+                    // Trace response body only if the request is not
+                    // GetObject/ListenBucketNotification
+                    // S3 API.
+                    Set<String> keys = queryParamMap.keySet();
+                    if ((method != Method.GET
+                            || objectName == null
+                            || !Collections.disjoint(keys, TRACE_QUERY_PARAMS))
+                        && !(keys.contains("events")
+                            && (keys.contains("prefix") || keys.contains("suffix")))) {
+                      ResponseBody responseBody = response.peekBody(1024 * 1024);
+                      traceStream.println(responseBody.string());
+                    }
+                    traceStream.println(END_HTTP);
+                  }
+
+                  completableFuture.complete(response);
+                  return;
+                }
+
+                String errorXml = null;
+                try (ResponseBody responseBody = response.body()) {
+                  errorXml = responseBody.string();
+                }
+
+                if (!("".equals(errorXml) && method.equals(Method.HEAD))) {
+                  traceBuilder.append(errorXml).append("\n");
+                  if (traceStream != null) traceStream.println(errorXml);
+                }
+
+                traceBuilder.append(END_HTTP).append("\n");
+                if (traceStream != null) traceStream.println(END_HTTP);
+
+                // Error in case of Non-XML response from server for non-HEAD requests.
+                String contentType = response.headers().get("content-type");
+                if (!method.equals(Method.HEAD)
+                    && (contentType == null
+                        || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
+                  completableFuture.completeExceptionally(
+                      new InvalidResponseException(
+                          response.code(),
+                          contentType,
+                          errorXml.substring(
+                              0, errorXml.length() > 1024 ? 1024 : errorXml.length()),
+                          traceBuilder.toString()));
+                  return;
+                }
+
+                ErrorResponse errorResponse = null;
+                if (!"".equals(errorXml)) {
+                  try {
+                    errorResponse = Xml.unmarshal(ErrorResponse.class, errorXml);
+                  } catch (XmlParserException e) {
+                    completableFuture.completeExceptionally(e);
+                    return;
+                  }
+                } else if (!method.equals(Method.HEAD)) {
+                  completableFuture.completeExceptionally(
+                      new InvalidResponseException(
+                          response.code(), contentType, errorXml, traceBuilder.toString()));
+                  return;
+                }
+
+                if (errorResponse == null) {
+                  String code = null;
+                  String message = null;
+                  switch (response.code()) {
+                    case 301:
+                    case 307:
+                    case 400:
+                      String[] result = handleRedirectResponse(method, bucketName, response, true);
+                      code = result[0];
+                      message = result[1];
+                      break;
+                    case 404:
+                      if (objectName != null) {
+                        code = "NoSuchKey";
+                        message = "Object does not exist";
+                      } else if (bucketName != null) {
+                        code = NO_SUCH_BUCKET;
+                        message = NO_SUCH_BUCKET_MESSAGE;
+                      } else {
+                        code = "ResourceNotFound";
+                        message = "Request resource not found";
+                      }
+                      break;
+                    case 501:
+                    case 405:
+                      code = "MethodNotAllowed";
+                      message = "The specified method is not allowed against this resource";
+                      break;
+                    case 409:
+                      if (bucketName != null) {
+                        code = NO_SUCH_BUCKET;
+                        message = NO_SUCH_BUCKET_MESSAGE;
+                      } else {
+                        code = "ResourceConflict";
+                        message = "Request resource conflicts";
+                      }
+                      break;
+                    case 403:
+                      code = "AccessDenied";
+                      message = "Access denied";
+                      break;
+                    case 412:
+                      code = "PreconditionFailed";
+                      message = "At least one of the preconditions you specified did not hold";
+                      break;
+                    case 416:
+                      code = "InvalidRange";
+                      message = "The requested range cannot be satisfied";
+                      break;
+                    default:
+                      completableFuture.completeExceptionally(
+                          new ServerException(
+                              "server failed with HTTP status code " + response.code(),
+                              traceBuilder.toString()));
+                      return;
+                  }
+
+                  errorResponse =
+                      new ErrorResponse(
+                          code,
+                          message,
+                          bucketName,
+                          objectName,
+                          request.url().encodedPath(),
+                          response.header("x-amz-request-id"),
+                          response.header("x-amz-id-2"));
+                }
+
+                // invalidate region cache if needed
+                if (errorResponse.code().equals(NO_SUCH_BUCKET)
+                    || errorResponse.code().equals(RETRY_HEAD)) {
+                  regionCache.remove(bucketName);
+                }
+
+                ErrorResponseException e =
+                    new ErrorResponseException(errorResponse, response, traceBuilder.toString());
+                completableFuture.completeExceptionally(e);
+              }
+            });
+    return completableFuture;
+  }
+
+  /** Execute HTTP request asynchronously for given args and parameters. */
+  protected CompletableFuture<Response> executeAsync(
+      Method method,
+      BaseArgs args,
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams,
+      Object body,
+      int length)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    final String bucketName;
+    final String region;
+    final String objectName;
+
+    if (args instanceof BucketArgs) {
+      bucketName = ((BucketArgs) args).bucket();
+      region = ((BucketArgs) args).region();
+    } else {
+      bucketName = null;
+      region = null;
+    }
+
+    if (args instanceof ObjectArgs) {
+      objectName = ((ObjectArgs) args).object();
+    } else {
+      objectName = null;
+    }
+
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    method,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(merge(args.extraHeaders(), headers)),
+                    merge(args.extraQueryParams(), queryParams),
+                    body,
+                    length);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            });
+  }
+
+  /**
+   * Execute HTTP request for given parameters.
+   *
+   * @deprecated This method is no longer supported. Use {@link #executeAsync}.
+   */
+  @Deprecated
+  protected Response execute(
+      Method method,
+      String bucketName,
+      String objectName,
+      String region,
+      Headers headers,
+      Multimap<String, String> queryParamMap,
+      Object body,
+      int length)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    CompletableFuture<Response> completableFuture =
+        executeAsync(method, bucketName, objectName, region, headers, queryParamMap, body, length);
+    try {
+      return completableFuture.get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Execute HTTP request for given args and parameters.
+   *
+   * @deprecated This method is no longer supported. Use {@link #executeAsync}.
+   */
+  @Deprecated
   protected Response execute(
       Method method,
       BaseArgs args,
@@ -449,297 +800,209 @@ public abstract class S3Base {
         length);
   }
 
-  /** Execute HTTP request for given parameters. */
-  protected Response execute(
-      Method method,
-      String bucketName,
-      String objectName,
-      String region,
-      Headers headers,
-      Multimap<String, String> queryParamMap,
-      Object body,
-      int length)
-      throws ErrorResponseException, InsufficientDataException, InternalException,
-          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
-          ServerException, XmlParserException {
-    boolean traceRequestBody = false;
-    if (body != null && !(body instanceof PartSource || body instanceof byte[])) {
-      byte[] bytes;
-      if (body instanceof CharSequence) {
-        bytes = body.toString().getBytes(StandardCharsets.UTF_8);
-      } else {
-        bytes = Xml.marshal(body).getBytes(StandardCharsets.UTF_8);
-      }
-
-      body = bytes;
-      length = bytes.length;
-      traceRequestBody = true;
-    }
-
-    if (body == null && (method == Method.PUT || method == Method.POST))
-      body = HttpUtils.EMPTY_BODY;
-
-    HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
-    Credentials creds = (provider == null) ? null : provider.fetch();
-    Request request = createRequest(url, method, headers, body, length, creds);
-    if (creds != null) {
-      request =
-          Signer.signV4S3(
-              request,
-              region,
-              creds.accessKey(),
-              creds.secretKey(),
-              request.header("x-amz-content-sha256"));
-    }
-
-    StringBuilder traceBuilder =
-        newTraceBuilder(
-            request, traceRequestBody ? new String((byte[]) body, StandardCharsets.UTF_8) : null);
-    PrintWriter traceStream = this.traceStream;
-    if (traceStream != null) traceStream.println(traceBuilder.toString());
-    traceBuilder.append("\n");
-
-    OkHttpClient httpClient = this.httpClient;
-    if (!(body instanceof byte[]) && (method == Method.PUT || method == Method.POST)) {
-      // Issue #924: disable connection retry for PUT and POST methods for other than byte array.
-      httpClient = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
-    }
-
-    Response response = httpClient.newCall(request).execute();
-    String trace =
-        response.protocol().toString().toUpperCase(Locale.US)
-            + " "
-            + response.code()
-            + "\n"
-            + response.headers();
-    traceBuilder.append(trace).append("\n");
-    if (traceStream != null) traceStream.println(trace);
-
-    if (response.isSuccessful()) {
-      if (traceStream != null) {
-        // Trace response body only if the request is not GetObject/ListenBucketNotification S3 API.
-        Set<String> keys = queryParamMap.keySet();
-        if ((method != Method.GET
-                || objectName == null
-                || !Collections.disjoint(keys, TRACE_QUERY_PARAMS))
-            && !(keys.contains("events") && (keys.contains("prefix") || keys.contains("suffix")))) {
-          ResponseBody responseBody = response.peekBody(1024 * 1024);
-          traceStream.println(responseBody.string());
-        }
-        traceStream.println(END_HTTP);
-      }
-      return response;
-    }
-
-    String errorXml = null;
-    try (ResponseBody responseBody = response.body()) {
-      errorXml = responseBody.string();
-    }
-
-    if (!("".equals(errorXml) && method.equals(Method.HEAD))) {
-      traceBuilder.append(errorXml).append("\n");
-      if (traceStream != null) traceStream.println(errorXml);
-    }
-
-    traceBuilder.append(END_HTTP).append("\n");
-    if (traceStream != null) traceStream.println(END_HTTP);
-
-    // Error in case of Non-XML response from server for non-HEAD requests.
-    String contentType = response.headers().get("content-type");
-    if (!method.equals(Method.HEAD)
-        && (contentType == null
-            || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
-      throw new InvalidResponseException(
-          response.code(),
-          contentType,
-          errorXml.substring(0, errorXml.length() > 1024 ? 1024 : errorXml.length()),
-          traceBuilder.toString());
-    }
-
-    ErrorResponse errorResponse = null;
-    if (!"".equals(errorXml)) {
-      errorResponse = Xml.unmarshal(ErrorResponse.class, errorXml);
-    } else if (!method.equals(Method.HEAD)) {
-      throw new InvalidResponseException(
-          response.code(), contentType, errorXml, traceBuilder.toString());
-    }
-
-    if (errorResponse == null) {
-      String code = null;
-      String message = null;
-      switch (response.code()) {
-        case 301:
-        case 307:
-        case 400:
-          String[] result = handleRedirectResponse(method, bucketName, response, true);
-          code = result[0];
-          message = result[1];
-          break;
-        case 404:
-          if (objectName != null) {
-            code = "NoSuchKey";
-            message = "Object does not exist";
-          } else if (bucketName != null) {
-            code = NO_SUCH_BUCKET;
-            message = NO_SUCH_BUCKET_MESSAGE;
-          } else {
-            code = "ResourceNotFound";
-            message = "Request resource not found";
-          }
-          break;
-        case 501:
-        case 405:
-          code = "MethodNotAllowed";
-          message = "The specified method is not allowed against this resource";
-          break;
-        case 409:
-          if (bucketName != null) {
-            code = NO_SUCH_BUCKET;
-            message = NO_SUCH_BUCKET_MESSAGE;
-          } else {
-            code = "ResourceConflict";
-            message = "Request resource conflicts";
-          }
-          break;
-        case 403:
-          code = "AccessDenied";
-          message = "Access denied";
-          break;
-        case 412:
-          code = "PreconditionFailed";
-          message = "At least one of the preconditions you specified did not hold";
-          break;
-        case 416:
-          code = "InvalidRange";
-          message = "The requested range cannot be satisfied";
-          break;
-        default:
-          throw new ServerException(
-              "server failed with HTTP status code " + response.code(), traceBuilder.toString());
-      }
-
-      errorResponse =
-          new ErrorResponse(
-              code,
-              message,
-              bucketName,
-              objectName,
-              request.url().encodedPath(),
-              response.header("x-amz-request-id"),
-              response.header("x-amz-id-2"));
-    }
-
-    // invalidate region cache if needed
-    if (errorResponse.code().equals(NO_SUCH_BUCKET) || errorResponse.code().equals(RETRY_HEAD)) {
-      regionCache.remove(bucketName);
-    }
-
-    throw new ErrorResponseException(errorResponse, response, traceBuilder.toString());
-  }
-
   /** Returns region of given bucket either from region cache or set in constructor. */
-  protected String getRegion(String bucketName, String region)
-      throws ErrorResponseException, InsufficientDataException, InternalException,
-          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
-          ServerException, XmlParserException {
+  protected CompletableFuture<String> getRegionAsync(String bucketName, String region)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
     if (region != null) {
       // Error out if region does not match with region passed via constructor.
       if (this.region != null && !this.region.equals(region)) {
         throw new IllegalArgumentException(
             "region must be " + this.region + ", but passed " + region);
       }
-      return region;
+      return CompletableFuture.completedFuture(region);
     }
 
-    if (this.region != null && !this.region.equals("")) return this.region;
-    if (bucketName == null || this.provider == null) return US_EAST_1;
+    if (this.region != null && !this.region.equals("")) {
+      return CompletableFuture.completedFuture(this.region);
+    }
+    if (bucketName == null || this.provider == null) {
+      return CompletableFuture.completedFuture(US_EAST_1);
+    }
     region = regionCache.get(bucketName);
-    if (region != null) return region;
+    if (region != null) return CompletableFuture.completedFuture(region);
 
     // Execute GetBucketLocation REST API to get region of the bucket.
-    Response response =
-        execute(
+    CompletableFuture<Response> future =
+        executeAsync(
             Method.GET, bucketName, null, US_EAST_1, null, newMultimap("location", null), null, 0);
+    return future.thenApply(
+        response -> {
+          String location;
+          try (ResponseBody body = response.body()) {
+            LocationConstraint lc = Xml.unmarshal(LocationConstraint.class, body.charStream());
+            if (lc.location() == null || lc.location().equals("")) {
+              location = US_EAST_1;
+            } else if (lc.location().equals("EU")) {
+              location = "eu-west-1"; // eu-west-1 is also referred as 'EU'.
+            } else {
+              location = lc.location();
+            }
+          } catch (XmlParserException e) {
+            throw new CompletionException(e);
+          }
 
-    try (ResponseBody body = response.body()) {
-      LocationConstraint lc = Xml.unmarshal(LocationConstraint.class, body.charStream());
-      if (lc.location() == null || lc.location().equals("")) {
-        region = US_EAST_1;
-      } else if (lc.location().equals("EU")) {
-        region = "eu-west-1"; // eu-west-1 is also referred as 'EU'.
-      } else {
-        region = lc.location();
-      }
-    }
-
-    regionCache.put(bucketName, region);
-    return region;
+          regionCache.put(bucketName, location);
+          return location;
+        });
   }
 
-  /** Execute GET HTTP request for given parameters. */
+  /**
+   * Returns region of given bucket either from region cache or set in constructor.
+   *
+   * @deprecated This method is no longer supported. Use {@link #getRegionAsync}.
+   */
+  @Deprecated
+  protected String getRegion(String bucketName, String region)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      return getRegionAsync(bucketName, region).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /** Execute asynchronously GET HTTP request for given parameters. */
+  protected CompletableFuture<Response> executeGetAsync(
+      BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return executeAsync(Method.GET, args, headers, queryParams, null, 0);
+  }
+
+  /**
+   * Execute GET HTTP request for given parameters.
+   *
+   * @deprecated This method is no longer supported. Use {@link #executeGetAsync}.
+   */
+  @Deprecated
   protected Response executeGet(
       BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return execute(Method.GET, args, headers, queryParams, null, 0);
+    try {
+      return executeGetAsync(args, headers, queryParams).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
   }
 
-  /** Execute HEAD HTTP request for given parameters. */
+  /** Execute asynchronously HEAD HTTP request for given parameters. */
+  protected CompletableFuture<Response> executeHeadAsync(
+      BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return executeAsync(Method.HEAD, args, headers, queryParams, null, 0)
+        .exceptionally(
+            e -> {
+              if (e instanceof ErrorResponseException) {
+                ErrorResponseException ex = (ErrorResponseException) e;
+                if (ex.errorResponse().code().equals(RETRY_HEAD)) {
+                  return null;
+                }
+              }
+              throw new CompletionException(e);
+            })
+        .thenCompose(
+            response -> {
+              if (response != null) {
+                return CompletableFuture.completedFuture(response);
+              }
+
+              try {
+                return executeAsync(Method.HEAD, args, headers, queryParams, null, 0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            });
+  }
+
+  /**
+   * Execute HEAD HTTP request for given parameters.
+   *
+   * @deprecated This method is no longer supported. Use {@link #executeHeadAsync}.
+   */
+  @Deprecated
   protected Response executeHead(
       BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
     try {
-      Response response = execute(Method.HEAD, args, headers, queryParams, null, 0);
-      response.body().close();
-      return response;
-    } catch (ErrorResponseException e) {
-      if (!e.errorResponse().code().equals(RETRY_HEAD)) {
-        throw e;
-      }
-    }
-
-    try {
-      // Retry once for RETRY_HEAD error.
-      Response response = execute(Method.HEAD, args, headers, queryParams, null, 0);
-      response.body().close();
-      return response;
-    } catch (ErrorResponseException e) {
-      ErrorResponse errorResponse = e.errorResponse();
-      if (!errorResponse.code().equals(RETRY_HEAD)) {
-        throw e;
-      }
-
-      String[] result =
-          handleRedirectResponse(Method.HEAD, errorResponse.bucketName(), e.response(), false);
-      throw new ErrorResponseException(
-          new ErrorResponse(
-              result[0],
-              result[1],
-              errorResponse.bucketName(),
-              errorResponse.objectName(),
-              errorResponse.resource(),
-              errorResponse.requestId(),
-              errorResponse.hostId()),
-          e.response(),
-          e.httpTrace());
+      return executeHeadAsync(args, headers, queryParams).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
   }
 
-  /** Execute DELETE HTTP request for given parameters. */
+  /** Execute asynchronously DELETE HTTP request for given parameters. */
+  protected CompletableFuture<Response> executeDeleteAsync(
+      BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return executeAsync(Method.DELETE, args, headers, queryParams, null, 0)
+        .thenApply(
+            response -> {
+              if (response != null) response.body().close();
+              return response;
+            });
+  }
+
+  /**
+   * Execute DELETE HTTP request for given parameters.
+   *
+   * @deprecated This method is no longer supported. Use {@link #executeDeleteAsync}.
+   */
+  @Deprecated
   protected Response executeDelete(
       BaseArgs args, Multimap<String, String> headers, Multimap<String, String> queryParams)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    Response response = execute(Method.DELETE, args, headers, queryParams, null, 0);
-    response.body().close();
-    return response;
+    try {
+      return executeDeleteAsync(args, headers, queryParams).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
   }
 
-  /** Execute POST HTTP request for given parameters. */
+  /** Execute asynchronously POST HTTP request for given parameters. */
+  protected CompletableFuture<Response> executePostAsync(
+      BaseArgs args,
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams,
+      Object data)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return executeAsync(Method.POST, args, headers, queryParams, data, 0);
+  }
+
+  /**
+   * Execute POST HTTP request for given parameters.
+   *
+   * @deprecated This method is no longer supported. Use {@link #executePostAsync}.
+   */
+  @Deprecated
   protected Response executePost(
       BaseArgs args,
       Multimap<String, String> headers,
@@ -748,10 +1011,34 @@ public abstract class S3Base {
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return execute(Method.POST, args, headers, queryParams, data, 0);
+    try {
+      return executePostAsync(args, headers, queryParams, data).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
   }
 
-  /** Execute PUT HTTP request for given parameters. */
+  /** Execute asynchronously PUT HTTP request for given parameters. */
+  protected CompletableFuture<Response> executePutAsync(
+      BaseArgs args,
+      Multimap<String, String> headers,
+      Multimap<String, String> queryParams,
+      Object data,
+      int length)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return executeAsync(Method.PUT, args, headers, queryParams, data, length);
+  }
+
+  /**
+   * Execute PUT HTTP request for given parameters.
+   *
+   * @deprecated This method is no longer supported. Use {@link #executePutAsync}.
+   */
+  @Deprecated
   protected Response executePut(
       BaseArgs args,
       Multimap<String, String> headers,
@@ -761,10 +1048,102 @@ public abstract class S3Base {
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    return execute(Method.PUT, args, headers, queryParams, data, length);
+    try {
+      return executePutAsync(args, headers, queryParams, data, length).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  protected CompletableFuture<Integer> calculatePartCountAsync(List<ComposeSource> sources)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    long[] objectSize = {0};
+    int index = 0;
+
+    CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> 0);
+    for (ComposeSource src : sources) {
+      index++;
+      final int i = index;
+      completableFuture =
+          completableFuture.thenCombine(
+              statObjectAsync(new StatObjectArgs((ObjectReadArgs) src)),
+              (partCount, statObjectResponse) -> {
+                src.buildHeaders(statObjectResponse.size(), statObjectResponse.etag());
+
+                long size = statObjectResponse.size();
+                if (src.length() != null) {
+                  size = src.length();
+                } else if (src.offset() != null) {
+                  size -= src.offset();
+                }
+
+                if (size < ObjectWriteArgs.MIN_MULTIPART_SIZE
+                    && sources.size() != 1
+                    && i != sources.size()) {
+                  throw new IllegalArgumentException(
+                      "source "
+                          + src.bucket()
+                          + "/"
+                          + src.object()
+                          + ": size "
+                          + size
+                          + " must be greater than "
+                          + ObjectWriteArgs.MIN_MULTIPART_SIZE);
+                }
+
+                objectSize[0] += size;
+                if (objectSize[0] > ObjectWriteArgs.MAX_OBJECT_SIZE) {
+                  throw new IllegalArgumentException(
+                      "destination object size must be less than "
+                          + ObjectWriteArgs.MAX_OBJECT_SIZE);
+                }
+
+                if (size > ObjectWriteArgs.MAX_PART_SIZE) {
+                  long count = size / ObjectWriteArgs.MAX_PART_SIZE;
+                  long lastPartSize = size - (count * ObjectWriteArgs.MAX_PART_SIZE);
+                  if (lastPartSize > 0) {
+                    count++;
+                  } else {
+                    lastPartSize = ObjectWriteArgs.MAX_PART_SIZE;
+                  }
+
+                  if (lastPartSize < ObjectWriteArgs.MIN_MULTIPART_SIZE
+                      && sources.size() != 1
+                      && i != sources.size()) {
+                    throw new IllegalArgumentException(
+                        "source "
+                            + src.bucket()
+                            + "/"
+                            + src.object()
+                            + ": "
+                            + "for multipart split upload of "
+                            + size
+                            + ", last part size is less than "
+                            + ObjectWriteArgs.MIN_MULTIPART_SIZE);
+                  }
+                  partCount += (int) count;
+                } else {
+                  partCount++;
+                }
+
+                if (partCount > ObjectWriteArgs.MAX_MULTIPART_COUNT) {
+                  throw new IllegalArgumentException(
+                      "Compose sources create more than allowed multipart count "
+                          + ObjectWriteArgs.MAX_MULTIPART_COUNT);
+                }
+                return partCount;
+              });
+    }
+
+    return completableFuture;
   }
 
   /** Calculate part count of given compose sources. */
+  @Deprecated
   protected int calculatePartCount(List<ComposeSource> sources)
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
@@ -774,7 +1153,14 @@ public abstract class S3Base {
     int i = 0;
     for (ComposeSource src : sources) {
       i++;
-      StatObjectResponse stat = statObject(new StatObjectArgs((ObjectReadArgs) src));
+      StatObjectResponse stat = null;
+      try {
+        stat = statObjectAsync(new StatObjectArgs((ObjectReadArgs) src)).get();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      } catch (ExecutionException e) {
+        throwEncapsulatedException(e);
+      }
 
       src.buildHeaders(stat.size(), stat.etag());
 
@@ -1073,7 +1459,7 @@ public abstract class S3Base {
     };
   }
 
-  private PartReader newPartReader(Object data, long objectSize, long partSize, int partCount) {
+  protected PartReader newPartReader(Object data, long objectSize, long partSize, int partCount) {
     if (data instanceof RandomAccessFile) {
       return new PartReader((RandomAccessFile) data, objectSize, partSize, partCount);
     }
@@ -1085,7 +1471,12 @@ public abstract class S3Base {
     return null;
   }
 
-  /** Execute put object. */
+  /**
+   * Execute put object.
+   *
+   * @deprecated This method is no longer supported. Use {@link #putObjectAsync}.
+   */
+  @Deprecated
   protected ObjectWriteResponse putObject(
       PutObjectBaseArgs args,
       Object data,
@@ -1096,74 +1487,13 @@ public abstract class S3Base {
       throws ErrorResponseException, InsufficientDataException, InternalException,
           InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
           ServerException, XmlParserException {
-    Multimap<String, String> headers = newMultimap(args.extraHeaders());
-    headers.putAll(args.genHeaders());
-    if (!headers.containsKey("Content-Type")) headers.put("Content-Type", contentType);
-
-    String uploadId = null;
-    Part[] parts = null;
-
-    PartReader partReader = newPartReader(data, objectSize, partSize, partCount);
-    if (partReader == null) {
-      throw new IllegalArgumentException("data must be RandomAccessFile or InputStream");
-    }
-
     try {
-      while (true) {
-        PartSource partSource = partReader.getPart(!this.baseUrl.isHttps());
-        if (partSource == null) break;
-
-        if (partReader.partCount() == 1) {
-          return putObject(
-              args.bucket(),
-              args.region(),
-              args.object(),
-              partSource,
-              headers,
-              args.extraQueryParams());
-        }
-
-        if (uploadId == null) {
-          CreateMultipartUploadResponse response =
-              createMultipartUpload(
-                  args.bucket(), args.region(), args.object(), headers, args.extraQueryParams());
-          uploadId = response.result().uploadId();
-          parts = new Part[ObjectWriteArgs.MAX_MULTIPART_COUNT];
-        }
-
-        Map<String, String> ssecHeaders = null;
-        // set encryption headers in the case of SSE-C.
-        if (args.sse() != null && args.sse() instanceof ServerSideEncryptionCustomerKey) {
-          ssecHeaders = args.sse().headers();
-        }
-
-        int partNumber = partSource.partNumber();
-        UploadPartResponse response =
-            uploadPart(
-                args.bucket(),
-                args.region(),
-                args.object(),
-                partSource,
-                partNumber,
-                uploadId,
-                (ssecHeaders != null) ? Multimaps.forMap(ssecHeaders) : null,
-                null);
-        String etag = response.etag();
-        parts[partNumber - 1] = new Part(partNumber, etag);
-      }
-
-      return completeMultipartUpload(
-          args.bucket(), args.region(), args.object(), uploadId, parts, null, null);
-    } catch (RuntimeException e) {
-      if (uploadId != null) {
-        abortMultipartUpload(args.bucket(), args.region(), args.object(), uploadId, null, null);
-      }
-      throw e;
-    } catch (Exception e) {
-      if (uploadId != null) {
-        abortMultipartUpload(args.bucket(), args.region(), args.object(), uploadId, null, null);
-      }
-      throw e;
+      return putObjectAsync(args, data, objectSize, partSize, partCount, contentType).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
   }
 
@@ -1364,19 +1694,81 @@ public abstract class S3Base {
     this.useVirtualStyle = false;
   }
 
-  /** Execute stat object. */
-  protected StatObjectResponse statObject(StatObjectArgs args)
-      throws ErrorResponseException, InsufficientDataException, InternalException,
-          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
-          ServerException, XmlParserException {
+  /** Execute stat object asynchronously. */
+  protected CompletableFuture<StatObjectResponse> statObjectAsync(StatObjectArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
     checkArgs(args);
     args.validateSsec(baseUrl);
-    Response response =
-        executeHead(
+    return executeHeadAsync(
             args,
             args.getHeaders(),
-            (args.versionId() != null) ? newMultimap("versionId", args.versionId()) : null);
-    return new StatObjectResponse(response.headers(), args.bucket(), args.region(), args.object());
+            (args.versionId() != null) ? newMultimap("versionId", args.versionId()) : null)
+        .thenApply(
+            response ->
+                new StatObjectResponse(
+                    response.headers(), args.bucket(), args.region(), args.object()));
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_AbortMultipartUpload.html">AbortMultipartUpload
+   * S3 API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param uploadId Upload ID.
+   * @param extraHeaders Extra headers (Optional).
+   * @param extraQueryParams Extra query parameters (Optional).
+   * @return {@link CompletableFuture}&lt;{@link AbortMultipartUploadResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<AbortMultipartUploadResponse> abortMultipartUploadAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      String uploadId,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.DELETE,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(extraHeaders),
+                    merge(extraQueryParams, newMultimap(UPLOAD_ID, uploadId)),
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                return new AbortMultipartUploadResponse(
+                    response.headers(), bucketName, region, objectName, uploadId);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1400,7 +1792,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #abortMultipartUploadAsync}.
    */
+  @Deprecated
   protected AbortMultipartUploadResponse abortMultipartUpload(
       String bucketName,
       String region,
@@ -1411,19 +1805,121 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    try (Response response =
-        execute(
-            Method.DELETE,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            merge(extraQueryParams, newMultimap(UPLOAD_ID, uploadId)),
-            null,
-            0)) {
-      return new AbortMultipartUploadResponse(
-          response.headers(), bucketName, region, objectName, uploadId);
+    try {
+      return abortMultipartUploadAsync(
+              bucketName, region, objectName, uploadId, extraHeaders, extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
+   * S3 API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param uploadId Upload ID.
+   * @param parts List of parts.
+   * @param extraHeaders Extra headers (Optional).
+   * @param extraQueryParams Extra query parameters (Optional).
+   * @return {@link CompletableFuture}&lt;{@link ObjectWriteResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ObjectWriteResponse> completeMultipartUploadAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      String uploadId,
+      Part[] parts,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
+    queryParams.put(UPLOAD_ID, uploadId);
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.POST,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(extraHeaders),
+                    queryParams,
+                    new CompleteMultipartUpload(parts),
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                String bodyContent = response.body().string();
+                bodyContent = bodyContent.trim();
+                if (!bodyContent.isEmpty()) {
+                  try {
+                    if (Xml.validate(ErrorResponse.class, bodyContent)) {
+                      ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
+                      throw new CompletionException(
+                          new ErrorResponseException(errorResponse, response, null));
+                    }
+                  } catch (XmlParserException e) {
+                    // As it is not <Error> message, fallback to parse CompleteMultipartUploadOutput
+                    // XML.
+                  }
+
+                  try {
+                    CompleteMultipartUploadOutput result =
+                        Xml.unmarshal(CompleteMultipartUploadOutput.class, bodyContent);
+                    return new ObjectWriteResponse(
+                        response.headers(),
+                        result.bucket(),
+                        result.location(),
+                        result.object(),
+                        result.etag(),
+                        response.header("x-amz-version-id"));
+                  } catch (XmlParserException e) {
+                    // As this CompleteMultipartUpload REST call succeeded, just log it.
+                    Logger.getLogger(S3Base.class.getName())
+                        .warning(
+                            "S3 service returned unknown XML for CompleteMultipartUpload REST API. "
+                                + bodyContent);
+                  }
+                }
+
+                return new ObjectWriteResponse(
+                    response.headers(),
+                    bucketName,
+                    region,
+                    objectName,
+                    null,
+                    response.header("x-amz-version-id"));
+              } catch (IOException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1448,7 +1944,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #completeMultipartUploadAsync}.
    */
+  @Deprecated
   protected ObjectWriteResponse completeMultipartUpload(
       String bucketName,
       String region,
@@ -1460,58 +1958,89 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
-    queryParams.put(UPLOAD_ID, uploadId);
-
-    try (Response response =
-        execute(
-            Method.POST,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            queryParams,
-            new CompleteMultipartUpload(parts),
-            0)) {
-      String bodyContent = response.body().string();
-      bodyContent = bodyContent.trim();
-      if (!bodyContent.isEmpty()) {
-        try {
-          if (Xml.validate(ErrorResponse.class, bodyContent)) {
-            ErrorResponse errorResponse = Xml.unmarshal(ErrorResponse.class, bodyContent);
-            throw new ErrorResponseException(errorResponse, response, null);
-          }
-        } catch (XmlParserException e) {
-          // As it is not <Error> message, fall-back to parse CompleteMultipartUploadOutput XML.
-        }
-
-        try {
-          CompleteMultipartUploadOutput result =
-              Xml.unmarshal(CompleteMultipartUploadOutput.class, bodyContent);
-          return new ObjectWriteResponse(
-              response.headers(),
-              result.bucket(),
-              result.location(),
-              result.object(),
-              result.etag(),
-              response.header("x-amz-version-id"));
-        } catch (XmlParserException e) {
-          // As this CompleteMultipartUpload REST call succeeded, just log it.
-          Logger.getLogger(MinioClient.class.getName())
-              .warning(
-                  "S3 service returned unknown XML for CompleteMultipartUpload REST API. "
-                      + bodyContent);
-        }
-      }
-
-      return new ObjectWriteResponse(
-          response.headers(),
-          bucketName,
-          region,
-          objectName,
-          null,
-          response.header("x-amz-version-id"));
+    try {
+      return completeMultipartUploadAsync(
+              bucketName, region, objectName, uploadId, parts, extraHeaders, extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateMultipartUpload.html">CreateMultipartUpload
+   * S3 API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region name of buckets in S3 service.
+   * @param objectName Object name in the bucket.
+   * @param headers Request headers.
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link CreateMultipartUploadResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<CreateMultipartUploadResponse> createMultipartUploadAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
+    queryParams.put("uploads", "");
+
+    Multimap<String, String> headersCopy = newMultimap(headers);
+    // set content type if not set already
+    if (!headersCopy.containsKey("Content-Type")) {
+      headersCopy.put("Content-Type", "application/octet-stream");
+    }
+
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.POST,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(headersCopy),
+                    queryParams,
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                InitiateMultipartUploadResult result =
+                    Xml.unmarshal(
+                        InitiateMultipartUploadResult.class, response.body().charStream());
+                return new CreateMultipartUploadResponse(
+                    response.headers(), bucketName, region, objectName, result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1534,7 +2063,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #createMultipartUploadAsync}.
    */
+  @Deprecated
   protected CreateMultipartUploadResponse createMultipartUpload(
       String bucketName,
       String region,
@@ -1544,30 +2075,105 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    Multimap<String, String> queryParams = newMultimap(extraQueryParams);
-    queryParams.put("uploads", "");
+    try {
+      return createMultipartUploadAsync(bucketName, region, objectName, headers, extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
+  }
 
-    Multimap<String, String> headersCopy = newMultimap(headers);
-    // set content type if not set already
-    if (!headersCopy.containsKey("Content-Type")) {
-      headersCopy.put("Content-Type", "application/octet-stream");
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObjects.html">DeleteObjects S3
+   * API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param objectList List of object names.
+   * @param quiet Quiet flag.
+   * @param bypassGovernanceMode Bypass Governance retention mode.
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link DeleteObjectsResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<DeleteObjectsResponse> deleteObjectsAsync(
+      String bucketName,
+      String region,
+      List<DeleteObject> objectList,
+      boolean quiet,
+      boolean bypassGovernanceMode,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    if (objectList == null) objectList = new LinkedList<>();
+
+    if (objectList.size() > 1000) {
+      throw new IllegalArgumentException("list of objects must not be more than 1000");
     }
 
-    try (Response response =
-        execute(
-            Method.POST,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(headersCopy),
-            queryParams,
-            null,
-            0)) {
-      InitiateMultipartUploadResult result =
-          Xml.unmarshal(InitiateMultipartUploadResult.class, response.body().charStream());
-      return new CreateMultipartUploadResponse(
-          response.headers(), bucketName, region, objectName, result);
-    }
+    Multimap<String, String> headers =
+        merge(
+            extraHeaders,
+            bypassGovernanceMode ? newMultimap("x-amz-bypass-governance-retention", "true") : null);
+
+    final List<DeleteObject> objects = objectList;
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.POST,
+                    bucketName,
+                    null,
+                    location,
+                    httpHeaders(headers),
+                    merge(extraQueryParams, newMultimap("delete", "")),
+                    new DeleteRequest(objects, quiet),
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                String bodyContent = response.body().string();
+                try {
+                  if (Xml.validate(DeleteError.class, bodyContent)) {
+                    DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
+                    DeleteResult result = new DeleteResult(error);
+                    return new DeleteObjectsResponse(
+                        response.headers(), bucketName, region, result);
+                  }
+                } catch (XmlParserException e) {
+                  // Ignore this exception as it is not <Error> message,
+                  // but parse it as <DeleteResult> message below.
+                }
+
+                DeleteResult result = Xml.unmarshal(DeleteResult.class, bodyContent);
+                return new DeleteObjectsResponse(response.headers(), bucketName, region, result);
+              } catch (IOException | XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1592,7 +2198,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #deleteObjectsAsync}.
    */
+  @Deprecated
   protected DeleteObjectsResponse deleteObjects(
       String bucketName,
       String region,
@@ -1604,41 +2212,107 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    if (objectList == null) objectList = new LinkedList<>();
-
-    if (objectList.size() > 1000) {
-      throw new IllegalArgumentException("list of objects must not be more than 1000");
+    try {
+      return deleteObjectsAsync(
+              bucketName,
+              region,
+              objectList,
+              quiet,
+              bypassGovernanceMode,
+              extraHeaders,
+              extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
+  }
 
-    Multimap<String, String> headers =
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">ListObjects
+   * version 1 S3 API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param startAfter Fetch listing after this key (Optional).
+   * @param maxKeys Maximum object information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param continuationToken Continuation token (Optional).
+   * @param fetchOwner Flag to fetch owner information (Optional).
+   * @param includeUserMetadata MinIO extension flag to include user metadata (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link ListObjectsV2Response}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ListObjectsV2Response> listObjectsV2Async(
+      String bucketName,
+      String region,
+      String delimiter,
+      String encodingType,
+      String startAfter,
+      Integer maxKeys,
+      String prefix,
+      String continuationToken,
+      boolean fetchOwner,
+      boolean includeUserMetadata,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    Multimap<String, String> queryParams =
         merge(
-            extraHeaders,
-            bypassGovernanceMode ? newMultimap("x-amz-bypass-governance-retention", "true") : null);
-    try (Response response =
-        execute(
-            Method.POST,
-            bucketName,
-            null,
-            getRegion(bucketName, region),
-            httpHeaders(headers),
-            merge(extraQueryParams, newMultimap("delete", "")),
-            new DeleteRequest(objectList, quiet),
-            0)) {
-      String bodyContent = response.body().string();
-      try {
-        if (Xml.validate(DeleteError.class, bodyContent)) {
-          DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
-          DeleteResult result = new DeleteResult(error);
-          return new DeleteObjectsResponse(response.headers(), bucketName, region, result);
-        }
-      } catch (XmlParserException e) {
-        // Ignore this exception as it is not <Error> message,
-        // but parse it as <DeleteResult> message below.
-      }
+            extraQueryParams,
+            getCommonListObjectsQueryParams(delimiter, encodingType, maxKeys, prefix));
+    queryParams.put("list-type", "2");
+    if (continuationToken != null) queryParams.put("continuation-token", continuationToken);
+    if (fetchOwner) queryParams.put("fetch-owner", "true");
+    if (startAfter != null) queryParams.put("start-after", startAfter);
+    if (includeUserMetadata) queryParams.put("metadata", "true");
 
-      DeleteResult result = Xml.unmarshal(DeleteResult.class, bodyContent);
-      return new DeleteObjectsResponse(response.headers(), bucketName, region, result);
-    }
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.GET,
+                    bucketName,
+                    null,
+                    location,
+                    httpHeaders(extraHeaders),
+                    queryParams,
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                ListBucketResultV2 result =
+                    Xml.unmarshal(ListBucketResultV2.class, response.body().charStream());
+                return new ListObjectsV2Response(response.headers(), bucketName, region, result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1667,7 +2341,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #listObjectsV2Async}.
    */
+  @Deprecated
   protected ListObjectsV2Response listObjectsV2(
       String bucketName,
       String region,
@@ -1684,30 +2360,102 @@ public abstract class S3Base {
       throws InvalidKeyException, NoSuchAlgorithmException, InsufficientDataException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException, IOException {
+    try {
+      return listObjectsV2Async(
+              bucketName,
+              region,
+              delimiter,
+              encodingType,
+              startAfter,
+              maxKeys,
+              prefix,
+              continuationToken,
+              fetchOwner,
+              includeUserMetadata,
+              extraHeaders,
+              extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">ListObjects
+   * version 1 S3 API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param marker Marker (Optional).
+   * @param maxKeys Maximum object information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link ListObjectsV1Response}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ListObjectsV1Response> listObjectsV1Async(
+      String bucketName,
+      String region,
+      String delimiter,
+      String encodingType,
+      String marker,
+      Integer maxKeys,
+      String prefix,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
     Multimap<String, String> queryParams =
         merge(
             extraQueryParams,
             getCommonListObjectsQueryParams(delimiter, encodingType, maxKeys, prefix));
-    queryParams.put("list-type", "2");
-    if (continuationToken != null) queryParams.put("continuation-token", continuationToken);
-    if (fetchOwner) queryParams.put("fetch-owner", "true");
-    if (startAfter != null) queryParams.put("start-after", startAfter);
-    if (includeUserMetadata) queryParams.put("metadata", "true");
+    if (marker != null) queryParams.put("marker", marker);
 
-    try (Response response =
-        execute(
-            Method.GET,
-            bucketName,
-            null,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            queryParams,
-            null,
-            0)) {
-      ListBucketResultV2 result =
-          Xml.unmarshal(ListBucketResultV2.class, response.body().charStream());
-      return new ListObjectsV2Response(response.headers(), bucketName, region, result);
-    }
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.GET,
+                    bucketName,
+                    null,
+                    location,
+                    httpHeaders(extraHeaders),
+                    queryParams,
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                ListBucketResultV1 result =
+                    Xml.unmarshal(ListBucketResultV1.class, response.body().charStream());
+                return new ListObjectsV1Response(response.headers(), bucketName, region, result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1733,7 +2481,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #listObjectsV1Async}.
    */
+  @Deprecated
   protected ListObjectsV1Response listObjectsV1(
       String bucketName,
       String region,
@@ -1747,26 +2497,105 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
+    try {
+      return listObjectsV1Async(
+              bucketName,
+              region,
+              delimiter,
+              encodingType,
+              marker,
+              maxKeys,
+              prefix,
+              extraHeaders,
+              extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectVersions.html">ListObjectVersions
+   * API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param keyMarker Key marker (Optional).
+   * @param maxKeys Maximum object information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param versionIdMarker Version ID marker (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link ListObjectVersionsResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ListObjectVersionsResponse> listObjectVersionsAsync(
+      String bucketName,
+      String region,
+      String delimiter,
+      String encodingType,
+      String keyMarker,
+      Integer maxKeys,
+      String prefix,
+      String versionIdMarker,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
     Multimap<String, String> queryParams =
         merge(
             extraQueryParams,
             getCommonListObjectsQueryParams(delimiter, encodingType, maxKeys, prefix));
-    if (marker != null) queryParams.put("marker", marker);
+    if (keyMarker != null) queryParams.put("key-marker", keyMarker);
+    if (versionIdMarker != null) queryParams.put("version-id-marker", versionIdMarker);
+    queryParams.put("versions", "");
 
-    try (Response response =
-        execute(
-            Method.GET,
-            bucketName,
-            null,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            queryParams,
-            null,
-            0)) {
-      ListBucketResultV1 result =
-          Xml.unmarshal(ListBucketResultV1.class, response.body().charStream());
-      return new ListObjectsV1Response(response.headers(), bucketName, region, result);
-    }
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.GET,
+                    bucketName,
+                    null,
+                    location,
+                    httpHeaders(extraHeaders),
+                    queryParams,
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                ListVersionsResult result =
+                    Xml.unmarshal(ListVersionsResult.class, response.body().charStream());
+                return new ListObjectVersionsResponse(
+                    response.headers(), bucketName, region, result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1794,7 +2623,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #listObjectVersionsAsync}.
    */
+  @Deprecated
   protected ListObjectVersionsResponse listObjectVersions(
       String bucketName,
       String region,
@@ -1809,58 +2640,351 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    Multimap<String, String> queryParams =
-        merge(
-            extraQueryParams,
-            getCommonListObjectsQueryParams(delimiter, encodingType, maxKeys, prefix));
-    if (keyMarker != null) queryParams.put("key-marker", keyMarker);
-    if (versionIdMarker != null) queryParams.put("version-id-marker", versionIdMarker);
-    queryParams.put("versions", "");
-
-    try (Response response =
-        execute(
-            Method.GET,
-            bucketName,
-            null,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            queryParams,
-            null,
-            0)) {
-      ListVersionsResult result =
-          Xml.unmarshal(ListVersionsResult.class, response.body().charStream());
-      return new ListObjectVersionsResponse(response.headers(), bucketName, region, result);
+    try {
+      return listObjectVersionsAsync(
+              bucketName,
+              region,
+              delimiter,
+              encodingType,
+              keyMarker,
+              maxKeys,
+              prefix,
+              versionIdMarker,
+              extraHeaders,
+              extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
   }
 
-  private ObjectWriteResponse putObject(
+  private Part[] uploadParts(
+      PutObjectBaseArgs args, String uploadId, PartReader partReader, PartSource firstPartSource)
+      throws InterruptedException, ExecutionException, InsufficientDataException, InternalException,
+          InvalidKeyException, IOException, NoSuchAlgorithmException, XmlParserException {
+    Part[] parts = new Part[ObjectWriteArgs.MAX_MULTIPART_COUNT];
+    int partNumber = 0;
+    PartSource partSource = firstPartSource;
+    while (true) {
+      partNumber++;
+
+      Multimap<String, String> ssecHeaders = null;
+      // set encryption headers in the case of SSE-C.
+      if (args.sse() != null && args.sse() instanceof ServerSideEncryptionCustomerKey) {
+        ssecHeaders = Multimaps.forMap(args.sse().headers());
+      }
+
+      UploadPartResponse response =
+          uploadPartAsync(
+                  args.bucket(),
+                  args.region(),
+                  args.object(),
+                  partSource,
+                  partNumber,
+                  uploadId,
+                  ssecHeaders,
+                  null)
+              .get();
+      parts[partNumber - 1] = new Part(partNumber, response.etag());
+
+      partSource = partReader.getPart(!this.baseUrl.isHttps());
+      if (partSource == null) break;
+    }
+
+    return parts;
+  }
+
+  private CompletableFuture<ObjectWriteResponse> putMultipartObjectAsync(
+      PutObjectBaseArgs args,
+      Multimap<String, String> headers,
+      PartReader partReader,
+      PartSource firstPartSource)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          String uploadId = null;
+          ObjectWriteResponse response = null;
+          try {
+            CreateMultipartUploadResponse createMultipartUploadResponse =
+                createMultipartUploadAsync(
+                        args.bucket(),
+                        args.region(),
+                        args.object(),
+                        headers,
+                        args.extraQueryParams())
+                    .get();
+            uploadId = createMultipartUploadResponse.result().uploadId();
+            Part[] parts = uploadParts(args, uploadId, partReader, firstPartSource);
+            response =
+                completeMultipartUploadAsync(
+                        args.bucket(), args.region(), args.object(), uploadId, parts, null, null)
+                    .get();
+          } catch (InsufficientDataException
+              | InternalException
+              | InvalidKeyException
+              | IOException
+              | NoSuchAlgorithmException
+              | XmlParserException
+              | InterruptedException
+              | ExecutionException e) {
+            if (uploadId == null) {
+              Throwable throwable = e;
+              if (throwable instanceof ExecutionException) {
+                throwable = ((ExecutionException) throwable).getCause();
+              }
+              if (throwable instanceof CompletionException) {
+                throwable = ((CompletionException) throwable).getCause();
+              }
+              throw new CompletionException(throwable);
+            }
+            try {
+              abortMultipartUploadAsync(
+                      args.bucket(), args.region(), args.object(), uploadId, null, null)
+                  .get();
+            } catch (InsufficientDataException
+                | InternalException
+                | InvalidKeyException
+                | IOException
+                | NoSuchAlgorithmException
+                | XmlParserException
+                | InterruptedException
+                | ExecutionException ex) {
+              Throwable throwable = ex;
+              if (throwable instanceof ExecutionException) {
+                throwable = ((ExecutionException) throwable).getCause();
+              }
+              if (throwable instanceof CompletionException) {
+                throwable = ((CompletionException) throwable).getCause();
+              }
+              throw new CompletionException(throwable);
+            }
+          }
+          return response;
+        });
+  }
+
+  /**
+   * Execute put object asynchronously from object data from {@link RandomAccessFile} or {@link
+   * InputStream}.
+   *
+   * @param args {@link PutObjectBaseArgs}.
+   * @param data {@link RandomAccessFile} or {@link InputStream}.
+   * @param objectSize object size.
+   * @param partSize part size for multipart upload.
+   * @param partCount Number of parts for multipart upload.
+   * @param contentType content-type of object.
+   * @return {@link CompletableFuture}&lt;{@link ObjectWriteResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ObjectWriteResponse> putObjectAsync(
+      PutObjectBaseArgs args,
+      Object data,
+      long objectSize,
+      long partSize,
+      int partCount,
+      String contentType)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    PartReader partReader = newPartReader(data, objectSize, partSize, partCount);
+    if (partReader == null) {
+      throw new IllegalArgumentException("data must be RandomAccessFile or InputStream");
+    }
+
+    Multimap<String, String> headers = newMultimap(args.extraHeaders());
+    headers.putAll(args.genHeaders());
+    if (!headers.containsKey("Content-Type")) headers.put("Content-Type", contentType);
+
+    return CompletableFuture.supplyAsync(
+            () -> {
+              try {
+                return partReader.getPart(!this.baseUrl.isHttps());
+              } catch (NoSuchAlgorithmException | IOException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenCompose(
+            partSource -> {
+              try {
+                if (partReader.partCount() == 1) {
+                  return putObjectAsync(
+                      args.bucket(),
+                      args.region(),
+                      args.object(),
+                      partSource,
+                      headers,
+                      args.extraQueryParams());
+                } else {
+                  return putMultipartObjectAsync(args, headers, partReader, partSource);
+                }
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            });
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">PutObject S3
+   * API</a> for {@link PartSource} asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param objectName Object name in the bucket.
+   * @param partSource PartSource object.
+   * @param headers Additional headers.
+   * @param extraQueryParams Additional query parameters if any.
+   * @return {@link CompletableFuture}&lt;{@link ObjectWriteResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  private CompletableFuture<ObjectWriteResponse> putObjectAsync(
       String bucketName,
       String region,
       String objectName,
       PartSource partSource,
       Multimap<String, String> headers,
       Multimap<String, String> extraQueryParams)
-      throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
-          ServerException, XmlParserException, ErrorResponseException, InternalException,
-          InvalidResponseException {
-    try (Response response =
-        execute(
-            Method.PUT,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(headers),
-            extraQueryParams,
-            partSource,
-            0)) {
-      return new ObjectWriteResponse(
-          response.headers(),
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.PUT,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(headers),
+                    extraQueryParams,
+                    partSource,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                return new ObjectWriteResponse(
+                    response.headers(),
+                    bucketName,
+                    region,
+                    objectName,
+                    response.header("ETag").replaceAll("\"", ""),
+                    response.header("x-amz-version-id"));
+              } finally {
+                response.close();
+              }
+            });
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html">PutObject S3
+   * API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param objectName Object name in the bucket.
+   * @param data Object data must be InputStream, RandomAccessFile, byte[] or String.
+   * @param length Length of object data.
+   * @param headers Additional headers.
+   * @param extraQueryParams Additional query parameters if any.
+   * @return {@link CompletableFuture}&lt;{@link ObjectWriteResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ObjectWriteResponse> putObjectAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      Object data,
+      long length,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    if (!(data instanceof InputStream
+        || data instanceof RandomAccessFile
+        || data instanceof byte[]
+        || data instanceof CharSequence)) {
+      throw new IllegalArgumentException(
+          "data must be InputStream, RandomAccessFile, byte[] or String");
+    }
+
+    PartReader partReader = newPartReader(data, length, length, 1);
+
+    if (partReader != null) {
+      return putObjectAsync(
           bucketName,
           region,
           objectName,
-          response.header("ETag").replaceAll("\"", ""),
-          response.header("x-amz-version-id"));
+          partReader.getPart(!this.baseUrl.isHttps()),
+          headers,
+          extraQueryParams);
     }
+
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.PUT,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(headers),
+                    extraQueryParams,
+                    data,
+                    (int) length);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                return new ObjectWriteResponse(
+                    response.headers(),
+                    bucketName,
+                    region,
+                    objectName,
+                    response.header("ETag").replaceAll("\"", ""),
+                    response.header("x-amz-version-id"));
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1883,7 +3007,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #putObjectAsync}.
    */
+  @Deprecated
   protected ObjectWriteResponse putObject(
       String bucketName,
       String region,
@@ -1895,44 +3021,104 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    if (!(data instanceof InputStream
-        || data instanceof RandomAccessFile
-        || data instanceof byte[]
-        || data instanceof CharSequence)) {
-      throw new IllegalArgumentException(
-          "data must be InputStream, RandomAccessFile, byte[] or String");
+    try {
+      return putObjectAsync(bucketName, region, objectName, data, length, headers, extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
+  }
 
-    PartReader partReader = newPartReader(data, length, length, 1);
-
-    if (partReader != null) {
-      return putObject(
-          bucketName,
-          region,
-          objectName,
-          partReader.getPart(!this.baseUrl.isHttps()),
-          headers,
-          extraQueryParams);
-    }
-
-    try (Response response =
-        execute(
-            Method.PUT,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(headers),
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListMultipartUploads.html">ListMultipartUploads
+   * S3 API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param delimiter Delimiter (Optional).
+   * @param encodingType Encoding type (Optional).
+   * @param keyMarker Key marker (Optional).
+   * @param maxUploads Maximum upload information to fetch (Optional).
+   * @param prefix Prefix (Optional).
+   * @param uploadIdMarker Upload ID marker (Optional).
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link ListMultipartUploadsResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ListMultipartUploadsResponse> listMultipartUploadsAsync(
+      String bucketName,
+      String region,
+      String delimiter,
+      String encodingType,
+      String keyMarker,
+      Integer maxUploads,
+      String prefix,
+      String uploadIdMarker,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    Multimap<String, String> queryParams =
+        merge(
             extraQueryParams,
-            data,
-            (int) length)) {
-      return new ObjectWriteResponse(
-          response.headers(),
-          bucketName,
-          region,
-          objectName,
-          response.header("ETag").replaceAll("\"", ""),
-          response.header("x-amz-version-id"));
-    }
+            newMultimap(
+                "uploads",
+                "",
+                "delimiter",
+                (delimiter != null) ? delimiter : "",
+                "max-uploads",
+                (maxUploads != null) ? maxUploads.toString() : "1000",
+                "prefix",
+                (prefix != null) ? prefix : ""));
+    if (encodingType != null) queryParams.put("encoding-type", encodingType);
+    if (keyMarker != null) queryParams.put("key-marker", keyMarker);
+    if (uploadIdMarker != null) queryParams.put("upload-id-marker", uploadIdMarker);
+
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.GET,
+                    bucketName,
+                    null,
+                    location,
+                    httpHeaders(extraHeaders),
+                    queryParams,
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                ListMultipartUploadsResult result =
+                    Xml.unmarshal(ListMultipartUploadsResult.class, response.body().charStream());
+                return new ListMultipartUploadsResponse(
+                    response.headers(), bucketName, region, result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -1960,7 +3146,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #listMultipartUploadsAsync}.
    */
+  @Deprecated
   protected ListMultipartUploadsResponse listMultipartUploads(
       String bucketName,
       String region,
@@ -1975,36 +3163,105 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
+    try {
+      return listMultipartUploadsAsync(
+              bucketName,
+              region,
+              delimiter,
+              encodingType,
+              keyMarker,
+              maxUploads,
+              prefix,
+              uploadIdMarker,
+              extraHeaders,
+              extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListParts.html">ListParts S3
+   * API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Name of the bucket (Optional).
+   * @param objectName Object name in the bucket.
+   * @param maxParts Maximum parts information to fetch (Optional).
+   * @param partNumberMarker Part number marker (Optional).
+   * @param uploadId Upload ID.
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link ListPartsResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<ListPartsResponse> listPartsAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      Integer maxParts,
+      Integer partNumberMarker,
+      String uploadId,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
     Multimap<String, String> queryParams =
         merge(
             extraQueryParams,
             newMultimap(
-                "uploads",
-                "",
-                "delimiter",
-                (delimiter != null) ? delimiter : "",
-                "max-uploads",
-                (maxUploads != null) ? maxUploads.toString() : "1000",
-                "prefix",
-                (prefix != null) ? prefix : ""));
-    if (encodingType != null) queryParams.put("encoding-type", encodingType);
-    if (keyMarker != null) queryParams.put("key-marker", keyMarker);
-    if (uploadIdMarker != null) queryParams.put("upload-id-marker", uploadIdMarker);
-
-    try (Response response =
-        execute(
-            Method.GET,
-            bucketName,
-            null,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            queryParams,
-            null,
-            0)) {
-      ListMultipartUploadsResult result =
-          Xml.unmarshal(ListMultipartUploadsResult.class, response.body().charStream());
-      return new ListMultipartUploadsResponse(response.headers(), bucketName, region, result);
+                UPLOAD_ID,
+                uploadId,
+                "max-parts",
+                (maxParts != null) ? maxParts.toString() : "1000"));
+    if (partNumberMarker != null) {
+      queryParams.put("part-number-marker", partNumberMarker.toString());
     }
+
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.GET,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(extraHeaders),
+                    queryParams,
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                ListPartsResult result =
+                    Xml.unmarshal(ListPartsResult.class, response.body().charStream());
+                return new ListPartsResponse(
+                    response.headers(), bucketName, region, objectName, result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -2029,7 +3286,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #listPartsAsync}.
    */
+  @Deprecated
   protected ListPartsResponse listParts(
       String bucketName,
       String region,
@@ -2042,34 +3301,46 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    Multimap<String, String> queryParams =
-        merge(
-            extraQueryParams,
-            newMultimap(
-                UPLOAD_ID,
-                uploadId,
-                "max-parts",
-                (maxParts != null) ? maxParts.toString() : "1000"));
-    if (partNumberMarker != null) {
-      queryParams.put("part-number-marker", partNumberMarker.toString());
-    }
-
-    try (Response response =
-        execute(
-            Method.GET,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            queryParams,
-            null,
-            0)) {
-      ListPartsResult result = Xml.unmarshal(ListPartsResult.class, response.body().charStream());
-      return new ListPartsResponse(response.headers(), bucketName, region, objectName, result);
+    try {
+      return listPartsAsync(
+              bucketName,
+              region,
+              objectName,
+              maxParts,
+              partNumberMarker,
+              uploadId,
+              extraHeaders,
+              extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
   }
 
-  private UploadPartResponse uploadPart(
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html">UploadPart S3
+   * API</a> for PartSource asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param objectName Object name in the bucket.
+   * @param partSource PartSource Object.
+   * @param partNumber Part number.
+   * @param uploadId Upload ID.
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link UploadPartResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<UploadPartResponse> uploadPartAsync(
       String bucketName,
       String region,
       String objectName,
@@ -2078,30 +3349,145 @@ public abstract class S3Base {
       String uploadId,
       Multimap<String, String> extraHeaders,
       Multimap<String, String> extraQueryParams)
-      throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
-          ServerException, XmlParserException, ErrorResponseException, InternalException,
-          InvalidResponseException {
-    try (Response response =
-        execute(
-            Method.PUT,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            merge(
-                extraQueryParams,
-                newMultimap("partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
-            partSource,
-            0)) {
-      return new UploadPartResponse(
-          response.headers(),
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.PUT,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(extraHeaders),
+                    merge(
+                        extraQueryParams,
+                        newMultimap(
+                            "partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
+                    partSource,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                return new UploadPartResponse(
+                    response.headers(),
+                    bucketName,
+                    region,
+                    objectName,
+                    uploadId,
+                    partNumber,
+                    response.header("ETag").replaceAll("\"", ""));
+              } finally {
+                response.close();
+              }
+            });
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html">UploadPart S3
+   * API</a> asynchronously.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param objectName Object name in the bucket.
+   * @param data Object data must be InputStream, RandomAccessFile, byte[] or String.
+   * @param length Length of object data.
+   * @param uploadId Upload ID.
+   * @param partNumber Part number.
+   * @param extraHeaders Extra headers for request (Optional).
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link UploadPartResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<UploadPartResponse> uploadPartAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      Object data,
+      long length,
+      String uploadId,
+      int partNumber,
+      Multimap<String, String> extraHeaders,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    if (!(data instanceof InputStream
+        || data instanceof RandomAccessFile
+        || data instanceof byte[]
+        || data instanceof CharSequence)) {
+      throw new IllegalArgumentException(
+          "data must be InputStream, RandomAccessFile, byte[] or String");
+    }
+
+    PartReader partReader = newPartReader(data, length, length, 1);
+
+    if (partReader != null) {
+      return uploadPartAsync(
           bucketName,
           region,
           objectName,
-          uploadId,
+          partReader.getPart(!this.baseUrl.isHttps()),
           partNumber,
-          response.header("ETag").replaceAll("\"", ""));
+          uploadId,
+          extraHeaders,
+          extraQueryParams);
     }
+
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.PUT,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(extraHeaders),
+                    merge(
+                        extraQueryParams,
+                        newMultimap(
+                            "partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
+                    data,
+                    (int) length);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                return new UploadPartResponse(
+                    response.headers(),
+                    bucketName,
+                    region,
+                    objectName,
+                    uploadId,
+                    partNumber,
+                    response.header("ETag").replaceAll("\"", ""));
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**
@@ -2117,7 +3503,7 @@ public abstract class S3Base {
    * @param partNumber Part number.
    * @param extraHeaders Extra headers for request (Optional).
    * @param extraQueryParams Extra query parameters for request (Optional).
-   * @return String - Contains ETag.
+   * @return {@link UploadPartResponse} object.
    * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws InternalException thrown to indicate internal library error.
@@ -2127,7 +3513,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #uploadPartAsync}.
    */
+  @Deprecated
   protected UploadPartResponse uploadPart(
       String bucketName,
       String region,
@@ -2141,48 +3529,23 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    if (!(data instanceof InputStream
-        || data instanceof RandomAccessFile
-        || data instanceof byte[]
-        || data instanceof CharSequence)) {
-      throw new IllegalArgumentException(
-          "data must be InputStream, RandomAccessFile, byte[] or String");
-    }
-
-    PartReader partReader = newPartReader(data, length, length, 1);
-
-    if (partReader != null) {
-      return uploadPart(
-          bucketName,
-          region,
-          objectName,
-          partReader.getPart(!this.baseUrl.isHttps()),
-          partNumber,
-          uploadId,
-          extraHeaders,
-          extraQueryParams);
-    }
-
-    try (Response response =
-        execute(
-            Method.PUT,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(extraHeaders),
-            merge(
-                extraQueryParams,
-                newMultimap("partNumber", Integer.toString(partNumber), UPLOAD_ID, uploadId)),
-            data,
-            (int) length)) {
-      return new UploadPartResponse(
-          response.headers(),
-          bucketName,
-          region,
-          objectName,
-          uploadId,
-          partNumber,
-          response.header("ETag").replaceAll("\"", ""));
+    try {
+      return uploadPartAsync(
+              bucketName,
+              region,
+              objectName,
+              data,
+              length,
+              uploadId,
+              partNumber,
+              extraHeaders,
+              extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
   }
 
@@ -2208,7 +3571,9 @@ public abstract class S3Base {
    * @throws IOException thrown to indicate I/O error on S3 operation.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
+   * @deprecated This method is no longer supported. Use {@link #uploadPartCopyAsync}.
    */
+  @Deprecated
   protected UploadPartCopyResponse uploadPartCopy(
       String bucketName,
       String region,
@@ -2220,21 +3585,91 @@ public abstract class S3Base {
       throws NoSuchAlgorithmException, InsufficientDataException, IOException, InvalidKeyException,
           ServerException, XmlParserException, ErrorResponseException, InternalException,
           InvalidResponseException {
-    try (Response response =
-        execute(
-            Method.PUT,
-            bucketName,
-            objectName,
-            getRegion(bucketName, region),
-            httpHeaders(headers),
-            merge(
-                extraQueryParams,
-                newMultimap("partNumber", Integer.toString(partNumber), "uploadId", uploadId)),
-            null,
-            0)) {
-      CopyPartResult result = Xml.unmarshal(CopyPartResult.class, response.body().charStream());
-      return new UploadPartCopyResponse(
-          response.headers(), bucketName, region, objectName, uploadId, partNumber, result);
+    try {
+      return uploadPartCopyAsync(
+              bucketName, region, objectName, uploadId, partNumber, headers, extraQueryParams)
+          .get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throwEncapsulatedException(e);
+      return null;
     }
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html">UploadPartCopy
+   * S3 API</a>.
+   *
+   * @param bucketName Name of the bucket.
+   * @param region Region of the bucket (Optional).
+   * @param objectName Object name in the bucket.
+   * @param uploadId Upload ID.
+   * @param partNumber Part number.
+   * @param headers Request headers with source object definitions.
+   * @param extraQueryParams Extra query parameters for request (Optional).
+   * @return {@link CompletableFuture}&lt;{@link UploadPartCopyResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  protected CompletableFuture<UploadPartCopyResponse> uploadPartCopyAsync(
+      String bucketName,
+      String region,
+      String objectName,
+      String uploadId,
+      int partNumber,
+      Multimap<String, String> headers,
+      Multimap<String, String> extraQueryParams)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    return getRegionAsync(bucketName, region)
+        .thenCompose(
+            location -> {
+              try {
+                return executeAsync(
+                    Method.PUT,
+                    bucketName,
+                    objectName,
+                    location,
+                    httpHeaders(headers),
+                    merge(
+                        extraQueryParams,
+                        newMultimap(
+                            "partNumber", Integer.toString(partNumber), "uploadId", uploadId)),
+                    null,
+                    0);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                CopyPartResult result =
+                    Xml.unmarshal(CopyPartResult.class, response.body().charStream());
+                return new UploadPartCopyResponse(
+                    response.headers(),
+                    bucketName,
+                    region,
+                    objectName,
+                    uploadId,
+                    partNumber,
+                    result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 }

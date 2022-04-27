@@ -20,7 +20,9 @@ import io.minio.messages.DeleteObject;
 import java.util.LinkedList;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#removeObjects}. */
+/**
+ * Argument class of {@link MinioAsyncClient#removeObjects} and {@link MinioClient#removeObjects}.
+ */
 public class RemoveObjectsArgs extends BucketArgs {
   private boolean bypassGovernanceMode;
   private Iterable<DeleteObject> objects = new LinkedList<>();

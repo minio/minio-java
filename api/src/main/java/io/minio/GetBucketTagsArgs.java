@@ -16,7 +16,9 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#getBucketTags}. */
+/**
+ * Argument class of {@link MinioAsyncClient#getBucketTags} and {@link MinioClient#getBucketTags}.
+ */
 public class GetBucketTagsArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();

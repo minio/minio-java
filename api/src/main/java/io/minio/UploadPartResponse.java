@@ -18,7 +18,7 @@ package io.minio;
 
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#uploadPart}. */
+/** Response class of {@link S3Base#uploadPartAsync}. */
 public class UploadPartResponse extends GenericResponse {
   private String uploadId;
   private int partNumber;

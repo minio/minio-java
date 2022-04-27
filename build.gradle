@@ -34,7 +34,7 @@ apply plugin: "de.marcphilipp.nexus-publish"
 
 allprojects {
     group = 'io.minio'
-    version = '8.3.10'
+    version = '8.4.0'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
@@ -68,7 +68,7 @@ subprojects {
 
     [compileJava, compileTestJava].each() {
         it.options.fork = true
-        it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options", "-Werror"]
+        it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options", "-Werror", "-Xdiags:verbose"]
         it.options.encoding = "UTF-8"
     }
 

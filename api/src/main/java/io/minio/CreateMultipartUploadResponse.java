@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.InitiateMultipartUploadResult;
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#createMultipartUpload}. */
+/** Response class of {@link S3Base#createMultipartUploadAsync}. */
 public class CreateMultipartUploadResponse extends GenericResponse {
   private InitiateMultipartUploadResult result;
 

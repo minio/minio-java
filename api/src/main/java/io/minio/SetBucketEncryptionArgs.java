@@ -19,7 +19,10 @@ package io.minio;
 import io.minio.messages.SseConfiguration;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setBucketEncryption}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setBucketEncryption} and {@link
+ * MinioClient#setBucketEncryption}.
+ */
 public class SetBucketEncryptionArgs extends BucketArgs {
   private SseConfiguration config;
 

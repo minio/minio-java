@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.DeleteResult;
 import okhttp3.Headers;
 
-/** Response class of {@link MinioClient#listObjectsV1}. */
+/** Response class of {@link S3Base#deleteObjectsAsync}. */
 public class DeleteObjectsResponse extends GenericResponse {
   private DeleteResult result;
 

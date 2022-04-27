@@ -26,7 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import okhttp3.Headers;
 
-/** Response of {@link MinioClient#statObject}. */
+/** Response of {@link S3Base#statObjectAsync}. */
 public class StatObjectResponse extends GenericResponse {
   private String etag;
   private long size;

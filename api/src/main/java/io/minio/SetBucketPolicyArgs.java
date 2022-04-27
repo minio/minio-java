@@ -18,7 +18,10 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#setBucketPolicy}. */
+/**
+ * Argument class of {@link MinioAsyncClient#setBucketPolicy} and {@link
+ * MinioClient#setBucketPolicy}.
+ */
 public class SetBucketPolicyArgs extends BucketArgs {
   private String config;
 

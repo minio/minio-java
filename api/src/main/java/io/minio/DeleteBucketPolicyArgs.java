@@ -16,7 +16,10 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioClient#deleteBucketPolicy}. */
+/**
+ * Argument class of {@link MinioAsyncClient#deleteBucketPolicy} and {@link
+ * MinioClient#deleteBucketPolicy}.
+ */
 public class DeleteBucketPolicyArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
