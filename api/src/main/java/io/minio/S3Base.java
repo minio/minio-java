@@ -573,6 +573,14 @@ public abstract class S3Base {
                 if (!method.equals(Method.HEAD)
                     && (contentType == null
                         || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
+                  if (response.code() == 304 && response.body().contentLength() == 0) {
+                    completableFuture.completeExceptionally(
+                        new ServerException(
+                            "server failed with HTTP status code " + response.code(),
+                            response.code(),
+                            traceBuilder.toString()));
+                  }
+
                   completableFuture.completeExceptionally(
                       new InvalidResponseException(
                           response.code(),
@@ -651,6 +659,7 @@ public abstract class S3Base {
                       completableFuture.completeExceptionally(
                           new ServerException(
                               "server failed with HTTP status code " + response.code(),
+                              response.code(),
                               traceBuilder.toString()));
                       return;
                   }
