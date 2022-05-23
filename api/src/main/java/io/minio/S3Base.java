@@ -391,11 +391,7 @@ public abstract class S3Base {
 
     String md5Hash = Digest.ZERO_MD5_HASH;
     if (body != null) {
-      if (body instanceof PartSource) {
-        md5Hash = ((PartSource) body).md5Hash();
-      } else if (body instanceof byte[]) {
-        md5Hash = Digest.md5Hash((byte[]) body, length);
-      }
+      md5Hash = (body instanceof byte[]) ? Digest.md5Hash((byte[]) body, length) : null;
     }
 
     String sha256Hash = null;
@@ -412,6 +408,9 @@ public abstract class S3Base {
       } else {
         // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
         sha256Hash = "UNSIGNED-PAYLOAD";
+        if (body != null && body instanceof PartSource) {
+          sha256Hash = ((PartSource) body).sha256Hash();
+        }
       }
     }
 
@@ -2690,7 +2689,7 @@ public abstract class S3Base {
               .get();
       parts[partNumber - 1] = new Part(partNumber, response.etag());
 
-      partSource = partReader.getPart(!this.baseUrl.isHttps());
+      partSource = partReader.getPart();
       if (partSource == null) break;
     }
 
@@ -2806,7 +2805,7 @@ public abstract class S3Base {
     return CompletableFuture.supplyAsync(
             () -> {
               try {
-                return partReader.getPart(!this.baseUrl.isHttps());
+                return partReader.getPart();
               } catch (NoSuchAlgorithmException | IOException e) {
                 throw new CompletionException(e);
               }
@@ -2941,12 +2940,7 @@ public abstract class S3Base {
 
     if (partReader != null) {
       return putObjectAsync(
-          bucketName,
-          region,
-          objectName,
-          partReader.getPart(!this.baseUrl.isHttps()),
-          headers,
-          extraQueryParams);
+          bucketName, region, objectName, partReader.getPart(), headers, extraQueryParams);
     }
 
     return getRegionAsync(bucketName, region)
@@ -3441,7 +3435,7 @@ public abstract class S3Base {
           bucketName,
           region,
           objectName,
-          partReader.getPart(!this.baseUrl.isHttps()),
+          partReader.getPart(),
           partNumber,
           uploadId,
           extraHeaders,
