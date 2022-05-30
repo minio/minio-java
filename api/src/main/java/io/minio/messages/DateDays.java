@@ -22,19 +22,10 @@ import org.simpleframework.xml.Element;
 /** Base class for {@link Transition} and {@link Expiration}. */
 public abstract class DateDays {
   @Element(name = "Date", required = false)
-  private ResponseDate date;
+  protected ResponseDate date;
 
   @Element(name = "Days", required = false)
-  private Integer days;
-
-  public DateDays(ResponseDate date, Integer days) {
-    if (date != null ^ days != null) {
-      this.date = date;
-      this.days = days;
-    } else {
-      throw new IllegalArgumentException("Only one of date or days must be set");
-    }
-  }
+  protected Integer days;
 
   public ZonedDateTime date() {
     return (date != null) ? date.zonedDateTime() : null;
