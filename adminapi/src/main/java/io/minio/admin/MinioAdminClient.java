@@ -23,17 +23,16 @@ import com.fasterxml.jackson.databind.type.MapType;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.minio.*;
+import io.minio.Digest;
+import io.minio.MinioProperties;
+import io.minio.S3Escaper;
+import io.minio.Signer;
+import io.minio.Time;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
-import okhttp3.*;
-import org.bouncycastle.crypto.InvalidCipherTextException;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -49,6 +48,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
+import org.bouncycastle.crypto.InvalidCipherTextException;
 
 /** Client to perform MinIO administration operations. */
 public class MinioAdminClient {
