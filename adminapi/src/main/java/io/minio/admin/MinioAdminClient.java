@@ -295,6 +295,7 @@ public class MinioAdminClient {
 
   /**
    * set bucket quota size
+   *
    * @param bucketName bucketName
    * @param size the capacity of the bucket
    * @param unit the quota unit of the size argument
@@ -303,23 +304,23 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void setBucketQuota(@Nonnull String bucketName, long size, @Nonnull QuotaUnit unit)
-          throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    Map<String, Object> quotaEntity = new HashMap<>(4);
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    Map<String, Object> quotaEntity = new HashMap<>();
     if (size > 0) {
       quotaEntity.put("quotatype", "hard");
     }
     quotaEntity.put("quota", unit.toBytes(size));
     try (Response response =
-                 execute(
-                         Method.PUT,
-                         Command.SET_BUCKET_QUOTA,
-                         ImmutableMultimap.of("bucket", bucketName),
-                         OBJECT_MAPPER.writeValueAsBytes(quotaEntity))) {
-    }
+        execute(
+            Method.PUT,
+            Command.SET_BUCKET_QUOTA,
+            ImmutableMultimap.of("bucket", bucketName),
+            OBJECT_MAPPER.writeValueAsBytes(quotaEntity))) {}
   }
 
   /**
    * get bucket quota size
+   *
    * @param bucketName bucketName
    * @return bytes of bucket
    * @throws IOException
@@ -327,37 +328,36 @@ public class MinioAdminClient {
    * @throws InvalidKeyException
    */
   public long getBucketQuota(String bucketName)
-          throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response =
-                 execute(
-                         Method.GET,
-                         Command.GET_BUCKET_QUOTA,
-                         ImmutableMultimap.of("bucket", bucketName),
-                         null)) {
+        execute(
+            Method.GET,
+            Command.GET_BUCKET_QUOTA,
+            ImmutableMultimap.of("bucket", bucketName),
+            null)) {
       MapType mapType =
-              OBJECT_MAPPER
-                      .getTypeFactory()
-                      .constructMapType(HashMap.class, String.class, JsonNode.class);
-      return OBJECT_MAPPER
-              .<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
-              .entrySet()
-              .stream()
-              .filter(entry -> "quota".equals(entry.getKey()))
-              .findFirst()
-              .map(entry -> Long.valueOf(entry.getValue().toString()))
-              .orElseThrow(() -> new IllegalArgumentException("found not quota"));
+          OBJECT_MAPPER
+              .getTypeFactory()
+              .constructMapType(HashMap.class, String.class, JsonNode.class);
+      return OBJECT_MAPPER.<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
+          .entrySet().stream()
+          .filter(entry -> "quota".equals(entry.getKey()))
+          .findFirst()
+          .map(entry -> Long.valueOf(entry.getValue().toString()))
+          .orElseThrow(() -> new IllegalArgumentException("found not quota"));
     }
   }
 
   /**
    * Reset bucket quota
+   *
    * @param bucketName bucketName
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void clearBucketQuota(@Nonnull String bucketName)
-          throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     setBucketQuota(bucketName, 0, QuotaUnit.KB);
   }
 
