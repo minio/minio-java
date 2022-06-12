@@ -133,7 +133,8 @@ public class MinioAsyncClient extends S3Base {
       HttpUrl baseUrl,
       String region,
       boolean isAwsHost,
-      boolean isAcceleratedHost,
+      boolean isFipsHost,
+      boolean isAccelerateHost,
       boolean isDualStackHost,
       boolean useVirtualStyle,
       Provider provider,
@@ -142,7 +143,8 @@ public class MinioAsyncClient extends S3Base {
         baseUrl,
         region,
         isAwsHost,
-        isAcceleratedHost,
+        isFipsHost,
+        isAccelerateHost,
         isDualStackHost,
         useVirtualStyle,
         provider,
@@ -3174,7 +3176,8 @@ public class MinioAsyncClient extends S3Base {
     private HttpUrl baseUrl;
     private String region;
     private boolean isAwsHost;
-    private boolean isAcceleratedHost;
+    private boolean isFipsHost;
+    private boolean isAccelerateHost;
     private boolean isDualStackHost;
     private boolean useVirtualStyle;
     private Provider provider;
@@ -3183,13 +3186,19 @@ public class MinioAsyncClient extends S3Base {
     private boolean isAwsChinaHost;
     private String regionInUrl;
 
-    private boolean isAwsEndpoint(String endpoint) {
-      return (endpoint.startsWith("s3.") || isAwsAccelerateEndpoint(endpoint))
-          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
+    private boolean isAwsFipsEndpoint(String endpoint) {
+      return endpoint.startsWith("s3-fips.");
     }
 
     private boolean isAwsAccelerateEndpoint(String endpoint) {
       return endpoint.startsWith("s3-accelerate.");
+    }
+
+    private boolean isAwsEndpoint(String endpoint) {
+      return (endpoint.startsWith("s3.")
+              || isAwsFipsEndpoint(endpoint)
+              || isAwsAccelerateEndpoint(endpoint))
+          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
     }
 
     private boolean isAwsDualStackEndpoint(String endpoint) {
@@ -3236,7 +3245,8 @@ public class MinioAsyncClient extends S3Base {
             url.newBuilder()
                 .host(this.isAwsChinaHost ? "amazonaws.com.cn" : "amazonaws.com")
                 .build();
-        this.isAcceleratedHost = isAwsAccelerateEndpoint(host);
+        this.isFipsHost = isAwsFipsEndpoint(host);
+        this.isAccelerateHost = isAwsAccelerateEndpoint(host);
         this.isDualStackHost = isAwsDualStackEndpoint(host);
         this.regionInUrl = extractRegion(host);
         this.useVirtualStyle = true;
@@ -3316,7 +3326,8 @@ public class MinioAsyncClient extends S3Base {
           baseUrl,
           region,
           isAwsHost,
-          isAcceleratedHost,
+          isFipsHost,
+          isAccelerateHost,
           isDualStackHost,
           useVirtualStyle,
           provider,
