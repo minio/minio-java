@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Locale;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -72,15 +71,13 @@ class PartReader {
     for (int i = 0; i < this.buffers.length; i++) this.buffers[i] = new ByteBufferStream();
   }
 
-  private long readStreamChunk(
-      ByteBufferStream buffer, long size, MessageDigest md5, MessageDigest sha256)
+  private long readStreamChunk(ByteBufferStream buffer, long size, MessageDigest sha256)
       throws IOException {
     long totalBytesRead = 0;
 
     if (this.oneByte != null) {
       buffer.write(this.oneByte);
-      md5.update(this.oneByte);
-      if (sha256 != null) sha256.update(this.oneByte);
+      sha256.update(this.oneByte);
       totalBytesRead++;
       this.oneByte = null;
     }
@@ -95,15 +92,14 @@ class PartReader {
         throw new IOException("unexpected EOF");
       }
       buffer.write(this.buf16k, 0, bytesRead);
-      md5.update(this.buf16k, 0, bytesRead);
-      if (sha256 != null) sha256.update(this.buf16k, 0, bytesRead);
+      sha256.update(this.buf16k, 0, bytesRead);
       totalBytesRead += bytesRead;
     }
 
     return totalBytesRead;
   }
 
-  private long readStream(long size, MessageDigest md5, MessageDigest sha256) throws IOException {
+  private long readStream(long size, MessageDigest sha256) throws IOException {
     long count = size / CHUNK_SIZE;
     long lastChunkSize = size - (count * CHUNK_SIZE);
     if (lastChunkSize > 0) {
@@ -116,7 +112,7 @@ class PartReader {
     for (int i = 0; i < buffers.length; i++) buffers[i].reset();
     for (long i = 1; i <= count && !this.eof; i++) {
       long chunkSize = (i != count) ? CHUNK_SIZE : lastChunkSize;
-      long bytesRead = this.readStreamChunk(buffers[(int) (i - 1)], chunkSize, md5, sha256);
+      long bytesRead = this.readStreamChunk(buffers[(int) (i - 1)], chunkSize, sha256);
       totalBytesRead += bytesRead;
     }
 
@@ -128,7 +124,7 @@ class PartReader {
     return totalBytesRead;
   }
 
-  private long readFile(long size, MessageDigest md5, MessageDigest sha256) throws IOException {
+  private long readFile(long size, MessageDigest sha256) throws IOException {
     long position = this.file.getFilePointer();
     long totalBytesRead = 0;
 
@@ -137,8 +133,7 @@ class PartReader {
       if (bytesToRead > this.buf16k.length) bytesToRead = this.buf16k.length;
       int bytesRead = this.file.read(this.buf16k, 0, (int) bytesToRead);
       if (bytesRead < 0) throw new IOException("unexpected EOF");
-      md5.update(this.buf16k, 0, bytesRead);
-      if (sha256 != null) sha256.update(this.buf16k, 0, bytesRead);
+      sha256.update(this.buf16k, 0, bytesRead);
       totalBytesRead += bytesRead;
     }
 
@@ -146,35 +141,30 @@ class PartReader {
     return totalBytesRead;
   }
 
-  private long read(long size, MessageDigest md5, MessageDigest sha256) throws IOException {
-    return (this.file != null) ? readFile(size, md5, sha256) : readStream(size, md5, sha256);
+  private long read(long size, MessageDigest sha256) throws IOException {
+    return (this.file != null) ? readFile(size, sha256) : readStream(size, sha256);
   }
 
-  public PartSource getPart(boolean computeSha256) throws NoSuchAlgorithmException, IOException {
+  public PartSource getPart() throws NoSuchAlgorithmException, IOException {
     if (this.partNumber == this.partCount) return null;
 
     this.partNumber++;
 
-    MessageDigest md5 = MessageDigest.getInstance("MD5");
-    MessageDigest sha256 = computeSha256 ? MessageDigest.getInstance("SHA-256") : null;
+    MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
 
     long partSize = this.partSize;
     if (this.partNumber == this.partCount) partSize = this.objectSize - this.totalDataRead;
-    long bytesRead = this.read(partSize, md5, sha256);
+    long bytesRead = this.read(partSize, sha256);
     this.totalDataRead += bytesRead;
     if (this.objectSize < 0 && this.eof) this.partCount = this.partNumber;
 
-    String md5Hash = Base64.getEncoder().encodeToString(md5.digest());
-    String sha256Hash = null;
-    if (computeSha256) {
-      sha256Hash = BaseEncoding.base16().encode(sha256.digest()).toLowerCase(Locale.US);
-    }
+    String sha256Hash = BaseEncoding.base16().encode(sha256.digest()).toLowerCase(Locale.US);
 
     if (this.file != null) {
-      return new PartSource(this.partNumber, this.file, bytesRead, md5Hash, sha256Hash);
+      return new PartSource(this.partNumber, this.file, bytesRead, null, sha256Hash);
     }
 
-    return new PartSource(this.partNumber, this.buffers, bytesRead, md5Hash, sha256Hash);
+    return new PartSource(this.partNumber, this.buffers, bytesRead, null, sha256Hash);
   }
 
   public int partCount() {
