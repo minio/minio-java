@@ -132,7 +132,8 @@ public abstract class S3Base {
   protected Provider provider;
 
   private boolean isAwsHost;
-  private boolean isAcceleratedHost;
+  private boolean isFipsHost;
+  private boolean isAccelerateHost;
   private boolean isDualStackHost;
   private boolean useVirtualStyle;
   private OkHttpClient httpClient;
@@ -141,7 +142,8 @@ public abstract class S3Base {
       HttpUrl baseUrl,
       String region,
       boolean isAwsHost,
-      boolean isAcceleratedHost,
+      boolean isFipsHost,
+      boolean isAccelerateHost,
       boolean isDualStackHost,
       boolean useVirtualStyle,
       Provider provider,
@@ -149,7 +151,8 @@ public abstract class S3Base {
     this.baseUrl = baseUrl;
     this.region = region;
     this.isAwsHost = isAwsHost;
-    this.isAcceleratedHost = isAcceleratedHost;
+    this.isFipsHost = isFipsHost;
+    this.isAccelerateHost = isAccelerateHost;
     this.isDualStackHost = isDualStackHost;
     this.useVirtualStyle = useVirtualStyle;
     this.provider = provider;
@@ -160,7 +163,8 @@ public abstract class S3Base {
     this.baseUrl = client.baseUrl;
     this.region = client.region;
     this.isAwsHost = client.isAwsHost;
-    this.isAcceleratedHost = client.isAcceleratedHost;
+    this.isFipsHost = client.isFipsHost;
+    this.isAccelerateHost = client.isAccelerateHost;
     this.isDualStackHost = client.isDualStackHost;
     this.useVirtualStyle = client.useVirtualStyle;
     this.provider = client.provider;
@@ -301,7 +305,9 @@ public abstract class S3Base {
 
       if (isAwsHost) {
         String s3Domain = "s3.";
-        if (isAcceleratedHost) {
+        if (isFipsHost) {
+          s3Domain = "s3-fips.";
+        } else if (isAccelerateHost) {
           if (bucketName.contains(".")) {
             throw new IllegalArgumentException(
                 "bucket name '"
@@ -316,7 +322,7 @@ public abstract class S3Base {
         if (isDualStackHost) dualStack = "dualstack.";
 
         String endpoint = s3Domain + dualStack;
-        if (enforcePathStyle || !isAcceleratedHost) endpoint += region + ".";
+        if (enforcePathStyle || !isAccelerateHost) endpoint += region + ".";
 
         host = endpoint + host;
       }
@@ -1666,12 +1672,12 @@ public abstract class S3Base {
 
   /** Enables accelerate endpoint for Amazon S3 endpoint. */
   public void enableAccelerateEndpoint() {
-    this.isAcceleratedHost = true;
+    this.isAccelerateHost = true;
   }
 
   /** Disables accelerate endpoint for Amazon S3 endpoint. */
   public void disableAccelerateEndpoint() {
-    this.isAcceleratedHost = false;
+    this.isAccelerateHost = false;
   }
 
   /** Enables dual-stack endpoint for Amazon S3 endpoint. */
