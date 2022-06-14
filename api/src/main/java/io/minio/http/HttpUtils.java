@@ -112,13 +112,18 @@ public class HttpUtils {
   }
 
   public static String getHostHeader(HttpUrl url) {
+    String host = url.host();
+    if (InetAddressValidator.getInstance().isValidInet6Address(host)) {
+      host = "[" + host + "]";
+    }
+
     // ignore port when port and service matches i.e HTTP -> 80, HTTPS -> 443
     if ((url.scheme().equals("http") && url.port() == 80)
         || (url.scheme().equals("https") && url.port() == 443)) {
-      return url.host();
+      return host;
     }
 
-    return url.host() + ":" + url.port();
+    return host + ":" + url.port();
   }
 
   /**

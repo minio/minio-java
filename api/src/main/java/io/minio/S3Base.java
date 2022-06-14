@@ -132,7 +132,8 @@ public abstract class S3Base {
   protected Provider provider;
 
   private boolean isAwsHost;
-  private boolean isAcceleratedHost;
+  private boolean isFipsHost;
+  private boolean isAccelerateHost;
   private boolean isDualStackHost;
   private boolean useVirtualStyle;
   private OkHttpClient httpClient;
@@ -141,7 +142,8 @@ public abstract class S3Base {
       HttpUrl baseUrl,
       String region,
       boolean isAwsHost,
-      boolean isAcceleratedHost,
+      boolean isFipsHost,
+      boolean isAccelerateHost,
       boolean isDualStackHost,
       boolean useVirtualStyle,
       Provider provider,
@@ -149,7 +151,8 @@ public abstract class S3Base {
     this.baseUrl = baseUrl;
     this.region = region;
     this.isAwsHost = isAwsHost;
-    this.isAcceleratedHost = isAcceleratedHost;
+    this.isFipsHost = isFipsHost;
+    this.isAccelerateHost = isAccelerateHost;
     this.isDualStackHost = isDualStackHost;
     this.useVirtualStyle = useVirtualStyle;
     this.provider = provider;
@@ -160,7 +163,8 @@ public abstract class S3Base {
     this.baseUrl = client.baseUrl;
     this.region = client.region;
     this.isAwsHost = client.isAwsHost;
-    this.isAcceleratedHost = client.isAcceleratedHost;
+    this.isFipsHost = client.isFipsHost;
+    this.isAccelerateHost = client.isAccelerateHost;
     this.isDualStackHost = client.isDualStackHost;
     this.useVirtualStyle = client.useVirtualStyle;
     this.provider = client.provider;
@@ -301,7 +305,9 @@ public abstract class S3Base {
 
       if (isAwsHost) {
         String s3Domain = "s3.";
-        if (isAcceleratedHost) {
+        if (isFipsHost) {
+          s3Domain = "s3-fips.";
+        } else if (isAccelerateHost) {
           if (bucketName.contains(".")) {
             throw new IllegalArgumentException(
                 "bucket name '"
@@ -316,7 +322,7 @@ public abstract class S3Base {
         if (isDualStackHost) dualStack = "dualstack.";
 
         String endpoint = s3Domain + dualStack;
-        if (enforcePathStyle || !isAcceleratedHost) endpoint += region + ".";
+        if (enforcePathStyle || !isAccelerateHost) endpoint += region + ".";
 
         host = endpoint + host;
       }
@@ -391,11 +397,7 @@ public abstract class S3Base {
 
     String md5Hash = Digest.ZERO_MD5_HASH;
     if (body != null) {
-      if (body instanceof PartSource) {
-        md5Hash = ((PartSource) body).md5Hash();
-      } else if (body instanceof byte[]) {
-        md5Hash = Digest.md5Hash((byte[]) body, length);
-      }
+      md5Hash = (body instanceof byte[]) ? Digest.md5Hash((byte[]) body, length) : null;
     }
 
     String sha256Hash = null;
@@ -412,6 +414,9 @@ public abstract class S3Base {
       } else {
         // Fix issue #415: No need to compute sha256 if endpoint scheme is HTTPS.
         sha256Hash = "UNSIGNED-PAYLOAD";
+        if (body != null && body instanceof PartSource) {
+          sha256Hash = ((PartSource) body).sha256Hash();
+        }
       }
     }
 
@@ -573,6 +578,14 @@ public abstract class S3Base {
                 if (!method.equals(Method.HEAD)
                     && (contentType == null
                         || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
+                  if (response.code() == 304 && response.body().contentLength() == 0) {
+                    completableFuture.completeExceptionally(
+                        new ServerException(
+                            "server failed with HTTP status code " + response.code(),
+                            response.code(),
+                            traceBuilder.toString()));
+                  }
+
                   completableFuture.completeExceptionally(
                       new InvalidResponseException(
                           response.code(),
@@ -651,6 +664,7 @@ public abstract class S3Base {
                       completableFuture.completeExceptionally(
                           new ServerException(
                               "server failed with HTTP status code " + response.code(),
+                              response.code(),
                               traceBuilder.toString()));
                       return;
                   }
@@ -1666,12 +1680,12 @@ public abstract class S3Base {
 
   /** Enables accelerate endpoint for Amazon S3 endpoint. */
   public void enableAccelerateEndpoint() {
-    this.isAcceleratedHost = true;
+    this.isAccelerateHost = true;
   }
 
   /** Disables accelerate endpoint for Amazon S3 endpoint. */
   public void disableAccelerateEndpoint() {
-    this.isAcceleratedHost = false;
+    this.isAccelerateHost = false;
   }
 
   /** Enables dual-stack endpoint for Amazon S3 endpoint. */
@@ -2690,7 +2704,7 @@ public abstract class S3Base {
               .get();
       parts[partNumber - 1] = new Part(partNumber, response.etag());
 
-      partSource = partReader.getPart(!this.baseUrl.isHttps());
+      partSource = partReader.getPart();
       if (partSource == null) break;
     }
 
@@ -2806,7 +2820,7 @@ public abstract class S3Base {
     return CompletableFuture.supplyAsync(
             () -> {
               try {
-                return partReader.getPart(!this.baseUrl.isHttps());
+                return partReader.getPart();
               } catch (NoSuchAlgorithmException | IOException e) {
                 throw new CompletionException(e);
               }
@@ -2941,12 +2955,7 @@ public abstract class S3Base {
 
     if (partReader != null) {
       return putObjectAsync(
-          bucketName,
-          region,
-          objectName,
-          partReader.getPart(!this.baseUrl.isHttps()),
-          headers,
-          extraQueryParams);
+          bucketName, region, objectName, partReader.getPart(), headers, extraQueryParams);
     }
 
     return getRegionAsync(bucketName, region)
@@ -3441,7 +3450,7 @@ public abstract class S3Base {
           bucketName,
           region,
           objectName,
-          partReader.getPart(!this.baseUrl.isHttps()),
+          partReader.getPart(),
           partNumber,
           uploadId,
           extraHeaders,
