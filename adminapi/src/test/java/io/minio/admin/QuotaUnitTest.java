@@ -1,5 +1,6 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
+ * (C) 2021 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +15,18 @@
  * limitations under the License.
  */
 
-package io.minio.messages;
+package io.minio.admin;
 
-import java.time.ZonedDateTime;
-import org.simpleframework.xml.Element;
+import org.junit.Test;
 
-/** Base class for {@link Transition} and {@link Expiration}. */
-public abstract class DateDays {
-  @Element(name = "Date", required = false)
-  protected ResponseDate date;
-
-  @Element(name = "Days", required = false)
-  protected Integer days;
-
-  public ZonedDateTime date() {
-    return (date != null) ? date.zonedDateTime() : null;
+public class QuotaUnitTest {
+  @Test(expected = IllegalArgumentException.class)
+  public void testBytesOverflow() {
+    QuotaUnit.GB.toBytes(Long.MAX_VALUE);
   }
 
-  public Integer days() {
-    return days;
+  @Test(expected = IllegalArgumentException.class)
+  public void testBytesLessThanZero() {
+    QuotaUnit.KB.toBytes(-1);
   }
 }
