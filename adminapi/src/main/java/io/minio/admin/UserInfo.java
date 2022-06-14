@@ -24,8 +24,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /** Represents user information. */
@@ -44,11 +42,11 @@ public class UserInfo {
   private Status status;
 
   public UserInfo(
-      @Nonnull @JsonProperty("status") Status status,
+      @Nullable @JsonProperty("status") Status status,
       @Nullable @JsonProperty("secretKey") String secretKey,
       @Nullable @JsonProperty("policyName") String policyName,
       @Nullable @JsonProperty("memberOf") List<String> memberOf) {
-    this.status = Objects.requireNonNull(status, "Status must be provided");
+    this.status = status;
     this.secretKey = secretKey;
     this.policyName = policyName;
     this.memberOf = (memberOf != null) ? Collections.unmodifiableList(memberOf) : null;
