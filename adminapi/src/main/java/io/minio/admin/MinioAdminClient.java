@@ -299,30 +299,23 @@ public class MinioAdminClient {
   }
 
   /**
-   * Adds, updates or removes a group.
+   * Adds or updates a group.
    *
    * @param group Group name.
    * @param groupStatus Status.
    * @param members Members of group.
-   * @param isRemove Add or remove group.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
-  public void addUpdateRemoveGroup(
-      @Nonnull String group,
-      @Nullable Status groupStatus,
-      @Nullable List<String> members,
-      @Nonnull Boolean isRemove)
+  public void addUpdateGroup(
+      @Nonnull String group, @Nullable Status groupStatus, @Nullable List<String> members)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     if (group == null || group.isEmpty()) {
       throw new IllegalArgumentException("group must be provided");
     }
-    if (isRemove == null) {
-      throw new IllegalArgumentException("isRemove must be provided");
-    }
     GroupAddUpdateRemoveInfo groupAddUpdateRemoveInfo =
-        new GroupAddUpdateRemoveInfo(group, groupStatus, members, isRemove);
+        new GroupAddUpdateRemoveInfo(group, groupStatus, members, false);
 
     try (Response response =
         execute(
@@ -366,6 +359,30 @@ public class MinioAdminClient {
           OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, String.class);
       return OBJECT_MAPPER.readValue(jsonData, mapType);
     }
+  }
+
+  /**
+   * Removes a group.
+   *
+   * @param group Group name.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   */
+  public void removeGroup(@Nonnull String group)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+    if (group == null || group.isEmpty()) {
+      throw new IllegalArgumentException("group must be provided");
+    }
+    GroupAddUpdateRemoveInfo groupAddUpdateRemoveInfo =
+        new GroupAddUpdateRemoveInfo(group, null, null, true);
+
+    try (Response response =
+        execute(
+            Method.PUT,
+            Command.ADD_UPDATE_REMOVE_GROUP,
+            null,
+            OBJECT_MAPPER.writeValueAsBytes(groupAddUpdateRemoveInfo))) {}
   }
 
   /**
