@@ -964,9 +964,9 @@ public class MinioClient {
       requestBuilder.header("Content-MD5", md5Hash);
     }
     if (this.shouldOmitPortInHostHeader(url)) {
-      requestBuilder.header("Host", url.host());
+      requestBuilder.header("Host", url.uri().getHost());
     } else {
-      requestBuilder.header("Host", url.host() + ":" + url.port());
+      requestBuilder.header("Host", url.uri().getHost() + ":" + url.port());
     }
     requestBuilder.header("User-Agent", this.userAgent);
     if (sha256Hash != null) {
