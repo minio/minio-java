@@ -55,7 +55,7 @@ public class LifecycleRule {
       @Nullable @Element(name = "AbortIncompleteMultipartUpload", required = false)
           AbortIncompleteMultipartUpload abortIncompleteMultipartUpload,
       @Nullable @Element(name = "Expiration", required = false) Expiration expiration,
-      @Nullable @Element(name = "Filter", required = false) RuleFilter filter,
+      @Nonnull @Element(name = "Filter", required = false) RuleFilter filter,
       @Nullable @Element(name = "ID", required = false) String id,
       @Nullable @Element(name = "NoncurrentVersionExpiration", required = false)
           NoncurrentVersionExpiration noncurrentVersionExpiration,
@@ -81,7 +81,7 @@ public class LifecycleRule {
 
     this.abortIncompleteMultipartUpload = abortIncompleteMultipartUpload;
     this.expiration = expiration;
-    this.filter = filter;
+    this.filter = Objects.requireNonNull(filter, "Filter must not be null");
     this.id = id;
     this.noncurrentVersionExpiration = noncurrentVersionExpiration;
     this.noncurrentVersionTransition = noncurrentVersionTransition;
