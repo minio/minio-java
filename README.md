@@ -12,19 +12,19 @@ Java 1.8 or above.
 <dependency>
     <groupId>io.minio</groupId>
     <artifactId>minio</artifactId>
-    <version>8.4.3</version>
+    <version>8.4.4</version>
 </dependency>
 ```
 
 ## Gradle usage
 ```
 dependencies {
-    implementation("io.minio:minio:8.4.3")
+    implementation("io.minio:minio:8.4.4")
 }
 ```
 
 ## JAR download
-The latest JAR can be downloaded from [here](https://repo1.maven.org/maven2/io/minio/minio/8.4.3/)
+The latest JAR can be downloaded from [here](https://repo1.maven.org/maven2/io/minio/minio/8.4.4/)
 
 ## Quick Start Example - File Uploader
 This example program connects to an object storage server, makes a bucket on the server and then uploads a file to the bucket.
@@ -92,12 +92,12 @@ public class FileUploader {
 
 #### Compile FileUploader
 ```sh
-$ javac -cp minio-8.4.3-all.jar FileUploader.java
+$ javac -cp minio-8.4.4-all.jar FileUploader.java
 ```
 
 #### Run FileUploader
 ```sh
-$ java -cp minio-8.4.3-all.jar:. FileUploader
+$ java -cp minio-8.4.4-all.jar:. FileUploader
 '/home/user/Photos/asiaphotos.zip' is successfully uploaded as object 'asiaphotos-2015.zip' to bucket 'asiatrip'.
 
 $ mc ls play/asiatrip/
