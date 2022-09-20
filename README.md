@@ -2,7 +2,7 @@
 
 MinIO Java SDK is Simple Storage Service (aka S3) client to perform bucket and object operations to any Amazon S3 compatible object storage service.
 
-For a complete list of APIs and examples, please take a look at the [Java Client API Reference](https://docs.min.io/docs/java-client-api-reference) documentation.
+For a complete list of APIs and examples, please take a look at the [Java Client API Reference](https://min.io/docs/minio/linux/developers/java/API.html) documentation.
 
 ## Minimum Requirements
 Java 1.8 or above.
@@ -105,12 +105,12 @@ $ mc ls play/asiatrip/
 ```
 
 ## More References
-* [Java Client API Reference](https://docs.min.io/docs/java-client-api-reference)
+* [Java Client API Reference](https://min.io/docs/minio/linux/developers/java/API.html)
 * [Javadoc](https://minio-java.min.io/)
 * [Examples](https://github.com/minio/minio-java/tree/release/examples)
 
 ## Explore Further
-* [Complete Documentation](https://docs.min.io)
+* [Complete Documentation](https://min.io/docs/minio/kubernetes/upstream/index.html)
 * [Build your own Photo API Service - Full Application Example ](https://github.com/minio/minio-java-rest-example)
 
 ## Contribute
