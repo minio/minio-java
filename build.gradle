@@ -34,7 +34,7 @@ apply plugin: "de.marcphilipp.nexus-publish"
 
 allprojects {
     group = 'io.minio'
-    version = '8.4.5'
+    version = '8.4.6'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
