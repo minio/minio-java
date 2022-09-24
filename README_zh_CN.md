@@ -2,7 +2,7 @@
 
 MinIO Java Client SDK提供简单的API来访问任何与Amazon S3兼容的对象存储服务。
 
-本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](https://docs.min.io/docs/java-client-api-reference)文档。
+本快速入门指南将向你展示如何安装客户端SDK并执行示例java程序。有关API和示例的完整列表，请查看[Java Client API Reference](https://min.io/docs/minio/linux/developers/java/API.html)文档。
 
 ## 最低需求
 Java 1.8或更高版本:
@@ -98,32 +98,32 @@ mc ls play/asiatrip/
 
 下面链接是完整的API文档
 
-* [API完整文档](https://docs.min.io/docs/java-client-api-reference)
+* [API完整文档](https://min.io/docs/minio/linux/developers/java/API.html)
 
 ### API文档: 操作存储桶
-* [`makeBucket`](https://docs.min.io/docs/java-client-api-reference#makeBucket)
-* [`listBuckets`](https://docs.min.io/docs/java-client-api-reference#listBuckets)
-* [`bucketExists`](https://docs.min.io/docs/java-client-api-reference#bucketExists)
-* [`removeBucket`](https://docs.min.io/docs/java-client-api-reference#removeBucket)
-* [`listObjects`](https://docs.min.io/docs/java-client-api-reference#listObjects)
-* [`listIncompleteUploads`](https://docs.min.io/docs/java-client-api-reference#listIncompleteUploads)
+* [`makeBucket`](https://min.io/docs/minio/linux/developers/java/API.html#makeBucket)
+* [`listBuckets`](https://min.io/docs/minio/linux/developers/java/API.html#listBuckets)
+* [`bucketExists`](https://min.io/docs/minio/linux/developers/java/API.html#bucketExists)
+* [`removeBucket`](https://min.io/docs/minio/linux/developers/java/API.html#removeBucket)
+* [`listObjects`](https://min.io/docs/minio/linux/developers/java/API.html#listObjects)
+* [`listIncompleteUploads`](https://min.io/docs/minio/linux/developers/java/API.html#listIncompleteUploads)
 
 ### API文档: 操作文件对象
-* [`getObject`](https://docs.min.io/docs/java-client-api-reference#getObject)
-* [`putObject`](https://docs.min.io/docs/java-client-api-reference#putObject)
-* [`copyObject`](https://docs.min.io/docs/java-client-api-reference#copyObject)
-* [`statObject`](https://docs.min.io/docs/java-client-api-reference#statObject)
-* [`removeObject`](https://docs.min.io/docs/java-client-api-reference#removeObject)
-* [`removeIncompleteUpload`](https://docs.min.io/docs/java-client-api-reference#removeIncompleteUpload)
+* [`getObject`](https://min.io/docs/minio/linux/developers/java/API.html#getObject)
+* [`putObject`](https://min.io/docs/minio/linux/developers/java/API.html#putObject)
+* [`copyObject`](https://min.io/docs/minio/linux/developers/java/API.html#copyObject)
+* [`statObject`](https://min.io/docs/minio/linux/developers/java/API.html#statObject)
+* [`removeObject`](https://min.io/docs/minio/linux/developers/java/API.html#removeObject)
+* [`removeIncompleteUpload`](https://min.io/docs/minio/linux/developers/java/API.html#removeIncompleteUpload)
 
 ### API文档: Presigned操作
-* [`presignedGetObject`](https://docs.min.io/docs/java-client-api-reference#presignedGetObject)
-* [`presignedPutObject`](https://docs.min.io/docs/java-client-api-reference#presignedPutObject)
-* [`presignedPostPolicy`](https://docs.min.io/docs/java-client-api-reference#presignedPostPolicy)
+* [`presignedGetObject`](https://min.io/docs/minio/linux/developers/java/API.html#presignedGetObject)
+* [`presignedPutObject`](https://min.io/docs/minio/linux/developers/java/API.html#presignedPutObject)
+* [`presignedPostPolicy`](https://min.io/docs/minio/linux/developers/java/API.html#presignedPostPolicy)
 
 ### API文档: 操作存储桶策略
-* [`getBucketPolicy`](https://docs.min.io/docs/java-client-api-reference#getBucketPolicy)
-* [`setBucketPolicy`](https://docs.min.io/docs/java-client-api-reference#setBucketPolicy)
+* [`getBucketPolicy`](https://min.io/docs/minio/linux/developers/java/API.html#getBucketPolicy)
+* [`setBucketPolicy`](https://min.io/docs/minio/linux/developers/java/API.html#setBucketPolicy)
 
 ## 完整示例
 
@@ -155,8 +155,8 @@ mc ls play/asiatrip/
 * [GetBucketPolicy.Java](https://github.com/minio/minio-java/tree/master/examples/GetBucketPolicy.java)
 
 ## 了解更多
-* [MinIO官方文档](https://docs.min.io)
-* [MinIO Java Client SDK API文档](https://docs.min.io/docs/java-client-api-reference)
+* [MinIO官方文档](https://min.io/docs/minio/kubernetes/upstream/index.html)
+* [MinIO Java Client SDK API文档](https://min.io/docs/minio/linux/developers/java/API.html)
 * [创建属于你的照片API服务-完整示例](https://github.com/minio/minio-java-rest-example)
 
 ## 贡献
