@@ -657,6 +657,52 @@ public class MinioClient {
   }
 
   /**
+   * Restores an object.
+   *
+   * <pre>Example:{@code
+   * // Restore object.
+   * minioClient.restoreObject(
+   *     RestoreObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-objectname")
+   *         .request(new RestoreRequest(null, null, null, null, null, null))
+   *         .build());
+   *
+   * // Restore versioned object.
+   * minioClient.restoreObject(
+   *     RestoreObjectArgs.builder()
+   *         .bucket("my-bucketname")
+   *         .object("my-versioned-objectname")
+   *         .versionId("my-versionid")
+   *         .request(new RestoreRequest(null, null, null, null, null, null))
+   *         .build());
+   * }</pre>
+   *
+   * @param args {@link RestoreObjectArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void restoreObject(RestoreObjectArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      asyncClient.restoreObject(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+    }
+  }
+
+  /**
    * Lists objects information optionally with versions of a bucket. Supports both the versions 1
    * and 2 of the S3 API. By default, the <a
    * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">version 2</a> API

@@ -40,13 +40,13 @@ MinioClient minioClient =
 | [`getBucketTags`](#getBucketTags)                                 | [`putObject`](#putObject)                               |
 | [`getBucketVersioning`](#getBucketVersioning)                     | [`removeObject`](#removeObject)                         |
 | [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`removeObjects`](#removeObjects)                       |
-| [`listBuckets`](#listBuckets)                                     | [`selectObjectContent`](#selectObjectContent)           |
-| [`listenBucketNotification`](#listenBucketNotification)           | [`setObjectRetention`](#setObjectRetention)             |
-| [`makeBucket`](#makeBucket)                                       | [`setObjectTags`](#setObjectTags)                       |
-| [`removeBucket`](#removeBucket)                                   | [`statObject`](#statObject)                             |
-| [`setBucketEncryption`](#setBucketEncryption)                     | [`uploadObject`](#uploadObject)                         |
-| [`setBucketLifecycle`](#setBucketLifecycle)                       | [`uploadSnowballObjects`](#uploadSnowballObjects)       |
-| [`setBucketNotification`](#setBucketNotification)                 |                                                         |
+| [`listBuckets`](#listBuckets)                                     | [`restoreObject`](#restoreObject)                       |
+| [`listenBucketNotification`](#listenBucketNotification)           | [`selectObjectContent`](#selectObjectContent)           |
+| [`makeBucket`](#makeBucket)                                       | [`setObjectRetention`](#setObjectRetention)             |
+| [`removeBucket`](#removeBucket)                                   | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketEncryption`](#setBucketEncryption)                     | [`statObject`](#statObject)                             |
+| [`setBucketLifecycle`](#setBucketLifecycle)                       | [`uploadObject`](#uploadObject)                         |
+| [`setBucketNotification`](#setBucketNotification)                 | [`uploadSnowballObjects`](#uploadSnowballObjects)       |
 | [`setBucketPolicy`](#setBucketPolicy)                             |                                                         |
 | [`setBucketReplication`](#setBucketReplication)                   |                                                         |
 | [`setBucketTags`](#setBucketTags)                                 |                                                         |
@@ -1685,6 +1685,37 @@ for (Result<DeleteError> result : results) {
 }
 ```
 
+<a name="restoreObject"></a>
+### restoreObject(RestoreObjectArgs args)
+`public void restoreObject(RestoreObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#restoreObject-io.minio.RestoreObjectArgs-)_
+
+Restores an object.
+
+__Parameters__
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[RestoreObjectArgs]_ | Arguments.  |
+
+__Example__
+```java
+// Restore object.
+minioClient.restoreObject(
+    RestoreObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-objectname")
+        .request(new RestoreRequest(null, null, null, null, null, null))
+        .build());
+
+// Restore versioned object.
+minioClient.restoreObject(
+    RestoreObjectArgs.builder()
+        .bucket("my-bucketname")
+        .object("my-versioned-objectname")
+        .versionId("my-versionid")
+        .request(new RestoreRequest(null, null, null, null, null, null))
+        .build());
+```
+
  <a name="selectObjectContent"></a>
 ### selectObjectContent(SelectObjectContentArgs args)
 `public SelectResponseStream selectObjectContent(SelectObjectContentArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#selectObjectContent-io.minio.SelectObjectContentArgs-)_
@@ -1917,3 +1948,4 @@ ObjectStat objectStat =
 [VersioningConfiguration]: http://minio.github.io/minio-java/io/minio/messages/VersioningConfiguration.html
 [GetBucketVersioningArgs]: http://minio.github.io/minio-java/io/minio/GetBucketVersioningArgs.html
 [SetBucketVersioningArgs]: http://minio.github.io/minio-java/io/minio/SetBucketVersioningArgs.html
+[RestoreObjectArgs]: http://minio.github.io/minio-java/io/minio/RestoreObjectArgs.html
