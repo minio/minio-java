@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015-2021 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015-2022 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.Path;
 
 /**
  * Helper class to denote Object information in {@link ListBucketResultV1}, {@link
@@ -54,8 +58,15 @@ public abstract class Item {
   @Element(name = "VersionId", required = false)
   private String versionId; // except ListObjects V1
 
-  @Element(name = "UserMetadata", required = false)
-  private Metadata userMetadata;
+  @Path(value = "UserMetadata")
+  @ElementMap(
+      attribute = false,
+      entry = "Items",
+      inline = true,
+      key = "Key",
+      value = "Value",
+      required = false)
+  private Map<String, String> userMetadata;
 
   private boolean isDir = false;
   private String encodingType = null;
@@ -108,7 +119,7 @@ public abstract class Item {
 
   /** Returns user metadata. This is MinIO specific extension to ListObjectsV2. */
   public Map<String, String> userMetadata() {
-    return (userMetadata == null) ? null : userMetadata.get();
+    return Collections.unmodifiableMap(userMetadata == null ? new HashMap<>() : userMetadata);
   }
 
   /** Returns whether this version ID is latest. */
