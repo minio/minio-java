@@ -35,6 +35,9 @@ public class ResponseDate {
   public static final DateTimeFormatter MINIO_RESPONSE_DATE_FORMAT =
       DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH':'mm':'ss'Z'", Locale.US).withZone(Time.UTC);
 
+  public static final DateTimeFormatter MINIO_RESPONSE_DATE_FORMAT_SHORT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH':'mm':'ss'.'S'Z'", Locale.US).withZone(Time.UTC);
+
   private ZonedDateTime zonedDateTime;
 
   public ResponseDate() {}
@@ -55,8 +58,14 @@ public class ResponseDate {
   public static ResponseDate fromString(String responseDateString) {
     try {
       return new ResponseDate(ZonedDateTime.parse(responseDateString, Time.RESPONSE_DATE_FORMAT));
-    } catch (DateTimeParseException e) {
-      return new ResponseDate(ZonedDateTime.parse(responseDateString, MINIO_RESPONSE_DATE_FORMAT));
+    } catch (DateTimeParseException me) {
+      try {
+        return new ResponseDate(
+            ZonedDateTime.parse(responseDateString, MINIO_RESPONSE_DATE_FORMAT));
+      } catch (DateTimeParseException se) {
+        return new ResponseDate(
+            ZonedDateTime.parse(responseDateString, MINIO_RESPONSE_DATE_FORMAT_SHORT));
+      }
     }
   }
 
