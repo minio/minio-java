@@ -70,19 +70,19 @@ public class CompleteMultipartUploadOutput {
     return etag;
   }
 
-  public String getChecksumCRC32() {
+  public String checksumCRC32() {
     return checksumCRC32;
   }
 
-  public String getChecksumCRC32C() {
+  public String checksumCRC32C() {
     return checksumCRC32C;
   }
 
-  public String getChecksumSHA1() {
+  public String checksumSHA1() {
     return checksumSHA1;
   }
 
-  public String getChecksumSHA256() {
+  public String checksumSHA256() {
     return checksumSHA256;
   }
 }
