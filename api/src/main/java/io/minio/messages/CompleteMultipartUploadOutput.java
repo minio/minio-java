@@ -40,6 +40,18 @@ public class CompleteMultipartUploadOutput {
   @Element(name = "ETag")
   private String etag;
 
+  @Element(name = "ChecksumCRC32", required = false)
+  private String checksumCRC32;
+
+  @Element(name = "ChecksumCRC32C", required = false)
+  private String checksumCRC32C;
+
+  @Element(name = "ChecksumSHA1", required = false)
+  private String checksumSHA1;
+
+  @Element(name = "ChecksumSHA256", required = false)
+  private String checksumSHA256;
+
   public CompleteMultipartUploadOutput() {}
 
   public String location() {
@@ -56,5 +68,21 @@ public class CompleteMultipartUploadOutput {
 
   public String etag() {
     return etag;
+  }
+
+  public String getChecksumCRC32() {
+    return checksumCRC32;
+  }
+
+  public String getChecksumCRC32C() {
+    return checksumCRC32C;
+  }
+
+  public String getChecksumSHA1() {
+    return checksumSHA1;
+  }
+
+  public String getChecksumSHA256() {
+    return checksumSHA256;
   }
 }
