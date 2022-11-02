@@ -54,9 +54,9 @@ subprojects {
         compile "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
         compile "com.google.guava:guava:30.1.1-jre"
         compile "com.squareup.okhttp3:okhttp:4.10.0"
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.13.2"
-        compile "com.fasterxml.jackson.core:jackson-core:2.13.2"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.13.2.2"
+        compile "com.fasterxml.jackson.core:jackson-annotations:2.13.4"
+        compile "com.fasterxml.jackson.core:jackson-core:2.13.4"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.13.4.2"
         compile "org.bouncycastle:bcprov-jdk15on:1.69"
         compile 'org.apache.commons:commons-compress:1.21'
         compile "org.xerial.snappy:snappy-java:1.1.8.4"
