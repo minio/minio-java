@@ -74,6 +74,7 @@ public class MinioAdminClient {
     REMOVE_CANNED_POLICY("remove-canned-policy"),
     SET_BUCKET_QUOTA("set-bucket-quota"),
     GET_BUCKET_QUOTA("get-bucket-quota"),
+    DATA_USAGE_INFO("datausageinfo"),
     ADD_UPDATE_REMOVE_GROUP("update-group-members"),
     GROUP_INFO("group"),
     LIST_GROUPS("groups");
@@ -573,6 +574,21 @@ public class MinioAdminClient {
             Command.REMOVE_CANNED_POLICY,
             ImmutableMultimap.of("name", name),
             null)) {}
+  }
+
+  /**
+   * Get server/cluster data usage info
+   *
+   * @return DataUsageInfo object
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   */
+  public DataUsageInfo getDataUsageInfo()
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    try (Response response = execute(Method.GET, Command.DATA_USAGE_INFO, null, null)) {
+      return OBJECT_MAPPER.readValue(response.body().bytes(), DataUsageInfo.class);
+    }
   }
 
   /**
