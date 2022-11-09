@@ -29,6 +29,7 @@ import io.minio.MinioProperties;
 import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
+import io.minio.admin.model.DataUsageInfo;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;

@@ -15,15 +15,23 @@
  * limitations under the License.
  */
 
-package io.minio.admin;
+package io.minio.admin.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Date;
 import java.util.Map;
 
-/** Represents Data usage of the current object APi. */
+/**
+ * Represents data usage stats of the current object APi.
+ *
+ * @see https://github.com/minio/minio/blob/master/cmd/data-usage-utils.go#L69
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DataUsageInfo {
+  @JsonProperty("lastUpdate")
+  private Date lastUpdate;
+
   @JsonProperty("objectsCount")
   private long objectsCount;
 
@@ -33,11 +41,24 @@ public class DataUsageInfo {
   @JsonProperty("objectsTotalSize")
   private long objectsTotalSize;
 
+  @JsonProperty("objectsReplicationInfo")
+  private Map<String, BucketTargetUsageInfo> objectsReplicationInfo;
+
   @JsonProperty("bucketsCount")
   private long bucketsCount;
 
   @JsonProperty("bucketsUsageInfo")
   private Map<String, BucketUsageInfo> bucketsUsageInfo;
+
+  @JsonProperty("bucketsSizes")
+  private Map<String, Long> bucketsSizes;
+
+  @JsonProperty("tierStats")
+  private AllTierStats tierStats;
+
+  public Date getLastUpdate() {
+    return lastUpdate;
+  }
 
   public long getObjectsCount() {
     return objectsCount;
@@ -51,6 +72,10 @@ public class DataUsageInfo {
     return objectsTotalSize;
   }
 
+  public Map<String, BucketTargetUsageInfo> getObjectsReplicationInfo() {
+    return objectsReplicationInfo;
+  }
+
   public long getBucketsCount() {
     return bucketsCount;
   }
@@ -59,27 +84,11 @@ public class DataUsageInfo {
     return bucketsUsageInfo;
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public static class BucketUsageInfo {
-    @JsonProperty("size")
-    private long size;
+  public Map<String, Long> getBucketsSizes() {
+    return bucketsSizes;
+  }
 
-    @JsonProperty("objectsCount")
-    private long objectsCount;
-
-    @JsonProperty("versionsCount")
-    private long versionsCount;
-
-    public long getSize() {
-      return size;
-    }
-
-    public long getObjectsCount() {
-      return objectsCount;
-    }
-
-    public long getVersionsCount() {
-      return versionsCount;
-    }
+  public AllTierStats getTierStats() {
+    return tierStats;
   }
 }
