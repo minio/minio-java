@@ -15,16 +15,18 @@
  * limitations under the License.
  */
 
-package io.minio.admin.model;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Collections;
 import java.util.Map;
 
 /**
  * Represents bucket usage stats of the current object APi.
  *
- * @see https://github.com/minio/minio/blob/master/cmd/data-usage-utils.go#L47
+ * @see <a
+ *     href="https://github.com/minio/minio/blob/master/cmd/data-usage-utils.go#L47">data-usage-utils.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BucketUsageInfo {
@@ -61,47 +63,47 @@ public class BucketUsageInfo {
   @JsonProperty("objectsReplicationInfo")
   private Map<String, BucketTargetUsageInfo> objectsReplicationInfo;
 
-  public long getSize() {
+  public long size() {
     return size;
   }
 
-  public long getObjectsPendingReplicationTotalSize() {
+  public long objectsPendingReplicationTotalSize() {
     return objectsPendingReplicationTotalSize;
   }
 
-  public long getObjectsFailedReplicationTotalSize() {
+  public long objectsFailedReplicationTotalSize() {
     return objectsFailedReplicationTotalSize;
   }
 
-  public long getObjectsReplicatedTotalSize() {
+  public long objectsReplicatedTotalSize() {
     return objectsReplicatedTotalSize;
   }
 
-  public long getObjectsPendingReplicationCount() {
+  public long objectsPendingReplicationCount() {
     return objectsPendingReplicationCount;
   }
 
-  public long getObjectsFailedReplicationCount() {
+  public long objectsFailedReplicationCount() {
     return objectsFailedReplicationCount;
   }
 
-  public long getObjectsCount() {
+  public long objectsCount() {
     return objectsCount;
   }
 
-  public Map<String, Long> getObjectsSizesHistogram() {
-    return objectsSizesHistogram;
+  public Map<String, Long> objectsSizesHistogram() {
+    return Collections.unmodifiableMap(this.objectsSizesHistogram);
   }
 
-  public long getVersionsCount() {
+  public long versionsCount() {
     return versionsCount;
   }
 
-  public long getObjectReplicaTotalSize() {
+  public long objectReplicaTotalSize() {
     return objectReplicaTotalSize;
   }
 
-  public Map<String, BucketTargetUsageInfo> getObjectsReplicationInfo() {
-    return objectsReplicationInfo;
+  public Map<String, BucketTargetUsageInfo> objectsReplicationInfo() {
+    return Collections.unmodifiableMap(this.objectsReplicationInfo);
   }
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.minio.admin.model;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,7 +23,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Represents bucket replica stats of the current object APi.
  *
- * @see https://github.com/minio/minio/blob/master/cmd/data-usage-utils.go#L34
+ * @see <a
+ *     href="https://github.com/minio/minio/blob/master/cmd/data-usage-utils.go#L34">data-usage-utils.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BucketTargetUsageInfo {
@@ -45,27 +46,27 @@ public class BucketTargetUsageInfo {
   @JsonProperty("objectsFailedReplicationCount")
   private long objectsFailedReplicationCount;
 
-  public long getObjectsPendingReplicationTotalSize() {
+  public long objectsPendingReplicationTotalSize() {
     return objectsPendingReplicationTotalSize;
   }
 
-  public long getObjectsFailedReplicationTotalSize() {
+  public long objectsFailedReplicationTotalSize() {
     return objectsFailedReplicationTotalSize;
   }
 
-  public long getObjectsReplicatedTotalSize() {
+  public long objectsReplicatedTotalSize() {
     return objectsReplicatedTotalSize;
   }
 
-  public long getObjectReplicaTotalSize() {
+  public long objectReplicaTotalSize() {
     return objectReplicaTotalSize;
   }
 
-  public long getObjectsPendingReplicationCount() {
+  public long objectsPendingReplicationCount() {
     return objectsPendingReplicationCount;
   }
 
-  public long getObjectsFailedReplicationCount() {
+  public long objectsFailedReplicationCount() {
     return objectsFailedReplicationCount;
   }
 }

@@ -15,17 +15,19 @@
  * limitations under the License.
  */
 
-package io.minio.admin.model;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
 /**
  * Represents data usage stats of the current object APi.
  *
- * @see https://github.com/minio/minio/blob/master/cmd/data-usage-utils.go#L69
+ * @see <a
+ *     href="https://github.com/minio/minio/blob/master/cmd/data-usage-utils.go#L69">data-usage-utils.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DataUsageInfo {
@@ -56,39 +58,39 @@ public class DataUsageInfo {
   @JsonProperty("tierStats")
   private AllTierStats tierStats;
 
-  public Date getLastUpdate() {
+  public Date lastUpdate() {
     return lastUpdate;
   }
 
-  public long getObjectsCount() {
+  public long objectsCount() {
     return objectsCount;
   }
 
-  public long getVersionsCount() {
+  public long versionsCount() {
     return versionsCount;
   }
 
-  public long getObjectsTotalSize() {
+  public long objectsTotalSize() {
     return objectsTotalSize;
   }
 
-  public Map<String, BucketTargetUsageInfo> getObjectsReplicationInfo() {
-    return objectsReplicationInfo;
+  public Map<String, BucketTargetUsageInfo> objectsReplicationInfo() {
+    return Collections.unmodifiableMap(this.objectsReplicationInfo);
   }
 
-  public long getBucketsCount() {
+  public long bucketsCount() {
     return bucketsCount;
   }
 
-  public Map<String, BucketUsageInfo> getBucketsUsageInfo() {
-    return bucketsUsageInfo;
+  public Map<String, BucketUsageInfo> bucketsUsageInfo() {
+    return Collections.unmodifiableMap(this.bucketsUsageInfo);
   }
 
-  public Map<String, Long> getBucketsSizes() {
+  public Map<String, Long> bucketsSizes() {
     return bucketsSizes;
   }
 
-  public AllTierStats getTierStats() {
+  public AllTierStats tierStats() {
     return tierStats;
   }
 }

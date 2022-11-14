@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-package io.minio.admin;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.minio.admin.model.DataUsageInfo;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Assert;
@@ -32,14 +31,15 @@ public class DataUsageInfoTest {
 
     DataUsageInfo info =
         OBJECT_MAPPER.readValue(
-            new File(getClass().getClassLoader().getResource("json/datausageinfo.json").getFile()),
+            new File(
+                getClass().getClassLoader().getResource("messages/datausageinfo.json").getFile()),
             DataUsageInfo.class);
-    Assert.assertNotNull(info.getLastUpdate());
+    Assert.assertNotNull(info.lastUpdate());
 
-    Assert.assertEquals(1, info.getBucketsCount());
-    Assert.assertTrue(info.getBucketsUsageInfo().containsKey("tier-bucket"));
-    Assert.assertTrue(info.getTierStats().getTiers().containsKey("STANDARD"));
+    Assert.assertEquals(1, info.bucketsCount());
+    Assert.assertTrue(info.bucketsUsageInfo().containsKey("tier-bucket"));
+    Assert.assertTrue(info.tierStats().tiers().containsKey("STANDARD"));
 
-    Assert.assertEquals(7155L, (long) info.getBucketsSizes().get("tier-bucket"));
+    Assert.assertEquals(7155L, (long) info.bucketsSizes().get("tier-bucket"));
   }
 }

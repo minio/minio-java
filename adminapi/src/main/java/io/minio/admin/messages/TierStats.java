@@ -15,23 +15,37 @@
  * limitations under the License.
  */
 
-package io.minio.admin.model;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Map;
 
 /**
- * Collection of per-tier stats across all configured remote tiers
+ * Per-tier stats of a remote tier.
  *
- * @see https://github.com/minio/minio/blob/master/cmd/data-usage-cache.go#L63
+ * @see <a
+ *     href="https://github.com/minio/minio/blob/master/cmd/data-usage-cache.go#L102">data-usage-cache.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AllTierStats {
-  @JsonProperty("Tiers")
-  private Map<String, TierStats> tiers;
+public class TierStats {
+  @JsonProperty("TotalSize")
+  private long totalSize;
 
-  public Map<String, TierStats> getTiers() {
-    return tiers;
+  @JsonProperty("NumVersions")
+  private int numVersions;
+
+  @JsonProperty("NumObjects")
+  private int numObjects;
+
+  public long totalSize() {
+    return totalSize;
+  }
+
+  public int numVersions() {
+    return numVersions;
+  }
+
+  public int numObjects() {
+    return numObjects;
   }
 }
