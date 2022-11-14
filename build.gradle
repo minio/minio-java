@@ -242,6 +242,7 @@ project(':adminapi') {
 
     dependencies {
         compile project(':api')
+        compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4"
         testImplementation project(':api')
     }
 

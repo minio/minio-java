@@ -19,8 +19,8 @@ package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Map;
 
 /**
@@ -31,8 +31,9 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DataUsageInfo {
+
   @JsonProperty("lastUpdate")
-  private Date lastUpdate;
+  private ZonedDateTime lastUpdate;
 
   @JsonProperty("objectsCount")
   private long objectsCount;
@@ -58,7 +59,7 @@ public class DataUsageInfo {
   @JsonProperty("tierStats")
   private AllTierStats tierStats;
 
-  public Date lastUpdate() {
+  public ZonedDateTime lastUpdate() {
     return lastUpdate;
   }
 

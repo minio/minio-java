@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -93,6 +94,10 @@ public class MinioAdminClient {
   private static final long DEFAULT_CONNECTION_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.parse("application/octet-stream");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  static {
+    OBJECT_MAPPER.registerModule(new JavaTimeModule());
+  }
 
   private String userAgent = MinioProperties.INSTANCE.getDefaultUserAgent();
   private PrintWriter traceStream;
