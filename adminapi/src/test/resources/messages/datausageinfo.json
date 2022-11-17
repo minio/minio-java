@@ -1,0 +1,43 @@
+{
+  "bucketsCount": 1,
+  "bucketsSizes": {
+    "tier-bucket": 7155
+  },
+  "bucketsUsageInfo": {
+    "tier-bucket": {
+      "objectReplicaTotalSize": 0,
+      "objectsCount": 1,
+      "objectsFailedReplicationCount": 0,
+      "objectsFailedReplicationTotalSize": 0,
+      "objectsPendingReplicationCount": 0,
+      "objectsPendingReplicationTotalSize": 0,
+      "objectsReplicatedTotalSize": 0,
+      "objectsReplicationInfo": {},
+      "objectsSizesHistogram": {
+        "BETWEEN_1024_B_AND_1_MB": 1,
+        "BETWEEN_10_MB_AND_64_MB": 0,
+        "BETWEEN_128_MB_AND_512_MB": 0,
+        "BETWEEN_1_MB_AND_10_MB": 0,
+        "BETWEEN_64_MB_AND_128_MB": 0,
+        "GREATER_THAN_512_MB": 0,
+        "LESS_THAN_1024_B": 0
+      },
+      "size": 7155,
+      "versionsCount": 1
+    }
+  },
+  "lastUpdate": "2022-11-08T16:15:56.277821865+01:00",
+  "objectsCount": 57,
+  "objectsReplicationInfo": null,
+  "objectsTotalSize": 4296263795,
+  "tierStats": {
+    "Tiers": {
+      "STANDARD": {
+        "NumObjects": 2,
+        "NumVersions": 2,
+        "TotalSize": 14310
+      }
+    }
+  },
+  "versionsCount": 1
+}

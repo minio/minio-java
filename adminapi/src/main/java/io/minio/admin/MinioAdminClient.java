@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapType;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -29,6 +30,7 @@ import io.minio.MinioProperties;
 import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
+import io.minio.admin.messages.DataUsageInfo;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;
@@ -74,6 +76,7 @@ public class MinioAdminClient {
     REMOVE_CANNED_POLICY("remove-canned-policy"),
     SET_BUCKET_QUOTA("set-bucket-quota"),
     GET_BUCKET_QUOTA("get-bucket-quota"),
+    DATA_USAGE_INFO("datausageinfo"),
     ADD_UPDATE_REMOVE_GROUP("update-group-members"),
     GROUP_INFO("group"),
     LIST_GROUPS("groups");
@@ -91,6 +94,10 @@ public class MinioAdminClient {
   private static final long DEFAULT_CONNECTION_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.parse("application/octet-stream");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  static {
+    OBJECT_MAPPER.registerModule(new JavaTimeModule());
+  }
 
   private String userAgent = MinioProperties.INSTANCE.getDefaultUserAgent();
   private PrintWriter traceStream;
@@ -573,6 +580,21 @@ public class MinioAdminClient {
             Command.REMOVE_CANNED_POLICY,
             ImmutableMultimap.of("name", name),
             null)) {}
+  }
+
+  /**
+   * Get server/cluster data usage info
+   *
+   * @return DataUsageInfo object
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   */
+  public DataUsageInfo getDataUsageInfo()
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    try (Response response = execute(Method.GET, Command.DATA_USAGE_INFO, null, null)) {
+      return OBJECT_MAPPER.readValue(response.body().bytes(), DataUsageInfo.class);
+    }
   }
 
   /**
