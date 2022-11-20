@@ -38,7 +38,9 @@ public enum EventType {
   OBJECT_REMOVED_ANY("s3:ObjectRemoved:*"),
   OBJECT_REMOVED_DELETE("s3:ObjectRemoved:Delete"),
   OBJECT_REMOVED_DELETED_MARKER_CREATED("s3:ObjectRemoved:DeleteMarkerCreated"),
-  REDUCED_REDUNDANCY_LOST_OBJECT("s3:ReducedRedundancyLostObject");
+  REDUCED_REDUNDANCY_LOST_OBJECT("s3:ReducedRedundancyLostObject"),
+  BUCKET_CREATED("s3:BucketCreated"),
+  BUCKET_REMOVED("s3:BucketRemoved");
 
   private final String value;
 
