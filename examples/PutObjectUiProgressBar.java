@@ -35,18 +35,15 @@ public class PutObjectUiProgressBar extends JFrame {
 
   private static final long serialVersionUID = 1L;
   private static final String defaultFileName = "/etc/issue";
-  private JButton button;
+  private JButton button = null;
 
-  PutObjectUiProgressBar() {
-    button = new JButton("Click here to upload !");
-    ButtonActionListener bal = new ButtonActionListener();
-    button.addActionListener(bal);
-
-    this.getContentPane().add(button);
-  }
+  PutObjectUiProgressBar() {}
 
   /** go() implements a blocking UI frame. */
   public void go() {
+    button = new JButton("Click here to upload!");
+    button.addActionListener(new ButtonActionListener());
+    this.getContentPane().add(button);
 
     this.setLocationRelativeTo(null);
     this.setVisible(true);
@@ -97,7 +94,6 @@ public class PutObjectUiProgressBar extends JFrame {
 
   /** Internal class extends button listener, adds methods to initiate upload operation. */
   private class ButtonActionListener implements ActionListener {
-
     @Override
     public void actionPerformed(ActionEvent e) {
 

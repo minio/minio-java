@@ -88,7 +88,7 @@ public class DataUsageInfo {
   }
 
   public Map<String, Long> bucketsSizes() {
-    return bucketsSizes;
+    return Collections.unmodifiableMap(bucketsSizes);
   }
 
   public AllTierStats tierStats() {
