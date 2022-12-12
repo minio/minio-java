@@ -8,4 +8,16 @@
   <Match>
     <Bug code="RCN" />
   </Match>
+  <!-- False positive: Random object created and used only once. -->
+  <Match>
+    <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
+  </Match>
+  <!-- False positive in many cases: May expose internal representation by returning reference to mutable object. -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP"/>
+  </Match>
+  <!-- False positive in many cases: May expose internal representation by incorporating reference to mutable object. -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP2"/>
+  </Match>
 </FindBugsFilter>

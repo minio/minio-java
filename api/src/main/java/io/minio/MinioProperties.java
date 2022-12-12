@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** Identifies and stores version information of minio-java package at run time. */
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "MS_EXPOSE_REP")
 public enum MinioProperties {
   INSTANCE;
 

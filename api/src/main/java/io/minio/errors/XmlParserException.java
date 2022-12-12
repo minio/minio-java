@@ -20,15 +20,7 @@ package io.minio.errors;
 public class XmlParserException extends MinioException {
   private static final long serialVersionUID = -3877568719271880309L;
 
-  Exception exception;
-
-  public XmlParserException(Exception exception) {
-    super();
-    this.exception = exception;
-  }
-
-  @Override
-  public String toString() {
-    return exception.toString();
+  public XmlParserException(Exception e) {
+    super(e.toString());
   }
 }

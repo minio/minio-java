@@ -19,6 +19,8 @@ package io.minio.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /** Helper class to denote single event record for {@link NotificationRecords}. */
@@ -58,11 +60,13 @@ public class Event {
   }
 
   public Map<String, String> requestParameters() {
-    return requestParameters;
+    return Collections.unmodifiableMap(
+        requestParameters == null ? new HashMap<>() : requestParameters);
   }
 
   public Map<String, String> responseElements() {
-    return responseElements;
+    return Collections.unmodifiableMap(
+        responseElements == null ? new HashMap<>() : responseElements);
   }
 
   public String bucketName() {
