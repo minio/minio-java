@@ -41,7 +41,7 @@ allprojects {
 }
 
 subprojects {
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'com.github.spotbugs'
     apply plugin: "com.diffplug.spotless"
 
@@ -51,15 +51,15 @@ subprojects {
     }
 
     dependencies {
-        implementation "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
-        implementation "com.google.guava:guava:30.1.1-jre"
-        implementation "com.squareup.okhttp3:okhttp:4.10.0"
-        implementation "com.fasterxml.jackson.core:jackson-annotations:2.13.4"
-        implementation "com.fasterxml.jackson.core:jackson-core:2.13.4"
-        implementation "com.fasterxml.jackson.core:jackson-databind:2.13.4.2"
-        implementation "org.bouncycastle:bcprov-jdk15on:1.69"
-        implementation 'org.apache.commons:commons-compress:1.21'
-        implementation "org.xerial.snappy:snappy-java:1.1.8.4"
+        api "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
+        api "com.google.guava:guava:30.1.1-jre"
+        api "com.squareup.okhttp3:okhttp:4.10.0"
+        api "com.fasterxml.jackson.core:jackson-annotations:2.13.4"
+        api "com.fasterxml.jackson.core:jackson-core:2.13.4"
+        api "com.fasterxml.jackson.core:jackson-databind:2.13.4.2"
+        api "org.bouncycastle:bcprov-jdk15on:1.69"
+        api 'org.apache.commons:commons-compress:1.21'
+        api "org.xerial.snappy:snappy-java:1.1.8.4"
         compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
 
         testImplementation "com.squareup.okhttp3:mockwebserver:4.8.1"
@@ -125,7 +125,7 @@ subprojects {
 }
 
 project(':api') {
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'com.github.johnrengelman.shadow'
@@ -232,7 +232,7 @@ project(':api') {
 }
 
 project(':adminapi') {
-    apply plugin: 'java'
+    apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'com.github.johnrengelman.shadow'
@@ -241,8 +241,8 @@ project(':adminapi') {
     archivesBaseName = 'minio-admin'
 
     dependencies {
-        implementation project(':api')
-        implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4"
+        api project(':api')
+        api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4"
         testImplementation project(':api')
     }
 
