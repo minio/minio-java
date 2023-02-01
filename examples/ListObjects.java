@@ -65,6 +65,18 @@ public class ListObjects {
         }
       }
 
+     {
+        // Listing object information contains usermetadata.
+        Iterable<Result<Item>> results =
+            minioClient.listObjects(
+                ListObjectsArgs.builder().bucket("my-bucketname").includeUserMetadata(true).build());
+
+        for (Result<Item> result : results) {
+          Item item = result.get();
+          System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName() + "\t" + item.userMetadata());
+        }
+      }
+      
       {
         // Lists maximum 100 objects information those names starts with 'E' and after
         // 'ExampleGuide.pdf'.
