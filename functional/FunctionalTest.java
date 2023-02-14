@@ -3849,10 +3849,8 @@ public class FunctionalTest {
     env.put("MINIO_ROOT_USER", "minio");
     env.put("MINIO_ROOT_PASSWORD", "minio123");
     env.put("MINIO_CI_CD", "1");
-    env.put("MINIO_KMS_KES_ENDPOINT", "https://play.min.io:7373");
-    env.put("MINIO_KMS_KES_KEY_FILE", "play.min.io.kes.root.key");
-    env.put("MINIO_KMS_KES_CERT_FILE", "play.min.io.kes.root.cert");
-    env.put("MINIO_KMS_KES_KEY_NAME", "my-minio-key");
+    // echo -n abcdefghijklmnopqrstuvwxyzABCDEF | base64 -
+    env.put("MINIO_KMS_SECRET_KEY", "my-minio-key:YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUY=");
     env.put("MINIO_NOTIFY_WEBHOOK_ENABLE_miniojavatest", "on");
     env.put("MINIO_NOTIFY_WEBHOOK_ENDPOINT_miniojavatest", "http://example.org/");
     sqsArn = "arn:minio:sqs::miniojavatest:webhook";
