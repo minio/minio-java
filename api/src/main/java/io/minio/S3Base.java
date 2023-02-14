@@ -240,7 +240,7 @@ public abstract class S3Base {
         | XmlParserException exc) {
       throw exc;
     } catch (Throwable exc) {
-      throw new RuntimeException(exc.getCause());
+      throw new RuntimeException(exc.getCause() == null ? exc : exc.getCause());
     }
   }
 
