@@ -34,16 +34,16 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
 public class MinioClientWithTLS {
-    // your key store password
+    // Your key store password
     private static final String KEY_STORE_PASSWORD = "123456";
-    // your trust store password
+    // Your trust store password
     private static final String TRUST_STORE_PASSWORD = "123456";
 
     public static void main(String[] args) throws Exception {
-        // build OkHttpClient
+        // Build OkHttpClient
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.sslSocketFactory(getSSLSocketFactoryWithJKS());
-        // default skip hostname verifier
+        // Default skip hostname verifier
         builder.hostnameVerifier(new HostnameVerifier() {
             @Override
             public boolean verify(String hostname, SSLSession session) {
