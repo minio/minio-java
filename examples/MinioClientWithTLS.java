@@ -42,7 +42,7 @@ public class MinioClientWithTLS {
     public static void main(String[] args) throws Exception {
         // Build OkHttpClient
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.sslSocketFactory(getSSLSocketFactoryWithJKS());
+        builder.sslSocketFactory(getSSLSocketFactoryWithoutCertificate());
         // Default skip hostname verifier
         builder.hostnameVerifier(new HostnameVerifier() {
             @Override
@@ -66,11 +66,14 @@ public class MinioClientWithTLS {
     /**
      * The client uses a certificate of the jks type.
      *
+     * @param truststorePath Your truststore JKS file path
+     * @param keystorePath Your keystore JKS file path
      * @return SSLSocketFactory
      */
-    public static SSLSocketFactory getSSLSocketFactoryWithJKS() {
-        try (InputStream trustInput = new FileInputStream("your truststore file path");
-             InputStream keyInput = new FileInputStream("your keystore file path");) {
+    public static SSLSocketFactory getSSLSocketFactoryWithJKS(String truststorePath, String keystorePath) {
+        //
+        try (InputStream trustInput = new FileInputStream(truststorePath);
+             InputStream keyInput = new FileInputStream(keystorePath);) {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             KeyStore trustStore = KeyStore.getInstance("JKS");
             trustStore.load(trustInput, TRUST_STORE_PASSWORD.toCharArray());
@@ -96,11 +99,14 @@ public class MinioClientWithTLS {
     /**
      * The client uses a certificate of the p12 type.
      *
+     * @param truststorePath Your truststore JKS file path
+     * @param keystorePath Your keystore p12 file path
      * @return SSLSocketFactory
      */
-    public static SSLSocketFactory getSSLSocketFactoryWithP12() {
-        try (InputStream trustInput = new FileInputStream("your truststore file path");
-             InputStream keyInput = new FileInputStream("your keystore file path");) {
+    public static SSLSocketFactory getSSLSocketFactoryWithP12(String truststorePath, String keystorePath) {
+        // Your truststore JKS file path and Your keystore P12 file path
+        try (InputStream trustInput = new FileInputStream(truststorePath);
+             InputStream keyInput = new FileInputStream(keystorePath);) {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             KeyStore trustStore = KeyStore.getInstance("JKS");
             trustStore.load(trustInput, TRUST_STORE_PASSWORD.toCharArray());
