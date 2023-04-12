@@ -20,10 +20,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -127,11 +129,79 @@ public class HttpUtils {
   }
 
   /**
+   * The client uses a certificate of the jks or p12 type.
+   *
+   * @param truststorePath Your truststore JKS file path
+   * @param keystorePath Your keystore JKS or p12 file path
+   * @return OkHttpClient
+   */
+  public static OkHttpClient enableJKSOrP12Certificates(OkHttpClient httpClient, String truststorePath, String keystorePath)
+          throws GeneralSecurityException, IOException {
+    String keyStorePassword = System.getenv("SSL_CERT_KEYSTORE_PASSWORD");
+    String trustStorePassword = System.getenv("SSL_CERT_TRUSTSTORE_PASSWORD");
+    String keystoreType = System.getenv("SSL_CERT_KEYSTORE_TYPE");
+    if (keystoreType == null || keystoreType.isEmpty()) {
+      // Get default keystore type
+      keystoreType = "JKS".equalsIgnoreCase(keystorePath.substring(keystorePath.lastIndexOf(".") + 1))?"JKS":"PKCS12";
+    }
+    if (keyStorePassword == null){
+      keyStorePassword = "";
+    }
+    if (trustStorePassword == null){
+      trustStorePassword = "";
+    }
+    // Build sslContext
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    KeyStore keyStore = KeyStore.getInstance(keystoreType);
+    try (InputStream trustInput = new FileInputStream(truststorePath);
+         InputStream keyInput = new FileInputStream(keystorePath);) {
+      trustStore.load(trustInput, trustStorePassword.toCharArray());
+      keyStore.load(keyInput, keyStorePassword.toCharArray());
+    }
+    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    trustManagerFactory.init(trustStore);
+
+    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+
+    sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
+    SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+    return httpClient
+            .newBuilder()
+            .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagerFactory.getTrustManagers()[0])
+            .build();
+  }
+
+  /**
+   * Enable defalut external certificates
+   *
+   * @param httpClient Defalut httpClient
+   * @return OkHttpClient
+   */
+  public static OkHttpClient enableExternalCertificates(OkHttpClient httpClient)
+          throws GeneralSecurityException, IOException {
+    // Default use pem certificates
+    String filename = System.getenv("SSL_CERT_FILE");
+    if (filename != null && !filename.isEmpty()) {
+      return enablePEMCertificates(httpClient, filename);
+    }
+    String truststorePath = System.getenv("SSL_CERT_TRUSTSTORE_PATH");
+    String keystorePath = System.getenv("SSL_CERT_KEYSTORE_PATH");
+    // Default certificates of the JKS and P12 types are supported.
+    if (truststorePath != null && !truststorePath.isEmpty()
+            && keystorePath != null && !keystorePath.isEmpty()) {
+      return enableJKSOrP12Certificates(httpClient,truststorePath,keystorePath);
+    }
+    return httpClient;
+  }
+
+  /**
    * copied logic from
    * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
    */
-  public static OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
-      throws GeneralSecurityException, IOException {
+  public static OkHttpClient enablePEMCertificates(OkHttpClient httpClient, String filename)
+          throws GeneralSecurityException, IOException {
     Collection<? extends Certificate> certificates = null;
     try (FileInputStream fis = new FileInputStream(filename)) {
       certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
@@ -156,10 +226,10 @@ public class HttpUtils {
 
     // Use it to build an X509 trust manager.
     KeyManagerFactory keyManagerFactory =
-        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
     keyManagerFactory.init(keyStore, password);
     TrustManagerFactory trustManagerFactory =
-        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     trustManagerFactory.init(keyStore);
 
     final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
@@ -170,9 +240,9 @@ public class HttpUtils {
     SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
     return httpClient
-        .newBuilder()
-        .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
-        .build();
+            .newBuilder()
+            .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
+            .build();
   }
 
   public static OkHttpClient newDefaultHttpClient(
@@ -185,13 +255,10 @@ public class HttpUtils {
             .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
             .protocols(Arrays.asList(Protocol.HTTP_1_1))
             .build();
-    String filename = System.getenv("SSL_CERT_FILE");
-    if (filename != null && !filename.isEmpty()) {
-      try {
-        httpClient = enableExternalCertificates(httpClient, filename);
-      } catch (GeneralSecurityException | IOException e) {
+    try {
+        httpClient = enableExternalCertificates(httpClient);
+      } catch (Exception e) {
         throw new RuntimeException(e);
-      }
     }
     return httpClient;
   }

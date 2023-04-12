@@ -52,14 +52,14 @@ public class MinioClientWithTLS {
         });
         MinioClient minioClient =
                 MinioClient.builder()
-                        .endpoint("https://MINIO-HOST:MINIO-PORT")
-                        .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY").httpClient(builder.build())
+                        .endpoint("https://minio-manage.kube-system.svc.cluster.local:8989")
+                        .credentials("5SHscdMrKiB4jOsIFG", "gUmlhoaJC5+P5@=s")
                         .build();
         // minioClient.ignoreCertCheck();
         // Get information of an object.
         StatObjectResponse stat =
                 minioClient.statObject(
-                        StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+                        StatObjectArgs.builder().bucket("manas-data-bucket").object("admin/11111111111111111111111111111111/test_1223/input/data_week3_sum.csv").build());
         System.out.println(stat);
     }
 
