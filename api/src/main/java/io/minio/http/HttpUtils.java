@@ -229,7 +229,7 @@ public class HttpUtils {
    * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
    */
   public static OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
-          throws GeneralSecurityException, IOException {
+      throws GeneralSecurityException, IOException {
     Collection<? extends Certificate> certificates = null;
     try (FileInputStream fis = new FileInputStream(filename)) {
       certificates = CertificateFactory.getInstance("X.509").generateCertificates(fis);
@@ -254,10 +254,10 @@ public class HttpUtils {
 
     // Use it to build an X509 trust manager.
     KeyManagerFactory keyManagerFactory =
-            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
     keyManagerFactory.init(keyStore, password);
     TrustManagerFactory trustManagerFactory =
-            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     trustManagerFactory.init(keyStore);
 
     final KeyManager[] keyManagers = keyManagerFactory.getKeyManagers();
@@ -268,21 +268,21 @@ public class HttpUtils {
     SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
     return httpClient
-            .newBuilder()
-            .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
-            .build();
+        .newBuilder()
+        .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagers[0])
+        .build();
   }
 
   public static OkHttpClient newDefaultHttpClient(
-          long connectTimeout, long writeTimeout, long readTimeout) {
+      long connectTimeout, long writeTimeout, long readTimeout) {
     OkHttpClient httpClient =
-            new OkHttpClient()
-                    .newBuilder()
-                    .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
-                    .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
-                    .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
-                    .protocols(Arrays.asList(Protocol.HTTP_1_1))
-                    .build();
+        new OkHttpClient()
+            .newBuilder()
+            .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
+            .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
+            .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
+            .protocols(Arrays.asList(Protocol.HTTP_1_1))
+            .build();
     String filename = System.getenv("SSL_CERT_FILE");
     if (filename != null && !filename.isEmpty()) {
       try {
