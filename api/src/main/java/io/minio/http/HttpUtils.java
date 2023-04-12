@@ -128,28 +128,11 @@ public class HttpUtils {
     return host + ":" + url.port();
   }
 
-  /**
-   * The client uses a certificate of the jks or p12 type.
-   *
-   * @param truststorePath Your truststore JKS file path
-   * @param keystorePath Your keystore JKS or p12 file path
-   * @return OkHttpClient
-   */
-  public static OkHttpClient enableJKSOrP12Certificates(OkHttpClient httpClient, String truststorePath, String keystorePath)
+
+  private static SSLSocketFactory getSSLSocketFactory(String keystoreType, String truststorePath,
+                                                      String keystorePath, String trustStorePassword,
+                                                      String keyStorePassword)
           throws GeneralSecurityException, IOException {
-    String keyStorePassword = System.getenv("SSL_CERT_KEYSTORE_PASSWORD");
-    String trustStorePassword = System.getenv("SSL_CERT_TRUSTSTORE_PASSWORD");
-    String keystoreType = System.getenv("SSL_CERT_KEYSTORE_TYPE");
-    if (keystoreType == null || keystoreType.isEmpty()) {
-      // Get default keystore type
-      keystoreType = "JKS".equalsIgnoreCase(keystorePath.substring(keystorePath.lastIndexOf(".") + 1))?"JKS":"PKCS12";
-    }
-    if (keyStorePassword == null){
-      keyStorePassword = "";
-    }
-    if (trustStorePassword == null){
-      trustStorePassword = "";
-    }
     // Build sslContext
     SSLContext sslContext = SSLContext.getInstance("TLS");
     KeyStore trustStore = KeyStore.getInstance("JKS");
@@ -166,41 +149,86 @@ public class HttpUtils {
     keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
 
     sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
-    SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-    return httpClient
-            .newBuilder()
-            .sslSocketFactory(sslSocketFactory, (X509TrustManager) trustManagerFactory.getTrustManagers()[0])
-            .build();
+    return sslContext.getSocketFactory();
   }
 
-  /**
-   * Enable defalut external certificates
-   *
-   * @param httpClient Defalut httpClient
-   * @return OkHttpClient
-   */
-  public static OkHttpClient enableExternalCertificates(OkHttpClient httpClient)
+  private static X509TrustManager getX509TrustManager(String truststorePath, String trustStorePassword)
           throws GeneralSecurityException, IOException {
-    // Default use pem certificates
-    String filename = System.getenv("SSL_CERT_FILE");
-    if (filename != null && !filename.isEmpty()) {
-      return enablePEMCertificates(httpClient, filename);
+      KeyStore trustStore = KeyStore.getInstance("JKS");
+      try (InputStream trustInput = new FileInputStream(truststorePath)) {
+          trustStore.load(trustInput, trustStorePassword.toCharArray());
+      }
+      TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(trustStore);
+      return (X509TrustManager) trustManagerFactory.getTrustManagers()[0];
+  }
+
+    /**
+     * The client uses a certificate of the jks type.
+     *
+     * @param truststorePath Trust store file path
+     * @param keystorePath Key store file path
+     * @param trustStorePassword Trust store password
+     * @param keyStorePassword Key store password
+     * @return OkHttpClient
+     */
+  public static OkHttpClient newHttpClientByJKSCert(String truststorePath,
+                                                  String keystorePath,
+                                                  String trustStorePassword,
+                                                  String keyStorePassword){
+      OkHttpClient.Builder builder = new OkHttpClient.Builder();
+    if (truststorePath == null || keystorePath == null ||
+            truststorePath.isEmpty() || keystorePath.isEmpty()) {
+      return builder.build();
     }
-    String truststorePath = System.getenv("SSL_CERT_TRUSTSTORE_PATH");
-    String keystorePath = System.getenv("SSL_CERT_KEYSTORE_PATH");
-    // Default certificates of the JKS and P12 types are supported.
-    if (truststorePath != null && !truststorePath.isEmpty()
-            && keystorePath != null && !keystorePath.isEmpty()) {
-      return enableJKSOrP12Certificates(httpClient,truststorePath,keystorePath);
+    SSLSocketFactory sslSocketFactory = null;
+    X509TrustManager trustManager = null;
+    try {
+        sslSocketFactory = getSSLSocketFactory("JKS", truststorePath,
+                keystorePath, trustStorePassword, keyStorePassword);
+        trustManager = getX509TrustManager(truststorePath,trustStorePassword);
+    } catch (Exception e) {
+        throw new RuntimeException(e);
     }
-    return httpClient;
+    return builder.sslSocketFactory(sslSocketFactory, trustManager).build();
+  }
+
+
+    /**
+     * The client uses a certificate of the p12 type.
+     *
+     * @param truststorePath Trust store file path
+     * @param keystorePath Key store file path
+     * @param trustStorePassword Trust store password
+     * @param keyStorePassword Key store password
+     * @return OkHttpClient
+     */
+  public static OkHttpClient newHttpClientByP12Cert(String truststorePath,
+                                                  String keystorePath,
+                                                  String trustStorePassword,
+                                                  String keyStorePassword){
+      OkHttpClient.Builder builder = new OkHttpClient.Builder();
+    if (truststorePath == null || keystorePath == null ||
+            truststorePath.isEmpty() || keystorePath.isEmpty()) {
+      return builder.build();
+    }
+    SSLSocketFactory sslSocketFactory = null;
+    X509TrustManager trustManager = null;
+    try {
+        sslSocketFactory = getSSLSocketFactory("PKCS12", truststorePath,
+                keystorePath, trustStorePassword, keyStorePassword);
+        trustManager = getX509TrustManager(truststorePath, trustStorePassword);
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+    return builder.sslSocketFactory(sslSocketFactory, trustManager).build();
   }
 
   /**
    * copied logic from
    * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
    */
-  public static OkHttpClient enablePEMCertificates(OkHttpClient httpClient, String filename)
+  public static OkHttpClient enableExternalCertificates(OkHttpClient httpClient, String filename)
           throws GeneralSecurityException, IOException {
     Collection<? extends Certificate> certificates = null;
     try (FileInputStream fis = new FileInputStream(filename)) {
@@ -246,19 +274,22 @@ public class HttpUtils {
   }
 
   public static OkHttpClient newDefaultHttpClient(
-      long connectTimeout, long writeTimeout, long readTimeout) {
+          long connectTimeout, long writeTimeout, long readTimeout) {
     OkHttpClient httpClient =
-        new OkHttpClient()
-            .newBuilder()
-            .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
-            .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
-            .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
-            .protocols(Arrays.asList(Protocol.HTTP_1_1))
-            .build();
-    try {
-        httpClient = enableExternalCertificates(httpClient);
-      } catch (Exception e) {
+            new OkHttpClient()
+                    .newBuilder()
+                    .connectTimeout(connectTimeout, TimeUnit.MILLISECONDS)
+                    .writeTimeout(writeTimeout, TimeUnit.MILLISECONDS)
+                    .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
+                    .protocols(Arrays.asList(Protocol.HTTP_1_1))
+                    .build();
+    String filename = System.getenv("SSL_CERT_FILE");
+    if (filename != null && !filename.isEmpty()) {
+      try {
+        httpClient = enableExternalCertificates(httpClient, filename);
+      } catch (GeneralSecurityException | IOException e) {
         throw new RuntimeException(e);
+      }
     }
     return httpClient;
   }
