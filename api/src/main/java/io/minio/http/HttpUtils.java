@@ -127,13 +127,13 @@ public class HttpUtils {
   }
 
   private static OkHttpClient enableJKSPKCS12Certificates(
-          OkHttpClient httpClient,
-          String trustStorePath,
-          String trustStorePassword,
-          String keyStorePath,
-          String keyStorePassword,
-          String keyStoreType)
-          throws GeneralSecurityException, IOException {
+      OkHttpClient httpClient,
+      String trustStorePath,
+      String trustStorePassword,
+      String keyStorePath,
+      String keyStorePassword,
+      String keyStoreType)
+      throws GeneralSecurityException, IOException {
     if (trustStorePath == null || trustStorePath.isEmpty()) {
       throw new IllegalArgumentException("trust store path must be provided");
     }
@@ -151,51 +151,51 @@ public class HttpUtils {
     KeyStore trustStore = KeyStore.getInstance("JKS");
     KeyStore keyStore = KeyStore.getInstance(keyStoreType);
     try (FileInputStream trustInput = new FileInputStream(trustStorePath);
-         FileInputStream keyInput = new FileInputStream(keyStorePath); ) {
+        FileInputStream keyInput = new FileInputStream(keyStorePath); ) {
       trustStore.load(trustInput, trustStorePassword.toCharArray());
       keyStore.load(keyInput, keyStorePassword.toCharArray());
     }
     TrustManagerFactory trustManagerFactory =
-            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     trustManagerFactory.init(trustStore);
 
     KeyManagerFactory keyManagerFactory =
-            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
     keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
 
     sslContext.init(
-            keyManagerFactory.getKeyManagers(),
-            trustManagerFactory.getTrustManagers(),
-            new java.security.SecureRandom());
+        keyManagerFactory.getKeyManagers(),
+        trustManagerFactory.getTrustManagers(),
+        new java.security.SecureRandom());
 
     return httpClient
-            .newBuilder()
-            .sslSocketFactory(
-                    sslContext.getSocketFactory(),
-                    (X509TrustManager) trustManagerFactory.getTrustManagers()[0])
-            .build();
+        .newBuilder()
+        .sslSocketFactory(
+            sslContext.getSocketFactory(),
+            (X509TrustManager) trustManagerFactory.getTrustManagers()[0])
+        .build();
   }
 
   public static OkHttpClient enableJKSCertificates(
-          OkHttpClient httpClient,
-          String trustStorePath,
-          String trustStorePassword,
-          String keyStorePath,
-          String keyStorePassword)
-          throws GeneralSecurityException, IOException {
+      OkHttpClient httpClient,
+      String trustStorePath,
+      String trustStorePassword,
+      String keyStorePath,
+      String keyStorePassword)
+      throws GeneralSecurityException, IOException {
     return enableJKSPKCS12Certificates(
-            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "JKS");
+        httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "JKS");
   }
 
   public static OkHttpClient enablePKCS12Certificates(
-          OkHttpClient httpClient,
-          String trustStorePath,
-          String trustStorePassword,
-          String keyStorePath,
-          String keyStorePassword)
-          throws GeneralSecurityException, IOException {
+      OkHttpClient httpClient,
+      String trustStorePath,
+      String trustStorePassword,
+      String keyStorePath,
+      String keyStorePassword)
+      throws GeneralSecurityException, IOException {
     return enableJKSPKCS12Certificates(
-            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "PKCS12");
+        httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "PKCS12");
   }
 
   /**
