@@ -126,6 +126,78 @@ public class HttpUtils {
     return host + ":" + url.port();
   }
 
+  private static OkHttpClient enableJKSPKCS12Certificates(
+      OkHttpClient httpClient,
+      String trustStorePath,
+      String trustStorePassword,
+      String keyStorePath,
+      String keyStorePassword,
+      String keyStoreType)
+      throws GeneralSecurityException, IOException {
+    if (trustStorePath == null || trustStorePath.isEmpty()) {
+      throw new IllegalArgumentException("trust store path must be provided");
+    }
+    if (trustStorePassword == null) {
+      throw new IllegalArgumentException("trust store password must be provided");
+    }
+    if (keyStorePath == null || keyStorePath.isEmpty()) {
+      throw new IllegalArgumentException("key store path must be provided");
+    }
+    if (keyStorePassword == null) {
+      throw new IllegalArgumentException("key store password must be provided");
+    }
+
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    KeyStore trustStore = KeyStore.getInstance("JKS");
+    KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+    try (FileInputStream trustInput = new FileInputStream(trustStorePath);
+        FileInputStream keyInput = new FileInputStream(keyStorePath); ) {
+      trustStore.load(trustInput, trustStorePassword.toCharArray());
+      keyStore.load(keyInput, keyStorePassword.toCharArray());
+    }
+    TrustManagerFactory trustManagerFactory =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    trustManagerFactory.init(trustStore);
+
+    KeyManagerFactory keyManagerFactory =
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
+
+    sslContext.init(
+        keyManagerFactory.getKeyManagers(),
+        trustManagerFactory.getTrustManagers(),
+        new java.security.SecureRandom());
+
+    return httpClient
+        .newBuilder()
+        .sslSocketFactory(
+            sslContext.getSocketFactory(),
+            (X509TrustManager) trustManagerFactory.getTrustManagers()[0])
+        .build();
+  }
+
+  public static OkHttpClient enableJKSCertificates(
+      OkHttpClient httpClient,
+      String trustStorePath,
+      String trustStorePassword,
+      String keyStorePath,
+      String keyStorePassword)
+      throws GeneralSecurityException, IOException {
+    return enableJKSPKCS12Certificates(
+        httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "JKS");
+  }
+
+  public static OkHttpClient enablePKCS12Certificates(
+      OkHttpClient httpClient,
+      String trustStorePath,
+      String trustStorePassword,
+      String keyStorePath,
+      String keyStorePassword)
+      throws GeneralSecurityException, IOException {
+    return enableJKSPKCS12Certificates(
+        httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "PKCS12");
+  }
+
   /**
    * copied logic from
    * https://github.com/square/okhttp/blob/master/samples/guide/src/main/java/okhttp3/recipes/CustomTrust.java
