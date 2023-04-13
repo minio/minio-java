@@ -20,12 +20,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -128,100 +126,76 @@ public class HttpUtils {
     return host + ":" + url.port();
   }
 
-
-  private static SSLSocketFactory getSSLSocketFactory(String keystoreType, String truststorePath,
-                                                      String keystorePath, String trustStorePassword,
-                                                      String keyStorePassword)
+  private static OkHttpClient enableJKSPKCS12Certificates(
+          OkHttpClient httpClient,
+          String trustStorePath,
+          String trustStorePassword,
+          String keyStorePath,
+          String keyStorePassword,
+          boolean pkcs12)
           throws GeneralSecurityException, IOException {
-    // Build sslContext
+    if (trustStorePath == null || trustStorePath.isEmpty()) {
+      throw new IllegalArgumentException("trust store path must be provided");
+    }
+    if (trustStorePassword == null) {
+      throw new IllegalArgumentException("trust store password must be provided");
+    }
+    if (keyStorePath == null || keyStorePath.isEmpty()) {
+      throw new IllegalArgumentException("key store path must be provided");
+    }
+    if (keyStorePassword == null) {
+      throw new IllegalArgumentException("key store password must be provided");
+    }
+
     SSLContext sslContext = SSLContext.getInstance("TLS");
     KeyStore trustStore = KeyStore.getInstance("JKS");
-    KeyStore keyStore = KeyStore.getInstance(keystoreType);
-    try (InputStream trustInput = new FileInputStream(truststorePath);
-         InputStream keyInput = new FileInputStream(keystorePath);) {
+    KeyStore keyStore = KeyStore.getInstance(pkcs12 ? "PKCS12" : "JKS");
+    try (FileInputStream trustInput = new FileInputStream(trustStorePath);
+         FileInputStream keyInput = new FileInputStream(keyStorePath); ) {
       trustStore.load(trustInput, trustStorePassword.toCharArray());
       keyStore.load(keyInput, keyStorePassword.toCharArray());
     }
-    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    TrustManagerFactory trustManagerFactory =
+            TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
     trustManagerFactory.init(trustStore);
 
-    KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    KeyManagerFactory keyManagerFactory =
+            KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
     keyManagerFactory.init(keyStore, keyStorePassword.toCharArray());
 
-    sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
-    return sslContext.getSocketFactory();
+    sslContext.init(
+            keyManagerFactory.getKeyManagers(),
+            trustManagerFactory.getTrustManagers(),
+            new java.security.SecureRandom());
+
+    return httpClient
+            .newBuilder()
+            .sslSocketFactory(
+                    sslContext.getSocketFactory(),
+                    (X509TrustManager) trustManagerFactory.getTrustManagers()[0])
+            .build();
   }
 
-  private static X509TrustManager getX509TrustManager(String truststorePath, String trustStorePassword)
+  public static OkHttpClient enableJKSCertificates(
+          OkHttpClient httpClient,
+          String trustStorePath,
+          String trustStorePassword,
+          String keyStorePath,
+          String keyStorePassword)
           throws GeneralSecurityException, IOException {
-      KeyStore trustStore = KeyStore.getInstance("JKS");
-      try (InputStream trustInput = new FileInputStream(truststorePath)) {
-          trustStore.load(trustInput, trustStorePassword.toCharArray());
-      }
-      TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      trustManagerFactory.init(trustStore);
-      return (X509TrustManager) trustManagerFactory.getTrustManagers()[0];
+    return enableJKSPKCS12Certificates(
+            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, false);
   }
 
-    /**
-     * The client uses a certificate of the jks type.
-     *
-     * @param truststorePath Trust store file path
-     * @param keystorePath Key store file path
-     * @param trustStorePassword Trust store password
-     * @param keyStorePassword Key store password
-     * @return OkHttpClient
-     */
-  public static OkHttpClient newHttpClientByJKSCert(String truststorePath,
-                                                  String keystorePath,
-                                                  String trustStorePassword,
-                                                  String keyStorePassword){
-      OkHttpClient.Builder builder = new OkHttpClient.Builder();
-    if (truststorePath == null || keystorePath == null ||
-            truststorePath.isEmpty() || keystorePath.isEmpty()) {
-      return builder.build();
-    }
-    SSLSocketFactory sslSocketFactory = null;
-    X509TrustManager trustManager = null;
-    try {
-        sslSocketFactory = getSSLSocketFactory("JKS", truststorePath,
-                keystorePath, trustStorePassword, keyStorePassword);
-        trustManager = getX509TrustManager(truststorePath,trustStorePassword);
-    } catch (Exception e) {
-        throw new RuntimeException(e);
-    }
-    return builder.sslSocketFactory(sslSocketFactory, trustManager).build();
-  }
-
-
-    /**
-     * The client uses a certificate of the p12 type.
-     *
-     * @param truststorePath Trust store file path
-     * @param keystorePath Key store file path
-     * @param trustStorePassword Trust store password
-     * @param keyStorePassword Key store password
-     * @return OkHttpClient
-     */
-  public static OkHttpClient newHttpClientByP12Cert(String truststorePath,
-                                                  String keystorePath,
-                                                  String trustStorePassword,
-                                                  String keyStorePassword){
-      OkHttpClient.Builder builder = new OkHttpClient.Builder();
-    if (truststorePath == null || keystorePath == null ||
-            truststorePath.isEmpty() || keystorePath.isEmpty()) {
-      return builder.build();
-    }
-    SSLSocketFactory sslSocketFactory = null;
-    X509TrustManager trustManager = null;
-    try {
-        sslSocketFactory = getSSLSocketFactory("PKCS12", truststorePath,
-                keystorePath, trustStorePassword, keyStorePassword);
-        trustManager = getX509TrustManager(truststorePath, trustStorePassword);
-    } catch (Exception e) {
-        throw new RuntimeException(e);
-    }
-    return builder.sslSocketFactory(sslSocketFactory, trustManager).build();
+  public static OkHttpClient enablePKCS12Certificates(
+          OkHttpClient httpClient,
+          String trustStorePath,
+          String trustStorePassword,
+          String keyStorePath,
+          String keyStorePassword)
+          throws GeneralSecurityException, IOException {
+    return enableJKSPKCS12Certificates(
+            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, true);
   }
 
   /**
