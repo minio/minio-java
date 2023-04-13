@@ -132,7 +132,7 @@ public class HttpUtils {
           String trustStorePassword,
           String keyStorePath,
           String keyStorePassword,
-          boolean pkcs12)
+          String keyStoreType)
           throws GeneralSecurityException, IOException {
     if (trustStorePath == null || trustStorePath.isEmpty()) {
       throw new IllegalArgumentException("trust store path must be provided");
@@ -149,7 +149,7 @@ public class HttpUtils {
 
     SSLContext sslContext = SSLContext.getInstance("TLS");
     KeyStore trustStore = KeyStore.getInstance("JKS");
-    KeyStore keyStore = KeyStore.getInstance(pkcs12 ? "PKCS12" : "JKS");
+    KeyStore keyStore = KeyStore.getInstance(keyStoreType);
     try (FileInputStream trustInput = new FileInputStream(trustStorePath);
          FileInputStream keyInput = new FileInputStream(keyStorePath); ) {
       trustStore.load(trustInput, trustStorePassword.toCharArray());
@@ -184,7 +184,7 @@ public class HttpUtils {
           String keyStorePassword)
           throws GeneralSecurityException, IOException {
     return enableJKSPKCS12Certificates(
-            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, false);
+            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "JKS");
   }
 
   public static OkHttpClient enablePKCS12Certificates(
@@ -195,7 +195,7 @@ public class HttpUtils {
           String keyStorePassword)
           throws GeneralSecurityException, IOException {
     return enableJKSPKCS12Certificates(
-            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, true);
+            httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "PKCS12");
   }
 
   /**
