@@ -26,7 +26,7 @@ jobs:
             echo "Error: use java.util.Objects instead of com.google.common.base.Objects"
             exit 1
           fi
-      - name: Setup java
+      - name: Setup java ${{ matrix.java-version }}
         uses: actions/setup-java@v3
         with:
           distribution: temurin
@@ -35,7 +35,7 @@ jobs:
         run: |
           echo "DEV_VERSION=$(./gradlew properties | awk '/^version:/ { print $2 }')" >> $GITHUB_ENV
           echo "RELEASE_VERSION=$(./gradlew properties -Prelease | awk '/^version:/ { print $2 }')" >> $GITHUB_ENV
-      - name: Gradle build on java ${{ matrix.java-version }}
+      - name: Gradle build on Ununtu
         if: matrix.os == 'ubuntu-latest'
         run: |
           ./gradlew build
@@ -46,7 +46,7 @@ jobs:
           ./gradlew build -Prelease
           javac -cp api/build/libs/minio-${RELEASE_VERSION}-all.jar functional/TestUserAgent.java
           java -Dversion=${RELEASE_VERSION} -cp api/build/libs/minio-${RELEASE_VERSION}-all.jar:functional TestUserAgent
-      - name: Gradle build on java ${{ matrix.java-version }}
+      - name: Gradle build on Windows
         if: matrix.os == 'windows-latest'
         run: |
           $Env:Path += ';.'
