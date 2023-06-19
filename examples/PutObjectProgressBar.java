@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import me.tongfei.progressbar.ProgressBarStyle;
 
 public class PutObjectProgressBar {
   /** MinioClient.putObjectProgressBar() example. */
@@ -49,8 +48,7 @@ public class PutObjectProgressBar {
 
     File file = new File("my-filename");
     InputStream pis =
-        new BufferedInputStream(
-            new ProgressStream("Uploading... ", ProgressBarStyle.ASCII, new FileInputStream(file)));
+        new BufferedInputStream(new ProgressStream("Uploading... ", new FileInputStream(file)));
     minioClient.putObject(
         PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
                 pis, pis.available(), -1)

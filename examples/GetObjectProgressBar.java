@@ -29,7 +29,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import me.tongfei.progressbar.ProgressBarStyle;
 
 public class GetObjectProgressBar {
   /** MinioClient.getObjectProgressBar() example. */
@@ -66,7 +65,6 @@ public class GetObjectProgressBar {
       InputStream is =
           new ProgressStream(
               "Downloading .. ",
-              ProgressBarStyle.ASCII,
               stat.size(),
               minioClient.getObject(
                   GetObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build()));

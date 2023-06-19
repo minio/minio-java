@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-/***************************/
-/*  gradleVersion = '7.6'  */
-/***************************/
+/*****************************/
+/*  gradleVersion = '8.1.1'  */
+/*****************************/
 
 plugins {
   id "com.github.johnrengelman.shadow" version "7.1.2"
-  id "com.github.spotbugs" version "5.0.13"
+  id "com.github.spotbugs" version "5.0.14"
   id "io.codearte.nexus-staging" version "0.30.0"
   id "de.marcphilipp.nexus-publish" version "0.4.0"
-  id "com.diffplug.spotless" version "6.12.0"
+  id "com.diffplug.spotless" version "6.13.0"
 }
 
 /*
@@ -52,17 +52,17 @@ subprojects {
 
     dependencies {
         api "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
-        api "com.google.guava:guava:30.1.1-jre"
-        api "com.squareup.okhttp3:okhttp:4.10.0"
-        api "com.fasterxml.jackson.core:jackson-annotations:2.13.4"
-        api "com.fasterxml.jackson.core:jackson-core:2.13.4"
-        api "com.fasterxml.jackson.core:jackson-databind:2.13.4.2"
-        api "org.bouncycastle:bcprov-jdk15on:1.69"
-        api 'org.apache.commons:commons-compress:1.21'
-        api "org.xerial.snappy:snappy-java:1.1.8.4"
-        compileOnly "com.github.spotbugs:spotbugs-annotations:4.1.2"
+        api "com.google.guava:guava:32.0.0-jre"
+        api "com.squareup.okhttp3:okhttp:4.11.0"
+        api "com.fasterxml.jackson.core:jackson-annotations:2.15.2"
+        api "com.fasterxml.jackson.core:jackson-core:2.15.2"
+        api "com.fasterxml.jackson.core:jackson-databind:2.15.2"
+        api "org.bouncycastle:bcprov-jdk15on:1.70"
+        api 'org.apache.commons:commons-compress:1.23.0'
+        api "org.xerial.snappy:snappy-java:1.1.10.1"
+        compileOnly "com.github.spotbugs:spotbugs-annotations:4.7.3"
 
-        testImplementation "com.squareup.okhttp3:mockwebserver:4.8.1"
+        testImplementation "com.squareup.okhttp3:mockwebserver:4.11.0"
         testImplementation "junit:junit:4.13.2"
     }
 
@@ -242,7 +242,7 @@ project(':adminapi') {
 
     dependencies {
         api project(':api')
-        api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4"
+        api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2"
         testImplementation project(':api')
     }
 
@@ -346,9 +346,12 @@ project(':adminapi') {
 
 project(':examples') {
     dependencies {
-        compileOnly "me.tongfei:progressbar:0.5.3"
+        compileOnly "me.tongfei:progressbar:0.9.5"
         compileOnly project(':api')
     }
+
+    compileJava.dependsOn spotlessGroovyGradle, spotlessJava
+    spotbugsMain.dependsOn compileTestJava, jar, localeTest, spotlessGroovyGradle, spotlessJava
 
     sourceSets {
         main {
@@ -367,6 +370,9 @@ project(':functional') {
         implementation project(':api')
         implementation project(':adminapi')
     }
+
+    compileJava.dependsOn spotlessGroovyGradle, spotlessJava
+    spotbugsMain.dependsOn compileTestJava, jar, localeTest, spotlessGroovyGradle, spotlessJava
 
     sourceSets {
         main {
