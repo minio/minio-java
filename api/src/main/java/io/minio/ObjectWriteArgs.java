@@ -33,7 +33,7 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
   public static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
   // allowed minimum part size is 5MiB in multipart upload.
   public static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
-  // allowed minimum part size is 5GiB in multipart upload.
+  // allowed maximum part size is 5GiB in multipart upload.
   public static final long MAX_PART_SIZE = 5L * 1024 * 1024 * 1024;
   public static final int MAX_MULTIPART_COUNT = 10000;
 
