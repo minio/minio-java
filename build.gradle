@@ -57,7 +57,7 @@ subprojects {
         api "com.fasterxml.jackson.core:jackson-annotations:2.15.2"
         api "com.fasterxml.jackson.core:jackson-core:2.15.2"
         api "com.fasterxml.jackson.core:jackson-databind:2.15.2"
-        api "org.bouncycastle:bcprov-jdk15on:1.70"
+        api 'org.bouncycastle:bcprov-jdk18on:1.74'
         api 'org.apache.commons:commons-compress:1.23.0'
         api "org.xerial.snappy:snappy-java:1.1.10.1"
         compileOnly "com.github.spotbugs:spotbugs-annotations:4.7.3"
