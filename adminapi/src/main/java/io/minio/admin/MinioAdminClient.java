@@ -108,7 +108,7 @@ public class MinioAdminClient {
   private OkHttpClient httpClient;
 
   private MinioAdminClient(
-      HttpUrl baseUrl, String region, Provider provider, OkHttpClient httpClient) {
+          HttpUrl baseUrl, String region, Provider provider, OkHttpClient httpClient) {
     this.baseUrl = baseUrl;
     this.region = region;
     this.provider = provider;
@@ -117,26 +117,24 @@ public class MinioAdminClient {
 
   private Credentials getCredentials() {
     Credentials creds = provider.fetch();
-    if (creds == null) {
-      throw new RuntimeException("Credential provider returns null credential");
-    }
+    if (creds == null) throw new RuntimeException("Credential provider returns null credential");
     return creds;
   }
 
   private Response execute(
-      Method method, Command command, Multimap<String, String> queryParamMap, byte[] body)
-      throws InvalidKeyException, IOException, NoSuchAlgorithmException {
+          Method method, Command command, Multimap<String, String> queryParamMap, byte[] body)
+          throws InvalidKeyException, IOException, NoSuchAlgorithmException {
     Credentials creds = getCredentials();
 
     HttpUrl.Builder urlBuilder =
-        this.baseUrl
-            .newBuilder()
-            .host(this.baseUrl.host())
-            .addEncodedPathSegments(S3Escaper.encodePath("minio/admin/v3/" + command.toString()));
+            this.baseUrl
+                    .newBuilder()
+                    .host(this.baseUrl.host())
+                    .addEncodedPathSegments(S3Escaper.encodePath("minio/admin/v3/" + command.toString()));
     if (queryParamMap != null) {
       for (Map.Entry<String, String> entry : queryParamMap.entries()) {
         urlBuilder.addEncodedQueryParameter(
-            S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
+                S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
       }
     }
     HttpUrl url = urlBuilder.build();
@@ -162,12 +160,12 @@ public class MinioAdminClient {
     Request request = requestBuilder.build();
 
     request =
-        Signer.signV4S3(
-            request,
-            region,
-            creds.accessKey(),
-            creds.secretKey(),
-            request.header("x-amz-content-sha256"));
+            Signer.signV4S3(
+                    request,
+                    region,
+                    creds.accessKey(),
+                    creds.secretKey(),
+                    request.header("x-amz-content-sha256"));
 
     PrintWriter traceStream = this.traceStream;
     if (traceStream != null) {
@@ -175,19 +173,15 @@ public class MinioAdminClient {
       traceBuilder.append("---------START-HTTP---------\n");
       String encodedPath = request.url().encodedPath();
       String encodedQuery = request.url().encodedQuery();
-      if (encodedQuery != null) {
-        encodedPath += "?" + encodedQuery;
-      }
+      if (encodedQuery != null) encodedPath += "?" + encodedQuery;
       traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
       traceBuilder.append(
-          request
-              .headers()
-              .toString()
-              .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
-      if (body != null) {
-        traceBuilder.append("\n").append(new String(body, StandardCharsets.UTF_8));
-      }
+              request
+                      .headers()
+                      .toString()
+                      .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
+                      .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
+      if (body != null) traceBuilder.append("\n").append(new String(body, StandardCharsets.UTF_8));
       traceStream.println(traceBuilder.toString());
     }
 
@@ -196,20 +190,18 @@ public class MinioAdminClient {
 
     if (traceStream != null) {
       String trace =
-          response.protocol().toString().toUpperCase(Locale.US)
-              + " "
-              + response.code()
-              + "\n"
-              + response.headers();
+              response.protocol().toString().toUpperCase(Locale.US)
+                      + " "
+                      + response.code()
+                      + "\n"
+                      + response.headers();
       traceStream.println(trace);
       ResponseBody responseBody = response.peekBody(1024 * 1024);
       traceStream.println(responseBody.string());
       traceStream.println("----------END-HTTP----------");
     }
 
-    if (response.isSuccessful()) {
-      return response;
-    }
+    if (response.isSuccessful()) return response;
 
     throw new RuntimeException("Request failed with response: " + response.body().string());
   }
@@ -228,12 +220,12 @@ public class MinioAdminClient {
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
   public void addUser(
-      @Nonnull String accessKey,
-      @Nonnull UserInfo.Status status,
-      @Nullable String secretKey,
-      @Nullable String policyName,
-      @Nullable List<String> memberOf)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          @Nonnull String accessKey,
+          @Nonnull UserInfo.Status status,
+          @Nullable String secretKey,
+          @Nullable String policyName,
+          @Nullable List<String> memberOf)
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
     if (accessKey == null || accessKey.isEmpty()) {
       throw new IllegalArgumentException("access key must be provided");
@@ -242,11 +234,11 @@ public class MinioAdminClient {
 
     Credentials creds = getCredentials();
     try (Response response =
-        execute(
-            Method.PUT,
-            Command.ADD_USER,
-            ImmutableMultimap.of("accessKey", accessKey),
-            Crypto.encrypt(creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(userInfo)))) {}
+                 execute(
+                         Method.PUT,
+                         Command.ADD_USER,
+                         ImmutableMultimap.of("accessKey", accessKey),
+                         Crypto.encrypt(creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(userInfo)))) {}
   }
 
   /**
@@ -259,10 +251,10 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public UserInfo getUserInfo(String accessKey)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     try (Response response =
-        execute(
-            Method.GET, Command.USER_INFO, ImmutableMultimap.of("accessKey", accessKey), null)) {
+                 execute(
+                         Method.GET, Command.USER_INFO, ImmutableMultimap.of("accessKey", accessKey), null)) {
       byte[] jsonData = response.body().bytes();
       return OBJECT_MAPPER.readValue(jsonData, UserInfo.class);
     }
@@ -278,15 +270,15 @@ public class MinioAdminClient {
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
   public Map<String, UserInfo> listUsers()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
     try (Response response = execute(Method.GET, Command.LIST_USERS, null, null)) {
       Credentials creds = getCredentials();
       byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
       MapType mapType =
-          OBJECT_MAPPER
-              .getTypeFactory()
-              .constructMapType(HashMap.class, String.class, UserInfo.class);
+              OBJECT_MAPPER
+                      .getTypeFactory()
+                      .constructMapType(HashMap.class, String.class, UserInfo.class);
       return OBJECT_MAPPER.readValue(jsonData, mapType);
     }
   }
@@ -300,17 +292,17 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void deleteUser(@Nonnull String accessKey)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     if (accessKey == null || accessKey.isEmpty()) {
       throw new IllegalArgumentException("access key must be provided");
     }
 
     try (Response response =
-        execute(
-            Method.DELETE,
-            Command.REMOVE_USER,
-            ImmutableMultimap.of("accessKey", accessKey),
-            null)) {}
+                 execute(
+                         Method.DELETE,
+                         Command.REMOVE_USER,
+                         ImmutableMultimap.of("accessKey", accessKey),
+                         null)) {}
   }
 
   /**
@@ -324,20 +316,20 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void addUpdateGroup(
-      @Nonnull String group, @Nullable Status groupStatus, @Nullable List<String> members)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          @Nonnull String group, @Nullable Status groupStatus, @Nullable List<String> members)
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     if (group == null || group.isEmpty()) {
       throw new IllegalArgumentException("group must be provided");
     }
     GroupAddUpdateRemoveInfo groupAddUpdateRemoveInfo =
-        new GroupAddUpdateRemoveInfo(group, groupStatus, members, false);
+            new GroupAddUpdateRemoveInfo(group, groupStatus, members, false);
 
     try (Response response =
-        execute(
-            Method.PUT,
-            Command.ADD_UPDATE_REMOVE_GROUP,
-            null,
-            OBJECT_MAPPER.writeValueAsBytes(groupAddUpdateRemoveInfo))) {}
+                 execute(
+                         Method.PUT,
+                         Command.ADD_UPDATE_REMOVE_GROUP,
+                         null,
+                         OBJECT_MAPPER.writeValueAsBytes(groupAddUpdateRemoveInfo))) {}
   }
 
   /**
@@ -350,9 +342,9 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public GroupInfo getGroupInfo(String group)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     try (Response response =
-        execute(Method.GET, Command.GROUP_INFO, ImmutableMultimap.of("group", group), null)) {
+                 execute(Method.GET, Command.GROUP_INFO, ImmutableMultimap.of("group", group), null)) {
       byte[] jsonData = response.body().bytes();
       return OBJECT_MAPPER.readValue(jsonData, GroupInfo.class);
     }
@@ -367,11 +359,11 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public List<String> listGroups()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     try (Response response = execute(Method.GET, Command.LIST_GROUPS, null, null)) {
       byte[] jsonData = response.body().bytes();
       CollectionType mapType =
-          OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, String.class);
+              OBJECT_MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, String.class);
       return OBJECT_MAPPER.readValue(jsonData, mapType);
     }
   }
@@ -385,19 +377,19 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void removeGroup(@Nonnull String group)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     if (group == null || group.isEmpty()) {
       throw new IllegalArgumentException("group must be provided");
     }
     GroupAddUpdateRemoveInfo groupAddUpdateRemoveInfo =
-        new GroupAddUpdateRemoveInfo(group, null, null, true);
+            new GroupAddUpdateRemoveInfo(group, null, null, true);
 
     try (Response response =
-        execute(
-            Method.PUT,
-            Command.ADD_UPDATE_REMOVE_GROUP,
-            null,
-            OBJECT_MAPPER.writeValueAsBytes(groupAddUpdateRemoveInfo))) {}
+                 execute(
+                         Method.PUT,
+                         Command.ADD_UPDATE_REMOVE_GROUP,
+                         null,
+                         OBJECT_MAPPER.writeValueAsBytes(groupAddUpdateRemoveInfo))) {}
   }
 
   /**
@@ -411,18 +403,18 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void setBucketQuota(@Nonnull String bucketName, long size, @Nonnull QuotaUnit unit)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+          throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     Map<String, Object> quotaEntity = new HashMap<>();
     if (size > 0) {
       quotaEntity.put("quotatype", "hard");
     }
     quotaEntity.put("quota", unit.toBytes(size));
     try (Response response =
-        execute(
-            Method.PUT,
-            Command.SET_BUCKET_QUOTA,
-            ImmutableMultimap.of("bucket", bucketName),
-            OBJECT_MAPPER.writeValueAsBytes(quotaEntity))) {}
+                 execute(
+                         Method.PUT,
+                         Command.SET_BUCKET_QUOTA,
+                         ImmutableMultimap.of("bucket", bucketName),
+                         OBJECT_MAPPER.writeValueAsBytes(quotaEntity))) {}
   }
 
   /**
@@ -435,23 +427,23 @@ public class MinioAdminClient {
    * @throws InvalidKeyException
    */
   public long getBucketQuota(String bucketName)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+          throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response =
-        execute(
-            Method.GET,
-            Command.GET_BUCKET_QUOTA,
-            ImmutableMultimap.of("bucket", bucketName),
-            null)) {
+                 execute(
+                         Method.GET,
+                         Command.GET_BUCKET_QUOTA,
+                         ImmutableMultimap.of("bucket", bucketName),
+                         null)) {
       MapType mapType =
-          OBJECT_MAPPER
-              .getTypeFactory()
-              .constructMapType(HashMap.class, String.class, JsonNode.class);
+              OBJECT_MAPPER
+                      .getTypeFactory()
+                      .constructMapType(HashMap.class, String.class, JsonNode.class);
       return OBJECT_MAPPER.<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
-          .entrySet().stream()
-          .filter(entry -> "quota".equals(entry.getKey()))
-          .findFirst()
-          .map(entry -> Long.valueOf(entry.getValue().toString()))
-          .orElseThrow(() -> new IllegalArgumentException("found not quota"));
+              .entrySet().stream()
+              .filter(entry -> "quota".equals(entry.getKey()))
+              .findFirst()
+              .map(entry -> Long.valueOf(entry.getValue().toString()))
+              .orElseThrow(() -> new IllegalArgumentException("found not quota"));
     }
   }
 
@@ -464,15 +456,14 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void clearBucketQuota(@Nonnull String bucketName)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+          throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     setBucketQuota(bucketName, 0, QuotaUnit.KB);
   }
 
   /**
    * Creates a policy.
    *
-   * <pre>
-   * Example:{@code
+   * <pre>Example:{@code
    * // Assume policyJson contains below JSON string;
    * // {
    * //     "Statement": [
@@ -487,8 +478,7 @@ public class MinioAdminClient {
    * // }
    * //
    * client.addCannedPolicy("my-policy-name", policyJson);
-   * }
-   * </pre>
+   * }</pre>
    *
    * @param name Policy name.
    * @param policy Policy as JSON string.
@@ -497,7 +487,7 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void addCannedPolicy(@Nonnull String name, @Nonnull String policy)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     if (name == null || name.isEmpty()) {
       throw new IllegalArgumentException("name must be provided");
     }
@@ -506,11 +496,11 @@ public class MinioAdminClient {
     }
 
     try (Response response =
-        execute(
-            Method.PUT,
-            Command.ADD_CANNED_POLICY,
-            ImmutableMultimap.of("name", name),
-            policy.getBytes(StandardCharsets.UTF_8))) {}
+                 execute(
+                         Method.PUT,
+                         Command.ADD_CANNED_POLICY,
+                         ImmutableMultimap.of("name", name),
+                         policy.getBytes(StandardCharsets.UTF_8))) {}
   }
 
   /**
@@ -524,8 +514,8 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void setPolicy(
-      @Nonnull String userOrGroupName, boolean isGroup, @Nonnull String policyName)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          @Nonnull String userOrGroupName, boolean isGroup, @Nonnull String policyName)
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     if (userOrGroupName == null || userOrGroupName.isEmpty()) {
       throw new IllegalArgumentException("user/group name must be provided");
     }
@@ -534,17 +524,17 @@ public class MinioAdminClient {
     }
 
     try (Response response =
-        execute(
-            Method.PUT,
-            Command.SET_USER_OR_GROUP_POLICY,
-            ImmutableMultimap.of(
-                "userOrGroup",
-                userOrGroupName,
-                "isGroup",
-                String.valueOf(isGroup),
-                "policyName",
-                policyName),
-            null)) {}
+                 execute(
+                         Method.PUT,
+                         Command.SET_USER_OR_GROUP_POLICY,
+                         ImmutableMultimap.of(
+                                 "userOrGroup",
+                                 userOrGroupName,
+                                 "isGroup",
+                                 String.valueOf(isGroup),
+                                 "policyName",
+                                 policyName),
+                         null)) {}
   }
 
   /**
@@ -556,16 +546,16 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public Map<String, String> listCannedPolicies()
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     try (Response response = execute(Method.GET, Command.LIST_CANNED_POLICIES, null, null)) {
       MapType mapType =
-          OBJECT_MAPPER
-              .getTypeFactory()
-              .constructMapType(HashMap.class, String.class, JsonNode.class);
+              OBJECT_MAPPER
+                      .getTypeFactory()
+                      .constructMapType(HashMap.class, String.class, JsonNode.class);
       HashMap<String, String> policies = new HashMap<>();
       OBJECT_MAPPER
-          .<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
-          .forEach((key, value) -> policies.put(key, value.toString()));
+              .<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
+              .forEach((key, value) -> policies.put(key, value.toString()));
       return policies;
     }
   }
@@ -579,17 +569,17 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public void removeCannedPolicy(@Nonnull String name)
-      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+          throws NoSuchAlgorithmException, InvalidKeyException, IOException {
     if (name == null || name.isEmpty()) {
       throw new IllegalArgumentException("name must be provided");
     }
 
     try (Response response =
-        execute(
-            Method.DELETE,
-            Command.REMOVE_CANNED_POLICY,
-            ImmutableMultimap.of("name", name),
-            null)) {}
+                 execute(
+                         Method.DELETE,
+                         Command.REMOVE_CANNED_POLICY,
+                         ImmutableMultimap.of("name", name),
+                         null)) {}
   }
 
   /**
@@ -601,7 +591,7 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public DataUsageInfo getDataUsageInfo()
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+          throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response = execute(Method.GET, Command.DATA_USAGE_INFO, null, null)) {
       return OBJECT_MAPPER.readValue(response.body().bytes(), DataUsageInfo.class);
     }
@@ -611,12 +601,10 @@ public class MinioAdminClient {
    * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values
    * must be between 1 and Integer.MAX_VALUE when converted to milliseconds.
    *
-   * <pre>
-   * Example:{@code
+   * <pre>Example:{@code
    * minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10),
    *     TimeUnit.SECONDS.toMillis(30));
-   * }
-   * </pre>
+   * }</pre>
    *
    * @param connectTimeout HTTP connect timeout in milliseconds.
    * @param writeTimeout HTTP write timeout in milliseconds.
@@ -624,17 +612,15 @@ public class MinioAdminClient {
    */
   public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
     this.httpClient =
-        HttpUtils.setTimeout(this.httpClient, connectTimeout, writeTimeout, readTimeout);
+            HttpUtils.setTimeout(this.httpClient, connectTimeout, writeTimeout, readTimeout);
   }
 
   /**
    * Ignores check on server certificate for HTTPS connection.
    *
-   * <pre>
-   * Example:{@code
+   * <pre>Example:{@code
    * client.ignoreCertCheck();
-   * }
-   * </pre>
+   * }</pre>
    *
    * @throws KeyManagementException thrown to indicate key management error.
    * @throws NoSuchAlgorithmException thrown to indicate missing of SSL library.
@@ -652,11 +638,9 @@ public class MinioAdminClient {
    * @param version Your application version.
    */
   public void setAppInfo(String name, String version) {
-    if (name == null || version == null) {
-      return;
-    }
+    if (name == null || version == null) return;
     this.userAgent =
-        MinioProperties.INSTANCE.getDefaultUserAgent() + " " + name.trim() + "/" + version.trim();
+            MinioProperties.INSTANCE.getDefaultUserAgent() + " " + name.trim() + "/" + version.trim();
   }
 
   /**
@@ -666,11 +650,9 @@ public class MinioAdminClient {
    * @see #traceOff
    */
   public void traceOn(OutputStream traceStream) {
-    if (traceStream == null) {
-      throw new IllegalArgumentException("trace stream must be provided");
-    }
+    if (traceStream == null) throw new IllegalArgumentException("trace stream must be provided");
     this.traceStream =
-        new PrintWriter(new OutputStreamWriter(traceStream, StandardCharsets.UTF_8), true);
+            new PrintWriter(new OutputStreamWriter(traceStream, StandardCharsets.UTF_8), true);
   }
 
   /**
@@ -750,8 +732,8 @@ public class MinioAdminClient {
       HttpUtils.validateNotNull(provider, "credential provider");
       if (httpClient == null) {
         httpClient =
-            HttpUtils.newDefaultHttpClient(
-                DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
+                HttpUtils.newDefaultHttpClient(
+                        DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
       }
       return new MinioAdminClient(baseUrl, region, provider, httpClient);
     }
