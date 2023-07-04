@@ -81,7 +81,6 @@ public class MinioAdminClient {
     ADD_UPDATE_REMOVE_GROUP("update-group-members"),
     GROUP_INFO("group"),
     LIST_GROUPS("groups"),
-
     ADMIN_INFO("info");
     private final String value;
 
@@ -209,13 +208,14 @@ public class MinioAdminClient {
     throw new RuntimeException("Request failed with response: " + response.body().string());
   }
 
+
   /**
-   * Obtains admin info for the Minio server
+   * Obtains admin info for the Minio server.
    *
-   * @return admin info for the Minio server
-   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   * @return admin info for the Minio server.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
   public InfoMessage getAdminInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response =
