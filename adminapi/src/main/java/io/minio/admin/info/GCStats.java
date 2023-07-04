@@ -18,7 +18,6 @@ package io.minio.admin.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,44 +25,43 @@ import java.util.List;
 /**
  * GCStats collect information about recent garbage collections.
  *
- * @see <a
- *     href="https://github.com/minio/madmin-go/blob/main/health.go#L865">health.go</a>
+ * @see <a href="https://github.com/minio/madmin-go/blob/main/health.go#L865">health.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GCStats {
 
-    @JsonProperty("last_gc")
-    private String lastGC;
+  @JsonProperty("last_gc")
+  private String lastGC;
 
-    @JsonProperty("num_gc")
-    private Integer numGC;
+  @JsonProperty("num_gc")
+  private Integer numGC;
 
-    @JsonProperty("pause_total")
-    private Integer pauseTotal;
+  @JsonProperty("pause_total")
+  private Integer pauseTotal;
 
-    @JsonProperty("pause")
-    private List<Integer> pause;
+  @JsonProperty("pause")
+  private List<Integer> pause;
 
-    @JsonProperty("pause_end")
-    private List<String> pauseEnd;
+  @JsonProperty("pause_end")
+  private List<String> pauseEnd;
 
-    public String lastGC() {
-        return lastGC;
-    }
+  public String lastGC() {
+    return lastGC;
+  }
 
-    public Integer numGC() {
-        return numGC;
-    }
+  public Integer numGC() {
+    return numGC;
+  }
 
-    public Integer pauseTotal() {
-        return pauseTotal;
-    }
+  public Integer pauseTotal() {
+    return pauseTotal;
+  }
 
-    public List<Integer> pause() {
-        return Collections.unmodifiableList(pause == null ? new LinkedList<>() : pause);
-    }
+  public List<Integer> pause() {
+    return Collections.unmodifiableList(pause == null ? new LinkedList<>() : pause);
+  }
 
-    public List<String> pauseEnd() {
-        return Collections.unmodifiableList(pauseEnd == null ? new LinkedList<>() : pauseEnd);
-    }
+  public List<String> pauseEnd() {
+    return Collections.unmodifiableList(pauseEnd == null ? new LinkedList<>() : pauseEnd);
+  }
 }

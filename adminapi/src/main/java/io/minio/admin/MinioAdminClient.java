@@ -208,7 +208,6 @@ public class MinioAdminClient {
     throw new RuntimeException("Request failed with response: " + response.body().string());
   }
 
-
   /**
    * Obtains admin info for the Minio server.
    *
@@ -217,10 +216,9 @@ public class MinioAdminClient {
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
-  public InfoMessage getAdminInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try (Response response =
-                 execute(
-                         Method.GET, Command.ADMIN_INFO, null, null)) {
+  public InfoMessage getAdminInfo()
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+    try (Response response = execute(Method.GET, Command.ADMIN_INFO, null, null)) {
       byte[] jsonData = response.body().bytes();
       System.out.println(new String(jsonData));
       return OBJECT_MAPPER.readValue(jsonData, InfoMessage.class);

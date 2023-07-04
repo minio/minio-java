@@ -18,7 +18,6 @@ package io.minio.admin.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,66 +32,66 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InfoMessage {
 
-    @JsonProperty("mode")
-    private String	mode;
+  @JsonProperty("mode")
+  private String mode;
 
-    @JsonProperty("deploymentID")
-    private String	deploymentID;
+  @JsonProperty("deploymentID")
+  private String deploymentID;
 
-    @JsonProperty("buckets")
-    private Buckets	buckets;
+  @JsonProperty("buckets")
+  private Buckets buckets;
 
-    @JsonProperty("objects")
-    private Objects	objects;
+  @JsonProperty("objects")
+  private Objects objects;
 
-    @JsonProperty("versions")
-    private Versions versions;
+  @JsonProperty("versions")
+  private Versions versions;
 
-    @JsonProperty("usage")
-    private Usage usage;
+  @JsonProperty("usage")
+  private Usage usage;
 
-    @JsonProperty("backend")
-    private ErasureBackend	backend;
+  @JsonProperty("backend")
+  private ErasureBackend backend;
 
-    @JsonProperty("servers")
-    private List<ServerProperties> servers;
+  @JsonProperty("servers")
+  private List<ServerProperties> servers;
 
-    @JsonProperty("pools")
-    private Map<Integer,Map<Integer,ErasureSetInfo>> erasureSetInfo;
+  @JsonProperty("pools")
+  private Map<Integer, Map<Integer, ErasureSetInfo>> erasureSetInfo;
 
-    public String mode() {
-        return mode;
-    }
+  public String mode() {
+    return mode;
+  }
 
-    public String deploymentID() {
-        return deploymentID;
-    }
+  public String deploymentID() {
+    return deploymentID;
+  }
 
-    public Buckets buckets() {
-        return buckets;
-    }
+  public Buckets buckets() {
+    return buckets;
+  }
 
-    public Objects objects() {
-        return objects;
-    }
+  public Objects objects() {
+    return objects;
+  }
 
-    public Versions versions() {
-        return versions;
-    }
+  public Versions versions() {
+    return versions;
+  }
 
-    public Usage usage() {
-        return usage;
-    }
+  public Usage usage() {
+    return usage;
+  }
 
-    public ErasureBackend backend() {
-        return backend;
-    }
+  public ErasureBackend backend() {
+    return backend;
+  }
 
-    public List<ServerProperties> servers() {
-        return Collections.unmodifiableList(servers == null ? new LinkedList<>() : servers);
-    }
+  public List<ServerProperties> servers() {
+    return Collections.unmodifiableList(servers == null ? new LinkedList<>() : servers);
+  }
 
-    public Map<Integer, Map<Integer, ErasureSetInfo>> erasureSetInfo() {
-        return erasureSetInfo;
-    }
+  public Map<Integer, Map<Integer, ErasureSetInfo>> erasureSetInfo() {
+    return erasureSetInfo;
+  }
 }

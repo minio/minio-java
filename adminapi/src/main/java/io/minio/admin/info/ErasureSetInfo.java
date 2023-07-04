@@ -19,7 +19,6 @@ package io.minio.admin.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.math.BigDecimal;
 
 /**
@@ -31,52 +30,52 @@ import java.math.BigDecimal;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ErasureSetInfo {
 
-    @JsonProperty("id")
-    private Integer id;
+  @JsonProperty("id")
+  private Integer id;
 
-    @JsonProperty("rawUsage")
-    private BigDecimal rawUsage;
+  @JsonProperty("rawUsage")
+  private BigDecimal rawUsage;
 
-    @JsonProperty("rawCapacity")
-    private BigDecimal rawCapacity;
+  @JsonProperty("rawCapacity")
+  private BigDecimal rawCapacity;
 
-    @JsonProperty("usage")
-    private BigDecimal usage;
+  @JsonProperty("usage")
+  private BigDecimal usage;
 
-    @JsonProperty("objectsCount")
-    private BigDecimal objectsCount;
+  @JsonProperty("objectsCount")
+  private BigDecimal objectsCount;
 
-    @JsonProperty("versionsCount")
-    private BigDecimal versionsCount;
+  @JsonProperty("versionsCount")
+  private BigDecimal versionsCount;
 
-    @JsonProperty("healDisks")
-    private Integer healDisks;
+  @JsonProperty("healDisks")
+  private Integer healDisks;
 
-    public Integer id() {
-        return id;
-    }
+  public Integer id() {
+    return id;
+  }
 
-    public BigDecimal rawUsage() {
-        return rawUsage;
-    }
+  public BigDecimal rawUsage() {
+    return rawUsage;
+  }
 
-    public BigDecimal rawCapacity() {
-        return rawCapacity;
-    }
+  public BigDecimal rawCapacity() {
+    return rawCapacity;
+  }
 
-    public BigDecimal usage() {
-        return usage;
-    }
+  public BigDecimal usage() {
+    return usage;
+  }
 
-    public BigDecimal objectsCount() {
-        return objectsCount;
-    }
+  public BigDecimal objectsCount() {
+    return objectsCount;
+  }
 
-    public BigDecimal versionsCount() {
-        return versionsCount;
-    }
+  public BigDecimal versionsCount() {
+    return versionsCount;
+  }
 
-    public Integer healDisks() {
-        return healDisks;
-    }
+  public Integer healDisks() {
+    return healDisks;
+  }
 }

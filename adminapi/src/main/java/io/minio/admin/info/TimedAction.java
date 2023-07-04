@@ -18,35 +18,33 @@ package io.minio.admin.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.math.BigDecimal;
 
 /**
  * TimedAction contains a number of actions and their accumulated duration in nanoseconds.
  *
- * @see <a
- *     https://github.com/minio/madmin-go/blob/main/metrics.go#L244">metrics.go</a>
+ * @see <a https://github.com/minio/madmin-go/blob/main/metrics.go#L244">metrics.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TimedAction {
-    @JsonProperty("count")
-    private BigDecimal count;
+  @JsonProperty("count")
+  private BigDecimal count;
 
-    @JsonProperty("acc_time_ns")
-    private BigDecimal accTime;
+  @JsonProperty("acc_time_ns")
+  private BigDecimal accTime;
 
-    @JsonProperty("bytes")
-    private BigDecimal bytes;
+  @JsonProperty("bytes")
+  private BigDecimal bytes;
 
-    public BigDecimal count() {
-        return count;
-    }
+  public BigDecimal count() {
+    return count;
+  }
 
-    public BigDecimal accTime() {
-        return accTime;
-    }
+  public BigDecimal accTime() {
+    return accTime;
+  }
 
-    public BigDecimal bytes() {
-        return bytes;
-    }
+  public BigDecimal bytes() {
+    return bytes;
+  }
 }

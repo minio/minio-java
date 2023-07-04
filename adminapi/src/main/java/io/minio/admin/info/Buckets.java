@@ -28,17 +28,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Buckets {
 
-    @JsonProperty("count")
-    private Integer	count;
+  @JsonProperty("count")
+  private Integer count;
 
-    @JsonProperty("error")
-    private String error;
+  @JsonProperty("error")
+  private String error;
 
-    public Integer count() {
-        return count;
-    }
+  public Integer count() {
+    return count;
+  }
 
-    public String error() {
-        return error;
-    }
+  public String error() {
+    return error;
+  }
 }
