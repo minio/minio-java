@@ -14,9 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.minio.admin.info;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -24,21 +26,21 @@ import java.util.Map;
  * DiskMetrics has the information about XL Storage APIs
  *
  * @see <a
- *     href="https://github.com/minio/madmin-go/blob/main/info-commands.go#L395">info-commands.go</a>
+ *      href=
+ *      "https://github.com/minio/madmin-go/blob/main/info-commands.go#L395">info-commands.go</a>
  */
 public class DiskMetrics {
+    @JsonProperty("lastMinute")
+    private Map<String, TimedAction> lastMinute;
 
-  @JsonProperty("lastMinute")
-  private Map<String, TimedAction> lastMinute;
+    @JsonProperty("apiCalls")
+    private Map<String, String> apiCalls;
 
-  @JsonProperty("apiCalls")
-  private Map<String, String> apiCalls;
+    public Map<String, TimedAction> lastMinute() {
+        return Collections.unmodifiableMap(lastMinute);
+    }
 
-  public Map<String, TimedAction> lastMinute() {
-    return Collections.unmodifiableMap(lastMinute);
-  }
-
-  public Map<String, String> apiCalls() {
-    return Collections.unmodifiableMap(apiCalls);
-  }
+    public Map<String, String> apiCalls() {
+        return Collections.unmodifiableMap(apiCalls);
+    }
 }

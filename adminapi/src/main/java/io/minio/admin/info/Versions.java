@@ -23,22 +23,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Versions contains the number of versions
  *
- * @see <a https://github.com/minio/madmin-go/blob/main/info-commands.go#L298">info-commands.go</a>
+ * @see <a
+ *      https://github.com/minio/madmin-go/blob/main/info-commands.go#L298">info-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Versions {
+    @JsonProperty("count")
+    private Integer count;
 
-  @JsonProperty("count")
-  private Integer count;
+    @JsonProperty("error")
+    private String error;
 
-  @JsonProperty("error")
-  private String error;
+    public Integer count() {
+        return count;
+    }
 
-  public Integer count() {
-    return count;
-  }
-
-  public String error() {
-    return error;
-  }
+    public String error() {
+        return error;
+    }
 }

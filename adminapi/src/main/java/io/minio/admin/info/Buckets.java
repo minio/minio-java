@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package io.minio.admin.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,22 +24,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Buckets contains the number of buckets
  *
  * @see <a
- *     href="https://github.com/minio/madmin-go/blob/main/info-commands.go#L286">info-commands.go</a>
+ *      href=
+ *      "https://github.com/minio/madmin-go/blob/main/info-commands.go#L286">info-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Buckets {
+    @JsonProperty("count")
+    private Integer count;
 
-  @JsonProperty("count")
-  private Integer count;
+    @JsonProperty("error")
+    private String error;
 
-  @JsonProperty("error")
-  private String error;
+    public Integer count() {
+        return count;
+    }
 
-  public Integer count() {
-    return count;
-  }
-
-  public String error() {
-    return error;
-  }
+    public String error() {
+        return error;
+    }
 }
