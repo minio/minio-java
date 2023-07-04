@@ -30,6 +30,7 @@ import io.minio.MinioProperties;
 import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
+import io.minio.admin.clusterinfo.InfoMessage;
 import io.minio.admin.messages.DataUsageInfo;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
@@ -606,10 +607,10 @@ public class MinioAdminClient {
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
-  public DataUsageInfo getAdminInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+  public InfoMessage getAdminInfo()
+      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response = execute(Method.GET, Command.ADMIN_INFO, null, null)) {
-      byte[] jsonData = response.body().bytes();
-      return OBJECT_MAPPER.readValue(jsonData, DataUsageInfo.class);
+      return OBJECT_MAPPER.readValue(response.body().bytes(), InfoMessage.class);
     }
   }
 
