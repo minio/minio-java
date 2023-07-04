@@ -15,40 +15,30 @@
  * limitations under the License.
  */
 
-package io.minio.admin.info;
+package io.minio.admin.clusterinfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.math.BigDecimal;
-
 /**
- * TimedAction contains a number of actions and their accumulated duration in
- * nanoseconds.
+ * Buckets contains the number of buckets
  *
- * @see <a
- *      https://github.com/minio/madmin-go/blob/main/metrics.go#L244">metrics.go</a>
+ * @see <a href=
+ *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L286">info-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TimedAction {
-    @JsonProperty("count")
-    private BigDecimal count;
+public class Buckets {
+  @JsonProperty("count")
+  private Integer count;
 
-    @JsonProperty("acc_time_ns")
-    private BigDecimal accTime;
+  @JsonProperty("error")
+  private String error;
 
-    @JsonProperty("bytes")
-    private BigDecimal bytes;
+  public Integer count() {
+    return count;
+  }
 
-    public BigDecimal count() {
-        return count;
-    }
-
-    public BigDecimal accTime() {
-        return accTime;
-    }
-
-    public BigDecimal bytes() {
-        return bytes;
-    }
+  public String error() {
+    return error;
+  }
 }

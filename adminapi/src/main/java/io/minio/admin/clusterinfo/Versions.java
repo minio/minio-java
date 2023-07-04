@@ -15,32 +15,29 @@
  * limitations under the License.
  */
 
-package io.minio.admin.info;
+package io.minio.admin.clusterinfo;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Collections;
-import java.util.Map;
-
 /**
- * DiskMetrics has the information about XL Storage APIs
+ * Versions contains the number of versions
  *
- * @see <a
- *      href=
- *      "https://github.com/minio/madmin-go/blob/main/info-commands.go#L395">info-commands.go</a>
+ * @see <a https://github.com/minio/madmin-go/blob/main/info-commands.go#L298">info-commands.go</a>
  */
-public class DiskMetrics {
-    @JsonProperty("lastMinute")
-    private Map<String, TimedAction> lastMinute;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Versions {
+  @JsonProperty("count")
+  private Integer count;
 
-    @JsonProperty("apiCalls")
-    private Map<String, String> apiCalls;
+  @JsonProperty("error")
+  private String error;
 
-    public Map<String, TimedAction> lastMinute() {
-        return Collections.unmodifiableMap(lastMinute);
-    }
+  public Integer count() {
+    return count;
+  }
 
-    public Map<String, String> apiCalls() {
-        return Collections.unmodifiableMap(apiCalls);
-    }
+  public String error() {
+    return error;
+  }
 }

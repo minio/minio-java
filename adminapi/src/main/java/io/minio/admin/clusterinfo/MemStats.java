@@ -15,54 +15,51 @@
  * limitations under the License.
  */
 
-package io.minio.admin.info;
+package io.minio.admin.clusterinfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.math.BigDecimal;
 
 /**
- * MemStats is strip down version of runtime.MemStats containing memory stats of
- * MinIO server.
+ * MemStats is strip down version of runtime.MemStats containing memory stats of MinIO server.
  *
- * @see <a href=
- *      "https://github.com/minio/madmin-go/blob/main/health.go#L856">health.go</a>
+ * @see <a href= "https://github.com/minio/madmin-go/blob/main/health.go#L856">health.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MemStats {
-    @JsonProperty("Alloc")
-    private BigDecimal alloc;
+  @JsonProperty("Alloc")
+  private BigDecimal alloc;
 
-    @JsonProperty("TotalAlloc")
-    private BigDecimal totalAlloc;
+  @JsonProperty("TotalAlloc")
+  private BigDecimal totalAlloc;
 
-    @JsonProperty("Mallocs")
-    private BigDecimal mallocs;
+  @JsonProperty("Mallocs")
+  private BigDecimal mallocs;
 
-    @JsonProperty("Frees")
-    private BigDecimal frees;
+  @JsonProperty("Frees")
+  private BigDecimal frees;
 
-    @JsonProperty("HeapAlloc")
-    private BigDecimal heapAlloc;
+  @JsonProperty("HeapAlloc")
+  private BigDecimal heapAlloc;
 
-    public BigDecimal alloc() {
-        return alloc;
-    }
+  public BigDecimal alloc() {
+    return alloc;
+  }
 
-    public BigDecimal totalAlloc() {
-        return totalAlloc;
-    }
+  public BigDecimal totalAlloc() {
+    return totalAlloc;
+  }
 
-    public BigDecimal mallocs() {
-        return mallocs;
-    }
+  public BigDecimal mallocs() {
+    return mallocs;
+  }
 
-    public BigDecimal frees() {
-        return frees;
-    }
+  public BigDecimal frees() {
+    return frees;
+  }
 
-    public BigDecimal heapAlloc() {
-        return heapAlloc;
-    }
+  public BigDecimal heapAlloc() {
+    return heapAlloc;
+  }
 }

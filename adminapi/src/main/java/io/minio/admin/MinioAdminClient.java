@@ -30,7 +30,7 @@ import io.minio.MinioProperties;
 import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
-import io.minio.admin.info.InfoMessage;
+import io.minio.admin.clusterinfo.InfoMessage;
 import io.minio.admin.messages.DataUsageInfo;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
@@ -119,7 +119,9 @@ public class MinioAdminClient {
 
   private Credentials getCredentials() {
     Credentials creds = provider.fetch();
-    if (creds == null) throw new RuntimeException("Credential provider returns null credential");
+    if (creds == null) {
+      throw new RuntimeException("Credential provider returns null credential");
+    }
     return creds;
   }
 
@@ -175,7 +177,9 @@ public class MinioAdminClient {
       traceBuilder.append("---------START-HTTP---------\n");
       String encodedPath = request.url().encodedPath();
       String encodedQuery = request.url().encodedQuery();
-      if (encodedQuery != null) encodedPath += "?" + encodedQuery;
+      if (encodedQuery != null) {
+        encodedPath += "?" + encodedQuery;
+      }
       traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
       traceBuilder.append(
           request
@@ -183,7 +187,9 @@ public class MinioAdminClient {
               .toString()
               .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
               .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
-      if (body != null) traceBuilder.append("\n").append(new String(body, StandardCharsets.UTF_8));
+      if (body != null) {
+        traceBuilder.append("\n").append(new String(body, StandardCharsets.UTF_8));
+      }
       traceStream.println(traceBuilder.toString());
     }
 
@@ -203,7 +209,9 @@ public class MinioAdminClient {
       traceStream.println("----------END-HTTP----------");
     }
 
-    if (response.isSuccessful()) return response;
+    if (response.isSuccessful()) {
+      return response;
+    }
 
     throw new RuntimeException("Request failed with response: " + response.body().string());
   }
@@ -481,7 +489,8 @@ public class MinioAdminClient {
   /**
    * Creates a policy.
    *
-   * <pre>Example:{@code
+   * <pre>
+   * Example:{@code
    * // Assume policyJson contains below JSON string;
    * // {
    * //     "Statement": [
@@ -496,7 +505,8 @@ public class MinioAdminClient {
    * // }
    * //
    * client.addCannedPolicy("my-policy-name", policyJson);
-   * }</pre>
+   * }
+   * </pre>
    *
    * @param name Policy name.
    * @param policy Policy as JSON string.
@@ -619,10 +629,12 @@ public class MinioAdminClient {
    * Sets HTTP connect, write and read timeouts. A value of 0 means no timeout, otherwise values
    * must be between 1 and Integer.MAX_VALUE when converted to milliseconds.
    *
-   * <pre>Example:{@code
+   * <pre>
+   * Example:{@code
    * minioClient.setTimeout(TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10),
    *     TimeUnit.SECONDS.toMillis(30));
-   * }</pre>
+   * }
+   * </pre>
    *
    * @param connectTimeout HTTP connect timeout in milliseconds.
    * @param writeTimeout HTTP write timeout in milliseconds.
@@ -636,9 +648,11 @@ public class MinioAdminClient {
   /**
    * Ignores check on server certificate for HTTPS connection.
    *
-   * <pre>Example:{@code
+   * <pre>
+   * Example:{@code
    * client.ignoreCertCheck();
-   * }</pre>
+   * }
+   * </pre>
    *
    * @throws KeyManagementException thrown to indicate key management error.
    * @throws NoSuchAlgorithmException thrown to indicate missing of SSL library.
@@ -656,7 +670,9 @@ public class MinioAdminClient {
    * @param version Your application version.
    */
   public void setAppInfo(String name, String version) {
-    if (name == null || version == null) return;
+    if (name == null || version == null) {
+      return;
+    }
     this.userAgent =
         MinioProperties.INSTANCE.getDefaultUserAgent() + " " + name.trim() + "/" + version.trim();
   }
@@ -668,7 +684,9 @@ public class MinioAdminClient {
    * @see #traceOff
    */
   public void traceOn(OutputStream traceStream) {
-    if (traceStream == null) throw new IllegalArgumentException("trace stream must be provided");
+    if (traceStream == null) {
+      throw new IllegalArgumentException("trace stream must be provided");
+    }
     this.traceStream =
         new PrintWriter(new OutputStreamWriter(traceStream, StandardCharsets.UTF_8), true);
   }

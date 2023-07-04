@@ -15,31 +15,29 @@
  * limitations under the License.
  */
 
-package io.minio.admin.info;
+package io.minio.admin.clusterinfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Buckets contains the number of buckets
+ * Usage contains the total size used
  *
- * @see <a
- *      href=
- *      "https://github.com/minio/madmin-go/blob/main/info-commands.go#L286">info-commands.go</a>
+ * @see <a https://github.com/minio/madmin-go/blob/main/info-commands.go#L304">info-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Buckets {
-    @JsonProperty("count")
-    private Integer count;
+public class Usage {
+  @JsonProperty("size")
+  private Integer size;
 
-    @JsonProperty("error")
-    private String error;
+  @JsonProperty("error")
+  private String error;
 
-    public Integer count() {
-        return count;
-    }
+  public Integer size() {
+    return size;
+  }
 
-    public String error() {
-        return error;
-    }
+  public String error() {
+    return error;
+  }
 }
