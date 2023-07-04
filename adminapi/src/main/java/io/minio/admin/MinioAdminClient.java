@@ -609,7 +609,7 @@ public class MinioAdminClient {
   public DataUsageInfo getAdminInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response = execute(Method.GET, Command.ADMIN_INFO, null, null)) {
       byte[] jsonData = response.body().bytes();
-      return OBJECT_MAPPER.readValue(response.body().bytes(), DataUsageInfo.class);
+      return OBJECT_MAPPER.readValue(jsonData, DataUsageInfo.class);
     }
   }
 
