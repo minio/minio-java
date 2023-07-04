@@ -17,7 +17,10 @@
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.admin.*;
+
 import java.util.Map;
+
+import io.minio.admin.info.InfoMessage;
 import org.junit.Assert;
 
 @SuppressFBWarnings(
@@ -156,6 +159,22 @@ public class TestMinioAdminClient {
     }
   }
 
+  public void getAdminInfo()throws Exception{
+    String methodName = "getAdminInfo()";
+    if (!mintEnv) {
+      System.out.println(methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    try {
+      InfoMessage infoMessage = adminClient.getAdminInfo();
+      String mode = infoMessage.mode();
+      Assert.assertTrue(mode != null);
+    } catch (Exception e) {
+      FunctionalTest.handleException(methodName, null, startTime, e);
+    }
+  }
+
   public void runAdminTests() throws Exception {
     addUser();
     addCannedPolicy();
@@ -165,5 +184,6 @@ public class TestMinioAdminClient {
     listCannedPolicies();
     deleteUser();
     removeCannedPolicy();
+    getAdminInfo();
   }
 }
