@@ -220,7 +220,6 @@ public class MinioAdminClient {
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response = execute(Method.GET, Command.ADMIN_INFO, null, null)) {
       byte[] jsonData = response.body().bytes();
-      System.out.println(new String(jsonData));
       return OBJECT_MAPPER.readValue(jsonData, InfoMessage.class);
     }
   }

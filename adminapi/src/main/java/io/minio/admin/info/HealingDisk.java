@@ -94,7 +94,7 @@ public class HealingDisk {
   private List<String> queuedBuckets;
 
   @JsonProperty("healed_buckets")
-  private List<String> HealedBuckets;
+  private List<String> healedBuckets;
 
   public String id() {
     return id;
@@ -177,6 +177,6 @@ public class HealingDisk {
   }
 
   public List<String> healedBuckets() {
-    return Collections.unmodifiableList(HealedBuckets == null ? new LinkedList<>() : HealedBuckets);
+    return Collections.unmodifiableList(healedBuckets == null ? new LinkedList<>() : healedBuckets);
   }
 }
