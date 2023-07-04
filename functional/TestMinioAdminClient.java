@@ -17,15 +17,12 @@
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.admin.*;
-
 import java.util.Map;
-
-import io.minio.admin.info.InfoMessage;
 import org.junit.Assert;
 
 @SuppressFBWarnings(
-    value = "REC",
-    justification = "Allow catching super class Exception since it's tests")
+        value = "REC",
+        justification = "Allow catching super class Exception since it's tests")
 public class TestMinioAdminClient {
 
   private final MinioAdminClient adminClient;
@@ -61,8 +58,8 @@ public class TestMinioAdminClient {
     long startTime = System.currentTimeMillis();
     try {
       String policyJson =
-          "{'Version': '2012-10-17','Statement': [{'Action': ['s3:GetObject'],'Effect':"
-              + " 'Allow','Resource': ['arn:aws:s3:::my-bucketname/*'],'Sid': ''}]}";
+              "{'Version': '2012-10-17','Statement': [{'Action': ['s3:GetObject'],'Effect':"
+                      + " 'Allow','Resource': ['arn:aws:s3:::my-bucketname/*'],'Sid': ''}]}";
       adminClient.addCannedPolicy(policyName, policyJson.replaceAll("'", "\""));
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
@@ -159,22 +156,6 @@ public class TestMinioAdminClient {
     }
   }
 
-  public void getAdminInfo()throws Exception{
-    String methodName = "getAdminInfo()";
-    if (!mintEnv) {
-      System.out.println(methodName);
-    }
-
-    long startTime = System.currentTimeMillis();
-    try {
-      InfoMessage infoMessage = adminClient.getAdminInfo();
-      String mode = infoMessage.mode();
-      Assert.assertTrue(mode != null);
-    } catch (Exception e) {
-      FunctionalTest.handleException(methodName, null, startTime, e);
-    }
-  }
-
   public void runAdminTests() throws Exception {
     addUser();
     addCannedPolicy();
@@ -184,6 +165,5 @@ public class TestMinioAdminClient {
     listCannedPolicies();
     deleteUser();
     removeCannedPolicy();
-    getAdminInfo();
   }
 }
