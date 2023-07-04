@@ -21,8 +21,8 @@ import java.util.Map;
 import org.junit.Assert;
 
 @SuppressFBWarnings(
-        value = "REC",
-        justification = "Allow catching super class Exception since it's tests")
+    value = "REC",
+    justification = "Allow catching super class Exception since it's tests")
 public class TestMinioAdminClient {
 
   private final MinioAdminClient adminClient;
@@ -58,8 +58,8 @@ public class TestMinioAdminClient {
     long startTime = System.currentTimeMillis();
     try {
       String policyJson =
-              "{'Version': '2012-10-17','Statement': [{'Action': ['s3:GetObject'],'Effect':"
-                      + " 'Allow','Resource': ['arn:aws:s3:::my-bucketname/*'],'Sid': ''}]}";
+          "{'Version': '2012-10-17','Statement': [{'Action': ['s3:GetObject'],'Effect':"
+              + " 'Allow','Resource': ['arn:aws:s3:::my-bucketname/*'],'Sid': ''}]}";
       adminClient.addCannedPolicy(policyName, policyJson.replaceAll("'", "\""));
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
