@@ -606,11 +606,11 @@ public class MinioAdminClient {
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
-  public byte[] getAdminInfo()
+  public String getAdminInfo()
           throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response = execute(Method.GET, Command.ADMIN_INFO, null, null)) {
       byte[] jsonData = response.body().bytes();
-      return jsonData;
+      return new String(jsonData);
     }
   }
 
