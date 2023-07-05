@@ -15,10 +15,17 @@
  * limitations under the License.
  */
 
-package io.minio.admin.clusterinfo;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.minio.admin.clusterinfo.Backend;
+import io.minio.admin.clusterinfo.Buckets;
+import io.minio.admin.clusterinfo.ErasureSetInfo;
+import io.minio.admin.clusterinfo.Objects;
+import io.minio.admin.clusterinfo.ServerProperties;
+import io.minio.admin.clusterinfo.Usage;
+import io.minio.admin.clusterinfo.Versions;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +49,7 @@ public class InfoMessage {
   private Buckets buckets;
 
   @JsonProperty("objects")
-  private MinioObjects minioObjects;
+  private Objects objects;
 
   @JsonProperty("versions")
   private Versions versions;
@@ -51,13 +58,13 @@ public class InfoMessage {
   private Usage usage;
 
   @JsonProperty("backend")
-  private ErasureBackend backend;
+  private Backend backend;
 
   @JsonProperty("servers")
   private List<ServerProperties> servers;
 
   @JsonProperty("pools")
-  private Map<Integer, Map<Integer, ErasureSetInfo>> erasureSetInfo;
+  private Map<Integer, Map<Integer, ErasureSetInfo>> pools;
 
   public String mode() {
     return mode;
@@ -71,8 +78,8 @@ public class InfoMessage {
     return buckets;
   }
 
-  public MinioObjects minioObjects() {
-    return minioObjects;
+  public Objects objects() {
+    return objects;
   }
 
   public Versions versions() {
@@ -83,7 +90,7 @@ public class InfoMessage {
     return usage;
   }
 
-  public ErasureBackend backend() {
+  public Backend backend() {
     return backend;
   }
 
@@ -91,7 +98,7 @@ public class InfoMessage {
     return Collections.unmodifiableList(servers == null ? new LinkedList<>() : servers);
   }
 
-  public Map<Integer, Map<Integer, ErasureSetInfo>> erasureSetInfo() {
-    return erasureSetInfo;
+  public Map<Integer, Map<Integer, ErasureSetInfo>> pools() {
+    return pools;
   }
 }

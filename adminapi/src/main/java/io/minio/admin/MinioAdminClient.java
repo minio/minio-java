@@ -30,8 +30,8 @@ import io.minio.MinioProperties;
 import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
-import io.minio.admin.clusterinfo.InfoMessage;
 import io.minio.admin.messages.DataUsageInfo;
+import io.minio.admin.messages.InfoMessage;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;
@@ -81,7 +81,7 @@ public class MinioAdminClient {
     ADD_UPDATE_REMOVE_GROUP("update-group-members"),
     GROUP_INFO("group"),
     LIST_GROUPS("groups"),
-    ADMIN_INFO("info");
+    INFO("info");
     private final String value;
 
     private Command(String value) {
@@ -607,10 +607,10 @@ public class MinioAdminClient {
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
-  public InfoMessage getAdminInfo()
+  public InfoMessage getServerInfo()
       throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try (Response response = execute(Method.GET, Command.ADMIN_INFO, null, null)) {
-      return OBJECT_MAPPER.readValue(response.body().bytes(), InfoMessage.class);
+    try (Response response = execute(Method.GET, Command.INFO, null, null)) {
+      return OBJECT_MAPPER.readValue(response.body().charStream(), InfoMessage.class);
     }
   }
 

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L292">info-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MinioObjects {
+public class Objects {
   @JsonProperty("count")
   private Integer count;
 

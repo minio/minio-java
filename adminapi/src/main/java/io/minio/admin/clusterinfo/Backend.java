@@ -30,7 +30,7 @@ import java.util.List;
  *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L359">info-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ErasureBackend {
+public class Backend {
   @JsonProperty("backendType")
   private String backendType;
 
