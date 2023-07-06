@@ -31,7 +31,7 @@ import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
 import io.minio.admin.messages.DataUsageInfo;
-import io.minio.admin.messages.Message;
+import io.minio.admin.messages.info.Message;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;

@@ -15,37 +15,51 @@
  * limitations under the License.
  */
 
-package io.minio.admin.messages;
+package io.minio.admin.messages.info;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
 /**
- * TimedAction contains a number of actions and their accumulated duration in nanoseconds.
+ * MemStats is strip down version of runtime.MemStats containing memory stats of MinIO server.
  *
- * @see <a href= "https://github.com/minio/madmin-go/blob/main/metrics.go#L244">metrics.go</a>
+ * @see <a href= "https://github.com/minio/madmin-go/blob/main/health.go#L856">health.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TimedAction {
-  @JsonProperty("count")
-  private BigDecimal count;
+public class MemStats {
+  @JsonProperty("Alloc")
+  private BigDecimal alloc;
 
-  @JsonProperty("acc_time_ns")
-  private BigDecimal accTime;
+  @JsonProperty("TotalAlloc")
+  private BigDecimal totalAlloc;
 
-  @JsonProperty("bytes")
-  private BigDecimal bytes;
+  @JsonProperty("Mallocs")
+  private BigDecimal mallocs;
 
-  public BigDecimal count() {
-    return count;
+  @JsonProperty("Frees")
+  private BigDecimal frees;
+
+  @JsonProperty("HeapAlloc")
+  private BigDecimal heapAlloc;
+
+  public BigDecimal alloc() {
+    return alloc;
   }
 
-  public BigDecimal accTime() {
-    return accTime;
+  public BigDecimal totalAlloc() {
+    return totalAlloc;
   }
 
-  public BigDecimal bytes() {
-    return bytes;
+  public BigDecimal mallocs() {
+    return mallocs;
+  }
+
+  public BigDecimal frees() {
+    return frees;
+  }
+
+  public BigDecimal heapAlloc() {
+    return heapAlloc;
   }
 }
