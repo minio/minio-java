@@ -19,14 +19,10 @@ package io.minio.admin.messages.info;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.minio.admin.messages.DataUsageInfo;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class MessageTest {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -40,8 +36,7 @@ public class MessageTest {
 
     Message message =
         OBJECT_MAPPER.readValue(
-            new File(
-                getClass().getClassLoader().getResource("messages/message.json").getFile()),
+            new File(getClass().getClassLoader().getResource("messages/message.json").getFile()),
             Message.class);
     Assert.assertNotNull(message.mode());
     Assert.assertNotNull(message.deploymentID());

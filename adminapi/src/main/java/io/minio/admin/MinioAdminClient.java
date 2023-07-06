@@ -607,8 +607,7 @@ public class MinioAdminClient {
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    */
-  public Message getServerInfo()
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+  public Message getServerInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response = execute(Method.GET, Command.INFO, null, null)) {
       return OBJECT_MAPPER.readValue(response.body().charStream(), Message.class);
     }
