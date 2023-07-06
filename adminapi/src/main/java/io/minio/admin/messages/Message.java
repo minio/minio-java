@@ -19,13 +19,7 @@ package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.minio.admin.clusterinfo.Backend;
-import io.minio.admin.clusterinfo.Buckets;
-import io.minio.admin.clusterinfo.ErasureSetInfo;
-import io.minio.admin.clusterinfo.Objects;
-import io.minio.admin.clusterinfo.ServerProperties;
-import io.minio.admin.clusterinfo.Usage;
-import io.minio.admin.clusterinfo.Versions;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,7 +32,7 @@ import java.util.Map;
  *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L238">heal-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InfoMessage {
+public class Message {
   @JsonProperty("mode")
   private String mode;
 

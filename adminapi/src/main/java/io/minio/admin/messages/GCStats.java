@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.minio.admin.clusterinfo;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

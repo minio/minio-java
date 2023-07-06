@@ -15,27 +15,27 @@
  * limitations under the License.
  */
 
-package io.minio.admin.clusterinfo;
+package io.minio.admin.messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Objects contains the number of objects
+ * Usage contains the total size used
  *
  * @see <a href=
- *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L292">info-commands.go</a>
+ *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L304">info-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Objects {
-  @JsonProperty("count")
-  private Integer count;
+public class Usage {
+  @JsonProperty("size")
+  private Integer size;
 
   @JsonProperty("error")
   private String error;
 
-  public Integer count() {
-    return count;
+  public Integer size() {
+    return size;
   }
 
   public String error() {
