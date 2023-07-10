@@ -87,6 +87,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
@@ -103,7 +104,7 @@ public abstract class S3Base {
     try {
       RequestBody.create(new byte[] {}, null);
     } catch (NoSuchMethodError ex) {
-      throw new RuntimeException("Unsupported OkHttp library found. Must use okhttp >= 4.8.1", ex);
+      throw new RuntimeException("Unsupported OkHttp library found. Must use okhttp >= 4.11.0", ex);
     }
   }
 
@@ -128,16 +129,35 @@ public abstract class S3Base {
   private String userAgent = MinioProperties.INSTANCE.getDefaultUserAgent();
 
   protected HttpUrl baseUrl;
+  protected String awsS3Prefix;
+  protected String awsDomainSuffix;
+  protected boolean awsDualstack;
+  protected boolean useVirtualStyle;
   protected String region;
   protected Provider provider;
+  protected OkHttpClient httpClient;
 
-  private boolean isAwsHost;
-  private boolean isFipsHost;
-  private boolean isAccelerateHost;
-  private boolean isDualStackHost;
-  private boolean useVirtualStyle;
-  private OkHttpClient httpClient;
+  protected S3Base(
+      HttpUrl baseUrl,
+      String awsS3Prefix,
+      String awsDomainSuffix,
+      boolean awsDualstack,
+      boolean useVirtualStyle,
+      String region,
+      Provider provider,
+      OkHttpClient httpClient) {
+    this.baseUrl = baseUrl;
+    this.awsS3Prefix = awsS3Prefix;
+    this.awsDomainSuffix = awsDomainSuffix;
+    this.awsDualstack = awsDualstack;
+    this.useVirtualStyle = useVirtualStyle;
+    this.region = region;
+    this.provider = provider;
+    this.httpClient = httpClient;
+  }
 
+  /** @deprecated This method is no longer supported. */
+  @Deprecated
   protected S3Base(
       HttpUrl baseUrl,
       String region,
@@ -149,24 +169,28 @@ public abstract class S3Base {
       Provider provider,
       OkHttpClient httpClient) {
     this.baseUrl = baseUrl;
-    this.region = region;
-    this.isAwsHost = isAwsHost;
-    this.isFipsHost = isFipsHost;
-    this.isAccelerateHost = isAccelerateHost;
-    this.isDualStackHost = isDualStackHost;
+    if (isAwsHost) this.awsS3Prefix = "s3.";
+    if (isFipsHost) this.awsS3Prefix = "s3-fips.";
+    if (isAccelerateHost) this.awsS3Prefix = "s3-accelerate.";
+    if (isAwsHost || isFipsHost || isAccelerateHost) {
+      String host = baseUrl.host();
+      if (host.endsWith(".amazonaws.com")) this.awsDomainSuffix = "amazonaws.com";
+      if (host.endsWith(".amazonaws.com.cn")) this.awsDomainSuffix = "amazonaws.com.cn";
+    }
+    this.awsDualstack = isDualStackHost;
     this.useVirtualStyle = useVirtualStyle;
+    this.region = region;
     this.provider = provider;
     this.httpClient = httpClient;
   }
 
   protected S3Base(S3Base client) {
     this.baseUrl = client.baseUrl;
-    this.region = client.region;
-    this.isAwsHost = client.isAwsHost;
-    this.isFipsHost = client.isFipsHost;
-    this.isAccelerateHost = client.isAccelerateHost;
-    this.isDualStackHost = client.isDualStackHost;
+    this.awsS3Prefix = client.awsS3Prefix;
+    this.awsDomainSuffix = client.awsDomainSuffix;
+    this.awsDualstack = client.awsDualstack;
     this.useVirtualStyle = client.useVirtualStyle;
+    this.region = client.region;
     this.provider = client.provider;
     this.httpClient = client.httpClient;
   }
@@ -174,6 +198,18 @@ public abstract class S3Base {
   /** Check whether argument is valid or not. */
   protected void checkArgs(BaseArgs args) {
     if (args == null) throw new IllegalArgumentException("null arguments");
+
+    if ((this.awsDomainSuffix != null) && (args instanceof BucketArgs)) {
+      String bucketName = ((BucketArgs) args).bucket();
+      if (bucketName.startsWith("xn--")
+          || bucketName.endsWith("--s3alias")
+          || bucketName.endsWith("--ol-s3")) {
+        throw new IllegalArgumentException(
+            "bucket name '"
+                + bucketName
+                + "' must not start with 'xn--' and must not end with '--s3alias' or '--ol-s3'");
+      }
+    }
   }
 
   /** Merge two Multimaps. */
@@ -275,6 +311,56 @@ public abstract class S3Base {
     return new String[] {code, message};
   }
 
+  private String buildAwsUrl(
+      HttpUrl.Builder builder, String bucketName, boolean enforcePathStyle, String region) {
+    String host = this.awsS3Prefix + this.awsDomainSuffix;
+    if (host.equals("s3-external-1.amazonaws.com")
+        || host.equals("s3-us-gov-west-1.amazonaws.com")
+        || host.equals("s3-fips-us-gov-west-1.amazonaws.com")) {
+      builder.host(host);
+      return host;
+    }
+
+    host = this.awsS3Prefix;
+    if (this.awsS3Prefix.contains("s3-accelerate")) {
+      if (bucketName.contains(".")) {
+        throw new IllegalArgumentException(
+            "bucket name '" + bucketName + "' with '.' is not allowed for accelerate endpoint");
+      }
+      if (enforcePathStyle) host = host.replaceFirst("-accelerate", "");
+    }
+
+    if (this.awsDualstack) host += "dualstack.";
+    if (!this.awsS3Prefix.contains("s3-accelerate")) host += region + ".";
+    host += this.awsDomainSuffix;
+
+    builder.host(host);
+    return host;
+  }
+
+  private String buildListBucketsUrl(HttpUrl.Builder builder, String region) {
+    if (this.awsDomainSuffix == null) return null;
+
+    String host = this.awsS3Prefix + this.awsDomainSuffix;
+    if (host.equals("s3-external-1.amazonaws.com")
+        || host.equals("s3-us-gov-west-1.amazonaws.com")
+        || host.equals("s3-fips-us-gov-west-1.amazonaws.com")) {
+      builder.host(host);
+      return host;
+    }
+
+    String s3Prefix = this.awsS3Prefix;
+    String domainSuffix = this.awsDomainSuffix;
+    if (this.awsS3Prefix.startsWith("s3.") || this.awsS3Prefix.startsWith("s3-")) {
+      s3Prefix = "s3.";
+      domainSuffix = "amazonaws.com" + (domainSuffix.endsWith(".cn") ? ".cn" : "");
+    }
+
+    host = s3Prefix + region + "." + domainSuffix;
+    builder.host(host);
+    return host;
+  }
+
   /** Build URL for given parameters. */
   protected HttpUrl buildUrl(
       Method method,
@@ -288,72 +374,43 @@ public abstract class S3Base {
     }
 
     HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
-    String host = this.baseUrl.host();
-    if (bucketName != null) {
-      boolean enforcePathStyle = false;
-      if (method == Method.PUT && objectName == null && queryParamMap == null) {
-        // use path style for make bucket to workaround "AuthorizationHeaderMalformed" error from
-        // s3.amazonaws.com
-        enforcePathStyle = true;
-      } else if (queryParamMap != null && queryParamMap.containsKey("location")) {
-        // use path style for location query
-        enforcePathStyle = true;
-      } else if (bucketName.contains(".") && this.baseUrl.isHttps()) {
-        // use path style where '.' in bucketName causes SSL certificate validation error
-        enforcePathStyle = true;
-      }
-
-      if (isAwsHost) {
-        String s3Domain = "s3.";
-        if (isFipsHost) {
-          s3Domain = "s3-fips.";
-        } else if (isAccelerateHost) {
-          if (bucketName.contains(".")) {
-            throw new IllegalArgumentException(
-                "bucket name '"
-                    + bucketName
-                    + "' with '.' is not allowed for accelerated endpoint");
-          }
-
-          if (!enforcePathStyle) s3Domain = "s3-accelerate.";
-        }
-
-        String dualStack = "";
-        if (isDualStackHost) dualStack = "dualstack.";
-
-        String endpoint = s3Domain + dualStack;
-        if (enforcePathStyle || !isAccelerateHost) endpoint += region + ".";
-
-        host = endpoint + host;
-      }
-
-      if (enforcePathStyle || !useVirtualStyle) {
-        urlBuilder.host(host);
-        urlBuilder.addEncodedPathSegment(S3Escaper.encode(bucketName));
-      } else {
-        urlBuilder.host(bucketName + "." + host);
-      }
-
-      if (objectName != null) {
-        // Limitation: OkHttp does not allow to add '.' and '..' as path segment.
-        for (String token : objectName.split("/")) {
-          if (token.equals(".") || token.equals("..")) {
-            throw new IllegalArgumentException(
-                "object name with '.' or '..' path segment is not supported");
-          }
-        }
-
-        urlBuilder.addEncodedPathSegments(S3Escaper.encodePath(objectName));
-      }
-    } else {
-      if (isAwsHost) urlBuilder.host("s3." + region + "." + host);
-    }
 
     if (queryParamMap != null) {
       for (Map.Entry<String, String> entry : queryParamMap.entries()) {
         urlBuilder.addEncodedQueryParameter(
             S3Escaper.encode(entry.getKey()), S3Escaper.encode(entry.getValue()));
       }
+    }
+
+    if (bucketName == null) {
+      this.buildListBucketsUrl(urlBuilder, region);
+      return urlBuilder.build();
+    }
+
+    boolean enforcePathStyle = (
+        // use path style for make bucket to workaround "AuthorizationHeaderMalformed" error from
+        // s3.amazonaws.com
+        (method == Method.PUT && objectName == null && queryParamMap == null)
+
+            // use path style for location query
+            || (queryParamMap != null && queryParamMap.containsKey("location"))
+
+            // use path style where '.' in bucketName causes SSL certificate validation error
+            || (bucketName.contains(".") && this.baseUrl.isHttps()));
+
+    String host = this.baseUrl.host();
+    if (this.awsDomainSuffix != null) {
+      host = this.buildAwsUrl(urlBuilder, bucketName, enforcePathStyle, region);
+    }
+
+    if (enforcePathStyle || !this.useVirtualStyle) {
+      urlBuilder.addEncodedPathSegment(S3Escaper.encode(bucketName));
+    } else {
+      urlBuilder.host(bucketName + "." + host);
+    }
+
+    if (objectName != null) {
+      urlBuilder.addEncodedPathSegments(S3Escaper.encodePath(objectName));
     }
 
     return urlBuilder.build();
@@ -847,7 +904,7 @@ public abstract class S3Base {
             LocationConstraint lc = Xml.unmarshal(LocationConstraint.class, body.charStream());
             if (lc.location() == null || lc.location().equals("")) {
               location = US_EAST_1;
-            } else if (lc.location().equals("EU")) {
+            } else if (lc.location().equals("EU") && this.awsDomainSuffix != null) {
               location = "eu-west-1"; // eu-west-1 is also referred as 'EU'.
             } else {
               location = lc.location();
@@ -1678,24 +1735,34 @@ public abstract class S3Base {
     this.traceStream = null;
   }
 
-  /** Enables accelerate endpoint for Amazon S3 endpoint. */
+  /**
+   * Enables accelerate endpoint for Amazon S3 endpoint.
+   *
+   * @deprecated This method is no longer supported.
+   */
+  @Deprecated
   public void enableAccelerateEndpoint() {
-    this.isAccelerateHost = true;
+    this.awsS3Prefix = "s3-accelerate.";
   }
 
-  /** Disables accelerate endpoint for Amazon S3 endpoint. */
+  /**
+   * Disables accelerate endpoint for Amazon S3 endpoint.
+   *
+   * @deprecated This method is no longer supported.
+   */
+  @Deprecated
   public void disableAccelerateEndpoint() {
-    this.isAccelerateHost = false;
+    this.awsS3Prefix = "s3.";
   }
 
   /** Enables dual-stack endpoint for Amazon S3 endpoint. */
   public void enableDualStackEndpoint() {
-    this.isDualStackHost = true;
+    this.awsDualstack = true;
   }
 
   /** Disables dual-stack endpoint for Amazon S3 endpoint. */
   public void disableDualStackEndpoint() {
-    this.isDualStackHost = false;
+    this.awsDualstack = false;
   }
 
   /** Enables virtual-style endpoint. */
@@ -1706,6 +1773,15 @@ public abstract class S3Base {
   /** Disables virtual-style endpoint. */
   public void disableVirtualStyleEndpoint() {
     this.useVirtualStyle = false;
+  }
+
+  /** Sets AWS S3 domain prefix. */
+  public void setAwsS3Prefix(@Nonnull String awsS3Prefix) {
+    if (awsS3Prefix == null) throw new IllegalArgumentException("null Amazon AWS S3 domain prefix");
+    if (!HttpUtils.AWS_S3_PREFIX_REGEX.matcher(awsS3Prefix).find()) {
+      throw new IllegalArgumentException("invalid Amazon AWS S3 domain prefix " + awsS3Prefix);
+    }
+    this.awsS3Prefix = awsS3Prefix;
   }
 
   /** Execute stat object asynchronously. */

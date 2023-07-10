@@ -31,6 +31,7 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -46,6 +47,36 @@ import okhttp3.Protocol;
 
 /** HTTP utilities. */
 public class HttpUtils {
+  public static final String AWS_S3_PREFIX =
+      "^(((bucket\\.|accesspoint\\.)"
+          + "vpce(-(?!_)[a-z_\\d]+(?<!-)(?<!_))+\\.s3\\.)|"
+          + "((?!s3)(?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\.)"
+          + "s3-control(-(?!_)[a-z_\\d]+(?<!-)(?<!_))*\\.|"
+          + "(s3(-(?!_)[a-z_\\d]+(?<!-)(?<!_))*\\.))";
+
+  public static final Pattern HOSTNAME_REGEX =
+      Pattern.compile(
+          "^((?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\.)*"
+              + "((?!_)(?!-)[a-z_\\d-]{1,63}(?<!-)(?<!_))$",
+          Pattern.CASE_INSENSITIVE);
+  public static final Pattern AWS_ENDPOINT_REGEX =
+      Pattern.compile(".*\\.amazonaws\\.com(|\\.cn)$", Pattern.CASE_INSENSITIVE);
+  public static final Pattern AWS_S3_ENDPOINT_REGEX =
+      Pattern.compile(
+          AWS_S3_PREFIX
+              + "((?!s3)(?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\.)*amazonaws\\.com(|\\.cn)$",
+          Pattern.CASE_INSENSITIVE);
+  public static final Pattern AWS_ELB_ENDPOINT_REGEX =
+      Pattern.compile(
+          "^(?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\."
+              + "(?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\."
+              + "elb\\.amazonaws\\.com$",
+          Pattern.CASE_INSENSITIVE);
+  public static final Pattern AWS_S3_PREFIX_REGEX =
+      Pattern.compile(AWS_S3_PREFIX, Pattern.CASE_INSENSITIVE);
+  public static final Pattern REGION_REGEX =
+      Pattern.compile("^((?!_)(?!-)[a-z_\\d-]{1,63}(?<!-)(?<!_))$", Pattern.CASE_INSENSITIVE);
+
   public static final byte[] EMPTY_BODY = new byte[] {};
 
   public static void validateNotNull(Object arg, String argName) {
@@ -73,22 +104,8 @@ public class HttpUtils {
       return;
     }
 
-    // Check endpoint is a hostname.
-
-    // Refer https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_host_names
-    // why checks are done like below
-    if (endpoint.length() < 1 || endpoint.length() > 253) {
-      throw new IllegalArgumentException("invalid hostname");
-    }
-
-    for (String label : endpoint.split("\\.")) {
-      if (label.length() < 1 || label.length() > 63) {
-        throw new IllegalArgumentException("invalid hostname");
-      }
-
-      if (!(label.matches("^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$"))) {
-        throw new IllegalArgumentException("invalid hostname");
-      }
+    if (!HOSTNAME_REGEX.matcher(endpoint).find()) {
+      throw new IllegalArgumentException("invalid hostname " + endpoint);
     }
   }
 
