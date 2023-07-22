@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module io.minio.api.admin {
+open module io.minio.api.admin {
 	requires org.bouncycastle.provider;
 	requires com.google.common;
 	requires com.fasterxml.jackson.annotation;
