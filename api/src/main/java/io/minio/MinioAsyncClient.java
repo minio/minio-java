@@ -934,15 +934,16 @@ public class MinioAsyncClient extends S3Base {
     } catch (ExecutionException e) {
       throwEncapsulatedException(e);
     }
+    HttpUrl proxyUrl = args.endpoint() == null ? this.baseUrl : HttpUrl.parse(args.endpoint());
 
     if (provider == null) {
-      HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
+      HttpUrl url = buildUrl(proxyUrl, args.method(), args.bucket(), args.object(), region, queryParams);
       return url.toString();
     }
 
     Credentials creds = provider.fetch();
     if (creds.sessionToken() != null) queryParams.put("X-Amz-Security-Token", creds.sessionToken());
-    HttpUrl url = buildUrl(args.method(), args.bucket(), args.object(), region, queryParams);
+    HttpUrl url = buildUrl(proxyUrl, args.method(), args.bucket(), args.object(), region, queryParams);
     Request request =
         createRequest(
             url,

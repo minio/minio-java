@@ -277,18 +277,20 @@ public abstract class S3Base {
 
   /** Build URL for given parameters. */
   protected HttpUrl buildUrl(
-      Method method,
-      String bucketName,
-      String objectName,
-      String region,
-      Multimap<String, String> queryParamMap)
-      throws NoSuchAlgorithmException {
+          HttpUrl proxyUrl,
+          Method method,
+          String bucketName,
+          String objectName,
+          String region,
+          Multimap<String, String> queryParamMap)
+          throws NoSuchAlgorithmException {
     if (bucketName == null && objectName != null) {
       throw new IllegalArgumentException("null bucket name for object '" + objectName + "'");
     }
 
     HttpUrl.Builder urlBuilder = this.baseUrl.newBuilder();
-    String host = this.baseUrl.host();
+    urlBuilder.port(proxyUrl.port());
+    String host = proxyUrl.host();
     if (bucketName != null) {
       boolean enforcePathStyle = false;
       if (method == Method.PUT && objectName == null && queryParamMap == null) {
@@ -357,6 +359,17 @@ public abstract class S3Base {
     }
 
     return urlBuilder.build();
+  }
+
+  /** Build URL for given parameters. */
+  protected HttpUrl buildUrl(
+      Method method,
+      String bucketName,
+      String objectName,
+      String region,
+      Multimap<String, String> queryParamMap)
+      throws NoSuchAlgorithmException {
+    return buildUrl(baseUrl, method, bucketName, objectName, region, queryParamMap);
   }
 
   /** Convert Multimap to Headers. */

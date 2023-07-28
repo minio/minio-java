@@ -1626,6 +1626,17 @@ public class FunctionalTest {
                 .build(),
             expectedChecksum);
 
+        testTags = "[GET, expiry, endpoint]";
+        testGetPresignedUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .endpoint("http://127.0.0.1:9000")
+                        .method(Method.GET)
+                        .bucket(bucketName)
+                        .object(objectName)
+                        .expiry(1, TimeUnit.DAYS)
+                        .build(),
+                expectedChecksum);
+
         testTags = "[GET, expiry, query params]";
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("response-content-type", "application/json");

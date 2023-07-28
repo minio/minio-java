@@ -27,9 +27,13 @@ import java.util.concurrent.TimeUnit;
 public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
   // default expiration for a presigned URL is 7 days in seconds
   public static final int DEFAULT_EXPIRY_TIME = (int) TimeUnit.DAYS.toSeconds(7);
-
+  private String endpoint;
   private Method method;
   private int expiry = DEFAULT_EXPIRY_TIME;
+
+  public String endpoint() {
+    return endpoint;
+  }
 
   public Method method() {
     return method;
@@ -46,6 +50,10 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
   /** Argument builder of {@link GetPresignedObjectUrlArgs}. */
   public static final class Builder
       extends ObjectVersionArgs.Builder<Builder, GetPresignedObjectUrlArgs> {
+    private void validateEndpoint(String endpoint) {
+      validateNotNull(endpoint, "endpoint");
+    }
+
     private void validateMethod(Method method) {
       validateNotNull(method, "method");
     }
@@ -57,6 +65,13 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
                 + TimeUnit.SECONDS.toDays(DEFAULT_EXPIRY_TIME)
                 + " days");
       }
+    }
+
+    /* proxy address. */
+    public Builder endpoint(String endpoint) {
+      validateEndpoint(endpoint);
+      operations.add(args -> args.endpoint = endpoint);
+      return this;
     }
 
     /* method HTTP {@link Method} to generate presigned URL. */
@@ -90,11 +105,13 @@ public class GetPresignedObjectUrlArgs extends ObjectVersionArgs {
     if (!(o instanceof GetPresignedObjectUrlArgs)) return false;
     if (!super.equals(o)) return false;
     GetPresignedObjectUrlArgs that = (GetPresignedObjectUrlArgs) o;
-    return expiry == that.expiry && method == that.method;
+    return expiry == that.expiry
+        && method == that.method
+        && Objects.equals(endpoint, that.endpoint);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), method, expiry);
+    return Objects.hash(super.hashCode(), method, expiry, endpoint);
   }
 }
