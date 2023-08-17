@@ -66,6 +66,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -75,6 +76,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -131,22 +133,20 @@ import org.xerial.snappy.SnappyFramedOutputStream;
 public class MinioAsyncClient extends S3Base {
   private MinioAsyncClient(
       HttpUrl baseUrl,
-      String region,
-      boolean isAwsHost,
-      boolean isFipsHost,
-      boolean isAccelerateHost,
-      boolean isDualStackHost,
+      String awsS3Prefix,
+      String awsDomainSuffix,
+      boolean awsDualstack,
       boolean useVirtualStyle,
+      String region,
       Provider provider,
       OkHttpClient httpClient) {
     super(
         baseUrl,
-        region,
-        isAwsHost,
-        isFipsHost,
-        isAccelerateHost,
-        isDualStackHost,
+        awsS3Prefix,
+        awsDomainSuffix,
+        awsDualstack,
         useVirtualStyle,
+        region,
         provider,
         httpClient);
   }
@@ -3213,87 +3213,66 @@ public class MinioAsyncClient extends S3Base {
   /** Argument builder of {@link MinioClient}. */
   public static final class Builder {
     private HttpUrl baseUrl;
-    private String region;
-    private boolean isAwsHost;
-    private boolean isFipsHost;
-    private boolean isAccelerateHost;
-    private boolean isDualStackHost;
+    private String awsS3Prefix;
+    private String awsDomainSuffix;
+    private boolean awsDualstack;
     private boolean useVirtualStyle;
+
+    private String region;
     private Provider provider;
     private OkHttpClient httpClient;
 
-    private boolean isAwsChinaHost;
-    private String regionInUrl;
+    private void setAwsInfo(String host, boolean https) {
+      this.awsS3Prefix = null;
+      this.awsDomainSuffix = null;
+      this.awsDualstack = false;
 
-    private boolean isAwsFipsEndpoint(String endpoint) {
-      return endpoint.startsWith("s3-fips.");
-    }
+      if (!HttpUtils.HOSTNAME_REGEX.matcher(host).find()) return;
 
-    private boolean isAwsAccelerateEndpoint(String endpoint) {
-      return endpoint.startsWith("s3-accelerate.");
-    }
-
-    private boolean isAwsEndpoint(String endpoint) {
-      return (endpoint.startsWith("s3.")
-              || isAwsFipsEndpoint(endpoint)
-              || isAwsAccelerateEndpoint(endpoint))
-          && (endpoint.endsWith(".amazonaws.com") || endpoint.endsWith(".amazonaws.com.cn"));
-    }
-
-    private boolean isAwsDualStackEndpoint(String endpoint) {
-      return endpoint.contains(".dualstack.");
-    }
-
-    /**
-     * Extracts region from AWS endpoint if available. Region is placed at second token normal
-     * endpoints and third token for dualstack endpoints.
-     *
-     * <p>Region is marked in square brackets in below examples.
-     * <pre>
-     * https://s3.[us-east-2].amazonaws.com
-     * https://s3.dualstack.[ca-central-1].amazonaws.com
-     * https://s3.[cn-north-1].amazonaws.com.cn
-     * https://s3.dualstack.[cn-northwest-1].amazonaws.com.cn
-     */
-    private String extractRegion(String endpoint) {
-      String[] tokens = endpoint.split("\\.");
-      String token = tokens[1];
-
-      // If token is "dualstack", then region might be in next token.
-      if (token.equals("dualstack")) {
-        token = tokens[2];
+      if (HttpUtils.AWS_ELB_ENDPOINT_REGEX.matcher(host).find()) {
+        String[] tokens = host.split("\\.elb\\.amazonaws\\.com", 1)[0].split("\\.");
+        this.region = tokens[tokens.length - 1];
+        return;
       }
 
-      // If token is equal to "amazonaws", region is not passed in the endpoint.
-      if (token.equals("amazonaws")) {
-        return null;
+      if (!HttpUtils.AWS_ENDPOINT_REGEX.matcher(host).find()) return;
+
+      if (!HttpUtils.AWS_S3_ENDPOINT_REGEX.matcher(host).find()) {
+        throw new IllegalArgumentException("invalid Amazon AWS host " + host);
       }
 
-      // Return token as region.
-      return token;
+      Matcher matcher = HttpUtils.AWS_S3_PREFIX_REGEX.matcher(host);
+      matcher.lookingAt();
+      int end = matcher.end();
+
+      this.awsS3Prefix = host.substring(0, end);
+      if (this.awsS3Prefix.contains("s3-accesspoint") && !https) {
+        throw new IllegalArgumentException("use HTTPS scheme for host " + host);
+      }
+
+      String[] tokens = host.substring(end).split("\\.");
+      awsDualstack = "dualstack".equals(tokens[0]);
+      if (awsDualstack) tokens = Arrays.copyOfRange(tokens, 1, tokens.length);
+      String regionInHost = null;
+      if (!tokens[0].equals("vpce") && !tokens[0].equals("amazonaws")) {
+        regionInHost = tokens[0];
+        tokens = Arrays.copyOfRange(tokens, 1, tokens.length);
+      }
+      this.awsDomainSuffix = String.join(".", tokens);
+
+      if (host.equals("s3-external-1.amazonaws.com")) regionInHost = "us-east-1";
+      if (host.equals("s3-us-gov-west-1.amazonaws.com")
+          || host.equals("s3-fips-us-gov-west-1.amazonaws.com")) {
+        regionInHost = "us-gov-west-1";
+      }
+
+      if (regionInHost != null) this.region = regionInHost;
     }
 
     private void setBaseUrl(HttpUrl url) {
-      String host = url.host();
-
-      this.isAwsHost = isAwsEndpoint(host);
-      this.isAwsChinaHost = false;
-      if (this.isAwsHost) {
-        this.isAwsChinaHost = host.endsWith(".cn");
-        url =
-            url.newBuilder()
-                .host(this.isAwsChinaHost ? "amazonaws.com.cn" : "amazonaws.com")
-                .build();
-        this.isFipsHost = isAwsFipsEndpoint(host);
-        this.isAccelerateHost = isAwsAccelerateEndpoint(host);
-        this.isDualStackHost = isAwsDualStackEndpoint(host);
-        this.regionInUrl = extractRegion(host);
-        this.useVirtualStyle = true;
-      } else {
-        this.useVirtualStyle = host.endsWith("aliyuncs.com");
-      }
-
       this.baseUrl = url;
+      this.setAwsInfo(url.host(), url.isHttps());
+      this.useVirtualStyle = this.awsDomainSuffix != null || url.host().endsWith("aliyuncs.com");
     }
 
     public Builder endpoint(String endpoint) {
@@ -3325,8 +3304,9 @@ public class MinioAsyncClient extends S3Base {
     }
 
     public Builder region(String region) {
-      HttpUtils.validateNullOrNotEmptyString(region, "region");
-      this.regionInUrl = region;
+      if (region != null && !HttpUtils.REGION_REGEX.matcher(region).find()) {
+        throw new IllegalArgumentException("invalid region " + region);
+      }
       this.region = region;
       return this;
     }
@@ -3349,7 +3329,11 @@ public class MinioAsyncClient extends S3Base {
 
     public MinioAsyncClient build() {
       HttpUtils.validateNotNull(this.baseUrl, "endpoint");
-      if (this.isAwsChinaHost && this.regionInUrl == null && this.region == null) {
+
+      if (this.awsDomainSuffix != null
+          && this.awsDomainSuffix.endsWith(".cn")
+          && !this.awsS3Prefix.endsWith("s3-accelerate.")
+          && this.region == null) {
         throw new IllegalArgumentException(
             "Region missing in Amazon S3 China endpoint " + this.baseUrl);
       }
@@ -3358,17 +3342,15 @@ public class MinioAsyncClient extends S3Base {
         this.httpClient =
             HttpUtils.newDefaultHttpClient(
                 DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
-        if (this.region == null) this.region = regionInUrl;
       }
 
       return new MinioAsyncClient(
           baseUrl,
-          region,
-          isAwsHost,
-          isFipsHost,
-          isAccelerateHost,
-          isDualStackHost,
+          awsS3Prefix,
+          awsDomainSuffix,
+          awsDualstack,
           useVirtualStyle,
+          region,
           provider,
           httpClient);
     }
