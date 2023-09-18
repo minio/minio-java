@@ -510,7 +510,7 @@ public class MinioAdminClient {
    *
    * @param userOrGroupName User/Group name.
    * @param isGroup Flag to denote userOrGroupName is a group name.
-   * @param policyName Policy name.
+   * @param policyName Policy name or comma separated policy names.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
