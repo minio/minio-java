@@ -34,7 +34,7 @@ apply plugin: "de.marcphilipp.nexus-publish"
 
 allprojects {
     group = 'io.minio'
-    version = '8.5.5'
+    version = '8.5.6'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
@@ -52,7 +52,7 @@ subprojects {
 
     dependencies {
         api "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
-        api "com.google.guava:guava:32.0.0-jre"
+        api "com.google.guava:guava:32.0.1-jre"
         api "com.squareup.okhttp3:okhttp:4.11.0"
         api "com.fasterxml.jackson.core:jackson-annotations:2.15.2"
         api "com.fasterxml.jackson.core:jackson-core:2.15.2"
