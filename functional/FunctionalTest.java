@@ -1725,6 +1725,7 @@ public class FunctionalTest {
 
       PostPolicy policy = new PostPolicy(bucketName, ZonedDateTime.now().plusDays(7));
       policy.addEqualsCondition("key", objectName);
+      policy.addEqualsCondition("content-type", "image/png");
       policy.addContentLengthRangeCondition(1 * MB, 4 * MB);
       Map<String, String> formData = client.getPresignedPostFormData(policy);
 
