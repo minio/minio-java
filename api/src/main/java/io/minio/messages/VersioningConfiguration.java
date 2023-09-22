@@ -36,7 +36,7 @@ public class VersioningConfiguration {
   @Element(name = "Status", required = false)
   private String status;
 
-  @Element(name = "MFADelete", required = false)
+  @Element(name = "MfaDelete", required = false)
   private String mfaDelete;
 
   public VersioningConfiguration() {}
