@@ -30,7 +30,10 @@ import io.minio.MinioProperties;
 import io.minio.S3Escaper;
 import io.minio.Signer;
 import io.minio.Time;
+import io.minio.admin.messages.AddServiceAccountRequest;
+import io.minio.admin.messages.AddServiceAccountResponse;
 import io.minio.admin.messages.DataUsageInfo;
+import io.minio.admin.messages.ServiceAccountCredentials;
 import io.minio.admin.messages.info.Message;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
@@ -71,6 +74,7 @@ public class MinioAdminClient {
     USER_INFO("user-info"),
     LIST_USERS("list-users"),
     REMOVE_USER("remove-user"),
+    ADD_SERVICE_ACCOUNT("add-service-account"),
     ADD_CANNED_POLICY("add-canned-policy"),
     SET_USER_OR_GROUP_POLICY("set-user-or-group-policy"),
     LIST_CANNED_POLICIES("list-canned-policies"),
@@ -305,6 +309,30 @@ public class MinioAdminClient {
             Command.REMOVE_USER,
             ImmutableMultimap.of("accessKey", accessKey),
             null)) {}
+  }
+
+  /**
+   * Add a service account for a given user.
+   *
+   * @param targetUser Target user.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
+   */
+  public ServiceAccountCredentials addServiceAccount(String targetUser)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          InvalidCipherTextException {
+    Credentials creds = getCredentials();
+    AddServiceAccountRequest addServiceAccountRequest = new AddServiceAccountRequest(targetUser);
+    byte[] body =
+        Crypto.encrypt(
+            creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(addServiceAccountRequest));
+
+    try (Response response = execute(Method.PUT, Command.ADD_SERVICE_ACCOUNT, null, body)) {
+      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+      return OBJECT_MAPPER.readValue(jsonData, AddServiceAccountResponse.class).credentials();
+    }
   }
 
   /**
@@ -674,8 +702,8 @@ public class MinioAdminClient {
   /**
    * Disables HTTP call tracing previously enabled.
    *
-   * @see #traceOn
    * @throws IOException upon connection error
+   * @see #traceOn
    */
   public void traceOff() throws IOException {
     this.traceStream = null;
