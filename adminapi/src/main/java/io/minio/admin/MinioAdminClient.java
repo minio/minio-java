@@ -46,12 +46,14 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -81,7 +83,11 @@ public class MinioAdminClient {
     ADD_UPDATE_REMOVE_GROUP("update-group-members"),
     GROUP_INFO("group"),
     LIST_GROUPS("groups"),
-    INFO("info");
+    INFO("info"),
+    ADD_SERVICE_ACCOUNT("add-service-account"),
+    LIST_SERVICE_ACCOUNTS("list-service-accounts"),
+    DELETE_SERVICE_ACCOUNT("delete-service-account"),
+    INFO_SERVICE_ACCOUNT("info-service-account");
     private final String value;
 
     private Command(String value) {
@@ -610,6 +616,172 @@ public class MinioAdminClient {
   public Message getServerInfo() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
     try (Response response = execute(Method.GET, Command.INFO, null, null)) {
       return OBJECT_MAPPER.readValue(response.body().charStream(), Message.class);
+    }
+  }
+
+  /**
+   * Adds a user with the specified access and secret key.
+   *
+   * <pre>Example:{@code
+   * // Assume policyJson contains below JSON string;
+   * // {
+   * //     "Statement": [
+   * //         {
+   * //             "Action": "s3:GetObject",
+   * //             "Effect": "Allow",
+   * //             "Principal": "*",
+   * //             "Resource": "arn:aws:s3:::my-bucketname/myobject*"
+   * //         }
+   * //     ],
+   * //     "Version": "2012-10-17"
+   * // }
+   * //
+   * }</pre>
+   *
+   * @param accessKey Access key.
+   * @param targetUser Target user.
+   * @param secretKey Secret key.
+   * @param policy Policy as JSON string .
+   * @param name Service account name.
+   * @param expiryTime Expiry time , Example : 2023-12-02T15:04:05Z.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
+   */
+  public AddServiceAccountReq addServiceAccount(
+      @Nonnull String targetUser,
+      @Nullable String name,
+      @Nullable String secretKey,
+      @Nullable String accessKey,
+      @Nullable String policy,
+      @Nullable String description,
+      @Nullable String expiryTime)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          InvalidCipherTextException {
+    if (targetUser == null || targetUser.isEmpty()) {
+      throw new IllegalArgumentException("target user must be provided");
+    }
+    if (accessKey == null || accessKey.isEmpty()) {
+      accessKey = generateCredentials(20);
+    }
+    if (secretKey == null || secretKey.isEmpty()) {
+      secretKey = generateCredentials(40);
+    }
+    byte[] policyBytes = null;
+    if (policy != null && !policy.isEmpty()) {
+      policyBytes = policy.getBytes(StandardCharsets.UTF_8);
+    }
+    if (expiryTime != null && !expiryTime.isEmpty()) {}
+
+    Credentials creds = getCredentials();
+    AddServiceAccountReq addServiceAccountReq =
+        new AddServiceAccountReq(
+            secretKey, policyBytes, targetUser, accessKey, name, description, expiryTime);
+    try (Response response =
+        execute(
+            Method.PUT,
+            Command.ADD_SERVICE_ACCOUNT,
+            ImmutableMultimap.of("accessKey", accessKey),
+            Crypto.encrypt(
+                creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(addServiceAccountReq)))) {
+      return addServiceAccountReq;
+    }
+  }
+
+  /**
+   * Creates randomly generated credentials of maximum.
+   *
+   * @param length credentials length
+   * @return credential
+   */
+  private String generateCredentials(int length) {
+    String characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    StringBuffer randomString = new StringBuffer();
+    Random random = new Random(new SecureRandom().nextLong());
+    for (int i = 0; i < length; i++) {
+      int randomIndex = random.nextInt(length);
+      randomString.append(characters.charAt(randomIndex % characters.length()));
+    }
+    return randomString.toString();
+  }
+
+  /**
+   * Deletes a service account by it's access key
+   *
+   * @param accessKey Access Key.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   */
+  public void deleteServiceAccount(@Nonnull String accessKey)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+    if (accessKey == null || accessKey.isEmpty()) {
+      throw new IllegalArgumentException("access key must be provided");
+    }
+
+    try (Response response =
+        execute(
+            Method.DELETE,
+            Command.DELETE_SERVICE_ACCOUNT,
+            ImmutableMultimap.of("accessKey", accessKey),
+            null)) {}
+  }
+
+  /**
+   * Obtains a list of minio service account by user name.
+   *
+   * @param userName user name.
+   * @return List of minio service account.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
+   */
+  public List<AddServiceAccountReq> listServiceAccount(@Nonnull String userName)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          InvalidCipherTextException {
+    if (userName == null || userName.isEmpty()) {
+      throw new IllegalArgumentException("user name must be provided");
+    }
+
+    try (Response response =
+        execute(
+            Method.GET,
+            Command.LIST_SERVICE_ACCOUNTS,
+            ImmutableMultimap.of("user", userName),
+            null)) {
+      Credentials creds = getCredentials();
+      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+      return OBJECT_MAPPER.readValue(jsonData, ListServiceAccountResp.class).accounts();
+    }
+  }
+
+  /**
+   * Obtains service account info for a specified MinIO user.
+   *
+   * @param accessKey Access Key.
+   * @return Service account info for the specified accessKey.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
+   */
+  public InfoServiceAccountResp getServiceAccountInfo(String accessKey)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          InvalidCipherTextException {
+    if (accessKey == null || accessKey.isEmpty()) {
+      throw new IllegalArgumentException("access key must be provided");
+    }
+    try (Response response =
+        execute(
+            Method.GET,
+            Command.INFO_SERVICE_ACCOUNT,
+            ImmutableMultimap.of("accessKey", accessKey),
+            null)) {
+      Credentials creds = getCredentials();
+      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+      return OBJECT_MAPPER.readValue(jsonData, InfoServiceAccountResp.class);
     }
   }
 
