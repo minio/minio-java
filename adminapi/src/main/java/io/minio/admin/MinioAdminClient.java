@@ -661,6 +661,11 @@ public class MinioAdminClient {
           InvalidCipherTextException {
     if (targetUser == null || targetUser.isEmpty()) {
       throw new IllegalArgumentException("target user must be provided");
+    } else if (targetUser.length() > 32) {
+      throw new IllegalArgumentException("name must not be longer than 32 characters");
+    }
+    if (description != null && description.length() > 256) {
+      throw new IllegalArgumentException("description must be at most 256 bytes long");
     }
     if (accessKey == null || accessKey.isEmpty()) {
       accessKey = generateCredentials(20);
@@ -672,7 +677,6 @@ public class MinioAdminClient {
     if (policy != null && !policy.isEmpty()) {
       policyBytes = policy.getBytes(StandardCharsets.UTF_8);
     }
-    if (expiryTime != null && !expiryTime.isEmpty()) {}
 
     Credentials creds = getCredentials();
     AddServiceAccountReq addServiceAccountReq =
