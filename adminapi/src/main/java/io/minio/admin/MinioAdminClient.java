@@ -85,6 +85,7 @@ public class MinioAdminClient {
     LIST_GROUPS("groups"),
     INFO("info"),
     ADD_SERVICE_ACCOUNT("add-service-account"),
+    UPDATE_SERVICE_ACCOUNT("update-service-account"),
     LIST_SERVICE_ACCOUNTS("list-service-accounts"),
     DELETE_SERVICE_ACCOUNT("delete-service-account"),
     INFO_SERVICE_ACCOUNT("info-service-account");
@@ -620,7 +621,7 @@ public class MinioAdminClient {
   }
 
   /**
-   * Adds a user with the specified access and secret key.
+   * Creates a new service account belonging to the user sending.
    *
    * <pre>Example:{@code
    * // Assume policyJson contains below JSON string;
@@ -691,6 +692,70 @@ public class MinioAdminClient {
                 creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(addServiceAccountReq)))) {
       return addServiceAccountReq;
     }
+  }
+
+  /**
+   * Edit an existing service account.
+   *
+   * <pre>Example:{@code
+   * // Assume policyJson contains below JSON string;
+   * // {
+   * //     "Statement": [
+   * //         {
+   * //             "Action": "s3:GetObject",
+   * //             "Effect": "Allow",
+   * //             "Principal": "*",
+   * //             "Resource": "arn:aws:s3:::my-bucketname/myobject*"
+   * //         }
+   * //     ],
+   * //     "Version": "2012-10-17"
+   * // }
+   * //
+   * }</pre>
+   *
+   * @param accessKey Access key.
+   * @param targetUser Target user.
+   * @param secretKey Secret key.
+   * @param policy Policy as JSON string .
+   * @param name Service account name.
+   * @param expiryTime Expiry time , Example : 2023-12-02T15:04:05Z.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on MinIO REST operation.
+   * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
+   */
+  public void updateServiceAccount(
+      @Nullable String newName,
+      @Nullable String newSecretKey,
+      @Nullable String accessKey,
+      @Nullable String newStatus,
+      @Nullable String newPolicy,
+      @Nullable String newDescription,
+      @Nullable String newExpiration)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          InvalidCipherTextException {
+    if (newDescription != null && newDescription.length() > 256) {
+      throw new IllegalArgumentException("description must be at most 256 bytes long");
+    }
+    if (accessKey == null || accessKey.isEmpty()) {
+      throw new IllegalArgumentException("access key must be provided");
+    }
+    byte[] policyBytes = null;
+    if (newPolicy != null && !newPolicy.isEmpty()) {
+      policyBytes = newPolicy.getBytes(StandardCharsets.UTF_8);
+    }
+
+    Credentials creds = getCredentials();
+    UpdateServiceAccountReq updateServiceAccountReq =
+        new UpdateServiceAccountReq(
+            newSecretKey, policyBytes, newStatus, newName, newDescription, newExpiration);
+    try (Response response =
+        execute(
+            Method.PUT,
+            Command.UPDATE_SERVICE_ACCOUNT,
+            ImmutableMultimap.of("accessKey", accessKey),
+            Crypto.encrypt(
+                creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(updateServiceAccountReq)))) {}
   }
 
   /**
