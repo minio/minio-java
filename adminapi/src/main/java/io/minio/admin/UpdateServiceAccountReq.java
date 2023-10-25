@@ -17,8 +17,10 @@
 
 package io.minio.admin;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import javax.annotation.Nullable;
 
 /**
@@ -33,7 +35,7 @@ public class UpdateServiceAccountReq {
   private String newSecretKey;
 
   @JsonProperty("newStatus")
-  private String newStatus;
+  private Status newStatus;
 
   @JsonProperty("newPolicy")
   private byte[] newPolicy;
@@ -52,7 +54,7 @@ public class UpdateServiceAccountReq {
   public UpdateServiceAccountReq(
       @Nullable @JsonProperty("newSecretKey") String newSecretKey,
       @Nullable @JsonProperty("newPolicy") byte[] newPolicy,
-      @Nullable @JsonProperty("newStatus") String newStatus,
+      @Nullable @JsonProperty("newStatus") Status newStatus,
       @Nullable @JsonProperty("newName") String newName,
       @Nullable @JsonProperty("newDescription") String newDescription,
       @Nullable @JsonProperty("newExpiration") String newExpiration) {
@@ -72,7 +74,7 @@ public class UpdateServiceAccountReq {
     return newPolicy;
   }
 
-  public String newStatus() {
+  public Status newStatus() {
     return newStatus;
   }
 
@@ -86,5 +88,38 @@ public class UpdateServiceAccountReq {
 
   public String newExpiration() {
     return newExpiration;
+  }
+
+  public static enum Status {
+    ENABLED("on"),
+    DISABLED("off");
+
+    private final String value;
+
+    private Status(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String toString() {
+      return this.value;
+    }
+
+    @JsonCreator
+    public static UpdateServiceAccountReq.Status fromString(String statusString) {
+      if ("on".equals(statusString)) {
+        return ENABLED;
+      }
+
+      if ("off".equals(statusString)) {
+        return DISABLED;
+      }
+
+      if (statusString.isEmpty()) {
+        return null;
+      }
+
+      throw new IllegalArgumentException("Unknown status " + statusString);
+    }
   }
 }
