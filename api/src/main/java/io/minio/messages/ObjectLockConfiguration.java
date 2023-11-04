@@ -29,6 +29,7 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "ObjectLockConfiguration", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class ObjectLockConfiguration {
   @Element(name = "ObjectLockEnabled")
   private String objectLockEnabled = "Enabled";

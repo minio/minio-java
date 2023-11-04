@@ -25,6 +25,7 @@ import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
+import org.bouncycastle.crypto.modes.GCMModeCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -83,7 +84,7 @@ public class Crypto {
    */
   private static byte[] generateAdditionalData(byte[] key, byte[] paddedNonce)
       throws InvalidCipherTextException {
-    GCMBlockCipher cipher = new GCMBlockCipher(new AESEngine());
+    GCMModeCipher cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
     cipher.init(true, new AEADParameters(new KeyParameter(key), 128, paddedNonce));
     int outputLength = cipher.getMac().length;
     byte[] additionalData = new byte[outputLength];
@@ -132,7 +133,7 @@ public class Crypto {
     /** Increment IV (nonce) by 1 as we used it for generating a tag for additional data. */
     paddedNonce[8] = 1;
 
-    GCMBlockCipher cipher = new GCMBlockCipher(new AESEngine());
+    GCMModeCipher cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
     cipher.init(true, new AEADParameters(new KeyParameter(key), 128, paddedNonce, additionalData));
     int outputLength = cipher.getOutputSize(data.length);
     byte[] encryptedData = new byte[outputLength];
@@ -180,7 +181,7 @@ public class Crypto {
     /** Increment IV (nonce) by 1 as we used it for generating a tag for additional data. */
     paddedNonce[8] = 1;
 
-    GCMBlockCipher cipher = new GCMBlockCipher(new AESEngine());
+    GCMModeCipher cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
     cipher.init(false, new AEADParameters(new KeyParameter(key), 128, paddedNonce, additionalData));
     int outputLength = cipher.getOutputSize(encryptedData.length);
     byte[] decryptedData = new byte[outputLength];
