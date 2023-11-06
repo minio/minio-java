@@ -25,9 +25,25 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ListServiceAccountResp {
   @JsonProperty("accounts")
-  private List<AddServiceAccountReq> accounts;
+  private List<ListServiceAccountInfo> accounts;
 
-  public List<AddServiceAccountReq> accounts() {
+  public List<ListServiceAccountInfo> accounts() {
     return accounts;
+  }
+
+  public static class ListServiceAccountInfo {
+    @JsonProperty("accessKey")
+    private String accessKey;
+
+    @JsonProperty("expiration")
+    private String expiration;
+
+    public String expiration() {
+      return expiration;
+    }
+
+    public String accessKey() {
+      return accessKey;
+    }
   }
 }

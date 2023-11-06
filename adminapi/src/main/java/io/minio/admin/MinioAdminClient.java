@@ -37,6 +37,7 @@ import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
+import io.minio.messages.ResponseDate;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -46,14 +47,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -620,6 +619,43 @@ public class MinioAdminClient {
     }
   }
 
+  private Map<String, Object> buildServiceAccount(
+      String targetUser,
+      String name,
+      String secretKey,
+      String accessKey,
+      String newStatus,
+      String policy,
+      String description,
+      boolean updateFlag,
+      String expiryTime) {
+    Map<String, Object> serviceAccount = new HashMap<>(7);
+    if (!updateFlag) {
+      serviceAccount.put("targetUser", targetUser);
+      serviceAccount.put("accessKey", accessKey);
+    }
+    if (updateFlag && newStatus != null && !newStatus.isEmpty()) {
+      serviceAccount.put("newStatus", newStatus);
+    }
+    if (name != null && !name.isEmpty()) {
+      serviceAccount.put(updateFlag ? "newName" : "name", name);
+    }
+    if (secretKey != null && !secretKey.isEmpty()) {
+      serviceAccount.put(updateFlag ? "newSecretKey" : "secretKey", secretKey);
+    }
+    if (policy != null && !policy.isEmpty()) {
+      serviceAccount.put(
+          updateFlag ? "newPolicy" : "policy", policy.getBytes(StandardCharsets.UTF_8));
+    }
+    if (description != null && !description.isEmpty()) {
+      serviceAccount.put(updateFlag ? "newDescription" : "description", description);
+    }
+    if (expiryTime != null && !expiryTime.isEmpty()) {
+      serviceAccount.put(updateFlag ? "newExpiration" : "expiration", expiryTime);
+    }
+    return serviceAccount;
+  }
+
   /**
    * Creates a new service account belonging to the user sending.
    *
@@ -650,7 +686,7 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
-  public AddServiceAccountReq addServiceAccount(
+  public Credentials addServiceAccount(
       @Nonnull String targetUser,
       @Nullable String name,
       @Nullable String secretKey,
@@ -668,29 +704,27 @@ public class MinioAdminClient {
     if (description != null && description.length() > 256) {
       throw new IllegalArgumentException("description must be at most 256 bytes long");
     }
-    if (accessKey == null || accessKey.isEmpty()) {
-      accessKey = generateCredentials(20);
-    }
-    if (secretKey == null || secretKey.isEmpty()) {
-      secretKey = generateCredentials(40);
-    }
-    byte[] policyBytes = null;
-    if (policy != null && !policy.isEmpty()) {
-      policyBytes = policy.getBytes(StandardCharsets.UTF_8);
-    }
 
     Credentials creds = getCredentials();
-    AddServiceAccountReq addServiceAccountReq =
-        new AddServiceAccountReq(
-            secretKey, policyBytes, targetUser, accessKey, name, description, expiryTime);
     try (Response response =
         execute(
             Method.PUT,
             Command.ADD_SERVICE_ACCOUNT,
             ImmutableMultimap.of("accessKey", accessKey),
             Crypto.encrypt(
-                creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(addServiceAccountReq)))) {
-      return addServiceAccountReq;
+                creds.secretKey(),
+                OBJECT_MAPPER.writeValueAsBytes(
+                    buildServiceAccount(
+                        targetUser,
+                        name,
+                        secretKey,
+                        accessKey,
+                        null,
+                        policy,
+                        description,
+                        false,
+                        expiryTime))))) {
+      return new Credentials(accessKey, secretKey, null, ResponseDate.fromString(expiryTime));
     }
   }
 
@@ -729,7 +763,7 @@ public class MinioAdminClient {
       @Nullable String newName,
       @Nullable String newSecretKey,
       @Nullable String accessKey,
-      @Nullable UpdateServiceAccountReq.Status newStatus,
+      @Nullable String newStatus,
       @Nullable String newPolicy,
       @Nullable String newDescription,
       @Nullable String newExpiration)
@@ -741,39 +775,32 @@ public class MinioAdminClient {
     if (accessKey == null || accessKey.isEmpty()) {
       throw new IllegalArgumentException("access key must be provided");
     }
-    byte[] policyBytes = null;
-    if (newPolicy != null && !newPolicy.isEmpty()) {
-      policyBytes = newPolicy.getBytes(StandardCharsets.UTF_8);
+    if (newStatus != null
+        && !newStatus.isEmpty()
+        && !"on".equals(newStatus)
+        && !"off".equals(newStatus)) {
+      throw new IllegalArgumentException("status key must be on or off");
     }
 
     Credentials creds = getCredentials();
-    UpdateServiceAccountReq updateServiceAccountReq =
-        new UpdateServiceAccountReq(
-            newSecretKey, policyBytes, newStatus, newName, newDescription, newExpiration);
     try (Response response =
         execute(
             Method.POST,
             Command.UPDATE_SERVICE_ACCOUNT,
             ImmutableMultimap.of("accessKey", accessKey),
             Crypto.encrypt(
-                creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(updateServiceAccountReq)))) {}
-  }
-
-  /**
-   * Creates randomly generated credentials of maximum.
-   *
-   * @param length credentials length
-   * @return credential
-   */
-  private String generateCredentials(int length) {
-    String characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    StringBuffer randomString = new StringBuffer();
-    Random random = new Random(new SecureRandom().nextLong());
-    for (int i = 0; i < length; i++) {
-      int randomIndex = random.nextInt(length);
-      randomString.append(characters.charAt(randomIndex % characters.length()));
-    }
-    return randomString.toString();
+                creds.secretKey(),
+                OBJECT_MAPPER.writeValueAsBytes(
+                    buildServiceAccount(
+                        null,
+                        newName,
+                        newSecretKey,
+                        accessKey,
+                        newStatus,
+                        newPolicy,
+                        newDescription,
+                        true,
+                        newExpiration))))) {}
   }
 
   /**
@@ -808,7 +835,7 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
-  public List<AddServiceAccountReq> listServiceAccount(@Nonnull String userName)
+  public ListServiceAccountResp listServiceAccount(@Nonnull String userName)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
     if (userName == null || userName.isEmpty()) {
@@ -823,7 +850,7 @@ public class MinioAdminClient {
             null)) {
       Credentials creds = getCredentials();
       byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
-      return OBJECT_MAPPER.readValue(jsonData, ListServiceAccountResp.class).accounts();
+      return OBJECT_MAPPER.readValue(jsonData, ListServiceAccountResp.class);
     }
   }
 
