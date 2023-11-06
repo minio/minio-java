@@ -681,6 +681,7 @@ public class MinioAdminClient {
    * @param policy Policy as JSON string .
    * @param name Service account name.
    * @param expiryTime Expiry time , Example : 2023-12-02T15:04:05Z.
+   * @return Service account info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -754,12 +755,13 @@ public class MinioAdminClient {
    * @param newName New service account name.
    * @param newDescription New description.
    * @param newExpiration New expiry time , Example : 2023-12-02T15:04:05Z.
+   * @return Service account info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
-  public void updateServiceAccount(
+  public Credentials updateServiceAccount(
       @Nullable String newName,
       @Nullable String newSecretKey,
       @Nullable String accessKey,
@@ -800,7 +802,9 @@ public class MinioAdminClient {
                         newPolicy,
                         newDescription,
                         true,
-                        newExpiration))))) {}
+                        newExpiration))))) {
+      return new Credentials(accessKey, newSecretKey, null, ResponseDate.fromString(newExpiration));
+    }
   }
 
   /**
