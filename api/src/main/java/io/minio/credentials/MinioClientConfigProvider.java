@@ -111,6 +111,9 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
     }
   }
 
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = {"UwF", "UuF"},
+      justification = "All the fields are written at the time of JSON unmarshalling.")
   public static class McConfig {
     private Map<String, Map<String, String>> hosts;
 

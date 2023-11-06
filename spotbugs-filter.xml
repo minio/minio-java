@@ -20,4 +20,16 @@
   <Match>
     <Bug pattern="EI_EXPOSE_REP2"/>
   </Match>
+  <!-- False positive in many cases: minio-java does not shadow the publicly available identifier from the Java Standard Library by packaging them under io.minio. -->
+  <Match>
+    <Bug pattern="PI_DO_NOT_REUSE_PUBLIC_IDENTIFIERS_CLASS_NAMES"/>
+  </Match>
+  <!-- False positive in many cases: Classes cannot be final in reported classes and deprecated finalize() cannot be used. -->
+  <Match>
+    <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+  </Match>
+  <!-- False positive: Method invocation is legit. -->
+  <Match>
+    <Bug pattern="DMI_DOH"/>
+  </Match>
 </FindBugsFilter>
