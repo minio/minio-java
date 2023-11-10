@@ -17,6 +17,7 @@
 
 package io.minio.admin;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
@@ -628,7 +629,8 @@ public class MinioAdminClient {
       String policy,
       String description,
       boolean updateFlag,
-      String expiryTime) {
+      String expiryTime)
+      throws JsonProcessingException {
     Map<String, Object> serviceAccount = new HashMap<>(7);
     if (!updateFlag) {
       serviceAccount.put("targetUser", targetUser);
@@ -644,8 +646,8 @@ public class MinioAdminClient {
       serviceAccount.put(updateFlag ? "newSecretKey" : "secretKey", secretKey);
     }
     if (policy != null && !policy.isEmpty()) {
-      serviceAccount.put(
-          updateFlag ? "newPolicy" : "policy", policy.getBytes(StandardCharsets.UTF_8));
+      Map<String, Object> policyMap = OBJECT_MAPPER.readValue(policy, Map.class);
+      serviceAccount.put(updateFlag ? "newPolicy" : "policy", policyMap);
     }
     if (description != null && !description.isEmpty()) {
       serviceAccount.put(updateFlag ? "newDescription" : "description", description);
@@ -725,7 +727,13 @@ public class MinioAdminClient {
                         description,
                         false,
                         expiryTime))))) {
-      return new Credentials(accessKey, secretKey, null, ResponseDate.fromString(expiryTime));
+      return new Credentials(
+          accessKey,
+          secretKey,
+          null,
+          (expiryTime != null && !expiryTime.isEmpty())
+              ? ResponseDate.fromString(expiryTime)
+              : null);
     }
   }
 
@@ -755,13 +763,12 @@ public class MinioAdminClient {
    * @param newName New service account name.
    * @param newDescription New description.
    * @param newExpiration New expiry time , Example : 2023-12-02T15:04:05Z.
-   * @return Service account info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
-  public Credentials updateServiceAccount(
+  public void updateServiceAccount(
       @Nullable String newName,
       @Nullable String newSecretKey,
       @Nullable String accessKey,
@@ -802,9 +809,7 @@ public class MinioAdminClient {
                         newPolicy,
                         newDescription,
                         true,
-                        newExpiration))))) {
-      return new Credentials(accessKey, newSecretKey, null, ResponseDate.fromString(newExpiration));
-    }
+                        newExpiration))))) {}
   }
 
   /**
