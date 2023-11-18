@@ -655,8 +655,8 @@ public class MinioAdminClient {
   public Credentials addServiceAccount(
       @Nonnull String targetUser,
       @Nullable String name,
-      @Nullable String secretKey,
-      @Nullable String accessKey,
+      @Nonnull String secretKey,
+      @Nonnull String accessKey,
       @Nullable String policy,
       @Nullable String description,
       @Nullable ZonedDateTime expiration,
@@ -672,15 +672,19 @@ public class MinioAdminClient {
     if (description != null && description.length() > 256) {
       throw new IllegalArgumentException("description must be at most 256 bytes long");
     }
+    if (accessKey == null || accessKey.isEmpty()) {
+      throw new IllegalArgumentException("access key must be provided");
+    }
+    if (secretKey == null || secretKey.isEmpty()) {
+      throw new IllegalArgumentException("secret key must be provided");
+    }
     Map<String, Object> serviceAccount = new HashMap<>(8);
     serviceAccount.put("targetUser", targetUser);
     serviceAccount.put("accessKey", accessKey);
     if (name != null && !name.isEmpty()) {
       serviceAccount.put("name", name);
     }
-    if (secretKey != null && !secretKey.isEmpty()) {
-      serviceAccount.put("secretKey", secretKey);
-    }
+    serviceAccount.put("secretKey", secretKey);
     if (policy != null && !policy.isEmpty()) {
       Map<String, Object> policyMap = OBJECT_MAPPER.readValue(policy, Map.class);
       serviceAccount.put("policy", policyMap);
