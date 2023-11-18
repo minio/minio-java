@@ -37,7 +37,6 @@ import io.minio.credentials.Provider;
 import io.minio.credentials.StaticProvider;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
-import io.minio.messages.ResponseDate;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -54,6 +53,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -102,6 +102,9 @@ public class MinioAdminClient {
   private static final long DEFAULT_CONNECTION_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
   private static final MediaType DEFAULT_MEDIA_TYPE = MediaType.parse("application/octet-stream");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+  private static final Pattern SERVICE_ACCOUNT_NAME_REGEX =
+      Pattern.compile("^[a-zA-Z][a-zA-Z0-9_-]*");
 
   static {
     OBJECT_MAPPER.registerModule(new JavaTimeModule());
@@ -622,29 +625,12 @@ public class MinioAdminClient {
   /**
    * Creates a new service account belonging to the user sending.
    *
-   * <pre>Example:{@code
-   * // Assume policyJson contains below JSON string;
-   * // {
-   * //     "Statement": [
-   * //         {
-   * //             "Action": "s3:GetObject",
-   * //             "Effect": "Allow",
-   * //             "Principal": "*",
-   * //             "Resource": "arn:aws:s3:::my-bucketname/myobject*"
-   * //         }
-   * //     ],
-   * //     "Version": "2012-10-17"
-   * // }
-   * //
-   * }</pre>
-   *
    * @param accessKey Access key.
-   * @param targetUser Target user.
    * @param secretKey Secret key.
-   * @param policy Policy as JSON string .
+   * @param targetUser Target user.
+   * @param policy Policy as map .
    * @param name Service account name.
    * @param description Description for this access key.
-   * @param comment Deprecated: use description instead.
    * @param expiration Expiry time , Example : 2023-12-02T15:04:05Z.
    * @return Service account info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
@@ -653,24 +639,24 @@ public class MinioAdminClient {
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
   public Credentials addServiceAccount(
-      @Nonnull String targetUser,
-      @Nullable String name,
-      @Nonnull String secretKey,
       @Nonnull String accessKey,
-      @Nullable String policy,
+      @Nonnull String secretKey,
+      @Nullable String targetUser,
+      @Nullable Map<String, Object> policy,
+      @Nullable String name,
       @Nullable String description,
-      @Nullable ZonedDateTime expiration,
-      @Nullable String comment)
+      @Nullable ZonedDateTime expiration)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
-    if (targetUser == null || targetUser.isEmpty()) {
-      throw new IllegalArgumentException("target user must be provided");
-    }
-    if (targetUser.length() > 32) {
+    if (name.length() > 32) {
       throw new IllegalArgumentException("name must not be longer than 32 characters");
     }
+    if (!SERVICE_ACCOUNT_NAME_REGEX.matcher(name).find()) {
+      throw new IllegalArgumentException(
+          "name must contain only ASCII letters, digits, underscores and hyphens and must start with a letter");
+    }
     if (description != null && description.length() > 256) {
-      throw new IllegalArgumentException("description must be at most 256 bytes long");
+      throw new IllegalArgumentException("description must be at most 256 characters long");
     }
     if (accessKey == null || accessKey.isEmpty()) {
       throw new IllegalArgumentException("access key must be provided");
@@ -678,66 +664,45 @@ public class MinioAdminClient {
     if (secretKey == null || secretKey.isEmpty()) {
       throw new IllegalArgumentException("secret key must be provided");
     }
-    Map<String, Object> serviceAccount = new HashMap<>(8);
-    serviceAccount.put("targetUser", targetUser);
+
+    Map<String, Object> serviceAccount = new HashMap<>();
     serviceAccount.put("accessKey", accessKey);
+    serviceAccount.put("secretKey", secretKey);
+    if (targetUser != null && !targetUser.isEmpty()) {
+      serviceAccount.put("targetUser", targetUser);
+    }
+    if (policy != null && !policy.isEmpty()) {
+      serviceAccount.put("policy", policy);
+    }
     if (name != null && !name.isEmpty()) {
       serviceAccount.put("name", name);
-    }
-    serviceAccount.put("secretKey", secretKey);
-    if (policy != null && !policy.isEmpty()) {
-      Map<String, Object> policyMap = OBJECT_MAPPER.readValue(policy, Map.class);
-      serviceAccount.put("policy", policyMap);
     }
     if (description != null && !description.isEmpty()) {
       serviceAccount.put("description", description);
     }
-    if (comment != null && !comment.isEmpty()) {
-      serviceAccount.put("comment", comment);
-    }
-    String expirationFormat = null;
     if (expiration != null) {
-      expirationFormat = expiration.format(Time.EXPIRATION_DATE_FORMAT);
-      serviceAccount.put("expiration", expirationFormat);
+      serviceAccount.put("expiration", expiration.format(Time.EXPIRATION_DATE_FORMAT));
     }
+
     Credentials creds = getCredentials();
     try (Response response =
         execute(
             Method.PUT,
             Command.ADD_SERVICE_ACCOUNT,
-            ImmutableMultimap.of("accessKey", accessKey),
+            null,
             Crypto.encrypt(creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(serviceAccount)))) {
-      return new Credentials(
-          accessKey,
-          secretKey,
-          null,
-          (expiration != null) ? ResponseDate.fromString(expirationFormat) : null);
+      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+      return OBJECT_MAPPER.readValue(jsonData, AddServiceAccountResp.class).credentials();
     }
   }
 
   /**
    * Edit an existing service account.
    *
-   * <pre>Example:{@code
-   * // Assume policyJson contains below JSON string;
-   * // {
-   * //     "Statement": [
-   * //         {
-   * //             "Action": "s3:GetObject",
-   * //             "Effect": "Allow",
-   * //             "Principal": "*",
-   * //             "Resource": "arn:aws:s3:::my-bucketname/myobject*"
-   * //         }
-   * //     ],
-   * //     "Version": "2012-10-17"
-   * // }
-   * //
-   * }</pre>
-   *
    * @param accessKey Access key.
-   * @param newStatus New service account status.
    * @param newSecretKey New secret key.
    * @param newPolicy New policy as JSON string .
+   * @param newStatus New service account status.
    * @param newName New service account name.
    * @param newDescription New description.
    * @param newExpiration New expiry time , Example : 2023-12-02T15:04:05Z.
@@ -747,41 +712,47 @@ public class MinioAdminClient {
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
   public void updateServiceAccount(
-      @Nullable String newName,
-      @Nullable String newSecretKey,
       @Nonnull String accessKey,
+      @Nullable String newSecretKey,
+      @Nullable Map<String, Object> newPolicy,
       @Nullable boolean newStatus,
-      @Nullable String newPolicy,
+      @Nullable String newName,
       @Nullable String newDescription,
       @Nullable ZonedDateTime newExpiration)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
+    if (newName.length() > 32) {
+      throw new IllegalArgumentException("new name must not be longer than 32 characters");
+    }
+    if (!SERVICE_ACCOUNT_NAME_REGEX.matcher(newName).find()) {
+      throw new IllegalArgumentException(
+          "new name must contain only ASCII letters, digits, underscores and hyphens and must start with a letter");
+    }
     if (newDescription != null && newDescription.length() > 256) {
-      throw new IllegalArgumentException("description must be at most 256 characters long");
+      throw new IllegalArgumentException("new description must be at most 256 characters long");
     }
     if (accessKey == null || accessKey.isEmpty()) {
       throw new IllegalArgumentException("access key must be provided");
     }
-    Map<String, Object> serviceAccount = new HashMap<>(7);
-    serviceAccount.put("newStatus", newStatus ? "on" : "off");
-    if (newName != null && !newName.isEmpty()) {
-      serviceAccount.put("newName", newName);
-    }
+
+    Map<String, Object> serviceAccount = new HashMap<>();
     if (newSecretKey != null && !newSecretKey.isEmpty()) {
       serviceAccount.put("newSecretKey", newSecretKey);
     }
     if (newPolicy != null && !newPolicy.isEmpty()) {
-      Map<String, Object> policyMap = OBJECT_MAPPER.readValue(newPolicy, Map.class);
-      serviceAccount.put("newPolicy", policyMap);
+      serviceAccount.put("newPolicy", newPolicy);
+    }
+    serviceAccount.put("newStatus", newStatus ? "on" : "off");
+    if (newName != null && !newName.isEmpty()) {
+      serviceAccount.put("newName", newName);
     }
     if (newDescription != null && !newDescription.isEmpty()) {
       serviceAccount.put("newDescription", newDescription);
     }
-    String newExpirationFormat = null;
     if (newExpiration != null) {
-      newExpirationFormat = newExpiration.format(Time.EXPIRATION_DATE_FORMAT);
-      serviceAccount.put("newExpiration", newExpirationFormat);
+      serviceAccount.put("newExpiration", newExpiration.format(Time.EXPIRATION_DATE_FORMAT));
     }
+
     Credentials creds = getCredentials();
     try (Response response =
         execute(
@@ -852,7 +823,7 @@ public class MinioAdminClient {
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
-  public InfoServiceAccountResp getServiceAccountInfo(@Nonnull String accessKey)
+  public GetServiceAccountInfoResp getServiceAccountInfo(@Nonnull String accessKey)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
     if (accessKey == null || accessKey.isEmpty()) {
@@ -866,7 +837,7 @@ public class MinioAdminClient {
             null)) {
       Credentials creds = getCredentials();
       byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
-      return OBJECT_MAPPER.readValue(jsonData, InfoServiceAccountResp.class);
+      return OBJECT_MAPPER.readValue(jsonData, GetServiceAccountInfoResp.class);
     }
   }
 

@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * "https://github.com/minio/madmin-go/blob/main/user-commands.go#L535">user-commands.go</a>
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InfoServiceAccountResp {
+public class GetServiceAccountInfoResp {
   @JsonProperty("parentUser")
   private String parentUser;
 
