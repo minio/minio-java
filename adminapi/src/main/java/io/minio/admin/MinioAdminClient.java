@@ -551,7 +551,8 @@ public class MinioAdminClient {
   /**
    * Lists all configured canned policies.
    *
-   * @return {@link Map<String, String>} - Map of policies, keyed by their name, with their actual policy as their value.
+   * @return {@link Map<String, String>} - Map of policies, keyed by their name, with their actual
+   *     policy as their value.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
