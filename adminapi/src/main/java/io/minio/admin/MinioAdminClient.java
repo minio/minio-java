@@ -104,7 +104,7 @@ public class MinioAdminClient {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private static final Pattern SERVICE_ACCOUNT_NAME_REGEX =
-      Pattern.compile("^[a-zA-Z][a-zA-Z0-9_-]*");
+      Pattern.compile("^(?!-)(?!_)[a-z_\\d-]{1,31}(?<!-)(?<!_)$", Pattern.CASE_INSENSITIVE);
 
   static {
     OBJECT_MAPPER.registerModule(new JavaTimeModule());
@@ -631,7 +631,7 @@ public class MinioAdminClient {
    * @param policy Policy as map .
    * @param name Service account name.
    * @param description Description for this access key.
-   * @param expiration Expiry time , Example : 2023-12-02T15:04:05Z.
+   * @param expiration Expiry time.
    * @return Service account info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
@@ -648,6 +648,12 @@ public class MinioAdminClient {
       @Nullable ZonedDateTime expiration)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
+    if (accessKey == null || accessKey.isEmpty()) {
+      throw new IllegalArgumentException("access key must be provided");
+    }
+    if (secretKey == null || secretKey.isEmpty()) {
+      throw new IllegalArgumentException("secret key must be provided");
+    }
     if (name.length() > 32) {
       throw new IllegalArgumentException("name must not be longer than 32 characters");
     }
@@ -657,12 +663,6 @@ public class MinioAdminClient {
     }
     if (description != null && description.length() > 256) {
       throw new IllegalArgumentException("description must be at most 256 characters long");
-    }
-    if (accessKey == null || accessKey.isEmpty()) {
-      throw new IllegalArgumentException("access key must be provided");
-    }
-    if (secretKey == null || secretKey.isEmpty()) {
-      throw new IllegalArgumentException("secret key must be provided");
     }
 
     Map<String, Object> serviceAccount = new HashMap<>();
@@ -705,7 +705,7 @@ public class MinioAdminClient {
    * @param newStatus New service account status.
    * @param newName New service account name.
    * @param newDescription New description.
-   * @param newExpiration New expiry time , Example : 2023-12-02T15:04:05Z.
+   * @param newExpiration New expiry time.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -721,6 +721,9 @@ public class MinioAdminClient {
       @Nullable ZonedDateTime newExpiration)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
+    if (accessKey == null || accessKey.isEmpty()) {
+      throw new IllegalArgumentException("access key must be provided");
+    }
     if (newName.length() > 32) {
       throw new IllegalArgumentException("new name must not be longer than 32 characters");
     }
@@ -730,9 +733,6 @@ public class MinioAdminClient {
     }
     if (newDescription != null && newDescription.length() > 256) {
       throw new IllegalArgumentException("new description must be at most 256 characters long");
-    }
-    if (accessKey == null || accessKey.isEmpty()) {
-      throw new IllegalArgumentException("access key must be provided");
     }
 
     Map<String, Object> serviceAccount = new HashMap<>();
@@ -787,17 +787,17 @@ public class MinioAdminClient {
   /**
    * Obtains a list of minio service account by user name.
    *
-   * @param userName user name.
+   * @param username user name.
    * @return List of minio service account.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
    * @throws InvalidCipherTextException thrown to indicate data cannot be encrypted/decrypted.
    */
-  public ListServiceAccountResp listServiceAccount(@Nonnull String userName)
+  public ListServiceAccountResp listServiceAccount(@Nonnull String username)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
-    if (userName == null || userName.isEmpty()) {
+    if (username == null || username.isEmpty()) {
       throw new IllegalArgumentException("user name must be provided");
     }
 
@@ -805,7 +805,7 @@ public class MinioAdminClient {
         execute(
             Method.GET,
             Command.LIST_SERVICE_ACCOUNTS,
-            ImmutableMultimap.of("user", userName),
+            ImmutableMultimap.of("user", username),
             null)) {
       Credentials creds = getCredentials();
       byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
