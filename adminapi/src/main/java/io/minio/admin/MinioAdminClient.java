@@ -256,7 +256,7 @@ public class MinioAdminClient {
    * Obtains user info for a specified MinIO user.
    *
    * @param accessKey Access Key.
-   * @return user info for the specified accessKey.
+   * @return {@link UserInfo} - user info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -274,7 +274,7 @@ public class MinioAdminClient {
   /**
    * Obtains a list of all MinIO users.
    *
-   * @return List of all users.
+   * @return {@link Map<String, UserInfo>} - List of all users.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -347,7 +347,7 @@ public class MinioAdminClient {
    * Obtains group info for a specified MinIO group.
    *
    * @param group Group name.
-   * @return group info for the specified group.
+   * @return {@link GroupInfo} - group info for the specified group.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -364,7 +364,7 @@ public class MinioAdminClient {
   /**
    * Obtains a list of all MinIO groups.
    *
-   * @return List of all groups.
+   * @return {@link List<String>} - List of all groups.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -551,7 +551,7 @@ public class MinioAdminClient {
   /**
    * Lists all configured canned policies.
    *
-   * @return Map of policies, keyed by their name, with their actual policy as their value.
+   * @return {@link Map<String, String>} - Map of policies, keyed by their name, with their actual policy as their value.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -596,7 +596,7 @@ public class MinioAdminClient {
   /**
    * Get server/cluster data usage info
    *
-   * @return DataUsageInfo object
+   * @return {@link DataUsageInfo} - DataUsageInfo object
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -611,7 +611,7 @@ public class MinioAdminClient {
   /**
    * Obtains admin info for the Minio server.
    *
-   * @return admin info for the Minio server.
+   * @return {@link Message} - admin info for the Minio server.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -632,7 +632,7 @@ public class MinioAdminClient {
    * @param name Service account name.
    * @param description Description for this access key.
    * @param expiration Expiry time.
-   * @return Service account info for the specified accessKey.
+   * @return {@link Credentials} - Service account info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -654,12 +654,9 @@ public class MinioAdminClient {
     if (secretKey == null || secretKey.isEmpty()) {
       throw new IllegalArgumentException("secret key must be provided");
     }
-    if (name.length() > 32) {
-      throw new IllegalArgumentException("name must not be longer than 32 characters");
-    }
-    if (!SERVICE_ACCOUNT_NAME_REGEX.matcher(name).find()) {
+    if (name != null && !SERVICE_ACCOUNT_NAME_REGEX.matcher(name).find()) {
       throw new IllegalArgumentException(
-          "name must contain only ASCII letters, digits, underscores and hyphens and must start with a letter");
+          "name must contain non-empty alphanumeric,  underscore and hyphen characters not longer than 32 characters");
     }
     if (description != null && description.length() > 256) {
       throw new IllegalArgumentException("description must be at most 256 characters long");
@@ -724,12 +721,9 @@ public class MinioAdminClient {
     if (accessKey == null || accessKey.isEmpty()) {
       throw new IllegalArgumentException("access key must be provided");
     }
-    if (newName.length() > 32) {
-      throw new IllegalArgumentException("new name must not be longer than 32 characters");
-    }
-    if (!SERVICE_ACCOUNT_NAME_REGEX.matcher(newName).find()) {
+    if (newName != null && !SERVICE_ACCOUNT_NAME_REGEX.matcher(newName).find()) {
       throw new IllegalArgumentException(
-          "new name must contain only ASCII letters, digits, underscores and hyphens and must start with a letter");
+          "new name must contain non-empty alphanumeric,  underscore and hyphen characters not longer than 32 characters");
     }
     if (newDescription != null && newDescription.length() > 256) {
       throw new IllegalArgumentException("new description must be at most 256 characters long");
@@ -788,7 +782,7 @@ public class MinioAdminClient {
    * Obtains a list of minio service account by user name.
    *
    * @param username user name.
-   * @return List of minio service account.
+   * @return {@link ListServiceAccountResp} - List of minio service account.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
@@ -817,7 +811,7 @@ public class MinioAdminClient {
    * Obtains service account info for a specified MinIO user.
    *
    * @param accessKey Access Key.
-   * @return Service account info for the specified accessKey.
+   * @return {@link GetServiceAccountInfoResp} - Service account info for the specified accessKey.
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
    * @throws IOException thrown to indicate I/O error on MinIO REST operation.
