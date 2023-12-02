@@ -16,6 +16,8 @@
 
 package io.minio.credentials;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.minio.messages.ResponseDate;
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -27,24 +29,29 @@ import org.simpleframework.xml.Root;
 
 /** Object representation of credentials access key, secret key and session token. */
 @Root(name = "Credentials", strict = false)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Credentials {
   @Element(name = "AccessKeyId")
+  @JsonProperty("accessKey")
   private final String accessKey;
 
   @Element(name = "SecretAccessKey")
+  @JsonProperty("secretKey")
   private final String secretKey;
 
   @Element(name = "SessionToken")
+  @JsonProperty("sessionToken")
   private final String sessionToken;
 
   @Element(name = "Expiration")
+  @JsonProperty("expiration")
   private final ResponseDate expiration;
 
   public Credentials(
-      @Nonnull @Element(name = "AccessKeyId") String accessKey,
-      @Nonnull @Element(name = "SecretAccessKey") String secretKey,
-      @Nullable @Element(name = "SessionToken") String sessionToken,
-      @Nullable @Element(name = "Expiration") ResponseDate expiration) {
+      @Nonnull @Element(name = "AccessKeyId") @JsonProperty("accessKey") String accessKey,
+      @Nonnull @Element(name = "SecretAccessKey") @JsonProperty("secretKey") String secretKey,
+      @Nullable @Element(name = "SessionToken") @JsonProperty("sessionToken") String sessionToken,
+      @Nullable @Element(name = "Expiration") @JsonProperty("expiration") ResponseDate expiration) {
     this.accessKey = Objects.requireNonNull(accessKey, "AccessKey must not be null");
     this.secretKey = Objects.requireNonNull(secretKey, "SecretKey must not be null");
     if (accessKey.isEmpty() || secretKey.isEmpty()) {
