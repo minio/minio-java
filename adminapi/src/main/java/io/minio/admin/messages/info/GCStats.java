@@ -37,7 +37,7 @@ public class GCStats {
   private Integer numGC;
 
   @JsonProperty("pause_total")
-  private Integer pauseTotal;
+  private Long pauseTotal;
 
   @JsonProperty("pause")
   private List<Integer> pause;
@@ -53,7 +53,7 @@ public class GCStats {
     return numGC;
   }
 
-  public Integer pauseTotal() {
+  public Long pauseTotal() {
     return pauseTotal;
   }
 
