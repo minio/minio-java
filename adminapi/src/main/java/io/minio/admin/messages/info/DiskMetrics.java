@@ -34,6 +34,20 @@ public class DiskMetrics {
   @JsonProperty("apiCalls")
   private Map<String, String> apiCalls;
 
+  @JsonProperty("totalErrorsAvailability")
+  private Integer totalErrorsAvailability;
+
+  @JsonProperty("totalErrorsTimeout")
+  private Integer totalErrorsTimeout;
+
+  public Integer totalErrorsAvailability() {
+    return totalErrorsAvailability;
+  }
+
+  public Integer totalErrorsTimeout() {
+    return totalErrorsTimeout;
+  }
+
   public Map<String, TimedAction> lastMinute() {
     return Collections.unmodifiableMap(lastMinute);
   }
