@@ -140,6 +140,7 @@ public class IamAwsProvider extends EnvironmentProvider {
           new HttpUrl.Builder()
               .scheme(url.scheme())
               .host(url.host())
+              .port(url.port())
               .addPathSegments("latest/api/token")
               .build();
     }
@@ -188,6 +189,7 @@ public class IamAwsProvider extends EnvironmentProvider {
           new HttpUrl.Builder()
               .scheme(url.scheme())
               .host(url.host())
+              .port(url.port())
               .addPathSegments("latest/meta-data/iam/security-credentials/")
               .build();
     }
