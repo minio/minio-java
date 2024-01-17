@@ -3839,8 +3839,8 @@ public class FunctionalTest {
               "server",
               "--address",
               ":9001",
-              "--config-dir",
-              ".cfg",
+              "--certs-dir",
+              ".cfg/certs",
               ".d{1...4}");
     } else {
       pb = new ProcessBuilder(binaryPath.getPath(), "server", ".d{1...4}");
