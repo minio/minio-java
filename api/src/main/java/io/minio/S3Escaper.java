@@ -28,24 +28,32 @@ public class S3Escaper {
       return "";
     }
 
-    return ESCAPER
-        .escape(str)
-        .replaceAll("\\!", "%21")
-        .replaceAll("\\$", "%24")
-        .replaceAll("\\&", "%26")
-        .replaceAll("\\'", "%27")
-        .replaceAll("\\(", "%28")
-        .replaceAll("\\)", "%29")
-        .replaceAll("\\*", "%2A")
-        .replaceAll("\\+", "%2B")
-        .replaceAll("\\,", "%2C")
-        .replaceAll("\\/", "%2F")
-        .replaceAll("\\:", "%3A")
-        .replaceAll("\\;", "%3B")
-        .replaceAll("\\=", "%3D")
-        .replaceAll("\\@", "%40")
-        .replaceAll("\\[", "%5B")
-        .replaceAll("\\]", "%5D");
+    str = ESCAPER.escape(str);
+    StringBuilder encoded = new StringBuilder(str.length() + Math.max(str.length() >> 3, 4));
+
+    for (char ch : str.toCharArray()) {
+      switch (ch) {
+        case '!': encoded.append("%21"); break;
+        case '$': encoded.append("%24"); break;
+        case '&': encoded.append("%26"); break;
+        case '\'': encoded.append("%27"); break;
+        case '(': encoded.append("%28"); break;
+        case ')': encoded.append("%29"); break;
+        case '*': encoded.append("%2A"); break;
+        case '+': encoded.append("%2B"); break;
+        case ',': encoded.append("%2C"); break;
+        case '/': encoded.append("%2F"); break;
+        case ':': encoded.append("%3A"); break;
+        case ';': encoded.append("%3B"); break;
+        case '=': encoded.append("%3D"); break;
+        case '@': encoded.append("%40"); break;
+        case '[': encoded.append("%5B"); break;
+        case ']': encoded.append("%5D"); break;
+        default: encoded.append(ch);
+      }
+    }
+
+    return encoded.toString();
   }
 
   /** Returns S3 encoded string of given path where multiple '/' are trimmed. */
