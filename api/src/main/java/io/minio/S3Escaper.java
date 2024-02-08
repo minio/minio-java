@@ -28,30 +28,62 @@ public class S3Escaper {
       return "";
     }
 
-    StringBuilder encoded = new StringBuilder();
+    StringBuilder builder = new StringBuilder();
     for (char ch : ESCAPER.escape(str).toCharArray()) {
       switch (ch) {
-        case '!': encoded.append("%21"); break;
-        case '$': encoded.append("%24"); break;
-        case '&': encoded.append("%26"); break;
-        case '\'': encoded.append("%27"); break;
-        case '(': encoded.append("%28"); break;
-        case ')': encoded.append("%29"); break;
-        case '*': encoded.append("%2A"); break;
-        case '+': encoded.append("%2B"); break;
-        case ',': encoded.append("%2C"); break;
-        case '/': encoded.append("%2F"); break;
-        case ':': encoded.append("%3A"); break;
-        case ';': encoded.append("%3B"); break;
-        case '=': encoded.append("%3D"); break;
-        case '@': encoded.append("%40"); break;
-        case '[': encoded.append("%5B"); break;
-        case ']': encoded.append("%5D"); break;
-        default: encoded.append(ch);
+        case '!':
+          builder.append("%21");
+          break;
+        case '$':
+          builder.append("%24");
+          break;
+        case '&':
+          builder.append("%26");
+          break;
+        case '\'':
+          builder.append("%27");
+          break;
+        case '(':
+          builder.append("%28");
+          break;
+        case ')':
+          builder.append("%29");
+          break;
+        case '*':
+          builder.append("%2A");
+          break;
+        case '+':
+          builder.append("%2B");
+          break;
+        case ',':
+          builder.append("%2C");
+          break;
+        case '/':
+          builder.append("%2F");
+          break;
+        case ':':
+          builder.append("%3A");
+          break;
+        case ';':
+          builder.append("%3B");
+          break;
+        case '=':
+          builder.append("%3D");
+          break;
+        case '@':
+          builder.append("%40");
+          break;
+        case '[':
+          builder.append("%5B");
+          break;
+        case ']':
+          builder.append("%5D");
+          break;
+        default:
+          builder.append(ch);
       }
     }
-
-    return encoded.toString();
+    return builder.toString();
   }
 
   /** Returns S3 encoded string of given path where multiple '/' are trimmed. */
