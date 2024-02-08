@@ -28,10 +28,8 @@ public class S3Escaper {
       return "";
     }
 
-    str = ESCAPER.escape(str);
-    StringBuilder encoded = new StringBuilder(str.length() + Math.max(str.length() >> 3, 4));
-
-    for (char ch : str.toCharArray()) {
+    StringBuilder encoded = new StringBuilder();
+    for (char ch : ESCAPER.escape(str).toCharArray()) {
       switch (ch) {
         case '!': encoded.append("%21"); break;
         case '$': encoded.append("%24"); break;
