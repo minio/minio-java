@@ -28,24 +28,62 @@ public class S3Escaper {
       return "";
     }
 
-    return ESCAPER
-        .escape(str)
-        .replaceAll("\\!", "%21")
-        .replaceAll("\\$", "%24")
-        .replaceAll("\\&", "%26")
-        .replaceAll("\\'", "%27")
-        .replaceAll("\\(", "%28")
-        .replaceAll("\\)", "%29")
-        .replaceAll("\\*", "%2A")
-        .replaceAll("\\+", "%2B")
-        .replaceAll("\\,", "%2C")
-        .replaceAll("\\/", "%2F")
-        .replaceAll("\\:", "%3A")
-        .replaceAll("\\;", "%3B")
-        .replaceAll("\\=", "%3D")
-        .replaceAll("\\@", "%40")
-        .replaceAll("\\[", "%5B")
-        .replaceAll("\\]", "%5D");
+    StringBuilder builder = new StringBuilder();
+    for (char ch : ESCAPER.escape(str).toCharArray()) {
+      switch (ch) {
+        case '!':
+          builder.append("%21");
+          break;
+        case '$':
+          builder.append("%24");
+          break;
+        case '&':
+          builder.append("%26");
+          break;
+        case '\'':
+          builder.append("%27");
+          break;
+        case '(':
+          builder.append("%28");
+          break;
+        case ')':
+          builder.append("%29");
+          break;
+        case '*':
+          builder.append("%2A");
+          break;
+        case '+':
+          builder.append("%2B");
+          break;
+        case ',':
+          builder.append("%2C");
+          break;
+        case '/':
+          builder.append("%2F");
+          break;
+        case ':':
+          builder.append("%3A");
+          break;
+        case ';':
+          builder.append("%3B");
+          break;
+        case '=':
+          builder.append("%3D");
+          break;
+        case '@':
+          builder.append("%40");
+          break;
+        case '[':
+          builder.append("%5B");
+          break;
+        case ']':
+          builder.append("%5D");
+          break;
+        default:
+          builder.append(ch);
+      }
+    }
+    return builder.toString();
   }
 
   /** Returns S3 encoded string of given path where multiple '/' are trimmed. */
