@@ -29,12 +29,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Usage {
   @JsonProperty("size")
-  private Integer size;
+  private Long size;
 
   @JsonProperty("error")
   private String error;
 
-  public Integer size() {
+  public Long size() {
     return size;
   }
 
