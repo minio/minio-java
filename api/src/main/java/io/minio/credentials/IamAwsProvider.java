@@ -45,11 +45,6 @@ import okhttp3.Response;
  * for Amazon EC2</a>.
  */
 public class IamAwsProvider extends EnvironmentProvider {
-
-  private static final int DEFAULT_PORT_HTTP = 80;
-  private static final int DEFAULT_PORT_HTTPS = 443;
-  private static final String SCHEME_HTTP = "http";
-  private static final String SCHEME_HTTPS = "https";
   // Custom endpoint to fetch IAM role credentials.
   private final HttpUrl customEndpoint;
   private final OkHttpClient httpClient;
@@ -141,9 +136,13 @@ public class IamAwsProvider extends EnvironmentProvider {
     if (url == null) {
       url = HttpUrl.parse("http://169.254.169.254/latest/api/token");
     } else {
-      HttpUrl.Builder urlBuilder = new HttpUrl.Builder().scheme(url.scheme()).host(url.host());
-      setPortIfRequired(urlBuilder, url);
-      url = urlBuilder.addPathSegments("latest/api/token").build();
+      url =
+          new HttpUrl.Builder()
+              .scheme(url.scheme())
+              .host(url.host())
+              .port(url.port())
+              .addPathSegments("latest/api/token")
+              .build();
     }
     String token = "";
     Request request =
@@ -158,21 +157,6 @@ public class IamAwsProvider extends EnvironmentProvider {
       token = "";
     }
     return token;
-  }
-
-  private void setPortIfRequired(HttpUrl.Builder builder, HttpUrl sourceUrl) {
-    if (shouldAddPortToUrl(sourceUrl)) {
-      builder.port(sourceUrl.port());
-    }
-  }
-
-  private boolean shouldAddPortToUrl(HttpUrl sourceUrl) {
-    String scheme = sourceUrl.scheme();
-    int port = sourceUrl.port();
-    boolean isDefaultPortForProtocolUsed =
-        (SCHEME_HTTP.equals(scheme) && port == DEFAULT_PORT_HTTP)
-            || (SCHEME_HTTPS.equals(scheme) && port == DEFAULT_PORT_HTTPS);
-    return !isDefaultPortForProtocolUsed;
   }
 
   private String getIamRoleName(HttpUrl url, String token) {
@@ -201,9 +185,13 @@ public class IamAwsProvider extends EnvironmentProvider {
     if (url == null) {
       url = HttpUrl.parse("http://169.254.169.254/latest/meta-data/iam/security-credentials/");
     } else {
-      HttpUrl.Builder urlBuilder = new HttpUrl.Builder().scheme(url.scheme()).host(url.host());
-      setPortIfRequired(urlBuilder, url);
-      url = urlBuilder.addPathSegments("latest/meta-data/iam/security-credentials/").build();
+      url =
+          new HttpUrl.Builder()
+              .scheme(url.scheme())
+              .host(url.host())
+              .port(url.port())
+              .addPathSegments("latest/meta-data/iam/security-credentials/")
+              .build();
     }
 
     String roleName = getIamRoleName(url, token);
