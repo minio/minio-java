@@ -57,6 +57,9 @@ public abstract class Item {
   @Element(name = "UserMetadata", required = false)
   private Metadata userMetadata;
 
+  @Element(name = "UserTags", required = false)
+  private String userTags;
+
   private boolean isDir = false;
   private String encodingType = null;
 
@@ -109,6 +112,10 @@ public abstract class Item {
   /** Returns user metadata. This is MinIO specific extension to ListObjectsV2. */
   public Map<String, String> userMetadata() {
     return (userMetadata == null) ? null : userMetadata.get();
+  }
+
+  public String userTags() {
+    return userTags;
   }
 
   /** Returns whether this version ID is latest. */
