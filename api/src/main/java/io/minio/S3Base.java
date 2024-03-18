@@ -84,6 +84,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -136,6 +137,7 @@ public abstract class S3Base {
   protected String region;
   protected Provider provider;
   protected OkHttpClient httpClient;
+  private final ExecutorService executorService;
 
   protected S3Base(
       HttpUrl baseUrl,
@@ -145,7 +147,8 @@ public abstract class S3Base {
       boolean useVirtualStyle,
       String region,
       Provider provider,
-      OkHttpClient httpClient) {
+      OkHttpClient httpClient,
+      ExecutorService executorService) {
     this.baseUrl = baseUrl;
     this.awsS3Prefix = awsS3Prefix;
     this.awsDomainSuffix = awsDomainSuffix;
@@ -154,6 +157,7 @@ public abstract class S3Base {
     this.region = region;
     this.provider = provider;
     this.httpClient = httpClient;
+    this.executorService = executorService;
   }
 
   /** @deprecated This method is no longer supported. */
@@ -167,7 +171,8 @@ public abstract class S3Base {
       boolean isDualStackHost,
       boolean useVirtualStyle,
       Provider provider,
-      OkHttpClient httpClient) {
+      OkHttpClient httpClient,
+      ExecutorService executorService) {
     this.baseUrl = baseUrl;
     if (isAwsHost) this.awsS3Prefix = "s3.";
     if (isFipsHost) this.awsS3Prefix = "s3-fips.";
@@ -182,6 +187,7 @@ public abstract class S3Base {
     this.region = region;
     this.provider = provider;
     this.httpClient = httpClient;
+    this.executorService = executorService;
   }
 
   protected S3Base(S3Base client) {
@@ -193,6 +199,7 @@ public abstract class S3Base {
     this.region = client.region;
     this.provider = client.provider;
     this.httpClient = client.httpClient;
+    this.executorService = client.executorService;
   }
 
   /** Check whether argument is valid or not. */
@@ -1135,7 +1142,8 @@ public abstract class S3Base {
     long[] objectSize = {0};
     int index = 0;
 
-    CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> 0);
+    CompletableFuture<Integer> completableFuture =
+        CompletableFuture.supplyAsync(() -> 0, executorService);
     for (ComposeSource src : sources) {
       index++;
       final int i = index;
@@ -2854,7 +2862,8 @@ public abstract class S3Base {
             }
           }
           return response;
-        });
+        },
+        executorService);
   }
 
   /**
@@ -2900,7 +2909,8 @@ public abstract class S3Base {
               } catch (NoSuchAlgorithmException | IOException e) {
                 throw new CompletionException(e);
               }
-            })
+            },
+            executorService)
         .thenCompose(
             partSource -> {
               try {
