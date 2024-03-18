@@ -76,6 +76,8 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Matcher;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -140,7 +142,8 @@ public class MinioAsyncClient extends S3Base {
       String region,
       Provider provider,
       OkHttpClient httpClient,
-      boolean closeHttpClient) {
+      boolean closeHttpClient,
+      ExecutorService executorService) {
     super(
         baseUrl,
         awsS3Prefix,
@@ -150,7 +153,8 @@ public class MinioAsyncClient extends S3Base {
         region,
         provider,
         httpClient,
-        closeHttpClient);
+        closeHttpClient,
+        executorService);
   }
 
   protected MinioAsyncClient(MinioAsyncClient client) {
@@ -453,7 +457,7 @@ public class MinioAsyncClient extends S3Base {
     args.validateSse(this.baseUrl);
 
     return CompletableFuture.supplyAsync(
-            () -> args.source().offset() != null && args.source().length() != null)
+            () -> args.source().offset() != null && args.source().length() != null, executorService)
         .thenCompose(
             condition -> {
               if (condition) {
@@ -667,7 +671,7 @@ public class MinioAsyncClient extends S3Base {
                             Multimap<String, String> headers = newMultimap(args.extraHeaders());
                             headers.putAll(args.genHeaders());
                             return headers;
-                          })
+                          }, executorService)
                       .thenCompose(
                           headers -> {
                             try {
@@ -705,7 +709,7 @@ public class MinioAsyncClient extends S3Base {
                                 CompletableFuture.supplyAsync(
                                     () -> {
                                       return new Part[partCount[0]];
-                                    });
+                                    }, executorService);
                             for (ComposeSource src : sources) {
                               long size = 0;
                               try {
@@ -801,8 +805,8 @@ public class MinioAsyncClient extends S3Base {
                                             throw new CompletionException(e);
                                           }
                                         });
-                                offset += length;
-                                size -= length;
+                                offset = startBytes;
+                                size -= (endBytes - startBytes);
                               }
                             }
 
@@ -3155,7 +3159,7 @@ public class MinioAsyncClient extends S3Base {
                 }
               }
               return baos;
-            })
+            }, executorService)
         .thenCompose(
             baos -> {
               Multimap<String, String> headers = newMultimap(args.extraHeaders());
@@ -3223,6 +3227,7 @@ public class MinioAsyncClient extends S3Base {
     private String region;
     private Provider provider;
     private OkHttpClient httpClient;
+    private ExecutorService executorService = ForkJoinPool.commonPool();
 
     private void setAwsInfo(String host, boolean https) {
       this.awsS3Prefix = null;
@@ -3329,6 +3334,11 @@ public class MinioAsyncClient extends S3Base {
       return this;
     }
 
+    public Builder executorService(ExecutorService executorService) {
+      this.executorService = executorService;
+      return this;
+    }
+
     public MinioAsyncClient build() {
       HttpUtils.validateNotNull(this.baseUrl, "endpoint");
 
@@ -3357,7 +3367,8 @@ public class MinioAsyncClient extends S3Base {
           region,
           provider,
           httpClient,
-          closeHttpClient);
+          closeHttpClient,
+          executorService());
     }
   }
 }
