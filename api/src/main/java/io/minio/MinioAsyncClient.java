@@ -76,6 +76,8 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Matcher;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -139,7 +141,8 @@ public class MinioAsyncClient extends S3Base {
       boolean useVirtualStyle,
       String region,
       Provider provider,
-      OkHttpClient httpClient) {
+      OkHttpClient httpClient,
+      ExecutorService executorService) {
     super(
         baseUrl,
         awsS3Prefix,
@@ -148,7 +151,8 @@ public class MinioAsyncClient extends S3Base {
         useVirtualStyle,
         region,
         provider,
-        httpClient);
+        httpClient,
+        executorService);
   }
 
   protected MinioAsyncClient(MinioAsyncClient client) {
@@ -3221,6 +3225,7 @@ public class MinioAsyncClient extends S3Base {
     private String region;
     private Provider provider;
     private OkHttpClient httpClient;
+    private ExecutorService executorService = ForkJoinPool.commonPool();
 
     private void setAwsInfo(String host, boolean https) {
       this.awsS3Prefix = null;
@@ -3327,6 +3332,11 @@ public class MinioAsyncClient extends S3Base {
       return this;
     }
 
+    public Builder executorService(ExecutorService executorService) {
+      this.executorService = executorService;
+      return this;
+    }
+
     public MinioAsyncClient build() {
       HttpUtils.validateNotNull(this.baseUrl, "endpoint");
 
@@ -3352,7 +3362,8 @@ public class MinioAsyncClient extends S3Base {
           useVirtualStyle,
           region,
           provider,
-          httpClient);
+          httpClient,
+          executorService);
     }
   }
 }
