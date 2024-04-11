@@ -95,7 +95,7 @@ import okhttp3.OkHttpClient;
  *         .build();
  * }</pre>
  */
-public class MinioClient {
+public class MinioClient implements AutoCloseable {
   private MinioAsyncClient asyncClient = null;
 
   private MinioClient(MinioAsyncClient asyncClient) {
@@ -2448,6 +2448,13 @@ public class MinioClient {
   /** Sets AWS S3 domain prefix. */
   public void setAwsS3Prefix(String awsS3Prefix) {
     asyncClient.setAwsS3Prefix(awsS3Prefix);
+  }
+
+  @Override
+  public void close() throws Exception {
+    if (asyncClient != null) {
+      asyncClient.close();
+    }
   }
 
   public static Builder builder() {
