@@ -718,6 +718,13 @@ public abstract class S3Base {
                       message = "The requested range cannot be satisfied";
                       break;
                     default:
+                      System.out.println(
+                          "response.request().method(): " + response.request().method());
+                      System.out.println("response.request().url(): " + response.request().url());
+                      System.out.println("response.code(): " + response.code());
+                      System.out.println("response.headers(): " + response.headers());
+                      System.out.println("response.message(): " + response.message());
+                      System.out.println("response.toString(): " + response.toString());
                       completableFuture.completeExceptionally(
                           new ServerException(
                               "server failed with HTTP status code " + response.code(),
