@@ -99,7 +99,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /** Core S3 API client. */
-public abstract class S3Base {
+public abstract class S3Base implements AutoCloseable {
   static {
     try {
       RequestBody.create(new byte[] {}, null);
@@ -136,7 +136,10 @@ public abstract class S3Base {
   protected String region;
   protected Provider provider;
   protected OkHttpClient httpClient;
+  protected boolean closeHttpClient;
 
+  /** @deprecated This method is no longer supported. */
+  @Deprecated
   protected S3Base(
       HttpUrl baseUrl,
       String awsS3Prefix,
@@ -146,6 +149,28 @@ public abstract class S3Base {
       String region,
       Provider provider,
       OkHttpClient httpClient) {
+    this(
+        baseUrl,
+        awsS3Prefix,
+        awsDomainSuffix,
+        awsDualstack,
+        useVirtualStyle,
+        region,
+        provider,
+        httpClient,
+        false);
+  }
+
+  protected S3Base(
+      HttpUrl baseUrl,
+      String awsS3Prefix,
+      String awsDomainSuffix,
+      boolean awsDualstack,
+      boolean useVirtualStyle,
+      String region,
+      Provider provider,
+      OkHttpClient httpClient,
+      boolean closeHttpClient) {
     this.baseUrl = baseUrl;
     this.awsS3Prefix = awsS3Prefix;
     this.awsDomainSuffix = awsDomainSuffix;
@@ -154,6 +179,7 @@ public abstract class S3Base {
     this.region = region;
     this.provider = provider;
     this.httpClient = httpClient;
+    this.closeHttpClient = closeHttpClient;
   }
 
   /** @deprecated This method is no longer supported. */
@@ -182,6 +208,7 @@ public abstract class S3Base {
     this.region = region;
     this.provider = provider;
     this.httpClient = httpClient;
+    this.closeHttpClient = false;
   }
 
   protected S3Base(S3Base client) {
@@ -193,6 +220,7 @@ public abstract class S3Base {
     this.region = client.region;
     this.provider = client.provider;
     this.httpClient = client.httpClient;
+    this.closeHttpClient = client.closeHttpClient;
   }
 
   /** Check whether argument is valid or not. */
@@ -3756,5 +3784,13 @@ public abstract class S3Base {
                 response.close();
               }
             });
+  }
+
+  @Override
+  public void close() throws Exception {
+    if (closeHttpClient) {
+      httpClient.dispatcher().executorService().shutdown();
+      httpClient.connectionPool().evictAll();
+    }
   }
 }
