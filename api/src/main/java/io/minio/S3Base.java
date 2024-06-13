@@ -2783,7 +2783,7 @@ public abstract class S3Base implements AutoCloseable {
       PutObjectBaseArgs args, String uploadId, PartReader partReader, PartSource firstPartSource)
       throws InterruptedException, ExecutionException, InsufficientDataException, InternalException,
           InvalidKeyException, IOException, NoSuchAlgorithmException, XmlParserException {
-    Part[] parts = new Part[ObjectWriteArgs.MAX_MULTIPART_COUNT];
+    Part[] parts = new Part[Math.min(partReader.partCount(), ObjectWriteArgs.MAX_MULTIPART_COUNT)];
     int partNumber = 0;
     PartSource partSource = firstPartSource;
     while (true) {
