@@ -769,15 +769,15 @@ public class MinioAsyncClient extends S3Base {
                               while (size > 0) {
                                 partNumber++;
 
-                                long startBytes = offset;
-                                long endBytes = startBytes + ObjectWriteArgs.MAX_PART_SIZE;
-                                if (size < ObjectWriteArgs.MAX_PART_SIZE)
-                                  endBytes = startBytes + size;
+                                long length = size;
+                                if (length > ObjectWriteArgs.MAX_PART_SIZE) {
+                                  length = ObjectWriteArgs.MAX_PART_SIZE;
+                                }
+                                long endBytes = offset + length - 1;
 
                                 Multimap<String, String> headersCopy = newMultimap(headers);
                                 headersCopy.put(
-                                    "x-amz-copy-source-range",
-                                    "bytes=" + startBytes + "-" + endBytes);
+                                    "x-amz-copy-source-range", "bytes=" + offset + "-" + endBytes);
 
                                 final int partNum = partNumber;
                                 future =
@@ -801,8 +801,8 @@ public class MinioAsyncClient extends S3Base {
                                             throw new CompletionException(e);
                                           }
                                         });
-                                offset = startBytes;
-                                size -= (endBytes - startBytes);
+                                offset += length;
+                                size -= length;
                               }
                             }
 
