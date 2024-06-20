@@ -38,6 +38,12 @@ public enum EventType {
   OBJECT_REMOVED_ANY("s3:ObjectRemoved:*"),
   OBJECT_REMOVED_DELETE("s3:ObjectRemoved:Delete"),
   OBJECT_REMOVED_DELETED_MARKER_CREATED("s3:ObjectRemoved:DeleteMarkerCreated"),
+  OBJECT_REPLICATION_ANY("s3:Replication:*"),
+  OBJECT_REPLICATION_FAILED("s3:Replication:OperationFailedReplication"),
+  OBJECT_REPLICATION_COMPLETE("s3:Replication:OperationCompletedReplication"),
+  OBJECT_REPLICATION_NOT_TRACKED("s3:Replication:OperationNotTracked"),
+  OBJECT_REPLICATION_MISSED_THRESHOLD("s3:Replication:OperationMissedThreshold"),
+  OBJECT_REPLICATION_REPLICATED_AFTER_THRESHOLD("s3:Replication:OperationReplicatedAfterThreshold"),
   REDUCED_REDUNDANCY_LOST_OBJECT("s3:ReducedRedundancyLostObject"),
   BUCKET_CREATED("s3:BucketCreated"),
   BUCKET_REMOVED("s3:BucketRemoved");
