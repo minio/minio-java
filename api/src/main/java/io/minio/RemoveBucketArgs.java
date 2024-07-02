@@ -19,6 +19,12 @@ package io.minio;
 /** Argument class of {@link MinioAsyncClient#removeBucket} and {@link MinioClient#removeBucket}. */
 public class RemoveBucketArgs extends BucketArgs {
 
+  protected boolean isForce;
+
+  public boolean isForce() {
+    return isForce;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
