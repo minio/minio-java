@@ -1895,8 +1895,7 @@ public class MinioAsyncClient extends S3Base {
           NoSuchAlgorithmException, XmlParserException {
     checkArgs(args);
     if (args.isForce) {
-      return executeDeleteAsync(args, newMultimap("x-minio-force-delete", "true"), null)
-          .thenAccept(response -> regionCache.remove(args.bucket()));
+      args.extraHeaders = merge(args.extraHeaders, newMultimap("x-minio-force-delete", "true"));
     }
     return executeDeleteAsync(args, null, null)
         .thenAccept(response -> regionCache.remove(args.bucket()));
