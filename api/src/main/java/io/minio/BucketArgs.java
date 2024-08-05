@@ -39,9 +39,13 @@ public abstract class BucketArgs extends BaseArgs {
       extends BaseArgs.Builder<B, A> {
     private static final Pattern BUCKET_NAME_REGEX =
         Pattern.compile("^[a-z0-9][a-z0-9\\.\\-]{1,61}[a-z0-9]$");
+    private boolean validateBucket = true;
 
     protected void validateBucketName(String name) {
       validateNotNull(name, "bucket name");
+      if (!validateBucket) {
+        return;
+      }
 
       if (!BUCKET_NAME_REGEX.matcher(name).find()) {
         throw new IllegalArgumentException(
@@ -77,6 +81,12 @@ public abstract class BucketArgs extends BaseArgs {
     public B bucket(String name) {
       validateBucketName(name);
       operations.add(args -> args.bucketName = name);
+      return (B) this;
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
+    public B bucketValidation(boolean validateBucket) {
+      this.validateBucket = validateBucket;
       return (B) this;
     }
 
