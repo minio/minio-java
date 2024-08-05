@@ -43,6 +43,9 @@ public abstract class ObjectArgs extends BucketArgs {
       extends BucketArgs.Builder<B, A> {
     protected void validateObjectName(String name) {
       validateNotEmptyString(name, "object name");
+      if (skipValidation) {
+        return;
+      }
       for (String token : name.split("/")) {
         if (token.equals(".") || token.equals("..")) {
           throw new IllegalArgumentException(

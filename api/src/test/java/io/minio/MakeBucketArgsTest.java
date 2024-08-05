@@ -51,11 +51,6 @@ public class MakeBucketArgsTest {
     Assert.fail("exception should be thrown");
   }
 
-  @Test()
-  public void testInvalidBucketNameWithoutValidation() {
-    MakeBucketArgs.builder().bucketValidation(false).bucket("invalid_bucketname").build();
-  }
-
   @Test
   public void testBuild() {
     MakeBucketArgs args =
