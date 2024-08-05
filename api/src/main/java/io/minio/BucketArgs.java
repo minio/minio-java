@@ -39,9 +39,13 @@ public abstract class BucketArgs extends BaseArgs {
       extends BaseArgs.Builder<B, A> {
     private static final Pattern BUCKET_NAME_REGEX =
         Pattern.compile("^[a-z0-9][a-z0-9\\.\\-]{1,61}[a-z0-9]$");
+    protected boolean skipValidation = false;
 
     protected void validateBucketName(String name) {
       validateNotNull(name, "bucket name");
+      if (skipValidation) {
+        return;
+      }
 
       if (!BUCKET_NAME_REGEX.matcher(name).find()) {
         throw new IllegalArgumentException(
@@ -63,7 +67,7 @@ public abstract class BucketArgs extends BaseArgs {
     }
 
     private void validateRegion(String region) {
-      if (region != null && !HttpUtils.REGION_REGEX.matcher(region).find()) {
+      if (!skipValidation && region != null && !HttpUtils.REGION_REGEX.matcher(region).find()) {
         throw new IllegalArgumentException("invalid region " + region);
       }
     }
@@ -77,6 +81,12 @@ public abstract class BucketArgs extends BaseArgs {
     public B bucket(String name) {
       validateBucketName(name);
       operations.add(args -> args.bucketName = name);
+      return (B) this;
+    }
+
+    @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
+    public B skipValidation(boolean skipValidation) {
+      this.skipValidation = skipValidation;
       return (B) this;
     }
 
