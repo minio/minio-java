@@ -134,12 +134,14 @@ public class Signer {
         // https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
         // * Header having multiple values should be converted to comma separated values.
         // * Multi-spaced value of header should be trimmed to single spaced value.
+        // * Trim leading/trailing spaces in header value (As OkHttp trims leading/trailing spaces
+        // automatically, this is added for completion).
         this.canonicalHeaders.put(
             signedHeader,
             headers.values(name).stream()
                 .map(
                     value -> {
-                      return value.replaceAll("( +)", " ");
+                      return value.replaceAll("( +)", " ").trim();
                     })
                 .collect(Collectors.joining(",")));
       }
