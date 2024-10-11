@@ -27,6 +27,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.crypto.KeyGenerator;
+import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okio.Buffer;
@@ -360,6 +361,25 @@ public class MinioClientTest {
                 .build());
     Assert.assertEquals(
         "https://s3-accelerate.dualstack.amazonaws.com.cn/mybucket/myobject", url.split("\\?")[0]);
+  }
+
+  @Test
+  public void testCustomHttpClientClose() throws Exception {
+    OkHttpClient httpClient = new OkHttpClient().newBuilder().build();
+    Assert.assertFalse(httpClient.dispatcher().executorService().isShutdown());
+
+    MinioClient clientThatDoesntCloseHttpClient =
+        MinioClient.builder().endpoint("https://s3.amazonaws.com").httpClient(httpClient).build();
+    clientThatDoesntCloseHttpClient.close();
+    Assert.assertFalse(httpClient.dispatcher().executorService().isShutdown());
+
+    MinioClient clientThatClosesHttpClient =
+        MinioClient.builder()
+            .endpoint("https://s3.amazonaws.com")
+            .httpClient(httpClient, true)
+            .build();
+    clientThatClosesHttpClient.close();
+    Assert.assertTrue(httpClient.dispatcher().executorService().isShutdown());
   }
 
   @Test(expected = IllegalArgumentException.class)

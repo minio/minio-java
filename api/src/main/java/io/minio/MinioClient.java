@@ -2509,6 +2509,11 @@ public class MinioClient implements AutoCloseable {
       return this;
     }
 
+    public Builder httpClient(OkHttpClient httpClient, boolean close) {
+      asyncClientBuilder.httpClient(httpClient, close);
+      return this;
+    }
+
     public MinioClient build() {
       MinioAsyncClient asyncClient = asyncClientBuilder.build();
       return new MinioClient(asyncClient);
