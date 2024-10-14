@@ -3223,6 +3223,7 @@ public class MinioAsyncClient extends S3Base {
     private String region;
     private Provider provider;
     private OkHttpClient httpClient;
+    private boolean closeHttpClient;
 
     private void setAwsInfo(String host, boolean https) {
       this.awsS3Prefix = null;
@@ -3329,6 +3330,13 @@ public class MinioAsyncClient extends S3Base {
       return this;
     }
 
+    public Builder httpClient(OkHttpClient httpClient, boolean close) {
+      HttpUtils.validateNotNull(httpClient, "http client");
+      this.httpClient = httpClient;
+      this.closeHttpClient = close;
+      return this;
+    }
+
     public MinioAsyncClient build() {
       HttpUtils.validateNotNull(this.baseUrl, "endpoint");
 
@@ -3340,12 +3348,11 @@ public class MinioAsyncClient extends S3Base {
             "Region missing in Amazon S3 China endpoint " + this.baseUrl);
       }
 
-      boolean closeHttpClient = false;
       if (this.httpClient == null) {
+        this.closeHttpClient = true;
         this.httpClient =
             HttpUtils.newDefaultHttpClient(
                 DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT);
-        closeHttpClient = true;
       }
 
       return new MinioAsyncClient(
