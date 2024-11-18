@@ -17,32 +17,57 @@
 
 package io.minio.admin;
 
-import com.google.common.base.Preconditions;
-import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
+import org.bouncycastle.crypto.modes.AEADCipher;
+import org.bouncycastle.crypto.modes.ChaCha20Poly1305;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
-import org.bouncycastle.crypto.modes.GCMModeCipher;
 import org.bouncycastle.crypto.params.AEADParameters;
 import org.bouncycastle.crypto.params.Argon2Parameters;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 /**
- * MinIO <a href="https://github.com/minio/madmin-go/blob/main/encrypt.go#L38">encrypts/decrypts</a>
- * any payloads containing access or secret keys. The encryption scheme used is from a library
- * called <a href="https://github.com/secure-io/sio-go">sio-go</a>. The library encrypts/decrypts
- * data in chunks, which allows it handle large amounts of data, without sacrificing security. In
- * addition, MinIO itself formats the data into specific format, to allow encryption/decryption
- * between client and server.
+ * Cryptography to read and write encrypted MinIO Admin payload.
+ *
+ * <pre>
+ * Encrypted Message Format:
+ *
+ * |    41 bytes HEADER      |
+ * |-------------------------|
+ * | 16 KiB encrypted chunk  |
+ * |     + 16 bytes TAG      |
+ * |-------------------------|
+ * |          ....           |
+ * |-------------------------|
+ * | ~16 KiB encrypted chunk |
+ * |     + 16 bytes TAG      |
+ * |-------------------------|
+ *
+ * HEADER:
+ *
+ * | 32 bytes salt  |
+ * |----------------|
+ * | 1 byte AEAD ID |
+ * |----------------|
+ * | 8 bytes NONCE  |
+ * |----------------|
+ * </pre>
  */
 public class Crypto {
-  private static final byte ARGON2ID_AES_GCM = 0;
-  private static final int NONCE_LENGTH = 8;
+  private static final int TAG_LENGTH = 16;
+  private static final int CHUNK_SIZE = 16 * 1024;
+  private static final int MAX_CHUNK_SIZE = CHUNK_SIZE + TAG_LENGTH;
   private static final int SALT_LENGTH = 32;
-  private static final int BUFFER_SIZE = 16384; // 16 KiB
+  private static final int NONCE_LENGTH = 8;
   private static final SecureRandom RANDOM = new SecureRandom();
 
   private static byte[] random(int length) {
@@ -51,143 +76,247 @@ public class Crypto {
     return data;
   }
 
-  /**
-   * Generates a 256-bit Argon2ID key
-   *
-   * @param password Password to derive unique key from
-   * @param salt Salt to be used for hash generation
-   * @return 256-bit key that can be used for encryption/decryption
-   */
-  private static byte[] generateKey(byte[] password, byte[] salt) {
-    byte[] key = new byte[32];
+  private static byte[] appendBytes(byte[]... args) {
+    if (args.length == 1) {
+      return args[0];
+    }
+
+    int length = 0;
+    for (byte[] arg : args) {
+      length += arg.length;
+    }
+
+    ByteBuffer buf = ByteBuffer.allocate(length);
+    for (byte[] arg : args) {
+      buf.put(arg);
+    }
+    return buf.array();
+  }
+
+  private static int[] readFully(InputStream inputStream, byte[] buf, boolean raiseEof)
+      throws EOFException, IOException {
+    int totalBytesRead = 0;
+    int eof = 0;
+    int offset = 0;
+
+    while (totalBytesRead < buf.length) {
+      int bytesToRead = buf.length - totalBytesRead;
+      int bytesRead = inputStream.read(buf, offset, bytesToRead);
+      if (bytesRead < 0) {
+        if (raiseEof) throw new EOFException("EOF occurred");
+        eof = 1;
+        break;
+      }
+      totalBytesRead += bytesRead;
+      offset += bytesRead;
+    }
+
+    return new int[] {totalBytesRead, eof};
+  }
+
+  private static AEADCipher getEncryptDecryptCipher(
+      boolean encryptFlag, int aeadId, byte[] key, byte[] paddedNonce) {
+    AEADCipher cipher = null;
+    switch (aeadId) {
+      case 0:
+        cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
+        break;
+      case 1:
+        cipher = new ChaCha20Poly1305();
+        break;
+      default:
+        throw new IllegalArgumentException("unknown AEAD ID " + aeadId);
+    }
+    cipher.init(encryptFlag, new AEADParameters(new KeyParameter(key), 128, paddedNonce));
+    return cipher;
+  }
+
+  private static AEADCipher getEncryptCipher(int aeadId, byte[] key, byte[] paddedNonce) {
+    return getEncryptDecryptCipher(true, aeadId, key, paddedNonce);
+  }
+
+  private static AEADCipher getDecryptCipher(int aeadId, byte[] key, byte[] paddedNonce) {
+    return getEncryptDecryptCipher(false, aeadId, key, paddedNonce);
+  }
+
+  private static byte[] generateKey(byte[] secret, byte[] salt) {
     Argon2BytesGenerator generator = new Argon2BytesGenerator();
-    Argon2Parameters params =
+    generator.init(
         new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
             .withVersion(Argon2Parameters.ARGON2_VERSION_13)
             .withSalt(salt)
-            .withMemoryAsKB(65536) // 64 KiB
+            .withMemoryAsKB(65536)
             .withParallelism(4)
             .withIterations(1)
-            .build();
-    generator.init(params);
-    generator.generateBytes(password, key);
+            .build());
+
+    byte[] key = new byte[32];
+    generator.generateBytes(secret, key);
     return key;
   }
 
-  /**
-   * Generates the additional data which is used per chunk.
-   *
-   * @param key Encryption key
-   * @param paddedNonce 12-byte NONCE
-   * @return Additional data (128-bit) that can be used along side encryption/decryption
-   * @throws InvalidCipherTextException
-   */
-  private static byte[] generateAdditionalData(byte[] key, byte[] paddedNonce)
+  private static byte[] generateEncryptDecryptAdditionalData(
+      boolean encryptFlag, int aeadId, byte[] key, byte[] paddedNonce)
       throws InvalidCipherTextException {
-    GCMModeCipher cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
-    cipher.init(true, new AEADParameters(new KeyParameter(key), 128, paddedNonce));
+    AEADCipher cipher = getEncryptCipher(aeadId, key, paddedNonce);
     int outputLength = cipher.getMac().length;
     byte[] additionalData = new byte[outputLength];
     cipher.doFinal(additionalData, 0);
-    byte[] finalAdditionalData = new byte[outputLength + 1];
-    System.arraycopy(additionalData, 0, finalAdditionalData, 1, additionalData.length);
-    finalAdditionalData[0] = (byte) 0x80;
-    return finalAdditionalData;
+    return appendBytes(new byte[] {0}, additionalData);
   }
 
-  /**
-   * Encrypts data in {@link Crypto#BUFFER_SIZE} chunks using AES-GCM using a 256-bit Argon2ID key.
-   * The format returned is compatible with MinIO servers and clients. Header format: salt [string
-   * 32] | aead id [byte 1] | nonce [byte 8] | encrypted_data [byte len(encrypted_data)] To see the
-   * original implementation in Go, check out the <a
-   * href="https://github.com/minio/madmin-go/blob/main/encrypt.go#L38">madmin-go library</a>.
-   *
-   * @param password Plaintext password
-   * @param data The data to encrypt
-   * @return Encrypted data
-   * @throws UnsupportedEncodingException
-   * @throws InvalidCipherTextException
-   */
-  public static byte[] encrypt(String password, byte[] data)
-      throws UnsupportedEncodingException, InvalidCipherTextException {
-    Preconditions.checkArgument(
-        data.length <= BUFFER_SIZE,
-        "Cannot encrypt data of length %d that is greater than block size %d, currently only n = 1"
-            + " blocks (chunks) are supported.",
-        data.length,
-        BUFFER_SIZE);
+  private static byte[] generateEncryptAdditionalData(int aeadId, byte[] key, byte[] paddedNonce)
+      throws InvalidCipherTextException {
+    return generateEncryptDecryptAdditionalData(true, aeadId, key, paddedNonce);
+  }
 
+  private static byte[] generateDecryptAdditionalData(int aeadId, byte[] key, byte[] paddedNonce)
+      throws InvalidCipherTextException {
+    return generateEncryptDecryptAdditionalData(false, aeadId, key, paddedNonce);
+  }
+
+  private static byte[] markAsLast(byte[] additionalData) {
+    additionalData[0] = (byte) 0x80;
+    return additionalData;
+  }
+
+  private static byte[] updateNonceId(byte[] nonce, int idx) {
+    byte[] idxLittleEndian = new byte[4];
+    idxLittleEndian[0] = (byte) (idx & 0xFF);
+    idxLittleEndian[1] = (byte) ((idx >> 8) & 0xFF);
+    idxLittleEndian[2] = (byte) ((idx >> 16) & 0xFF);
+    idxLittleEndian[3] = (byte) ((idx >> 24) & 0xFF);
+    return appendBytes(nonce, idxLittleEndian);
+  }
+
+  /** Encrypt data payload. */
+  public static byte[] encrypt(byte[] payload, String password) throws InvalidCipherTextException {
     byte[] nonce = random(NONCE_LENGTH);
-
-    /**
-     * NONCE is expected to be 12-bytes for AES-GCM. We add 4 empty bytes, which we increment in
-     * Little Endian format per chunk
-     */
-    byte[] paddedNonce = new byte[NONCE_LENGTH + 4];
-    System.arraycopy(nonce, 0, paddedNonce, 0, nonce.length);
     byte[] salt = random(SALT_LENGTH);
 
-    byte[] key = generateKey(password.getBytes("utf-8"), salt);
-    byte[] additionalData = generateAdditionalData(key, paddedNonce);
+    byte[] key = generateKey(password.getBytes(StandardCharsets.UTF_8), salt);
+    byte[] aeadId = new byte[] {0x0};
+    byte[] paddedNonce = appendBytes(nonce, new byte[] {0, 0, 0, 0});
+    byte[] additionalData = generateEncryptAdditionalData(aeadId[0], key, paddedNonce);
 
-    /** Increment IV (nonce) by 1 as we used it for generating a tag for additional data. */
-    paddedNonce[8] = 1;
+    byte[] result = appendBytes(salt, aeadId, nonce);
 
-    GCMModeCipher cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
-    cipher.init(true, new AEADParameters(new KeyParameter(key), 128, paddedNonce, additionalData));
-    int outputLength = cipher.getOutputSize(data.length);
-    byte[] encryptedData = new byte[outputLength];
-    int outputOffset = cipher.processBytes(data, 0, data.length, encryptedData, 0);
-    cipher.doFinal(encryptedData, outputOffset);
-    ByteBuffer payload = ByteBuffer.allocate(1 + salt.length + nonce.length + outputLength);
-    payload.put(salt);
-    payload.put(ARGON2ID_AES_GCM);
-    payload.put(nonce);
-    payload.put(encryptedData);
-    return payload.array();
+    int from = 0;
+    boolean done = false;
+    for (int nonceId = 1; !done; nonceId++) {
+      int to = from + CHUNK_SIZE;
+      if (to > payload.length) {
+        additionalData = markAsLast(additionalData);
+        to = payload.length;
+        done = true;
+      }
+      byte[] chunk = Arrays.copyOfRange(payload, from, to);
+      paddedNonce = updateNonceId(nonce, nonceId);
+
+      AEADCipher cipher = getEncryptCipher(aeadId[0], key, paddedNonce);
+      cipher.processAADBytes(additionalData, 0, additionalData.length);
+
+      int outputLength = cipher.getOutputSize(chunk.length);
+      byte[] encryptedData = new byte[outputLength];
+      int outputOffset = cipher.processBytes(chunk, 0, chunk.length, encryptedData, 0);
+      cipher.doFinal(encryptedData, outputOffset);
+
+      result = appendBytes(result, encryptedData);
+
+      from = to;
+    }
+
+    return result;
   }
 
-  /**
-   * Decrypts data in {@link Crypto#BUFFER_SIZE} chunks using AES-GCM using a 256-bit Argon2ID key.
-   *
-   * @param password Plaintext password
-   * @param payload Data to decrypt, including headers
-   * @return Decrypted data
-   * @throws UnsupportedEncodingException
-   * @throws InvalidCipherTextException
-   */
-  public static byte[] decrypt(String password, byte[] payload)
-      throws UnsupportedEncodingException, InvalidCipherTextException {
-    ByteBuffer payloadBuffer = ByteBuffer.wrap(payload);
-    byte[] nonce = new byte[NONCE_LENGTH];
-    byte[] salt = new byte[SALT_LENGTH];
-    payloadBuffer.get(salt);
-    /** One byte to determine which encryption format to use. We only allow for Argon2ID AES-GCM. */
-    payloadBuffer.get();
-    payloadBuffer.get(nonce);
-    byte[] encryptedData = new byte[payloadBuffer.remaining()];
-    payloadBuffer.get(encryptedData);
+  /** Reader crypts MinioAdmin API response. */
+  public static class DecryptReader {
+    private InputStream inputStream;
+    private byte[] secret;
+    private byte[] salt = new byte[32];
+    private byte[] aeadId = new byte[1];
+    private byte[] nonce = new byte[8];
+    private byte[] key = null;
+    private byte[] additionalData = null;
+    private int count = 0;
+    private byte[] chunk = new byte[MAX_CHUNK_SIZE];
+    private byte[] oneByte = null;
+    private boolean eof = false;
 
-    byte[] key = generateKey(password.getBytes("UTF-8"), salt);
+    public DecryptReader(InputStream inputStream, byte[] secret)
+        throws EOFException, IOException, InvalidCipherTextException {
+      this.inputStream = inputStream;
+      this.secret = secret;
+      readFully(this.inputStream, this.salt, true);
+      readFully(this.inputStream, this.aeadId, true);
+      readFully(this.inputStream, this.nonce, true);
+      this.key = generateKey(this.secret, this.salt);
+      byte[] paddedNonce = appendBytes(this.nonce, new byte[] {0, 0, 0, 0});
+      this.additionalData = generateDecryptAdditionalData(this.aeadId[0], this.key, paddedNonce);
+    }
 
-    /**
-     * Nonce for AES-GCM is expected to be 12 bytes, but we keep it at 8-bytes to allow up to
-     * 4-bytes (int32) chunks
-     */
-    byte[] paddedNonce = new byte[NONCE_LENGTH + 4];
-    System.arraycopy(nonce, 0, paddedNonce, 0, nonce.length);
-    byte[] additionalData = generateAdditionalData(key, paddedNonce);
+    private byte[] decrypt(byte[] encryptedData, boolean lastChunk)
+        throws InvalidCipherTextException {
+      this.count++;
+      if (lastChunk) {
+        this.additionalData = markAsLast(this.additionalData);
+      }
+      byte[] paddedNonce = updateNonceId(this.nonce, this.count);
+      AEADCipher cipher = getDecryptCipher(this.aeadId[0], this.key, paddedNonce);
+      cipher.processAADBytes(this.additionalData, 0, this.additionalData.length);
+      int outputLength = cipher.getOutputSize(encryptedData.length);
+      byte[] decryptedData = new byte[outputLength];
+      int outputOffset =
+          cipher.processBytes(encryptedData, 0, encryptedData.length, decryptedData, 0);
+      cipher.doFinal(decryptedData, outputOffset);
+      return decryptedData;
+    }
 
-    /** Increment IV (nonce) by 1 as we used it for generating a tag for additional data. */
-    paddedNonce[8] = 1;
+    /** Read a chunk at least one byte more than chunk size. */
+    private byte[] readChunk() throws IOException {
+      if (this.eof) {
+        return new byte[] {};
+      }
 
-    GCMModeCipher cipher = GCMBlockCipher.newInstance(AESEngine.newInstance());
-    cipher.init(false, new AEADParameters(new KeyParameter(key), 128, paddedNonce, additionalData));
-    int outputLength = cipher.getOutputSize(encryptedData.length);
-    byte[] decryptedData = new byte[outputLength];
-    int outputOffset =
-        cipher.processBytes(encryptedData, 0, encryptedData.length, decryptedData, 0);
-    cipher.doFinal(decryptedData, outputOffset);
-    return ByteBuffer.wrap(decryptedData).array();
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      if (this.oneByte != null) {
+        baos.write(this.oneByte);
+      }
+
+      int[] result = readFully(this.inputStream, this.chunk, false);
+      int bytesRead = result[0];
+      this.eof = result[1] == 1;
+      if (bytesRead == this.chunk.length) {
+        if (this.oneByte != null) {
+          bytesRead--;
+          this.oneByte[0] = this.chunk[bytesRead];
+        } else if (!this.eof) {
+          this.oneByte = new byte[] {0};
+          result = readFully(this.inputStream, this.oneByte, false);
+          this.eof = result[1] == 1;
+          if (this.eof) this.oneByte = null;
+        }
+      }
+
+      baos.write(this.chunk, 0, bytesRead);
+      return baos.toByteArray();
+    }
+
+    public byte[] readAllBytes() throws IOException, InvalidCipherTextException {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      while (!this.eof) {
+        byte[] payload = this.readChunk();
+        baos.write(this.decrypt(payload, this.eof));
+      }
+      return baos.toByteArray();
+    }
+  }
+
+  /** Decrypt data stream. */
+  public static byte[] decrypt(InputStream inputStream, String password)
+      throws EOFException, IOException, InvalidCipherTextException {
+    DecryptReader reader =
+        new DecryptReader(inputStream, password.getBytes(StandardCharsets.UTF_8));
+    return reader.readAllBytes();
   }
 }

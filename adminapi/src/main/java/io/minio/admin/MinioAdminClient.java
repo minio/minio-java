@@ -249,7 +249,7 @@ public class MinioAdminClient {
             Method.PUT,
             Command.ADD_USER,
             ImmutableMultimap.of("accessKey", accessKey),
-            Crypto.encrypt(creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(userInfo)))) {}
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(userInfo), creds.secretKey()))) {}
   }
 
   /**
@@ -285,7 +285,7 @@ public class MinioAdminClient {
           InvalidCipherTextException {
     try (Response response = execute(Method.GET, Command.LIST_USERS, null, null)) {
       Credentials creds = getCredentials();
-      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+      byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       MapType mapType =
           OBJECT_MAPPER
               .getTypeFactory()
@@ -688,8 +688,8 @@ public class MinioAdminClient {
             Method.PUT,
             Command.ADD_SERVICE_ACCOUNT,
             null,
-            Crypto.encrypt(creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(serviceAccount)))) {
-      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(serviceAccount), creds.secretKey()))) {
+      byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       return OBJECT_MAPPER.readValue(jsonData, AddServiceAccountResp.class).credentials();
     }
   }
@@ -754,7 +754,7 @@ public class MinioAdminClient {
             Method.POST,
             Command.UPDATE_SERVICE_ACCOUNT,
             ImmutableMultimap.of("accessKey", accessKey),
-            Crypto.encrypt(creds.secretKey(), OBJECT_MAPPER.writeValueAsBytes(serviceAccount)))) {}
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(serviceAccount), creds.secretKey()))) {}
   }
 
   /**
@@ -803,7 +803,7 @@ public class MinioAdminClient {
             ImmutableMultimap.of("user", username),
             null)) {
       Credentials creds = getCredentials();
-      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+      byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       return OBJECT_MAPPER.readValue(jsonData, ListServiceAccountResp.class);
     }
   }
@@ -831,7 +831,7 @@ public class MinioAdminClient {
             ImmutableMultimap.of("accessKey", accessKey),
             null)) {
       Credentials creds = getCredentials();
-      byte[] jsonData = Crypto.decrypt(creds.secretKey(), response.body().bytes());
+      byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       return OBJECT_MAPPER.readValue(jsonData, GetServiceAccountInfoResp.class);
     }
   }
