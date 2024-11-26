@@ -2849,14 +2849,14 @@ public abstract class S3Base implements AutoCloseable {
               | XmlParserException
               | InterruptedException
               | ExecutionException e) {
+            Throwable throwable = e;
+            if (throwable instanceof ExecutionException) {
+              throwable = ((ExecutionException) throwable).getCause();
+            }
+            if (throwable instanceof CompletionException) {
+              throwable = ((CompletionException) throwable).getCause();
+            }
             if (uploadId == null) {
-              Throwable throwable = e;
-              if (throwable instanceof ExecutionException) {
-                throwable = ((ExecutionException) throwable).getCause();
-              }
-              if (throwable instanceof CompletionException) {
-                throwable = ((CompletionException) throwable).getCause();
-              }
               throw new CompletionException(throwable);
             }
             try {
@@ -2871,15 +2871,15 @@ public abstract class S3Base implements AutoCloseable {
                 | XmlParserException
                 | InterruptedException
                 | ExecutionException ex) {
-              Throwable throwable = ex;
+              throwable = ex;
               if (throwable instanceof ExecutionException) {
                 throwable = ((ExecutionException) throwable).getCause();
               }
               if (throwable instanceof CompletionException) {
                 throwable = ((CompletionException) throwable).getCause();
               }
-              throw new CompletionException(throwable);
             }
+            throw new CompletionException(throwable);
           }
           return response;
         });
