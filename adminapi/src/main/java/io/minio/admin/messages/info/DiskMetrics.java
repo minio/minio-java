@@ -17,6 +17,7 @@
 
 package io.minio.admin.messages.info;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @see <a href=
  *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L395">info-commands.go</a>
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DiskMetrics {
   @JsonProperty("lastMinute")
   private Map<String, TimedAction> lastMinute;
