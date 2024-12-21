@@ -21,6 +21,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Map;
+import java.util.Optional;
 import org.simpleframework.xml.Element;
 
 /**
@@ -86,7 +87,9 @@ public abstract class Item {
 
   /** Returns last modified time of the object. */
   public ZonedDateTime lastModified() {
-    return lastModified.zonedDateTime();
+    return Optional.ofNullable(lastModified)
+      .map(ResponseDate::zonedDateTime)
+      .orElse(null);
   }
 
   /** Returns ETag of the object. */
@@ -111,7 +114,9 @@ public abstract class Item {
 
   /** Returns user metadata. This is MinIO specific extension to ListObjectsV2. */
   public Map<String, String> userMetadata() {
-    return (userMetadata == null) ? null : userMetadata.get();
+    return Optional.ofNullable(userMetadata)
+      .map(Metadata::get)
+      .orElse(null);
   }
 
   public String userTags() {
