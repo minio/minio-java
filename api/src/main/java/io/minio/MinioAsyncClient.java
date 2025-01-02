@@ -532,7 +532,11 @@ public class MinioAsyncClient extends S3Base {
                                 args.region(),
                                 args.object(),
                                 result.etag(),
-                                response.header("x-amz-version-id"));
+                                response.header("x-amz-version-id"),
+                                result.checksumCRC32(),
+                                result.checksumCRC32C(),
+                                result.checksumSHA1(),
+                                result.checksumSHA256());
                           } catch (XmlParserException e) {
                             throw new CompletionException(e);
                           } finally {
