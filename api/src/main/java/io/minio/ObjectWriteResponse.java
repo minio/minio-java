@@ -22,6 +22,10 @@ import okhttp3.Headers;
 public class ObjectWriteResponse extends GenericResponse {
   private String etag;
   private String versionId;
+  private String checksumCRC32;
+  private String checksumCRC32C;
+  private String checksumSHA1;
+  private String checksumSHA256;
 
   public ObjectWriteResponse(
       Headers headers, String bucket, String region, String object, String etag, String versionId) {
@@ -30,11 +34,40 @@ public class ObjectWriteResponse extends GenericResponse {
     this.versionId = versionId;
   }
 
+  public ObjectWriteResponse(
+          Headers headers, String bucket, String region, String object, String etag, String versionId,
+          String checksumCRC32, String checksumCRC32C, String checksumSHA1, String checksumSHA256
+  ) {
+    super(headers, bucket, region, object);
+    this.etag = etag;
+    this.versionId = versionId;
+    this.checksumCRC32 = checksumCRC32;
+    this.checksumCRC32C = checksumCRC32C;
+    this.checksumSHA1 = checksumSHA1;
+    this.checksumSHA256 = checksumSHA256;
+  }
+
   public String etag() {
     return etag;
   }
 
   public String versionId() {
     return versionId;
+  }
+
+  public String checksumCRC32() {
+    return checksumCRC32;
+  }
+
+  public String checksumCRC32C() {
+    return checksumCRC32C;
+  }
+
+  public String checksumSHA1() {
+    return checksumSHA1;
+  }
+
+  public String checksumSHA256() {
+    return checksumSHA256;
   }
 }

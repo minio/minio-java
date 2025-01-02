@@ -35,6 +35,18 @@ public class CopyObjectResult {
   @Element(name = "LastModified")
   private ResponseDate lastModified;
 
+  @Element(name = "ChecksumCRC32", required = false)
+  private String checksumCRC32;
+
+  @Element(name = "ChecksumCRC32C", required = false)
+  private String checksumCRC32C;
+
+  @Element(name = "ChecksumSHA1", required = false)
+  private String checksumSHA1;
+
+  @Element(name = "ChecksumSHA256", required = false)
+  private String checksumSHA256;
+
   public CopyObjectResult() {}
 
   /** Returns ETag of the object. */
@@ -45,5 +57,21 @@ public class CopyObjectResult {
   /** Returns last modified time. */
   public ZonedDateTime lastModified() {
     return lastModified.zonedDateTime();
+  }
+
+  public String checksumCRC32() {
+    return checksumCRC32;
+  }
+
+  public String checksumCRC32C() {
+    return checksumCRC32C;
+  }
+
+  public String checksumSHA1() {
+    return checksumSHA1;
+  }
+
+  public String checksumSHA256() {
+    return checksumSHA256;
   }
 }
