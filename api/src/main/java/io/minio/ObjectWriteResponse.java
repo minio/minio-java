@@ -16,9 +16,9 @@
 
 package io.minio;
 
-import okhttp3.Headers;
-import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CompleteMultipartUploadOutput;
+import io.minio.messages.CopyObjectResult;
+import okhttp3.Headers;
 
 /** Response class of any APIs doing object creation. */
 public class ObjectWriteResponse extends GenericResponse {
@@ -43,9 +43,13 @@ public class ObjectWriteResponse extends GenericResponse {
   }
 
   public ObjectWriteResponse(
-          Headers headers, String bucket, String region, String object, String etag, String versionId,
-          CopyObjectResult result
-    ) {
+      Headers headers,
+      String bucket,
+      String region,
+      String object,
+      String etag,
+      String versionId,
+      CopyObjectResult result) {
     super(headers, bucket, region, object);
     this.etag = etag;
     this.versionId = versionId;
@@ -58,9 +62,13 @@ public class ObjectWriteResponse extends GenericResponse {
   }
 
   public ObjectWriteResponse(
-          Headers headers, String bucket, String region, String object, String etag, String versionId,
-          CompleteMultipartUploadOutput result
-  ) {
+      Headers headers,
+      String bucket,
+      String region,
+      String object,
+      String etag,
+      String versionId,
+      CompleteMultipartUploadOutput result) {
     super(headers, bucket, region, object);
     this.etag = etag;
     this.versionId = versionId;
