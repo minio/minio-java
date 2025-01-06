@@ -59,7 +59,7 @@ public class ObjectWriteResponse extends GenericResponse {
 
   public ObjectWriteResponse(
           Headers headers, String bucket, String region, String object, String etag, String versionId,
-          CompleteMultipartUploadResult result
+          CompleteMultipartUploadOutput result
   ) {
     super(headers, bucket, region, object);
     this.etag = etag;
