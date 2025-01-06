@@ -50,10 +50,10 @@ public class ObjectWriteResponse extends GenericResponse {
     this.etag = etag;
     this.versionId = versionId;
     if (result != null) {
-      this.checksumCRC32 = result.checksumCRC32(),
-      this.checksumCRC32C = result.checksumCRC32C(),
-      this.checksumSHA1 = result.checksumSHA1(),
-      this.checksumSHA256 = result.checksumSHA256()
+      this.checksumCRC32 = result.checksumCRC32();
+      this.checksumCRC32C = result.checksumCRC32C();
+      this.checksumSHA1 = result.checksumSHA1();
+      this.checksumSHA256 = result.checksumSHA256();
     }
   }
 
@@ -65,10 +65,10 @@ public class ObjectWriteResponse extends GenericResponse {
     this.etag = etag;
     this.versionId = versionId;
     if (result != null) {
-      this.checksumCRC32 = result.checksumCRC32(),
-      this.checksumCRC32C = result.checksumCRC32C(),
-      this.checksumSHA1 = result.checksumSHA1(),
-      this.checksumSHA256 = result.checksumSHA256()
+      this.checksumCRC32 = result.checksumCRC32();
+      this.checksumCRC32C = result.checksumCRC32C();
+      this.checksumSHA1 = result.checksumSHA1();
+      this.checksumSHA256 = result.checksumSHA256();
     }
   }
 
