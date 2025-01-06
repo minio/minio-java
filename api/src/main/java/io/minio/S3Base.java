@@ -2016,10 +2016,7 @@ public abstract class S3Base implements AutoCloseable {
                         result.object(),
                         result.etag(),
                         response.header("x-amz-version-id"),
-                        result.checksumCRC32(),
-                        result.checksumCRC32C(),
-                        result.checksumSHA1(),
-                        result.checksumSHA256());
+                        result);
                   } catch (XmlParserException e) {
                     // As this CompleteMultipartUpload REST call succeeded, just log it.
                     Logger.getLogger(S3Base.class.getName())
@@ -3016,11 +3013,7 @@ public abstract class S3Base implements AutoCloseable {
                     region,
                     objectName,
                     response.header("ETag").replaceAll("\"", ""),
-                    response.header("x-amz-version-id"),
-                    response.header("x-amz-checksum-crc32"),
-                    response.header("x-amz-checksum-crc32c"),
-                    response.header("x-amz-checksum-sha1"),
-                    response.header("x-amz-checksum-sha256"));
+                    response.header("x-amz-version-id"));
               } finally {
                 response.close();
               }
@@ -3101,11 +3094,7 @@ public abstract class S3Base implements AutoCloseable {
                     region,
                     objectName,
                     response.header("ETag").replaceAll("\"", ""),
-                    response.header("x-amz-version-id"),
-                    response.header("x-amz-checksum-crc32"),
-                    response.header("x-amz-checksum-crc32c"),
-                    response.header("x-amz-checksum-sha1"),
-                    response.header("x-amz-checksum-sha256"));
+                    response.header("x-amz-version-id"));
               } finally {
                 response.close();
               }

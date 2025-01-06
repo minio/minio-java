@@ -17,6 +17,8 @@
 package io.minio;
 
 import okhttp3.Headers;
+import io.minio.messages.CopyObjectResult;
+import io.minio.messages.CompleteMultipartUploadOutput;
 
 /** Response class of any APIs doing object creation. */
 public class ObjectWriteResponse extends GenericResponse {
@@ -32,19 +34,42 @@ public class ObjectWriteResponse extends GenericResponse {
     super(headers, bucket, region, object);
     this.etag = etag;
     this.versionId = versionId;
+    if (headers != null) {
+      this.checksumCRC32 = headers.get("x-amz-checksum-crc32");
+      this.checksumCRC32C = headers.get("x-amz-checksum-crc32c");
+      this.checksumSHA1 = headers.get("x-amz-checksum-sha1");
+      this.checksumSHA256 = headers.get("x-amz-checksum-sha256");
+    }
   }
 
   public ObjectWriteResponse(
           Headers headers, String bucket, String region, String object, String etag, String versionId,
-          String checksumCRC32, String checksumCRC32C, String checksumSHA1, String checksumSHA256
+          CopyObjectResult result
+    ) {
+    super(headers, bucket, region, object);
+    this.etag = etag;
+    this.versionId = versionId;
+    if (result != null) {
+      this.checksumCRC32 = result.checksumCRC32(),
+      this.checksumCRC32C = result.checksumCRC32C(),
+      this.checksumSHA1 = result.checksumSHA1(),
+      this.checksumSHA256 = result.checksumSHA256()
+    }
+  }
+
+  public ObjectWriteResponse(
+          Headers headers, String bucket, String region, String object, String etag, String versionId,
+          CompleteMultipartUploadResult result
   ) {
     super(headers, bucket, region, object);
     this.etag = etag;
     this.versionId = versionId;
-    this.checksumCRC32 = checksumCRC32;
-    this.checksumCRC32C = checksumCRC32C;
-    this.checksumSHA1 = checksumSHA1;
-    this.checksumSHA256 = checksumSHA256;
+    if (result != null) {
+      this.checksumCRC32 = result.checksumCRC32(),
+      this.checksumCRC32C = result.checksumCRC32C(),
+      this.checksumSHA1 = result.checksumSHA1(),
+      this.checksumSHA256 = result.checksumSHA256()
+    }
   }
 
   public String etag() {
