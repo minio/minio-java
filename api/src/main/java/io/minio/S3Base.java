@@ -2015,7 +2015,8 @@ public abstract class S3Base implements AutoCloseable {
                         result.location(),
                         result.object(),
                         result.etag(),
-                        response.header("x-amz-version-id"));
+                        response.header("x-amz-version-id"),
+                        result);
                   } catch (XmlParserException e) {
                     // As this CompleteMultipartUpload REST call succeeded, just log it.
                     Logger.getLogger(S3Base.class.getName())
