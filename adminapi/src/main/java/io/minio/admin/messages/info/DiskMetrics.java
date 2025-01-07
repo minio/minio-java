@@ -17,6 +17,7 @@
 
 package io.minio.admin.messages.info;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Collections;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @see <a href=
  *     "https://github.com/minio/madmin-go/blob/main/info-commands.go#L395">info-commands.go</a>
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DiskMetrics {
   @JsonProperty("lastMinute")
   private Map<String, TimedAction> lastMinute;
@@ -39,6 +41,18 @@ public class DiskMetrics {
 
   @JsonProperty("totalErrorsTimeout")
   private Integer totalErrorsTimeout;
+
+  @JsonProperty("totalTokens")
+  private Long totalTokens;
+
+  @JsonProperty("totalWaiting")
+  private Long totalWaiting;
+
+  @JsonProperty("totalWrites")
+  private Long totalWrites;
+
+  @JsonProperty("totalDeletes")
+  private Long totalDeletes;
 
   public Integer totalErrorsAvailability() {
     return totalErrorsAvailability;
@@ -54,5 +68,21 @@ public class DiskMetrics {
 
   public Map<String, String> apiCalls() {
     return Collections.unmodifiableMap(apiCalls);
+  }
+
+  public Long totalTokens() {
+    return totalTokens;
+  }
+
+  public Long totalWaiting() {
+    return totalWaiting;
+  }
+
+  public Long totalWrites() {
+    return totalWrites;
+  }
+
+  public Long totalDeletes() {
+    return totalDeletes;
   }
 }
