@@ -53,7 +53,7 @@ public class SetBucketLifecycle {
           new LifecycleRule(
               Status.ENABLED,
               null,
-              new Expiration((ZonedDateTime) null, 365, null),
+              new Expiration((ZonedDateTime) null, 365, null, null),
               new RuleFilter("logs/"),
               "rule2",
               null,

@@ -27,11 +27,16 @@ public class Expiration extends DateDays {
   @Element(name = "ExpiredObjectDeleteMarker", required = false)
   private Boolean expiredObjectDeleteMarker;
 
+  @Element(name = "ExpiredObjectAllVersions", required = false)
+  private Boolean expiredObjectAllVersions;
+
   public Expiration(
       @Nullable @Element(name = "Date", required = false) ResponseDate date,
       @Nullable @Element(name = "Days", required = false) Integer days,
       @Nullable @Element(name = "ExpiredObjectDeleteMarker", required = false)
-          Boolean expiredObjectDeleteMarker) {
+          Boolean expiredObjectDeleteMarker,
+      @Nullable @Element(name = "ExpiredObjectAllVersions", required = false)
+          Boolean expiredObjectAllVersions) {
     if (expiredObjectDeleteMarker != null) {
       if (date != null || days != null) {
         throw new IllegalArgumentException(
@@ -45,13 +50,26 @@ public class Expiration extends DateDays {
     }
 
     this.expiredObjectDeleteMarker = expiredObjectDeleteMarker;
+    this.expiredObjectAllVersions = expiredObjectAllVersions;
   }
 
-  public Expiration(ZonedDateTime date, Integer days, Boolean expiredObjectDeleteMarker) {
-    this(date == null ? null : new ResponseDate(date), days, expiredObjectDeleteMarker);
+  public Expiration(
+      ZonedDateTime date,
+      Integer days,
+      Boolean expiredObjectDeleteMarker,
+      Boolean expiredObjectAllVersions) {
+    this(
+        date == null ? null : new ResponseDate(date),
+        days,
+        expiredObjectDeleteMarker,
+        expiredObjectAllVersions);
   }
 
   public Boolean expiredObjectDeleteMarker() {
     return expiredObjectDeleteMarker;
+  }
+
+  public Boolean expiredObjectAllVersions() {
+    return expiredObjectAllVersions;
   }
 }

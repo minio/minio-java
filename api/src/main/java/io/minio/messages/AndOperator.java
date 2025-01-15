@@ -31,6 +31,12 @@ public class AndOperator {
   @Convert(PrefixConverter.class)
   private String prefix;
 
+  @Element(name = "ObjectSizeLessThan", required = false)
+  private Integer objectSizeLessThan;
+
+  @Element(name = "ObjectSizeGreaterThan", required = false)
+  private Integer objectSizeGreaterThan;
+
   @ElementMap(
       attribute = false,
       entry = "Tag",
@@ -42,6 +48,9 @@ public class AndOperator {
 
   public AndOperator(
       @Nullable @Element(name = "Prefix", required = false) String prefix,
+      @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
+      @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
+          Integer objectSizeGreaterThan,
       @Nullable
           @ElementMap(
               attribute = false,
@@ -64,11 +73,21 @@ public class AndOperator {
     }
 
     this.prefix = prefix;
+    this.objectSizeLessThan = objectSizeLessThan;
+    this.objectSizeGreaterThan = objectSizeGreaterThan;
     this.tags = (tags != null) ? Collections.unmodifiableMap(tags) : null;
   }
 
   public String prefix() {
     return this.prefix;
+  }
+
+  public Integer objectSizeLessThan() {
+    return this.objectSizeLessThan;
+  }
+
+  public Integer objectSizeGreaterThan() {
+    return this.objectSizeGreaterThan;
   }
 
   public Map<String, String> tags() {

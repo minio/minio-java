@@ -38,14 +38,25 @@ public class RuleFilter {
   @Element(name = "Tag", required = false)
   private Tag tag;
 
+  @Element(name = "ObjectSizeLessThan", required = false)
+  private Integer objectSizeLessThan;
+
+  @Element(name = "ObjectSizeGreaterThan", required = false)
+  private Integer objectSizeGreaterThan;
+
   public RuleFilter(
       @Nullable @Element(name = "And", required = false) AndOperator andOperator,
       @Nullable @Element(name = "Prefix", required = false) String prefix,
+      @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
+      @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
+          Integer objectSizeGreaterThan,
       @Nullable @Element(name = "Tag", required = false) Tag tag) {
     if (andOperator != null ^ prefix != null ^ tag != null) {
       this.andOperator = andOperator;
       this.prefix = prefix;
       this.tag = tag;
+      this.objectSizeLessThan = objectSizeLessThan;
+      this.objectSizeGreaterThan = objectSizeGreaterThan;
     } else {
       throw new IllegalArgumentException("Only one of And, Prefix or Tag must be set");
     }
@@ -73,5 +84,13 @@ public class RuleFilter {
 
   public Tag tag() {
     return this.tag;
+  }
+
+  public Integer objectSizeLessThan() {
+    return this.objectSizeLessThan;
+  }
+
+  public Integer objectSizeGreaterThan() {
+    return this.objectSizeGreaterThan;
   }
 }
