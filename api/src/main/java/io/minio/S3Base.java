@@ -634,6 +634,14 @@ public abstract class S3Base implements AutoCloseable {
 
               @Override
               public void onResponse(Call call, final Response response) throws IOException {
+                try {
+                  onResponse(response);
+                } catch (Exception e) {
+                  completableFuture.completeExceptionally(e);
+                }
+              }
+
+              private void onResponse(final Response response) throws IOException {
                 String trace =
                     response.protocol().toString().toUpperCase(Locale.US)
                         + " "
@@ -1867,7 +1875,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<AbortMultipartUploadResponse> abortMultipartUploadAsync(
+  public CompletableFuture<AbortMultipartUploadResponse> abortMultipartUploadAsync(
       String bucketName,
       String region,
       String objectName,
@@ -1975,7 +1983,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<ObjectWriteResponse> completeMultipartUploadAsync(
+  public CompletableFuture<ObjectWriteResponse> completeMultipartUploadAsync(
       String bucketName,
       String region,
       String objectName,
@@ -2035,7 +2043,8 @@ public abstract class S3Base implements AutoCloseable {
                         result.location(),
                         result.object(),
                         result.etag(),
-                        response.header("x-amz-version-id"));
+                        response.header("x-amz-version-id"),
+                        result);
                   } catch (XmlParserException e) {
                     // As this CompleteMultipartUpload REST call succeeded, just log it.
                     Logger.getLogger(S3Base.class.getName())
@@ -2126,7 +2135,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<CreateMultipartUploadResponse> createMultipartUploadAsync(
+  public CompletableFuture<CreateMultipartUploadResponse> createMultipartUploadAsync(
       String bucketName,
       String region,
       String objectName,
@@ -3190,7 +3199,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<ListMultipartUploadsResponse> listMultipartUploadsAsync(
+  public CompletableFuture<ListMultipartUploadsResponse> listMultipartUploadsAsync(
       String bucketName,
       String region,
       String delimiter,
@@ -3339,7 +3348,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<ListPartsResponse> listPartsAsync(
+  public CompletableFuture<ListPartsResponse> listPartsAsync(
       String bucketName,
       String region,
       String objectName,
@@ -3475,7 +3484,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<UploadPartResponse> uploadPartAsync(
+  public CompletableFuture<UploadPartResponse> uploadPartAsync(
       String bucketName,
       String region,
       String objectName,
@@ -3549,7 +3558,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<UploadPartResponse> uploadPartAsync(
+  public CompletableFuture<UploadPartResponse> uploadPartAsync(
       String bucketName,
       String region,
       String objectName,
@@ -3752,7 +3761,7 @@ public abstract class S3Base implements AutoCloseable {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  protected CompletableFuture<UploadPartCopyResponse> uploadPartCopyAsync(
+  public CompletableFuture<UploadPartCopyResponse> uploadPartCopyAsync(
       String bucketName,
       String region,
       String objectName,
