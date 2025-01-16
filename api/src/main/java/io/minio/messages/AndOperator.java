@@ -48,6 +48,33 @@ public class AndOperator {
 
   public AndOperator(
       @Nullable @Element(name = "Prefix", required = false) String prefix,
+      @Nullable
+          @ElementMap(
+              attribute = false,
+              entry = "Tag",
+              inline = true,
+              key = "Key",
+              value = "Value",
+              required = false)
+          Map<String, String> tags) {
+    if (prefix == null && tags == null) {
+      throw new IllegalArgumentException("At least Prefix or Tags must be set");
+    }
+
+    if (tags != null) {
+      for (String key : tags.keySet()) {
+        if (key.isEmpty()) {
+          throw new IllegalArgumentException("Tags must not contain empty key");
+        }
+      }
+    }
+
+    this.prefix = prefix;
+    this.tags = (tags != null) ? Collections.unmodifiableMap(tags) : null;
+  }
+
+  public AndOperator(
+      @Nullable @Element(name = "Prefix", required = false) String prefix,
       @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
       @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
           Integer objectSizeGreaterThan,

@@ -53,6 +53,10 @@ public class Expiration extends DateDays {
     this.expiredObjectAllVersions = expiredObjectAllVersions;
   }
 
+  public Expiration(ZonedDateTime date, Integer days, Boolean expiredObjectDeleteMarker) {
+    this(date == null ? null : new ResponseDate(date), days, expiredObjectDeleteMarker, null);
+  }
+
   public Expiration(
       ZonedDateTime date,
       Integer days,
@@ -69,6 +73,7 @@ public class Expiration extends DateDays {
     return expiredObjectDeleteMarker;
   }
 
+  /** Allow setting ILM rule for removing all versions of expired objects from command line. */
   public Boolean expiredObjectAllVersions() {
     return expiredObjectAllVersions;
   }

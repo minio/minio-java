@@ -47,6 +47,19 @@ public class RuleFilter {
   public RuleFilter(
       @Nullable @Element(name = "And", required = false) AndOperator andOperator,
       @Nullable @Element(name = "Prefix", required = false) String prefix,
+      @Nullable @Element(name = "Tag", required = false) Tag tag) {
+    if (andOperator != null ^ prefix != null ^ tag != null) {
+      this.andOperator = andOperator;
+      this.prefix = prefix;
+      this.tag = tag;
+    } else {
+      throw new IllegalArgumentException("Only one of And, Prefix or Tag must be set");
+    }
+  }
+
+  public RuleFilter(
+      @Nullable @Element(name = "And", required = false) AndOperator andOperator,
+      @Nullable @Element(name = "Prefix", required = false) String prefix,
       @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
       @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
           Integer objectSizeGreaterThan,

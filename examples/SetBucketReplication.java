@@ -61,7 +61,7 @@ public class SetBucketReplication {
               new ReplicationDestination(
                   null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
               null,
-              new RuleFilter(new AndOperator("TaxDocs", null, null, tags)),
+              new RuleFilter(new AndOperator("TaxDocs", tags)),
               "rule1",
               null,
               1,
