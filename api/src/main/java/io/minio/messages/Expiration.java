@@ -34,9 +34,7 @@ public class Expiration extends DateDays {
       @Nullable @Element(name = "Date", required = false) ResponseDate date,
       @Nullable @Element(name = "Days", required = false) Integer days,
       @Nullable @Element(name = "ExpiredObjectDeleteMarker", required = false)
-          Boolean expiredObjectDeleteMarker,
-      @Nullable @Element(name = "ExpiredObjectAllVersions", required = false)
-          Boolean expiredObjectAllVersions) {
+          Boolean expiredObjectDeleteMarker) {
     if (expiredObjectDeleteMarker != null) {
       if (date != null || days != null) {
         throw new IllegalArgumentException(
@@ -50,11 +48,10 @@ public class Expiration extends DateDays {
     }
 
     this.expiredObjectDeleteMarker = expiredObjectDeleteMarker;
-    this.expiredObjectAllVersions = expiredObjectAllVersions;
   }
 
   public Expiration(ZonedDateTime date, Integer days, Boolean expiredObjectDeleteMarker) {
-    this(date == null ? null : new ResponseDate(date), days, expiredObjectDeleteMarker, null);
+    this(date == null ? null : new ResponseDate(date), days, expiredObjectDeleteMarker);
   }
 
   public Expiration(
@@ -62,18 +59,18 @@ public class Expiration extends DateDays {
       Integer days,
       Boolean expiredObjectDeleteMarker,
       Boolean expiredObjectAllVersions) {
-    this(
-        date == null ? null : new ResponseDate(date),
-        days,
-        expiredObjectDeleteMarker,
-        expiredObjectAllVersions);
+    this(date == null ? null : new ResponseDate(date), days, expiredObjectDeleteMarker);
+    this.expiredObjectAllVersions = expiredObjectAllVersions;
   }
 
   public Boolean expiredObjectDeleteMarker() {
     return expiredObjectDeleteMarker;
   }
 
-  /** Allow setting ILM rule for removing all versions of expired objects from command line. */
+  /**
+   * Allow setting ILM rule for removing all versions of expired objects. This is MinIO specific
+   * extension to PutBucketLifecycle.
+   */
   public Boolean expiredObjectAllVersions() {
     return expiredObjectAllVersions;
   }

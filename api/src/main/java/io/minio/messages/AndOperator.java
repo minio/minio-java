@@ -87,22 +87,9 @@ public class AndOperator {
       @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
       @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
           Integer objectSizeGreaterThan) {
-    if (prefix == null && tags == null) {
-      throw new IllegalArgumentException("At least Prefix or Tags must be set");
-    }
-
-    if (tags != null) {
-      for (String key : tags.keySet()) {
-        if (key.isEmpty()) {
-          throw new IllegalArgumentException("Tags must not contain empty key");
-        }
-      }
-    }
-
-    this.prefix = prefix;
+    this(prefix, tags);
     this.objectSizeLessThan = objectSizeLessThan;
     this.objectSizeGreaterThan = objectSizeGreaterThan;
-    this.tags = (tags != null) ? Collections.unmodifiableMap(tags) : null;
   }
 
   public String prefix() {
