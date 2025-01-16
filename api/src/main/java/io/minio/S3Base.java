@@ -615,6 +615,14 @@ public abstract class S3Base implements AutoCloseable {
 
               @Override
               public void onResponse(Call call, final Response response) throws IOException {
+                try {
+                  onResponse(response);
+                } catch (Exception e) {
+                  completableFuture.completeExceptionally(e);
+                }
+              }
+
+              private void onResponse(final Response response) throws IOException {
                 String trace =
                     response.protocol().toString().toUpperCase(Locale.US)
                         + " "
