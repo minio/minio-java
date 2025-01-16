@@ -86,7 +86,7 @@ public class PutObjectArgs extends PutObjectBaseArgs {
     }
 
     public Builder contentType(String contentType) {
-      validateNotEmptyString(contentType, "content type");
+      validateContentType(contentType);
       operations.add(args -> args.contentType = contentType);
       return this;
     }

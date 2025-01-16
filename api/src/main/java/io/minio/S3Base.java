@@ -92,6 +92,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -518,6 +519,11 @@ public abstract class S3Base implements AutoCloseable {
     RequestBody requestBody = null;
     if (body != null) {
       String contentType = (headers != null) ? headers.get("Content-Type") : null;
+      if (contentType != null && MediaType.parse(contentType) == null) {
+        throw new IllegalArgumentException(
+            "invalid content type '" + contentType + "' as per RFC 2045");
+      }
+
       if (body instanceof PartSource) {
         requestBody = new HttpRequestBody((PartSource) body, contentType);
       } else {
