@@ -616,168 +616,172 @@ public abstract class S3Base implements AutoCloseable {
               @Override
               public void onResponse(Call call, final Response response) throws IOException {
                 try {
-                  String trace =
-                      response.protocol().toString().toUpperCase(Locale.US)
-                          + " "
-                          + response.code()
-                          + "\n"
-                          + response.headers();
-                  traceBuilder.append(trace).append("\n");
-                  if (traceStream != null) traceStream.println(trace);
+                  onResponse(response);
+                } catch (Exception e) {
+                  completableFuture.completeExceptionally(e);
+                }
+              }
 
-                  if (response.isSuccessful()) {
-                    if (traceStream != null) {
-                      // Trace response body only if the request is not
-                      // GetObject/ListenBucketNotification
-                      // S3 API.
-                      Set<String> keys = queryParamMap.keySet();
-                      if ((method != Method.GET
-                              || objectName == null
-                              || !Collections.disjoint(keys, TRACE_QUERY_PARAMS))
-                          && !(keys.contains("events")
-                              && (keys.contains("prefix") || keys.contains("suffix")))) {
-                        ResponseBody responseBody = response.peekBody(1024 * 1024);
-                        traceStream.println(responseBody.string());
-                      }
-                      traceStream.println(END_HTTP);
+              private void onResponse(final Response response) throws IOException {
+                String trace =
+                    response.protocol().toString().toUpperCase(Locale.US)
+                        + " "
+                        + response.code()
+                        + "\n"
+                        + response.headers();
+                traceBuilder.append(trace).append("\n");
+                if (traceStream != null) traceStream.println(trace);
+
+                if (response.isSuccessful()) {
+                  if (traceStream != null) {
+                    // Trace response body only if the request is not
+                    // GetObject/ListenBucketNotification
+                    // S3 API.
+                    Set<String> keys = queryParamMap.keySet();
+                    if ((method != Method.GET
+                            || objectName == null
+                            || !Collections.disjoint(keys, TRACE_QUERY_PARAMS))
+                        && !(keys.contains("events")
+                            && (keys.contains("prefix") || keys.contains("suffix")))) {
+                      ResponseBody responseBody = response.peekBody(1024 * 1024);
+                      traceStream.println(responseBody.string());
                     }
+                    traceStream.println(END_HTTP);
+                  }
 
-                    completableFuture.complete(response);
+                  completableFuture.complete(response);
+                  return;
+                }
+
+                String errorXml = null;
+                try (ResponseBody responseBody = response.body()) {
+                  errorXml = responseBody.string();
+                }
+
+                if (!("".equals(errorXml) && method.equals(Method.HEAD))) {
+                  traceBuilder.append(errorXml).append("\n");
+                  if (traceStream != null) traceStream.println(errorXml);
+                }
+
+                traceBuilder.append(END_HTTP).append("\n");
+                if (traceStream != null) traceStream.println(END_HTTP);
+
+                // Error in case of Non-XML response from server for non-HEAD requests.
+                String contentType = response.headers().get("content-type");
+                if (!method.equals(Method.HEAD)
+                    && (contentType == null
+                        || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
+                  if (response.code() == 304 && response.body().contentLength() == 0) {
+                    completableFuture.completeExceptionally(
+                        new ServerException(
+                            "server failed with HTTP status code " + response.code(),
+                            response.code(),
+                            traceBuilder.toString()));
+                  }
+
+                  completableFuture.completeExceptionally(
+                      new InvalidResponseException(
+                          response.code(),
+                          contentType,
+                          errorXml.substring(
+                              0, errorXml.length() > 1024 ? 1024 : errorXml.length()),
+                          traceBuilder.toString()));
+                  return;
+                }
+
+                ErrorResponse errorResponse = null;
+                if (!"".equals(errorXml)) {
+                  try {
+                    errorResponse = Xml.unmarshal(ErrorResponse.class, errorXml);
+                  } catch (XmlParserException e) {
+                    completableFuture.completeExceptionally(e);
                     return;
                   }
+                } else if (!method.equals(Method.HEAD)) {
+                  completableFuture.completeExceptionally(
+                      new InvalidResponseException(
+                          response.code(), contentType, errorXml, traceBuilder.toString()));
+                  return;
+                }
 
-                  String errorXml = null;
-                  try (ResponseBody responseBody = response.body()) {
-                    errorXml = responseBody.string();
-                  }
-
-                  if (!("".equals(errorXml) && method.equals(Method.HEAD))) {
-                    traceBuilder.append(errorXml).append("\n");
-                    if (traceStream != null) traceStream.println(errorXml);
-                  }
-
-                  traceBuilder.append(END_HTTP).append("\n");
-                  if (traceStream != null) traceStream.println(END_HTTP);
-
-                  // Error in case of Non-XML response from server for non-HEAD requests.
-                  String contentType = response.headers().get("content-type");
-                  if (!method.equals(Method.HEAD)
-                      && (contentType == null
-                          || !Arrays.asList(contentType.split(";")).contains("application/xml"))) {
-                    if (response.code() == 304 && response.body().contentLength() == 0) {
+                if (errorResponse == null) {
+                  String code = null;
+                  String message = null;
+                  switch (response.code()) {
+                    case 301:
+                    case 307:
+                    case 400:
+                      String[] result = handleRedirectResponse(method, bucketName, response, true);
+                      code = result[0];
+                      message = result[1];
+                      break;
+                    case 404:
+                      if (objectName != null) {
+                        code = "NoSuchKey";
+                        message = "Object does not exist";
+                      } else if (bucketName != null) {
+                        code = NO_SUCH_BUCKET;
+                        message = NO_SUCH_BUCKET_MESSAGE;
+                      } else {
+                        code = "ResourceNotFound";
+                        message = "Request resource not found";
+                      }
+                      break;
+                    case 501:
+                    case 405:
+                      code = "MethodNotAllowed";
+                      message = "The specified method is not allowed against this resource";
+                      break;
+                    case 409:
+                      if (bucketName != null) {
+                        code = NO_SUCH_BUCKET;
+                        message = NO_SUCH_BUCKET_MESSAGE;
+                      } else {
+                        code = "ResourceConflict";
+                        message = "Request resource conflicts";
+                      }
+                      break;
+                    case 403:
+                      code = "AccessDenied";
+                      message = "Access denied";
+                      break;
+                    case 412:
+                      code = "PreconditionFailed";
+                      message = "At least one of the preconditions you specified did not hold";
+                      break;
+                    case 416:
+                      code = "InvalidRange";
+                      message = "The requested range cannot be satisfied";
+                      break;
+                    default:
                       completableFuture.completeExceptionally(
                           new ServerException(
                               "server failed with HTTP status code " + response.code(),
                               response.code(),
                               traceBuilder.toString()));
-                    }
-
-                    completableFuture.completeExceptionally(
-                        new InvalidResponseException(
-                            response.code(),
-                            contentType,
-                            errorXml.substring(
-                                0, errorXml.length() > 1024 ? 1024 : errorXml.length()),
-                            traceBuilder.toString()));
-                    return;
-                  }
-
-                  ErrorResponse errorResponse = null;
-                  if (!"".equals(errorXml)) {
-                    try {
-                      errorResponse = Xml.unmarshal(ErrorResponse.class, errorXml);
-                    } catch (XmlParserException e) {
-                      completableFuture.completeExceptionally(e);
                       return;
-                    }
-                  } else if (!method.equals(Method.HEAD)) {
-                    completableFuture.completeExceptionally(
-                        new InvalidResponseException(
-                            response.code(), contentType, errorXml, traceBuilder.toString()));
-                    return;
                   }
 
-                  if (errorResponse == null) {
-                    String code = null;
-                    String message = null;
-                    switch (response.code()) {
-                      case 301:
-                      case 307:
-                      case 400:
-                        String[] result = handleRedirectResponse(method, bucketName, response, true);
-                        code = result[0];
-                        message = result[1];
-                        break;
-                      case 404:
-                        if (objectName != null) {
-                          code = "NoSuchKey";
-                          message = "Object does not exist";
-                        } else if (bucketName != null) {
-                          code = NO_SUCH_BUCKET;
-                          message = NO_SUCH_BUCKET_MESSAGE;
-                        } else {
-                          code = "ResourceNotFound";
-                          message = "Request resource not found";
-                        }
-                        break;
-                      case 501:
-                      case 405:
-                        code = "MethodNotAllowed";
-                        message = "The specified method is not allowed against this resource";
-                        break;
-                      case 409:
-                        if (bucketName != null) {
-                          code = NO_SUCH_BUCKET;
-                          message = NO_SUCH_BUCKET_MESSAGE;
-                        } else {
-                          code = "ResourceConflict";
-                          message = "Request resource conflicts";
-                        }
-                        break;
-                      case 403:
-                        code = "AccessDenied";
-                        message = "Access denied";
-                        break;
-                      case 412:
-                        code = "PreconditionFailed";
-                        message = "At least one of the preconditions you specified did not hold";
-                        break;
-                      case 416:
-                        code = "InvalidRange";
-                        message = "The requested range cannot be satisfied";
-                        break;
-                      default:
-                        completableFuture.completeExceptionally(
-                            new ServerException(
-                                "server failed with HTTP status code " + response.code(),
-                                response.code(),
-                                traceBuilder.toString()));
-                        return;
-                    }
-
-                    errorResponse =
-                        new ErrorResponse(
-                            code,
-                            message,
-                            bucketName,
-                            objectName,
-                            request.url().encodedPath(),
-                            response.header("x-amz-request-id"),
-                            response.header("x-amz-id-2"));
-                  }
-
-                  // invalidate region cache if needed
-                  if (errorResponse.code().equals(NO_SUCH_BUCKET)
-                      || errorResponse.code().equals(RETRY_HEAD)) {
-                    regionCache.remove(bucketName);
-                  }
-
-                  ErrorResponseException e =
-                      new ErrorResponseException(errorResponse, response, traceBuilder.toString());
-                  completableFuture.completeExceptionally(e);
-                } catch (Exception e) {
-                  completableFuture.completeExceptionally(e);
+                  errorResponse =
+                      new ErrorResponse(
+                          code,
+                          message,
+                          bucketName,
+                          objectName,
+                          request.url().encodedPath(),
+                          response.header("x-amz-request-id"),
+                          response.header("x-amz-id-2"));
                 }
+
+                // invalidate region cache if needed
+                if (errorResponse.code().equals(NO_SUCH_BUCKET)
+                    || errorResponse.code().equals(RETRY_HEAD)) {
+                  regionCache.remove(bucketName);
+                }
+
+                ErrorResponseException e =
+                    new ErrorResponseException(errorResponse, response, traceBuilder.toString());
+                completableFuture.completeExceptionally(e);
               }
             });
     return completableFuture;
