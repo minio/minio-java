@@ -60,10 +60,10 @@ public class RuleFilter {
   public RuleFilter(
       @Nullable @Element(name = "And", required = false) AndOperator andOperator,
       @Nullable @Element(name = "Prefix", required = false) String prefix,
+      @Nullable @Element(name = "Tag", required = false) Tag tag,
       @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
       @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
-          Integer objectSizeGreaterThan,
-      @Nullable @Element(name = "Tag", required = false) Tag tag) {
+          Integer objectSizeGreaterThan) {
     if (andOperator != null ^ prefix != null ^ tag != null) {
       this.andOperator = andOperator;
       this.prefix = prefix;

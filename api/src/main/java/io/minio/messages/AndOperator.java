@@ -75,9 +75,6 @@ public class AndOperator {
 
   public AndOperator(
       @Nullable @Element(name = "Prefix", required = false) String prefix,
-      @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
-      @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
-          Integer objectSizeGreaterThan,
       @Nullable
           @ElementMap(
               attribute = false,
@@ -86,7 +83,10 @@ public class AndOperator {
               key = "Key",
               value = "Value",
               required = false)
-          Map<String, String> tags) {
+          Map<String, String> tags,
+      @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
+      @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
+          Integer objectSizeGreaterThan) {
     if (prefix == null && tags == null) {
       throw new IllegalArgumentException("At least Prefix or Tags must be set");
     }
