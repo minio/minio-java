@@ -18,6 +18,7 @@ package io.minio;
 
 import java.io.IOException;
 import java.util.Objects;
+import okhttp3.MediaType;
 
 /** Base argument class for {@link PutObjectArgs} and {@link UploadObjectArgs}. */
 public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
@@ -60,6 +61,14 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
   @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends PutObjectBaseArgs>
       extends ObjectWriteArgs.Builder<B, A> {
+    protected void validateContentType(String contentType) {
+      validateNotEmptyString(contentType, "content type");
+      if (MediaType.parse(contentType) == null) {
+        throw new IllegalArgumentException(
+            "invalid content type '" + contentType + "' as per RFC 2045");
+      }
+    }
+
     private void validateSizes(long objectSize, long partSize) {
       if (partSize > 0) {
         if (partSize < MIN_MULTIPART_SIZE) {
