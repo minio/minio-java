@@ -27,6 +27,9 @@ public class Expiration extends DateDays {
   @Element(name = "ExpiredObjectDeleteMarker", required = false)
   private Boolean expiredObjectDeleteMarker;
 
+  @Element(name = "ExpiredObjectAllVersions", required = false)
+  private Boolean expiredObjectAllVersions;
+
   public Expiration(
       @Nullable @Element(name = "Date", required = false) ResponseDate date,
       @Nullable @Element(name = "Days", required = false) Integer days,
@@ -51,7 +54,23 @@ public class Expiration extends DateDays {
     this(date == null ? null : new ResponseDate(date), days, expiredObjectDeleteMarker);
   }
 
+  public Expiration(
+      @Nullable @Element(name = "Date", required = false) ResponseDate date,
+      @Nullable @Element(name = "Days", required = false) Integer days,
+      @Nullable @Element(name = "ExpiredObjectDeleteMarker", required = false)
+          Boolean expiredObjectDeleteMarker,
+      @Element(name = "ExpiredObjectAllVersions", required = false)
+          Boolean expiredObjectAllVersions) {
+    this(date, days, expiredObjectDeleteMarker);
+    this.expiredObjectAllVersions = expiredObjectAllVersions;
+  }
+
   public Boolean expiredObjectDeleteMarker() {
     return expiredObjectDeleteMarker;
+  }
+
+  /** This is MinIO specific extension. */
+  public Boolean expiredObjectAllVersions() {
+    return expiredObjectAllVersions;
   }
 }
