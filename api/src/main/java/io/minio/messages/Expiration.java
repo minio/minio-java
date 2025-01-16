@@ -55,11 +55,13 @@ public class Expiration extends DateDays {
   }
 
   public Expiration(
-      ZonedDateTime date,
-      Integer days,
-      Boolean expiredObjectDeleteMarker,
-      Boolean expiredObjectAllVersions) {
-    this(date == null ? null : new ResponseDate(date), days, expiredObjectDeleteMarker);
+      @Nullable @Element(name = "Date", required = false) ResponseDate date,
+      @Nullable @Element(name = "Days", required = false) Integer days,
+      @Nullable @Element(name = "ExpiredObjectDeleteMarker", required = false)
+          Boolean expiredObjectDeleteMarker,
+      @Element(name = "ExpiredObjectAllVersions", required = false)
+          Boolean expiredObjectAllVersions) {
+    this(date, days, expiredObjectDeleteMarker);
     this.expiredObjectAllVersions = expiredObjectAllVersions;
   }
 
@@ -67,10 +69,7 @@ public class Expiration extends DateDays {
     return expiredObjectDeleteMarker;
   }
 
-  /**
-   * Allow setting ILM rule for removing all versions of expired objects. This is MinIO specific
-   * extension to PutBucketLifecycle.
-   */
+  /** This is MinIO specific extension. */
   public Boolean expiredObjectAllVersions() {
     return expiredObjectAllVersions;
   }
