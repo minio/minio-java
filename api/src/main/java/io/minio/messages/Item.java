@@ -86,7 +86,7 @@ public abstract class Item {
 
   /** Returns last modified time of the object. */
   public ZonedDateTime lastModified() {
-    return lastModified.zonedDateTime();
+    return (lastModified == null) ? null : lastModified.zonedDateTime();
   }
 
   /** Returns ETag of the object. */
