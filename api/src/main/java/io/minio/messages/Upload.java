@@ -16,9 +16,7 @@
 
 package io.minio.messages;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import io.minio.Utils;
 import java.time.ZonedDateTime;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
@@ -49,6 +47,12 @@ public class Upload {
   @Element(name = "Initiated")
   private ResponseDate initiated;
 
+  @Element(name = "ChecksumAlgorithm", required = false)
+  private String checksumAlgorithm;
+
+  @Element(name = "ChecksumType", required = false)
+  private String checksumType;
+
   private long aggregatedPartSize;
   private String encodingType = null;
 
@@ -56,14 +60,7 @@ public class Upload {
 
   /** Returns object name. */
   public String objectName() {
-    try {
-      return "url".equals(encodingType)
-          ? URLDecoder.decode(objectName, StandardCharsets.UTF_8.name())
-          : objectName;
-    } catch (UnsupportedEncodingException e) {
-      // This never happens as 'enc' name comes from JDK's own StandardCharsets.
-      throw new RuntimeException(e);
-    }
+    return Utils.urlDecode(objectName, encodingType);
   }
 
   /** Returns upload ID. */
@@ -103,5 +100,13 @@ public class Upload {
 
   public void setEncodingType(String encodingType) {
     this.encodingType = encodingType;
+  }
+
+  public String checksumAlgorithm() {
+    return checksumAlgorithm;
+  }
+
+  public String checksumType() {
+    return checksumType;
   }
 }

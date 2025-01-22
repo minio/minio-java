@@ -16,8 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -49,8 +48,7 @@ public class ReplicationConfiguration {
       @Nonnull @ElementList(name = "Rule", inline = true) List<ReplicationRule> rules) {
     this.role = role; // Role is not applicable in MinIO server and it is optional.
 
-    this.rules =
-        Collections.unmodifiableList(Objects.requireNonNull(rules, "Rules must not be null"));
+    this.rules = Utils.unmodifiableList(Objects.requireNonNull(rules, "Rules must not be null"));
     if (rules.isEmpty()) {
       throw new IllegalArgumentException("Rules must not be empty");
     }
@@ -64,6 +62,6 @@ public class ReplicationConfiguration {
   }
 
   public List<ReplicationRule> rules() {
-    return Collections.unmodifiableList(rules == null ? new LinkedList<>() : rules);
+    return Utils.unmodifiableList(rules);
   }
 }

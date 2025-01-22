@@ -51,6 +51,7 @@ import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.IsObjectLegalHoldEnabledArgs;
+import io.minio.ListBucketsArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.ListenBucketNotificationArgs;
 import io.minio.MakeBucketArgs;
@@ -561,7 +562,9 @@ public class FunctionalTest {
         expectedBucketNames.add(bucketName);
 
         List<String> bucketNames = new LinkedList<>();
-        for (Bucket bucket : client.listBuckets()) {
+        for (Result<Bucket> result :
+            client.listBuckets(ListBucketsArgs.builder().maxBuckets(1).build())) {
+          Bucket bucket = result.get();
           if (expectedBucketNames.contains(bucket.name())) {
             bucketNames.add(bucket.name());
           }

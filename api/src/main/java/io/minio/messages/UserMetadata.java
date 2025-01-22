@@ -16,7 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
+import io.minio.Utils;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -43,6 +43,6 @@ public class UserMetadata {
     if (metadataEntries.size() == 0) {
       throw new IllegalArgumentException("Metadata entries must not be empty");
     }
-    this.metadataEntries = Collections.unmodifiableMap(metadataEntries);
+    this.metadataEntries = Utils.unmodifiableMap(metadataEntries);
   }
 }

@@ -16,9 +16,11 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
+import io.minio.Utils;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import javax.annotation.Nonnull;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.convert.Convert;
 import org.simpleframework.xml.convert.Converter;
@@ -33,8 +35,8 @@ public class Metadata {
 
   public Metadata() {}
 
-  public Metadata(Map<String, String> map) {
-    this.map = Collections.unmodifiableMap(map);
+  public Metadata(@Nonnull Map<String, String> map) {
+    this.map = Utils.unmodifiableMap(Objects.requireNonNull(map, "Metadata must not be null"));
   }
 
   public Map<String, String> get() {

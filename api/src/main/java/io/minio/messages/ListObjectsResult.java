@@ -16,12 +16,7 @@
 
 package io.minio.messages;
 
-import com.google.common.base.MoreObjects;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -52,21 +47,9 @@ public abstract class ListObjectsResult {
   @ElementList(name = "CommonPrefixes", inline = true, required = false)
   private List<Prefix> commonPrefixes;
 
-  private static final List<DeleteMarker> deleteMarkers =
-      Collections.unmodifiableList(new LinkedList<>());
+  private static final List<DeleteMarker> deleteMarkers = Utils.unmodifiableList(null);
 
   public ListObjectsResult() {}
-
-  protected String decodeIfNeeded(String value) {
-    try {
-      return (value != null && "url".equals(encodingType))
-          ? URLDecoder.decode(value, StandardCharsets.UTF_8.name())
-          : value;
-    } catch (UnsupportedEncodingException e) {
-      // This never happens as 'enc' name comes from JDK's own StandardCharsets.
-      throw new RuntimeException(e);
-    }
-  }
 
   /** Returns bucket name. */
   public String name() {
@@ -79,7 +62,7 @@ public abstract class ListObjectsResult {
 
   /** Returns prefix. */
   public String prefix() {
-    return decodeIfNeeded(prefix);
+    return Utils.urlDecode(prefix, encodingType);
   }
 
   /** Returns delimiter. */
@@ -99,16 +82,11 @@ public abstract class ListObjectsResult {
 
   /** Returns List of Prefix. */
   public List<Prefix> commonPrefixes() {
-    return Collections.unmodifiableList(
-        (commonPrefixes == null) ? new LinkedList<>() : commonPrefixes);
+    return Utils.unmodifiableList(commonPrefixes);
   }
 
   public List<DeleteMarker> deleteMarkers() {
     return deleteMarkers;
-  }
-
-  protected <T extends Item> List<T> emptyIfNull(List<T> lst) {
-    return Collections.unmodifiableList(MoreObjects.firstNonNull(lst, new LinkedList<T>()));
   }
 
   public abstract List<? extends Item> contents();

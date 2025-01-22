@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2015 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2025 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package io.minio.messages;
+package io.minio;
 
-import org.simpleframework.xml.Namespace;
-import org.simpleframework.xml.Root;
+import io.minio.messages.ListAllMyBucketsResult;
+import okhttp3.Headers;
 
-/**
- * Object representation of response XML of <a
- * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
- * API</a>.
- */
-@Root(name = "CompleteMultipartUploadOutput")
-@Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class CompleteMultipartUploadOutput extends CompleteMultipartUploadResult {}
+/** Response class of {@link S3Base#listBucketsAsync}. */
+public class ListBucketsResponse extends GenericResponse {
+  private ListAllMyBucketsResult result;
+
+  public ListBucketsResponse(Headers headers, ListAllMyBucketsResult result) {
+    super(headers, null, null, null);
+    this.result = result;
+  }
+
+  public ListAllMyBucketsResult result() {
+    return result;
+  }
+}

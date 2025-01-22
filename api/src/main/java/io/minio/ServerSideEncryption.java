@@ -16,14 +16,11 @@
 
 package io.minio;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 /** Base class of server-side encryption. */
 public abstract class ServerSideEncryption {
-  private static final Map<String, String> emptyHeaders =
-      Collections.unmodifiableMap(new HashMap<>());
+  private static final Map<String, String> emptyHeaders = Utils.unmodifiableMap(null);
 
   public abstract Map<String, String> headers();
 

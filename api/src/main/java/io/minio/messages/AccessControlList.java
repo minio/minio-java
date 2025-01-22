@@ -16,7 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
+import io.minio.Utils;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -35,6 +35,6 @@ public class AccessControlList {
     if (grants.size() == 0) {
       throw new IllegalArgumentException("Grants must not be empty");
     }
-    this.grants = Collections.unmodifiableList(grants);
+    this.grants = Utils.unmodifiableList(grants);
   }
 }

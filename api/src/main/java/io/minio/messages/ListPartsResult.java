@@ -16,8 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -60,6 +59,15 @@ public class ListPartsResult {
 
   @ElementList(name = "Part", inline = true, required = false)
   private List<Part> partList;
+
+  @Element(name = "UploadId", required = false)
+  private String uploadId;
+
+  @Element(name = "ChecksumAlgorithm", required = false)
+  private String checksumAlgorithm;
+
+  @Element(name = "ChecksumType", required = false)
+  private String checksumType;
 
   public ListPartsResult() {}
 
@@ -110,10 +118,18 @@ public class ListPartsResult {
 
   /** Returns List of Part. */
   public List<Part> partList() {
-    if (partList == null) {
-      return Collections.unmodifiableList(new LinkedList<>());
-    }
+    return Utils.unmodifiableList(partList);
+  }
 
-    return Collections.unmodifiableList(partList);
+  public String uploadId() {
+    return uploadId;
+  }
+
+  public String checksumAlgorithm() {
+    return checksumAlgorithm;
+  }
+
+  public String checksumType() {
+    return checksumType;
   }
 }

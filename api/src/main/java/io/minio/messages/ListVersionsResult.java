@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -49,11 +50,11 @@ public class ListVersionsResult extends ListObjectsResult {
   private List<DeleteMarker> deleteMarkers;
 
   public String keyMarker() {
-    return decodeIfNeeded(keyMarker);
+    return Utils.urlDecode(keyMarker, encodingType());
   }
 
   public String nextKeyMarker() {
-    return decodeIfNeeded(nextKeyMarker);
+    return Utils.urlDecode(nextKeyMarker, encodingType());
   }
 
   public String versionIdMarker() {
@@ -66,11 +67,11 @@ public class ListVersionsResult extends ListObjectsResult {
 
   @Override
   public List<Version> contents() {
-    return emptyIfNull(contents);
+    return Utils.unmodifiableList(contents);
   }
 
   @Override
   public List<DeleteMarker> deleteMarkers() {
-    return emptyIfNull(deleteMarkers);
+    return Utils.unmodifiableList(deleteMarkers);
   }
 }
