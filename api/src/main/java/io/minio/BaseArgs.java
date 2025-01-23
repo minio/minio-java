@@ -30,10 +30,19 @@ import okhttp3.HttpUrl;
 
 /** Base argument class. */
 public abstract class BaseArgs {
+  private String location;
   protected Multimap<String, String> extraHeaders =
       Multimaps.unmodifiableMultimap(HashMultimap.create());
   protected Multimap<String, String> extraQueryParams =
       Multimaps.unmodifiableMultimap(HashMultimap.create());
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
+
+  public String location() {
+    return location;
+  }
 
   public Multimap<String, String> extraHeaders() {
     return extraHeaders;
@@ -43,12 +52,12 @@ public abstract class BaseArgs {
     return extraQueryParams;
   }
 
-  protected void checkSse(ServerSideEncryption sse, HttpUrl url) {
+  protected void checkSse(ServerSideEncryption sse, boolean isHttps) {
     if (sse == null) {
       return;
     }
 
-    if (sse.tlsRequired() && !url.isHttps()) {
+    if (sse.tlsRequired() && !isHttps) {
       throw new IllegalArgumentException(
           sse + " operations must be performed over a secure connection.");
     }
@@ -60,75 +69,34 @@ public abstract class BaseArgs {
 
     protected abstract void validate(A args);
 
-    protected void validateNotNull(Object arg, String argName) {
-      if (arg == null) {
-        throw new IllegalArgumentException(argName + " must not be null.");
-      }
-    }
-
-    protected void validateNotEmptyString(String arg, String argName) {
-      validateNotNull(arg, argName);
-      if (arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    protected void validateNullOrNotEmptyString(String arg, String argName) {
-      if (arg != null && arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    protected void validateNullOrPositive(Number arg, String argName) {
-      if (arg != null && arg.longValue() < 0) {
-        throw new IllegalArgumentException(argName + " cannot be non-negative.");
-      }
-    }
-
     public Builder() {
       this.operations = new ArrayList<>();
     }
 
-    protected Multimap<String, String> copyMultimap(Multimap<String, String> multimap) {
-      Multimap<String, String> multimapCopy = HashMultimap.create();
-      if (multimap != null) {
-        multimapCopy.putAll(multimap);
-      }
-      return Multimaps.unmodifiableMultimap(multimapCopy);
-    }
-
-    protected Multimap<String, String> toMultimap(Map<String, String> map) {
-      Multimap<String, String> multimap = HashMultimap.create();
-      if (map != null) {
-        multimap.putAll(Multimaps.forMap(map));
-      }
-      return Multimaps.unmodifiableMultimap(multimap);
-    }
-
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B extraHeaders(Multimap<String, String> headers) {
-      final Multimap<String, String> extraHeaders = copyMultimap(headers);
+      final Multimap<String, String> extraHeaders = Utils.newMultimap(headers);
       operations.add(args -> args.extraHeaders = extraHeaders);
       return (B) this;
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B extraQueryParams(Multimap<String, String> queryParams) {
-      final Multimap<String, String> extraQueryParams = copyMultimap(queryParams);
+      final Multimap<String, String> extraQueryParams = Utils.newMultimap(queryParams);
       operations.add(args -> args.extraQueryParams = extraQueryParams);
       return (B) this;
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B extraHeaders(Map<String, String> headers) {
-      final Multimap<String, String> extraHeaders = toMultimap(headers);
+      final Multimap<String, String> extraHeaders = Utils.newMultimap(headers);
       operations.add(args -> args.extraHeaders = extraHeaders);
       return (B) this;
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B extraQueryParams(Map<String, String> queryParams) {
-      final Multimap<String, String> extraQueryParams = toMultimap(queryParams);
+      final Multimap<String, String> extraQueryParams = Utils.newMultimap(queryParams);
       operations.add(args -> args.extraQueryParams = extraQueryParams);
       return (B) this;
     }
