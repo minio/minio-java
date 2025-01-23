@@ -17,7 +17,7 @@
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,10 +71,10 @@ public class MintLogger {
   /** Return JSON Log Entry. */
   @JsonIgnore
   public String toString() {
-
     try {
       return new ObjectMapper()
-          .setSerializationInclusion(Include.NON_NULL)
+          .setDefaultPropertyInclusion(
+              JsonInclude.Value.empty().withValueInclusion(JsonInclude.Include.NON_NULL))
           .writeValueAsString(this);
     } catch (JsonProcessingException e) {
       e.printStackTrace();

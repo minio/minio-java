@@ -16,14 +16,12 @@
 
 package io.minio;
 
-/**
- * Argument class of {@link MinioAsyncClient#getBucketCors} and {@link MinioClient#getBucketCors}.
- */
+/** Arguments of {@link MinioAsyncClient#getBucketCors} and {@link MinioClient#getBucketCors}. */
 public class GetBucketCorsArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetBucketCorsArgs}. */
+  /** Builder of {@link GetBucketCorsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, GetBucketCorsArgs> {}
 }

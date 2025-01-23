@@ -16,12 +16,13 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of request XML of <a
+ * Request XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectLegalHold.html">PutObjectLegalHold
  * API</a> and response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectLegalHold.html">GetObjectLegalHold
@@ -47,5 +48,10 @@ public class LegalHold {
   /** Indicates whether the specified object has a Legal Hold in place or not. */
   public boolean status() {
     return status != null && status.equals("ON");
+  }
+
+  @Override
+  public String toString() {
+    return String.format("LegalHold{status=%s}", Utils.stringify(status));
   }
 }

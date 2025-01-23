@@ -19,98 +19,90 @@ import io.minio.MinioClient;
 import io.minio.Result;
 import io.minio.errors.MinioException;
 import io.minio.messages.Item;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class ListObjects {
   /** MinioClient.listObjects() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      {
-        // Lists objects information.
-        Iterable<Result<Item>> results =
-            minioClient.listObjects(ListObjectsArgs.builder().bucket("my-bucketname").build());
+    {
+      // Lists objects information.
+      Iterable<Result<Item>> results =
+          minioClient.listObjects(ListObjectsArgs.builder().bucket("my-bucket").build());
 
-        for (Result<Item> result : results) {
-          Item item = result.get();
-          System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
-        }
+      for (Result<Item> result : results) {
+        Item item = result.get();
+        System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
       }
+    }
 
-      {
-        // Lists objects information recursively.
-        Iterable<Result<Item>> results =
-            minioClient.listObjects(
-                ListObjectsArgs.builder().bucket("my-bucketname").recursive(true).build());
+    {
+      // Lists objects information recursively.
+      Iterable<Result<Item>> results =
+          minioClient.listObjects(
+              ListObjectsArgs.builder().bucket("my-bucket").recursive(true).build());
 
-        for (Result<Item> result : results) {
-          Item item = result.get();
-          System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
-        }
+      for (Result<Item> result : results) {
+        Item item = result.get();
+        System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
       }
+    }
 
-      {
-        // Lists maximum 100 objects information those names starts with 'E' and after
-        // 'ExampleGuide.pdf'.
-        Iterable<Result<Item>> results =
-            minioClient.listObjects(
-                ListObjectsArgs.builder()
-                    .bucket("my-bucketname")
-                    .startAfter("ExampleGuide.pdf")
-                    .prefix("E")
-                    .maxKeys(100)
-                    .build());
+    {
+      // Lists maximum 100 objects information those names starts with 'E' and after
+      // 'ExampleGuide.pdf'.
+      Iterable<Result<Item>> results =
+          minioClient.listObjects(
+              ListObjectsArgs.builder()
+                  .bucket("my-bucket")
+                  .startAfter("ExampleGuide.pdf")
+                  .prefix("E")
+                  .maxKeys(100)
+                  .build());
 
-        for (Result<Item> result : results) {
-          Item item = result.get();
-          System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
-        }
+      for (Result<Item> result : results) {
+        Item item = result.get();
+        System.out.println(item.lastModified() + "\t" + item.size() + "\t" + item.objectName());
       }
+    }
 
-      {
-        // Lists maximum 100 objects information with version those names starts with 'E' and after
-        // 'ExampleGuide.pdf'.
-        Iterable<Result<Item>> results =
-            minioClient.listObjects(
-                ListObjectsArgs.builder()
-                    .bucket("my-bucketname")
-                    .startAfter("ExampleGuide.pdf")
-                    .prefix("E")
-                    .maxKeys(100)
-                    .includeVersions(true)
-                    .build());
+    {
+      // Lists maximum 100 objects information with version those names starts with 'E' and after
+      // 'ExampleGuide.pdf'.
+      Iterable<Result<Item>> results =
+          minioClient.listObjects(
+              ListObjectsArgs.builder()
+                  .bucket("my-bucket")
+                  .startAfter("ExampleGuide.pdf")
+                  .prefix("E")
+                  .maxKeys(100)
+                  .includeVersions(true)
+                  .build());
 
-        for (Result<Item> result : results) {
-          Item item = result.get();
-          System.out.println(
-              item.lastModified()
-                  + "\t"
-                  + item.size()
-                  + "\t"
-                  + item.objectName()
-                  + " ["
-                  + item.versionId()
-                  + "]");
-        }
+      for (Result<Item> result : results) {
+        Item item = result.get();
+        System.out.println(
+            item.lastModified()
+                + "\t"
+                + item.size()
+                + "\t"
+                + item.objectName()
+                + " ["
+                + item.versionId()
+                + "]");
       }
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
     }
   }
 }

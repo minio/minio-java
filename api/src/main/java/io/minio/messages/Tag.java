@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2020 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2025 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,31 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import java.util.Objects;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
 
-/** Helper class to denote tag information for {@link RuleFilter}. */
+/** Single tag information of {@link Tags} and {@link Filter}. */
 @Root(name = "Tag")
 public class Tag {
   @Element(name = "Key")
   private String key;
 
-  @Element(name = "Value")
+  @Element(name = "Value", required = false)
+  @Convert(StringConverter.class)
   private String value;
 
   public Tag(
-      @Nonnull @Element(name = "Key") String key, @Nonnull @Element(name = "Value") String value) {
+      @Nonnull @Element(name = "Key") String key,
+      @Nullable @Element(name = "Value", required = false) String value) {
     Objects.requireNonNull(key, "Key must not be null");
-    if (key.isEmpty()) {
-      throw new IllegalArgumentException("Key must not be empty");
-    }
-
+    if (key.isEmpty()) throw new IllegalArgumentException("Key must not be empty");
     this.key = key;
-    this.value = Objects.requireNonNull(value, "Value must not be null");
+    this.value = value;
   }
 
   public String key() {
@@ -47,5 +49,10 @@ public class Tag {
 
   public String value() {
     return this.value;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Tag{key=%s, value=%s}", Utils.stringify(key), Utils.stringify(value));
   }
 }

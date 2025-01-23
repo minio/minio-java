@@ -17,6 +17,7 @@
 
 package io.minio;
 
+import io.minio.errors.MinioException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
@@ -24,25 +25,25 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class StatObjectArgsTest {
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testEmptyBuild() {
     StatObjectArgs.builder().build();
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testEmptyBucketBuild1() {
     StatObjectArgs.builder().object("myobject").build();
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testEmptyBucketBuild2() {
     StatObjectArgs.builder().object("myobject").bucket(null).build();
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testEmptyBucketBuild3() {
     StatObjectArgs.builder().bucket("mybucket").bucket(null).build();
     Assert.fail("exception should be thrown");
@@ -54,7 +55,7 @@ public class StatObjectArgsTest {
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testEmptyObjectBuild1() {
     StatObjectArgs.builder().object(null).build();
     Assert.fail("exception should be thrown");
@@ -67,11 +68,11 @@ public class StatObjectArgsTest {
   }
 
   @Test
-  public void testBuild() throws NoSuchAlgorithmException, InvalidKeyException {
+  public void testBuild() throws InvalidKeyException, MinioException, NoSuchAlgorithmException {
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
-    ServerSideEncryptionCustomerKey ssec =
-        new ServerSideEncryptionCustomerKey(keyGen.generateKey());
+    ServerSideEncryption.CustomerKey ssec =
+        new ServerSideEncryption.CustomerKey(keyGen.generateKey());
     StatObjectArgs args =
         StatObjectArgs.builder()
             .bucket("mybucket")

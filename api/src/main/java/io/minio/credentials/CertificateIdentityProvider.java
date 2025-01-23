@@ -16,8 +16,7 @@
 
 package io.minio.credentials;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import io.minio.errors.MinioException;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -38,7 +37,7 @@ import org.simpleframework.xml.Root;
  * href="https://github.com/minio/minio/blob/master/docs/sts/tls.md">AssumeRoleWithCertificate
  * API</a>.
  */
-public class CertificateIdentityProvider extends AssumeRoleBaseProvider {
+public class CertificateIdentityProvider extends BaseIdentityProvider {
   private static final RequestBody EMPTY_BODY =
       RequestBody.create(new byte[] {}, MediaType.parse("application/octet-stream"));
   private final Request request;
@@ -49,7 +48,7 @@ public class CertificateIdentityProvider extends AssumeRoleBaseProvider {
       @Nullable X509TrustManager trustManager,
       @Nullable Integer durationSeconds,
       @Nullable OkHttpClient customHttpClient)
-      throws GeneralSecurityException, IOException {
+      throws MinioException {
     super(customHttpClient, sslSocketFactory, trustManager);
     stsEndpoint = Objects.requireNonNull(stsEndpoint, "STS endpoint cannot be empty");
     HttpUrl url = Objects.requireNonNull(HttpUrl.parse(stsEndpoint), "Invalid STS endpoint");
@@ -75,14 +74,18 @@ public class CertificateIdentityProvider extends AssumeRoleBaseProvider {
   }
 
   @Override
-  protected Class<? extends AssumeRoleBaseProvider.Response> getResponseClass() {
-    return CertificateIdentityResponse.class;
+  protected Class<? extends BaseIdentityProvider.Response> getResponseClass() {
+    return Response.class;
   }
 
-  /** Object representation of response XML of AssumeRoleWithCertificate API. */
+  /**
+   * Response XML of <a
+   * href="https://github.com/minio/minio/blob/master/docs/sts/tls.md">AssumeRoleWithCertificate
+   * API</a>.
+   */
   @Root(name = "AssumeRoleWithCertificateResponse", strict = false)
   @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class CertificateIdentityResponse implements AssumeRoleBaseProvider.Response {
+  public static class Response implements BaseIdentityProvider.Response {
     @Path(value = "AssumeRoleWithCertificateResult")
     @Element(name = "Credentials")
     private Credentials credentials;

@@ -17,67 +17,56 @@
 import io.minio.MinioClient;
 import io.minio.SetBucketReplicationArgs;
 import io.minio.errors.MinioException;
-import io.minio.messages.AndOperator;
-import io.minio.messages.DeleteMarkerReplication;
+import io.minio.messages.Filter;
 import io.minio.messages.ReplicationConfiguration;
-import io.minio.messages.ReplicationDestination;
-import io.minio.messages.ReplicationRule;
-import io.minio.messages.RuleFilter;
 import io.minio.messages.Status;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class SetBucketReplication {
   /** MinioClient.setBucketReplication() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      Map<String, String> tags = new HashMap<>();
-      tags.put("key1", "value1");
-      tags.put("key2", "value2");
+    Map<String, String> tags = new HashMap<>();
+    tags.put("key1", "value1");
+    tags.put("key2", "value2");
 
-      ReplicationRule rule =
-          new ReplicationRule(
-              new DeleteMarkerReplication(Status.DISABLED),
-              new ReplicationDestination(
-                  null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
-              null,
-              new RuleFilter(new AndOperator("TaxDocs", tags)),
-              "rule1",
-              null,
-              1,
-              null,
-              Status.ENABLED);
+    ReplicationConfiguration.Rule rule =
+        new ReplicationConfiguration.Rule(
+            Status.ENABLED,
+            new ReplicationConfiguration.Destination(
+                null, null, "REPLACE-WITH-ACTUAL-DESTINATION-BUCKET-ARN", null, null, null, null),
+            new ReplicationConfiguration.DeleteMarkerReplication(Status.DISABLED),
+            null,
+            new Filter(new Filter.And("TaxDocs", tags, null, null)),
+            "rule1",
+            null,
+            1,
+            null,
+            null);
 
-      List<ReplicationRule> rules = new LinkedList<>();
-      rules.add(rule);
+    List<ReplicationConfiguration.Rule> rules = new ArrayList<>();
+    rules.add(rule);
 
-      ReplicationConfiguration config =
-          new ReplicationConfiguration("REPLACE-WITH-ACTUAL-ROLE", rules);
+    ReplicationConfiguration config =
+        new ReplicationConfiguration("REPLACE-WITH-ACTUAL-ROLE", rules);
 
-      minioClient.setBucketReplication(
-          SetBucketReplicationArgs.builder().bucket("my-bucketname").config(config).build());
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    minioClient.setBucketReplication(
+        SetBucketReplicationArgs.builder().bucket("my-bucket").config(config).build());
   }
 }

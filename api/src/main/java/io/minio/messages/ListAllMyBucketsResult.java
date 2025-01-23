@@ -16,7 +16,9 @@
 
 package io.minio.messages;
 
+import io.minio.Time;
 import io.minio.Utils;
+import java.time.ZonedDateTime;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -24,7 +26,7 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of response XML of <a
+ * Response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListBuckets.html">ListBuckets API</a>.
  */
 @Root(name = "ListAllMyBucketsResult", strict = false)
@@ -36,7 +38,7 @@ public class ListAllMyBucketsResult {
   @ElementList(name = "Buckets")
   private List<Bucket> buckets;
 
-  @Element(name = "prefix", required = false)
+  @Element(name = "Prefix", required = false)
   private String prefix;
 
   @Element(name = "ContinuationToken", required = false)
@@ -60,5 +62,51 @@ public class ListAllMyBucketsResult {
 
   public String continuationToken() {
     return continuationToken;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "ListAllMyBucketsResult{owner=%s, buckets=%s, prefix=%s, continuationToken=%s}",
+        Utils.stringify(owner),
+        Utils.stringify(buckets),
+        Utils.stringify(prefix),
+        Utils.stringify(continuationToken));
+  }
+
+  /** Bucket information of {@link ListAllMyBucketsResult}. */
+  @Root(name = "Bucket", strict = false)
+  public static class Bucket {
+    @Element(name = "Name")
+    private String name;
+
+    @Element(name = "CreationDate")
+    private Time.S3Time creationDate;
+
+    @Element(name = "BucketRegion", required = false)
+    private String bucketRegion;
+
+    public Bucket() {}
+
+    /** Returns bucket name. */
+    public String name() {
+      return name;
+    }
+
+    /** Returns creation date. */
+    public ZonedDateTime creationDate() {
+      return creationDate == null ? null : creationDate.toZonedDateTime();
+    }
+
+    public String bucketRegion() {
+      return bucketRegion;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "Bucket{name=%s, creationDate=%s, bucketRegion=%s}",
+          Utils.stringify(name), Utils.stringify(creationDate), Utils.stringify(bucketRegion));
+    }
   }
 }

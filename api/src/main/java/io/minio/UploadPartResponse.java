@@ -16,13 +16,13 @@
 
 package io.minio;
 
+import io.minio.messages.Part;
 import okhttp3.Headers;
 
-/** Response class of {@link S3Base#uploadPartAsync}. */
+/** Response of {@link BaseS3Client#uploadPart}. */
 public class UploadPartResponse extends GenericResponse {
   private String uploadId;
-  private int partNumber;
-  private String etag;
+  private Part part;
 
   public UploadPartResponse(
       Headers headers,
@@ -34,19 +34,22 @@ public class UploadPartResponse extends GenericResponse {
       String etag) {
     super(headers, bucket, region, object);
     this.uploadId = uploadId;
-    this.partNumber = partNumber;
-    this.etag = etag;
+    this.part =
+        new Part(
+            partNumber,
+            etag,
+            headers.get("x-amz-checksum-crc32"),
+            headers.get("x-amz-checksum-crc32c"),
+            headers.get("x-amz-checksum-crc64nvme"),
+            headers.get("x-amz-checksum-sha1"),
+            headers.get("x-amz-checksum-sha256"));
   }
 
   public String uploadId() {
     return uploadId;
   }
 
-  public int partNumber() {
-    return partNumber;
-  }
-
-  public String etag() {
-    return etag;
+  public Part part() {
+    return part;
   }
 }

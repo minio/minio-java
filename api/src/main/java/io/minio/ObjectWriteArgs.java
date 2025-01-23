@@ -16,18 +16,19 @@
 
 package io.minio;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import io.minio.messages.Retention;
 import io.minio.messages.Tags;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 
-/** Base argument class for writing object. */
+/**
+ * Common arguments of {@link UploadSnowballObjectsArgs}, {@link UploadSnowballObjectsArgs}, {@link
+ * PutObjectBaseArgs}, {@link ComposeObjectArgs} and {@link CopyObjectArgs}.
+ */
 public abstract class ObjectWriteArgs extends ObjectArgs {
   // allowed maximum object size is 5TiB.
   public static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
@@ -37,20 +38,30 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
   public static final long MAX_PART_SIZE = 5L * 1024 * 1024 * 1024;
   public static final int MAX_MULTIPART_COUNT = 10000;
 
-  protected Multimap<String, String> headers =
-      Multimaps.unmodifiableMultimap(HashMultimap.create());
-  protected Multimap<String, String> userMetadata =
-      Multimaps.unmodifiableMultimap(HashMultimap.create());
+  protected Http.Headers headers;
+  protected Http.Headers userMetadata;
   protected ServerSideEncryption sse;
   protected Tags tags = new Tags();
   protected Retention retention;
   protected boolean legalHold;
 
-  public Multimap<String, String> headers() {
+  protected ObjectWriteArgs() {}
+
+  protected ObjectWriteArgs(ObjectWriteArgs args) {
+    super(args);
+    this.headers = args.headers;
+    this.userMetadata = args.userMetadata;
+    this.sse = args.sse;
+    this.tags = args.tags;
+    this.retention = args.retention;
+    this.legalHold = args.legalHold;
+  }
+
+  public Http.Headers headers() {
     return headers;
   }
 
-  public Multimap<String, String> userMetadata() {
+  public Http.Headers userMetadata() {
     return userMetadata;
   }
 
@@ -70,74 +81,73 @@ public abstract class ObjectWriteArgs extends ObjectArgs {
     return legalHold;
   }
 
-  public Multimap<String, String> genHeaders() {
-    Multimap<String, String> headers = HashMultimap.create();
+  public MediaType contentType() throws IOException {
+    return (headers != null && headers.getFirst(Http.Headers.CONTENT_TYPE) != null)
+        ? MediaType.parse(headers.getFirst(Http.Headers.CONTENT_TYPE))
+        : null;
+  }
 
-    headers.putAll(this.headers);
-    headers.putAll(userMetadata);
+  public Http.Headers makeHeaders() {
+    return makeHeaders(null, null);
+  }
 
-    if (sse != null) {
-      headers.putAll(Multimaps.forMap(sse.headers()));
-    }
+  public Http.Headers makeHeaders(MediaType contentType, Http.Headers checksumHeaders) {
+    Http.Headers headers =
+        Http.Headers.merge(
+            this.headers, userMetadata, sse == null ? null : sse.headers(), checksumHeaders);
 
     String tagging =
         tags.get().entrySet().stream()
-            .map(e -> S3Escaper.encode(e.getKey()) + "=" + S3Escaper.encode(e.getValue()))
+            .map(e -> Utils.encode(e.getKey()) + "=" + Utils.encode(e.getValue()))
             .collect(Collectors.joining("&"));
-    if (!tagging.isEmpty()) {
-      headers.put("x-amz-tagging", tagging);
-    }
+    if (!tagging.isEmpty()) headers.put("x-amz-tagging", tagging);
 
     if (retention != null && retention.mode() != null) {
-      headers.put("x-amz-object-lock-mode", retention.mode().name());
+      headers.put("x-amz-object-lock-mode", retention.mode().toString());
       headers.put(
           "x-amz-object-lock-retain-until-date",
-          retention.retainUntilDate().format(Time.RESPONSE_DATE_FORMAT));
+          retention.retainUntilDate().format(Time.ISO8601UTC_FORMAT));
     }
 
-    if (legalHold) {
-      headers.put("x-amz-object-lock-legal-hold", "ON");
-    }
+    if (legalHold) headers.put("x-amz-object-lock-legal-hold", "ON");
+    if (contentType != null) headers.put(Http.Headers.CONTENT_TYPE, contentType.toString());
 
     return headers;
   }
 
-  protected void validateSse(HttpUrl url) {
-    checkSse(sse, url);
+  protected void validateSse(boolean isHttps) {
+    checkSse(sse, isHttps);
   }
 
-  /** Base argument builder class for {@link ObjectWriteArgs}. */
+  /** Builder of {@link ObjectWriteArgs}. */
   @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectWriteArgs>
       extends ObjectArgs.Builder<B, A> {
     public B headers(Map<String, String> headers) {
-      final Multimap<String, String> headersCopy = toMultimap(headers);
-      operations.add(args -> args.headers = headersCopy);
-      return (B) this;
+      return headers(new Http.Headers(headers));
     }
 
-    public B headers(Multimap<String, String> headers) {
-      final Multimap<String, String> headersCopy = copyMultimap(headers);
-      operations.add(args -> args.headers = headersCopy);
+    public B headers(Http.Headers headers) {
+      final Http.Headers finalHeaders = new Http.Headers(headers);
+      operations.add(args -> args.headers = finalHeaders);
       return (B) this;
     }
 
     public B userMetadata(Map<String, String> userMetadata) {
-      return userMetadata((userMetadata == null) ? null : Multimaps.forMap(userMetadata));
+      return userMetadata(new Http.Headers(userMetadata));
     }
 
-    public B userMetadata(Multimap<String, String> userMetadata) {
-      Multimap<String, String> userMetadataCopy = HashMultimap.create();
+    public B userMetadata(Http.Headers userMetadata) {
+      Http.Headers normalizedHeaders = new Http.Headers();
       if (userMetadata != null) {
         for (String key : userMetadata.keySet()) {
-          userMetadataCopy.putAll(
+          normalizedHeaders.put(
               (key.toLowerCase(Locale.US).startsWith("x-amz-meta-") ? "" : "x-amz-meta-") + key,
               userMetadata.get(key));
         }
       }
 
-      final Multimap<String, String> finalUserMetadata =
-          Multimaps.unmodifiableMultimap(userMetadataCopy);
+      final Http.Headers finalUserMetadata = normalizedHeaders;
       operations.add(args -> args.userMetadata = finalUserMetadata);
       return (B) this;
     }

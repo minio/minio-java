@@ -16,79 +16,83 @@
 
 package io.minio;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Objects;
+import okhttp3.MediaType;
 
-/** Argument class of {@link MinioAsyncClient#putObject} and {@link MinioClient#putObject}. */
+/**
+ * Arguments of {@link MinioAsyncClient#putObject(io.minio.PutObjectArgs)} and {@link
+ * MinioClient#putObject}.
+ */
 public class PutObjectArgs extends PutObjectBaseArgs {
-  private BufferedInputStream stream;
+  private InputStream stream;
+  private byte[] data;
 
-  public BufferedInputStream stream() {
+  public InputStream stream() {
     return stream;
   }
 
-  /**
-   * Gets content type. It returns if content type is set (or) value of "Content-Type" header (or)
-   * default "application/octet-stream".
-   */
-  public String contentType() throws IOException {
-    String contentType = super.contentType();
-    return (contentType != null) ? contentType : "application/octet-stream";
+  public byte[] data() {
+    return data;
+  }
+
+  public MediaType contentType() throws IOException {
+    return super.contentType();
   }
 
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link PutObjectArgs}. */
+  /** Builder of {@link PutObjectArgs}. */
   public static final class Builder extends PutObjectBaseArgs.Builder<Builder, PutObjectArgs> {
     @Override
     protected void validate(PutObjectArgs args) {
       super.validate(args);
-      validateNotNull(args.stream, "stream");
-    }
-
-    /**
-     * Sets stream to upload. Two ways to provide object/part sizes.
-     *
-     * <ul>
-     *   <li>If object size is unknown, pass -1 to objectSize and pass valid partSize.
-     *   <li>If object size is known, pass -1 to partSize for auto detect; else pass valid partSize
-     *       to control memory usage and no. of parts in upload.
-     *   <li>If partSize is greater than objectSize, objectSize is used as partSize.
-     * </ul>
-     *
-     * <p>A valid part size is between 5MiB to 5GiB (both limits inclusive).
-     */
-    public Builder stream(InputStream stream, long objectSize, long partSize) {
-      validateNotNull(stream, "stream");
-
-      long[] partinfo = getPartInfo(objectSize, partSize);
-      long pSize = partinfo[0];
-      int pCount = (int) partinfo[1];
-
-      final BufferedInputStream bis =
-          (stream instanceof BufferedInputStream)
-              ? (BufferedInputStream) stream
-              : new BufferedInputStream(stream);
-      return setStream(bis, objectSize, pSize, pCount);
+      if (args.stream == null && args.data == null) {
+        throw new IllegalArgumentException("either stream or data must be provided");
+      }
     }
 
     private Builder setStream(
-        BufferedInputStream stream, long objectSize, long partSize, int partCount) {
+        InputStream stream, byte[] data, Long objectSize, long partSize, int partCount) {
       operations.add(args -> args.stream = stream);
+      operations.add(args -> args.data = data);
       operations.add(args -> args.objectSize = objectSize);
       operations.add(args -> args.partSize = partSize);
       operations.add(args -> args.partCount = partCount);
       return this;
     }
 
-    public Builder contentType(String contentType) {
-      validateContentType(contentType);
-      operations.add(args -> args.contentType = contentType);
-      return this;
+    /**
+     * Sets stream to upload. Two ways to provide object/part sizes.
+     *
+     * <ul>
+     *   <li>If object size is unknown, pass valid part size.
+     *   <li>If object size is known, pass valid part size to control memory usage and no. of parts
+     *       to upload.
+     * </ul>
+     *
+     * <p>A valid part size is between 5MiB to 5GiB (both limits inclusive).
+     */
+    public Builder stream(InputStream stream, Long objectSize, Long partSize) {
+      Utils.validateNotNull(stream, "stream");
+      long[] partinfo = getPartInfo(objectSize, partSize);
+      return setStream(stream, null, objectSize, partinfo[0], (int) partinfo[1]);
+    }
+
+    public Builder data(byte[] data, int length) {
+      if (data != null && length < 0) {
+        throw new IllegalArgumentException("valid length must be provided");
+      }
+      return setStream(
+          null,
+          data,
+          data == null ? null : (long) length,
+          (long) Math.max(MIN_MULTIPART_SIZE, data == null ? -1 : length),
+          1);
     }
   }
 
@@ -98,11 +102,11 @@ public class PutObjectArgs extends PutObjectBaseArgs {
     if (!(o instanceof PutObjectArgs)) return false;
     if (!super.equals(o)) return false;
     PutObjectArgs that = (PutObjectArgs) o;
-    return Objects.equals(stream, that.stream);
+    return Objects.equals(stream, that.stream) && Arrays.equals(data, that.data);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), stream);
+    return Objects.hash(super.hashCode(), stream, data);
   }
 }

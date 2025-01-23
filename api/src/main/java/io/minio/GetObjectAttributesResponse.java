@@ -20,7 +20,7 @@ import io.minio.messages.GetObjectAttributesOutput;
 import okhttp3.Headers;
 
 /**
- * Response class of {@link MinioAsyncClient#getObjectAttributes} and {@link
+ * Response of {@link MinioAsyncClient#getObjectAttributes} and {@link
  * MinioClient#getObjectAttributes}.
  */
 public class GetObjectAttributesResponse extends GenericResponse {

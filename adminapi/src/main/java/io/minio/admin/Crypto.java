@@ -17,6 +17,7 @@
 
 package io.minio.admin;
 
+import io.minio.errors.MinioException;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -156,22 +157,25 @@ public class Crypto {
   }
 
   private static byte[] generateEncryptDecryptAdditionalData(
-      boolean encryptFlag, int aeadId, byte[] key, byte[] paddedNonce)
-      throws InvalidCipherTextException {
-    AEADCipher cipher = getEncryptCipher(aeadId, key, paddedNonce);
-    int outputLength = cipher.getMac().length;
-    byte[] additionalData = new byte[outputLength];
-    cipher.doFinal(additionalData, 0);
-    return appendBytes(new byte[] {0}, additionalData);
+      boolean encryptFlag, int aeadId, byte[] key, byte[] paddedNonce) throws MinioException {
+    try {
+      AEADCipher cipher = getEncryptCipher(aeadId, key, paddedNonce);
+      int outputLength = cipher.getMac().length;
+      byte[] additionalData = new byte[outputLength];
+      cipher.doFinal(additionalData, 0);
+      return appendBytes(new byte[] {0}, additionalData);
+    } catch (InvalidCipherTextException e) {
+      throw new MinioException(e);
+    }
   }
 
   private static byte[] generateEncryptAdditionalData(int aeadId, byte[] key, byte[] paddedNonce)
-      throws InvalidCipherTextException {
+      throws MinioException {
     return generateEncryptDecryptAdditionalData(true, aeadId, key, paddedNonce);
   }
 
   private static byte[] generateDecryptAdditionalData(int aeadId, byte[] key, byte[] paddedNonce)
-      throws InvalidCipherTextException {
+      throws MinioException {
     return generateEncryptDecryptAdditionalData(false, aeadId, key, paddedNonce);
   }
 
@@ -190,7 +194,7 @@ public class Crypto {
   }
 
   /** Encrypt data payload. */
-  public static byte[] encrypt(byte[] payload, String password) throws InvalidCipherTextException {
+  public static byte[] encrypt(byte[] payload, String password) throws MinioException {
     byte[] nonce = random(NONCE_LENGTH);
     byte[] salt = random(SALT_LENGTH);
 
@@ -219,7 +223,11 @@ public class Crypto {
       int outputLength = cipher.getOutputSize(chunk.length);
       byte[] encryptedData = new byte[outputLength];
       int outputOffset = cipher.processBytes(chunk, 0, chunk.length, encryptedData, 0);
-      cipher.doFinal(encryptedData, outputOffset);
+      try {
+        cipher.doFinal(encryptedData, outputOffset);
+      } catch (InvalidCipherTextException e) {
+        throw new MinioException(e);
+      }
 
       result = appendBytes(result, encryptedData);
 
@@ -243,20 +251,24 @@ public class Crypto {
     private byte[] oneByte = null;
     private boolean eof = false;
 
-    public DecryptReader(InputStream inputStream, byte[] secret)
-        throws EOFException, IOException, InvalidCipherTextException {
+    public DecryptReader(InputStream inputStream, byte[] secret) throws MinioException {
       this.inputStream = inputStream;
       this.secret = secret;
-      readFully(this.inputStream, this.salt, true);
-      readFully(this.inputStream, this.aeadId, true);
-      readFully(this.inputStream, this.nonce, true);
+      try {
+        readFully(this.inputStream, this.salt, true);
+        readFully(this.inputStream, this.aeadId, true);
+        readFully(this.inputStream, this.nonce, true);
+      } catch (EOFException e) {
+        throw new MinioException(e);
+      } catch (IOException e) {
+        throw new MinioException(e);
+      }
       this.key = generateKey(this.secret, this.salt);
       byte[] paddedNonce = appendBytes(this.nonce, new byte[] {0, 0, 0, 0});
       this.additionalData = generateDecryptAdditionalData(this.aeadId[0], this.key, paddedNonce);
     }
 
-    private byte[] decrypt(byte[] encryptedData, boolean lastChunk)
-        throws InvalidCipherTextException {
+    private byte[] decrypt(byte[] encryptedData, boolean lastChunk) throws MinioException {
       this.count++;
       if (lastChunk) {
         this.additionalData = markAsLast(this.additionalData);
@@ -268,12 +280,16 @@ public class Crypto {
       byte[] decryptedData = new byte[outputLength];
       int outputOffset =
           cipher.processBytes(encryptedData, 0, encryptedData.length, decryptedData, 0);
-      cipher.doFinal(decryptedData, outputOffset);
+      try {
+        cipher.doFinal(decryptedData, outputOffset);
+      } catch (InvalidCipherTextException e) {
+        throw new MinioException(e);
+      }
       return decryptedData;
     }
 
     /** Read a chunk at least one byte more than chunk size. */
-    private byte[] readChunk() throws IOException {
+    private byte[] readChunk() throws EOFException, IOException {
       if (this.eof) {
         return new byte[] {};
       }
@@ -302,19 +318,24 @@ public class Crypto {
       return baos.toByteArray();
     }
 
-    public byte[] readAllBytes() throws IOException, InvalidCipherTextException {
+    public byte[] readAllBytes() throws MinioException {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       while (!this.eof) {
-        byte[] payload = this.readChunk();
-        baos.write(this.decrypt(payload, this.eof));
+        try {
+          byte[] payload = this.readChunk();
+          baos.write(this.decrypt(payload, this.eof));
+        } catch (EOFException e) {
+          throw new MinioException(e);
+        } catch (IOException e) {
+          throw new MinioException(e);
+        }
       }
       return baos.toByteArray();
     }
   }
 
   /** Decrypt data stream. */
-  public static byte[] decrypt(InputStream inputStream, String password)
-      throws EOFException, IOException, InvalidCipherTextException {
+  public static byte[] decrypt(InputStream inputStream, String password) throws MinioException {
     DecryptReader reader =
         new DecryptReader(inputStream, password.getBytes(StandardCharsets.UTF_8));
     return reader.readAllBytes();

@@ -16,11 +16,12 @@
 
 package io.minio.credentials;
 
-import io.minio.Digest;
+import io.minio.Checksum;
+import io.minio.Http;
 import io.minio.Signer;
 import io.minio.Time;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import io.minio.Utils;
+import io.minio.errors.MinioException;
 import java.security.ProviderException;
 import java.time.ZonedDateTime;
 import java.util.Objects;
@@ -41,7 +42,7 @@ import org.simpleframework.xml.Root;
  * href="https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html">AssumeRole
  * API</a>.
  */
-public class AssumeRoleProvider extends AssumeRoleBaseProvider {
+public class AssumeRoleProvider extends BaseIdentityProvider {
   private final String accessKey;
   private final String secretKey;
   private final String region;
@@ -59,7 +60,7 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
       @Nullable String roleSessionName,
       @Nullable String externalId,
       @Nullable OkHttpClient customHttpClient)
-      throws NoSuchAlgorithmException {
+      throws MinioException {
     super(customHttpClient);
     stsEndpoint = Objects.requireNonNull(stsEndpoint, "STS endpoint cannot be empty");
     HttpUrl url = Objects.requireNonNull(HttpUrl.parse(stsEndpoint), "Invalid STS endpoint");
@@ -75,13 +76,6 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
       throw new IllegalArgumentException("Length of ExternalId must be in between 2 and 1224");
     }
 
-    String host = url.host() + ":" + url.port();
-    // ignore port when port and service matches i.e HTTP -> 80, HTTPS -> 443
-    if ((url.scheme().equals("http") && url.port() == 80)
-        || (url.scheme().equals("https") && url.port() == 443)) {
-      host = url.host();
-    }
-
     HttpUrl.Builder urlBuilder =
         newUrlBuilder(
             url,
@@ -95,11 +89,11 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
     }
 
     String data = urlBuilder.build().encodedQuery();
-    this.contentSha256 = Digest.sha256Hash(data);
+    this.contentSha256 = Checksum.hexString(Checksum.SHA256.sum(data));
     this.request =
         new Request.Builder()
             .url(url)
-            .header("Host", host)
+            .header(Http.Headers.HOST, Utils.getHostHeader(url))
             .method(
                 "POST",
                 RequestBody.create(data, MediaType.parse("application/x-www-form-urlencoded")))
@@ -112,26 +106,30 @@ public class AssumeRoleProvider extends AssumeRoleBaseProvider {
       return Signer.signV4Sts(
           this.request
               .newBuilder()
-              .header("x-amz-date", ZonedDateTime.now().format(Time.AMZ_DATE_FORMAT))
+              .header(Http.Headers.X_AMZ_DATE, ZonedDateTime.now().format(Time.AMZ_DATE_FORMAT))
               .build(),
           region,
           accessKey,
           secretKey,
           contentSha256);
-    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+    } catch (MinioException e) {
       throw new ProviderException("Signature calculation failed", e);
     }
   }
 
   @Override
-  protected Class<? extends AssumeRoleBaseProvider.Response> getResponseClass() {
-    return AssumeRoleResponse.class;
+  protected Class<? extends BaseIdentityProvider.Response> getResponseClass() {
+    return Response.class;
   }
 
-  /** Object representation of response XML of AssumeRole API. */
+  /**
+   * Response XML of <a
+   * href="https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html">AssumeRole
+   * API</a>.
+   */
   @Root(name = "AssumeRoleResponse", strict = false)
   @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class AssumeRoleResponse implements AssumeRoleBaseProvider.Response {
+  public static class Response implements BaseIdentityProvider.Response {
     @Path(value = "AssumeRoleResult")
     @Element(name = "Credentials")
     private Credentials credentials;

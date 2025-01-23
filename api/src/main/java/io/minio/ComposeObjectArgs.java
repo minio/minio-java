@@ -16,36 +16,30 @@
 
 package io.minio;
 
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import okhttp3.HttpUrl;
 
 /**
- * Argument class of {@link MinioAsyncClient#composeObject} and {@link MinioClient#composeObject}.
+ * Arguments of {@link MinioAsyncClient#composeObject(io.minio.ComposeObjectArgs)} and {@link
+ * MinioClient#composeObject}.
  */
 public class ComposeObjectArgs extends ObjectWriteArgs {
-  List<ComposeSource> sources;
+  List<SourceObject> sources;
 
   protected ComposeObjectArgs() {}
 
-  public ComposeObjectArgs(CopyObjectArgs args) {
-    this.extraHeaders = args.extraHeaders;
-    this.extraQueryParams = args.extraQueryParams;
-    this.bucketName = args.bucketName;
-    this.region = args.region;
-    this.objectName = args.objectName;
-    this.headers = args.headers;
-    this.userMetadata = args.userMetadata;
-    this.sse = args.sse;
-    this.tags = args.tags;
-    this.retention = args.retention;
-    this.legalHold = args.legalHold;
-    this.sources = new LinkedList<>();
-    this.sources.add(new ComposeSource(args.source()));
+  public ComposeObjectArgs(ComposeObjectArgs args, List<SourceObject> sources) {
+    super(args);
+    this.sources = sources;
   }
 
-  public List<ComposeSource> sources() {
+  public ComposeObjectArgs(CopyObjectArgs args) {
+    super(args);
+    this.sources = Collections.singletonList(args.source());
+  }
+
+  public List<SourceObject> sources() {
     return sources;
   }
 
@@ -54,18 +48,18 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
   }
 
   @Override
-  public void validateSse(HttpUrl url) {
-    super.validateSse(url);
-    for (ComposeSource source : sources) {
-      source.validateSsec(url);
+  public void validateSse(boolean isHttps) {
+    super.validateSse(isHttps);
+    for (SourceObject source : sources) {
+      source.validateSsec(isHttps);
     }
   }
 
-  /** Argument builder of {@link ComposeObjectArgs}. */
+  /** Builder of {@link ComposeObjectArgs}. */
   public static final class Builder extends ObjectWriteArgs.Builder<Builder, ComposeObjectArgs> {
-    private void validateSources(List<ComposeSource> sources) {
+    private void validateSources(List<SourceObject> sources) {
       if (sources == null || sources.isEmpty()) {
-        throw new IllegalArgumentException("compose sources cannot be empty");
+        throw new IllegalArgumentException("source objects cannot be empty");
       }
     }
 
@@ -75,7 +69,7 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
       validateSources(args.sources);
     }
 
-    public Builder sources(List<ComposeSource> sources) {
+    public Builder sources(List<SourceObject> sources) {
       validateSources(sources);
       operations.add(args -> args.sources = sources);
       return this;

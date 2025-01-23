@@ -17,54 +17,44 @@
 import io.minio.MinioClient;
 import io.minio.SetBucketLifecycleArgs;
 import io.minio.errors.MinioException;
-import io.minio.messages.Expiration;
+import io.minio.messages.Filter;
 import io.minio.messages.LifecycleConfiguration;
-import io.minio.messages.LifecycleRule;
-import io.minio.messages.RuleFilter;
 import io.minio.messages.Status;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SetBucketLifecycle {
   /** MinioClient.SetBucketLifecycle() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      List<LifecycleRule> rules = new LinkedList<>();
-      rules.add(
-          new LifecycleRule(
-              Status.ENABLED,
-              null,
-              new Expiration((ZonedDateTime) null, 365, null),
-              new RuleFilter("logs/"),
-              "rule2",
-              null,
-              null,
-              null));
-      LifecycleConfiguration config = new LifecycleConfiguration(rules);
+    List<LifecycleConfiguration.Rule> rules = new ArrayList<>();
+    rules.add(
+        new LifecycleConfiguration.Rule(
+            Status.ENABLED,
+            null,
+            new LifecycleConfiguration.Expiration((ZonedDateTime) null, 365, null, null),
+            new Filter("logs/"),
+            "rule2",
+            null,
+            null,
+            null));
+    LifecycleConfiguration config = new LifecycleConfiguration(rules);
 
-      minioClient.setBucketLifecycle(
-          SetBucketLifecycleArgs.builder().bucket("my-bucketname").config(config).build());
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    minioClient.setBucketLifecycle(
+        SetBucketLifecycleArgs.builder().bucket("my-bucket").config(config).build());
   }
 }

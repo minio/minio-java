@@ -21,9 +21,9 @@ import java.io.InputStream;
 import okhttp3.Headers;
 
 /**
- * Response class of {@link MinioAsyncClient#promptObject} and {@link MinioClient#promptObject}.
- * This class is {@link InputStream} interface compatible and it must be closed after use to release
- * underneath network resources.
+ * Response of {@link MinioAsyncClient#promptObject} and {@link MinioClient#promptObject}. As it is
+ * {@link InputStream} interface compatible, it must be closed after use to release underneath
+ * network resources.
  */
 public class PromptObjectResponse extends FilterInputStream {
   private GenericResponse response;

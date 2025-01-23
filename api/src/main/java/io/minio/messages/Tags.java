@@ -17,18 +17,21 @@
 package io.minio.messages;
 
 import io.minio.Utils;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import org.simpleframework.xml.ElementMap;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Path;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of request XML of <a
+ * Request and response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketTagging.html">PutBucketTagging
- * API</a> and <a
+ * API</a>, <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectTagging.html">PutObjectTagging
- * API</a> response XML of <a
+ * API</a>, <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html">GetBucketTagging
  * API</a> and <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectTagging.html">GetObjectTagging
@@ -47,21 +50,13 @@ public class Tags {
   private static final int MAX_TAG_COUNT = 50;
 
   @Path(value = "TagSet")
-  @ElementMap(
-      attribute = false,
-      entry = "Tag",
-      inline = true,
-      key = "Key",
-      value = "Value",
-      required = false)
-  Map<String, String> tags;
+  @ElementList(entry = "Tag", inline = true, required = false)
+  private List<Tag> tags;
 
   public Tags() {}
 
-  private Tags(Map<String, String> tags, boolean isObject) throws IllegalArgumentException {
-    if (tags == null) {
-      return;
-    }
+  private Tags(Map<String, String> tags, boolean isObject) {
+    if (tags == null) return;
 
     int limit = isObject ? MAX_OBJECT_TAG_COUNT : MAX_TAG_COUNT;
     if (tags.size() > limit) {
@@ -74,6 +69,7 @@ public class Tags {
               + tags.size());
     }
 
+    this.tags = new ArrayList<>();
     for (Map.Entry<String, String> entry : tags.entrySet()) {
       String key = entry.getKey();
       if (key.length() == 0 || key.length() > MAX_KEY_LENGTH || key.contains("&")) {
@@ -84,23 +80,33 @@ public class Tags {
       if (value.length() > MAX_VALUE_LENGTH || value.contains("&")) {
         throw new IllegalArgumentException("invalid tag value '" + value + "'");
       }
-    }
 
-    this.tags = Utils.unmodifiableMap(tags);
+      this.tags.add(new Tag(key, value));
+    }
   }
 
   /** Creates new bucket tags. */
-  public static Tags newBucketTags(Map<String, String> tags) throws IllegalArgumentException {
+  public static Tags newBucketTags(Map<String, String> tags) {
     return new Tags(tags, false);
   }
 
   /** Creates new object tags. */
-  public static Tags newObjectTags(Map<String, String> tags) throws IllegalArgumentException {
+  public static Tags newObjectTags(Map<String, String> tags) {
     return new Tags(tags, true);
   }
 
-  /** Returns tags. */
   public Map<String, String> get() {
-    return Utils.unmodifiableMap(tags);
+    Map<String, String> map = new HashMap<>();
+    if (tags != null) {
+      for (Tag tag : tags) {
+        map.put(tag.key(), tag.value());
+      }
+    }
+    return map;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Tags{%s}", Utils.stringify(get()));
   }
 }

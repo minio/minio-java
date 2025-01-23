@@ -19,16 +19,16 @@ package io.minio;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.minio.credentials.Credentials;
+import io.minio.errors.MinioException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nonnull;
 
@@ -44,7 +44,7 @@ public class PostPolicy {
             "bucket",
             "x-amz-algorithm",
             "x-amz-credential",
-            "x-amz-date",
+            Http.Headers.X_AMZ_DATE.toLowerCase(Locale.US),
             "policy",
             "x-amz-signature"
           });
@@ -173,22 +173,17 @@ public class PostPolicy {
    * x-amz-credential, x-amz-security-token, x-amz-date, policy and x-amz-signature.
    */
   public Map<String, String> formData(@Nonnull Credentials creds, @Nonnull String region)
-      throws NoSuchAlgorithmException, InvalidKeyException {
-    if (creds == null) {
-      throw new IllegalArgumentException("credentials cannot be null");
-    }
-
-    if (region.isEmpty()) {
-      throw new IllegalArgumentException("region cannot be empty");
-    }
+      throws MinioException {
+    if (creds == null) throw new IllegalArgumentException("credentials cannot be null");
+    if (region.isEmpty()) throw new IllegalArgumentException("region cannot be empty");
 
     if (!conditions.get(EQ).containsKey("key") && !conditions.get(STARTS_WITH).containsKey("key")) {
       throw new IllegalArgumentException("key condition must be set");
     }
 
     Map<String, Object> policyMap = new HashMap<>();
-    policyMap.put("expiration", expiration.format(Time.EXPIRATION_DATE_FORMAT));
-    List<List<Object>> conditionList = new LinkedList<>();
+    policyMap.put("expiration", expiration.format(Time.ISO8601UTC_FORMAT));
+    List<List<Object>> conditionList = new ArrayList<>();
     conditionList.add(Arrays.asList(new Object[] {"eq", "$bucket", bucketName}));
     for (Map.Entry<String, Map<String, String>> condition : conditions.entrySet()) {
       for (Map.Entry<String, String> entry : condition.getValue().entrySet()) {
@@ -228,14 +223,15 @@ public class PostPolicy {
     formData.put("x-amz-algorithm", ALGORITHM);
     formData.put("x-amz-credential", credential);
     if (creds.sessionToken() != null) {
-      formData.put("x-amz-security-token", creds.sessionToken());
+      formData.put(Http.Headers.X_AMZ_SECURITY_TOKEN, creds.sessionToken());
     }
-    formData.put("x-amz-date", amzDate);
+    formData.put(Http.Headers.X_AMZ_DATE, amzDate);
     formData.put("policy", policy);
     formData.put("x-amz-signature", signature);
     return formData;
   }
 
+  /** Get bucket name. */
   public String bucket() {
     return this.bucketName;
   }

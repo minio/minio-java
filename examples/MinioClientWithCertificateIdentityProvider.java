@@ -19,11 +19,12 @@ import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
 import io.minio.credentials.CertificateIdentityProvider;
 import io.minio.credentials.Provider;
+import io.minio.errors.MinioException;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
 public class MinioClientWithCertificateIdentityProvider {
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws MinioException {
     // STS endpoint usually point to MinIO server.
     String stsEndpoint = "https://STS-HOST:STS-PORT/";
 
@@ -39,7 +40,8 @@ public class MinioClientWithCertificateIdentityProvider {
     // CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
     //
     // Certificate serverCertificate = null;
-    // try (FileInputStream fis = new FileInputStream("/home/bala/.minio/certs/public.crt")) {
+    // try (FileInputStream fis =
+    //     Files.newInputStream(Paths.get("/home/bala/.minio/certs/public.crt"))) {
     //   serverCertificate = certificateFactory.generateCertificate(fis);
     // }
     //
@@ -61,7 +63,8 @@ public class MinioClientWithCertificateIdentityProvider {
     // PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKey);
     //
     // Certificate certificateChain = null;
-    // try (FileInputStream fis = new FileInputStream("/home/bala/.minio/certs/CAs/client1.crt")) {
+    // try (FileInputStream fis =
+    //     Files.newInputStream(Paths.get("/home/bala/.minio/certs/CAs/client1.crt"))) {
     //   certificateChain = certificateFactory.generateCertificate(fis);
     // }
     //
@@ -102,7 +105,7 @@ public class MinioClientWithCertificateIdentityProvider {
     // Get information of an object.
     StatObjectResponse stat =
         minioClient.statObject(
-            StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+            StatObjectArgs.builder().bucket("my-bucket").object("my-object").build());
     System.out.println(stat);
   }
 }

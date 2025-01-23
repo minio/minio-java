@@ -16,15 +16,37 @@
 
 package io.minio;
 
-import io.minio.http.HttpUtils;
-import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-/** Base argument class holds bucket name and region. */
+/**
+ * Common arguments of {@link BucketExistsArgs}, {@link CreateBucketBaseArgs}, {@link
+ * DeleteBucketCorsArgs}, {@link DeleteBucketEncryptionArgs}, {@link DeleteBucketLifecycleArgs},
+ * {@link DeleteBucketNotificationArgs}, {@link DeleteBucketPolicyArgs}, {@link
+ * DeleteBucketReplicationArgs}, {@link DeleteBucketTagsArgs}, {@link
+ * DeleteObjectLockConfigurationArgs}, {@link DeleteObjectsArgs}, {@link GetBucketCorsArgs}, {@link
+ * GetBucketEncryptionArgs}, {@link GetBucketLifecycleArgs}, {@link GetBucketLocationArgs}, {@link
+ * GetBucketNotificationArgs}, {@link GetBucketPolicyArgs}, {@link GetBucketReplicationArgs}, {@link
+ * GetBucketTagsArgs}, {@link GetBucketVersioningArgs}, {@link GetObjectLockConfigurationArgs},
+ * {@link ListenBucketNotificationArgs}, {@link ListMultipartUploadsArgs}, {@link ListObjectsArgs},
+ * {@link ListObjectsV1Args}, {@link ListObjectsV2Args}, {@link ListObjectVersionsArgs}, {@link
+ * ListPartsArgs}, {@link ObjectArgs}, {@link PutObjectFanOutArgs}, {@link RemoveBucketArgs}, {@link
+ * RemoveObjectsArgs}, {@link SetBucketCorsArgs}, {@link SetBucketEncryptionArgs}, {@link
+ * SetBucketLifecycleArgs}, {@link SetBucketNotificationArgs}, {@link SetBucketPolicyArgs}, {@link
+ * SetBucketReplicationArgs}, {@link SetBucketTagsArgs}, {@link SetBucketVersioningArgs} and {@link
+ * SetObjectLockConfigurationArgs}.
+ */
 public abstract class BucketArgs extends BaseArgs {
   protected String bucketName;
   protected String region;
+
+  protected BucketArgs() {}
+
+  protected BucketArgs(BucketArgs args) {
+    super(args);
+    this.bucketName = args.bucketName;
+    this.region = args.region;
+  }
 
   public String bucket() {
     return bucketName;
@@ -34,7 +56,7 @@ public abstract class BucketArgs extends BaseArgs {
     return region;
   }
 
-  /** Base argument builder class for {@link BucketArgs}. */
+  /** Builder of {@link BucketArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends BucketArgs>
       extends BaseArgs.Builder<B, A> {
     private static final Pattern BUCKET_NAME_REGEX =
@@ -42,7 +64,7 @@ public abstract class BucketArgs extends BaseArgs {
     protected boolean skipValidation = false;
 
     protected void validateBucketName(String name) {
-      validateNotNull(name, "bucket name");
+      Utils.validateNotNull(name, "bucket name");
       if (skipValidation) {
         return;
       }
@@ -55,7 +77,7 @@ public abstract class BucketArgs extends BaseArgs {
                 + "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html");
       }
 
-      if (InetAddressValidator.getInstance().isValidInet4Address(name)) {
+      if (Utils.isValidIPv4(name)) {
         throw new IllegalArgumentException(
             "bucket name '" + name + "' must not be formatted as an IP address");
       }
@@ -67,7 +89,7 @@ public abstract class BucketArgs extends BaseArgs {
     }
 
     private void validateRegion(String region) {
-      if (!skipValidation && region != null && !HttpUtils.REGION_REGEX.matcher(region).find()) {
+      if (!skipValidation && region != null && !Utils.REGION_REGEX.matcher(region).find()) {
         throw new IllegalArgumentException("invalid region " + region);
       }
     }

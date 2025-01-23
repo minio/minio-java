@@ -18,44 +18,36 @@ import io.minio.MinioClient;
 import io.minio.SetObjectLockConfigurationArgs;
 import io.minio.errors.MinioException;
 import io.minio.messages.ObjectLockConfiguration;
-import io.minio.messages.RetentionDurationDays;
 import io.minio.messages.RetentionMode;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class SetObjectLockConfiguration {
   /** MinioClient.setObjectLockConfiguration() exanple. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Declaring config with Retention mode as Compliance and duration as 100 days
-      ObjectLockConfiguration config =
-          new ObjectLockConfiguration(RetentionMode.COMPLIANCE, new RetentionDurationDays(100));
+    // Declaring config with Retention mode as Compliance and duration as 100 days
+    ObjectLockConfiguration config =
+        new ObjectLockConfiguration(
+            RetentionMode.COMPLIANCE, new ObjectLockConfiguration.RetentionDurationDays(100));
 
-      minioClient.setObjectLockConfiguration(
-          SetObjectLockConfigurationArgs.builder()
-              .bucket("my-lock-enabled-bucketname")
-              .config(config)
-              .build());
+    minioClient.setObjectLockConfiguration(
+        SetObjectLockConfigurationArgs.builder()
+            .bucket("my-lock-enabled-bucketname")
+            .config(config)
+            .build());
 
-      System.out.println("object-lock configuration is set successfully");
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    System.out.println("object-lock configuration is set successfully");
   }
 }

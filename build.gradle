@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = 'io.minio'
-    version = '8.6.1'
+    version = '9.0.0'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
@@ -47,19 +47,19 @@ subprojects {
 
     dependencies {
         api 'com.carrotsearch.thirdparty:simple-xml-safe:2.7.1'
-        api 'com.google.guava:guava:33.4.8-jre'
-        api 'com.squareup.okhttp3:okhttp:5.1.0'
-        api 'com.fasterxml.jackson.core:jackson-annotations:2.19.1'
-        api 'com.fasterxml.jackson.core:jackson-core:2.19.1'
-        api 'com.fasterxml.jackson.core:jackson-databind:2.19.1'
-        api 'org.bouncycastle:bcprov-jdk18on:1.81'
+        api 'com.google.guava:guava:33.5.0-jre'
+        api 'com.squareup.okhttp3:okhttp:5.2.1'
+        api 'com.fasterxml.jackson.core:jackson-annotations:2.20'
+        api 'com.fasterxml.jackson.core:jackson-core:2.20.0'
+        api 'com.fasterxml.jackson.core:jackson-databind:2.20.0'
+        api 'org.bouncycastle:bcprov-jdk18on:1.82'
         api 'org.apache.commons:commons-compress:1.28.0'
-        api 'commons-codec:commons-codec:1.18.0'
-        api 'org.xerial.snappy:snappy-java:1.1.10.7'
-        compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
+        api 'commons-codec:commons-codec:1.19.0'
+        api 'org.xerial.snappy:snappy-java:1.1.10.8'
+        compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.8'
 
-        testImplementation 'com.squareup.okhttp3:mockwebserver:5.1.0'
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.3'
+        testImplementation 'com.squareup.okhttp3:mockwebserver:5.2.1'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.0'
     }
 
     [compileJava, compileTestJava].each() {
@@ -94,13 +94,10 @@ subprojects {
         }
     }
 
-    task localeTest(type: Test) {
-        description = 'Runs tests with locale de.DE'
-        System.setProperty('user.language', 'de')
-        System.setProperty('user.country', 'DE')
-        systemProperties = System.properties
-        classpath = testing.suites.test.sources.runtimeClasspath
-        dependsOn test
+    tasks.register('localeTest', Test) {
+        description = 'Runs tests with locale de-DE'
+        systemProperty 'user.language', 'de'
+        systemProperty 'user.country', 'DE'
     }
 
     check.dependsOn localeTest
@@ -167,14 +164,15 @@ project(':api') {
         }
     }
 
-    artifacts {
-        archives javadocJar, sourcesJar, shadowJar
+    tasks.named('assemble') {
+        dependsOn tasks.named('shadowJar')
     }
 
-    tasks.withType(Jar) { task ->
-        task.doLast {
-            ant.checksum algorithm: 'md5', file: it.archivePath
-            ant.checksum algorithm: 'sha1', file: it.archivePath
+    tasks.withType(Jar).configureEach {
+        doLast {
+            def jarFile = archiveFile.get().asFile
+            ant.checksum algorithm: 'md5', file: jarFile
+            ant.checksum algorithm: 'sha1', file: jarFile
         }
     }
 
@@ -228,10 +226,10 @@ project(':api') {
     }
 
     signing {
-        setRequired {
+        required {
             gradle.taskGraph.allTasks.any { it.name.contains('LocalMavenWithChecksums') }
-            sign publishing.publications.minioJava
         }
+        sign publishing.publications.minioJava
     }
 }
 
@@ -248,7 +246,7 @@ project(':adminapi') {
 
     dependencies {
         api project(':api')
-        api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.1'
+        api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.0'
         testImplementation project(':api')
     }
 
@@ -286,14 +284,15 @@ project(':adminapi') {
         }
     }
 
-    artifacts {
-        archives javadocJar, sourcesJar, shadowJar
+    tasks.named('assemble') {
+        dependsOn tasks.named('shadowJar')
     }
 
-    tasks.withType(Jar) { task ->
-        task.doLast {
-            ant.checksum algorithm: 'md5', file: it.archivePath
-            ant.checksum algorithm: 'sha1', file: it.archivePath
+    tasks.withType(Jar).configureEach {
+        doLast {
+            def jarFile = archiveFile.get().asFile
+            ant.checksum algorithm: 'md5', file: jarFile
+            ant.checksum algorithm: 'sha1', file: jarFile
         }
     }
 
@@ -347,10 +346,10 @@ project(':adminapi') {
     }
 
     signing {
-        setRequired {
-            gradle.taskGraph.allTasks.any { it.name.contains('LocalMavenWithChecksumsRepository') }
-            sign publishing.publications.minioJava
+        required {
+            gradle.taskGraph.allTasks.any { it.name.contains('LocalMavenWithChecksums') }
         }
+        sign publishing.publications.minioJava
     }
 }
 
@@ -372,11 +371,9 @@ project(':examples') {
     }
 }
 
-import org.gradle.internal.os.OperatingSystem;
-
 project(':functional') {
     dependencies {
-        implementation 'org.junit.jupiter:junit-jupiter-api:5.13.3'
+        implementation 'org.junit.jupiter:junit-jupiter-api:5.14.0'
         implementation project(':api')
         implementation project(':adminapi')
     }
@@ -394,7 +391,7 @@ project(':functional') {
 
     task runFunctionalTest(type:JavaExec) {
         mainClass = 'FunctionalTest'
-        classpath = testing.suites.test.sources.runtimeClasspath
+        classpath = sourceSets.main.runtimeClasspath
 
         ext.endpoint = 'https://play.min.io:9000'
         if (rootProject.hasProperty('endpoint')) {

@@ -18,19 +18,31 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Base argument class holds object name and version ID along with bucket information. */
+/**
+ * Common arguments of {@link AbortMultipartUploadArgs}, {@link CompleteMultipartUploadArgs}, {@link
+ * CreateMultipartUploadArgs}, {@link ListPartsArgs}, {@link ObjectVersionArgs}, {@link
+ * ObjectWriteArgs}, {@link PromptObjectArgs}, {@link PutObjectAPIBaseArgs} and {@link
+ * UploadPartCopyArgs}.
+ */
 public abstract class ObjectArgs extends BucketArgs {
   protected String objectName;
+
+  protected ObjectArgs() {}
+
+  protected ObjectArgs(ObjectArgs args) {
+    super(args);
+    this.objectName = args.objectName;
+  }
 
   public String object() {
     return objectName;
   }
 
-  /** Base argument builder class for {@link ObjectArgs}. */
+  /** Builder of {@link ObjectArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectArgs>
       extends BucketArgs.Builder<B, A> {
     protected void validateObjectName(String name) {
-      validateNotEmptyString(name, "object name");
+      Utils.validateNotEmptyString(name, "object name");
       if (skipValidation) {
         return;
       }

@@ -16,16 +16,20 @@
 
 package io.minio.messages;
 
+import io.minio.Time;
 import io.minio.Utils;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of request XML of <a
+ * Request XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketLifecycleConfiguration.html">PutBucketLifecycleConfiguration
  * API</a> and response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLifecycleConfiguration.html">GetBucketLifecycleConfiguration
@@ -35,18 +39,348 @@ import org.simpleframework.xml.Root;
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 public class LifecycleConfiguration {
   @ElementList(name = "Rule", inline = true)
-  private List<LifecycleRule> rules;
+  private List<Rule> rules;
 
   /** Constructs new lifecycle configuration. */
   public LifecycleConfiguration(
-      @Nonnull @ElementList(name = "Rule", inline = true) List<LifecycleRule> rules) {
-    this.rules = Utils.unmodifiableList(Objects.requireNonNull(rules, "Rules must not be null"));
-    if (rules.isEmpty()) {
+      @Nonnull @ElementList(name = "Rule", inline = true) List<Rule> rules) {
+    if (Objects.requireNonNull(rules, "Rules must not be null").isEmpty()) {
       throw new IllegalArgumentException("Rules must not be empty");
+    }
+    this.rules = Utils.unmodifiableList(rules);
+  }
+
+  public List<Rule> rules() {
+    return rules;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("LifecycleConfiguration{rules=%s}", Utils.stringify(rules));
+  }
+
+  /** Lifecycle rule information of {@link LifecycleConfiguration}. */
+  @Root(name = "Rule")
+  public static class Rule {
+    @Element(name = "AbortIncompleteMultipartUpload", required = false)
+    private AbortIncompleteMultipartUpload abortIncompleteMultipartUpload;
+
+    @Element(name = "Expiration", required = false)
+    private Expiration expiration;
+
+    @Element(name = "Filter", required = false)
+    private Filter filter;
+
+    @Element(name = "ID", required = false)
+    private String id;
+
+    @Element(name = "NoncurrentVersionExpiration", required = false)
+    private NoncurrentVersionExpiration noncurrentVersionExpiration;
+
+    @Element(name = "NoncurrentVersionTransition", required = false)
+    private NoncurrentVersionTransition noncurrentVersionTransition;
+
+    @Element(name = "Status")
+    private Status status;
+
+    @Element(name = "Transition", required = false)
+    private Transition transition;
+
+    /** Constructs new server-side encryption configuration rule. */
+    public Rule(
+        @Nonnull @Element(name = "Status") Status status,
+        @Nullable @Element(name = "AbortIncompleteMultipartUpload", required = false)
+            AbortIncompleteMultipartUpload abortIncompleteMultipartUpload,
+        @Nullable @Element(name = "Expiration", required = false) Expiration expiration,
+        @Nullable @Element(name = "Filter", required = false) Filter filter,
+        @Nullable @Element(name = "ID", required = false) String id,
+        @Nullable @Element(name = "NoncurrentVersionExpiration", required = false)
+            NoncurrentVersionExpiration noncurrentVersionExpiration,
+        @Nullable @Element(name = "NoncurrentVersionTransition", required = false)
+            NoncurrentVersionTransition noncurrentVersionTransition,
+        @Nullable @Element(name = "Transition", required = false) Transition transition) {
+      if (abortIncompleteMultipartUpload == null
+          && expiration == null
+          && noncurrentVersionExpiration == null
+          && noncurrentVersionTransition == null
+          && transition == null) {
+        throw new IllegalArgumentException(
+            "At least one of action (AbortIncompleteMultipartUpload, Expiration, "
+                + "NoncurrentVersionExpiration, NoncurrentVersionTransition or Transition) must be "
+                + "specified in a rule");
+      }
+
+      if (id != null) {
+        id = id.trim();
+        if (id.isEmpty()) throw new IllegalArgumentException("ID must be non-empty string");
+        if (id.length() > 255)
+          throw new IllegalArgumentException("ID must not exceed 255 characters");
+      }
+
+      this.abortIncompleteMultipartUpload = abortIncompleteMultipartUpload;
+      this.expiration = expiration;
+      this.filter = filter;
+      this.id = id;
+      this.noncurrentVersionExpiration = noncurrentVersionExpiration;
+      this.noncurrentVersionTransition = noncurrentVersionTransition;
+      this.status = Objects.requireNonNull(status, "Status must not be null");
+      this.transition = transition;
+    }
+
+    public AbortIncompleteMultipartUpload abortIncompleteMultipartUpload() {
+      return abortIncompleteMultipartUpload;
+    }
+
+    public Expiration expiration() {
+      return expiration;
+    }
+
+    public Filter filter() {
+      return this.filter;
+    }
+
+    public String id() {
+      return this.id;
+    }
+
+    public NoncurrentVersionExpiration noncurrentVersionExpiration() {
+      return noncurrentVersionExpiration;
+    }
+
+    public NoncurrentVersionTransition noncurrentVersionTransition() {
+      return noncurrentVersionTransition;
+    }
+
+    public Status status() {
+      return this.status;
+    }
+
+    public Transition transition() {
+      return transition;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "Rule{abortIncompleteMultipartUpload=%s, expiration=%s, filter=%s, id=%s,"
+              + " noncurrentVersionExpiration=%s, noncurrentVersionTransition=%s, status=%s,"
+              + " transition=%s}",
+          Utils.stringify(abortIncompleteMultipartUpload),
+          Utils.stringify(expiration),
+          Utils.stringify(filter),
+          Utils.stringify(id),
+          Utils.stringify(noncurrentVersionExpiration),
+          Utils.stringify(noncurrentVersionTransition),
+          Utils.stringify(status),
+          Utils.stringify(transition));
     }
   }
 
-  public List<LifecycleRule> rules() {
-    return rules;
+  /** Abort incomplete multipart upload information of {@link LifecycleConfiguration.Rule}. */
+  @Root(name = "AbortIncompleteMultipartUpload")
+  public static class AbortIncompleteMultipartUpload {
+    @Element(name = "DaysAfterInitiation")
+    private int daysAfterInitiation;
+
+    public AbortIncompleteMultipartUpload(
+        @Element(name = "DaysAfterInitiation") int daysAfterInitiation) {
+      this.daysAfterInitiation = daysAfterInitiation;
+    }
+
+    public int daysAfterInitiation() {
+      return daysAfterInitiation;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "AbortIncompleteMultipartUpload{daysAfterInitiation=%d}", daysAfterInitiation);
+    }
+  }
+
+  /**
+   * Date and days information of {@link LifecycleConfiguration.Expiration} and {@link
+   * LifecycleConfiguration.Transition}.
+   */
+  public abstract static class DateDays {
+    @Element(name = "Date", required = false)
+    protected Time.S3Time date;
+
+    @Element(name = "Days", required = false)
+    protected Integer days;
+
+    public ZonedDateTime date() {
+      return date == null ? null : date.toZonedDateTime();
+    }
+
+    public Integer days() {
+      return days;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("date=%s, days=%s", Utils.stringify(date), Utils.stringify(days));
+    }
+  }
+
+  /** Expiration information of {@link LifecycleConfiguration.Rule}. */
+  @Root(name = "Expiration")
+  public static class Expiration extends DateDays {
+    @Element(name = "ExpiredObjectDeleteMarker", required = false)
+    private Boolean expiredObjectDeleteMarker;
+
+    @Element(name = "ExpiredObjectAllVersions", required = false)
+    private Boolean expiredObjectAllVersions; // This is MinIO specific extension.
+
+    public Expiration(
+        @Nullable @Element(name = "Date", required = false) Time.S3Time date,
+        @Nullable @Element(name = "Days", required = false) Integer days,
+        @Nullable @Element(name = "ExpiredObjectDeleteMarker", required = false)
+            Boolean expiredObjectDeleteMarker,
+        @Element(name = "ExpiredObjectAllVersions", required = false)
+            Boolean expiredObjectAllVersions) {
+      if (expiredObjectDeleteMarker != null) {
+        if (date != null || days != null) {
+          throw new IllegalArgumentException(
+              "ExpiredObjectDeleteMarker must not be provided along with Date and Days");
+        }
+      } else if (date != null ^ days != null) {
+        this.date = date;
+        this.days = days;
+      } else {
+        throw new IllegalArgumentException("Only one of date or days must be set");
+      }
+
+      this.expiredObjectDeleteMarker = expiredObjectDeleteMarker;
+      this.expiredObjectAllVersions = expiredObjectAllVersions;
+    }
+
+    public Expiration(
+        ZonedDateTime date,
+        Integer days,
+        Boolean expiredObjectDeleteMarker,
+        Boolean expiredObjectAllVersions) {
+      this(
+          date == null ? null : new Time.S3Time(date),
+          days,
+          expiredObjectDeleteMarker,
+          expiredObjectAllVersions);
+    }
+
+    public Boolean expiredObjectDeleteMarker() {
+      return expiredObjectDeleteMarker;
+    }
+
+    public Boolean expiredObjectAllVersions() {
+      return expiredObjectAllVersions;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "Expiration{%s, expiredObjectDeleteMarker=%s, expiredObjectAllVersions=%s}",
+          super.toString(),
+          Utils.stringify(expiredObjectDeleteMarker),
+          Utils.stringify(expiredObjectAllVersions));
+    }
+  }
+
+  /** Non-current version expiration information of {@link LifecycleConfiguration.Rule}. */
+  @Root(name = "NoncurrentVersionExpiration")
+  public static class NoncurrentVersionExpiration {
+    @Element(name = "NoncurrentDays")
+    private int noncurrentDays;
+
+    @Element(name = "NewerNoncurrentVersions", required = false)
+    private Integer newerNoncurrentVersions;
+
+    public NoncurrentVersionExpiration(
+        @Element(name = "NoncurrentDays", required = false) int noncurrentDays,
+        @Element(name = "NewerNoncurrentVersions", required = false)
+            Integer newerNoncurrentVersions) {
+      this.noncurrentDays = noncurrentDays;
+      this.newerNoncurrentVersions = newerNoncurrentVersions;
+    }
+
+    public int noncurrentDays() {
+      return noncurrentDays;
+    }
+
+    public Integer newerNoncurrentVersions() {
+      return newerNoncurrentVersions;
+    }
+
+    protected String stringify() {
+      return String.format(
+          "noncurrentDays=%d, newerNoncurrentVersions=%s",
+          noncurrentDays, Utils.stringify(newerNoncurrentVersions));
+    }
+
+    @Override
+    public String toString() {
+      return String.format("NoncurrentVersionExpiration{%s}", stringify());
+    }
+  }
+
+  /** Non-current version transition information of {@link LifecycleConfiguration.Rule}. */
+  @Root(name = "NoncurrentVersionTransition")
+  public static class NoncurrentVersionTransition extends NoncurrentVersionExpiration {
+    @Element(name = "StorageClass")
+    private String storageClass;
+
+    public NoncurrentVersionTransition(
+        @Element(name = "NoncurrentDays", required = false) int noncurrentDays,
+        @Element(name = "NewerNoncurrentVersions", required = false)
+            Integer newerNoncurrentVersions,
+        @Nullable @Element(name = "StorageClass", required = false) String storageClass) {
+      super(noncurrentDays, newerNoncurrentVersions);
+      this.storageClass = storageClass;
+    }
+
+    public String storageClass() {
+      return storageClass;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "NoncurrentVersionTransition{%s, storageClass=%s}", super.stringify(), storageClass);
+    }
+  }
+
+  /** Transition information of {@link LifecycleConfiguration.Rule}. */
+  @Root(name = "Transition")
+  public static class Transition extends DateDays {
+    @Element(name = "StorageClass")
+    private String storageClass;
+
+    public Transition(
+        @Nullable @Element(name = "Date", required = false) Time.S3Time date,
+        @Nullable @Element(name = "Days", required = false) Integer days,
+        @Nullable @Element(name = "StorageClass", required = false) String storageClass) {
+      if (date != null ^ days != null) {
+        this.date = date;
+        this.days = days;
+      } else {
+        throw new IllegalArgumentException("Only one of date or days must be set");
+      }
+      if (storageClass == null || storageClass.isEmpty()) {
+        throw new IllegalArgumentException("StorageClass must be provided");
+      }
+      this.storageClass = storageClass;
+    }
+
+    public Transition(ZonedDateTime date, Integer days, String storageClass) {
+      this(date == null ? null : new Time.S3Time(date), days, storageClass);
+    }
+
+    public String storageClass() {
+      return storageClass;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("Transition{%s, storageClass=%s}", super.toString(), storageClass);
+    }
   }
 }

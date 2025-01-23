@@ -17,7 +17,7 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#getBucketEncryption} and {@link
+ * Arguments of {@link MinioAsyncClient#getBucketEncryption} and {@link
  * MinioClient#getBucketEncryption}.
  */
 public class GetBucketEncryptionArgs extends BucketArgs {
@@ -25,6 +25,6 @@ public class GetBucketEncryptionArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetBucketEncryptionArgs}. */
+  /** Builder of {@link GetBucketEncryptionArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, GetBucketEncryptionArgs> {}
 }

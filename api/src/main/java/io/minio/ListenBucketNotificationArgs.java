@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#listenBucketNotification} and {@link
+ * Arguments of {@link MinioAsyncClient#listenBucketNotification} and {@link
  * MinioClient#listenBucketNotification}.
  */
 public class ListenBucketNotificationArgs extends BucketArgs {
@@ -44,11 +44,11 @@ public class ListenBucketNotificationArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link ListenBucketNotificationArgs}. */
+  /** Builder of {@link ListenBucketNotificationArgs}. */
   public static final class Builder
       extends BucketArgs.Builder<Builder, ListenBucketNotificationArgs> {
     private void validateEvents(String[] events) {
-      validateNotNull(events, "events");
+      Utils.validateNotNull(events, "events");
     }
 
     protected void validate(ListenBucketNotificationArgs args) {
@@ -89,6 +89,6 @@ public class ListenBucketNotificationArgs extends BucketArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), prefix, suffix, events);
+    return Objects.hash(super.hashCode(), prefix, suffix, Arrays.hashCode(events));
   }
 }

@@ -20,7 +20,7 @@ import io.minio.messages.VersioningConfiguration;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setBucketVersioning} and {@link
+ * Arguments of {@link MinioAsyncClient#setBucketVersioning} and {@link
  * MinioClient#setBucketVersioning}.
  */
 public class SetBucketVersioningArgs extends BucketArgs {
@@ -34,10 +34,10 @@ public class SetBucketVersioningArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketVersioningArgs}. */
+  /** Builder of {@link SetBucketVersioningArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketVersioningArgs> {
     private void validateConfig(VersioningConfiguration config) {
-      validateNotNull(config, "versioning configuration");
+      Utils.validateNotNull(config, "versioning configuration");
     }
 
     protected void validate(SetBucketVersioningArgs args) {

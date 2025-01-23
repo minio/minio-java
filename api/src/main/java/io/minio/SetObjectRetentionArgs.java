@@ -20,7 +20,7 @@ import io.minio.messages.Retention;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setObjectRetention} and {@link
+ * Arguments of {@link MinioAsyncClient#setObjectRetention} and {@link
  * MinioClient#setObjectRetention}.
  */
 public class SetObjectRetentionArgs extends ObjectVersionArgs {
@@ -39,11 +39,11 @@ public class SetObjectRetentionArgs extends ObjectVersionArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetObjectRetentionArgs}. */
+  /** Builder of {@link SetObjectRetentionArgs}. */
   public static final class Builder
       extends ObjectVersionArgs.Builder<Builder, SetObjectRetentionArgs> {
     private void validateConfig(Retention config) {
-      validateNotNull(config, "retention configuration");
+      Utils.validateNotNull(config, "retention configuration");
     }
 
     protected void validate(SetObjectRetentionArgs args) {
