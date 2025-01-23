@@ -41,9 +41,6 @@ import io.minio.http.Method;
 import io.minio.messages.CompleteMultipartUpload;
 import io.minio.messages.CompleteMultipartUploadResult;
 import io.minio.messages.CopyPartResult;
-import io.minio.messages.DeleteError;
-import io.minio.messages.DeleteMarker;
-import io.minio.messages.DeleteObject;
 import io.minio.messages.DeleteRequest;
 import io.minio.messages.DeleteResult;
 import io.minio.messages.ErrorResponse;
@@ -59,7 +56,6 @@ import io.minio.messages.ListVersionsResult;
 import io.minio.messages.LocationConstraint;
 import io.minio.messages.NotificationRecords;
 import io.minio.messages.Part;
-import io.minio.messages.Prefix;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -1033,8 +1029,8 @@ public abstract class S3Base implements AutoCloseable {
   private abstract class ObjectIterator implements Iterator<Result<Item>> {
     protected Result<Item> error;
     protected Iterator<? extends Item> itemIterator;
-    protected Iterator<DeleteMarker> deleteMarkerIterator;
-    protected Iterator<Prefix> prefixIterator;
+    protected Iterator<ListVersionsResult.DeleteMarker> deleteMarkerIterator;
+    protected Iterator<ListObjectsResult.Prefix> prefixIterator;
     protected boolean completed = false;
     protected ListObjectsResult listObjectsResult;
     protected String lastObjectName;
@@ -1065,8 +1061,8 @@ public abstract class S3Base implements AutoCloseable {
         this.prefixIterator = this.listObjectsResult.commonPrefixes().iterator();
       } else {
         this.itemIterator = new LinkedList<Item>().iterator();
-        this.deleteMarkerIterator = new LinkedList<DeleteMarker>().iterator();
-        this.prefixIterator = new LinkedList<Prefix>().iterator();
+        this.deleteMarkerIterator = new LinkedList<ListVersionsResult.DeleteMarker>().iterator();
+        this.prefixIterator = new LinkedList<ListObjectsResult.Prefix>().iterator();
       }
     }
 
@@ -1772,7 +1768,7 @@ public abstract class S3Base implements AutoCloseable {
   protected CompletableFuture<DeleteObjectsResponse> deleteObjectsAsync(
       String bucketName,
       String region,
-      List<DeleteObject> objectList,
+      List<DeleteRequest.Object> objectList,
       boolean quiet,
       boolean bypassGovernanceMode,
       Multimap<String, String> extraHeaders,
@@ -1790,7 +1786,7 @@ public abstract class S3Base implements AutoCloseable {
             extraHeaders,
             bypassGovernanceMode ? newMultimap("x-amz-bypass-governance-retention", "true") : null);
 
-    final List<DeleteObject> objects = objectList;
+    final List<DeleteRequest.Object> objects = objectList;
     return getRegionAsync(bucketName, region)
         .thenCompose(
             location -> {
@@ -1818,8 +1814,8 @@ public abstract class S3Base implements AutoCloseable {
               try {
                 String bodyContent = response.body().string();
                 try {
-                  if (Xml.validate(DeleteError.class, bodyContent)) {
-                    DeleteError error = Xml.unmarshal(DeleteError.class, bodyContent);
+                  if (Xml.validate(DeleteResult.Error.class, bodyContent)) {
+                    DeleteResult.Error error = Xml.unmarshal(DeleteResult.Error.class, bodyContent);
                     DeleteResult result = new DeleteResult(error);
                     return new DeleteObjectsResponse(
                         response.headers(), bucketName, region, result);

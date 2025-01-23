@@ -17,6 +17,7 @@
 package io.minio;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -45,5 +46,37 @@ public class Utils {
 
   public static <K, V> Map<K, V> unmodifiableMap(Map<? extends K, ? extends V> value) {
     return Collections.unmodifiableMap(value == null ? new HashMap<K, V>() : value);
+  }
+
+  public static String stringify(Object value) {
+    if (value == null) return "<null>";
+
+    if (value.getClass().isArray()) {
+      StringBuilder result = new StringBuilder("[");
+
+      int length = Array.getLength(value);
+
+      if (value.getClass().getComponentType().isPrimitive()) {
+        for (int i = 0; i < length; i++) {
+          if (i > 0) result.append(", ");
+          result.append(Array.get(value, i));
+        }
+      } else {
+        for (int i = 0; i < length; i++) {
+          if (i > 0) result.append(", ");
+          Object element = Array.get(value, i);
+          result.append(stringify(element));
+        }
+      }
+
+      result.append("]");
+      return result.toString();
+    }
+
+    if (value instanceof CharSequence) {
+      return "'" + value.toString() + "'";
+    }
+
+    return value.toString();
   }
 }
