@@ -15,45 +15,37 @@
  */
 
 import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.Http;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import io.minio.http.Method;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class GetPresignedObjectUrl {
   /** MinioClient.getPresignedObjectUrl() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Get presigned URL string to delete 'my-objectname' in 'my-bucketname' and its life time
-      // is one day.
-      String url =
-          minioClient.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.DELETE)
-                  .bucket("my-bucketname")
-                  .object("my-objectname")
-                  .expiry(60 * 60 * 24)
-                  .build());
-      System.out.println(url);
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    // Get presigned URL string to delete 'my-object' in 'my-bucket' and its life time
+    // is one day.
+    String url =
+        minioClient.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Http.Method.DELETE)
+                .bucket("my-bucket")
+                .object("my-object")
+                .expiry(60 * 60 * 24)
+                .build());
+    System.out.println(url);
   }
 }

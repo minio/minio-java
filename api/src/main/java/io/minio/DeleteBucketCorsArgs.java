@@ -17,14 +17,13 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#deleteBucketCors} and {@link
- * MinioClient#deleteBucketCors}.
+ * Arguments of {@link MinioAsyncClient#deleteBucketCors} and {@link MinioClient#deleteBucketCors}.
  */
 public class DeleteBucketCorsArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link DeleteBucketCorsArgs}. */
+  /** Builder of {@link DeleteBucketCorsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, DeleteBucketCorsArgs> {}
 }

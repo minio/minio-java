@@ -16,12 +16,12 @@
 
 package io.minio.credentials;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.ProviderException;
 import java.util.HashMap;
@@ -54,23 +54,17 @@ public class AwsConfigProvider extends EnvironmentProvider {
    */
   @Override
   public Credentials fetch() {
-    String filename = this.filename;
-    if (filename == null) {
-      filename = getProperty("AWS_SHARED_CREDENTIALS_FILE");
-    }
+    String filename =
+        this.filename != null ? this.filename : getProperty("AWS_SHARED_CREDENTIALS_FILE");
     if (filename == null) {
       filename = Paths.get(System.getProperty("user.home"), ".aws", "credentials").toString();
     }
 
     String profile = this.profile;
-    if (profile == null) {
-      profile = getProperty("AWS_PROFILE");
-    }
-    if (profile == null) {
-      profile = "default";
-    }
+    if (profile == null) profile = getProperty("AWS_PROFILE");
+    if (profile == null) profile = "default";
 
-    try (InputStream is = new FileInputStream(filename)) {
+    try (InputStream is = Files.newInputStream(Paths.get(filename))) {
       Map<String, Properties> result = unmarshal(new InputStreamReader(is, StandardCharsets.UTF_8));
       Properties values = result.get(profile);
       if (values == null) {

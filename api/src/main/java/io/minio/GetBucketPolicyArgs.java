@@ -17,14 +17,13 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#getBucketPolicy} and {@link
- * MinioClient#getBucketPolicy}.
+ * Arguments of {@link MinioAsyncClient#getBucketPolicy} and {@link MinioClient#getBucketPolicy}.
  */
 public class GetBucketPolicyArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetBucketPolicyArgs}. */
+  /** Builder of {@link GetBucketPolicyArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, GetBucketPolicyArgs> {}
 }

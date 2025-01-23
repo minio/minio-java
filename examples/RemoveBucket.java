@@ -18,41 +18,33 @@ import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
 import io.minio.RemoveBucketArgs;
 import io.minio.errors.MinioException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class RemoveBucket {
   /** MinioClient.removeBucket() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Remove bucket 'my-bucketname' if it exists.
-      // This operation will only work if your bucket is empty.
-      boolean found =
-          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
-      if (found) {
-        minioClient.removeBucket(RemoveBucketArgs.builder().bucket("my-bucketname").build());
-        System.out.println("my-bucketname is removed successfully");
-      } else {
-        System.out.println("my-bucketname does not exist");
-      }
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
+    // Remove bucket 'my-bucket' if it exists.
+    // This operation will only work if your bucket is empty.
+    boolean found =
+        minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucket").build());
+    if (found) {
+      minioClient.removeBucket(RemoveBucketArgs.builder().bucket("my-bucket").build());
+      System.out.println("my-bucket is removed successfully");
+    } else {
+      System.out.println("my-bucket does not exist");
     }
   }
 }

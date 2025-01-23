@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- * Argument class of {@link MinioAsyncClient#uploadSnowballObjects} and {@link
+ * Arguments of {@link MinioAsyncClient#uploadSnowballObjects} and {@link
  * MinioClient#uploadSnowballObjects}.
  */
 public class UploadSnowballObjectsArgs extends ObjectWriteArgs {
@@ -47,11 +47,11 @@ public class UploadSnowballObjectsArgs extends ObjectWriteArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link UploadSnowballObjectsArgs}. */
+  /** Builder of {@link UploadSnowballObjectsArgs}. */
   public static final class Builder
       extends ObjectWriteArgs.Builder<Builder, UploadSnowballObjectsArgs> {
     private void validateObjects(Iterable<SnowballObject> objects) {
-      validateNotNull(objects, "objects");
+      Utils.validateNotNull(objects, "objects");
     }
 
     @Override

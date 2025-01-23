@@ -17,34 +17,26 @@
 import io.minio.DeleteBucketLifecycleArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class DeleteBucketLifecycle {
   /** MinioClient.DeleteBucketLifecycle() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Pass blank as life cycle in setBucketLifecycle method.
-      minioClient.deleteBucketLifecycle(
-          DeleteBucketLifecycleArgs.builder().bucket("my-bucketName").build());
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    // Pass blank as life cycle in setBucketLifecycle method.
+    minioClient.deleteBucketLifecycle(
+        DeleteBucketLifecycleArgs.builder().bucket("my-bucketName").build());
   }
 }

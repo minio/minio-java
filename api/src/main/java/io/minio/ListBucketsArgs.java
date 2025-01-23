@@ -18,7 +18,10 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Argument class of {@link MinioAsyncClient#listBuckets} and {@link MinioClient#listBuckets}. */
+/**
+ * Arguments of {@link BaseS3Client#listBucketsAPI}, {@link MinioAsyncClient#listBuckets} and {@link
+ * MinioClient#listBuckets}.
+ */
 public class ListBucketsArgs extends BaseArgs {
   private String bucketRegion;
   private int maxBuckets = 10000;
@@ -45,13 +48,13 @@ public class ListBucketsArgs extends BaseArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link ListBucketsArgs}. */
+  /** Builder of {@link ListBucketsArgs}. */
   public static final class Builder extends BaseArgs.Builder<Builder, ListBucketsArgs> {
     @Override
     protected void validate(ListBucketsArgs args) {}
 
     public Builder bucketRegion(String region) {
-      validateNullOrNotEmptyString(region, "bucket region");
+      Utils.validateNullOrNotEmptyString(region, "bucket region");
       operations.add(args -> args.bucketRegion = region);
       return this;
     }
@@ -66,13 +69,13 @@ public class ListBucketsArgs extends BaseArgs {
     }
 
     public Builder prefix(String prefix) {
-      validateNullOrNotEmptyString(prefix, "prefix");
+      Utils.validateNullOrNotEmptyString(prefix, "prefix");
       operations.add(args -> args.prefix = prefix);
       return this;
     }
 
     public Builder continuationToken(String continuationToken) {
-      validateNullOrNotEmptyString(continuationToken, "continuation token");
+      Utils.validateNullOrNotEmptyString(continuationToken, "continuation token");
       operations.add(args -> args.continuationToken = continuationToken);
       return this;
     }

@@ -33,9 +33,7 @@ public class ChainedProvider implements Provider {
 
   @Override
   public synchronized Credentials fetch() {
-    if (credentials != null && !credentials.isExpired()) {
-      return credentials;
-    }
+    if (credentials != null && !credentials.isExpired()) return credentials;
 
     if (currentProvider != null) {
       try {

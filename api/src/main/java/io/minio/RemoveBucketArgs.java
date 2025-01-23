@@ -16,13 +16,13 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioAsyncClient#removeBucket} and {@link MinioClient#removeBucket}. */
+/** Arguments of {@link MinioAsyncClient#removeBucket} and {@link MinioClient#removeBucket}. */
 public class RemoveBucketArgs extends BucketArgs {
 
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link RemoveBucketArgs}. */
+  /** Builder of {@link RemoveBucketArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, RemoveBucketArgs> {}
 }

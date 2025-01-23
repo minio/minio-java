@@ -16,13 +16,12 @@
 
 package io.minio;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 
-/** Base argument class holds condition properties for reading object. */
+/**
+ * Common arguments of {@link SourceObject}, {@link GetObjectArgs} and {@link HeadObjectBaseArgs}.
+ */
 public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
   protected Long offset;
   protected Long length;
@@ -30,6 +29,38 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
   protected String notMatchETag;
   protected ZonedDateTime modifiedSince;
   protected ZonedDateTime unmodifiedSince;
+  protected boolean fetchChecksum;
+
+  protected ObjectConditionalReadArgs() {}
+
+  protected ObjectConditionalReadArgs(SourceObject args) {
+    super(args);
+  }
+
+  protected ObjectConditionalReadArgs(AppendObjectArgs args) {
+    super(args);
+    this.fetchChecksum = true;
+  }
+
+  protected ObjectConditionalReadArgs(DownloadObjectArgs args) {
+    super(args);
+  }
+
+  protected ObjectConditionalReadArgs(ObjectConditionalReadArgs args) {
+    super(args);
+    this.offset = args.offset;
+    this.length = args.length;
+    this.matchETag = args.matchETag;
+    this.notMatchETag = args.notMatchETag;
+    this.modifiedSince = args.modifiedSince;
+    this.unmodifiedSince = args.unmodifiedSince;
+    this.fetchChecksum = args.fetchChecksum;
+  }
+
+  protected ObjectConditionalReadArgs(ObjectConditionalReadArgs args, String matchETag) {
+    this(args);
+    this.matchETag = args.matchETag;
+  }
 
   public Long offset() {
     return offset;
@@ -55,7 +86,11 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
     return unmodifiedSince;
   }
 
-  public Multimap<String, String> getHeaders() {
+  public boolean fetchChecksum() {
+    return fetchChecksum;
+  }
+
+  public Http.Headers makeHeaders() {
     Long offset = this.offset;
     Long length = this.length;
     if (length != null && offset == null) {
@@ -70,7 +105,7 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
       }
     }
 
-    Multimap<String, String> headers = HashMultimap.create();
+    Http.Headers headers = new Http.Headers(ssec == null ? null : ssec.headers());
 
     if (range != null) headers.put("Range", range);
     if (matchETag != null) headers.put("if-match", matchETag);
@@ -84,22 +119,20 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
       headers.put("if-unmodified-since", unmodifiedSince.format(Time.HTTP_HEADER_DATE_FORMAT));
     }
 
-    if (ssec != null) headers.putAll(Multimaps.forMap(ssec.headers()));
+    if (fetchChecksum) headers.put("x-amz-checksum-mode", "ENABLED");
 
     return headers;
   }
 
-  public Multimap<String, String> genCopyHeaders() {
-    Multimap<String, String> headers = HashMultimap.create();
-
-    String copySource = S3Escaper.encodePath("/" + bucketName + "/" + objectName);
+  public Http.Headers makeCopyHeaders() {
+    String copySource = Utils.encodePath("/" + bucketName + "/" + objectName);
     if (versionId != null) {
-      copySource += "?versionId=" + S3Escaper.encode(versionId);
+      copySource += "?versionId=" + Utils.encode(versionId);
     }
 
-    headers.put("x-amz-copy-source", copySource);
+    Http.Headers headers = new Http.Headers("x-amz-copy-source", copySource);
 
-    if (ssec != null) headers.putAll(Multimaps.forMap(ssec.copySourceHeaders()));
+    if (ssec != null) headers.putAll(ssec.copySourceHeaders());
     if (matchETag != null) headers.put("x-amz-copy-source-if-match", matchETag);
     if (notMatchETag != null) headers.put("x-amz-copy-source-if-none-match", notMatchETag);
 
@@ -118,7 +151,7 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
     return headers;
   }
 
-  /** Base argument builder class for {@link ObjectConditionalReadArgs}. */
+  /** Builder of {@link ObjectConditionalReadArgs}. */
   @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectConditionalReadArgs>
       extends ObjectReadArgs.Builder<B, A> {
@@ -147,13 +180,13 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
     }
 
     public B matchETag(String etag) {
-      validateNullOrNotEmptyString(etag, "etag");
+      Utils.validateNullOrNotEmptyString(etag, "etag");
       operations.add(args -> args.matchETag = etag);
       return (B) this;
     }
 
     public B notMatchETag(String etag) {
-      validateNullOrNotEmptyString(etag, "etag");
+      Utils.validateNullOrNotEmptyString(etag, "etag");
       operations.add(args -> args.notMatchETag = etag);
       return (B) this;
     }
@@ -165,6 +198,11 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
 
     public B unmodifiedSince(ZonedDateTime unmodifiedTime) {
       operations.add(args -> args.unmodifiedSince = unmodifiedTime);
+      return (B) this;
+    }
+
+    public B fetchChecksum(boolean flag) {
+      operations.add(args -> args.fetchChecksum = flag);
       return (B) this;
     }
   }
@@ -180,12 +218,20 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
         && Objects.equals(matchETag, that.matchETag)
         && Objects.equals(notMatchETag, that.notMatchETag)
         && Objects.equals(modifiedSince, that.modifiedSince)
-        && Objects.equals(unmodifiedSince, that.unmodifiedSince);
+        && Objects.equals(unmodifiedSince, that.unmodifiedSince)
+        && Objects.equals(fetchChecksum, that.fetchChecksum);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        super.hashCode(), offset, length, matchETag, notMatchETag, modifiedSince, unmodifiedSince);
+        super.hashCode(),
+        offset,
+        length,
+        matchETag,
+        notMatchETag,
+        modifiedSince,
+        unmodifiedSince,
+        fetchChecksum);
   }
 }

@@ -20,7 +20,7 @@ import io.minio.messages.ReplicationConfiguration;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setBucketReplication} and {@link
+ * Arguments of {@link MinioAsyncClient#setBucketReplication} and {@link
  * MinioClient#setBucketReplication}.
  */
 public class SetBucketReplicationArgs extends BucketArgs {
@@ -39,14 +39,14 @@ public class SetBucketReplicationArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketReplicationArgs}. */
+  /** Builder of {@link SetBucketReplicationArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketReplicationArgs> {
     private void validateConfig(ReplicationConfiguration config) {
-      validateNotNull(config, "replication configuration");
+      Utils.validateNotNull(config, "replication configuration");
     }
 
     private void validateObjectLockToken(String token) {
-      validateNullOrNotEmptyString(token, "object lock token");
+      Utils.validateNullOrNotEmptyString(token, "object lock token");
     }
 
     @Override

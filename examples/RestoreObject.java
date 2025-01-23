@@ -18,47 +18,39 @@ import io.minio.MinioClient;
 import io.minio.RestoreObjectArgs;
 import io.minio.errors.MinioException;
 import io.minio.messages.RestoreRequest;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class RestoreObject {
   /** MinioClient.restoreObject() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Restore object.
-      minioClient.restoreObject(
-          RestoreObjectArgs.builder()
-              .bucket("my-bucketname")
-              .object("my-objectname")
-              .request(new RestoreRequest(null, null, null, null, null, null))
-              .build());
+    // Restore object.
+    minioClient.restoreObject(
+        RestoreObjectArgs.builder()
+            .bucket("my-bucket")
+            .object("my-object")
+            .request(new RestoreRequest(null, null, null, null, null, null))
+            .build());
 
-      // Restore versioned object.
-      minioClient.restoreObject(
-          RestoreObjectArgs.builder()
-              .bucket("my-bucketname")
-              .object("my-versioned-objectname")
-              .versionId("my-versionid")
-              .request(new RestoreRequest(null, null, null, null, null, null))
-              .build());
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    // Restore versioned object.
+    minioClient.restoreObject(
+        RestoreObjectArgs.builder()
+            .bucket("my-bucket")
+            .object("my-versioned-objectname")
+            .versionId("my-versionid")
+            .request(new RestoreRequest(null, null, null, null, null, null))
+            .build());
   }
 }

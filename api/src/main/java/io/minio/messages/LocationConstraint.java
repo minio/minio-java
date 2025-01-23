@@ -16,12 +16,13 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 import org.simpleframework.xml.Text;
 
 /**
- * Object representation of response XML of <a
+ * Response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketLocation.html">GetBucketLocation
  * API</a>.
  */
@@ -35,5 +36,10 @@ public class LocationConstraint {
 
   public String location() {
     return location;
+  }
+
+  @Override
+  public String toString() {
+    return String.format("LocationConstraint{location=%s}", Utils.stringify(location));
   }
 }

@@ -18,7 +18,7 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Argument class of {@link MinioAsyncClient#listObjects} and {@link MinioClient#listObjects}. */
+/** Arguments of {@link MinioAsyncClient#listObjects} and {@link MinioClient#listObjects}. */
 public class ListObjectsArgs extends BucketArgs {
   private String delimiter = "";
   private boolean useUrlEncodingType = true;
@@ -97,7 +97,7 @@ public class ListObjectsArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link ListObjectsArgs}. */
+  /** Builder of {@link ListObjectsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, ListObjectsArgs> {
     @Override
     protected void validate(ListObjectsArgs args) {
@@ -128,7 +128,7 @@ public class ListObjectsArgs extends BucketArgs {
     }
 
     public Builder keyMarker(String keyMarker) {
-      validateNullOrNotEmptyString(keyMarker, "key marker");
+      Utils.validateNullOrNotEmptyString(keyMarker, "key marker");
       operations.add(args -> args.keyMarker = keyMarker);
       return this;
     }
@@ -158,7 +158,7 @@ public class ListObjectsArgs extends BucketArgs {
     }
 
     public Builder continuationToken(String continuationToken) {
-      validateNullOrNotEmptyString(continuationToken, "continuation token");
+      Utils.validateNullOrNotEmptyString(continuationToken, "continuation token");
       operations.add(args -> args.continuationToken = continuationToken);
       return this;
     }
@@ -169,7 +169,7 @@ public class ListObjectsArgs extends BucketArgs {
     }
 
     public Builder versionIdMarker(String versionIdMarker) {
-      validateNullOrNotEmptyString(versionIdMarker, "version ID marker");
+      Utils.validateNullOrNotEmptyString(versionIdMarker, "version ID marker");
       operations.add(args -> args.versionIdMarker = versionIdMarker);
       return this;
     }

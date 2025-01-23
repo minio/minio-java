@@ -19,9 +19,10 @@ import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
 import io.minio.credentials.IamAwsProvider;
 import io.minio.credentials.Provider;
+import io.minio.errors.MinioException;
 
 public class MinioClientWithIamAwsProvider {
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws MinioException {
     Provider provider = new IamAwsProvider(null, null);
 
     MinioClient minioClient =
@@ -33,7 +34,7 @@ public class MinioClientWithIamAwsProvider {
     // Get information of an object.
     StatObjectResponse stat =
         minioClient.statObject(
-            StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+            StatObjectArgs.builder().bucket("my-bucket").object("my-object").build());
     System.out.println(stat);
   }
 }

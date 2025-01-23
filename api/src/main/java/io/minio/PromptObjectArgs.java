@@ -19,8 +19,8 @@ package io.minio;
 import java.util.Map;
 import java.util.Objects;
 
-/** Argument class of {@link MinioAsyncClient#promptObject} and {@link MinioClient#promptObject}. */
-public class PromptObjectArgs extends ObjectArgs {
+/** Arguments of {@link MinioAsyncClient#promptObject} and {@link MinioClient#promptObject}. */
+public class PromptObjectArgs extends ObjectVersionArgs {
   private String prompt;
   private String lambdaArn;
   private Map<String, Object> promptArgs;
@@ -46,30 +46,30 @@ public class PromptObjectArgs extends ObjectArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link PromptObjectArgs}. */
-  public static final class Builder extends ObjectArgs.Builder<Builder, PromptObjectArgs> {
+  /** Builder of {@link PromptObjectArgs}. */
+  public static final class Builder extends ObjectVersionArgs.Builder<Builder, PromptObjectArgs> {
     @Override
     protected void validate(PromptObjectArgs args) {
       super.validate(args);
-      validateNotEmptyString(args.prompt, "prompt");
-      validateNotEmptyString(args.lambdaArn, "lambda ARN");
-      validateNotNull(args.promptArgs, "prompt argument");
+      Utils.validateNotEmptyString(args.prompt, "prompt");
+      Utils.validateNotEmptyString(args.lambdaArn, "lambda ARN");
+      Utils.validateNotNull(args.promptArgs, "prompt argument");
     }
 
     public Builder offset(String prompt) {
-      validateNotEmptyString(prompt, "prompt");
+      Utils.validateNotEmptyString(prompt, "prompt");
       operations.add(args -> args.prompt = prompt);
       return this;
     }
 
     public Builder lambdaArn(String lambdaArn) {
-      validateNotEmptyString(lambdaArn, "lambda ARN");
+      Utils.validateNotEmptyString(lambdaArn, "lambda ARN");
       operations.add(args -> args.lambdaArn = lambdaArn);
       return this;
     }
 
     public Builder promptArgs(Map<String, Object> promptArgs) {
-      validateNotNull(promptArgs, "prompt argument");
+      Utils.validateNotNull(promptArgs, "prompt argument");
       operations.add(args -> args.promptArgs = promptArgs);
       return this;
     }

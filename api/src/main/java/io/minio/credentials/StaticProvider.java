@@ -19,7 +19,7 @@ package io.minio.credentials;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-/** Fixed credential provider. */
+/** Provider contains constant credentials. */
 public class StaticProvider implements Provider {
   private final Credentials credentials;
 

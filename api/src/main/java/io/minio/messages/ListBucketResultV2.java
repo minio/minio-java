@@ -24,7 +24,7 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of response XML of <a
+ * Response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html">ListObjectsV2
  * API</a>.
  */
@@ -70,5 +70,18 @@ public class ListBucketResultV2 extends ListObjectsResult {
   @Override
   public List<Contents> contents() {
     return Utils.unmodifiableList(contents);
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "ListBucketResultV2{%s, keyCount=%s, startAfter=%s, continuationToken=%s,"
+            + " nextContinuationToken=%s, contents=%s}",
+        super.toString(),
+        Utils.stringify(keyCount),
+        Utils.stringify(startAfter),
+        Utils.stringify(continuationToken),
+        Utils.stringify(nextContinuationToken),
+        Utils.stringify(contents));
   }
 }

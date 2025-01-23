@@ -25,11 +25,9 @@ import io.minio.messages.Checksum;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
-import okhttp3.HttpUrl;
 
 /**
- * Argument class of {@link MinioAsyncClient#putObjectFanOut} and {@link
- * MinioClient#putObjectFanOut}.
+ * Arguments of {@link MinioAsyncClient#putObjectFanOut} and {@link MinioClient#putObjectFanOut}.
  */
 public class PutObjectFanOutArgs extends BucketArgs {
   private static final ObjectMapper objectMapper =
@@ -74,25 +72,25 @@ public class PutObjectFanOutArgs extends BucketArgs {
     return builder.toString();
   }
 
-  public void validateSse(HttpUrl url) {
-    checkSse(sse, url);
+  public void validateSse(boolean isHttps) {
+    checkSse(sse, isHttps);
   }
 
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link PutObjectFanOutArgs}. */
+  /** Builder of {@link PutObjectFanOutArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, PutObjectFanOutArgs> {
     @Override
     protected void validate(PutObjectFanOutArgs args) {
       super.validate(args);
-      validateNotNull(args.stream, "stream");
-      validateNotNull(args.entries, "fan-out entries");
+      Utils.validateNotNull(args.stream, "stream");
+      Utils.validateNotNull(args.entries, "fan-out entries");
     }
 
     public Builder stream(InputStream stream, long size) {
-      validateNotNull(stream, "stream");
+      Utils.validateNotNull(stream, "stream");
       if (size < 0) {
         throw new IllegalArgumentException("invalid stream size " + size);
       }

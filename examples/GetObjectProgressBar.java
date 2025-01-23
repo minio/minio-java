@@ -27,66 +27,55 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class GetObjectProgressBar {
   /** MinioClient.getObjectProgressBar() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws IOException, MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Check whether the object exists using statObject(). If the object is not found,
-      // statObject() throws an exception. It means that the object exists when statObject()
-      // execution is successful.
+    // Check whether the object exists using statObject(). If the object is not found,
+    // statObject() throws an exception. It means that the object exists when statObject()
+    // execution is successful.
 
-      // Get object stat information.
-      StatObjectResponse stat =
-          minioClient.statObject(
-              StatObjectArgs.builder()
-                  .bucket("testbucket")
-                  .object("resumes/4.original.pdf")
-                  .build());
+    // Get object stat information.
+    StatObjectResponse stat =
+        minioClient.statObject(
+            StatObjectArgs.builder().bucket("testbucket").object("resumes/4.original.pdf").build());
 
-      // Get input stream to have content of 'my-objectname' from 'my-bucketname'
-      InputStream is =
-          new ProgressStream(
-              "Downloading .. ",
-              stat.size(),
-              minioClient.getObject(
-                  GetObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build()));
+    // Get input stream to have content of 'my-object' from 'my-bucket'
+    InputStream is =
+        new ProgressStream(
+            "Downloading .. ",
+            stat.size(),
+            minioClient.getObject(
+                GetObjectArgs.builder().bucket("my-bucket").object("my-object").build()));
 
-      Path path = Paths.get("my-filename");
-      OutputStream os = Files.newOutputStream(path, StandardOpenOption.CREATE);
+    Path path = Paths.get("my-filename");
+    OutputStream os = Files.newOutputStream(path, StandardOpenOption.CREATE);
 
-      long bytesWritten = ByteStreams.copy(is, os);
-      is.close();
-      os.close();
+    long bytesWritten = ByteStreams.copy(is, os);
+    is.close();
+    os.close();
 
-      if (bytesWritten != stat.size()) {
-        throw new IOException(
-            path
-                + ": unexpected data written.  expected = "
-                + stat.size()
-                + ", written = "
-                + bytesWritten);
-      }
-
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
+    if (bytesWritten != stat.size()) {
+      throw new IOException(
+          path
+              + ": unexpected data written.  expected = "
+              + stat.size()
+              + ", written = "
+              + bytesWritten);
     }
   }
 }

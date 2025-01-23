@@ -25,7 +25,7 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of request/response XML of <a
+ * Request/response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketCors.html">PutBucketCors
  * API</a> and <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketCors.html">GetBucketCors
@@ -46,6 +46,12 @@ public class CORSConfiguration {
     return Utils.unmodifiableList(rules);
   }
 
+  @Override
+  public String toString() {
+    return String.format("CORSConfiguration{rules=%s}", Utils.stringify(rules));
+  }
+
+  /** CORS rule of {@link CORSConfiguration}. */
   public static class CORSRule {
     @ElementList(entry = "AllowedHeader", inline = true, required = false)
     private List<String> allowedHeaders;
@@ -106,6 +112,19 @@ public class CORSConfiguration {
 
     public Integer maxAgeSeconds() {
       return maxAgeSeconds;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "CORSRule{allowedHeaders=%s, allowedMethods=%s, allowedOrigins=%s, exposeHeaders=%s, "
+              + "id=%s, maxAgeSeconds=%s}",
+          Utils.stringify(allowedHeaders),
+          Utils.stringify(allowedMethods),
+          Utils.stringify(allowedOrigins),
+          Utils.stringify(exposeHeaders),
+          Utils.stringify(id),
+          Utils.stringify(maxAgeSeconds));
     }
   }
 }

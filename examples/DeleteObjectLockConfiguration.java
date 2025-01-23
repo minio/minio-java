@@ -17,35 +17,27 @@
 import io.minio.DeleteObjectLockConfigurationArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class DeleteObjectLockConfiguration {
   /** MinioClient.deleteObjectLockConfiguration() exanple. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      minioClient.deleteObjectLockConfiguration(
-          DeleteObjectLockConfigurationArgs.builder().bucket("my-lock-enabled-bucketname").build());
+    minioClient.deleteObjectLockConfiguration(
+        DeleteObjectLockConfigurationArgs.builder().bucket("my-lock-enabled-bucketname").build());
 
-      System.out.println("Object-lock configuration is deleted successfully");
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    System.out.println("Object-lock configuration is deleted successfully");
   }
 }

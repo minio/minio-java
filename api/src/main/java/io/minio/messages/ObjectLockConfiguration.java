@@ -16,12 +16,16 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementUnion;
 import org.simpleframework.xml.Namespace;
+import org.simpleframework.xml.Path;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.Text;
 
 /**
- * Object representation of request XML of <a
+ * Request XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectLockConfiguration.html">PutObjectLockConfiguration
  * API</a> and response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectLockConfiguration.html">GetObjectLockConfiguration
@@ -40,8 +44,7 @@ public class ObjectLockConfiguration {
   public ObjectLockConfiguration() {}
 
   /** Constructs a new ObjectLockConfiguration object with given retention. */
-  public ObjectLockConfiguration(RetentionMode mode, RetentionDuration duration)
-      throws IllegalArgumentException {
+  public ObjectLockConfiguration(RetentionMode mode, RetentionDuration duration) {
     this.rule = new Rule(mode, duration);
   }
 
@@ -53,5 +56,122 @@ public class ObjectLockConfiguration {
   /** Returns retention duration. */
   public RetentionDuration duration() {
     return (rule != null) ? rule.duration() : null;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "ObjectLockConfiguration{objectLockEnabled=%s, rule=%s}",
+        Utils.stringify(objectLockEnabled), Utils.stringify(rule));
+  }
+
+  /** Rule information of {@link ObjectLockConfiguration}. */
+  @Root(name = "Rule", strict = false)
+  public static class Rule {
+    @Path(value = "DefaultRetention")
+    @Element(name = "Mode", required = false)
+    private RetentionMode mode;
+
+    @Path(value = "DefaultRetention")
+    @ElementUnion({
+      @Element(name = "Days", type = RetentionDurationDays.class, required = false),
+      @Element(name = "Years", type = RetentionDurationYears.class, required = false)
+    })
+    private RetentionDuration duration;
+
+    public Rule(
+        @Element(name = "Mode", required = false) RetentionMode mode,
+        @ElementUnion({
+              @Element(name = "Days", type = RetentionDurationDays.class, required = false),
+              @Element(name = "Years", type = RetentionDurationYears.class, required = false)
+            })
+            RetentionDuration duration) {
+      if (mode != null && duration != null) {
+        this.mode = mode;
+        this.duration = duration;
+      } else if (mode != null || duration != null) {
+        if (mode == null) throw new IllegalArgumentException("mode is null");
+        throw new IllegalArgumentException("duration is null");
+      }
+    }
+
+    public RetentionMode mode() {
+      return mode;
+    }
+
+    public RetentionDuration duration() {
+      return duration;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "Rule{mode=%s, duration=%s}", Utils.stringify(mode), Utils.stringify(duration));
+    }
+  }
+
+  /** Interface represents retention duration of {@link Rule}. */
+  public static interface RetentionDuration {
+    public RetentionDurationUnit unit();
+
+    public int duration();
+  }
+
+  /** Retention duration unit. */
+  public static enum RetentionDurationUnit {
+    DAYS,
+    YEARS;
+  }
+
+  /** Retention duration days of {@link Rule}. */
+  @Root(name = "Days")
+  public static class RetentionDurationDays implements RetentionDuration {
+    @Text(required = false)
+    private Integer days;
+
+    public RetentionDurationDays() {}
+
+    public RetentionDurationDays(int days) {
+      this.days = Integer.valueOf(days);
+    }
+
+    public RetentionDurationUnit unit() {
+      return RetentionDurationUnit.DAYS;
+    }
+
+    public int duration() {
+      return days;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("RetentionDurationDays{%s}", Utils.stringify(days));
+    }
+  }
+
+  /** Retention duration years of {@link Rule}. */
+  @Root(name = "Years")
+  public static class RetentionDurationYears implements RetentionDuration {
+    @Text(required = false)
+    private Integer years;
+
+    public RetentionDurationYears() {}
+
+    public RetentionDurationYears(int years) {
+      this.years = Integer.valueOf(years);
+    }
+
+    public RetentionDurationUnit unit() {
+      return RetentionDurationUnit.YEARS;
+    }
+
+    public int duration() {
+      return years;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("RetentionDurationYears{%s}", Utils.stringify(years));
+    }
   }
 }

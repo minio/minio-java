@@ -21,10 +21,15 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of response XML of <a
+ * Response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPartCopy.html">UploadPartCopy
  * API</a>.
  */
 @Root(name = "CopyPartResult", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class CopyPartResult extends CopyObjectResult {}
+public class CopyPartResult extends CopyObjectResult {
+  @Override
+  public String toString() {
+    return String.format("CopyPartResult{%s}", super.stringify());
+  }
+}

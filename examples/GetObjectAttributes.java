@@ -18,42 +18,32 @@ import io.minio.GetObjectAttributesArgs;
 import io.minio.GetObjectAttributesResponse;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class GetObjectAttributes {
   /** MinioClient.getObjectAttributes() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      GetObjectAttributesResponse response =
-          minioClient.getObjectAttributes(
-              GetObjectAttributesArgs.builder()
-                  .bucket("my-bucketname")
-                  .object("my-objectname")
-                  .objectAttributes(
-                      new String[] {
-                        "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
-                      })
-                  .build());
-      System.out.println("Response: " + response);
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    GetObjectAttributesResponse response =
+        minioClient.getObjectAttributes(
+            GetObjectAttributesArgs.builder()
+                .bucket("my-bucket")
+                .object("my-object")
+                .objectAttributes(
+                    new String[] {"ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"})
+                .build());
+    System.out.println("Response: " + response);
   }
 }

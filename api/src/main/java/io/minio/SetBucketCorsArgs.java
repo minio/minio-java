@@ -19,9 +19,7 @@ package io.minio;
 import io.minio.messages.CORSConfiguration;
 import java.util.Objects;
 
-/**
- * Argument class of {@link MinioAsyncClient#setBucketCors} and {@link MinioClient#setBucketCors}.
- */
+/** Arguments of {@link MinioAsyncClient#setBucketCors} and {@link MinioClient#setBucketCors}. */
 public class SetBucketCorsArgs extends BucketArgs {
   private CORSConfiguration config;
 
@@ -33,10 +31,10 @@ public class SetBucketCorsArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketCorsArgs}. */
+  /** Builder of {@link SetBucketCorsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketCorsArgs> {
     private void validateCors(CORSConfiguration config) {
-      validateNotNull(config, "CORS configuration");
+      Utils.validateNotNull(config, "CORS configuration");
     }
 
     protected void validate(SetBucketCorsArgs args) {

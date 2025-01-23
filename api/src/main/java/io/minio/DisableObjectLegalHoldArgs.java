@@ -17,7 +17,7 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#disableObjectLegalHold} and {@link
+ * Arguments of {@link MinioAsyncClient#disableObjectLegalHold} and {@link
  * MinioClient#disableObjectLegalHold}.
  */
 public class DisableObjectLegalHoldArgs extends ObjectVersionArgs {
@@ -25,7 +25,7 @@ public class DisableObjectLegalHoldArgs extends ObjectVersionArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link DisableObjectLegalHoldArgs}. */
+  /** Builder of {@link DisableObjectLegalHoldArgs}. */
   public static final class Builder
       extends ObjectVersionArgs.Builder<Builder, DisableObjectLegalHoldArgs> {}
 }

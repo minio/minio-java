@@ -17,7 +17,7 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#getObjectLockConfiguration} and {@link
+ * Arguments of {@link MinioAsyncClient#getObjectLockConfiguration} and {@link
  * MinioClient#getObjectLockConfiguration}.
  */
 public class GetObjectLockConfigurationArgs extends BucketArgs {
@@ -25,7 +25,7 @@ public class GetObjectLockConfigurationArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetObjectLockConfigurationArgs}. */
+  /** Builder of {@link GetObjectLockConfigurationArgs}. */
   public static final class Builder
       extends BucketArgs.Builder<Builder, GetObjectLockConfigurationArgs> {}
 }

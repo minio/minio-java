@@ -23,21 +23,20 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of request XML of <a
+ * Request XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_SelectObjectContent.html">SelectObjectContent
  * API</a>.
  */
 @Root(name = "SelectObjectContentRequest")
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
-public class SelectObjectContentRequest extends SelectObjectContentRequestBase {
+public class SelectObjectContentRequest extends BaseSelectParameters {
   @Element(name = "RequestProgress", required = false)
   private RequestProgress requestProgress;
 
   @Element(name = "ScanRange", required = false)
   private ScanRange scanRange;
 
-  /** Constructs new SelectObjectContentRequest object for given parameters. */
   public SelectObjectContentRequest(
       @Nonnull String expression,
       boolean requestProgress,
@@ -51,6 +50,32 @@ public class SelectObjectContentRequest extends SelectObjectContentRequestBase {
     }
     if (scanStartRange != null || scanEndRange != null) {
       this.scanRange = new ScanRange(scanStartRange, scanEndRange);
+    }
+  }
+
+  /** Request progress information of {@link SelectObjectContentRequest}. */
+  @Root(name = "RequestProgress", strict = false)
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
+  public static class RequestProgress {
+    @Element(name = "Enabled")
+    private boolean enabled = true;
+
+    public RequestProgress() {}
+  }
+
+  /** Scan range information of {@link SelectObjectContentRequest}. */
+  @Root(name = "ScanRange")
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
+  public static class ScanRange {
+    @Element(name = "Start", required = false)
+    private Long start;
+
+    @Element(name = "End", required = false)
+    private Long end;
+
+    public ScanRange(Long start, Long end) {
+      this.start = start;
+      this.end = end;
     }
   }
 }

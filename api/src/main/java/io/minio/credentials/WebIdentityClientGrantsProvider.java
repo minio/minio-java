@@ -27,8 +27,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-/** Base class of WebIdentity and ClientGrants providers. */
-public abstract class WebIdentityClientGrantsProvider extends AssumeRoleBaseProvider {
+/** Base provider of {@link WebIdentityProvider} and {@link ClientGrantsProvider}. */
+public abstract class WebIdentityClientGrantsProvider extends BaseIdentityProvider {
   public static final int MIN_DURATION_SECONDS = (int) TimeUnit.MINUTES.toSeconds(15);
   public static final int MAX_DURATION_SECONDS = (int) TimeUnit.DAYS.toSeconds(7);
   private static final RequestBody EMPTY_BODY =
@@ -59,18 +59,9 @@ public abstract class WebIdentityClientGrantsProvider extends AssumeRoleBaseProv
   }
 
   protected int getDurationSeconds(int expiry) {
-    if (durationSeconds != null && durationSeconds > 0) {
-      expiry = durationSeconds;
-    }
-
-    if (expiry > MAX_DURATION_SECONDS) {
-      return MAX_DURATION_SECONDS;
-    }
-
-    if (expiry <= 0) {
-      return expiry;
-    }
-
+    if (durationSeconds != null && durationSeconds > 0) expiry = durationSeconds;
+    if (expiry > MAX_DURATION_SECONDS) return MAX_DURATION_SECONDS;
+    if (expiry <= 0) return expiry;
     return (expiry < MIN_DURATION_SECONDS) ? MIN_DURATION_SECONDS : expiry;
   }
 

@@ -16,18 +16,41 @@
 
 package io.minio.credentials;
 
+import java.security.ProviderException;
+
 /** Credential provider using Amazon AWS specific environment variables. */
 public class AwsEnvironmentProvider extends EnvironmentProvider {
   public AwsEnvironmentProvider() {}
 
+  private final String getValue(String key, String name) {
+    String value = getProperty(key);
+    if (value != null && value.isEmpty()) {
+      throw new ProviderException("Empty " + name + " in " + key + " environment variable");
+    }
+    return value;
+  }
+
+  private final String getValue(String primaryKey, String secondaryKey, String name) {
+    String value = getValue(primaryKey, name);
+    return value != null ? value : getValue(secondaryKey, name);
+  }
+
   private final String getAccessKey() {
-    String value = getProperty("AWS_ACCESS_KEY_ID");
-    return (value != null) ? value : getProperty("AWS_ACCESS_KEY");
+    String value = getValue("AWS_ACCESS_KEY_ID", "AWS_ACCESS_KEY", "access key");
+    if (value == null) {
+      throw new ProviderException(
+          "Access key does not exist in AWS_ACCESS_KEY_ID or AWS_ACCESS_KEY environment variable");
+    }
+    return value;
   }
 
   private final String getSecretKey() {
-    String value = getProperty("AWS_SECRET_ACCESS_KEY");
-    return (value != null) ? value : getProperty("AWS_SECRET_KEY");
+    String value = getValue("AWS_SECRET_ACCESS_KEY", "AWS_SECRET_KEY", "secret key");
+    if (value == null) {
+      throw new ProviderException(
+          "Secret key does not exist in AWS_SECRET_ACCESS_KEY or AWS_SECRET_KEY environment variable");
+    }
+    return value;
   }
 
   @Override

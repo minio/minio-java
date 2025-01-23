@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.io.BaseEncoding;
+import io.minio.errors.MinioException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -54,16 +55,19 @@ public class Signer {
   // calculation.
   //
   private static final Set<String> IGNORED_HEADERS =
-      ImmutableSet.of("accept-encoding", "authorization", "user-agent");
+      ImmutableSet.of(
+          Http.Headers.ACCEPT_ENCODING.toLowerCase(Locale.US),
+          Http.Headers.AUTHORIZATION.toLowerCase(Locale.US),
+          Http.Headers.USER_AGENT.toLowerCase(Locale.US));
   private static final Set<String> PRESIGN_IGNORED_HEADERS =
       ImmutableSet.of(
-          "accept-encoding",
-          "authorization",
-          "user-agent",
-          "content-md5",
-          "x-amz-content-sha256",
-          "x-amz-date",
-          "x-amz-security-token");
+          Http.Headers.ACCEPT_ENCODING.toLowerCase(Locale.US),
+          Http.Headers.AUTHORIZATION.toLowerCase(Locale.US),
+          Http.Headers.USER_AGENT.toLowerCase(Locale.US),
+          Http.Headers.CONTENT_MD5.toLowerCase(Locale.US),
+          Http.Headers.X_AMZ_CONTENT_SHA256.toLowerCase(Locale.US),
+          Http.Headers.X_AMZ_DATE.toLowerCase(Locale.US),
+          Http.Headers.X_AMZ_SECURITY_TOKEN.toLowerCase(Locale.US));
 
   private Request request;
   private String contentSha256;
@@ -175,7 +179,7 @@ public class Signer {
         Joiner.on("&").withKeyValueSeparator("=").join(signedQueryParams.entries());
   }
 
-  private void setCanonicalRequest() throws NoSuchAlgorithmException {
+  private void setCanonicalRequest() throws MinioException {
     setCanonicalHeaders(IGNORED_HEADERS);
     this.url = this.request.url();
     setCanonicalQueryString();
@@ -200,7 +204,7 @@ public class Signer {
             + "\n"
             + this.contentSha256;
 
-    this.canonicalRequestHash = Digest.sha256Hash(this.canonicalRequest);
+    this.canonicalRequestHash = Checksum.hexString(Checksum.SHA256.sum(this.canonicalRequest));
   }
 
   private void setStringToSign() {
@@ -214,7 +218,7 @@ public class Signer {
             + this.canonicalRequestHash;
   }
 
-  private void setChunkStringToSign() throws NoSuchAlgorithmException {
+  private void setChunkStringToSign() throws MinioException {
     this.stringToSign =
         "AWS4-HMAC-SHA256-PAYLOAD"
             + "\n"
@@ -224,13 +228,12 @@ public class Signer {
             + "\n"
             + this.prevSignature
             + "\n"
-            + Digest.sha256Hash("")
+            + Checksum.ZERO_SHA256_HASH
             + "\n"
             + this.contentSha256;
   }
 
-  private void setSigningKey(String serviceName)
-      throws NoSuchAlgorithmException, InvalidKeyException {
+  private void setSigningKey(String serviceName) throws MinioException {
     String aws4SecretKey = "AWS4" + this.secretKey;
 
     byte[] dateKey =
@@ -247,7 +250,7 @@ public class Signer {
         sumHmac(dateRegionServiceKey, "aws4_request".getBytes(StandardCharsets.UTF_8));
   }
 
-  private void setSignature() throws NoSuchAlgorithmException, InvalidKeyException {
+  private void setSignature() throws MinioException {
     byte[] digest = sumHmac(this.signingKey, this.stringToSign.getBytes(StandardCharsets.UTF_8));
     this.signature = BaseEncoding.base16().encode(digest).toLowerCase(Locale.US);
   }
@@ -267,7 +270,7 @@ public class Signer {
   /** Returns chunk signature calculated using given arguments. */
   public static String getChunkSignature(
       String chunkSha256, ZonedDateTime date, String region, String secretKey, String prevSignature)
-      throws NoSuchAlgorithmException, InvalidKeyException {
+      throws MinioException {
     Signer signer = new Signer(null, chunkSha256, date, region, null, secretKey, prevSignature);
     signer.setScope("s3");
     signer.setChunkStringToSign();
@@ -285,8 +288,9 @@ public class Signer {
       String accessKey,
       String secretKey,
       String contentSha256)
-      throws NoSuchAlgorithmException, InvalidKeyException {
-    ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
+      throws MinioException {
+    ZonedDateTime date =
+        ZonedDateTime.parse(request.header(Http.Headers.X_AMZ_DATE), Time.AMZ_DATE_FORMAT);
 
     Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
     signer.setScope(serviceName);
@@ -296,37 +300,38 @@ public class Signer {
     signer.setSignature();
     signer.setAuthorization();
 
-    return request.newBuilder().header("Authorization", signer.authorization).build();
+    return request.newBuilder().header(Http.Headers.AUTHORIZATION, signer.authorization).build();
   }
 
   /** Returns signed request of given request for S3 service. */
   public static Request signV4S3(
       Request request, String region, String accessKey, String secretKey, String contentSha256)
-      throws NoSuchAlgorithmException, InvalidKeyException {
+      throws MinioException {
     return signV4("s3", request, region, accessKey, secretKey, contentSha256);
   }
 
   /** Returns signed request of given request for STS service. */
   public static Request signV4Sts(
       Request request, String region, String accessKey, String secretKey, String contentSha256)
-      throws NoSuchAlgorithmException, InvalidKeyException {
+      throws MinioException {
     return signV4("sts", request, region, accessKey, secretKey, contentSha256);
   }
 
-  private void setPresignCanonicalRequest(int expires) throws NoSuchAlgorithmException {
+  private void setPresignCanonicalRequest(int expires) throws MinioException {
     setCanonicalHeaders(PRESIGN_IGNORED_HEADERS);
 
     HttpUrl.Builder urlBuilder = this.request.url().newBuilder();
     urlBuilder.addEncodedQueryParameter(
-        S3Escaper.encode("X-Amz-Algorithm"), S3Escaper.encode("AWS4-HMAC-SHA256"));
+        Utils.encode("X-Amz-Algorithm"), Utils.encode("AWS4-HMAC-SHA256"));
     urlBuilder.addEncodedQueryParameter(
-        S3Escaper.encode("X-Amz-Credential"), S3Escaper.encode(this.accessKey + "/" + this.scope));
+        Utils.encode("X-Amz-Credential"), Utils.encode(this.accessKey + "/" + this.scope));
     urlBuilder.addEncodedQueryParameter(
-        S3Escaper.encode("X-Amz-Date"), S3Escaper.encode(this.date.format(Time.AMZ_DATE_FORMAT)));
+        Utils.encode(Http.Headers.X_AMZ_DATE),
+        Utils.encode(this.date.format(Time.AMZ_DATE_FORMAT)));
     urlBuilder.addEncodedQueryParameter(
-        S3Escaper.encode("X-Amz-Expires"), S3Escaper.encode(Integer.toString(expires)));
+        Utils.encode("X-Amz-Expires"), Utils.encode(Integer.toString(expires)));
     urlBuilder.addEncodedQueryParameter(
-        S3Escaper.encode("X-Amz-SignedHeaders"), S3Escaper.encode(this.signedHeaders));
+        Utils.encode("X-Amz-SignedHeaders"), Utils.encode(this.signedHeaders));
     this.url = urlBuilder.build();
 
     setCanonicalQueryString();
@@ -344,7 +349,7 @@ public class Signer {
             + "\n"
             + this.contentSha256;
 
-    this.canonicalRequestHash = Digest.sha256Hash(this.canonicalRequest);
+    this.canonicalRequestHash = Checksum.hexString(Checksum.SHA256.sum(this.canonicalRequest));
   }
 
   /**
@@ -353,11 +358,12 @@ public class Signer {
    */
   public static HttpUrl presignV4(
       Request request, String region, String accessKey, String secretKey, int expires)
-      throws NoSuchAlgorithmException, InvalidKeyException {
-    String contentSha256 = "UNSIGNED-PAYLOAD";
-    ZonedDateTime date = ZonedDateTime.parse(request.header("x-amz-date"), Time.AMZ_DATE_FORMAT);
+      throws MinioException {
+    ZonedDateTime date =
+        ZonedDateTime.parse(request.header(Http.Headers.X_AMZ_DATE), Time.AMZ_DATE_FORMAT);
 
-    Signer signer = new Signer(request, contentSha256, date, region, accessKey, secretKey, null);
+    Signer signer =
+        new Signer(request, Checksum.UNSIGNED_PAYLOAD, date, region, accessKey, secretKey, null);
     signer.setScope("s3");
     signer.setPresignCanonicalRequest(expires);
     signer.setStringToSign();
@@ -367,8 +373,7 @@ public class Signer {
     return signer
         .url
         .newBuilder()
-        .addEncodedQueryParameter(
-            S3Escaper.encode("X-Amz-Signature"), S3Escaper.encode(signer.signature))
+        .addEncodedQueryParameter(Utils.encode("X-Amz-Signature"), Utils.encode(signer.signature))
         .build();
   }
 
@@ -385,23 +390,23 @@ public class Signer {
   /** Returns pre-signed post policy string for given stringToSign, secret key, date and region. */
   public static String postPresignV4(
       String stringToSign, String secretKey, ZonedDateTime date, String region)
-      throws NoSuchAlgorithmException, InvalidKeyException {
+      throws MinioException {
     Signer signer = new Signer(null, null, date, region, null, secretKey, null);
     signer.stringToSign = stringToSign;
     signer.setSigningKey("s3");
     signer.setSignature();
-
     return signer.signature;
   }
 
   /** Returns HMacSHA256 digest of given key and data. */
-  public static byte[] sumHmac(byte[] key, byte[] data)
-      throws NoSuchAlgorithmException, InvalidKeyException {
-    Mac mac = Mac.getInstance("HmacSHA256");
-
-    mac.init(new SecretKeySpec(key, "HmacSHA256"));
-    mac.update(data);
-
-    return mac.doFinal();
+  public static byte[] sumHmac(byte[] key, byte[] data) throws MinioException {
+    try {
+      Mac mac = Mac.getInstance("HmacSHA256");
+      mac.init(new SecretKeySpec(key, "HmacSHA256"));
+      mac.update(data);
+      return mac.doFinal();
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+      throw new MinioException(e);
+    }
   }
 }

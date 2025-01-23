@@ -21,7 +21,7 @@ import java.beans.ConstructorProperties;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 
-/** JSON web token used in WebIdentity and ClientGrants providers. */
+/** JSON web token used in {@link WebIdentityProvider} and {@link ClientGrantsProvider}. */
 public class Jwt {
   @JsonProperty("access_token")
   private final String token;

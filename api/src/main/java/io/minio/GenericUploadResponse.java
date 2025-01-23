@@ -20,7 +20,7 @@ import io.minio.messages.CompleteMultipartUploadResult;
 import io.minio.messages.CopyObjectResult;
 import okhttp3.Headers;
 
-/** Response class of any APIs doing object/part upload. */
+/** Common response of {@link ObjectWriteResponse} and {@link PutObjectFanOutResponse}. */
 public class GenericUploadResponse extends GenericResponse {
   private String etag;
   private String checksumCRC32;

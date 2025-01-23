@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.RestoreRequest;
 import java.util.Objects;
 
-/** Argument class of {@link MinioClient#restoreObject}. */
+/** Arguments of {@link MinioClient#restoreObject}. */
 public class RestoreObjectArgs extends ObjectVersionArgs {
   private RestoreRequest request;
 
@@ -31,10 +31,10 @@ public class RestoreObjectArgs extends ObjectVersionArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link RestoreObjectArgs}. */
+  /** Builder of {@link RestoreObjectArgs}. */
   public static final class Builder extends ObjectVersionArgs.Builder<Builder, RestoreObjectArgs> {
     private void validateRequest(RestoreRequest request) {
-      validateNotNull(request, "request");
+      Utils.validateNotNull(request, "request");
     }
 
     public Builder request(RestoreRequest request) {
