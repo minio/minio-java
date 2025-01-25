@@ -16,9 +16,9 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
+import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -42,42 +42,55 @@ public class NotificationConfiguration {
   @ElementList(name = "TopicConfiguration", inline = true, required = false)
   private List<TopicConfiguration> topicConfigurationList;
 
+  @Element(name = "EventBridgeConfiguration", required = false)
+  private EventBridgeConfiguration eventBridgeConfiguration;
+
   public NotificationConfiguration() {}
 
   /** Returns cloud function configuration. */
   public List<CloudFunctionConfiguration> cloudFunctionConfigurationList() {
-    return Collections.unmodifiableList(
-        cloudFunctionConfigurationList == null
-            ? new LinkedList<>()
-            : cloudFunctionConfigurationList);
+    return Utils.unmodifiableList(cloudFunctionConfigurationList);
   }
 
   /** Sets cloud function configuration list. */
   public void setCloudFunctionConfigurationList(
       List<CloudFunctionConfiguration> cloudFunctionConfigurationList) {
     this.cloudFunctionConfigurationList =
-        Collections.unmodifiableList(cloudFunctionConfigurationList);
+        cloudFunctionConfigurationList == null
+            ? null
+            : Utils.unmodifiableList(cloudFunctionConfigurationList);
   }
 
   /** Returns queue configuration list. */
   public List<QueueConfiguration> queueConfigurationList() {
-    return Collections.unmodifiableList(
-        queueConfigurationList == null ? new LinkedList<>() : queueConfigurationList);
+    return Utils.unmodifiableList(queueConfigurationList);
   }
 
   /** Sets queue configuration list. */
   public void setQueueConfigurationList(List<QueueConfiguration> queueConfigurationList) {
-    this.queueConfigurationList = Collections.unmodifiableList(queueConfigurationList);
+    this.queueConfigurationList =
+        queueConfigurationList == null ? null : Utils.unmodifiableList(queueConfigurationList);
   }
 
   /** Returns topic configuration list. */
   public List<TopicConfiguration> topicConfigurationList() {
-    return Collections.unmodifiableList(
-        topicConfigurationList == null ? new LinkedList<>() : topicConfigurationList);
+    return Utils.unmodifiableList(topicConfigurationList);
   }
 
   /** Sets topic configuration list. */
   public void setTopicConfigurationList(List<TopicConfiguration> topicConfigurationList) {
-    this.topicConfigurationList = Collections.unmodifiableList(topicConfigurationList);
+    this.topicConfigurationList =
+        topicConfigurationList == null ? null : Utils.unmodifiableList(topicConfigurationList);
   }
+
+  public EventBridgeConfiguration eventBridgeConfiguration() {
+    return this.eventBridgeConfiguration;
+  }
+
+  public void setEventBridgeConfiguration(EventBridgeConfiguration config) {
+    this.eventBridgeConfiguration = config;
+  }
+
+  @Root(name = "EventBridgeConfiguration")
+  public static class EventBridgeConfiguration {}
 }

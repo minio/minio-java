@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -39,15 +40,15 @@ public class ListBucketResultV1 extends ListObjectsResult {
   private List<Contents> contents;
 
   public String marker() {
-    return decodeIfNeeded(marker);
+    return Utils.urlDecode(marker, encodingType());
   }
 
   public String nextMarker() {
-    return decodeIfNeeded(nextMarker);
+    return Utils.urlDecode(nextMarker, encodingType());
   }
 
   @Override
   public List<Contents> contents() {
-    return emptyIfNull(contents);
+    return Utils.unmodifiableList(contents);
   }
 }

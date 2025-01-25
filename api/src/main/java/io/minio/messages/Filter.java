@@ -16,7 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
+import io.minio.Utils;
 import java.util.LinkedList;
 import java.util.List;
 import org.simpleframework.xml.ElementList;
@@ -67,7 +67,6 @@ public class Filter {
   }
 
   public List<FilterRule> filterRuleList() {
-    return Collections.unmodifiableList(
-        filterRuleList == null ? new LinkedList<>() : filterRuleList);
+    return Utils.unmodifiableList(filterRuleList);
   }
 }

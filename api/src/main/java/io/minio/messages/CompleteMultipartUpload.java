@@ -16,9 +16,11 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import javax.annotation.Nonnull;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
@@ -36,11 +38,10 @@ public class CompleteMultipartUpload {
   private List<Part> partList;
 
   /** Constucts a new CompleteMultipartUpload object with given parts. */
-  public CompleteMultipartUpload(Part[] parts) throws IllegalArgumentException {
-    if (parts == null || parts.length == 0) {
-      throw new IllegalArgumentException("null or empty parts");
+  public CompleteMultipartUpload(@Nonnull Part[] parts) throws IllegalArgumentException {
+    if (Objects.requireNonNull(parts, "parts must not be null").length == 0) {
+      throw new IllegalArgumentException("parts cannot be empty");
     }
-
-    this.partList = Collections.unmodifiableList(Arrays.asList(parts));
+    this.partList = Utils.unmodifiableList(Arrays.asList(parts));
   }
 }

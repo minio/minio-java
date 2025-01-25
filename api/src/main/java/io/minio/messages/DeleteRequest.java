@@ -16,8 +16,10 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
+import io.minio.Utils;
 import java.util.List;
+import java.util.Objects;
+import javax.annotation.Nonnull;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
@@ -39,8 +41,9 @@ public class DeleteRequest {
   private List<DeleteObject> objectList;
 
   /** Constructs new delete request for given object list and quiet flag. */
-  public DeleteRequest(List<DeleteObject> objectList, boolean quiet) {
-    this.objectList = Collections.unmodifiableList(objectList);
+  public DeleteRequest(@Nonnull List<DeleteObject> objectList, boolean quiet) {
+    this.objectList =
+        Utils.unmodifiableList(Objects.requireNonNull(objectList, "Object list must not be null"));
     this.quiet = quiet;
   }
 }

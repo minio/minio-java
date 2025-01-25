@@ -1,6 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2017 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2025 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +16,29 @@
 
 package io.minio.messages;
 
-import java.time.ZonedDateTime;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
  * Object representation of response XML of <a
- * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html">CopyObject API</a>.
+ * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
+ * API</a>.
  */
-@Root(name = "CopyObjectResult", strict = false)
+@Root(name = "CompleteMultipartUploadResult")
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-public class CopyObjectResult {
+public class CompleteMultipartUploadResult {
+  @Element(name = "Location")
+  private String location;
+
+  @Element(name = "Bucket")
+  private String bucket;
+
+  @Element(name = "Key")
+  private String object;
+
   @Element(name = "ETag")
   private String etag;
-
-  @Element(name = "LastModified")
-  private ResponseDate lastModified;
-
-  @Element(name = "ChecksumType", required = false)
-  private String checksumType;
 
   @Element(name = "ChecksumCRC32", required = false)
   private String checksumCRC32;
@@ -53,20 +55,25 @@ public class CopyObjectResult {
   @Element(name = "ChecksumSHA256", required = false)
   private String checksumSHA256;
 
-  public CopyObjectResult() {}
+  @Element(name = "ChecksumType", required = false)
+  private String checksumType;
 
-  /** Returns ETag of the object. */
+  public CompleteMultipartUploadResult() {}
+
+  public String location() {
+    return location;
+  }
+
+  public String bucket() {
+    return bucket;
+  }
+
+  public String object() {
+    return object;
+  }
+
   public String etag() {
     return etag;
-  }
-
-  /** Returns last modified time. */
-  public ZonedDateTime lastModified() {
-    return lastModified.zonedDateTime();
-  }
-
-  public String checksumType() {
-    return checksumType;
   }
 
   public String checksumCRC32() {
@@ -87,5 +94,9 @@ public class CopyObjectResult {
 
   public String checksumSHA256() {
     return checksumSHA256;
+  }
+
+  public String checksumType() {
+    return checksumType;
   }
 }

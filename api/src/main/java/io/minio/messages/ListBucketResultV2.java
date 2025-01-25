@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -52,7 +53,7 @@ public class ListBucketResultV2 extends ListObjectsResult {
 
   /** Returns start after. */
   public String startAfter() {
-    return decodeIfNeeded(startAfter);
+    return Utils.urlDecode(startAfter, encodingType());
   }
 
   /** Returns continuation token. */
@@ -68,6 +69,6 @@ public class ListBucketResultV2 extends ListObjectsResult {
   /** Returns List of Items. */
   @Override
   public List<Contents> contents() {
-    return emptyIfNull(contents);
+    return Utils.unmodifiableList(contents);
   }
 }

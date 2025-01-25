@@ -16,11 +16,7 @@
 
 package io.minio.messages;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -64,17 +60,6 @@ public class ListMultipartUploadsResult {
 
   public ListMultipartUploadsResult() {}
 
-  private String decodeIfNeeded(String value) {
-    try {
-      return (value != null && "url".equals(encodingType))
-          ? URLDecoder.decode(value, StandardCharsets.UTF_8.name())
-          : value;
-    } catch (UnsupportedEncodingException e) {
-      // This never happens as 'enc' name comes from JDK's own StandardCharsets.
-      throw new RuntimeException(e);
-    }
-  }
-
   /** Returns whether the result is truncated or not. */
   public boolean isTruncated() {
     return isTruncated;
@@ -87,7 +72,7 @@ public class ListMultipartUploadsResult {
 
   /** Returns key marker. */
   public String keyMarker() {
-    return decodeIfNeeded(keyMarker);
+    return Utils.urlDecode(keyMarker, encodingType);
   }
 
   /** Returns upload ID marker. */
@@ -97,7 +82,7 @@ public class ListMultipartUploadsResult {
 
   /** Returns next key marker. */
   public String nextKeyMarker() {
-    return decodeIfNeeded(nextKeyMarker);
+    return Utils.urlDecode(nextKeyMarker, encodingType);
   }
 
   /** Returns next upload ID marker. */
@@ -116,10 +101,6 @@ public class ListMultipartUploadsResult {
 
   /** Returns List of Upload. */
   public List<Upload> uploads() {
-    if (uploads == null) {
-      return Collections.unmodifiableList(new LinkedList<>());
-    }
-
-    return Collections.unmodifiableList(uploads);
+    return Utils.unmodifiableList(uploads);
   }
 }

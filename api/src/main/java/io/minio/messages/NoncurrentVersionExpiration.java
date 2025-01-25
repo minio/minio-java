@@ -25,12 +25,27 @@ public class NoncurrentVersionExpiration {
   @Element(name = "NoncurrentDays")
   private int noncurrentDays;
 
+  @Element(name = "NewerNoncurrentVersions", required = false)
+  private Integer newerNoncurrentVersions;
+
   public NoncurrentVersionExpiration(
       @Element(name = "NoncurrentDays", required = false) int noncurrentDays) {
     this.noncurrentDays = noncurrentDays;
   }
 
+  public NoncurrentVersionExpiration(
+      @Element(name = "NoncurrentDays", required = false) int noncurrentDays,
+      @Element(name = "NewerNoncurrentVersions", required = false)
+          Integer newerNoncurrentVersions) {
+    this.noncurrentDays = noncurrentDays;
+    this.newerNoncurrentVersions = newerNoncurrentVersions;
+  }
+
   public int noncurrentDays() {
     return noncurrentDays;
+  }
+
+  public Integer newerNoncurrentVersions() {
+    return newerNoncurrentVersions;
   }
 }

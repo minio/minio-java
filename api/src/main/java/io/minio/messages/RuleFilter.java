@@ -39,10 +39,10 @@ public class RuleFilter {
   private Tag tag;
 
   @Element(name = "ObjectSizeLessThan", required = false)
-  private Integer objectSizeLessThan;
+  private Long objectSizeLessThan;
 
   @Element(name = "ObjectSizeGreaterThan", required = false)
-  private Integer objectSizeGreaterThan;
+  private Long objectSizeGreaterThan;
 
   public RuleFilter(
       @Nullable @Element(name = "And", required = false) AndOperator andOperator,
@@ -61,9 +61,9 @@ public class RuleFilter {
       @Nullable @Element(name = "And", required = false) AndOperator andOperator,
       @Nullable @Element(name = "Prefix", required = false) String prefix,
       @Nullable @Element(name = "Tag", required = false) Tag tag,
-      @Nullable @Element(name = "ObjectSizeLessThan", required = false) Integer objectSizeLessThan,
+      @Nullable @Element(name = "ObjectSizeLessThan", required = false) Long objectSizeLessThan,
       @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
-          Integer objectSizeGreaterThan) {
+          Long objectSizeGreaterThan) {
     this(andOperator, prefix, tag);
     this.objectSizeLessThan = objectSizeLessThan;
     this.objectSizeGreaterThan = objectSizeGreaterThan;
@@ -93,11 +93,11 @@ public class RuleFilter {
     return this.tag;
   }
 
-  public Integer objectSizeLessThan() {
+  public Long objectSizeLessThan() {
     return this.objectSizeLessThan;
   }
 
-  public Integer objectSizeGreaterThan() {
+  public Long objectSizeGreaterThan() {
     return this.objectSizeGreaterThan;
   }
 }

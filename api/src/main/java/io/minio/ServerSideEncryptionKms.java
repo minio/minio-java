@@ -20,7 +20,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +45,7 @@ public class ServerSideEncryptionKms extends ServerSideEncryption {
                   objectMapper.writeValueAsString(context).getBytes(StandardCharsets.UTF_8)));
     }
 
-    this.headers = Collections.unmodifiableMap(headers);
+    this.headers = Utils.unmodifiableMap(headers);
   }
 
   @Override

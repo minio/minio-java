@@ -16,9 +16,10 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
+import java.util.Objects;
+import javax.annotation.Nonnull;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 
@@ -50,12 +51,12 @@ public abstract class NotificationCommonConfiguration {
 
   /** Returns events. */
   public List<EventType> events() {
-    return Collections.unmodifiableList(events == null ? new LinkedList<>() : events);
+    return Utils.unmodifiableList(events);
   }
 
   /** Sets event. */
-  public void setEvents(List<EventType> events) {
-    this.events = Collections.unmodifiableList(events);
+  public void setEvents(@Nonnull List<EventType> events) {
+    this.events = Utils.unmodifiableList(Objects.requireNonNull(events, "Events must not be null"));
   }
 
   /** sets filter prefix rule. */
@@ -78,7 +79,6 @@ public abstract class NotificationCommonConfiguration {
 
   /** returns filter rule list. */
   public List<FilterRule> filterRuleList() {
-    return Collections.unmodifiableList(
-        filter == null ? new LinkedList<>() : filter.filterRuleList());
+    return Utils.unmodifiableList(filter == null ? null : filter.filterRuleList());
   }
 }

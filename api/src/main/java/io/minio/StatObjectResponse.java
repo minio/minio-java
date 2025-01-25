@@ -20,7 +20,6 @@ import io.minio.messages.LegalHold;
 import io.minio.messages.ResponseDate;
 import io.minio.messages.RetentionMode;
 import java.time.ZonedDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class StatObjectResponse extends GenericResponse {
       }
     }
 
-    this.userMetadata = Collections.unmodifiableMap(userMetadata);
+    this.userMetadata = Utils.unmodifiableMap(userMetadata);
   }
 
   public String etag() {

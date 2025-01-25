@@ -20,7 +20,6 @@ import com.google.common.io.BaseEncoding;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import javax.crypto.SecretKey;
@@ -55,13 +54,13 @@ public class ServerSideEncryptionCustomerKey extends ServerSideEncryption {
     map.put("X-Amz-Server-Side-Encryption-Customer-Algorithm", "AES256");
     map.put("X-Amz-Server-Side-Encryption-Customer-Key", customerKey);
     map.put("X-Amz-Server-Side-Encryption-Customer-Key-Md5", customerKeyMd5);
-    this.headers = Collections.unmodifiableMap(map);
+    this.headers = Utils.unmodifiableMap(map);
 
     map = new HashMap<>();
     map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Algorithm", "AES256");
     map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key", customerKey);
     map.put("X-Amz-Copy-Source-Server-Side-Encryption-Customer-Key-Md5", customerKeyMd5);
-    this.copySourceHeaders = Collections.unmodifiableMap(map);
+    this.copySourceHeaders = Utils.unmodifiableMap(map);
   }
 
   @Override

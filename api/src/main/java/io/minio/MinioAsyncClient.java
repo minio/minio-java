@@ -1100,7 +1100,7 @@ public class MinioAsyncClient extends S3Base {
    *     minioAsyncClient.removeObjects(
    *         RemoveObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
    * for (Result<DeleteError> result : results) {
-   *   DeleteError error = errorResult.get();
+   *   DeleteError error = result.get();
    *   System.out.println(
    *       "Error in deleting object " + error.objectName() + "; " + error.message());
    * }
@@ -1330,41 +1330,135 @@ public class MinioAsyncClient extends S3Base {
   public CompletableFuture<List<Bucket>> listBuckets()
       throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
           NoSuchAlgorithmException, XmlParserException {
-    return listBuckets(ListBucketsArgs.builder().build());
+    return listBucketsAsync(null, null, null, null, null, null)
+        .thenApply(
+            response -> {
+              return response.result().buckets();
+            });
   }
 
   /**
    * Lists bucket information of all buckets.
    *
    * <pre>Example:{@code
-   * CompletableFuture<List<Bucket>> future =
-   *     minioAsyncClient.listBuckets(ListBucketsArgs.builder().extraHeaders(headers).build());
+   * Iterable<Result<Bucket>> results = minioAsyncClient.listBuckets(ListBucketsArgs.builder().build());
+   * for (Result<Bucket> result : results) {
+   *   Bucket bucket = result.get();
+   *   System.out.println(String.format("Bucket: %s, Region: %s, CreationDate: %s", bucket.name(), bucket.bucketRegion(), bucket.creationDate()));
+   * }
    * }</pre>
    *
-   * @return {@link CompletableFuture}&lt;{@link List}&lt;{@link Bucket}&gt;&gt; object.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
+   * @return {@link Iterable}&lt;{@link List}&lt;{@link Bucket}&gt;&gt; object.
    */
-  public CompletableFuture<List<Bucket>> listBuckets(ListBucketsArgs args)
-      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
-          NoSuchAlgorithmException, XmlParserException {
-    return executeGetAsync(args, null, null)
-        .thenApply(
-            response -> {
+  public Iterable<Result<Bucket>> listBuckets(ListBucketsArgs args) {
+    return new Iterable<Result<Bucket>>() {
+      @Override
+      public Iterator<Result<Bucket>> iterator() {
+        return new Iterator<Result<Bucket>>() {
+          private ListAllMyBucketsResult result = null;
+          private Result<Bucket> error = null;
+          private Iterator<Bucket> iterator = null;
+          private boolean completed = false;
+
+          private synchronized void populate() {
+            if (completed) return;
+
+            try {
+              this.iterator = new LinkedList<Bucket>().iterator();
               try {
-                ListAllMyBucketsResult result =
-                    Xml.unmarshal(ListAllMyBucketsResult.class, response.body().charStream());
-                return result.buckets();
-              } catch (XmlParserException e) {
-                throw new CompletionException(e);
-              } finally {
-                response.close();
+                ListBucketsResponse response =
+                    listBucketsAsync(
+                            args.bucketRegion(),
+                            args.maxBuckets(),
+                            args.prefix(),
+                            (result == null)
+                                ? args.continuationToken()
+                                : result.continuationToken(),
+                            args.extraHeaders(),
+                            args.extraQueryParams())
+                        .get();
+                this.result = response.result();
+              } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+              } catch (ExecutionException e) {
+                throwEncapsulatedException(e);
               }
-            });
+              this.iterator = this.result.buckets().iterator();
+            } catch (ErrorResponseException
+                | InsufficientDataException
+                | InternalException
+                | InvalidKeyException
+                | InvalidResponseException
+                | IOException
+                | NoSuchAlgorithmException
+                | ServerException
+                | XmlParserException e) {
+              this.error = new Result<>(e);
+              completed = true;
+            }
+          }
+
+          @Override
+          public boolean hasNext() {
+            if (this.completed) return false;
+
+            if (this.error == null && this.iterator == null) {
+              populate();
+            }
+
+            if (this.error == null
+                && !this.iterator.hasNext()
+                && this.result.continuationToken() != null
+                && !this.result.continuationToken().isEmpty()) {
+              populate();
+            }
+
+            if (this.error != null) return true;
+            if (this.iterator.hasNext()) return true;
+
+            this.completed = true;
+            return false;
+          }
+
+          @Override
+          public Result<Bucket> next() {
+            if (this.completed) throw new NoSuchElementException();
+            if (this.error == null && this.iterator == null) {
+              populate();
+            }
+
+            if (this.error == null
+                && !this.iterator.hasNext()
+                && this.result.continuationToken() != null
+                && !this.result.continuationToken().isEmpty()) {
+              populate();
+            }
+
+            if (this.error != null) {
+              this.completed = true;
+              return this.error;
+            }
+
+            Bucket item = null;
+            if (this.iterator.hasNext()) {
+              item = this.iterator.next();
+            }
+
+            if (item != null) {
+              return new Result<>(item);
+            }
+
+            this.completed = true;
+            throw new NoSuchElementException();
+          }
+
+          @Override
+          public void remove() {
+            throw new UnsupportedOperationException();
+          }
+        };
+      }
+    };
   }
 
   /**

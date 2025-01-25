@@ -643,7 +643,7 @@ public class MinioClient implements AutoCloseable {
    *     minioClient.removeObjects(
    *         RemoveObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
    * for (Result<DeleteError> result : results) {
-   *   DeleteError error = errorResult.get();
+   *   DeleteError error = result.get();
    *   System.out.println(
    *       "Error in deleting object " + error.objectName() + "; " + error.message());
    * }
@@ -788,36 +788,17 @@ public class MinioClient implements AutoCloseable {
    * Lists bucket information of all buckets.
    *
    * <pre>Example:{@code
-   * List<Bucket> bucketList =
-   *     minioClient.listBuckets(ListBucketsArgs.builder().extraHeaders(headers).build());
-   * for (Bucket bucket : bucketList) {
-   *   System.out.println(bucket.creationDate() + ", " + bucket.name());
+   * Iterable<Result<Bucket>> results = minioClient.listBuckets(ListBucketsArgs.builder().build());
+   * for (Result<Bucket> result : results) {
+   *   Bucket bucket = result.get();
+   *   System.out.println(String.format("Bucket: %s, Region: %s, CreationDate: %s", bucket.name(), bucket.bucketRegion(), bucket.creationDate()));
    * }
    * }</pre>
    *
-   * @return {@code List<Bucket>} - List of bucket information.
-   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
-   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
-   * @throws InternalException thrown to indicate internal library error.
-   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
-   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
-   *     response.
-   * @throws IOException thrown to indicate I/O error on S3 operation.
-   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
-   * @throws XmlParserException thrown to indicate XML parsing error.
+   * @return {@link Iterable}&lt;{@link List}&lt;{@link Bucket}&gt;&gt; object.
    */
-  public List<Bucket> listBuckets(ListBucketsArgs args)
-      throws ErrorResponseException, InsufficientDataException, InternalException,
-          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
-          ServerException, XmlParserException {
-    try {
-      return asyncClient.listBuckets(args).get();
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    } catch (ExecutionException e) {
-      asyncClient.throwEncapsulatedException(e);
-      return null;
-    }
+  public Iterable<Result<Bucket>> listBuckets(ListBucketsArgs args) {
+    return asyncClient.listBuckets(args);
   }
 
   /**

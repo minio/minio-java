@@ -16,7 +16,6 @@
 
 package io.minio;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +26,7 @@ public class ServerSideEncryptionS3 extends ServerSideEncryption {
   static {
     Map<String, String> map = new HashMap<>();
     map.put("X-Amz-Server-Side-Encryption", "AES256");
-    headers = Collections.unmodifiableMap(map);
+    headers = Utils.unmodifiableMap(map);
   }
 
   @Override

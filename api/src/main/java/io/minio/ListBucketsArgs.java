@@ -16,8 +16,31 @@
 
 package io.minio;
 
+import java.util.Objects;
+
 /** Argument class of {@link MinioAsyncClient#listBuckets} and {@link MinioClient#listBuckets}. */
 public class ListBucketsArgs extends BaseArgs {
+  private String bucketRegion;
+  private int maxBuckets = 10000;
+  private String prefix;
+  private String continuationToken;
+
+  public String bucketRegion() {
+    return bucketRegion;
+  }
+
+  public int maxBuckets() {
+    return maxBuckets;
+  }
+
+  public String prefix() {
+    return prefix;
+  }
+
+  public String continuationToken() {
+    return continuationToken;
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -26,5 +49,49 @@ public class ListBucketsArgs extends BaseArgs {
   public static final class Builder extends BaseArgs.Builder<Builder, ListBucketsArgs> {
     @Override
     protected void validate(ListBucketsArgs args) {}
+
+    public Builder bucketRegion(String region) {
+      validateNullOrNotEmptyString(region, "bucket region");
+      operations.add(args -> args.bucketRegion = region);
+      return this;
+    }
+
+    public Builder maxBuckets(int maxBuckets) {
+      if (maxBuckets < 1 || maxBuckets > 10000) {
+        throw new IllegalArgumentException("max buckets must be between 1 and 10000");
+      }
+
+      operations.add(args -> args.maxBuckets = maxBuckets);
+      return this;
+    }
+
+    public Builder prefix(String prefix) {
+      validateNullOrNotEmptyString(prefix, "prefix");
+      operations.add(args -> args.prefix = prefix);
+      return this;
+    }
+
+    public Builder continuationToken(String continuationToken) {
+      validateNullOrNotEmptyString(continuationToken, "continuation token");
+      operations.add(args -> args.continuationToken = continuationToken);
+      return this;
+    }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof ListBucketsArgs)) return false;
+    if (!super.equals(o)) return false;
+    ListBucketsArgs that = (ListBucketsArgs) o;
+    return Objects.equals(bucketRegion, that.bucketRegion)
+        && maxBuckets == that.maxBuckets
+        && Objects.equals(prefix, that.prefix)
+        && Objects.equals(continuationToken, that.continuationToken);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), bucketRegion, maxBuckets, prefix, continuationToken);
   }
 }

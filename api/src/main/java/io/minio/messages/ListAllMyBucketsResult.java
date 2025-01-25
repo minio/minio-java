@@ -16,8 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -37,6 +36,12 @@ public class ListAllMyBucketsResult {
   @ElementList(name = "Buckets")
   private List<Bucket> buckets;
 
+  @Element(name = "prefix", required = false)
+  private String prefix;
+
+  @Element(name = "ContinuationToken", required = false)
+  private String continuationToken;
+
   public ListAllMyBucketsResult() {}
 
   /** Returns owner. */
@@ -46,10 +51,14 @@ public class ListAllMyBucketsResult {
 
   /** Returns List of buckets. */
   public List<Bucket> buckets() {
-    if (buckets == null) {
-      return Collections.unmodifiableList(new LinkedList<>());
-    }
+    return Utils.unmodifiableList(buckets);
+  }
 
-    return Collections.unmodifiableList(buckets);
+  public String prefix() {
+    return prefix;
+  }
+
+  public String continuationToken() {
+    return continuationToken;
   }
 }
