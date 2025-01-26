@@ -25,28 +25,31 @@ MinioClient minioClient =
 | Bucket operations                                                 | Object operations                                       |
 |-------------------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                                   | [`composeObject`](#composeObject)                       |
-| [`deleteBucketEncryption`](#deleteBucketEncryption)               | [`copyObject`](#copyObject)                             |
-| [`deleteBucketLifecycle`](#deleteBucketLifecycle)                 | [`deleteObjectTags`](#deleteObjectTags)                 |
-| [`deleteBucketNotification`](#deleteBucketNotification)           | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
-| [`deleteBucketPolicy`](#deleteBucketPolicy)                       | [`downloadObject`](#downloadObject)                     |
-| [`deleteBucketReplication`](#deleteBucketReplication)             | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`deleteBucketTags`](#deleteBucketTags)                           | [`getObject`](#getObject)                               |
-| [`deleteObjectLockConfiguration`](#deleteObjectLockConfiguration) | [`getObjectRetention`](#getObjectRetention)             |
-| [`getBucketEncryption`](#getBucketEncryption)                     | [`getObjectTags`](#getObjectTags)                       |
-| [`getBucketLifecycle`](#getBucketLifecycle)                       | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
-| [`getBucketNotification`](#getBucketNotification)                 | [`getPresignedPostFormData`](#getPresignedPostFormData) |
-| [`getBucketPolicy`](#getBucketPolicy)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
-| [`getBucketReplication`](#getBucketReplication)                   | [`listObjects`](#listObjects)                           |
-| [`getBucketTags`](#getBucketTags)                                 | [`putObject`](#putObject)                               |
-| [`getBucketVersioning`](#getBucketVersioning)                     | [`removeObject`](#removeObject)                         |
-| [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`removeObjects`](#removeObjects)                       |
-| [`listBuckets`](#listBuckets)                                     | [`restoreObject`](#restoreObject)                       |
-| [`listenBucketNotification`](#listenBucketNotification)           | [`selectObjectContent`](#selectObjectContent)           |
-| [`makeBucket`](#makeBucket)                                       | [`setObjectRetention`](#setObjectRetention)             |
-| [`removeBucket`](#removeBucket)                                   | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketEncryption`](#setBucketEncryption)                     | [`statObject`](#statObject)                             |
-| [`setBucketLifecycle`](#setBucketLifecycle)                       | [`uploadObject`](#uploadObject)                         |
-| [`setBucketNotification`](#setBucketNotification)                 | [`uploadSnowballObjects`](#uploadSnowballObjects)       |
+| [`deleteBucketCors`](#deleteBucketCors)                           | [`copyObject`](#copyObject)                             |
+| [`deleteBucketEncryption`](#deleteBucketEncryption)               | [`deleteObjectTags`](#deleteObjectTags)                 |
+| [`deleteBucketLifecycle`](#deleteBucketLifecycle)                 | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
+| [`deleteBucketNotification`](#deleteBucketNotification)           | [`downloadObject`](#downloadObject)                     |
+| [`deleteBucketPolicy`](#deleteBucketPolicy)                       | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
+| [`deleteBucketReplication`](#deleteBucketReplication)             | [`getObject`](#getObject)                               |
+| [`deleteBucketTags`](#deleteBucketTags)                           | [`getObjectRetention`](#getObjectRetention)             |
+| [`deleteObjectLockConfiguration`](#deleteObjectLockConfiguration) | [`getObjectTags`](#getObjectTags)                       |
+| [`getBucketCors`](#getBucketCors)                                 | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
+| [`getBucketEncryption`](#getBucketEncryption)                     | [`getPresignedPostFormData`](#getPresignedPostFormData) |
+| [`getBucketLifecycle`](#getBucketLifecycle)                       | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
+| [`getBucketNotification`](#getBucketNotification)                 | [`listObjects`](#listObjects)                           |
+| [`getBucketPolicy`](#getBucketPolicy)                             | [`putObject`](#putObject)                               |
+| [`getBucketReplication`](#getBucketReplication)                   | [`removeObject`](#removeObject)                         |
+| [`getBucketTags`](#getBucketTags)                                 | [`removeObjects`](#removeObjects)                       |
+| [`getBucketVersioning`](#getBucketVersioning)                     | [`restoreObject`](#restoreObject)                       |
+| [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`selectObjectContent`](#selectObjectContent)           |
+| [`listBuckets`](#listBuckets)                                     | [`setObjectRetention`](#setObjectRetention)             |
+| [`listenBucketNotification`](#listenBucketNotification)           | [`setObjectTags`](#setObjectTags)                       |
+| [`makeBucket`](#makeBucket)                                       | [`statObject`](#statObject)                             |
+| [`removeBucket`](#removeBucket)                                   | [`uploadObject`](#uploadObject)                         |
+| [`setBucketCors`](#setBucketCors)                                 | [`uploadSnowballObjects`](#uploadSnowballObjects)       |
+| [`setBucketEncryption`](#setBucketEncryption)                     |                                                         |
+| [`setBucketLifecycle`](#setBucketLifecycle)                       |                                                         |
+| [`setBucketNotification`](#setBucketNotification)                 |                                                         |
 | [`setBucketPolicy`](#setBucketPolicy)                             |                                                         |
 | [`setBucketReplication`](#setBucketReplication)                   |                                                         |
 | [`setBucketTags`](#setBucketTags)                                 |                                                         |
@@ -253,6 +256,22 @@ if (found) {
 }
 ```
 
+<a name="deleteBucketCors"></a>
+### deleteBucketCors(DeleteBucketCorsArgs args)
+`private void deleteBucketCors(DeleteBucketCorsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketCors-io.minio.DeleteBucketCorsArgs-)_
+
+Deletes CORS configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                     | Description |
+|:----------|:-------------------------|:------------|
+| ``args``  | _[DeleteBucketCorsArgs]_ | Arguments.  |
+
+__Example__
+```java
+minioClient.deleteBucketCors(DeleteBucketCorsArgs.builder().bucket("my-bucketname").build());
+```
+
 <a name="deleteBucketEncryption"></a>
 ### deleteBucketEncryption(DeleteBucketEncryptionArgs args)
 `private void deleteBucketEncryption(DeleteBucketEncryptionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketEncryption-io.minio.DeleteBucketEncryptionArgs-)_
@@ -368,6 +387,27 @@ __Example__
 ```java
 minioClient.deleteObjectLockConfiguration(
     DeleteObjectLockConfigurationArgs.builder().bucket("my-bucketname").build());
+```
+
+<a name="getBucketCors"></a>
+### getBucketCors(GetBucketCorsArgs args)
+`public Tags getBucketCors(GetBucketCorsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.htmlgetBucketCors-io.minio.GetBucketCorsArgs-)_
+
+Gets CORS configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[GetBucketCorsArgs]_ | Arguments.  |
+
+
+| Returns                                     |
+|:--------------------------------------------|
+| _[CORSConfiguration]_ - CORS configuration. |
+
+__Example__
+```java
+CORSConfiguration config = minioClient.getBucketCors(GetBucketCorsArgs.builder().bucket("my-bucketname").build());
 ```
 
 <a name="getBucketEncryption"></a>
@@ -725,6 +765,46 @@ __Parameters__
 __Example__
 ```java
 minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+```
+
+<a name="setBucketCors"></a>
+### setBucketCors(SetBucketCorsArgs args)
+`public void setBucketCors(SetBucketCorsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketCors-io.minio.SetBucketCorsArgs-)_
+
+Sets CORS configuration to a bucket.
+
+__Parameters__
+
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[SetBucketCorsArgs]_ | Arguments.  |
+
+__Example__
+```java
+CORSConfiguration config =
+    new CORSConfiguration(
+        Arrays.asList(
+            new CORSConfiguration.CORSRule[] {
+              // Rule 1
+              new CORSConfiguration.CORSRule(
+                  Arrays.asList(new String[] {"*"}), // Allowed headers
+                  Arrays.asList(new String[] {"PUT", "POST", "DELETE"}), // Allowed methods
+                  Arrays.asList(new String[] {"http://www.example.com"}), // Allowed origins
+                  Arrays.asList(
+                      new String[] {"x-amz-server-side-encryption"}), // Expose headers
+                  null, // ID
+                  3000), // Maximum age seconds
+              // Rule 2
+              new CORSConfiguration.CORSRule(
+                  null, // Allowed headers
+                  Arrays.asList(new String[] {"GET"}), // Allowed methods
+                  Arrays.asList(new String[] {"*"}), // Allowed origins
+                  null, // Expose headers
+                  null, // ID
+                  null // Maximum age seconds
+                  )
+            }));
+minioClient.setBucketCors(SetBucketCorsArgs.builder().bucket("my-bucketname").config(config).build());
 ```
 
 <a name="setBucketEncryption"></a>
@@ -1949,3 +2029,6 @@ ObjectStat objectStat =
 [GetBucketVersioningArgs]: http://minio.github.io/minio-java/io/minio/GetBucketVersioningArgs.html
 [SetBucketVersioningArgs]: http://minio.github.io/minio-java/io/minio/SetBucketVersioningArgs.html
 [RestoreObjectArgs]: http://minio.github.io/minio-java/io/minio/RestoreObjectArgs.html
+[DeleteBucketCorsArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketCorsArgs.html
+[GetBucketCorsArgs]: http://minio.github.io/minio-java/io/minio/GetBucketCorsArgs.html
+[SetBucketCorsArgs]: http://minio.github.io/minio-java/io/minio/SetBucketCorsArgs.html
