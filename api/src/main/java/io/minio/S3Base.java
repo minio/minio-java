@@ -70,6 +70,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -79,6 +80,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -121,12 +123,18 @@ public abstract class S3Base implements AutoCloseable {
   protected static final int MAX_BUCKET_POLICY_SIZE = 20 * 1024;
   protected static final String US_EAST_1 = "us-east-1";
   protected final Map<String, String> regionCache = new ConcurrentHashMap<>();
+  protected static final Random random = new Random(new SecureRandom().nextLong());
+  protected static final ObjectMapper objectMapper =
+      JsonMapper.builder()
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+          .build();
 
   private static final String RETRY_HEAD = "RetryHead";
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String UPLOAD_ID = "uploadId";
   private static final Set<String> TRACE_QUERY_PARAMS =
-      ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID);
+      ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID, "acl", "attributes");
   private PrintWriter traceStream;
   private String userAgent = MinioProperties.INSTANCE.getDefaultUserAgent();
 
@@ -482,6 +490,10 @@ public abstract class S3Base implements AutoCloseable {
     requestBuilder.header("Accept-Encoding", "identity");
     requestBuilder.header("User-Agent", this.userAgent);
 
+    if (body != null && body instanceof RequestBody) {
+      return requestBuilder.method(method.toString(), (RequestBody) body).build();
+    }
+
     String md5Hash = Digest.ZERO_MD5_HASH;
     if (body != null) {
       md5Hash = (body instanceof byte[]) ? Digest.md5Hash((byte[]) body, length) : null;
@@ -566,7 +578,8 @@ public abstract class S3Base implements AutoCloseable {
       throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
           NoSuchAlgorithmException, XmlParserException {
     boolean traceRequestBody = false;
-    if (body != null && !(body instanceof PartSource || body instanceof byte[])) {
+    if (body != null
+        && !(body instanceof PartSource || body instanceof byte[] || body instanceof RequestBody)) {
       byte[] bytes;
       if (body instanceof CharSequence) {
         bytes = body.toString().getBytes(StandardCharsets.UTF_8);
@@ -586,7 +599,7 @@ public abstract class S3Base implements AutoCloseable {
     HttpUrl url = buildUrl(method, bucketName, objectName, region, queryParamMap);
     Credentials creds = (provider == null) ? null : provider.fetch();
     Request req = createRequest(url, method, headers, body, length, creds);
-    if (creds != null) {
+    if (!(body != null && body instanceof RequestBody) && creds != null) {
       req =
           Signer.signV4S3(
               req,
