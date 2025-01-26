@@ -26,6 +26,7 @@ import io.minio.ComposeObjectArgs;
 import io.minio.ComposeSource;
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
+import io.minio.DeleteBucketCorsArgs;
 import io.minio.DeleteBucketEncryptionArgs;
 import io.minio.DeleteBucketLifecycleArgs;
 import io.minio.DeleteBucketNotificationArgs;
@@ -38,6 +39,7 @@ import io.minio.Directive;
 import io.minio.DisableObjectLegalHoldArgs;
 import io.minio.DownloadObjectArgs;
 import io.minio.EnableObjectLegalHoldArgs;
+import io.minio.GetBucketCorsArgs;
 import io.minio.GetBucketEncryptionArgs;
 import io.minio.GetBucketLifecycleArgs;
 import io.minio.GetBucketNotificationArgs;
@@ -69,6 +71,7 @@ import io.minio.ServerSideEncryption;
 import io.minio.ServerSideEncryptionCustomerKey;
 import io.minio.ServerSideEncryptionKms;
 import io.minio.ServerSideEncryptionS3;
+import io.minio.SetBucketCorsArgs;
 import io.minio.SetBucketEncryptionArgs;
 import io.minio.SetBucketLifecycleArgs;
 import io.minio.SetBucketNotificationArgs;
@@ -92,6 +95,7 @@ import io.minio.http.HttpUtils;
 import io.minio.http.Method;
 import io.minio.messages.AndOperator;
 import io.minio.messages.Bucket;
+import io.minio.messages.CORSConfiguration;
 import io.minio.messages.DeleteMarkerReplication;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Event;
@@ -3316,6 +3320,72 @@ public class FunctionalTest {
     }
   }
 
+  public static void testBucketCors(String methodName, boolean getTest, boolean deleteTest)
+      throws Exception {
+    if (!mintEnv) {
+      System.out.println(methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String bucketName = getRandomName();
+    try {
+      client.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+      try {
+        CORSConfiguration expectedConfig =
+            new CORSConfiguration(
+                Arrays.asList(
+                    new CORSConfiguration.CORSRule[] {
+                      // Rule 1
+                      new CORSConfiguration.CORSRule(
+                          Arrays.asList(new String[] {"*"}), // Allowed headers
+                          Arrays.asList(new String[] {"PUT", "POST", "DELETE"}), // Allowed methods
+                          Arrays.asList(new String[] {"http://www.example.com"}), // Allowed origins
+                          Arrays.asList(
+                              new String[] {"x-amz-server-side-encryption"}), // Expose headers
+                          null, // ID
+                          3000), // Maximum age seconds
+                      // Rule 2
+                      new CORSConfiguration.CORSRule(
+                          null, // Allowed headers
+                          Arrays.asList(new String[] {"GET"}), // Allowed methods
+                          Arrays.asList(new String[] {"*"}), // Allowed origins
+                          null, // Expose headers
+                          null, // ID
+                          null // Maximum age seconds
+                          )
+                    }));
+        client.setBucketCors(
+            SetBucketCorsArgs.builder().bucket(bucketName).config(expectedConfig).build());
+        if (getTest) {
+          CORSConfiguration config =
+              client.getBucketCors(GetBucketCorsArgs.builder().bucket(bucketName).build());
+          Assert.assertEquals(
+              "cors: expected: " + expectedConfig + ", got: " + config, expectedConfig, config);
+        }
+        if (deleteTest) {
+          client.deleteBucketCors(DeleteBucketCorsArgs.builder().bucket(bucketName).build());
+        }
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void setBucketCors() throws Exception {
+    testBucketCors("setBucketCors()", false, false);
+  }
+
+  public static void getBucketCors() throws Exception {
+    testBucketCors("getBucketCors()", true, false);
+  }
+
+  public static void deleteBucketCors() throws Exception {
+    testBucketCors("deleteBucketCors()", false, true);
+  }
+
   public static void setBucketTags() throws Exception {
     String methodName = "setBucketTags()";
     if (!mintEnv) {
@@ -3719,6 +3789,10 @@ public class FunctionalTest {
     setBucketEncryption();
     getBucketEncryption();
     deleteBucketEncryption();
+
+    setBucketCors();
+    getBucketCors();
+    deleteBucketCors();
 
     setBucketTags();
     getBucketTags();

@@ -33,6 +33,7 @@ import io.minio.errors.XmlParserException;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
+import io.minio.messages.CORSConfiguration;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.DeleteError;
@@ -3149,6 +3150,133 @@ public class MinioAsyncClient extends S3Base {
     Multimap<String, String> queryParams = newMultimap("tagging", "");
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
     return executeDeleteAsync(args, null, queryParams).thenAccept(response -> response.close());
+  }
+
+  /**
+   * Gets CORS configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * CompletableFuture<CORSConfiguration> future =
+   *     minioAsyncClient.getBucketCors(GetBucketCorsArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketCorsArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link CORSConfiguration}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<CORSConfiguration> getBucketCors(GetBucketCorsArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+    return executeGetAsync(args, null, newMultimap("cors", ""))
+        .exceptionally(
+            e -> {
+              Throwable ex = e.getCause();
+
+              if (ex instanceof CompletionException) {
+                ex = ((CompletionException) ex).getCause();
+              }
+
+              if (ex instanceof ExecutionException) {
+                ex = ((ExecutionException) ex).getCause();
+              }
+
+              if (ex instanceof ErrorResponseException) {
+                if (((ErrorResponseException) ex).errorResponse().code().equals("NoSuchTagSet")) {
+                  return null;
+                }
+              }
+              throw new CompletionException(ex);
+            })
+        .thenApply(
+            response -> {
+              if (response == null) return new CORSConfiguration(null);
+              try {
+                return Xml.unmarshal(CORSConfiguration.class, response.body().charStream());
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
+  }
+
+  /**
+   * Sets CORS configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * CORSConfiguration config =
+   *     new CORSConfiguration(
+   *         Arrays.asList(
+   *             new CORSConfiguration.CORSRule[] {
+   *               // Rule 1
+   *               new CORSConfiguration.CORSRule(
+   *                   Arrays.asList(new String[] {"*"}), // Allowed headers
+   *                   Arrays.asList(new String[] {"PUT", "POST", "DELETE"}), // Allowed methods
+   *                   Arrays.asList(new String[] {"http://www.example.com"}), // Allowed origins
+   *                   Arrays.asList(
+   *                       new String[] {"x-amz-server-side-encryption"}), // Expose headers
+   *                   null, // ID
+   *                   3000), // Maximum age seconds
+   *               // Rule 2
+   *               new CORSConfiguration.CORSRule(
+   *                   null, // Allowed headers
+   *                   Arrays.asList(new String[] {"GET"}), // Allowed methods
+   *                   Arrays.asList(new String[] {"*"}), // Allowed origins
+   *                   null, // Expose headers
+   *                   null, // ID
+   *                   null // Maximum age seconds
+   *                   )
+   *             }));
+   * CompletableFuture<Void> future = minioAsyncClient.setBucketCors(
+   *     SetBucketCorsArgs.builder().bucket("my-bucketname").config(config).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketCorsArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link Void}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<Void> setBucketCors(SetBucketCorsArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+    return executePutAsync(args, null, newMultimap("cors", ""), args.config(), 0)
+        .thenAccept(response -> response.close());
+  }
+
+  /**
+   * Deletes CORS configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * CompletableFuture<Void> future = minioAsyncClient.deleteBucketCors(
+   *     DeleteBucketCorsArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketCorsArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link Void}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<Void> deleteBucketCors(DeleteBucketCorsArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+    return executeDeleteAsync(args, null, newMultimap("cors", ""))
+        .thenAccept(response -> response.close());
   }
 
   /**
