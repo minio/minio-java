@@ -45,7 +45,10 @@ import io.minio.GetBucketPolicyArgs;
 import io.minio.GetBucketReplicationArgs;
 import io.minio.GetBucketTagsArgs;
 import io.minio.GetBucketVersioningArgs;
+import io.minio.GetObjectAclArgs;
 import io.minio.GetObjectArgs;
+import io.minio.GetObjectAttributesArgs;
+import io.minio.GetObjectAttributesResponse;
 import io.minio.GetObjectLockConfigurationArgs;
 import io.minio.GetObjectRetentionArgs;
 import io.minio.GetObjectTagsArgs;
@@ -90,6 +93,7 @@ import io.minio.admin.MinioAdminClient;
 import io.minio.errors.ErrorResponseException;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
+import io.minio.messages.AccessControlPolicy;
 import io.minio.messages.AndOperator;
 import io.minio.messages.Bucket;
 import io.minio.messages.DeleteMarkerReplication;
@@ -98,6 +102,7 @@ import io.minio.messages.Event;
 import io.minio.messages.EventType;
 import io.minio.messages.Expiration;
 import io.minio.messages.FileHeaderInfo;
+import io.minio.messages.GranteeType;
 import io.minio.messages.InputSerialization;
 import io.minio.messages.LifecycleConfiguration;
 import io.minio.messages.LifecycleRule;
@@ -105,6 +110,7 @@ import io.minio.messages.NotificationConfiguration;
 import io.minio.messages.NotificationRecords;
 import io.minio.messages.ObjectLockConfiguration;
 import io.minio.messages.OutputSerialization;
+import io.minio.messages.Permission;
 import io.minio.messages.QueueConfiguration;
 import io.minio.messages.QuoteFields;
 import io.minio.messages.ReplicationConfiguration;
@@ -3503,6 +3509,94 @@ public class FunctionalTest {
     }
   }
 
+  public static void getObjectAcl() throws Exception {
+    String methodName = "getObjectAcl()";
+    if (!mintEnv) {
+      System.out.println(methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String objectName = getRandomName();
+    try {
+      try {
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
+        AccessControlPolicy policy =
+            client.getObjectAcl(
+                GetObjectAclArgs.builder().bucket(bucketName).object(objectName).build());
+        Assert.assertEquals(
+            "granteeType: expected: "
+                + GranteeType.CANONICAL_USER
+                + ", got: "
+                + policy.accessControlList().grants().get(0).grantee().type(),
+            policy.accessControlList().grants().get(0).grantee().type(),
+            GranteeType.CANONICAL_USER);
+        Assert.assertEquals(
+            "permission: expected: "
+                + Permission.FULL_CONTROL
+                + ", got: "
+                + policy.accessControlList().grants().get(0).permission(),
+            policy.accessControlList().grants().get(0).permission(),
+            Permission.FULL_CONTROL);
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
+  public static void getObjectAttributes() throws Exception {
+    String methodName = "getObjectAttributes()";
+    if (!mintEnv) {
+      System.out.println(methodName);
+    }
+
+    long startTime = System.currentTimeMillis();
+    String objectName = getRandomName();
+    try {
+      try {
+        client.putObject(
+            PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
+                    new ContentInputStream(1 * KB), 1 * KB, -1)
+                .build());
+        GetObjectAttributesResponse response =
+            client.getObjectAttributes(
+                GetObjectAttributesArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .objectAttributes(
+                        new String[] {
+                          "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
+                        })
+                    .build());
+        Assert.assertTrue(
+            "objectSize: expected: " + (1 * KB) + ", got: " + response.result().objectSize(),
+            response.result().objectSize() == (1 * KB));
+        Assert.assertTrue(
+            "partNumber: expected: 1, got: "
+                + response.result().objectParts().parts().get(0).partNumber(),
+            response.result().objectParts().parts().get(0).partNumber() == 1);
+        Assert.assertTrue(
+            "partSize: expected: "
+                + (1 * KB)
+                + ", got: "
+                + response.result().objectParts().parts().get(0).partSize(),
+            response.result().objectParts().parts().get(0).partSize() == (1 * KB));
+        mintSuccessLog(methodName, null, startTime);
+      } finally {
+        client.removeObject(
+            RemoveObjectArgs.builder().bucket(bucketName).object(objectName).build());
+      }
+    } catch (Exception e) {
+      handleException(methodName, null, startTime, e);
+    }
+  }
+
   public static void setBucketReplication() throws Exception {
     String methodName = "setBucketReplication()";
     if (!mintEnv) {
@@ -3774,6 +3868,9 @@ public class FunctionalTest {
     setObjectTags();
     getObjectTags();
     deleteObjectTags();
+
+    getObjectAcl();
+    getObjectAttributes();
 
     uploadSnowballObjects();
 
