@@ -30,11 +30,29 @@ public class Grant {
   @Element(name = "Permission", required = false)
   private Permission permission;
 
-  public Grant(@Nullable Grantee grantee, @Nullable Permission permission) {
+  public Grant(
+      @Nullable @Element(name = "Grantee", required = false) Grantee grantee,
+      @Nullable @Element(name = "Permission", required = false) Permission permission) {
     if (grantee == null && permission == null) {
       throw new IllegalArgumentException("Either Grantee or Permission must be provided");
     }
     this.grantee = grantee;
     this.permission = permission;
+  }
+
+  public Grantee grantee() {
+    return grantee;
+  }
+
+  public Permission permission() {
+    return permission;
+  }
+
+  public String granteeUri() {
+    return grantee == null ? null : grantee.uri();
+  }
+
+  public String granteeId() {
+    return grantee == null ? null : grantee.id();
   }
 }

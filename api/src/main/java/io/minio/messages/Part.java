@@ -26,10 +26,10 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "Part", strict = false)
 public class Part {
-  @Element(name = "PartNumber")
+  @Element(name = "PartNumber", required = false)
   private int partNumber;
 
-  @Element(name = "ETag")
+  @Element(name = "ETag", required = false)
   private String etag;
 
   @Element(name = "LastModified", required = false)

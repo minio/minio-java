@@ -17,6 +17,8 @@
 
 package io.minio;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
@@ -32,11 +34,13 @@ import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
+import io.minio.messages.AccessControlPolicy;
 import io.minio.messages.Bucket;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
+import io.minio.messages.GetObjectAttributesOutput;
 import io.minio.messages.Item;
 import io.minio.messages.LegalHold;
 import io.minio.messages.LifecycleConfiguration;
@@ -57,6 +61,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -66,8 +71,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -78,6 +85,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import okhttp3.HttpUrl;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -3152,6 +3160,111 @@ public class MinioAsyncClient extends S3Base {
   }
 
   /**
+   * Gets access control policy of an object.
+   *
+   * <pre>Example:{@code
+   * CompletableFuture<AccessControlPolicy> future =
+   *     minioAsyncClient.getObjectAcl(
+   *         GetObjectAclArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+   * }</pre>
+   *
+   * @param args {@link GetObjectAclArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link AccessControlPolicy}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<AccessControlPolicy> getObjectAcl(GetObjectAclArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+    Multimap<String, String> queryParams = newMultimap("acl", "");
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
+    return executeGetAsync(args, null, queryParams)
+        .thenApply(
+            response -> {
+              try {
+                return Xml.unmarshal(AccessControlPolicy.class, response.body().charStream());
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
+  }
+
+  /**
+   * Gets attributes of an object.
+   *
+   * <pre>Example:{@code
+   * CompletableFuture<GetObjectAttributesResponse> future =
+   *     minioAsyncClient.getObjectAttributes(
+   *         GetObjectAttributesArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .objectAttributes(
+   *                 new String[] {
+   *                   "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
+   *                 })
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link GetObjectAttributesArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link GetObjectAttributesResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<GetObjectAttributesResponse> getObjectAttributes(
+      GetObjectAttributesArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Multimap<String, String> queryParams = newMultimap("attributes", "");
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
+
+    Multimap<String, String> headers = HashMultimap.create();
+    if (args.maxParts() != null) headers.put("x-amz-max-parts", args.maxParts().toString());
+    if (args.partNumberMarker() != null) {
+      headers.put("x-amz-part-number-marker", args.partNumberMarker().toString());
+    }
+    for (String attribute : args.objectAttributes()) {
+      if (attribute != null) headers.put("x-amz-object-attributes", attribute);
+    }
+
+    return executeGetAsync(args, headers, queryParams)
+        .thenApply(
+            response -> {
+              try {
+                GetObjectAttributesOutput result =
+                    Xml.unmarshal(GetObjectAttributesOutput.class, response.body().charStream());
+
+                String value = response.headers().get("x-amz-delete-marker");
+                if (value != null) result.setDeleteMarker(Boolean.valueOf(value));
+                value = response.headers().get("Last-Modified");
+                if (value != null) {
+                  result.setLastModified(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
+                }
+                result.setVersionId(response.headers().get("x-amz-version-id"));
+
+                return new GetObjectAttributesResponse(
+                    response.headers(), args.bucket(), args.region(), args.object(), result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
+  }
+
+  /**
    * Uploads multiple objects in a single put call. It is done by creating intermediate TAR file
    * optionally compressed which is uploaded to S3 service.
    *
@@ -3300,6 +3413,167 @@ public class MinioAsyncClient extends S3Base {
                   | XmlParserException e) {
                 throw new CompletionException(e);
               }
+            });
+  }
+
+  /**
+   * Uploads multiple objects with same content from single stream with optional metadata and tags.
+   *
+   * <pre>Example:{@code
+   * Map<String, String> map = new HashMap<>();
+   * map.put("Project", "Project One");
+   * map.put("User", "jsmith");
+   * CompletableFuture<PutObjectFanOutResponse> future =
+   *     minioAsyncClient.putObjectFanOut(
+   *         PutObjectFanOutArgs.builder().bucket("my-bucketname").stream(
+   *                 new ByteArrayInputStream("somedata".getBytes(StandardCharsets.UTF_8)), 8)
+   *             .entries(
+   *                 Arrays.asList(
+   *                     new PutObjectFanOutEntry[] {
+   *                       PutObjectFanOutEntry.builder().key("fan-out.0").build(),
+   *                       PutObjectFanOutEntry.builder().key("fan-out.1").tags(map).build()
+   *                     }))
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link PutObjectFanOutArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link PutObjectFanOutResponse}&gt; object.
+   * @throws ErrorResponseException thrown to indicate presigned POST data failure.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<PutObjectFanOutResponse> putObjectFanOut(PutObjectFanOutArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, IOException, NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+    args.validateSse(this.baseUrl);
+
+    return CompletableFuture.supplyAsync(
+            () -> {
+              // Build POST object data
+              String objectName =
+                  "pan-out-"
+                      + new BigInteger(32, random).toString(32)
+                      + "-"
+                      + System.currentTimeMillis();
+              PostPolicy policy =
+                  new PostPolicy(args.bucket(), ZonedDateTime.now().plusMinutes(15));
+              policy.addEqualsCondition("key", objectName);
+              if (args.sse() != null) {
+                for (Map.Entry<String, String> entry : args.sse().headers().entrySet()) {
+                  policy.addEqualsCondition(entry.getKey(), entry.getValue());
+                }
+              }
+              if (args.checksum() != null) {
+                for (Map.Entry<String, String> entry : args.checksum().headers().entries()) {
+                  policy.addEqualsCondition(entry.getKey(), entry.getValue());
+                }
+              }
+
+              try {
+                Map<String, String> formData = this.getPresignedPostFormData(policy);
+
+                // Build MultipartBody
+                MultipartBody.Builder multipartBuilder = new MultipartBody.Builder();
+                multipartBuilder.setType(MultipartBody.FORM);
+                for (Map.Entry<String, String> entry : formData.entrySet()) {
+                  multipartBuilder.addFormDataPart(entry.getKey(), entry.getValue());
+                }
+                multipartBuilder.addFormDataPart("key", objectName);
+                multipartBuilder.addFormDataPart("x-minio-fanout-list", args.fanOutList());
+                // "file" must be added at last.
+                multipartBuilder.addFormDataPart(
+                    "file",
+                    "fanout-content",
+                    new HttpRequestBody(new PartSource(args.stream(), args.size()), null));
+
+                return multipartBuilder.build();
+              } catch (JsonProcessingException e) {
+                throw new CompletionException(e);
+              } catch (ErrorResponseException
+                  | InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | InvalidResponseException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | ServerException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenCompose(
+            body -> {
+              try {
+                return executePostAsync(args, null, null, body);
+              } catch (InsufficientDataException
+                  | InternalException
+                  | InvalidKeyException
+                  | IOException
+                  | NoSuchAlgorithmException
+                  | XmlParserException e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenApply(
+            response -> {
+              try {
+                JsonFactory jsonFactory = new JsonFactory();
+                Iterator<PutObjectFanOutResponse.Result> iterator =
+                    objectMapper.readValues(
+                        jsonFactory.createParser(response.body().byteStream()),
+                        PutObjectFanOutResponse.Result.class);
+                List<PutObjectFanOutResponse.Result> results = new LinkedList<>();
+                iterator.forEachRemaining(results::add);
+                return new PutObjectFanOutResponse(
+                    response.headers(), args.bucket(), args.region(), results);
+              } catch (IOException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
+  }
+
+  /**
+   * Performs language model inference with the prompt and referenced object as context.
+   *
+   * @param args {@link PromptObjectArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link PromptObjectResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<PromptObjectResponse> promptObject(PromptObjectArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Multimap<String, String> queryParams = newMultimap("lambdaArn", args.lambdaArn());
+    Multimap<String, String> headers =
+        merge(newMultimap(args.headers()), newMultimap("Content-Type", "application/json"));
+
+    Map<String, Object> promptArgs = args.promptArgs();
+    if (promptArgs == null) promptArgs = new HashMap<>();
+    promptArgs.put("prompt", args.prompt());
+    byte[] data = objectMapper.writeValueAsString(promptArgs).getBytes(StandardCharsets.UTF_8);
+
+    return executePostAsync(args, headers, queryParams, data)
+        .thenApply(
+            response -> {
+              return new PromptObjectResponse(
+                  response.headers(),
+                  args.bucket(),
+                  args.region(),
+                  args.object(),
+                  response.body().byteStream());
             });
   }
 

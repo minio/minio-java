@@ -19,13 +19,19 @@ package io.minio.messages;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /** Helper class to denote for the person being granted permissions of {@link Grant}. */
 @Root(name = "Grantee")
+@Namespace(prefix = "xsi", reference = "http://www.w3.org/2001/XMLSchema-instance")
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class Grantee {
+  @Attribute(name = "type")
+  private String xsiType;
+
   @Element(name = "DisplayName", required = false)
   private String displayName;
 
@@ -52,5 +58,36 @@ public class Grantee {
     this.emailAddress = emailAddress;
     this.id = id;
     this.uri = uri;
+  }
+
+  public Grantee(
+      @Nonnull @Attribute(name = "type") String xsiType,
+      @Nonnull @Element(name = "Type") GranteeType type,
+      @Nullable @Element(name = "DisplayName", required = false) String displayName,
+      @Nullable @Element(name = "EmailAddress", required = false) String emailAddress,
+      @Nullable @Element(name = "ID", required = false) String id,
+      @Nullable @Element(name = "URI", required = false) String uri) {
+    this(type, displayName, emailAddress, id, uri);
+    this.xsiType = xsiType;
+  }
+
+  public String displayName() {
+    return displayName;
+  }
+
+  public String emailAddress() {
+    return emailAddress;
+  }
+
+  public String id() {
+    return id;
+  }
+
+  public GranteeType type() {
+    return type;
+  }
+
+  public String uri() {
+    return uri;
   }
 }

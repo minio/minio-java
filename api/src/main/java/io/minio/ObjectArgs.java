@@ -17,7 +17,6 @@
 package io.minio;
 
 import java.util.Objects;
-import okhttp3.HttpUrl;
 
 /** Base argument class holds object name and version ID along with bucket information. */
 public abstract class ObjectArgs extends BucketArgs {
@@ -25,17 +24,6 @@ public abstract class ObjectArgs extends BucketArgs {
 
   public String object() {
     return objectName;
-  }
-
-  protected void checkSse(ServerSideEncryption sse, HttpUrl url) {
-    if (sse == null) {
-      return;
-    }
-
-    if (sse.tlsRequired() && !url.isHttps()) {
-      throw new IllegalArgumentException(
-          sse + " operations must be performed over a secure connection.");
-    }
   }
 
   /** Base argument builder class for {@link ObjectArgs}. */
