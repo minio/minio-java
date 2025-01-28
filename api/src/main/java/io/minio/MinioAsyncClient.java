@@ -32,11 +32,13 @@ import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
+import io.minio.messages.AccessControlPolicy;
 import io.minio.messages.Bucket;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
 import io.minio.messages.DeleteError;
 import io.minio.messages.DeleteObject;
+import io.minio.messages.GetObjectAttributesOutput;
 import io.minio.messages.Item;
 import io.minio.messages.LegalHold;
 import io.minio.messages.LifecycleConfiguration;
@@ -66,6 +68,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -3149,6 +3152,111 @@ public class MinioAsyncClient extends S3Base {
     Multimap<String, String> queryParams = newMultimap("tagging", "");
     if (args.versionId() != null) queryParams.put("versionId", args.versionId());
     return executeDeleteAsync(args, null, queryParams).thenAccept(response -> response.close());
+  }
+
+  /**
+   * Gets access control policy of an object.
+   *
+   * <pre>Example:{@code
+   * CompletableFuture<AccessControlPolicy> future =
+   *     minioAsyncClient.getObjectAcl(
+   *         GetObjectAclArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+   * }</pre>
+   *
+   * @param args {@link GetObjectAclArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link AccessControlPolicy}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<AccessControlPolicy> getObjectAcl(GetObjectAclArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+    Multimap<String, String> queryParams = newMultimap("acl", "");
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
+    return executeGetAsync(args, null, queryParams)
+        .thenApply(
+            response -> {
+              try {
+                return Xml.unmarshal(AccessControlPolicy.class, response.body().charStream());
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
+  }
+
+  /**
+   * Gets attributes of an object.
+   *
+   * <pre>Example:{@code
+   * CompletableFuture<GetObjectAttributesResponse> future =
+   *     minioAsyncClient.getObjectAttributes(
+   *         GetObjectAttributesArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .objectAttributes(
+   *                 new String[] {
+   *                   "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
+   *                 })
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link GetObjectAttributesArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link GetObjectAttributesResponse}&gt; object.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CompletableFuture<GetObjectAttributesResponse> getObjectAttributes(
+      GetObjectAttributesArgs args)
+      throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
+          NoSuchAlgorithmException, XmlParserException {
+    checkArgs(args);
+
+    Multimap<String, String> queryParams = newMultimap("attributes", "");
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
+
+    Multimap<String, String> headers = HashMultimap.create();
+    if (args.maxParts() != null) headers.put("x-amz-max-parts", args.maxParts().toString());
+    if (args.partNumberMarker() != null) {
+      headers.put("x-amz-part-number-marker", args.partNumberMarker().toString());
+    }
+    for (String attribute : args.objectAttributes()) {
+      if (attribute != null) headers.put("x-amz-object-attributes", attribute);
+    }
+
+    return executeGetAsync(args, headers, queryParams)
+        .thenApply(
+            response -> {
+              try {
+                GetObjectAttributesOutput result =
+                    Xml.unmarshal(GetObjectAttributesOutput.class, response.body().charStream());
+
+                String value = response.headers().get("x-amz-delete-marker");
+                if (value != null) result.setDeleteMarker(Boolean.valueOf(value));
+                value = response.headers().get("Last-Modified");
+                if (value != null) {
+                  result.setLastModified(ZonedDateTime.parse(value, Time.HTTP_HEADER_DATE_FORMAT));
+                }
+                result.setVersionId(response.headers().get("x-amz-version-id"));
+
+                return new GetObjectAttributesResponse(
+                    response.headers(), args.bucket(), args.region(), args.object(), result);
+              } catch (XmlParserException e) {
+                throw new CompletionException(e);
+              } finally {
+                response.close();
+              }
+            });
   }
 
   /**

@@ -126,7 +126,7 @@ public abstract class S3Base implements AutoCloseable {
   private static final String END_HTTP = "----------END-HTTP----------";
   private static final String UPLOAD_ID = "uploadId";
   private static final Set<String> TRACE_QUERY_PARAMS =
-      ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID);
+      ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID, "acl", "attributes");
   private PrintWriter traceStream;
   private String userAgent = MinioProperties.INSTANCE.getDefaultUserAgent();
 
