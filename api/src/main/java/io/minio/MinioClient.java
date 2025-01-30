@@ -26,7 +26,9 @@ import io.minio.errors.InternalException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
+import io.minio.messages.AccessControlPolicy;
 import io.minio.messages.Bucket;
+import io.minio.messages.CORSConfiguration;
 import io.minio.messages.DeleteError;
 import io.minio.messages.Item;
 import io.minio.messages.LifecycleConfiguration;
@@ -2276,6 +2278,203 @@ public class MinioClient implements AutoCloseable {
   }
 
   /**
+   * Gets CORS configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * CORSConfiguration config =
+   *     minioClient.getBucketCors(GetBucketCorsArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link GetBucketCorsArgs} object.
+   * @return {@link CORSConfiguration} - CORSConfiguration.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public CORSConfiguration getBucketCors(GetBucketCorsArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      return asyncClient.getBucketCors(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Sets CORS configuration to a bucket.
+   *
+   * <pre>Example:{@code
+   * CORSConfiguration config =
+   *     new CORSConfiguration(
+   *         Arrays.asList(
+   *             new CORSConfiguration.CORSRule[] {
+   *               // Rule 1
+   *               new CORSConfiguration.CORSRule(
+   *                   Arrays.asList(new String[] {"*"}), // Allowed headers
+   *                   Arrays.asList(new String[] {"PUT", "POST", "DELETE"}), // Allowed methods
+   *                   Arrays.asList(new String[] {"http://www.example.com"}), // Allowed origins
+   *                   Arrays.asList(
+   *                       new String[] {"x-amz-server-side-encryption"}), // Expose headers
+   *                   null, // ID
+   *                   3000), // Maximum age seconds
+   *               // Rule 2
+   *               new CORSConfiguration.CORSRule(
+   *                   null, // Allowed headers
+   *                   Arrays.asList(new String[] {"GET"}), // Allowed methods
+   *                   Arrays.asList(new String[] {"*"}), // Allowed origins
+   *                   null, // Expose headers
+   *                   null, // ID
+   *                   null // Maximum age seconds
+   *                   )
+   *             }));
+   * minioClient.setBucketCors(
+   *     SetBucketCorsArgs.builder().bucket("my-bucketname").config(config).build());
+   * }</pre>
+   *
+   * @param args {@link SetBucketCorsArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void setBucketCors(SetBucketCorsArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      asyncClient.setBucketCors(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+    }
+  }
+
+  /**
+   * Deletes CORS configuration of a bucket.
+   *
+   * <pre>Example:{@code
+   * minioClient.deleteBucketCors(DeleteBucketCorsArgs.builder().bucket("my-bucketname").build());
+   * }</pre>
+   *
+   * @param args {@link DeleteBucketCorsArgs} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public void deleteBucketCors(DeleteBucketCorsArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      asyncClient.deleteBucketCors(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+    }
+  }
+
+  /**
+   * Gets access control policy of an object.
+   *
+   * <pre>Example:{@code
+   * AccessControlPolicy policy =
+   *     minioClient.getObjectAcl(
+   *         GetObjectAclArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+   * }</pre>
+   *
+   * @param args {@link GetObjectAclArgs} object.
+   * @return {@link AccessControlPolicy} - Access control policy object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public AccessControlPolicy getObjectAcl(GetObjectAclArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      return asyncClient.getObjectAcl(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Gets attributes of an object.
+   *
+   * <pre>Example:{@code
+   * GetObjectAttributesResponse response =
+   *     minioClient.getObjectAttributes(
+   *         GetObjectAttributesArgs.builder()
+   *             .bucket("my-bucketname")
+   *             .object("my-objectname")
+   *             .objectAttributes(
+   *                 new String[] {
+   *                   "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
+   *                 })
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link GetObjectAttributesArgs} object.
+   * @return {@link GetObjectAttributesResponse} - Response object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public GetObjectAttributesResponse getObjectAttributes(GetObjectAttributesArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      return asyncClient.getObjectAttributes(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
    * Uploads multiple objects in a single put call. It is done by creating intermediate TAR file
    * optionally compressed which is uploaded to S3 service.
    *
@@ -2315,6 +2514,81 @@ public class MinioClient implements AutoCloseable {
           ServerException, XmlParserException {
     try {
       return asyncClient.uploadSnowballObjects(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Uploads multiple objects with same content from single stream with optional metadata and tags.
+   *
+   * <pre>Example:{@code
+   * Map<String, String> map = new HashMap<>();
+   * map.put("Project", "Project One");
+   * map.put("User", "jsmith");
+   * PutObjectFanOutResponse future =
+   *     minioClient.putObjectFanOut(
+   *         PutObjectFanOutArgs.builder().bucket("my-bucketname").stream(
+   *                 new ByteArrayInputStream("somedata".getBytes(StandardCharsets.UTF_8)), 8)
+   *             .entries(
+   *                 Arrays.asList(
+   *                     new PutObjectFanOutEntry[] {
+   *                       PutObjectFanOutEntry.builder().key("fan-out.0").build(),
+   *                       PutObjectFanOutEntry.builder().key("fan-out.1").tags(map).build()
+   *                     }))
+   *             .build());
+   * }</pre>
+   *
+   * @param args {@link PutObjectFanOutArgs} object.
+   * @return {@link PutObjectFanOutResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public PutObjectFanOutResponse putObjectFanOut(PutObjectFanOutArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      return asyncClient.putObjectFanOut(args).get();
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      asyncClient.throwEncapsulatedException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Performs language model inference with the prompt and referenced object as context.
+   *
+   * @param args {@link PromptObjectArgs} object.
+   * @return {@link PromptObjectResponse} object.
+   * @throws ErrorResponseException thrown to indicate S3 service returned an error response.
+   * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
+   * @throws InternalException thrown to indicate internal library error.
+   * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
+   * @throws InvalidResponseException thrown to indicate S3 service returned invalid or no error
+   *     response.
+   * @throws IOException thrown to indicate I/O error on S3 operation.
+   * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws XmlParserException thrown to indicate XML parsing error.
+   */
+  public PromptObjectResponse promptObject(PromptObjectArgs args)
+      throws ErrorResponseException, InsufficientDataException, InternalException,
+          InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException,
+          ServerException, XmlParserException {
+    try {
+      return asyncClient.promptObject(args).get();
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {

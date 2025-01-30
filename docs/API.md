@@ -25,29 +25,32 @@ MinioClient minioClient =
 | Bucket operations                                                 | Object operations                                       |
 |-------------------------------------------------------------------|---------------------------------------------------------|
 | [`bucketExists`](#bucketExists)                                   | [`composeObject`](#composeObject)                       |
-| [`deleteBucketEncryption`](#deleteBucketEncryption)               | [`copyObject`](#copyObject)                             |
-| [`deleteBucketLifecycle`](#deleteBucketLifecycle)                 | [`deleteObjectTags`](#deleteObjectTags)                 |
-| [`deleteBucketNotification`](#deleteBucketNotification)           | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
-| [`deleteBucketPolicy`](#deleteBucketPolicy)                       | [`downloadObject`](#downloadObject)                     |
-| [`deleteBucketReplication`](#deleteBucketReplication)             | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
-| [`deleteBucketTags`](#deleteBucketTags)                           | [`getObject`](#getObject)                               |
-| [`deleteObjectLockConfiguration`](#deleteObjectLockConfiguration) | [`getObjectRetention`](#getObjectRetention)             |
+| [`deleteBucketCors`](#deleteBucketCors)                           | [`copyObject`](#copyObject)                             |
+| [`deleteBucketEncryption`](#deleteBucketEncryption)               | [`deleteObjectTags`](#deleteObjectTags)                 |
+| [`deleteBucketLifecycle`](#deleteBucketLifecycle)                 | [`disableObjectLegalHold`](#disableObjectLegalHold)     |
+| [`deleteBucketNotification`](#deleteBucketNotification)           | [`downloadObject`](#downloadObject)                     |
+| [`deleteBucketPolicy`](#deleteBucketPolicy)                       | [`enableObjectLegalHold`](#enableObjectLegalHold)       |
+| [`deleteBucketReplication`](#deleteBucketReplication)             | [`getObject`](#getObject)                               |
+| [`deleteBucketTags`](#deleteBucketTags)                           | [`getObjectAcl`](#getObjectAcl)                         |
+| [`deleteObjectLockConfiguration`](#deleteObjectLockConfiguration) | [`getObjectAttributes`](#getObjectAttributes)           |
+| [`getBucketCors`](#getBucketCors)                                 | [`getObjectRetention`](#getObjectRetention)             |
 | [`getBucketEncryption`](#getBucketEncryption)                     | [`getObjectTags`](#getObjectTags)                       |
 | [`getBucketLifecycle`](#getBucketLifecycle)                       | [`getPresignedObjectUrl`](#getPresignedObjectUrl)       |
 | [`getBucketNotification`](#getBucketNotification)                 | [`getPresignedPostFormData`](#getPresignedPostFormData) |
 | [`getBucketPolicy`](#getBucketPolicy)                             | [`isObjectLegalHoldEnabled`](#isObjectLegalHoldEnabled) |
 | [`getBucketReplication`](#getBucketReplication)                   | [`listObjects`](#listObjects)                           |
-| [`getBucketTags`](#getBucketTags)                                 | [`putObject`](#putObject)                               |
-| [`getBucketVersioning`](#getBucketVersioning)                     | [`removeObject`](#removeObject)                         |
-| [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`removeObjects`](#removeObjects)                       |
-| [`listBuckets`](#listBuckets)                                     | [`restoreObject`](#restoreObject)                       |
-| [`listenBucketNotification`](#listenBucketNotification)           | [`selectObjectContent`](#selectObjectContent)           |
-| [`makeBucket`](#makeBucket)                                       | [`setObjectRetention`](#setObjectRetention)             |
-| [`removeBucket`](#removeBucket)                                   | [`setObjectTags`](#setObjectTags)                       |
-| [`setBucketEncryption`](#setBucketEncryption)                     | [`statObject`](#statObject)                             |
-| [`setBucketLifecycle`](#setBucketLifecycle)                       | [`uploadObject`](#uploadObject)                         |
-| [`setBucketNotification`](#setBucketNotification)                 | [`uploadSnowballObjects`](#uploadSnowballObjects)       |
-| [`setBucketPolicy`](#setBucketPolicy)                             |                                                         |
+| [`getBucketTags`](#getBucketTags)                                 | [`promptObject`](#promptObject)                         |
+| [`getBucketVersioning`](#getBucketVersioning)                     | [`putObject`](#putObject)                               |
+| [`getObjectLockConfiguration`](#getObjectLockConfiguration)       | [`putObjectFanOut`](#putObjectFanOut)                   |
+| [`listBuckets`](#listBuckets)                                     | [`removeObject`](#removeObject)                         |
+| [`listenBucketNotification`](#listenBucketNotification)           | [`removeObjects`](#removeObjects)                       |
+| [`makeBucket`](#makeBucket)                                       | [`restoreObject`](#restoreObject)                       |
+| [`removeBucket`](#removeBucket)                                   | [`selectObjectContent`](#selectObjectContent)           |
+| [`setBucketCors`](#setBucketCors)                                 | [`setObjectRetention`](#setObjectRetention)             |
+| [`setBucketEncryption`](#setBucketEncryption)                     | [`setObjectTags`](#setObjectTags)                       |
+| [`setBucketLifecycle`](#setBucketLifecycle)                       | [`statObject`](#statObject)                             |
+| [`setBucketNotification`](#setBucketNotification)                 | [`uploadObject`](#uploadObject)                         |
+| [`setBucketPolicy`](#setBucketPolicy)                             | [`uploadSnowballObjects`](#uploadSnowballObjects)       |
 | [`setBucketReplication`](#setBucketReplication)                   |                                                         |
 | [`setBucketTags`](#setBucketTags)                                 |                                                         |
 | [`setBucketVersioning`](#setBucketVersioning)                     |                                                         |
@@ -253,6 +256,22 @@ if (found) {
 }
 ```
 
+<a name="deleteBucketCors"></a>
+### deleteBucketCors(DeleteBucketCorsArgs args)
+`private void deleteBucketCors(DeleteBucketCorsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketCors-io.minio.DeleteBucketCorsArgs-)_
+
+Deletes CORS configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                     | Description |
+|:----------|:-------------------------|:------------|
+| ``args``  | _[DeleteBucketCorsArgs]_ | Arguments.  |
+
+__Example__
+```java
+minioClient.deleteBucketCors(DeleteBucketCorsArgs.builder().bucket("my-bucketname").build());
+```
+
 <a name="deleteBucketEncryption"></a>
 ### deleteBucketEncryption(DeleteBucketEncryptionArgs args)
 `private void deleteBucketEncryption(DeleteBucketEncryptionArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#deleteBucketEncryption-io.minio.DeleteBucketEncryptionArgs-)_
@@ -368,6 +387,27 @@ __Example__
 ```java
 minioClient.deleteObjectLockConfiguration(
     DeleteObjectLockConfigurationArgs.builder().bucket("my-bucketname").build());
+```
+
+<a name="getBucketCors"></a>
+### getBucketCors(GetBucketCorsArgs args)
+`public Tags getBucketCors(GetBucketCorsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.htmlgetBucketCors-io.minio.GetBucketCorsArgs-)_
+
+Gets CORS configuration of a bucket.
+
+__Parameters__
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[GetBucketCorsArgs]_ | Arguments.  |
+
+
+| Returns                                     |
+|:--------------------------------------------|
+| _[CORSConfiguration]_ - CORS configuration. |
+
+__Example__
+```java
+CORSConfiguration config = minioClient.getBucketCors(GetBucketCorsArgs.builder().bucket("my-bucketname").build());
 ```
 
 <a name="getBucketEncryption"></a>
@@ -725,6 +765,46 @@ __Parameters__
 __Example__
 ```java
 minioClient.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
+```
+
+<a name="setBucketCors"></a>
+### setBucketCors(SetBucketCorsArgs args)
+`public void setBucketCors(SetBucketCorsArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#setBucketCors-io.minio.SetBucketCorsArgs-)_
+
+Sets CORS configuration to a bucket.
+
+__Parameters__
+
+| Parameter | Type                  | Description |
+|:----------|:----------------------|:------------|
+| ``args``  | _[SetBucketCorsArgs]_ | Arguments.  |
+
+__Example__
+```java
+CORSConfiguration config =
+    new CORSConfiguration(
+        Arrays.asList(
+            new CORSConfiguration.CORSRule[] {
+              // Rule 1
+              new CORSConfiguration.CORSRule(
+                  Arrays.asList(new String[] {"*"}), // Allowed headers
+                  Arrays.asList(new String[] {"PUT", "POST", "DELETE"}), // Allowed methods
+                  Arrays.asList(new String[] {"http://www.example.com"}), // Allowed origins
+                  Arrays.asList(
+                      new String[] {"x-amz-server-side-encryption"}), // Expose headers
+                  null, // ID
+                  3000), // Maximum age seconds
+              // Rule 2
+              new CORSConfiguration.CORSRule(
+                  null, // Allowed headers
+                  Arrays.asList(new String[] {"GET"}), // Allowed methods
+                  Arrays.asList(new String[] {"*"}), // Allowed origins
+                  null, // Expose headers
+                  null, // ID
+                  null // Maximum age seconds
+                  )
+            }));
+minioClient.setBucketCors(SetBucketCorsArgs.builder().bucket("my-bucketname").config(config).build());
 ```
 
 <a name="setBucketEncryption"></a>
@@ -1262,6 +1342,58 @@ try (InputStream stream = minioClient.getObject(
 }
 ```
 
+<a name="getObjectAcl"></a>
+### getObjectAcl(GetObjectAclArgs args)
+`public Acl getObjectAcl(GetObjectAclArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectAcl-io.minio.GetObjectAclArgs-)_
+
+Gets tags of an object.
+
+__Parameters__
+| Parameter | Type                 | Description |
+|:----------|:---------------------|:------------|
+| ``args``  | _[GetObjectAclArgs]_ | Arguments.  |
+
+
+| Returns                                          |
+|:-------------------------------------------------|
+| _[AccessControlPolicy]_ - Access control policy. |
+
+__Example__
+```java
+AccessControlPolicy policy = minioClient.getObjectAcl(
+    GetObjectAclArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+```
+
+<a name="getObjectAttributes"></a>
+### getObjectAttributes(GetObjectAttributesArgs args)
+`public GetObjectAttributesResponse getObjectAttributes(GetObjectAttributesArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObjectAttributes-io.minio.GetObjectAttributesArgs-)_
+
+Gets tags of an object.
+
+__Parameters__
+| Parameter | Type                        | Description |
+|:----------|:----------------------------|:------------|
+| ``args``  | _[GetObjectAttributesArgs]_ | Arguments.  |
+
+
+| Returns                                    |
+|:-------------------------------------------|
+| _[GetObjectAttributesResponse]_ - Respone. |
+
+__Example__
+```java
+GetObjectAttributesResponse response =
+    minioClient.getObjectAttributes(
+        GetObjectAttributesArgs.builder()
+            .bucket("my-bucketname")
+            .object("my-objectname")
+            .objectAttributes(
+                new String[] {
+                  "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
+                })
+            .build());
+```
+
 <a name="downloadObject"></a>
 ### downloadObject(DownloadObjectArgs args)
 `public void downloadObject(DownloadObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#getObject-io.minio.DownloadObjectArgs-)_
@@ -1504,6 +1636,21 @@ if (response.isSuccessful()) {
 }
 ```
 
+<a name="promptObject"></a>
+### promptObject(PromptObjectArgs args)
+`public ObjectWriteResponse promptObject(PromptObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#promptObject-io.minio.PromptObjectArgs-)_
+
+Performs language model inference with the prompt and referenced object as context.
+
+__Parameters__
+| Parameter | Type                 | Description |
+|:----------|:---------------------|:------------|
+| ``args``  | _[PromptObjectArgs]_ | Arguments.  |
+
+| Returns                              |
+|:-------------------------------------|
+| _[PromptObjectResponse]_ - response. |
+
 <a name="putObject"></a>
 ### putObject(PutObjectArgs args)
 `public ObjectWriteResponse putObject(PutObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObject-io.minio.PutObjectArgs-)_
@@ -1559,6 +1706,40 @@ minioClient.putObject(
             inputStream, size, -1)
         .sse(sse)
         .build());
+```
+
+<a name="putObjectFanOut"></a>
+### putObjectFanOut(PutObjectFanOutArgs args)
+`public PutObjectFanOutResponse putObjectFanOut(PutObjectFanOutArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#putObjectFanOut-io.minio.PutObjectFanOutArgs-)_
+
+Uploads multiple objects with same content from single stream with optional metadata and tags.
+
+__Parameters__
+| Parameter | Type                    | Description |
+|:----------|:------------------------|:------------|
+| ``args``  | _[PutObjectFanOutArgs]_ | Arguments.  |
+
+
+| Returns                                 |
+|:----------------------------------------|
+| _[PutObjectFanOutResponse]_ - response. |
+
+__Example__
+```java
+Map<String, String> map = new HashMap<>();
+map.put("Project", "Project One");
+map.put("User", "jsmith");
+PutObjectFanOutResponse response =
+    minioClient.putObjectFanOut(
+        PutObjectFanOutArgs.builder().bucket("my-bucketname").stream(
+                new ByteArrayInputStream("somedata".getBytes(StandardCharsets.UTF_8)), 8)
+            .entries(
+                Arrays.asList(
+                    new PutObjectFanOutEntry[] {
+                      PutObjectFanOutEntry.builder().key("fan-out.0").build(),
+                      PutObjectFanOutEntry.builder().key("fan-out.1").tags(map).build()
+                    }))
+            .build());
 ```
 
 <a name="uploadObject"></a>
@@ -1949,3 +2130,14 @@ ObjectStat objectStat =
 [GetBucketVersioningArgs]: http://minio.github.io/minio-java/io/minio/GetBucketVersioningArgs.html
 [SetBucketVersioningArgs]: http://minio.github.io/minio-java/io/minio/SetBucketVersioningArgs.html
 [RestoreObjectArgs]: http://minio.github.io/minio-java/io/minio/RestoreObjectArgs.html
+[DeleteBucketCorsArgs]: http://minio.github.io/minio-java/io/minio/DeleteBucketCorsArgs.html
+[GetBucketCorsArgs]: http://minio.github.io/minio-java/io/minio/GetBucketCorsArgs.html
+[SetBucketCorsArgs]: http://minio.github.io/minio-java/io/minio/SetBucketCorsArgs.html
+[GetObjectAclArgs]: http://minio.github.io/minio-java/io/minio/GetObjectAclArgs.html
+[AccessControlPolicy]: http://minio.github.io/minio-java/io/minio/messages/AccessControlPolicy.html
+[GetObjectAttributesArgs]: http://minio.github.io/minio-java/io/minio/GetObjectAttributesArgs.html
+[GetObjectAttributesResponse]: http://minio.github.io/minio-java/io/minio/GetObjectAttributesResponse.html
+[PutObjectFanOutArgs]: http://minio.github.io/minio-java/io/minio/PutObjectFanOutArgs.html
+[PutObjectFanOutResponse]: http://minio.github.io/minio-java/io/minio/PutObjectFanOutResponse.html
+[PromptObjectArgs]: http://minio.github.io/minio-java/io/minio/PromptObjectArgs.html
+[PromptObjectResponse]: http://minio.github.io/minio-java/io/minio/PromptObjectResponse.html

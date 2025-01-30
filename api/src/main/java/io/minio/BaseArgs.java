@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import okhttp3.HttpUrl;
 
 /** Base argument class. */
 public abstract class BaseArgs {
@@ -40,6 +41,17 @@ public abstract class BaseArgs {
 
   public Multimap<String, String> extraQueryParams() {
     return extraQueryParams;
+  }
+
+  protected void checkSse(ServerSideEncryption sse, HttpUrl url) {
+    if (sse == null) {
+      return;
+    }
+
+    if (sse.tlsRequired() && !url.isHttps()) {
+      throw new IllegalArgumentException(
+          sse + " operations must be performed over a secure connection.");
+    }
   }
 
   /** Base builder which builds arguments. */
