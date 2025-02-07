@@ -15,22 +15,20 @@
  */
 
 /********************************/
-/*   gradleVersion = '8.10.2'   */
+/*   gradleVersion = '8.12.1'   */
 /********************************/
 
 plugins {
   id "com.github.johnrengelman.shadow" version "8.1.1"
-  id "com.github.spotbugs" version "5.2.1"
-  id "io.codearte.nexus-staging" version "0.30.0"
-  id "de.marcphilipp.nexus-publish" version "0.4.0"
+  id "com.github.spotbugs" version "6.1.3"
+  id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
   id "com.diffplug.spotless" version "6.13.0"
 }
 
 /*
  * Root project definitions
  */
-apply plugin: 'io.codearte.nexus-staging'
-apply plugin: "de.marcphilipp.nexus-publish"
+apply plugin: 'io.github.gradle-nexus.publish-plugin'
 
 allprojects {
     group = 'io.minio'
@@ -52,14 +50,14 @@ subprojects {
 
     dependencies {
         api "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
-        api "com.google.guava:guava:33.3.1-jre"
+        api "com.google.guava:guava:33.4.0-jre"
         api "com.squareup.okhttp3:okhttp:4.12.0"
-        api "com.fasterxml.jackson.core:jackson-annotations:2.18.0"
-        api "com.fasterxml.jackson.core:jackson-core:2.18.0"
-        api "com.fasterxml.jackson.core:jackson-databind:2.18.0"
-        api "org.bouncycastle:bcprov-jdk18on:1.78.1"
+        api "com.fasterxml.jackson.core:jackson-annotations:2.18.2"
+        api "com.fasterxml.jackson.core:jackson-core:2.18.2"
+        api "com.fasterxml.jackson.core:jackson-databind:2.18.2"
+        api "org.bouncycastle:bcprov-jdk18on:1.80"
         api "org.apache.commons:commons-compress:1.27.1"
-        api "commons-codec:commons-codec:1.17.1"
+        api "commons-codec:commons-codec:1.18.0"
         api "org.xerial.snappy:snappy-java:1.1.10.7"
         compileOnly "com.github.spotbugs:spotbugs-annotations:4.8.6"
 
@@ -74,8 +72,8 @@ subprojects {
     }
 
     spotbugs {
-        effort = "max"
-        reportLevel = "low"
+        effort = com.github.spotbugs.snom.Effort.MAX
+        reportLevel = com.github.spotbugs.snom.Confidence.values()[0]
         excludeFilter = file("$rootDir/spotbugs-filter.xml")
     }
 
@@ -93,9 +91,9 @@ subprojects {
         // Show stacktrace on test failure than opening in web browser.
         testLogging {
             exceptionFormat = 'full'
-            showExceptions true
-            showCauses true
-            showStackTraces true
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
         }
     }
 
@@ -104,13 +102,16 @@ subprojects {
         System.setProperty('user.language', 'de')
         System.setProperty('user.country', 'DE')
         systemProperties = System.properties
+        classpath = testing.suites.test.sources.runtimeClasspath
         dependsOn test
     }
 
     check.dependsOn localeTest
 
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
 
     spotless {
         java {
@@ -130,13 +131,14 @@ project(':api') {
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'com.github.johnrengelman.shadow'
-    apply plugin: "de.marcphilipp.nexus-publish"
 
-    archivesBaseName = 'minio'
+    base {
+        archivesName = 'minio'
+    }
 
     jar {
         manifest {
-            attributes('Implementation-Title': archivesBaseName,
+            attributes('Implementation-Title': base.archivesName,
                     'Implementation-Version': archiveVersion.get(),
                     'Built-By': 'MinIO, inc',
                     'Built-JDK': System.getProperty('java.version'),
@@ -175,7 +177,7 @@ project(':api') {
     publishing {
         publications {
             mavenJava(MavenPublication) {
-                artifactId archivesBaseName
+                artifactId = base.archivesName
                 from components.java
                 pom {
                     name = 'minio'
@@ -215,16 +217,11 @@ project(':api') {
         }
     }
 
-    nexusStaging {
-        packageGroup = group
-        stagingProfileId = '9b746c9f8abc1'
-        username = project.properties['nexusUsername']
-        password = project.properties['nexusPassword']
-    }
-
     nexusPublishing {
+        packageGroup = group
         repositories {
             sonatype {
+                stagingProfileId = '9b746c9f8abc1'
                 username = project.properties['nexusUsername']
                 password = project.properties['nexusPassword']
             }
@@ -237,19 +234,21 @@ project(':adminapi') {
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
     apply plugin: 'com.github.johnrengelman.shadow'
-    apply plugin: "de.marcphilipp.nexus-publish"
+    apply plugin: 'base'
 
-    archivesBaseName = 'minio-admin'
+    base {
+        archivesName = 'minio-admin'
+    }
 
     dependencies {
         api project(':api')
-        api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.0"
+        api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2"
         testImplementation project(':api')
     }
 
     jar {
         manifest {
-            attributes('Implementation-Title': archivesBaseName,
+            attributes('Implementation-Title': base.archivesName,
                     'Implementation-Version': archiveVersion.get(),
                     'Built-By': 'MinIO, inc',
                     'Built-JDK': System.getProperty('java.version'),
@@ -288,7 +287,7 @@ project(':adminapi') {
     publishing {
         publications {
             mavenJava(MavenPublication) {
-                artifactId archivesBaseName
+                artifactId = base.archivesName
                 from components.java
                 pom {
                     name = 'minio'
@@ -328,20 +327,8 @@ project(':adminapi') {
         }
     }
 
-    nexusStaging {
-        packageGroup = group
-        stagingProfileId = '9b746c9f8abc1'
-        username = project.properties['nexusUsername']
-        password = project.properties['nexusPassword']
-    }
-
     nexusPublishing {
-        repositories {
-            sonatype {
-                username = project.properties['nexusUsername']
-                password = project.properties['nexusPassword']
-            }
-        }
+        packageGroup = group
     }
 }
 
@@ -385,7 +372,7 @@ project(':functional') {
 
     task runFunctionalTest(type:JavaExec) {
         mainClass = 'FunctionalTest'
-        classpath = sourceSets.main.runtimeClasspath
+        classpath = testing.suites.test.sources.runtimeClasspath
 
         ext.endpoint = 'https://play.min.io:9000'
         if (rootProject.hasProperty('endpoint')) {
