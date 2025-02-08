@@ -42,6 +42,8 @@ class PartSource {
 
   private ByteBufferStream[] buffers;
 
+  private InputStream inputStream;
+
   private PartSource(int partNumber, long size, String md5Hash, String sha256Hash) {
     this.partNumber = partNumber;
     this.size = size;
@@ -67,6 +69,11 @@ class PartSource {
     this.buffers = Objects.requireNonNull(buffers, "buffers must not be null");
   }
 
+  public PartSource(@Nonnull InputStream inputStream, long size) {
+    this(0, size, null, null);
+    this.inputStream = Objects.requireNonNull(inputStream, "input stream must not be null");
+  }
+
   public int partNumber() {
     return this.partNumber;
   }
@@ -87,6 +94,10 @@ class PartSource {
     if (this.file != null) {
       this.file.seek(this.position);
       return Okio.source(Channels.newInputStream(this.file.getChannel()));
+    }
+
+    if (this.inputStream != null) {
+      return Okio.source(this.inputStream);
     }
 
     InputStream stream = buffers[0].inputStream();
