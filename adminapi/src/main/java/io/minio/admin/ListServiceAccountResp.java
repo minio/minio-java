@@ -92,7 +92,7 @@ public class ListServiceAccountResp {
           }
         }
 
-        throw new IllegalArgumentException("unknown account status ' " + value + "'");
+        throw new IllegalArgumentException("unknown account status '" + value + "'");
       }
     }
   }
