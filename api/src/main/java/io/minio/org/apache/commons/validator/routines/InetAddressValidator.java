@@ -17,7 +17,6 @@
 
 package io.minio.org.apache.commons.validator.routines;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +38,7 @@ import java.util.List;
  * @version $Revision$
  * @since Validator 1.4
  */
-public class InetAddressValidator implements Serializable {
+public class InetAddressValidator {
 
   private static final int IPV4_MAX_OCTET_VALUE = 255;
 
@@ -62,6 +61,8 @@ public class InetAddressValidator implements Serializable {
 
   /** IPv4 RegexValidator. */
   private final RegexValidator ipv4Validator = new RegexValidator(IPV4_REGEX);
+
+  private InetAddressValidator() {}
 
   /**
    * Returns the singleton instance of this validator.
