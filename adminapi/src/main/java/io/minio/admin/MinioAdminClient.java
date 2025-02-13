@@ -89,7 +89,10 @@ public class MinioAdminClient {
     UPDATE_SERVICE_ACCOUNT("update-service-account"),
     LIST_SERVICE_ACCOUNTS("list-service-accounts"),
     DELETE_SERVICE_ACCOUNT("delete-service-account"),
-    INFO_SERVICE_ACCOUNT("info-service-account");
+    INFO_SERVICE_ACCOUNT("info-service-account"),
+    ATTACH_POLICIES("idp/builtin/policy/attach"),
+    DETACH_POLICIES("idp/builtin/policy/detach"),
+    ;
     private final String value;
 
     private Command(String value) {
@@ -840,6 +843,90 @@ public class MinioAdminClient {
       Credentials creds = getCredentials();
       byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
       return OBJECT_MAPPER.readValue(jsonData, GetServiceAccountInfoResp.class);
+    }
+  }
+
+  /**
+   * Attach multiple policies to a user or group. <br>
+   *
+   * <p>Throws a runtime exception with the error code "XMinioAdminPolicyChangeAlreadyApplied" and
+   * message "The specified policy change is already in effect." if there is no difference between
+   * the policies before and after the change.
+   *
+   * @param userOrGroupName User or Group name.
+   * @param isGroup Flag to denote if userOrGroupName is a group name.
+   * @param policyNames Array of policy names to be attached.
+   * @throws NoSuchAlgorithmException Thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException Thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException Thrown to indicate I/O error on MinIO REST operation.
+   */
+  public AttachPoliciesResp attachPolicies(
+      @Nullable String userOrGroupName, boolean isGroup, String[] policyNames)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          InvalidCipherTextException {
+    if (userOrGroupName == null || userOrGroupName.isEmpty()) {
+      throw new IllegalArgumentException("user/group name must be provided");
+    }
+
+    Map<String, Object> policyEntity = new HashMap<>();
+    if (isGroup) {
+      policyEntity.put("group", userOrGroupName);
+    } else {
+      policyEntity.put("user", userOrGroupName);
+    }
+    policyEntity.put("policies", policyNames);
+
+    Credentials creds = getCredentials();
+    try (Response response =
+        execute(
+            Method.POST,
+            Command.ATTACH_POLICIES,
+            null,
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(policyEntity), creds.secretKey()))) {
+      byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
+      return OBJECT_MAPPER.readValue(jsonData, AttachPoliciesResp.class);
+    }
+  }
+
+  /**
+   * Detach multiple policies to a user or group. <br>
+   *
+   * <p>Throws a runtime exception with the error code "XMinioAdminPolicyChangeAlreadyApplied" and
+   * message "The specified policy change is already in effect." if there is no difference between
+   * the policies before and after the change.
+   *
+   * @param userOrGroupName User or Group name.
+   * @param isGroup Flag to denote if userOrGroupName is a group name.
+   * @param policyNames Array of policy names to be attached.
+   * @throws NoSuchAlgorithmException Thrown to indicate missing of MD5 or SHA-256 digest library.
+   * @throws InvalidKeyException Thrown to indicate missing of HMAC SHA-256 library.
+   * @throws IOException Thrown to indicate I/O error on MinIO REST operation.
+   */
+  public DetachPoliciesResp detachPolicies(
+      @Nullable String userOrGroupName, boolean isGroup, String[] policyNames)
+      throws NoSuchAlgorithmException, InvalidKeyException, IOException,
+          InvalidCipherTextException {
+    if (userOrGroupName == null || userOrGroupName.isEmpty()) {
+      throw new IllegalArgumentException("user/group name must be provided");
+    }
+
+    Map<String, Object> policyEntity = new HashMap<>();
+    if (isGroup) {
+      policyEntity.put("group", userOrGroupName);
+    } else {
+      policyEntity.put("user", userOrGroupName);
+    }
+    policyEntity.put("policies", policyNames);
+
+    Credentials creds = getCredentials();
+    try (Response response =
+        execute(
+            Method.POST,
+            Command.DETACH_POLICIES,
+            null,
+            Crypto.encrypt(OBJECT_MAPPER.writeValueAsBytes(policyEntity), creds.secretKey()))) {
+      byte[] jsonData = Crypto.decrypt(response.body().byteStream(), creds.secretKey());
+      return OBJECT_MAPPER.readValue(jsonData, DetachPoliciesResp.class);
     }
   }
 
