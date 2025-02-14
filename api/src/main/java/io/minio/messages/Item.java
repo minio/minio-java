@@ -18,11 +18,18 @@ package io.minio.messages;
 
 import io.minio.Utils;
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import javax.annotation.Nonnull;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
+import org.simpleframework.xml.convert.Converter;
+import org.simpleframework.xml.stream.InputNode;
+import org.simpleframework.xml.stream.OutputNode;
 
 /**
  * Helper class to denote Object information in {@link ListBucketResultV1}, {@link
@@ -54,7 +61,7 @@ public abstract class Item {
   private String versionId; // except ListObjects V1
 
   @Element(name = "UserMetadata", required = false)
-  private Metadata userMetadata;
+  private UserMetadata userMetadata;
 
   @Element(name = "UserTags", required = false)
   private String userTags;
@@ -139,7 +146,7 @@ public abstract class Item {
 
   /** Returns whether this item is a delete marker or not. */
   public boolean isDeleteMarker() {
-    return this instanceof DeleteMarker;
+    return this instanceof ListVersionsResult.DeleteMarker;
   }
 
   public List<String> checksumAlgorithm() {
@@ -152,6 +159,29 @@ public abstract class Item {
 
   public RestoreStatus restoreStatus() {
     return restoreStatus;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "etag=%s, objectName=%s, lastModified=%s, owner=%s, size=%s, storageClass=%s, isLatest=%s, "
+            + "versionId=%s, userMetadata=%s, userTags=%s, checksumAlgorithm=%s, checksumType=%s, "
+            + "restoreStatus=%s, isDir=%s, encodingType=%s",
+        Utils.stringify(etag),
+        Utils.stringify(objectName),
+        Utils.stringify(lastModified),
+        Utils.stringify(owner),
+        Utils.stringify(size),
+        Utils.stringify(storageClass),
+        Utils.stringify(isLatest),
+        Utils.stringify(versionId),
+        Utils.stringify(userMetadata),
+        Utils.stringify(userTags),
+        Utils.stringify(checksumAlgorithm),
+        Utils.stringify(checksumType),
+        Utils.stringify(restoreStatus),
+        Utils.stringify(isDir),
+        Utils.stringify(encodingType));
   }
 
   @Root(name = "RestoreStatus", strict = false)
@@ -175,6 +205,67 @@ public abstract class Item {
 
     public ZonedDateTime restoreExpiryDate() {
       return restoreExpiryDate == null ? null : restoreExpiryDate.zonedDateTime();
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "RestoreStatus{isRestoreInProgress=%s, restoreExpiryDate=%s}",
+          Utils.stringify(isRestoreInProgress), Utils.stringify(restoreExpiryDate));
+    }
+  }
+
+  @Root(name = "UserMetadata")
+  @Convert(UserMetadata.UserMetadataConverter.class)
+  public static class UserMetadata {
+    Map<String, String> map;
+
+    public UserMetadata() {}
+
+    public UserMetadata(@Nonnull Map<String, String> map) {
+      this.map =
+          Utils.unmodifiableMap(Objects.requireNonNull(map, "User metadata must not be null"));
+    }
+
+    public Map<String, String> get() {
+      return map;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("UserMetadata{%s}", Utils.stringify(map));
+    }
+
+    /** XML converter class. */
+    public static class UserMetadataConverter implements Converter<UserMetadata> {
+      @Override
+      public UserMetadata read(InputNode node) throws Exception {
+        Map<String, String> map = new HashMap<>();
+        while (true) {
+          InputNode childNode = node.getNext();
+          if (childNode == null) {
+            break;
+          }
+
+          map.put(childNode.getName(), childNode.getValue());
+        }
+
+        if (map.size() > 0) {
+          return new UserMetadata(map);
+        }
+
+        return null;
+      }
+
+      @Override
+      public void write(OutputNode node, UserMetadata metadata) throws Exception {
+        for (Map.Entry<String, String> entry : metadata.get().entrySet()) {
+          OutputNode childNode = node.getChild(entry.getKey());
+          childNode.setValue(entry.getValue());
+        }
+
+        node.commit();
+      }
     }
   }
 }

@@ -35,12 +35,11 @@ import io.minio.errors.XmlParserException;
 import io.minio.http.HttpUtils;
 import io.minio.http.Method;
 import io.minio.messages.AccessControlPolicy;
-import io.minio.messages.Bucket;
 import io.minio.messages.CORSConfiguration;
 import io.minio.messages.CopyObjectResult;
 import io.minio.messages.CreateBucketConfiguration;
-import io.minio.messages.DeleteError;
-import io.minio.messages.DeleteObject;
+import io.minio.messages.DeleteRequest;
+import io.minio.messages.DeleteResult;
 import io.minio.messages.GetObjectAttributesOutput;
 import io.minio.messages.Item;
 import io.minio.messages.LegalHold;
@@ -1105,35 +1104,36 @@ public class MinioAsyncClient extends S3Base {
    * objects.add(new DeleteObject("my-objectname1"));
    * objects.add(new DeleteObject("my-objectname2"));
    * objects.add(new DeleteObject("my-objectname3"));
-   * Iterable<Result<DeleteError>> results =
+   * Iterable<Result<DeleteResult.Error>> results =
    *     minioAsyncClient.removeObjects(
    *         RemoveObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
-   * for (Result<DeleteError> result : results) {
-   *   DeleteError error = result.get();
+   * for (Result<DeleteResult.Error> result : results) {
+   *   DeleteResult.Error error = result.get();
    *   System.out.println(
    *       "Error in deleting object " + error.objectName() + "; " + error.message());
    * }
    * }</pre>
    *
    * @param args {@link RemoveObjectsArgs} object.
-   * @return {@code Iterable<Result<DeleteError>>} - Lazy iterator contains object removal status.
+   * @return {@code Iterable<Result<DeleteResult.Error>>} - Lazy iterator contains object removal
+   *     status.
    */
-  public Iterable<Result<DeleteError>> removeObjects(RemoveObjectsArgs args) {
+  public Iterable<Result<DeleteResult.Error>> removeObjects(RemoveObjectsArgs args) {
     checkArgs(args);
 
-    return new Iterable<Result<DeleteError>>() {
+    return new Iterable<Result<DeleteResult.Error>>() {
       @Override
-      public Iterator<Result<DeleteError>> iterator() {
-        return new Iterator<Result<DeleteError>>() {
-          private Result<DeleteError> error = null;
-          private Iterator<DeleteError> errorIterator = null;
+      public Iterator<Result<DeleteResult.Error>> iterator() {
+        return new Iterator<Result<DeleteResult.Error>>() {
+          private Result<DeleteResult.Error> error = null;
+          private Iterator<DeleteResult.Error> errorIterator = null;
           private boolean completed = false;
-          private Iterator<DeleteObject> objectIter = args.objects().iterator();
+          private Iterator<DeleteRequest.Object> objectIter = args.objects().iterator();
 
           private void setError() {
             error = null;
             while (errorIterator.hasNext()) {
-              DeleteError deleteError = errorIterator.next();
+              DeleteResult.Error deleteError = errorIterator.next();
               if (!"NoSuchVersion".equals(deleteError.code())) {
                 error = new Result<>(deleteError);
                 break;
@@ -1147,7 +1147,7 @@ public class MinioAsyncClient extends S3Base {
             }
 
             try {
-              List<DeleteObject> objectList = new LinkedList<>();
+              List<DeleteRequest.Object> objectList = new LinkedList<>();
               while (objectIter.hasNext() && objectList.size() < 1000) {
                 objectList.add(objectIter.next());
               }
@@ -1171,8 +1171,8 @@ public class MinioAsyncClient extends S3Base {
               } catch (ExecutionException e) {
                 throwEncapsulatedException(e);
               }
-              if (!response.result().errorList().isEmpty()) {
-                errorIterator = response.result().errorList().iterator();
+              if (!response.result().errors().isEmpty()) {
+                errorIterator = response.result().errors().iterator();
                 setError();
                 completed = true;
               }
@@ -1205,11 +1205,11 @@ public class MinioAsyncClient extends S3Base {
           }
 
           @Override
-          public Result<DeleteError> next() {
+          public Result<DeleteResult.Error> next() {
             if (!hasNext()) throw new NoSuchElementException();
 
             if (this.error != null) {
-              Result<DeleteError> error = this.error;
+              Result<DeleteResult.Error> error = this.error;
               this.error = null;
               return error;
             }
@@ -1325,10 +1325,11 @@ public class MinioAsyncClient extends S3Base {
    * Lists bucket information of all buckets.
    *
    * <pre>Example:{@code
-   * CompletableFuture<List<Bucket>> future = minioAsyncClient.listBuckets();
+   * CompletableFuture<List<ListAllMyBucketsResult.Bucket>> future = minioAsyncClient.listBuckets();
    * }</pre>
    *
-   * @return {@link CompletableFuture}&lt;{@link List}&lt;{@link Bucket}&gt;&gt; object.
+   * @return {@link CompletableFuture}&lt;{@link List}&lt;{@link
+   *     ListAllMyBucketsResult.Bucket}&gt;&gt; object.
    * @throws InsufficientDataException thrown to indicate not enough data available in InputStream.
    * @throws InternalException thrown to indicate internal library error.
    * @throws InvalidKeyException thrown to indicate missing of HMAC SHA-256 library.
@@ -1336,7 +1337,7 @@ public class MinioAsyncClient extends S3Base {
    * @throws NoSuchAlgorithmException thrown to indicate missing of MD5 or SHA-256 digest library.
    * @throws XmlParserException thrown to indicate XML parsing error.
    */
-  public CompletableFuture<List<Bucket>> listBuckets()
+  public CompletableFuture<List<ListAllMyBucketsResult.Bucket>> listBuckets()
       throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
           NoSuchAlgorithmException, XmlParserException {
     return listBucketsAsync(null, null, null, null, null, null)
@@ -1350,30 +1351,31 @@ public class MinioAsyncClient extends S3Base {
    * Lists bucket information of all buckets.
    *
    * <pre>Example:{@code
-   * Iterable<Result<Bucket>> results = minioAsyncClient.listBuckets(ListBucketsArgs.builder().build());
-   * for (Result<Bucket> result : results) {
+   * Iterable<Result<ListAllMyBucketsResult.Bucket>> results = minioAsyncClient.listBuckets(ListBucketsArgs.builder().build());
+   * for (Result<ListAllMyBucketsResult.Bucket> result : results) {
    *   Bucket bucket = result.get();
    *   System.out.println(String.format("Bucket: %s, Region: %s, CreationDate: %s", bucket.name(), bucket.bucketRegion(), bucket.creationDate()));
    * }
    * }</pre>
    *
-   * @return {@link Iterable}&lt;{@link List}&lt;{@link Bucket}&gt;&gt; object.
+   * @return {@link Iterable}&lt;{@link List}&lt;{@link ListAllMyBucketsResult.Bucket}&gt;&gt;
+   *     object.
    */
-  public Iterable<Result<Bucket>> listBuckets(ListBucketsArgs args) {
-    return new Iterable<Result<Bucket>>() {
+  public Iterable<Result<ListAllMyBucketsResult.Bucket>> listBuckets(ListBucketsArgs args) {
+    return new Iterable<Result<ListAllMyBucketsResult.Bucket>>() {
       @Override
-      public Iterator<Result<Bucket>> iterator() {
-        return new Iterator<Result<Bucket>>() {
+      public Iterator<Result<ListAllMyBucketsResult.Bucket>> iterator() {
+        return new Iterator<Result<ListAllMyBucketsResult.Bucket>>() {
           private ListAllMyBucketsResult result = null;
-          private Result<Bucket> error = null;
-          private Iterator<Bucket> iterator = null;
+          private Result<ListAllMyBucketsResult.Bucket> error = null;
+          private Iterator<ListAllMyBucketsResult.Bucket> iterator = null;
           private boolean completed = false;
 
           private synchronized void populate() {
             if (completed) return;
 
             try {
-              this.iterator = new LinkedList<Bucket>().iterator();
+              this.iterator = new LinkedList<ListAllMyBucketsResult.Bucket>().iterator();
               try {
                 ListBucketsResponse response =
                     listBucketsAsync(
@@ -1430,7 +1432,7 @@ public class MinioAsyncClient extends S3Base {
           }
 
           @Override
-          public Result<Bucket> next() {
+          public Result<ListAllMyBucketsResult.Bucket> next() {
             if (this.completed) throw new NoSuchElementException();
             if (this.error == null && this.iterator == null) {
               populate();
@@ -1448,7 +1450,7 @@ public class MinioAsyncClient extends S3Base {
               return this.error;
             }
 
-            Bucket item = null;
+            ListAllMyBucketsResult.Bucket item = null;
             if (this.iterator.hasNext()) {
               item = this.iterator.next();
             }
@@ -2542,7 +2544,11 @@ public class MinioAsyncClient extends S3Base {
           NoSuchAlgorithmException, XmlParserException {
     checkArgs(args);
     return executePutAsync(
-            args, null, newMultimap("notification", ""), new NotificationConfiguration(), 0)
+            args,
+            null,
+            newMultimap("notification", ""),
+            new NotificationConfiguration(null, null, null, null),
+            0)
         .thenAccept(response -> response.close());
   }
 

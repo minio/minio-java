@@ -16,6 +16,7 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import java.time.ZonedDateTime;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
@@ -65,5 +66,12 @@ public class Retention {
     }
 
     return null;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "Retention{mode=%s, retainUntilDate=%s}",
+        Utils.stringify(mode), Utils.stringify(retainUntilDate));
   }
 }
