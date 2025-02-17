@@ -858,7 +858,10 @@ public class MinioAdminClient {
    * @throws IOException Thrown to indicate I/O error on MinIO REST operation.
    */
   private byte[] attachDetachPolicy(
-      Command command, List<String> polices, @Nullable String user, @Nullable String group)
+      @Nonnull Command command,
+      @Nonnull List<String> polices,
+      @Nullable String user,
+      @Nullable String group)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
 
@@ -887,7 +890,7 @@ public class MinioAdminClient {
 
   /** Attach multiple policies to a user or group. */
   public AttachPoliciesResp attachPolicy(
-      List<String> policies, @Nullable String user, @Nullable String group)
+      @Nonnull List<String> policies, @Nullable String user, @Nullable String group)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
     byte[] result =
@@ -897,7 +900,7 @@ public class MinioAdminClient {
 
   /** Detach multiple policies to a user or group. */
   public DetachPoliciesResp detachPolicy(
-      List<String> policies, @Nullable String user, @Nullable String group)
+      @Nonnull List<String> policies, @Nullable String user, @Nullable String group)
       throws NoSuchAlgorithmException, InvalidKeyException, IOException,
           InvalidCipherTextException {
     byte[] result =
