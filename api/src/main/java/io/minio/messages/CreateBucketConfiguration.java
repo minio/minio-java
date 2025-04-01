@@ -32,8 +32,50 @@ public class CreateBucketConfiguration {
   @Element(name = "LocationConstraint")
   private String locationConstraint;
 
+  @Element(name = "Location", required = false)
+  private Location location;
+
+  @Element(name = "Bucket", required = false)
+  private Bucket bucket;
+
   /** Constructs a new CreateBucketConfiguration object with given location constraint. */
   public CreateBucketConfiguration(String locationConstraint) {
     this.locationConstraint = locationConstraint;
+  }
+
+  public CreateBucketConfiguration(String locationConstraint, Location location, Bucket bucket) {
+    this.locationConstraint = locationConstraint;
+    this.location = location;
+    this.bucket = bucket;
+  }
+
+  @Root(name = "Location", strict = false)
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
+  public static class Location {
+    @Element(name = "Name", required = false)
+    private String name;
+
+    @Element(name = "Type", required = false)
+    private String type;
+
+    public Location(String name, String type) {
+      this.name = name;
+      this.type = type;
+    }
+  }
+
+  @Root(name = "Bucket", strict = false)
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
+  public static class Bucket {
+    @Element(name = "DataRedundancy", required = false)
+    private String dataRedundancy;
+
+    @Element(name = "Type", required = false)
+    private String type;
+
+    public Bucket(String dataRedundancy, String type) {
+      this.dataRedundancy = dataRedundancy;
+      this.type = type;
+    }
   }
 }

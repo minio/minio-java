@@ -18,8 +18,7 @@
 package io.minio.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Collections;
-import java.util.HashMap;
+import io.minio.Utils;
 import java.util.Map;
 
 /** Helper class to denote object information for {@link EventMetadata}. */
@@ -52,6 +51,6 @@ public class ObjectMetadata {
   }
 
   public Map<String, String> userMetadata() {
-    return Collections.unmodifiableMap(userMetadata == null ? new HashMap<>() : userMetadata);
+    return Utils.unmodifiableMap(userMetadata);
   }
 }

@@ -16,20 +16,19 @@
 
 package io.minio.messages;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import io.minio.Utils;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Map;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
 /**
  * Helper class to denote Object information in {@link ListBucketResultV1}, {@link
  * ListBucketResultV2} and {@link ListVersionsResult}.
  */
 public abstract class Item {
-  private static final String UTF_8 = StandardCharsets.UTF_8.toString();
-
   @Element(name = "ETag", required = false)
   private String etag; // except DeleteMarker
 
@@ -60,6 +59,15 @@ public abstract class Item {
   @Element(name = "UserTags", required = false)
   private String userTags;
 
+  @ElementList(name = "ChecksumAlgorithm", inline = true, required = false)
+  private List<String> checksumAlgorithm;
+
+  @Element(name = "ChecksumType", required = false)
+  private String checksumType;
+
+  @Element(name = "RestoreStatus", required = false)
+  private RestoreStatus restoreStatus;
+
   private boolean isDir = false;
   private String encodingType = null;
 
@@ -77,11 +85,7 @@ public abstract class Item {
 
   /** Returns object name. */
   public String objectName() {
-    try {
-      return "url".equals(encodingType) ? URLDecoder.decode(objectName, UTF_8) : objectName;
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return Utils.urlDecode(objectName, encodingType);
   }
 
   /** Returns last modified time of the object. */
@@ -136,5 +140,41 @@ public abstract class Item {
   /** Returns whether this item is a delete marker or not. */
   public boolean isDeleteMarker() {
     return this instanceof DeleteMarker;
+  }
+
+  public List<String> checksumAlgorithm() {
+    return Utils.unmodifiableList(checksumAlgorithm);
+  }
+
+  public String checksumType() {
+    return checksumType;
+  }
+
+  public RestoreStatus restoreStatus() {
+    return restoreStatus;
+  }
+
+  @Root(name = "RestoreStatus", strict = false)
+  public static class RestoreStatus {
+    @Element(name = "IsRestoreInProgress", required = false)
+    private Boolean isRestoreInProgress;
+
+    @Element(name = "RestoreExpiryDate", required = false)
+    private ResponseDate restoreExpiryDate;
+
+    public RestoreStatus(
+        @Element(name = "IsRestoreInProgress", required = false) Boolean isRestoreInProgress,
+        @Element(name = "RestoreExpiryDate", required = false) ResponseDate restoreExpiryDate) {
+      this.isRestoreInProgress = isRestoreInProgress;
+      this.restoreExpiryDate = restoreExpiryDate;
+    }
+
+    public Boolean isRestoreInProgress() {
+      return isRestoreInProgress;
+    }
+
+    public ZonedDateTime restoreExpiryDate() {
+      return restoreExpiryDate == null ? null : restoreExpiryDate.zonedDateTime();
+    }
   }
 }

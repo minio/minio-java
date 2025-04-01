@@ -16,8 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
-import java.util.HashMap;
+import io.minio.Utils;
 import java.util.Map;
 import org.simpleframework.xml.ElementMap;
 import org.simpleframework.xml.Namespace;
@@ -87,7 +86,7 @@ public class Tags {
       }
     }
 
-    this.tags = Collections.unmodifiableMap(tags);
+    this.tags = Utils.unmodifiableMap(tags);
   }
 
   /** Creates new bucket tags. */
@@ -102,6 +101,6 @@ public class Tags {
 
   /** Returns tags. */
   public Map<String, String> get() {
-    return Collections.unmodifiableMap(tags == null ? new HashMap<>() : tags);
+    return Utils.unmodifiableMap(tags);
   }
 }

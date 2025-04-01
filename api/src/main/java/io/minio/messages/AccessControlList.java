@@ -16,7 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
+import io.minio.Utils;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -30,11 +30,16 @@ public class AccessControlList {
   @ElementList(name = "Grant", inline = true)
   private List<Grant> grants;
 
-  public AccessControlList(@Nonnull List<Grant> grants) {
+  public AccessControlList(
+      @Nonnull @ElementList(name = "Grant", inline = true) List<Grant> grants) {
     Objects.requireNonNull(grants, "Grants must not be null");
     if (grants.size() == 0) {
       throw new IllegalArgumentException("Grants must not be empty");
     }
-    this.grants = Collections.unmodifiableList(grants);
+    this.grants = Utils.unmodifiableList(grants);
+  }
+
+  public List<Grant> grants() {
+    return Utils.unmodifiableList(grants);
   }
 }

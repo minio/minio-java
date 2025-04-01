@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+import io.minio.ListBucketsArgs;
 import io.minio.MinioClient;
+import io.minio.Result;
 import io.minio.errors.MinioException;
 import io.minio.messages.Bucket;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 
 public class ListBuckets {
   /** MinioClient.listBuckets() example. */
@@ -42,9 +43,13 @@ public class ListBuckets {
       //         .build();
 
       // List buckets we have atleast read access.
-      List<Bucket> bucketList = minioClient.listBuckets();
-      for (Bucket bucket : bucketList) {
-        System.out.println(bucket.creationDate() + ", " + bucket.name());
+      Iterable<Result<Bucket>> results = minioClient.listBuckets(ListBucketsArgs.builder().build());
+      for (Result<Bucket> result : results) {
+        Bucket bucket = result.get();
+        System.out.println(
+            String.format(
+                "Bucket: %s, Region: %s, CreationDate: %s",
+                bucket.name(), bucket.bucketRegion(), bucket.creationDate()));
       }
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);

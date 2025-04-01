@@ -26,10 +26,10 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "Part", strict = false)
 public class Part {
-  @Element(name = "PartNumber")
+  @Element(name = "PartNumber", required = false)
   private int partNumber;
 
-  @Element(name = "ETag")
+  @Element(name = "ETag", required = false)
   private String etag;
 
   @Element(name = "LastModified", required = false)
@@ -38,6 +38,21 @@ public class Part {
   @Element(name = "Size", required = false)
   private Long size;
 
+  @Element(name = "ChecksumCRC32", required = false)
+  private String checksumCRC32;
+
+  @Element(name = "ChecksumCRC32C", required = false)
+  private String checksumCRC32C;
+
+  @Element(name = "ChecksumCRC64NVME", required = false)
+  private String checksumCRC64NVME;
+
+  @Element(name = "ChecksumSHA1", required = false)
+  private String checksumSHA1;
+
+  @Element(name = "ChecksumSHA256", required = false)
+  private String checksumSHA256;
+
   public Part() {}
 
   /** Constructs a new Part object with given part number and ETag. */
@@ -45,6 +60,24 @@ public class Part {
 
     this.partNumber = partNumber;
     this.etag = etag;
+  }
+
+  /** Constructs a new Part object with given values. */
+  public Part(
+      int partNumber,
+      String etag,
+      String checksumCRC32,
+      String checksumCRC32C,
+      String checksumCRC64NVME,
+      String checksumSHA1,
+      String checksumSHA256) {
+    this.partNumber = partNumber;
+    this.etag = etag;
+    this.checksumCRC32 = checksumCRC32;
+    this.checksumCRC32C = checksumCRC32C;
+    this.checksumCRC64NVME = checksumCRC64NVME;
+    this.checksumSHA1 = checksumSHA1;
+    this.checksumSHA256 = checksumSHA256;
   }
 
   /** Returns part number. */
@@ -65,5 +98,25 @@ public class Part {
   /** Returns part size. */
   public long partSize() {
     return size;
+  }
+
+  public String checksumCRC32() {
+    return checksumCRC32;
+  }
+
+  public String checksumCRC32C() {
+    return checksumCRC32C;
+  }
+
+  public String checksumCRC64NVME() {
+    return checksumCRC64NVME;
+  }
+
+  public String checksumSHA1() {
+    return checksumSHA1;
+  }
+
+  public String checksumSHA256() {
+    return checksumSHA256;
   }
 }

@@ -16,7 +16,7 @@
 
 package io.minio.messages;
 
-import java.util.Collections;
+import io.minio.Utils;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -40,8 +40,7 @@ public class LifecycleConfiguration {
   /** Constructs new lifecycle configuration. */
   public LifecycleConfiguration(
       @Nonnull @ElementList(name = "Rule", inline = true) List<LifecycleRule> rules) {
-    this.rules =
-        Collections.unmodifiableList(Objects.requireNonNull(rules, "Rules must not be null"));
+    this.rules = Utils.unmodifiableList(Objects.requireNonNull(rules, "Rules must not be null"));
     if (rules.isEmpty()) {
       throw new IllegalArgumentException("Rules must not be empty");
     }

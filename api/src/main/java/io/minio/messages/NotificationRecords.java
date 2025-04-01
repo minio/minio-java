@@ -18,8 +18,7 @@
 package io.minio.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Collections;
-import java.util.LinkedList;
+import io.minio.Utils;
 import java.util.List;
 
 /**
@@ -35,6 +34,6 @@ public class NotificationRecords {
   private List<Event> events;
 
   public List<Event> events() {
-    return Collections.unmodifiableList(events == null ? new LinkedList<>() : events);
+    return Utils.unmodifiableList(events);
   }
 }

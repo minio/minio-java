@@ -29,7 +29,18 @@ public class NoncurrentVersionTransition extends NoncurrentVersionExpiration {
   public NoncurrentVersionTransition(
       @Element(name = "NoncurrentDays", required = false) int noncurrentDays,
       @Nonnull @Element(name = "StorageClass", required = false) String storageClass) {
-    super(noncurrentDays);
+    super(noncurrentDays, null);
+    if (storageClass == null || storageClass.isEmpty()) {
+      throw new IllegalArgumentException("StorageClass must be provided");
+    }
+    this.storageClass = storageClass;
+  }
+
+  public NoncurrentVersionTransition(
+      @Element(name = "NoncurrentDays", required = false) int noncurrentDays,
+      @Element(name = "NewerNoncurrentVersions", required = false) Integer newerNoncurrentVersions,
+      @Nonnull @Element(name = "StorageClass", required = false) String storageClass) {
+    super(noncurrentDays, newerNoncurrentVersions);
     if (storageClass == null || storageClass.isEmpty()) {
       throw new IllegalArgumentException("StorageClass must be provided");
     }

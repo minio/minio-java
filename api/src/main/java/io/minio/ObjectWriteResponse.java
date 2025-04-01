@@ -16,30 +16,18 @@
 
 package io.minio;
 
-import io.minio.messages.CompleteMultipartUploadOutput;
+import io.minio.messages.CompleteMultipartUploadResult;
 import io.minio.messages.CopyObjectResult;
 import okhttp3.Headers;
 
 /** Response class of any APIs doing object creation. */
-public class ObjectWriteResponse extends GenericResponse {
-  private String etag;
+public class ObjectWriteResponse extends GenericUploadResponse {
   private String versionId;
-  private String checksumCRC32;
-  private String checksumCRC32C;
-  private String checksumSHA1;
-  private String checksumSHA256;
 
   public ObjectWriteResponse(
       Headers headers, String bucket, String region, String object, String etag, String versionId) {
-    super(headers, bucket, region, object);
-    this.etag = etag;
+    super(headers, bucket, region, object, etag);
     this.versionId = versionId;
-    if (headers != null) {
-      this.checksumCRC32 = headers.get("x-amz-checksum-crc32");
-      this.checksumCRC32C = headers.get("x-amz-checksum-crc32c");
-      this.checksumSHA1 = headers.get("x-amz-checksum-sha1");
-      this.checksumSHA256 = headers.get("x-amz-checksum-sha256");
-    }
   }
 
   public ObjectWriteResponse(
@@ -50,15 +38,8 @@ public class ObjectWriteResponse extends GenericResponse {
       String etag,
       String versionId,
       CopyObjectResult result) {
-    super(headers, bucket, region, object);
-    this.etag = etag;
+    super(headers, bucket, region, object, etag, result);
     this.versionId = versionId;
-    if (result != null) {
-      this.checksumCRC32 = result.checksumCRC32();
-      this.checksumCRC32C = result.checksumCRC32C();
-      this.checksumSHA1 = result.checksumSHA1();
-      this.checksumSHA256 = result.checksumSHA256();
-    }
   }
 
   public ObjectWriteResponse(
@@ -68,39 +49,12 @@ public class ObjectWriteResponse extends GenericResponse {
       String object,
       String etag,
       String versionId,
-      CompleteMultipartUploadOutput result) {
-    super(headers, bucket, region, object);
-    this.etag = etag;
+      CompleteMultipartUploadResult result) {
+    super(headers, bucket, region, object, etag, result);
     this.versionId = versionId;
-    if (result != null) {
-      this.checksumCRC32 = result.checksumCRC32();
-      this.checksumCRC32C = result.checksumCRC32C();
-      this.checksumSHA1 = result.checksumSHA1();
-      this.checksumSHA256 = result.checksumSHA256();
-    }
-  }
-
-  public String etag() {
-    return etag;
   }
 
   public String versionId() {
     return versionId;
-  }
-
-  public String checksumCRC32() {
-    return checksumCRC32;
-  }
-
-  public String checksumCRC32C() {
-    return checksumCRC32C;
-  }
-
-  public String checksumSHA1() {
-    return checksumSHA1;
-  }
-
-  public String checksumSHA256() {
-    return checksumSHA256;
   }
 }

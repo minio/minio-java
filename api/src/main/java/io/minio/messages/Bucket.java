@@ -29,6 +29,9 @@ public class Bucket {
   @Element(name = "CreationDate")
   private ResponseDate creationDate;
 
+  @Element(name = "BucketRegion", required = false)
+  private String bucketRegion;
+
   public Bucket() {}
 
   /** Returns bucket name. */
@@ -39,5 +42,9 @@ public class Bucket {
   /** Returns creation date. */
   public ZonedDateTime creationDate() {
     return creationDate.zonedDateTime();
+  }
+
+  public String bucketRegion() {
+    return bucketRegion;
   }
 }

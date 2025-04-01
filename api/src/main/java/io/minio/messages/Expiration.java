@@ -28,7 +28,7 @@ public class Expiration extends DateDays {
   private Boolean expiredObjectDeleteMarker;
 
   @Element(name = "ExpiredObjectAllVersions", required = false)
-  private Boolean expiredObjectAllVersions;
+  private Boolean expiredObjectAllVersions; // This is MinIO specific extension.
 
   public Expiration(
       @Nullable @Element(name = "Date", required = false) ResponseDate date,
