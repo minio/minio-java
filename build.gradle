@@ -19,16 +19,13 @@
 /********************************/
 
 plugins {
-  id "com.github.johnrengelman.shadow" version "8.1.1"
-  id "com.github.spotbugs" version "6.1.3"
-  id "io.github.gradle-nexus.publish-plugin" version "2.0.0"
-  id "com.diffplug.spotless" version "6.13.0"
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.github.spotbugs' version '6.1.3'
+    id 'org.jreleaser' version '1.17.0'
+    id 'com.diffplug.spotless' version '6.13.0'
 }
 
-/*
- * Root project definitions
- */
-apply plugin: 'io.github.gradle-nexus.publish-plugin'
+/* Root project definitions */
 
 allprojects {
     group = 'io.minio'
@@ -41,7 +38,7 @@ allprojects {
 subprojects {
     apply plugin: 'java-library'
     apply plugin: 'com.github.spotbugs'
-    apply plugin: "com.diffplug.spotless"
+    apply plugin: 'com.diffplug.spotless'
 
     repositories {
         mavenLocal()
@@ -49,26 +46,26 @@ subprojects {
     }
 
     dependencies {
-        api "com.carrotsearch.thirdparty:simple-xml-safe:2.7.1"
-        api "com.google.guava:guava:33.4.0-jre"
-        api "com.squareup.okhttp3:okhttp:4.12.0"
-        api "com.fasterxml.jackson.core:jackson-annotations:2.18.2"
-        api "com.fasterxml.jackson.core:jackson-core:2.18.2"
-        api "com.fasterxml.jackson.core:jackson-databind:2.18.2"
-        api "org.bouncycastle:bcprov-jdk18on:1.80"
-        api "org.apache.commons:commons-compress:1.27.1"
-        api "commons-codec:commons-codec:1.18.0"
-        api "org.xerial.snappy:snappy-java:1.1.10.7"
-        compileOnly "com.github.spotbugs:spotbugs-annotations:4.8.6"
+        api 'com.carrotsearch.thirdparty:simple-xml-safe:2.7.1'
+        api 'com.google.guava:guava:33.4.0-jre'
+        api 'com.squareup.okhttp3:okhttp:4.12.0'
+        api 'com.fasterxml.jackson.core:jackson-annotations:2.18.2'
+        api 'com.fasterxml.jackson.core:jackson-core:2.18.2'
+        api 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+        api 'org.bouncycastle:bcprov-jdk18on:1.80'
+        api 'org.apache.commons:commons-compress:1.27.1'
+        api 'commons-codec:commons-codec:1.18.0'
+        api 'org.xerial.snappy:snappy-java:1.1.10.7'
+        compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
 
-        testImplementation "com.squareup.okhttp3:mockwebserver:4.12.0"
-        testImplementation "junit:junit:4.13.2"
+        testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+        testImplementation 'junit:junit:4.13.2'
     }
 
     [compileJava, compileTestJava].each() {
         it.options.fork = true
-        it.options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Xlint:-options", "-Werror", "-Xdiags:verbose"]
-        it.options.encoding = "UTF-8"
+        it.options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation', '-Xlint:-options', '-Werror', '-Xdiags:verbose']
+        it.options.encoding = 'UTF-8'
     }
 
     spotbugs {
@@ -98,7 +95,7 @@ subprojects {
     }
 
     task localeTest(type: Test) {
-        description = "Runs tests with locale de.DE"
+        description = 'Runs tests with locale de.DE'
         System.setProperty('user.language', 'de')
         System.setProperty('user.country', 'DE')
         systemProperties = System.properties
@@ -138,12 +135,12 @@ project(':api') {
 
     jar {
         manifest {
-            attributes('Implementation-Title': base.archivesName,
-                    'Implementation-Version': archiveVersion.get(),
-                    'Built-By': 'MinIO, inc',
-                    'Built-JDK': System.getProperty('java.version'),
-                    'Source-Compatibility': sourceCompatibility,
-                    'Target-Compatibility': targetCompatibility)
+            attributes('Implementation-Title': base.archivesName.get(),
+                       'Implementation-Version': archiveVersion.get(),
+                       'Built-By': 'MinIO, inc',
+                       'Built-JDK': System.getProperty('java.version'),
+                       'Source-Compatibility': sourceCompatibility,
+                       'Target-Compatibility': targetCompatibility)
         }
     }
 
@@ -174,10 +171,17 @@ project(':api') {
         archives javadocJar, sourcesJar, shadowJar
     }
 
+    tasks.withType(Jar) { task ->
+        task.doLast {
+            ant.checksum algorithm: 'md5', file: it.archivePath
+            ant.checksum algorithm: 'sha1', file: it.archivePath
+        }
+    }
+
     publishing {
         publications {
-            mavenJava(MavenPublication) {
-                artifactId = base.archivesName
+            minioJava(MavenPublication) {
+                artifactId = base.archivesName.get()
                 from components.java
                 pom {
                     name = 'minio'
@@ -209,22 +213,24 @@ project(':api') {
                 }
             }
         }
-    }
 
-    signing {
-        if (project.properties.containsKey('signing.keyId')) {
-            sign publishing.publications.mavenJava
+        repositories {
+            maven {
+                name = 'LocalMavenWithChecksums'
+                url = uri(layout.buildDirectory.dir('staging-deploy'))
+            }
+
+            maven {
+                name = 'PreDeploy'
+                url = uri(layout.buildDirectory.dir('pre-deploy'))
+            }
         }
     }
 
-    nexusPublishing {
-        packageGroup = group
-        repositories {
-            sonatype {
-                stagingProfileId = '9b746c9f8abc1'
-                username = project.properties['nexusUsername']
-                password = project.properties['nexusPassword']
-            }
+    signing {
+        setRequired {
+            gradle.taskGraph.allTasks.any { it.name.contains('LocalMavenWithChecksums') }
+            sign publishing.publications.minioJava
         }
     }
 }
@@ -242,18 +248,18 @@ project(':adminapi') {
 
     dependencies {
         api project(':api')
-        api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2"
+        api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2'
         testImplementation project(':api')
     }
 
     jar {
         manifest {
-            attributes('Implementation-Title': base.archivesName,
-                    'Implementation-Version': archiveVersion.get(),
-                    'Built-By': 'MinIO, inc',
-                    'Built-JDK': System.getProperty('java.version'),
-                    'Source-Compatibility': sourceCompatibility,
-                    'Target-Compatibility': targetCompatibility)
+            attributes('Implementation-Title': base.archivesName.get(),
+                       'Implementation-Version': archiveVersion.get(),
+                       'Built-By': 'MinIO, inc',
+                       'Built-JDK': System.getProperty('java.version'),
+                       'Source-Compatibility': sourceCompatibility,
+                       'Target-Compatibility': targetCompatibility)
         }
     }
 
@@ -284,10 +290,17 @@ project(':adminapi') {
         archives javadocJar, sourcesJar, shadowJar
     }
 
+    tasks.withType(Jar) { task ->
+        task.doLast {
+            ant.checksum algorithm: 'md5', file: it.archivePath
+            ant.checksum algorithm: 'sha1', file: it.archivePath
+        }
+    }
+
     publishing {
         publications {
-            mavenJava(MavenPublication) {
-                artifactId = base.archivesName
+            minioJava(MavenPublication) {
+                artifactId = base.archivesName.get()
                 from components.java
                 pom {
                     name = 'minio'
@@ -319,22 +332,31 @@ project(':adminapi') {
                 }
             }
         }
-    }
 
-    signing {
-        if (project.properties.containsKey('signing.keyId')) {
-            sign publishing.publications.mavenJava
+        repositories {
+            maven {
+                name = 'LocalMavenWithChecksums'
+                url = uri(layout.buildDirectory.dir('staging-deploy'))
+            }
+
+            maven {
+                name = 'PreDeploy'
+                url = uri(layout.buildDirectory.dir('pre-deploy'))
+            }
         }
     }
 
-    nexusPublishing {
-        packageGroup = group
+    signing {
+        setRequired {
+            gradle.taskGraph.allTasks.any { it.name.contains('LocalMavenWithChecksumsRepository') }
+            sign publishing.publications.minioJava
+        }
     }
 }
 
 project(':examples') {
     dependencies {
-        compileOnly "me.tongfei:progressbar:0.9.5"
+        compileOnly 'me.tongfei:progressbar:0.9.5'
         compileOnly project(':api')
     }
 
@@ -354,7 +376,7 @@ import org.gradle.internal.os.OperatingSystem;
 
 project(':functional') {
     dependencies {
-        implementation "junit:junit:4.13.2"
+        implementation 'junit:junit:4.13.2'
         implementation project(':api')
         implementation project(':adminapi')
     }
@@ -394,10 +416,84 @@ project(':functional') {
             ext.region = rootProject.properties['region']
         }
 
-        maxHeapSize = "4096m"
-        jvmArgs "-Xms256m"
+        maxHeapSize = '4096m'
+        jvmArgs '-Xms256m'
         if (rootProject.hasProperty('endpoint')) {
             args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
+        }
+    }
+}
+
+jreleaser {
+    project {
+        copyright = 'MinIO Inc.'
+        description = 'MinIO Java SDK for Amazon S3 Compatible Cloud Storage'
+    }
+
+    signing {
+        active = 'ALWAYS'
+        armored = true
+        mode = 'FILE'
+    }
+
+    deploy {
+	maven {
+	    nexus2 {
+		'maven-central' {
+		    stagingProfileId = '9b746c9f8abc1'
+		    active = 'ALWAYS'
+		    url = 'https://oss.sonatype.org/service/local'
+		    snapshotUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+		    closeRepository = true
+		    releaseRepository = true
+		    stagingRepository('api/build/pre-deploy')
+		}
+	    }
+	}
+	maven {
+	    nexus2 {
+		'maven-central' {
+		    stagingProfileId = '9b746c9f8abc1'
+		    active = 'ALWAYS'
+		    url = 'https://oss.sonatype.org/service/local'
+		    snapshotUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+		    closeRepository = true
+		    releaseRepository = true
+		    stagingRepository('adminapi/build/pre-deploy')
+		}
+	    }
+	}
+	// For newly created repositories
+        // maven {
+        //     mavenCentral {
+        //         sonatype {
+	// 	    applyMavenCentralRules = true
+        //             active = 'ALWAYS'
+        //             url = 'https://central.sonatype.com/api/v1/publisher'
+        //             username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
+        //             password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
+        //             stagingRepository('api/build/pre-deploy')
+        //         }
+        //     }
+        // }
+	// 
+        // maven {
+        //     mavenCentral {
+        //         sonatype {
+	// 	    applyMavenCentralRules = true
+        //             active = 'ALWAYS'
+        //             url = 'https://central.sonatype.com/api/v1/publisher'
+        //             username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
+        //             password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
+        //             stagingRepository('adminapi/build/pre-deploy')
+        //         }
+        //     }
+        // }
+    }
+
+    release {
+        github {
+            enabled = false
         }
     }
 }
