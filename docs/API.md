@@ -1988,7 +1988,8 @@ minioClient.setObjectTags(
 
 <a name="statObject"></a>
 ### statObject(StatObjectArgs args)
-`public ObjectStat statObject(StatObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-io.minio.StatObjectArgs-)_
+
+`public StatObjectResponse statObject(StatObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-io.minio.StatObjectArgs-)_
 
 Gets object information and metadata of an object.
 
@@ -1997,19 +1998,19 @@ __Parameters__
 |:----------|:-------------------|:------------|
 | ``args``  | _[StatObjectArgs]_ | Arguments.  |
 
-| Returns                                                     |
-|:------------------------------------------------------------|
-| _[ObjectStat]_ - Populated object information and metadata. |
+| Returns                                                             |
+|:--------------------------------------------------------------------|
+| _[StatObjectResponse]_ - Populated object information and metadata. |
 
 __Example__
 ```java
 // Get information of an object.
-ObjectStat objectStat =
+StatObjectResponse objectStat =
     minioClient.statObject(
         StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
 
 // Get information of SSE-C encrypted object.
-ObjectStat objectStat =
+StatObjectResponse objectStat =
     minioClient.statObject(
         StatObjectArgs.builder()
             .bucket("my-bucketname")
@@ -2018,7 +2019,7 @@ ObjectStat objectStat =
             .build());
 
 // Get information of a versioned object.
-ObjectStat objectStat =
+StatObjectResponse objectStat =
     minioClient.statObject(
         StatObjectArgs.builder()
             .bucket("my-bucketname")
@@ -2027,7 +2028,7 @@ ObjectStat objectStat =
             .build());
 
 // Get information of a SSE-C encrypted versioned object.
-ObjectStat objectStat =
+StatObjectResponse objectStat =
     minioClient.statObject(
         StatObjectArgs.builder()
             .bucket("my-bucketname")

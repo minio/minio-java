@@ -1118,15 +1118,15 @@ __参数__
 | ``objectName``  | _String_  | 存储桶里的对象名称。 |
 
 
-| 返回值类型	  | 异常   |
-|:--- |:--- |
-|  ``ObjectStat``: Populated object meta data. | 异常列表： |
-|        |  ``InvalidBucketNameException`` : 不合法的存储桶名称。 |
-|        | ``NoResponseException`` : 服务器无响应。            |
-|        | ``IOException`` : 连接异常。            |
-|        | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。            |
-|        | ``ErrorResponseException`` : 执行失败异常。            |
-|        | ``InternalException`` : 内部错误。        |
+| 返回值类型	                                              | 异常                                                      |
+|:----------------------------------------------------|:--------------------------------------------------------|
+| ``StatObjectResponse``: Populated object meta data. | 异常列表：                                                   |
+|                                                     | ``InvalidBucketNameException`` : 不合法的存储桶名称。             |
+|                                                     | ``NoResponseException`` : 服务器无响应。                       |
+|                                                     | ``IOException`` : 连接异常。                                 |
+|                                                     | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。 |
+|                                                     | ``ErrorResponseException`` : 执行失败异常。                    |
+|                                                     | ``InternalException`` : 内部错误。                           |
 
 __示例__
 
@@ -1134,7 +1134,7 @@ __示例__
 ```java
 try {
   // 获得对象的元数据。
-  ObjectStat objectStat = minioClient.statObject("mybucket", "myobject");
+  StatObjectResponse objectStat = minioClient.statObject("mybucket", "myobject");
   System.out.println(objectStat);
 } catch(MinioException e) {
   System.out.println("Error occurred: " + e);
