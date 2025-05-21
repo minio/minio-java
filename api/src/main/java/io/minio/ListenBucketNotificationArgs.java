@@ -89,6 +89,6 @@ public class ListenBucketNotificationArgs extends BucketArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), prefix, suffix, events);
+    return Objects.hash(super.hashCode(), prefix, suffix, Arrays.hashCode(events));
   }
 }
