@@ -23,6 +23,7 @@ import io.minio.ServerSideEncryptionS3;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
@@ -77,7 +78,7 @@ public class PutObject {
 
       {
         // Create a InputStream for object upload.
-        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
 
         // Create object 'my-objectname' in 'my-bucketname' with content from the input stream.
         minioClient.putObject(
@@ -90,7 +91,7 @@ public class PutObject {
 
       {
         // Create a InputStream for object upload.
-        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
 
         // Generate a new 256 bit AES key - This key must be remembered by the client.
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
@@ -111,7 +112,7 @@ public class PutObject {
 
       {
         // Create a InputStream for object upload.
-        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
 
         Map<String, String> myContext = new HashMap<>();
         myContext.put("key1", "value1");
@@ -130,7 +131,7 @@ public class PutObject {
 
       {
         // Create a InputStream for object upload.
-        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
 
         ServerSideEncryption sseS3 = new ServerSideEncryptionS3();
 
@@ -147,7 +148,7 @@ public class PutObject {
 
       {
         // Create a InputStream for object upload.
-        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes("UTF-8"));
+        ByteArrayInputStream bais = new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
 
         // Create headers
         Map<String, String> headers = new HashMap<>();
