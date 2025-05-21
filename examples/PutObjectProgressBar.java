@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -48,7 +49,7 @@ public class PutObjectProgressBar {
 
     File file = new File("my-filename");
     InputStream pis =
-        new BufferedInputStream(new ProgressStream("Uploading... ", new FileInputStream(file)));
+        new BufferedInputStream(new ProgressStream("Uploading... ", Files.newInputStream(file.toPath())));
     minioClient.putObject(
         PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
                 pis, pis.available(), -1)

@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.ProviderException;
 import java.util.HashMap;
@@ -70,7 +71,7 @@ public class AwsConfigProvider extends EnvironmentProvider {
       profile = "default";
     }
 
-    try (InputStream is = new FileInputStream(filename)) {
+    try (InputStream is = Files.newInputStream(Paths.get(filename))) {
       Map<String, Properties> result = unmarshal(new InputStreamReader(is, StandardCharsets.UTF_8));
       Properties values = result.get(profile);
       if (values == null) {
