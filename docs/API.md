@@ -196,7 +196,7 @@ MinioClient s3Client =
 MinioClient s3Client =
     MinioClient.builder()
 	    .endpoint("s3.amazonaws.com", 443, true)
-		.credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY").
+		.credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
 		.region("eu-west-2")
 		.build();
 
@@ -1259,7 +1259,7 @@ Enables legal hold on an object.
 
 | Parameter      | Type                          | Description  |
 |:---------------|:------------------------------|:-------------|
-| ``args``       | _[EnableObjectLegalHoldArgs]_ | Argumments.  |
+| ``args``       | _[EnableObjectLegalHoldArgs]_ | Arguments.  |
 
  __Example__
  ```java
@@ -1378,7 +1378,7 @@ __Parameters__
 
 | Returns                                    |
 |:-------------------------------------------|
-| _[GetObjectAttributesResponse]_ - Respone. |
+| _[GetObjectAttributesResponse]_ - Response. |
 
 __Example__
 ```java

@@ -40,7 +40,7 @@ public class ErrorResponseException extends MinioException {
     this.response = response;
   }
 
-  /** Returns ErrorResponse contains detail of what error occured. */
+  /** Returns ErrorResponse contains detail of what error occurred. */
   public ErrorResponse errorResponse() {
     return this.errorResponse;
   }

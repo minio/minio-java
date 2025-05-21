@@ -68,7 +68,7 @@ public class Upload {
     return uploadId;
   }
 
-  /** Returns initator information. */
+  /** Returns initiator information. */
   public Initiator initiator() {
     return initiator;
   }
@@ -83,7 +83,7 @@ public class Upload {
     return storageClass;
   }
 
-  /** Returns initated time. */
+  /** Returns initiated time. */
   public ZonedDateTime initiated() {
     return initiated.zonedDateTime();
   }

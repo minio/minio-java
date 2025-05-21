@@ -41,7 +41,7 @@ public class MakeBucket {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      // Create bucket 'my-bucketname' if it doesn`t exist.
+      // Create bucket 'my-bucketname' if it doesn't exist.
       if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build())) {
         minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
         System.out.println("my-bucketname is created successfully");

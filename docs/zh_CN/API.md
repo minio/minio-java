@@ -721,20 +721,20 @@ __参数__
 | ``objectName``  | _String_  | 存储桶里的对象名称。 |
 | ``key``  | _SecretKey_  | [SecretKey](https://docs.oracle.com/javase/7/docs/api/javax/crypto/SecretKey.html)类型的数据。|
 
-| 返回值类型	  | 异常   |
-|:--- |:--- |
-|  None  | 异常列表： |
-|        |  ``InvalidBucketNameException`` : 不合法的存储桶名称。 |
-|        | ``NoResponseException`` : 服务器无响应。            |
-|        | ``IOException`` : 连接异常。            |
-|        | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。            |
-|        | ``ErrorResponseException`` : 执行失败异常。            |
-|        | ``InternalException`` : 内部错误。        |
-|        | ``InvalidEncryptionMetadataException`` : 加密秘钥错误。  |
-|        | ``BadPaddingException`` : 错误的padding   |
-|        | ``IllegalBlockSizeException`` : 不正确的block size |
-|        | ``NoSuchPaddingException`` : 错误的pading类型 |
-|        | ``InvalidAlgorithmParameterException`` : 该算法不存在 |
+| 返回值类型	  | 异常                                                      |
+|:--- |:--------------------------------------------------------|
+|  None  | 异常列表：                                                   |
+|        | ``InvalidBucketNameException`` : 不合法的存储桶名称。             |
+|        | ``NoResponseException`` : 服务器无响应。                       |
+|        | ``IOException`` : 连接异常。                                 |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。 |
+|        | ``ErrorResponseException`` : 执行失败异常。                    |
+|        | ``InternalException`` : 内部错误。                           |
+|        | ``InvalidEncryptionMetadataException`` : 加密秘钥错误。        |
+|        | ``BadPaddingException`` : 错误的padding                    |
+|        | ``IllegalBlockSizeException`` : 不正确的block size          |
+|        | ``NoSuchPaddingException`` : 错误的padding类型               |
+|        | ``InvalidAlgorithmParameterException`` : 该算法不存在         |
 
 __示例__
 
@@ -787,20 +787,20 @@ __参数__
 | ``objectName``  | _String_  | 存储桶里的对象名称。 |
 | ``key``  | _KeyPair_  | RSA [KeyPair](https://docs.oracle.com/javase/7/docs/api/java/security/KeyPair.html)类型的对象。 |
 
-| 返回值类型	  | 异常   |
-|:--- |:--- |
-|  None  | 异常列表： |
-|        |  ``InvalidBucketNameException`` : 不合法的存储桶名称。 |
-|        | ``NoResponseException`` : 服务器无响应。            |
-|        | ``IOException`` : 连接异常。            |
-|        | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。            |
-|        | ``ErrorResponseException`` : 执行失败异常。            |
-|        | ``InternalException`` : 内部错误。        |
-|        | ``InvalidEncryptionMetadataException`` : 加密秘钥错误。  |
-|        | ``BadPaddingException`` : 错误的padding   |
-|        | ``IllegalBlockSizeException`` : 不正确的block size |
-|        | ``NoSuchPaddingException`` : 错误的pading类型 |
-|        | ``InvalidAlgorithmParameterException`` : 该算法不存在 |
+| 返回值类型	  | 异常                                                      |
+|:--- |:--------------------------------------------------------|
+|  None  | 异常列表：                                                   |
+|        | ``InvalidBucketNameException`` : 不合法的存储桶名称。             |
+|        | ``NoResponseException`` : 服务器无响应。                       |
+|        | ``IOException`` : 连接异常。                                 |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。 |
+|        | ``ErrorResponseException`` : 执行失败异常。                    |
+|        | ``InternalException`` : 内部错误。                           |
+|        | ``InvalidEncryptionMetadataException`` : 加密秘钥错误。        |
+|        | ``BadPaddingException`` : 错误的padding                    |
+|        | ``IllegalBlockSizeException`` : 不正确的block size          |
+|        | ``NoSuchPaddingException`` : 错误的padding类型               |
+|        | ``InvalidAlgorithmParameterException`` : 该算法不存在         |
 
 __示例__
 
@@ -1045,19 +1045,19 @@ __参数__
 | ``contentType``  | _String_ | Content type。 |
 | ``key``  | _KeyPair_ | 一个RSA [KeyPair](https://docs.oracle.com/javase/7/docs/api/java/security/KeyPair.html)的对象。  |
 
-| 返回值类型	  | 异常   |
-|:--- |:--- |
-|  None  | 异常列表： |
-|        |  ``InvalidBucketNameException`` : 不合法的存储桶名称。 |
-|        | ``NoResponseException`` : 服务器无响应。            |
-|        | ``IOException`` : 连接异常。            |
-|        | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。            |
-|        | ``ErrorResponseException`` : 执行失败异常。            |
-|        | ``InternalException`` : 内部错误。        |
-| 		 | ``InvalidAlgorithmParameterException`` : 错误的加密算法。 |
-|		 | ``BadPaddingException`` : 不正确的padding。 |
-|		 | ``IllegalBlockSizeException`` : 不正确的block。 |
-|		 | ``NoSuchPaddingException`` : 错误的pading类型。 |
+| 返回值类型	  | 异常                                                      |
+|:--- |:--------------------------------------------------------|
+|  None  | 异常列表：                                                   |
+|        | ``InvalidBucketNameException`` : 不合法的存储桶名称。             |
+|        | ``NoResponseException`` : 服务器无响应。                       |
+|        | ``IOException`` : 连接异常。                                 |
+|        | ``org.xmlpull.v1.XmlPullParserException`` : 解析返回的XML异常。 |
+|        | ``ErrorResponseException`` : 执行失败异常。                    |
+|        | ``InternalException`` : 内部错误。                           |
+| 		 | ``InvalidAlgorithmParameterException`` : 错误的加密算法。       |
+|		 | ``BadPaddingException`` : 不正确的padding。                  |
+|		 | ``IllegalBlockSizeException`` : 不正确的block。              |
+|		 | ``NoSuchPaddingException`` : 错误的padding类型。              |
 
 __示例__
 

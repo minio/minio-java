@@ -20,7 +20,7 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote Initator information of a multipart upload and used in {@link
+ * Helper class to denote Initiator information of a multipart upload and used in {@link
  * ListMultipartUploadsResult} and {@link ListPartsResult}.
  */
 @Root(name = "Initiator", strict = false)

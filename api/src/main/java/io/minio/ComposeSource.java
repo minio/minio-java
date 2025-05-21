@@ -22,7 +22,7 @@ import com.google.common.collect.Multimaps;
 import io.minio.errors.InternalException;
 import java.util.Objects;
 
-/** A source object defintion for {@link ComposeObjectArgs}. */
+/** A source object definition for {@link ComposeObjectArgs}. */
 public class ComposeSource extends ObjectConditionalReadArgs {
   private Long objectSize = null;
   private Multimap<String, String> headers = null;

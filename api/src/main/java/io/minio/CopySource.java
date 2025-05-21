@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** A source object defintion for {@link CopyObjectArgs}. */
+/** A source object definition for {@link CopyObjectArgs}. */
 public class CopySource extends ObjectConditionalReadArgs {
   protected CopySource() {}
 

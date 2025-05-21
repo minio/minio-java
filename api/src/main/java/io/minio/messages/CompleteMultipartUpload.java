@@ -37,7 +37,7 @@ public class CompleteMultipartUpload {
   @ElementList(name = "Part", inline = true)
   private List<Part> partList;
 
-  /** Constucts a new CompleteMultipartUpload object with given parts. */
+  /** Constructs a new CompleteMultipartUpload object with given parts. */
   public CompleteMultipartUpload(@Nonnull Part[] parts) throws IllegalArgumentException {
     if (Objects.requireNonNull(parts, "parts must not be null").length == 0) {
       throw new IllegalArgumentException("parts cannot be empty");

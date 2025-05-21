@@ -477,7 +477,7 @@ public abstract class S3Base implements AutoCloseable {
     return builder.build();
   }
 
-  /** Create HTTP request for given paramaters. */
+  /** Create HTTP request for given parameters. */
   protected Request createRequest(
       HttpUrl url, Method method, Headers headers, Object body, int length, Credentials creds)
       throws InsufficientDataException, InternalException, IOException, NoSuchAlgorithmException {

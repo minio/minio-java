@@ -86,7 +86,7 @@ public class ListPartsResult {
     return storageClass;
   }
 
-  /** Returns initator information. */
+  /** Returns initiator information. */
   public Initiator initiator() {
     return initiator;
   }

@@ -50,7 +50,7 @@ public class GetObjectRetention {
                   .build());
 
       System.out.println("Mode: " + retention.mode());
-      System.out.println("Retainuntil Date: " + retention.retainUntilDate());
+      System.out.println("Retain until Date: " + retention.retainUntilDate());
     } catch (MinioException e) {
       System.out.println("Error occurred: " + e);
     }

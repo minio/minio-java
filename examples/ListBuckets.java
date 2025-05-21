@@ -42,7 +42,7 @@ public class ListBuckets {
       //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
       //         .build();
 
-      // List buckets we have atleast read access.
+      // List buckets we have at least read access.
       Iterable<Result<Bucket>> results = minioClient.listBuckets(ListBucketsArgs.builder().build());
       for (Result<Bucket> result : results) {
         Bucket bucket = result.get();
