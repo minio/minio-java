@@ -1401,9 +1401,9 @@ public abstract class S3Base implements AutoCloseable {
         this.deleteMarkerIterator = this.listObjectsResult.deleteMarkers().iterator();
         this.prefixIterator = this.listObjectsResult.commonPrefixes().iterator();
       } else {
-        this.itemIterator = new LinkedList<Item>().iterator();
-        this.deleteMarkerIterator = new LinkedList<DeleteMarker>().iterator();
-        this.prefixIterator = new LinkedList<Prefix>().iterator();
+        this.itemIterator = Collections.emptyIterator();
+        this.deleteMarkerIterator = Collections.emptyIterator();
+        this.prefixIterator = Collections.emptyIterator();
       }
     }
 

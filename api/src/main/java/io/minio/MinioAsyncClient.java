@@ -74,6 +74,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1373,7 +1374,7 @@ public class MinioAsyncClient extends S3Base {
             if (completed) return;
 
             try {
-              this.iterator = new LinkedList<Bucket>().iterator();
+              this.iterator = Collections.emptyIterator();
               try {
                 ListBucketsResponse response =
                     listBucketsAsync(
