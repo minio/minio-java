@@ -50,8 +50,9 @@ public class HttpUtils {
   public static final String AWS_S3_PREFIX =
       "^(((bucket\\.|accesspoint\\.)"
           + "vpce(-(?!_)[a-z_\\d]+(?<!-)(?<!_))+\\.s3\\.)|"
-          + "((?!s3)(?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\.)"
+          + "((?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\.)"
           + "s3-control(-(?!_)[a-z_\\d]+(?<!-)(?<!_))*\\.|"
+          + "((?!-)(?!_)[a-z_\\d-]{1,63}(?<!-)(?<!_)\\.)"
           + "(s3(-(?!_)[a-z_\\d]+(?<!-)(?<!_))*\\.))";
 
   public static final Pattern HOSTNAME_REGEX =
