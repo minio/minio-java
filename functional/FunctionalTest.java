@@ -170,7 +170,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 @SuppressFBWarnings(
     value = "REC",
@@ -395,8 +395,8 @@ public class FunctionalTest {
       }
 
       bytesRead = stream.read(buf, 0, bytesToRead);
-      Assert.assertFalse(
-          "data length mismatch. expected: " + len + ", got: " + totalBytesRead, bytesRead < 0);
+      Assertions.assertFalse(
+          bytesRead < 0, "data length mismatch. expected: " + len + ", got: " + totalBytesRead);
 
       if (bytesRead > 0) {
         sha256Digest.update(buf, 0, bytesRead);
@@ -419,8 +419,8 @@ public class FunctionalTest {
       }
 
       bytesRead = stream.read(buf, 0, bytesToRead);
-      Assert.assertFalse(
-          "insufficient data. expected: " + len + ", got: " + totalBytesRead, bytesRead < 0);
+      Assertions.assertFalse(
+          bytesRead < 0, "insufficient data. expected: " + len + ", got: " + totalBytesRead);
       if (bytesRead > 0) {
         totalBytesRead += bytesRead;
       }
@@ -464,14 +464,11 @@ public class FunctionalTest {
     try {
       client.makeBucket(args);
       try {
-        Assert.assertFalse(
-            methodName + " failed after bucket creation",
+        Assertions.assertFalse(
             existCheck
                 && !client.bucketExists(
-                    BucketExistsArgs.builder()
-                        .bucket(args.bucket())
-                        .region(args.region())
-                        .build()));
+                    BucketExistsArgs.builder().bucket(args.bucket()).region(args.region()).build()),
+            methodName + " failed after bucket creation");
         if (removeCheck) {
           client.removeBucket(
               RemoveBucketArgs.builder().bucket(args.bucket()).region(args.region()).build());
@@ -582,9 +579,9 @@ public class FunctionalTest {
           }
         }
 
-        Assert.assertTrue(
-            "bucket names differ; expected = " + expectedBucketNames + ", got = " + bucketNames,
-            expectedBucketNames.containsAll(bucketNames));
+        Assertions.assertTrue(
+            expectedBucketNames.containsAll(bucketNames),
+            "bucket names differ; expected = " + expectedBucketNames + ", got = " + bucketNames);
 
         mintSuccessLog(methodName, null, startTime);
       } finally {
@@ -658,23 +655,23 @@ public class FunctionalTest {
       try {
         VersioningConfiguration config =
             client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
-        Assert.assertEquals(
-            "getBucketVersioning(); expected = \"\", got = " + config.status(),
+        Assertions.assertEquals(
             config.status(),
-            VersioningConfiguration.Status.OFF);
+            VersioningConfiguration.Status.OFF,
+            "getBucketVersioning(); expected = \"\", got = " + config.status());
         client.setBucketVersioning(
             SetBucketVersioningArgs.builder()
                 .bucket(name)
                 .config(new VersioningConfiguration(VersioningConfiguration.Status.ENABLED, null))
                 .build());
         config = client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
-        Assert.assertEquals(
+        Assertions.assertEquals(
+            config.status(),
+            VersioningConfiguration.Status.ENABLED,
             "getBucketVersioning(); expected = "
                 + VersioningConfiguration.Status.ENABLED
                 + ", got = "
-                + config.status(),
-            config.status(),
-            VersioningConfiguration.Status.ENABLED);
+                + config.status());
 
         client.setBucketVersioning(
             SetBucketVersioningArgs.builder()
@@ -682,13 +679,13 @@ public class FunctionalTest {
                 .config(new VersioningConfiguration(VersioningConfiguration.Status.SUSPENDED, null))
                 .build());
         config = client.getBucketVersioning(GetBucketVersioningArgs.builder().bucket(name).build());
-        Assert.assertEquals(
+        Assertions.assertEquals(
+            config.status(),
+            VersioningConfiguration.Status.SUSPENDED,
             "getBucketVersioning(); expected = "
                 + VersioningConfiguration.Status.SUSPENDED
                 + ", got = "
-                + config.status(),
-            config.status(),
-            VersioningConfiguration.Status.SUSPENDED);
+                + config.status());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(name).build());
@@ -1024,40 +1021,41 @@ public class FunctionalTest {
                     .ssec(ssec)
                     .build());
 
-        Assert.assertEquals(
-            "bucket name: expected = " + expectedStat.bucket() + ", got = " + stat.bucket(),
+        Assertions.assertEquals(
             expectedStat.bucket(),
-            stat.bucket());
+            stat.bucket(),
+            "bucket name: expected = " + expectedStat.bucket() + ", got = " + stat.bucket());
 
-        Assert.assertEquals(
-            "object name: expected = " + expectedStat.object() + ", got = " + stat.object(),
+        Assertions.assertEquals(
             expectedStat.object(),
-            stat.object());
+            stat.object(),
+            "object name: expected = " + expectedStat.object() + ", got = " + stat.object());
 
-        Assert.assertEquals(
-            "length: expected = " + expectedStat.size() + ", got = " + stat.size(),
+        Assertions.assertEquals(
             expectedStat.size(),
-            stat.size());
+            stat.size(),
+            "length: expected = " + expectedStat.size() + ", got = " + stat.size());
 
-        Assert.assertEquals(
+        Assertions.assertEquals(
+            expectedStat.contentType(),
+            stat.contentType(),
             "content-type: expected = "
                 + expectedStat.contentType()
                 + ", got = "
-                + stat.contentType(),
-            expectedStat.contentType(),
-            stat.contentType());
+                + stat.contentType());
 
         for (String key : expectedStat.userMetadata().keySet()) {
-          Assert.assertTrue("metadata " + key + " not found", stat.userMetadata().containsKey(key));
-          Assert.assertEquals(
+          Assertions.assertTrue(
+              stat.userMetadata().containsKey(key), "metadata " + key + " not found");
+          Assertions.assertEquals(
+              expectedStat.userMetadata().get(key),
+              stat.userMetadata().get(key),
               "metadata "
                   + key
                   + " value: expected: "
                   + expectedStat.userMetadata().get(key)
                   + ", got: "
-                  + stat.userMetadata().get(key),
-              expectedStat.userMetadata().get(key),
-              stat.userMetadata().get(key));
+                  + stat.userMetadata().get(key));
         }
 
         mintSuccessLog(methodName, testTags, startTime);
@@ -1156,10 +1154,10 @@ public class FunctionalTest {
 
       try (InputStream is = client.getObject(args)) {
         String checksum = getSha256Sum(is, length);
-        Assert.assertEquals(
-            "checksum mismatch. expected: " + sha256sum + ", got: " + checksum,
+        Assertions.assertEquals(
             checksum,
-            sha256sum);
+            sha256sum,
+            "checksum mismatch. expected: " + sha256sum + ", got: " + checksum);
       }
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
@@ -1424,7 +1422,7 @@ public class FunctionalTest {
           objCount *= versions;
         }
 
-        Assert.assertEquals("object count; expected=" + objCount + ", got=" + i, i, objCount);
+        Assertions.assertEquals(i, objCount, "object count; expected=" + objCount + ", got=" + i);
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         if (results != null) {
@@ -1603,10 +1601,10 @@ public class FunctionalTest {
     String urlString = client.getPresignedObjectUrl(args);
     byte[] data = readObject(urlString);
     String checksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
-    Assert.assertEquals(
-        "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum,
+    Assertions.assertEquals(
         expectedChecksum,
-        checksum);
+        checksum,
+        "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum);
   }
 
   public static void testGetPresignedObjectUrlForGet() throws Exception {
@@ -1678,10 +1676,10 @@ public class FunctionalTest {
                 GetObjectArgs.builder().bucket(args.bucket()).object(args.object()).build());
         data = readAllBytes(is);
         String checksum = getSha256Sum(new ByteArrayInputStream(data), data.length);
-        Assert.assertEquals(
-            "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum,
+        Assertions.assertEquals(
             expectedChecksum,
-            checksum);
+            checksum,
+            "content checksum differs; expected = " + expectedChecksum + ", got = " + checksum);
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
@@ -1770,7 +1768,7 @@ public class FunctionalTest {
       Request request = requestBuilder.url(urlString).post(multipartBuilder.build()).build();
       OkHttpClient transport = newHttpClient();
       Response response = transport.newCall(request).execute();
-      Assert.assertNotNull("no response from server", response);
+      Assertions.assertNotNull(response, "no response from server");
 
       try {
         if (!response.isSuccessful()) {
@@ -1917,10 +1915,13 @@ public class FunctionalTest {
                     .bucket(bucketName)
                     .object(srcObjectName + "-copy")
                     .build());
-        Assert.assertEquals(
-            "content type differs. expected: " + customContentType + ", got: " + stat.contentType(),
+        Assertions.assertEquals(
             customContentType,
-            stat.contentType());
+            stat.contentType(),
+            "content type differs. expected: "
+                + customContentType
+                + ", got: "
+                + stat.contentType());
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
@@ -1966,9 +1967,9 @@ public class FunctionalTest {
                     .bucket(bucketName)
                     .object(srcObjectName + "-copy")
                     .build());
-        Assert.assertFalse(
-            "expected user metadata to be removed in new object",
-            stat.userMetadata().containsKey("My-Project"));
+        Assertions.assertFalse(
+            stat.userMetadata().containsKey("My-Project"),
+            "expected user metadata to be removed in new object");
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
@@ -2321,8 +2322,8 @@ public class FunctionalTest {
     boolean result =
         client.isObjectLegalHoldEnabled(
             IsObjectLegalHoldEnabledArgs.builder().bucket(bucketName).object(objectName).build());
-    Assert.assertEquals(
-        "object legal hold: expected: " + enableCheck + ", got: " + result, result, enableCheck);
+    Assertions.assertEquals(
+        result, enableCheck, "object legal hold: expected: " + enableCheck + ", got: " + result);
   }
 
   public static void enableObjectLegalHold() throws Exception {
@@ -2431,7 +2432,7 @@ public class FunctionalTest {
                     .bucket(bucketNameWithLock)
                     .object(objectName)
                     .build());
-        Assert.assertFalse("object legal hold: expected: false, got: " + result, result);
+        Assertions.assertFalse(result, "object legal hold: expected: false, got: " + result);
         checkObjectLegalHold(bucketNameWithLock, objectName, true);
         checkObjectLegalHold(bucketNameWithLock, objectName, false);
         mintSuccessLog(methodName, null, startTime);
@@ -2484,14 +2485,14 @@ public class FunctionalTest {
     ObjectLockConfiguration config =
         client.getObjectLockConfiguration(
             GetObjectLockConfigurationArgs.builder().bucket(bucketName).build());
-    Assert.assertEquals(
-        "retention mode: expected: " + expectedConfig.mode() + ", got: " + config.mode(),
+    Assertions.assertEquals(
         config.mode(),
-        expectedConfig.mode());
-    Assert.assertFalse(
-        "retention duration: " + expectedConfig.duration() + ", got: " + config.duration(),
+        expectedConfig.mode(),
+        "retention mode: expected: " + expectedConfig.mode() + ", got: " + config.mode());
+    Assertions.assertFalse(
         config.duration().unit() != expectedConfig.duration().unit()
-            || config.duration().duration() != expectedConfig.duration().duration());
+            || config.duration().duration() != expectedConfig.duration().duration(),
+        "retention duration: " + expectedConfig.duration() + ", got: " + config.duration());
   }
 
   public static void getObjectLockConfiguration() throws Exception {
@@ -2605,29 +2606,29 @@ public class FunctionalTest {
             GetObjectRetentionArgs.builder().bucket(args.bucket()).object(args.object()).build());
 
     if (args.config().mode() == null) {
-      Assert.assertFalse(
-          "retention mode: expected: <null>, got: " + config.mode(),
-          config != null && config.mode() != null);
+      Assertions.assertFalse(
+          config != null && config.mode() != null,
+          "retention mode: expected: <null>, got: " + config.mode());
     } else {
-      Assert.assertEquals(
-          "retention mode: expected: " + args.config().mode() + ", got: " + config.mode(),
+      Assertions.assertEquals(
           args.config().mode(),
-          config.mode());
+          config.mode(),
+          "retention mode: expected: " + args.config().mode() + ", got: " + config.mode());
     }
 
     ZonedDateTime expectedDate = args.config().retainUntilDate();
     ZonedDateTime date = (config == null) ? null : config.retainUntilDate();
 
     if (expectedDate == null) {
-      Assert.assertNull("retention retain-until-date: expected: <null>, got: " + date, date);
+      Assertions.assertNull(date, "retention retain-until-date: expected: <null>, got: " + date);
     } else {
-      Assert.assertEquals(
+      Assertions.assertEquals(
+          date.withNano(0),
+          expectedDate.withNano(0),
           "retention retain-until-date: expected: "
               + expectedDate.withNano(0)
               + ", got: "
-              + date.withNano(0),
-          date.withNano(0),
-          expectedDate.withNano(0));
+              + date.withNano(0));
     }
   }
 
@@ -2709,7 +2710,7 @@ public class FunctionalTest {
       try {
         String config =
             client.getBucketPolicy(GetBucketPolicyArgs.builder().bucket(bucketName).build());
-        Assert.assertTrue("policy: expected: \"\", got: " + config, config.isEmpty());
+        Assertions.assertTrue(config.isEmpty(), "policy: expected: \"\", got: " + config);
         String policy =
             "{'Version':'2012-10-17','Statement':[{'Action':['s3:GetObject'],'Effect':'Allow',"
                 + "'Principal':{'AWS':['*']},'Resource':['arn:aws:s3:::"
@@ -2873,7 +2874,7 @@ public class FunctionalTest {
       try {
         LifecycleConfiguration config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
-        Assert.assertNull("config: expected: <null>, got: <non-null>", config);
+        Assertions.assertNull(config, "config: expected: <null>, got: <non-null>");
         testSetBucketLifecycle(
             bucketName,
             new LifecycleRule(
@@ -2887,29 +2888,30 @@ public class FunctionalTest {
                 null));
         config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
-        Assert.assertNotNull("config: expected: <non-null>, got: <null>", config);
+        Assertions.assertNotNull(config, "config: expected: <non-null>, got: <null>");
         List<LifecycleRule> rules = config.rules();
-        Assert.assertEquals(
-            "config.rules().size(): expected: 1, got: " + config.rules().size(),
+        Assertions.assertEquals(
             1,
-            config.rules().size());
+            config.rules().size(),
+            "config.rules().size(): expected: 1, got: " + config.rules().size());
         LifecycleRule rule = rules.get(0);
-        Assert.assertEquals(
-            "rule.status(): expected: " + Status.ENABLED + ", got: " + rule.status(),
+        Assertions.assertEquals(
             rule.status(),
-            Status.ENABLED);
-        Assert.assertNotNull(
-            "rule.expiration(): expected: <non-null>, got: <null>", rule.expiration());
-        Assert.assertEquals(
-            "rule.expiration().days(): expected: 365, got: " + rule.expiration().days(),
+            Status.ENABLED,
+            "rule.status(): expected: " + Status.ENABLED + ", got: " + rule.status());
+        Assertions.assertNotNull(
+            rule.expiration(), "rule.expiration(): expected: <non-null>, got: <null>");
+        Assertions.assertEquals(
             rule.expiration().days(),
-            Integer.valueOf(365));
-        Assert.assertNotNull("rule.filter(): expected: <non-null>, got: <null>", rule.filter());
-        Assert.assertEquals(
-            "rule.filter().prefix(): expected: logs/, got: " + rule.filter().prefix(),
+            Integer.valueOf(365),
+            "rule.expiration().days(): expected: 365, got: " + rule.expiration().days());
+        Assertions.assertNotNull(rule.filter(), "rule.filter(): expected: <non-null>, got: <null>");
+        Assertions.assertEquals(
             "logs/",
-            rule.filter().prefix());
-        Assert.assertEquals("rule.id(): expected: rule2, got: " + rule.id(), "rule2", rule.id());
+            rule.filter().prefix(),
+            "rule.filter().prefix(): expected: logs/, got: " + rule.filter().prefix());
+        Assertions.assertEquals(
+            "rule2", rule.id(), "rule.id(): expected: rule2, got: " + rule.id());
 
         testSetBucketLifecycle(
             bucketName,
@@ -2924,18 +2926,18 @@ public class FunctionalTest {
                 null));
         config =
             client.getBucketLifecycle(GetBucketLifecycleArgs.builder().bucket(bucketName).build());
-        Assert.assertNotNull("config: expected: <non-null>, got: <null>", config);
-        Assert.assertEquals(
-            "config.rules().size(): expected: 1, got: " + config.rules().size(),
+        Assertions.assertNotNull(config, "config: expected: <non-null>, got: <null>");
+        Assertions.assertEquals(
             config.rules().size(),
-            1);
-        Assert.assertNotNull(
-            "rule.filter(): expected: <non-null>, got: <null>", config.rules().get(0).filter());
-        Assert.assertEquals(
-            "rule.filter().prefix(): expected: <empty>, got: "
-                + config.rules().get(0).filter().prefix(),
+            1,
+            "config.rules().size(): expected: 1, got: " + config.rules().size());
+        Assertions.assertNotNull(
+            config.rules().get(0).filter(), "rule.filter(): expected: <non-null>, got: <null>");
+        Assertions.assertEquals(
             "",
-            config.rules().get(0).filter().prefix());
+            config.rules().get(0).filter().prefix(),
+            "rule.filter().prefix(): expected: <empty>, got: "
+                + config.rules().get(0).filter().prefix());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3199,25 +3201,25 @@ public class FunctionalTest {
                   .build());
 
       String result = new String(readAllBytes(responseStream), StandardCharsets.UTF_8);
-      Assert.assertEquals(
-          "result mismatch; expected: " + expectedResult + ", got: " + result,
+      Assertions.assertEquals(
           result,
-          expectedResult);
+          expectedResult,
+          "result mismatch; expected: " + expectedResult + ", got: " + result);
 
       Stats stats = responseStream.stats();
-      Assert.assertNotNull("stats is null", stats);
-      Assert.assertEquals(
-          "stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned(),
+      Assertions.assertNotNull(stats, "stats is null");
+      Assertions.assertEquals(
           stats.bytesScanned(),
-          256);
-      Assert.assertEquals(
-          "stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed(),
+          256,
+          "stats.bytesScanned mismatch; expected: 258, got: " + stats.bytesScanned());
+      Assertions.assertEquals(
           stats.bytesProcessed(),
-          256);
-      Assert.assertEquals(
-          "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned(),
+          256,
+          "stats.bytesProcessed mismatch; expected: 258, got: " + stats.bytesProcessed());
+      Assertions.assertEquals(
           stats.bytesReturned(),
-          222);
+          222,
+          "stats.bytesReturned mismatch; expected: 222, got: " + stats.bytesReturned());
       mintSuccessLog(methodName, testArgs, startTime);
     } catch (Exception e) {
       handleException(methodName, testArgs, startTime, e);
@@ -3268,7 +3270,7 @@ public class FunctionalTest {
         SseConfiguration config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        Assert.assertNull("rule: expected: <null>, got: <non-null>", config.rule());
+        Assertions.assertNull(config.rule(), "rule: expected: <null>, got: <non-null>");
         client.setBucketEncryption(
             SetBucketEncryptionArgs.builder()
                 .bucket(bucketName)
@@ -3277,14 +3279,14 @@ public class FunctionalTest {
         config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        Assert.assertNotNull("rule: expected: <non-null>, got: <null>", config.rule());
-        Assert.assertEquals(
+        Assertions.assertNotNull(config.rule(), "rule: expected: <non-null>, got: <null>");
+        Assertions.assertEquals(
+            config.rule().sseAlgorithm(),
+            SseAlgorithm.AES256,
             "sse algorithm: expected: "
                 + SseAlgorithm.AES256
                 + ", got: "
-                + config.rule().sseAlgorithm(),
-            config.rule().sseAlgorithm(),
-            SseAlgorithm.AES256);
+                + config.rule().sseAlgorithm());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3318,7 +3320,7 @@ public class FunctionalTest {
         SseConfiguration config =
             client.getBucketEncryption(
                 GetBucketEncryptionArgs.builder().bucket(bucketName).build());
-        Assert.assertNull("rule: expected: <null>, got: <non-null>", config.rule());
+        Assertions.assertNull(config.rule(), "rule: expected: <null>, got: <non-null>");
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3367,8 +3369,8 @@ public class FunctionalTest {
         if (getTest) {
           CORSConfiguration config =
               client.getBucketCors(GetBucketCorsArgs.builder().bucket(bucketName).build());
-          Assert.assertEquals(
-              "cors: expected: " + expectedConfig + ", got: " + config, expectedConfig, config);
+          Assertions.assertEquals(
+              expectedConfig, config, "cors: expected: " + expectedConfig + ", got: " + config);
         }
         if (deleteTest) {
           client.deleteBucketCors(DeleteBucketCorsArgs.builder().bucket(bucketName).build());
@@ -3431,13 +3433,13 @@ public class FunctionalTest {
       try {
         Map<String, String> map = new HashMap<>();
         Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
-        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
+        Assertions.assertEquals(map, tags.get(), "tags: expected: " + map + ", got: " + tags.get());
 
         map.put("Project", "Project One");
         map.put("User", "jsmith");
         client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
         tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
-        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
+        Assertions.assertEquals(map, tags.get(), "tags: expected: " + map + ", got: " + tags.get());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3466,7 +3468,8 @@ public class FunctionalTest {
         client.setBucketTags(SetBucketTagsArgs.builder().bucket(bucketName).tags(map).build());
         client.deleteBucketTags(DeleteBucketTagsArgs.builder().bucket(bucketName).build());
         Tags tags = client.getBucketTags(GetBucketTagsArgs.builder().bucket(bucketName).build());
-        Assert.assertTrue("tags: expected: <empty>" + ", got: " + tags.get(), tags.get().isEmpty());
+        Assertions.assertTrue(
+            tags.get().isEmpty(), "tags: expected: <empty>" + ", got: " + tags.get());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeBucket(RemoveBucketArgs.builder().bucket(bucketName).build());
@@ -3523,7 +3526,7 @@ public class FunctionalTest {
         Tags tags =
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
-        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
+        Assertions.assertEquals(map, tags.get(), "tags: expected: " + map + ", got: " + tags.get());
 
         map.put("Project", "Project One");
         map.put("User", "jsmith");
@@ -3532,7 +3535,7 @@ public class FunctionalTest {
         tags =
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
-        Assert.assertEquals("tags: expected: " + map + ", got: " + tags.get(), map, tags.get());
+        Assertions.assertEquals(map, tags.get(), "tags: expected: " + map + ", got: " + tags.get());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
@@ -3570,7 +3573,7 @@ public class FunctionalTest {
         Tags tags =
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName).build());
-        Assert.assertTrue("tags: expected: <empty>, got: " + tags.get(), tags.get().isEmpty());
+        Assertions.assertTrue(tags.get().isEmpty(), "tags: expected: <empty>, got: " + tags.get());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
@@ -3598,20 +3601,20 @@ public class FunctionalTest {
         AccessControlPolicy policy =
             client.getObjectAcl(
                 GetObjectAclArgs.builder().bucket(bucketName).object(objectName).build());
-        Assert.assertEquals(
+        Assertions.assertEquals(
+            policy.accessControlList().grants().get(0).grantee().type(),
+            GranteeType.CANONICAL_USER,
             "granteeType: expected: "
                 + GranteeType.CANONICAL_USER
                 + ", got: "
-                + policy.accessControlList().grants().get(0).grantee().type(),
-            policy.accessControlList().grants().get(0).grantee().type(),
-            GranteeType.CANONICAL_USER);
-        Assert.assertEquals(
+                + policy.accessControlList().grants().get(0).grantee().type());
+        Assertions.assertEquals(
+            policy.accessControlList().grants().get(0).permission(),
+            Permission.FULL_CONTROL,
             "permission: expected: "
                 + Permission.FULL_CONTROL
                 + ", got: "
-                + policy.accessControlList().grants().get(0).permission(),
-            policy.accessControlList().grants().get(0).permission(),
-            Permission.FULL_CONTROL);
+                + policy.accessControlList().grants().get(0).permission());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
@@ -3646,19 +3649,19 @@ public class FunctionalTest {
                           "ETag", "Checksum", "ObjectParts", "StorageClass", "ObjectSize"
                         })
                     .build());
-        Assert.assertTrue(
-            "objectSize: expected: " + (1 * KB) + ", got: " + response.result().objectSize(),
-            response.result().objectSize() == (1 * KB));
-        Assert.assertTrue(
+        Assertions.assertTrue(
+            response.result().objectSize() == (1 * KB),
+            "objectSize: expected: " + (1 * KB) + ", got: " + response.result().objectSize());
+        Assertions.assertTrue(
+            response.result().objectParts().parts().get(0).partNumber() == 1,
             "partNumber: expected: 1, got: "
-                + response.result().objectParts().parts().get(0).partNumber(),
-            response.result().objectParts().parts().get(0).partNumber() == 1);
-        Assert.assertTrue(
+                + response.result().objectParts().parts().get(0).partNumber());
+        Assertions.assertTrue(
+            response.result().objectParts().parts().get(0).partSize() == (1 * KB),
             "partSize: expected: "
                 + (1 * KB)
                 + ", got: "
-                + response.result().objectParts().parts().get(0).partSize(),
-            response.result().objectParts().parts().get(0).partSize() == (1 * KB));
+                + response.result().objectParts().parts().get(0).partSize());
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
@@ -3729,7 +3732,7 @@ public class FunctionalTest {
       ReplicationConfiguration config =
           client.getBucketReplication(
               GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
-      Assert.assertNull("config: expected: <null>, got: <non-null>", config);
+      Assertions.assertNull(config, "config: expected: <null>, got: <non-null>");
 
       Map<String, String> tags = new HashMap<>();
       tags.put("key1", "value1");
@@ -3756,7 +3759,7 @@ public class FunctionalTest {
       config =
           client.getBucketReplication(
               GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
-      Assert.assertNotNull("config: expected: <non-null>, got: <null>", config);
+      Assertions.assertNotNull(config, "config: expected: <non-null>, got: <null>");
       client.deleteBucketReplication(
           DeleteBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
       mintSuccessLog(methodName, null, startTime);
@@ -3808,7 +3811,7 @@ public class FunctionalTest {
       config =
           client.getBucketReplication(
               GetBucketReplicationArgs.builder().bucket(replicationSrcBucket).build());
-      Assert.assertNull("config: expected: <null>, got: <non-null>", config);
+      Assertions.assertNull(config, "config: expected: <null>, got: <non-null>");
       mintSuccessLog(methodName, null, startTime);
     } catch (Exception e) {
       handleException(methodName, null, startTime, e);
@@ -3842,12 +3845,12 @@ public class FunctionalTest {
         StatObjectResponse stat =
             client.statObject(
                 StatObjectArgs.builder().bucket(bucketName).object(objectName1).build());
-        Assert.assertEquals("object size: expected: 5, got: " + stat.size(), 5, stat.size());
+        Assertions.assertEquals(5, stat.size(), "object size: expected: 5, got: " + stat.size());
         stat =
             client.statObject(
                 StatObjectArgs.builder().bucket(bucketName).object(objectName2).build());
-        Assert.assertEquals(
-            "object size: expected: " + KB + ", got: " + stat.size(), 1 * KB, stat.size());
+        Assertions.assertEquals(
+            1 * KB, stat.size(), "object size: expected: " + KB + ", got: " + stat.size());
         mintSuccessLog(methodName, testTags, startTime);
       } finally {
         client.removeObject(
@@ -3898,21 +3901,21 @@ public class FunctionalTest {
         StatObjectResponse stat =
             client.statObject(
                 StatObjectArgs.builder().bucket(bucketName).object(objectName1).build());
-        Assert.assertTrue(
-            "userMetadata: expected = " + map + ", got = " + stat.userMetadata(),
+        Assertions.assertTrue(
             map.size() == stat.userMetadata().size()
                 && map.entrySet().stream()
                     .allMatch(
                         e ->
                             e.getValue()
                                 .equals(
-                                    stat.userMetadata().get(e.getKey().toLowerCase(Locale.US)))));
+                                    stat.userMetadata().get(e.getKey().toLowerCase(Locale.US)))),
+            "userMetadata: expected = " + map + ", got = " + stat.userMetadata());
 
         Tags tags =
             client.getObjectTags(
                 GetObjectTagsArgs.builder().bucket(bucketName).object(objectName2).build());
-        Assert.assertTrue(
-            "tags: expected = " + map + ", got = " + tags.get(), map.equals(tags.get()));
+        Assertions.assertTrue(
+            map.equals(tags.get()), "tags: expected = " + map + ", got = " + tags.get());
       } finally {
         client.removeObject(
             RemoveObjectArgs.builder().bucket(bucketName).object(objectName1).build());
