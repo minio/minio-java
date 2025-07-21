@@ -18,7 +18,7 @@
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.admin.*;
 import java.util.Map;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 @SuppressFBWarnings(
     value = "REC",
@@ -76,7 +76,7 @@ public class TestMinioAdminClient {
     try {
       Map<String, String> policies = adminClient.listCannedPolicies();
       String policy = policies.get(policyName);
-      Assert.assertTrue(policy != null);
+      Assertions.assertTrue(policy != null);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }
@@ -118,8 +118,8 @@ public class TestMinioAdminClient {
     long startTime = System.currentTimeMillis();
     try {
       UserInfo userInfo = adminClient.getUserInfo(userAccessKey);
-      Assert.assertEquals(userInfo.status(), UserInfo.Status.ENABLED);
-      Assert.assertEquals(userInfo.policyName(), policyName);
+      Assertions.assertEquals(userInfo.status(), UserInfo.Status.ENABLED);
+      Assertions.assertEquals(userInfo.policyName(), policyName);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }
@@ -134,9 +134,9 @@ public class TestMinioAdminClient {
     long startTime = System.currentTimeMillis();
     try {
       Map<String, UserInfo> users = adminClient.listUsers();
-      Assert.assertTrue(users.containsKey(userAccessKey));
-      Assert.assertEquals(users.get(userAccessKey).status(), UserInfo.Status.ENABLED);
-      Assert.assertEquals(users.get(userAccessKey).policyName(), policyName);
+      Assertions.assertTrue(users.containsKey(userAccessKey));
+      Assertions.assertEquals(users.get(userAccessKey).status(), UserInfo.Status.ENABLED);
+      Assertions.assertEquals(users.get(userAccessKey).policyName(), policyName);
     } catch (Exception e) {
       FunctionalTest.handleException(methodName, null, startTime, e);
     }
