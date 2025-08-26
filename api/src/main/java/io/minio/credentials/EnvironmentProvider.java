@@ -19,7 +19,10 @@ package io.minio.credentials;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-/** Base class of credential providers using environment variables. */
+/**
+ * Base environment provider of {@link AwsConfigProvider}, {@link MinioClientConfigProvider}, {@link
+ * AwsEnvironmentProvider}, {@link MinioEnvironmentProvider} and {@link IamAwsProvider}.
+ */
 public abstract class EnvironmentProvider implements Provider {
   /** Get value of a property from system property or environment variable. */
   @Nullable

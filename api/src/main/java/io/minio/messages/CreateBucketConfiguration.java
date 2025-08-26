@@ -21,7 +21,7 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of response XML of <a
+ * Request XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html">CreateBucket
  * API</a>.
  */
@@ -49,6 +49,7 @@ public class CreateBucketConfiguration {
     this.bucket = bucket;
   }
 
+  /** Bucket location information of {@link CreateBucketConfiguration}. */
   @Root(name = "Location", strict = false)
   @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class Location {
@@ -64,6 +65,7 @@ public class CreateBucketConfiguration {
     }
   }
 
+  /** Bucket properties of {@link CreateBucketConfiguration}. */
   @Root(name = "Bucket", strict = false)
   @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class Bucket {

@@ -196,7 +196,7 @@ MinioClient s3Client =
 MinioClient s3Client =
     MinioClient.builder()
 	    .endpoint("s3.amazonaws.com", 443, true)
-		.credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY").
+		.credentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY")
 		.region("eu-west-2")
 		.build();
 
@@ -1257,9 +1257,10 @@ Enables legal hold on an object.
 
  __Parameters__
 
-| Parameter      | Type                          | Description  |
-|:---------------|:------------------------------|:-------------|
-| ``args``       | _[EnableObjectLegalHoldArgs]_ | Argumments.  |
+| Parameter | Type                          | Description |
+|:----------|:------------------------------|:------------|
+| ``args``  | _[EnableObjectLegalHoldArgs]_ | Arguments.  |
+
 
  __Example__
  ```java
@@ -1376,9 +1377,9 @@ __Parameters__
 | ``args``  | _[GetObjectAttributesArgs]_ | Arguments.  |
 
 
-| Returns                                    |
-|:-------------------------------------------|
-| _[GetObjectAttributesResponse]_ - Respone. |
+| Returns                                     |
+|:--------------------------------------------|
+| _[GetObjectAttributesResponse]_ - Response. |
 
 __Example__
 ```java
@@ -1988,7 +1989,7 @@ minioClient.setObjectTags(
 
 <a name="statObject"></a>
 ### statObject(StatObjectArgs args)
-`public ObjectStat statObject(StatObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-io.minio.StatObjectArgs-)_
+`public StatObjectResponse statObject(StatObjectArgs args)` _[[Javadoc]](http://minio.github.io/minio-java/io/minio/MinioClient.html#statObject-io.minio.StatObjectArgs-)_
 
 Gets object information and metadata of an object.
 
@@ -1997,19 +1998,19 @@ __Parameters__
 |:----------|:-------------------|:------------|
 | ``args``  | _[StatObjectArgs]_ | Arguments.  |
 
-| Returns                                                     |
-|:------------------------------------------------------------|
-| _[ObjectStat]_ - Populated object information and metadata. |
+| Returns                                                             |
+|:--------------------------------------------------------------------|
+| _[StatObjectResponse]_ - Populated object information and metadata. |
 
 __Example__
 ```java
 // Get information of an object.
-ObjectStat objectStat =
+StatObjectResponse response =
     minioClient.statObject(
         StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
 
 // Get information of SSE-C encrypted object.
-ObjectStat objectStat =
+StatObjectResponse response =
     minioClient.statObject(
         StatObjectArgs.builder()
             .bucket("my-bucketname")
@@ -2018,7 +2019,7 @@ ObjectStat objectStat =
             .build());
 
 // Get information of a versioned object.
-ObjectStat objectStat =
+StatObjectResponse response =
     minioClient.statObject(
         StatObjectArgs.builder()
             .bucket("my-bucketname")
@@ -2027,7 +2028,7 @@ ObjectStat objectStat =
             .build());
 
 // Get information of a SSE-C encrypted versioned object.
-ObjectStat objectStat =
+StatObjectResponse response =
     minioClient.statObject(
         StatObjectArgs.builder()
             .bucket("my-bucketname")
@@ -2070,7 +2071,7 @@ ObjectStat objectStat =
 [InputSerialization]: http://minio.github.io/minio-java/io/minio/messages/InputSerialization.html
 [OutputSerialization]: http://minio.github.io/minio-java/io/minio/messages/OutputSerialization.html
 [Retention]: http://minio.github.io/minio-java/io/minio/messages/Retention.html
-[ObjectStat]: http://minio.github.io/minio-java/io/minio/ObjectStat.html
+[StatObjectResponse]: http://minio.github.io/minio-java/io/minio/StatObjectResponse.html
 [DeleteError]: http://minio.github.io/minio-java/io/minio/messages/DeleteError.html
 [SelectResponseStream]: http://minio.github.io/minio-java/io/minio/SelectResponseStream.html
 [MakeBucketArgs]: http://minio.github.io/minio-java/io/minio/MakeBucketArgs.html

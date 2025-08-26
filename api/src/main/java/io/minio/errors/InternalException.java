@@ -17,10 +17,16 @@
 package io.minio.errors;
 
 /**
- * Thrown to indicate that unexpected internal library error occured while processing given request.
+ * Thrown to indicate that unexpected internal library error occurred while processing given
+ * request.
  */
 public class InternalException extends MinioException {
   private static final long serialVersionUID = 138336287983212416L;
+
+  /** Constructs a new InternalException with given error message. */
+  public InternalException(String message) {
+    super(message);
+  }
 
   /** Constructs a new InternalException with given error message. */
   public InternalException(String message, String httpTrace) {

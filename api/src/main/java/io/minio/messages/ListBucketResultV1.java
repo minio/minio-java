@@ -24,7 +24,7 @@ import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of response XML of <a
+ * Response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjects.html">ListObjects API</a>.
  */
 @Root(name = "ListBucketResult", strict = false)
@@ -50,5 +50,15 @@ public class ListBucketResultV1 extends ListObjectsResult {
   @Override
   public List<Contents> contents() {
     return Utils.unmodifiableList(contents);
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "ListBucketResultV1{%s, marker=%s, nextMarker=%s, contents=%s}",
+        super.toString(),
+        Utils.stringify(marker),
+        Utils.stringify(nextMarker),
+        Utils.stringify(contents));
   }
 }

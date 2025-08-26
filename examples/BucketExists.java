@@ -17,39 +17,31 @@
 import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class BucketExists {
   /** MinioClient.bucketExists() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Check whether 'my-bucketname' exist or not.
-      boolean found =
-          minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build());
-      if (found) {
-        System.out.println("my-bucketname exists");
-      } else {
-        System.out.println("my-bucketname does not exist");
-      }
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
+    // Check whether 'my-bucket' exist or not.
+    boolean found =
+        minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucket").build());
+    if (found) {
+      System.out.println("my-bucket exists");
+    } else {
+      System.out.println("my-bucket does not exist");
     }
   }
 }

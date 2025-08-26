@@ -18,58 +18,50 @@ import io.minio.MinioClient;
 import io.minio.SetBucketCorsArgs;
 import io.minio.errors.MinioException;
 import io.minio.messages.CORSConfiguration;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 public class SetBucketCors {
   /** MinioClient.setBucketCors() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      CORSConfiguration config =
-          new CORSConfiguration(
-              Arrays.asList(
-                  new CORSConfiguration.CORSRule[] {
-                    // Rule 1
-                    new CORSConfiguration.CORSRule(
-                        Arrays.asList(new String[] {"*"}), // Allowed headers
-                        Arrays.asList(new String[] {"PUT", "POST", "DELETE"}), // Allowed methods
-                        Arrays.asList(new String[] {"http://www.example.com"}), // Allowed origins
-                        Arrays.asList(
-                            new String[] {"x-amz-server-side-encryption"}), // Expose headers
-                        null, // ID
-                        3000), // Maximum age seconds
-                    // Rule 2
-                    new CORSConfiguration.CORSRule(
-                        null, // Allowed headers
-                        Arrays.asList(new String[] {"GET"}), // Allowed methods
-                        Arrays.asList(new String[] {"*"}), // Allowed origins
-                        null, // Expose headers
-                        null, // ID
-                        null // Maximum age seconds
-                        )
-                  }));
+    CORSConfiguration config =
+        new CORSConfiguration(
+            Arrays.asList(
+                new CORSConfiguration.CORSRule[] {
+                  // Rule 1
+                  new CORSConfiguration.CORSRule(
+                      Arrays.asList(new String[] {"*"}), // Allowed headers
+                      Arrays.asList(new String[] {"PUT", "POST", "DELETE"}), // Allowed methods
+                      Arrays.asList(new String[] {"http://www.example.com"}), // Allowed origins
+                      Arrays.asList(
+                          new String[] {"x-amz-server-side-encryption"}), // Expose headers
+                      null, // ID
+                      3000), // Maximum age seconds
+                  // Rule 2
+                  new CORSConfiguration.CORSRule(
+                      null, // Allowed headers
+                      Arrays.asList(new String[] {"GET"}), // Allowed methods
+                      Arrays.asList(new String[] {"*"}), // Allowed origins
+                      null, // Expose headers
+                      null, // ID
+                      null // Maximum age seconds
+                      )
+                }));
 
-      minioClient.setBucketCors(
-          SetBucketCorsArgs.builder().bucket("my-bucketname").config(config).build());
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    minioClient.setBucketCors(
+        SetBucketCorsArgs.builder().bucket("my-bucket").config(config).build());
   }
 }

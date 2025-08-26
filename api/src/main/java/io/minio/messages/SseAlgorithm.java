@@ -23,7 +23,10 @@ import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
 
-/** Server-side encryption algorithm. */
+/**
+ * Server-side encryption algorithm type of {@link RestoreRequest.Encryption} and {@link
+ * SseConfiguration.Rule}.
+ */
 @Root(name = "SSEAlgorithm")
 @Convert(SseAlgorithm.SseAlgorithmConverter.class)
 public enum SseAlgorithm {
@@ -44,15 +47,12 @@ public enum SseAlgorithm {
   @JsonCreator
   public static SseAlgorithm fromString(String sseAlgorithmString) {
     for (SseAlgorithm sa : SseAlgorithm.values()) {
-      if (sseAlgorithmString.equals(sa.value)) {
-        return sa;
-      }
+      if (sseAlgorithmString.equals(sa.value)) return sa;
     }
-
-    throw new IllegalArgumentException("unknown SSE algorithm '" + sseAlgorithmString + "'");
+    throw new IllegalArgumentException("Unknown SSE algorithm '" + sseAlgorithmString + "'");
   }
 
-  /** XML converter class. */
+  /** XML converter of {@link SseAlgorithm}. */
   public static class SseAlgorithmConverter implements Converter<SseAlgorithm> {
     @Override
     public SseAlgorithm read(InputNode node) throws Exception {

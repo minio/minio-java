@@ -20,9 +20,7 @@ import io.minio.messages.Tags;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Argument class of {@link MinioAsyncClient#setObjectTags} and {@link MinioClient#setObjectTags}.
- */
+/** Arguments of {@link MinioAsyncClient#setObjectTags} and {@link MinioClient#setObjectTags}. */
 public class SetObjectTagsArgs extends ObjectVersionArgs {
   private Tags tags;
 
@@ -34,10 +32,10 @@ public class SetObjectTagsArgs extends ObjectVersionArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetObjectTagsArgs}. */
+  /** Builder of {@link SetObjectTagsArgs}. */
   public static final class Builder extends ObjectVersionArgs.Builder<Builder, SetObjectTagsArgs> {
     private void validateTags(Tags tags) {
-      validateNotNull(tags, "tags");
+      Utils.validateNotNull(tags, "tags");
     }
 
     protected void validate(SetObjectTagsArgs args) {
@@ -46,7 +44,7 @@ public class SetObjectTagsArgs extends ObjectVersionArgs {
     }
 
     public Builder tags(Map<String, String> map) {
-      validateNotNull(map, "map for tags");
+      Utils.validateNotNull(map, "map for tags");
       operations.add(args -> args.tags = Tags.newObjectTags(map));
       return this;
     }

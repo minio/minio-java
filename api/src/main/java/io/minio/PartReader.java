@@ -1,6 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2021 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2025 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,157 +16,159 @@
 
 package io.minio;
 
-import com.google.common.io.BaseEncoding;
+import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 
-/** PartReader reads part data from file or input stream sequentially and returns PartSource. */
-class PartReader {
-  private static final long CHUNK_SIZE = Integer.MAX_VALUE;
+/**
+ * Multipart data reader for {@link RandomAccessFile} or {@link InputStream} to given {@link
+ * ByteBuffer}.
+ */
+public class PartReader {
+  byte[] buf16k = new byte[16384];
 
-  private byte[] buf16k = new byte[16384]; // 16KiB buffer for optimization.
+  RandomAccessFile file;
+  InputStream stream;
+  long objectSize;
+  long partSize;
+  int partCount;
+  Map<Checksum.Algorithm, Checksum.Hasher> hashers;
 
-  private RandomAccessFile file;
-  private InputStream stream;
-
-  private long objectSize;
-  private long partSize;
-  private int partCount;
-
-  private int partNumber;
-  private long totalDataRead;
-
-  private ByteBufferStream[] buffers;
-  private byte[] oneByte = null;
+  long totalBytesRead = 0;
+  int partNumber = 0;
+  byte[] oneByte = null;
   boolean eof;
 
-  private PartReader(long objectSize, long partSize, int partCount) {
-    this.objectSize = objectSize;
+  public PartReader(
+      @Nonnull RandomAccessFile file,
+      long objectSize,
+      long partSize,
+      int partCount,
+      Checksum.Algorithm... algorithms)
+      throws MinioException {
+    this.file = Objects.requireNonNull(file, "file must not be null");
+    if (objectSize < 0) throw new IllegalArgumentException("valid object size must be provided");
+    if (partCount < 0) throw new IllegalArgumentException("part count must be provided");
+    set(objectSize, partSize, partCount, algorithms);
+  }
+
+  public PartReader(
+      @Nonnull InputStream stream,
+      Long objectSize,
+      long partSize,
+      int partCount,
+      Checksum.Algorithm... algorithms)
+      throws MinioException {
+    this.stream = Objects.requireNonNull(stream, "stream must not be null");
+    if (partCount == -1) {
+      objectSize = -1L;
+    } else if (objectSize < 0) {
+      throw new IllegalArgumentException("object size must be provided for part count");
+    }
+    set(objectSize, partSize, partCount, algorithms);
+  }
+
+  private void set(Long objectSize, long partSize, int partCount, Checksum.Algorithm[] algorithms)
+      throws MinioException {
+    if (partCount == 0) partCount = -1;
+    this.objectSize = objectSize == null ? -1 : objectSize;
     this.partSize = partSize;
     this.partCount = partCount;
-
-    long bufferCount = partSize / CHUNK_SIZE;
-    if ((partSize - (bufferCount * CHUNK_SIZE)) > 0) bufferCount++;
-    if (bufferCount == 0) bufferCount++;
-
-    this.buffers = new ByteBufferStream[(int) bufferCount];
+    this.hashers = Checksum.newHasherMap(algorithms);
   }
 
-  public PartReader(@Nonnull RandomAccessFile file, long objectSize, long partSize, int partCount) {
-    this(objectSize, partSize, partCount);
-    this.file = Objects.requireNonNull(file, "file must not be null");
-    if (this.objectSize < 0) throw new IllegalArgumentException("object size must be provided");
+  private int readBuf16k(int length) throws MinioException {
+    try {
+      return file != null ? file.read(buf16k, 0, length) : stream.read(buf16k, 0, length);
+    } catch (IOException e) {
+      throw new MinioException(e);
+    }
   }
 
-  public PartReader(@Nonnull InputStream stream, long objectSize, long partSize, int partCount) {
-    this(objectSize, partSize, partCount);
-    this.stream = Objects.requireNonNull(stream, "stream must not be null");
-    for (int i = 0; i < this.buffers.length; i++) this.buffers[i] = new ByteBufferStream();
-  }
+  private void readOneByte() throws MinioException {
+    if (eof) return;
 
-  private long readStreamChunk(ByteBufferStream buffer, long size, MessageDigest sha256)
-      throws IOException {
-    long totalBytesRead = 0;
+    oneByte = new byte[] {0};
+    int n = 0;
 
-    if (this.oneByte != null) {
-      buffer.write(this.oneByte);
-      sha256.update(this.oneByte);
-      totalBytesRead++;
-      this.oneByte = null;
+    try {
+      while ((n = file != null ? file.read(oneByte) : stream.read(oneByte)) == 0) ;
+    } catch (IOException e) {
+      throw new MinioException(e);
     }
 
-    while (totalBytesRead < size) {
-      long bytesToRead = size - totalBytesRead;
-      if (bytesToRead > this.buf16k.length) bytesToRead = this.buf16k.length;
-      int bytesRead = this.stream.read(this.buf16k, 0, (int) bytesToRead);
-      this.eof = (bytesRead < 0);
-      if (this.eof) {
-        if (this.objectSize < 0) break;
-        throw new IOException("unexpected EOF");
+    if ((eof = n < 0)) oneByte = null;
+  }
+
+  public void read(ByteBuffer buffer) throws MinioException {
+    if (buffer == null) throw new IllegalArgumentException("valid buffer must be provided");
+    if (eof) throw new MinioException("EOF reached");
+    if (partNumber == partCount) throw new MinioException("data fully read");
+
+    long size = partSize;
+    if (partCount == 1) {
+      size = objectSize;
+    } else if (partNumber == partCount - 1) {
+      size = objectSize - totalBytesRead;
+    }
+    if (buffer.size() < size) {
+      throw new IllegalArgumentException(
+          "insufficient buffer size " + buffer.size() + " for data size " + size);
+    }
+
+    if (hashers != null) {
+      for (Map.Entry<Checksum.Algorithm, Checksum.Hasher> entry : hashers.entrySet()) {
+        entry.getValue().reset();
       }
-      buffer.write(this.buf16k, 0, bytesRead);
-      sha256.update(this.buf16k, 0, bytesRead);
-      totalBytesRead += bytesRead;
     }
 
-    return totalBytesRead;
+    long bytesRead = 0;
+
+    if (oneByte != null) {
+      try {
+        buffer.write(oneByte);
+      } catch (IOException e) {
+        throw new MinioException(e);
+      }
+      if (hashers != null) Checksum.update(hashers, oneByte, oneByte.length);
+      bytesRead++;
+      oneByte = null;
+    }
+
+    while (bytesRead < size) {
+      int n = readBuf16k((int) Math.min(size - bytesRead, this.buf16k.length));
+      if ((eof = n < 0)) {
+        if (partCount < 0) break;
+        throw new MinioException("unexpected EOF");
+      }
+      try {
+        buffer.write(this.buf16k, 0, n);
+      } catch (IOException e) {
+        throw new MinioException(e);
+      }
+      if (hashers != null) Checksum.update(hashers, this.buf16k, n);
+      bytesRead += n;
+    }
+
+    totalBytesRead += bytesRead;
+    partNumber++;
+    readOneByte();
+    if (eof && partCount < 0) partCount = partNumber;
   }
 
-  private long readStream(long size, MessageDigest sha256) throws IOException {
-    long count = size / CHUNK_SIZE;
-    long lastChunkSize = size - (count * CHUNK_SIZE);
-    if (lastChunkSize > 0) {
-      count++;
-    } else {
-      lastChunkSize = CHUNK_SIZE;
-    }
-
-    long totalBytesRead = 0;
-    for (int i = 0; i < buffers.length; i++) buffers[i].reset();
-    for (long i = 1; i <= count && !this.eof; i++) {
-      long chunkSize = (i != count) ? CHUNK_SIZE : lastChunkSize;
-      long bytesRead = this.readStreamChunk(buffers[(int) (i - 1)], chunkSize, sha256);
-      totalBytesRead += bytesRead;
-    }
-
-    if (!this.eof && this.objectSize < 0) {
-      this.oneByte = new byte[1];
-      this.eof = this.stream.read(this.oneByte) < 0;
-    }
-
-    return totalBytesRead;
+  public Map<Checksum.Algorithm, Checksum.Hasher> hashers() {
+    return hashers;
   }
 
-  private long readFile(long size, MessageDigest sha256) throws IOException {
-    long position = this.file.getFilePointer();
-    long totalBytesRead = 0;
-
-    while (totalBytesRead < size) {
-      long bytesToRead = size - totalBytesRead;
-      if (bytesToRead > this.buf16k.length) bytesToRead = this.buf16k.length;
-      int bytesRead = this.file.read(this.buf16k, 0, (int) bytesToRead);
-      if (bytesRead < 0) throw new IOException("unexpected EOF");
-      sha256.update(this.buf16k, 0, bytesRead);
-      totalBytesRead += bytesRead;
-    }
-
-    this.file.seek(position);
-    return totalBytesRead;
-  }
-
-  private long read(long size, MessageDigest sha256) throws IOException {
-    return (this.file != null) ? readFile(size, sha256) : readStream(size, sha256);
-  }
-
-  public PartSource getPart() throws NoSuchAlgorithmException, IOException {
-    if (this.partNumber == this.partCount) return null;
-
-    this.partNumber++;
-
-    MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-
-    long partSize = this.partSize;
-    if (this.partNumber == this.partCount) partSize = this.objectSize - this.totalDataRead;
-    long bytesRead = this.read(partSize, sha256);
-    this.totalDataRead += bytesRead;
-    if (this.objectSize < 0 && this.eof) this.partCount = this.partNumber;
-
-    String sha256Hash = BaseEncoding.base16().encode(sha256.digest()).toLowerCase(Locale.US);
-
-    if (this.file != null) {
-      return new PartSource(this.partNumber, this.file, bytesRead, null, sha256Hash);
-    }
-
-    return new PartSource(this.partNumber, this.buffers, bytesRead, null, sha256Hash);
+  public int partNumber() {
+    return partNumber;
   }
 
   public int partCount() {
-    return this.partCount;
+    return partCount;
   }
 }

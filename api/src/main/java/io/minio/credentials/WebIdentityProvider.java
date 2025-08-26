@@ -60,14 +60,18 @@ public class WebIdentityProvider extends WebIdentityClientGrantsProvider {
   }
 
   @Override
-  protected Class<? extends AssumeRoleBaseProvider.Response> getResponseClass() {
-    return WebIdentityResponse.class;
+  protected Class<? extends BaseIdentityProvider.Response> getResponseClass() {
+    return Response.class;
   }
 
-  /** Object representation of response XML of AssumeRoleWithWebIdentity API. */
+  /**
+   * Response XML <a
+   * href="https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRoleWithWebIdentity.html">AssumeRoleWithWebIdentity
+   * API</a>.
+   */
   @Root(name = "AssumeRoleWithWebIdentityResponse", strict = false)
   @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class WebIdentityResponse implements AssumeRoleBaseProvider.Response {
+  public static class Response implements BaseIdentityProvider.Response {
     @Path(value = "AssumeRoleWithWebIdentityResult")
     @Element(name = "Credentials")
     private Credentials credentials;

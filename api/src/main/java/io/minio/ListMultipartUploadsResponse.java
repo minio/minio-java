@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.ListMultipartUploadsResult;
 import okhttp3.Headers;
 
-/** Response class of {@link S3Base#listMultipartUploadsAsync}. */
+/** Response of {@link BaseS3Client#listMultipartUploads}. */
 public class ListMultipartUploadsResponse extends GenericResponse {
   private ListMultipartUploadsResult result;
 

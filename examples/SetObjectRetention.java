@@ -20,46 +20,37 @@ import io.minio.Time;
 import io.minio.errors.MinioException;
 import io.minio.messages.Retention;
 import io.minio.messages.RetentionMode;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.ZonedDateTime;
 
 public class SetObjectRetention {
   /** MinioClient.setObjectRetention() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, IllegalArgumentException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Declaring config with Retention mode as Compliance and
-      // retain until 3 days from current date.
-      ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3).withNano(0);
-      Retention config = new Retention(RetentionMode.COMPLIANCE, retentionUntil);
+    // Declaring config with Retention mode as Compliance and
+    // retain until 3 days from current date.
+    ZonedDateTime retentionUntil = ZonedDateTime.now(Time.UTC).plusDays(3).withNano(0);
+    Retention config = new Retention(RetentionMode.COMPLIANCE, retentionUntil);
 
-      // Set object retention
-      minioClient.setObjectRetention(
-          SetObjectRetentionArgs.builder()
-              .bucket("my-bucketname")
-              .object("my-objectname")
-              .config(config)
-              .bypassGovernanceMode(true)
-              .build());
-
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    // Set object retention
+    minioClient.setObjectRetention(
+        SetObjectRetentionArgs.builder()
+            .bucket("my-bucket")
+            .object("my-object")
+            .config(config)
+            .bypassGovernanceMode(true)
+            .build());
   }
 }

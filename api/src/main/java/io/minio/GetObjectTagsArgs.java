@@ -16,14 +16,12 @@
 
 package io.minio;
 
-/**
- * Argument class of {@link MinioAsyncClient#getObjectTags} and {@link MinioClient#getObjectTags}.
- */
+/** Arguments of {@link MinioAsyncClient#getObjectTags} and {@link MinioClient#getObjectTags}. */
 public class GetObjectTagsArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetObjectTagsArgs}. */
+  /** Builder of {@link GetObjectTagsArgs}. */
   public static final class Builder extends ObjectVersionArgs.Builder<Builder, GetObjectTagsArgs> {}
 }

@@ -34,7 +34,7 @@ import org.simpleframework.xml.Root;
  * href="https://github.com/minio/minio/blob/master/docs/sts/ldap.md">AssumeRoleWithLDAPIdentity
  * API</a>.
  */
-public class LdapIdentityProvider extends AssumeRoleBaseProvider {
+public class LdapIdentityProvider extends BaseIdentityProvider {
   private static final RequestBody EMPTY_BODY =
       RequestBody.create(new byte[] {}, MediaType.parse("application/octet-stream"));
   private final Request request;
@@ -84,14 +84,18 @@ public class LdapIdentityProvider extends AssumeRoleBaseProvider {
   }
 
   @Override
-  protected Class<? extends AssumeRoleBaseProvider.Response> getResponseClass() {
-    return LdapIdentityResponse.class;
+  protected Class<? extends BaseIdentityProvider.Response> getResponseClass() {
+    return Response.class;
   }
 
-  /** Object representation of response XML of AssumeRoleWithLDAPIdentity API. */
+  /**
+   * Response XML of <a
+   * href="https://github.com/minio/minio/blob/master/docs/sts/ldap.md">AssumeRoleWithLDAPIdentity
+   * API</a>.
+   */
   @Root(name = "AssumeRoleWithLDAPIdentityResponse", strict = false)
   @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class LdapIdentityResponse implements AssumeRoleBaseProvider.Response {
+  public static class Response implements BaseIdentityProvider.Response {
     @Path(value = "AssumeRoleWithLDAPIdentityResult")
     @Element(name = "Credentials")
     private Credentials credentials;

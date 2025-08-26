@@ -20,9 +20,7 @@ import io.minio.messages.Tags;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Argument class of {@link MinioAsyncClient#setBucketTags} and {@link MinioClient#setBucketTags}.
- */
+/** Arguments of {@link MinioAsyncClient#setBucketTags} and {@link MinioClient#setBucketTags}. */
 public class SetBucketTagsArgs extends BucketArgs {
   private Tags tags;
 
@@ -34,10 +32,10 @@ public class SetBucketTagsArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketTagsArgs}. */
+  /** Builder of {@link SetBucketTagsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketTagsArgs> {
     private void validateTags(Tags tags) {
-      validateNotNull(tags, "tags");
+      Utils.validateNotNull(tags, "tags");
     }
 
     protected void validate(SetBucketTagsArgs args) {
@@ -46,7 +44,7 @@ public class SetBucketTagsArgs extends BucketArgs {
     }
 
     public Builder tags(Map<String, String> map) {
-      validateNotNull(map, "map for tags");
+      Utils.validateNotNull(map, "map for tags");
       operations.add(args -> args.tags = Tags.newBucketTags(map));
       return this;
     }

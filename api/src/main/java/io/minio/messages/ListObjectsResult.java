@@ -20,9 +20,10 @@ import io.minio.Utils;
 import java.util.List;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
+import org.simpleframework.xml.Root;
 
 /**
- * Base class of {@link ListBucketResultV1}, {@link ListBucketResultV2} and {@link
+ * Base object information of {@link ListBucketResultV1}, {@link ListBucketResultV2} and {@link
  * ListVersionsResult}.
  */
 public abstract class ListObjectsResult {
@@ -47,7 +48,8 @@ public abstract class ListObjectsResult {
   @ElementList(name = "CommonPrefixes", inline = true, required = false)
   private List<Prefix> commonPrefixes;
 
-  private static final List<DeleteMarker> deleteMarkers = Utils.unmodifiableList(null);
+  private static final List<ListVersionsResult.DeleteMarker> deleteMarkers =
+      Utils.unmodifiableList(null);
 
   public ListObjectsResult() {}
 
@@ -85,9 +87,41 @@ public abstract class ListObjectsResult {
     return Utils.unmodifiableList(commonPrefixes);
   }
 
-  public List<DeleteMarker> deleteMarkers() {
+  public List<ListVersionsResult.DeleteMarker> deleteMarkers() {
     return deleteMarkers;
   }
 
   public abstract List<? extends Item> contents();
+
+  @Override
+  public String toString() {
+    return String.format(
+        "name=%s, encodingType=%s, prefix=%s, delimiter=%s, isTruncated=%s, maxKeys=%s, commonPrefixes=%s, deleteMarkers=%s",
+        Utils.stringify(name),
+        Utils.stringify(encodingType),
+        Utils.stringify(prefix),
+        Utils.stringify(delimiter),
+        Utils.stringify(isTruncated),
+        Utils.stringify(maxKeys),
+        Utils.stringify(commonPrefixes),
+        Utils.stringify(deleteMarkers));
+  }
+
+  /** Common prefix informaton. */
+  @Root(name = "CommonPrefixes", strict = false)
+  public static class Prefix {
+    @Element(name = "Prefix")
+    private String prefix;
+
+    public Prefix() {}
+
+    public Item toItem() {
+      return new Contents(prefix);
+    }
+
+    @Override
+    public String toString() {
+      return String.format("Prefix{%s}", Utils.stringify(prefix));
+    }
+  }
 }

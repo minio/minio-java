@@ -20,7 +20,7 @@ import io.minio.messages.LifecycleConfiguration;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setBucketLifecycle} and {@link
+ * Arguments of {@link MinioAsyncClient#setBucketLifecycle} and {@link
  * MinioClient#setBucketLifecycle}.
  */
 public class SetBucketLifecycleArgs extends BucketArgs {
@@ -34,10 +34,10 @@ public class SetBucketLifecycleArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketLifecycleArgs}. */
+  /** Builder of {@link SetBucketLifecycleArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketLifecycleArgs> {
     private void validateConfig(LifecycleConfiguration config) {
-      validateNotNull(config, "lifecycle configuration");
+      Utils.validateNotNull(config, "lifecycle configuration");
     }
 
     protected void validate(SetBucketLifecycleArgs args) {

@@ -23,7 +23,7 @@ import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
 
-/** Status representing Disabled/Enabled. */
+/** Status type of {@link LifecycleConfiguration.Rule} and {@link ReplicationConfiguration.Rule}. */
 @Root(name = "Status")
 @Convert(Status.StatusConverter.class)
 public enum Status {
@@ -52,7 +52,7 @@ public enum Status {
     throw new IllegalArgumentException("Unknown status '" + statusString + "'");
   }
 
-  /** XML converter class. */
+  /** XML converter of {@link Status}. */
   public static class StatusConverter implements Converter<Status> {
     @Override
     public Status read(InputNode node) throws Exception {

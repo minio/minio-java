@@ -15,62 +15,52 @@
  */
 
 import io.minio.MinioClient;
-import io.minio.ServerSideEncryptionCustomerKey;
+import io.minio.ServerSideEncryption;
 import io.minio.UploadObjectArgs;
 import io.minio.errors.MinioException;
-import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
 
 public class UploadObject {
-  /** MinioClient.putObject() example. */
+  /** MinioClient.uploadObject() example. */
   public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+      throws InvalidKeyException, MinioException, NoSuchAlgorithmException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      {
-        // Upload 'my-filename' as object 'my-objectname' in 'my-bucketname'.
-        minioClient.uploadObject(
-            UploadObjectArgs.builder()
-                .bucket("my-bucketname")
-                .object("my-objectname")
-                .filename("my-filename")
-                .build());
-        System.out.println("my-filename is uploaded to my-objectname successfully");
-      }
+    // Upload 'my-filename' as object 'my-object' in 'my-bucket'.
+    minioClient.uploadObject(
+        UploadObjectArgs.builder()
+            .bucket("my-bucket")
+            .object("my-object")
+            .filename("my-filename")
+            .build());
+    System.out.println("my-filename is uploaded to my-object successfully");
 
-      {
-        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
-        keyGen.init(256);
-        ServerSideEncryptionCustomerKey ssec =
-            new ServerSideEncryptionCustomerKey(keyGen.generateKey());
-
-        // Upload 'my-filename' as object encrypted 'my-objectname' in 'my-bucketname'.
-        minioClient.uploadObject(
-            UploadObjectArgs.builder()
-                .bucket("my-bucketname")
-                .object("my-objectname")
-                .filename("my-filename")
-                .sse(ssec)
-                .build());
-        System.out.println("my-filename is uploaded to my-objectname successfully");
-      }
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    // Upload 'my-filename' as object encrypted 'my-object' in 'my-bucket'.
+    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+    keyGen.init(256);
+    ServerSideEncryption.CustomerKey ssec =
+        new ServerSideEncryption.CustomerKey(keyGen.generateKey());
+    minioClient.uploadObject(
+        UploadObjectArgs.builder()
+            .bucket("my-bucket")
+            .object("my-object")
+            .filename("my-filename")
+            .sse(ssec)
+            .build());
+    System.out.println("my-filename is uploaded to my-object successfully");
   }
 }

@@ -16,13 +16,13 @@
 
 package io.minio.messages;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import java.util.Locale;
+import io.minio.Http;
+import io.minio.Utils;
+import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
-/** Helper class for. */
+/** Object checksum information. */
 @Root(name = "Checksum", strict = false)
 public class Checksum {
   @Element(name = "ChecksumCRC32", required = false)
@@ -43,7 +43,31 @@ public class Checksum {
   @Element(name = "ChecksumType", required = false)
   private String checksumType;
 
-  public Checksum() {}
+  protected Checksum() {}
+
+  public Checksum(
+      @Nullable @Element(name = "ChecksumCRC32", required = false) String checksumCRC32,
+      @Nullable @Element(name = "ChecksumCRC32C", required = false) String checksumCRC32C,
+      @Nullable @Element(name = "ChecksumCRC64NVME", required = false) String checksumCRC64NVME,
+      @Nullable @Element(name = "ChecksumSHA1", required = false) String checksumSHA1,
+      @Nullable @Element(name = "ChecksumSHA256", required = false) String checksumSHA256,
+      @Nullable @Element(name = "ChecksumType", required = false) String checksumType) {
+    this.checksumCRC32 = checksumCRC32;
+    this.checksumCRC32C = checksumCRC32C;
+    this.checksumCRC64NVME = checksumCRC64NVME;
+    this.checksumSHA1 = checksumSHA1;
+    this.checksumSHA256 = checksumSHA256;
+    this.checksumType = checksumType;
+  }
+
+  public Checksum(Checksum checksum) {
+    this.checksumCRC32 = checksum.checksumCRC32;
+    this.checksumCRC32C = checksum.checksumCRC32C;
+    this.checksumCRC64NVME = checksum.checksumCRC64NVME;
+    this.checksumSHA1 = checksum.checksumSHA1;
+    this.checksumSHA256 = checksum.checksumSHA256;
+    this.checksumType = checksum.checksumType;
+  }
 
   public String checksumCRC32() {
     return checksumCRC32;
@@ -69,20 +93,36 @@ public class Checksum {
     return checksumType;
   }
 
-  private void addHeader(Multimap<String, String> map, String algorithm, String value) {
-    if (value != null || !value.isEmpty()) {
-      map.put("x-amz-checksum-algorithm", algorithm);
-      map.put("x-amz-checksum-algorithm-" + algorithm.toLowerCase(Locale.US), value);
-    }
+  private void addHeader(Http.Headers headers, String algorithm, String value) {
+    if (value == null || value.isEmpty()) return;
+    headers.put("x-amz-checksum-algorithm-" + algorithm, value);
+    headers.put("x-amz-checksum-algorithm", algorithm);
   }
 
-  public Multimap<String, String> headers() {
-    Multimap<String, String> map = HashMultimap.create();
-    addHeader(map, "CRC32", checksumCRC32);
-    addHeader(map, "CRC32C", checksumCRC32C);
-    addHeader(map, "CRC64NVME", checksumCRC64NVME);
-    addHeader(map, "SHA1", checksumSHA1);
-    addHeader(map, "SHA256", checksumSHA256);
-    return map;
+  public Http.Headers headers() {
+    Http.Headers headers = new Http.Headers();
+    addHeader(headers, "crc32", checksumCRC32);
+    addHeader(headers, "crc32c", checksumCRC32C);
+    addHeader(headers, "crc64nvme", checksumCRC64NVME);
+    addHeader(headers, "sha1", checksumSHA1);
+    addHeader(headers, "sha256", checksumSHA256);
+    return headers;
+  }
+
+  protected String stringify() {
+    return String.format(
+        "checksumCRC32=%s, checksumCRC32C=%s, checksumCRC64NVME=%s, checksumSHA1=%s,"
+            + " checksumSHA256=%s, checksumType=%s",
+        Utils.stringify(checksumCRC32),
+        Utils.stringify(checksumCRC32C),
+        Utils.stringify(checksumCRC64NVME),
+        Utils.stringify(checksumSHA1),
+        Utils.stringify(checksumSHA256),
+        Utils.stringify(checksumType));
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Checksum{%s}", stringify());
   }
 }

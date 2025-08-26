@@ -55,14 +55,18 @@ public class ClientGrantsProvider extends WebIdentityClientGrantsProvider {
   }
 
   @Override
-  protected Class<? extends AssumeRoleBaseProvider.Response> getResponseClass() {
-    return ClientGrantsResponse.class;
+  protected Class<? extends BaseIdentityProvider.Response> getResponseClass() {
+    return Response.class;
   }
 
-  /** Object representation of response XML of AssumeRoleWithClientGrants API. */
+  /**
+   * Response XML of <a
+   * href="https://github.com/minio/minio/blob/master/docs/sts/client-grants.md">AssumeRoleWithClientGrants
+   * API</a>.
+   */
   @Root(name = "AssumeRoleWithClientGrantsResponse", strict = false)
   @Namespace(reference = "https://sts.amazonaws.com/doc/2011-06-15/")
-  public static class ClientGrantsResponse implements AssumeRoleBaseProvider.Response {
+  public static class Response implements BaseIdentityProvider.Response {
     @Path(value = "AssumeRoleWithClientGrantsResult")
     @Element(name = "Credentials")
     private Credentials credentials;

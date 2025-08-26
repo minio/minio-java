@@ -16,12 +16,15 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import java.io.Serializable;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
-/** Object representation of error response XML of any S3 REST APIs. */
+/** Error response XML of any S3 REST APIs. */
 @Root(name = "ErrorResponse", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 public class ErrorResponse implements Serializable {
@@ -48,20 +51,20 @@ public class ErrorResponse implements Serializable {
   @Element(name = "HostId", required = false)
   protected String hostId;
 
-  public ErrorResponse() {}
+  protected ErrorResponse() {}
 
   /**
    * Constructs a new ErrorResponse object with error code, bucket name, object name, resource,
    * request ID and host ID.
    */
   public ErrorResponse(
-      String code,
-      String message,
-      String bucketName,
-      String objectName,
-      String resource,
-      String requestId,
-      String hostId) {
+      @Nonnull @Element(name = "Code") String code,
+      @Nullable @Element(name = "Message", required = false) String message,
+      @Nullable @Element(name = "BucketName", required = false) String bucketName,
+      @Nullable @Element(name = "Key", required = false) String objectName,
+      @Nullable @Element(name = "Resource", required = false) String resource,
+      @Nullable @Element(name = "RequestId", required = false) String requestId,
+      @Nullable @Element(name = "HostId", required = false) String hostId) {
     this.code = code;
     this.message = message;
     this.bucketName = bucketName;
@@ -106,28 +109,21 @@ public class ErrorResponse implements Serializable {
     return resource;
   }
 
-  /** Returns string representation of this object. */
+  protected String stringify() {
+    return String.format(
+        "code=%s, message=%s, bucketName=%s, objectName=%s, resource=%s,"
+            + " requestId=%s, hostId=%s",
+        Utils.stringify(code),
+        Utils.stringify(message),
+        Utils.stringify(bucketName),
+        Utils.stringify(objectName),
+        Utils.stringify(resource),
+        Utils.stringify(requestId),
+        Utils.stringify(hostId));
+  }
+
+  @Override
   public String toString() {
-    return "ErrorResponse(code = "
-        + code
-        + ", "
-        + "message = "
-        + message
-        + ", "
-        + "bucketName = "
-        + bucketName
-        + ", "
-        + "objectName = "
-        + objectName
-        + ", "
-        + "resource = "
-        + resource
-        + ", "
-        + "requestId = "
-        + requestId
-        + ", "
-        + "hostId = "
-        + hostId
-        + ")";
+    return String.format("ErrorResponse{%s}", stringify());
   }
 }

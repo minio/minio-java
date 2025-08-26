@@ -19,8 +19,6 @@ package io.minio;
 
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
-import io.minio.http.Method;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -38,7 +36,7 @@ public class MinioClientTest {
   private static final String CONTENT_TYPE = "Content-Type";
   private static final String CONTENT_LENGTH = "Content-Length";
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testEndpoint1() throws MinioException {
     MinioClient.builder().endpoint((String) null).build();
     Assert.fail("exception should be thrown");
@@ -103,7 +101,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -118,7 +116,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -129,7 +127,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -144,7 +142,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -156,7 +154,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -169,7 +167,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -185,7 +183,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -197,7 +195,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -213,7 +211,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -226,7 +224,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -243,7 +241,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -258,7 +256,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -273,7 +271,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -289,7 +287,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -306,7 +304,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -322,7 +320,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -338,7 +336,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -355,7 +353,7 @@ public class MinioClientTest {
     url =
         client.getPresignedObjectUrl(
             GetPresignedObjectUrlArgs.builder()
-                .method(Method.GET)
+                .method(Http.Method.GET)
                 .bucket("mybucket")
                 .object("myobject")
                 .build());
@@ -382,7 +380,7 @@ public class MinioClientTest {
     Assert.assertTrue(httpClient.dispatcher().executorService().isShutdown());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testBucketName1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     StatObjectArgs.builder().bucket(null);
@@ -432,7 +430,7 @@ public class MinioClientTest {
     Assert.fail("exception should be thrown");
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = NullPointerException.class)
   public void testObjectName1()
       throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
     StatObjectArgs.builder().object(null);
@@ -470,7 +468,7 @@ public class MinioClientTest {
         StatObjectArgs.builder()
             .bucket("mybucket")
             .object("myobject")
-            .ssec(new ServerSideEncryptionCustomerKey(keyGen.generateKey()))
+            .ssec(new ServerSideEncryption.CustomerKey(keyGen.generateKey()))
             .build());
     Assert.fail("exception should be thrown");
   }
@@ -482,9 +480,11 @@ public class MinioClientTest {
     KeyGenerator keyGen = KeyGenerator.getInstance("AES");
     keyGen.init(256);
     client.putObject(
-        PutObjectArgs.builder().bucket("mybucket").object("myobject").stream(
-                new ByteArrayInputStream(new byte[] {}), 0, -1)
-            .sse(new ServerSideEncryptionCustomerKey(keyGen.generateKey()))
+        PutObjectArgs.builder()
+            .bucket("mybucket")
+            .object("myobject")
+            .data(new byte[0], 0)
+            .sse(new ServerSideEncryption.CustomerKey(keyGen.generateKey()))
             .build());
     Assert.fail("exception should be thrown");
   }
@@ -496,9 +496,11 @@ public class MinioClientTest {
     Map<String, String> myContext = new HashMap<>();
     myContext.put("key1", "value1");
     client.putObject(
-        PutObjectArgs.builder().bucket("mybucket").object("myobject").stream(
-                new ByteArrayInputStream(new byte[] {}), 0, -1)
-            .sse(new ServerSideEncryptionKms("keyId", myContext))
+        PutObjectArgs.builder()
+            .bucket("mybucket")
+            .object("myobject")
+            .data(new byte[0], 0)
+            .sse(new ServerSideEncryption.KMS("keyId", myContext))
             .build());
     Assert.fail("exception should be thrown");
   }

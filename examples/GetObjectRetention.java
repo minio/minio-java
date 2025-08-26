@@ -18,41 +18,30 @@ import io.minio.GetObjectRetentionArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import io.minio.messages.Retention;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class GetObjectRetention {
   /** MinioClient.getObjectRetention() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, IllegalArgumentException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Get object lock retention
-      Retention retention =
-          minioClient.getObjectRetention(
-              GetObjectRetentionArgs.builder()
-                  .bucket("my-bucketname")
-                  .object("my-objectname")
-                  .build());
+    // Get object lock retention
+    Retention retention =
+        minioClient.getObjectRetention(
+            GetObjectRetentionArgs.builder().bucket("my-bucket").object("my-object").build());
 
-      System.out.println("Mode: " + retention.mode());
-      System.out.println("Retainuntil Date: " + retention.retainUntilDate());
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    System.out.println("Mode: " + retention.mode());
+    System.out.println("Retain until date: " + retention.retainUntilDate());
   }
 }

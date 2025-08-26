@@ -16,13 +16,14 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- * Helper class to denote owner information for {@link ListAllMyBucketsResult}, {@link
- * ListBucketResultV1}, {@link ListBucketResultV2}, {@link ListVersionsResult}, {@link
- * ListMultipartUploadsResult} and {@link ListPartsResult}.
+ * Owner information for {@link ListAllMyBucketsResult}, {@link ListBucketResultV1}, {@link
+ * ListBucketResultV2}, {@link ListVersionsResult}, {@link ListMultipartUploadsResult} and {@link
+ * ListPartsResult}.
  */
 @Root(name = "Owner", strict = false)
 public class Owner {
@@ -42,5 +43,11 @@ public class Owner {
   /** Returns owner display name. */
   public String displayName() {
     return displayName;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "Owner{id=%s, displayName=%s}", Utils.stringify(id), Utils.stringify(displayName));
   }
 }

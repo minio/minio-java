@@ -17,9 +17,10 @@
 package io.minio;
 
 import io.minio.messages.CopyPartResult;
+import io.minio.messages.Part;
 import okhttp3.Headers;
 
-/** Response class of {@link S3Base#uploadPartCopyAsync}. */
+/** Response of {@link BaseS3Client#uploadPartCopy}. */
 public class UploadPartCopyResponse extends GenericResponse {
   private String uploadId;
   private int partNumber;
@@ -49,5 +50,9 @@ public class UploadPartCopyResponse extends GenericResponse {
 
   public CopyPartResult result() {
     return result;
+  }
+
+  public Part part() {
+    return new Part(result, partNumber);
   }
 }

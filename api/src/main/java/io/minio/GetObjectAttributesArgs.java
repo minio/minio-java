@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#getObjectAttributes} and {@link
+ * Arguments of {@link MinioAsyncClient#getObjectAttributes} and {@link
  * MinioClient#getObjectAttributes}.
  */
 public class GetObjectAttributesArgs extends ObjectReadArgs {
@@ -45,13 +45,13 @@ public class GetObjectAttributesArgs extends ObjectReadArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetObjectAttributesArgs}. */
+  /** Builder of {@link GetObjectAttributesArgs}. */
   public static final class Builder
       extends ObjectReadArgs.Builder<Builder, GetObjectAttributesArgs> {
     @Override
     protected void validate(GetObjectAttributesArgs args) {
       super.validate(args);
-      validateNotNull(args.objectAttributes, "object attributes");
+      Utils.validateNotNull(args.objectAttributes, "object attributes");
     }
 
     public Builder objectAttributes(String[] objectAttributes) {

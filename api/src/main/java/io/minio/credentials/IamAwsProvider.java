@@ -21,7 +21,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import io.minio.messages.ResponseDate;
+import io.minio.Http;
+import io.minio.Time;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -200,9 +201,7 @@ public class IamAwsProvider extends EnvironmentProvider {
 
   @Override
   public synchronized Credentials fetch() {
-    if (credentials != null && !credentials.isExpired()) {
-      return credentials;
-    }
+    if (credentials != null && !credentials.isExpired()) return credentials;
 
     HttpUrl url = this.customEndpoint;
     String tokenFile = getProperty("AWS_WEB_IDENTITY_TOKEN_FILE");
@@ -211,7 +210,7 @@ public class IamAwsProvider extends EnvironmentProvider {
       return credentials;
     }
 
-    String tokenHeader = "Authorization";
+    String tokenHeader = Http.Headers.AUTHORIZATION;
     String token = getProperty("AWS_CONTAINER_AUTHORIZATION_TOKEN");
     if (getProperty("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") != null) {
       if (url == null) {
@@ -223,9 +222,7 @@ public class IamAwsProvider extends EnvironmentProvider {
                 .build();
       }
     } else if (getProperty("AWS_CONTAINER_CREDENTIALS_FULL_URI") != null) {
-      if (url == null) {
-        url = HttpUrl.parse(getProperty("AWS_CONTAINER_CREDENTIALS_FULL_URI"));
-      }
+      if (url == null) url = HttpUrl.parse(getProperty("AWS_CONTAINER_CREDENTIALS_FULL_URI"));
       checkLoopbackHost(url);
     } else {
       token = fetchImdsToken();
@@ -237,6 +234,7 @@ public class IamAwsProvider extends EnvironmentProvider {
     return credentials;
   }
 
+  /** ECS Credentials of {@link IamAwsProvider}. */
   public static class EcsCredentials {
     @JsonProperty("AccessKeyID")
     private String accessKey;
@@ -248,7 +246,7 @@ public class IamAwsProvider extends EnvironmentProvider {
     private String sessionToken;
 
     @JsonProperty("Expiration")
-    private ResponseDate expiration;
+    private Time.S3Time expiration;
 
     @JsonProperty("Code")
     private String code;

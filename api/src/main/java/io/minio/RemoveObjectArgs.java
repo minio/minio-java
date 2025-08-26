@@ -18,7 +18,7 @@ package io.minio;
 
 import java.util.Objects;
 
-/** Argument class of {@link MinioAsyncClient#removeObject} and {@link MinioClient#removeObject}. */
+/** Arguments of {@link MinioAsyncClient#removeObject} and {@link MinioClient#removeObject}. */
 public class RemoveObjectArgs extends ObjectVersionArgs {
   private boolean bypassGovernanceMode;
 
@@ -30,7 +30,7 @@ public class RemoveObjectArgs extends ObjectVersionArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link RemoveObjectArgs}. */
+  /** Builder of {@link RemoveObjectArgs}. */
   public static final class Builder extends ObjectVersionArgs.Builder<Builder, RemoveObjectArgs> {
     public Builder bypassGovernanceMode(boolean flag) {
       operations.add(args -> args.bypassGovernanceMode = flag);

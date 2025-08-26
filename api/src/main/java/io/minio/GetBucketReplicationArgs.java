@@ -17,7 +17,7 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#getBucketReplication} and {@link
+ * Arguments of {@link MinioAsyncClient#getBucketReplication} and {@link
  * MinioClient#getBucketReplication}.
  */
 public class GetBucketReplicationArgs extends BucketArgs {
@@ -25,6 +25,6 @@ public class GetBucketReplicationArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetBucketReplicationArgs}. */
+  /** Builder of {@link GetBucketReplicationArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, GetBucketReplicationArgs> {}
 }

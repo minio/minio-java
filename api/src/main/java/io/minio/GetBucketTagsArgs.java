@@ -16,14 +16,12 @@
 
 package io.minio;
 
-/**
- * Argument class of {@link MinioAsyncClient#getBucketTags} and {@link MinioClient#getBucketTags}.
- */
+/** Arguments of {@link MinioAsyncClient#getBucketTags} and {@link MinioClient#getBucketTags}. */
 public class GetBucketTagsArgs extends BucketArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetBucketTagsArgs}. */
+  /** Builder of {@link GetBucketTagsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, GetBucketTagsArgs> {}
 }
