@@ -88,6 +88,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -1204,7 +1205,7 @@ public abstract class S3Base implements AutoCloseable {
     long[] objectSize = {0};
     int index = 0;
 
-    CompletableFuture<Integer> completableFuture = CompletableFuture.supplyAsync(() -> 0);
+    CompletableFuture<Integer> completableFuture = supplyAsync(() -> 0);
     for (ComposeSource src : sources) {
       index++;
       final int i = index;
@@ -1280,6 +1281,10 @@ public abstract class S3Base implements AutoCloseable {
     }
 
     return completableFuture;
+  }
+
+  protected <T> CompletableFuture<T> supplyAsync(Supplier<T> supplier) {
+    return CompletableFuture.supplyAsync(supplier);
   }
 
   /** Calculate part count of given compose sources. */
@@ -2887,7 +2892,7 @@ public abstract class S3Base implements AutoCloseable {
       PartSource firstPartSource)
       throws InsufficientDataException, InternalException, InvalidKeyException, IOException,
           NoSuchAlgorithmException, XmlParserException {
-    return CompletableFuture.supplyAsync(
+    return supplyAsync(
         () -> {
           String uploadId = null;
           ObjectWriteResponse response = null;
@@ -2986,7 +2991,7 @@ public abstract class S3Base implements AutoCloseable {
     headers.putAll(args.genHeaders());
     if (!headers.containsKey("Content-Type")) headers.put("Content-Type", contentType);
 
-    return CompletableFuture.supplyAsync(
+    return supplyAsync(
             () -> {
               try {
                 return partReader.getPart();
