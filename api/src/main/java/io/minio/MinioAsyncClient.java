@@ -3872,7 +3872,7 @@ public class MinioAsyncClient extends S3Base {
           provider,
           httpClient,
           closeHttpClient,
-          executorService());
+          executorService);
     }
   }
 }
