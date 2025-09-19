@@ -21,7 +21,7 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'com.github.spotbugs' version '6.1.13'
-    id 'org.jreleaser' version '1.19.0'
+    id 'org.jreleaser' version '1.20.0'
     id 'com.diffplug.spotless' version '6.13.0'
 }
 
@@ -437,63 +437,71 @@ jreleaser {
     }
 
     deploy {
-	maven {
-	    nexus2 {
-		'maven-central' {
-		    stagingProfileId = '9b746c9f8abc1'
-		    active = 'ALWAYS'
-		    url = 'https://oss.sonatype.org/service/local'
-		    snapshotUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-		    closeRepository = true
-		    releaseRepository = true
-		    stagingRepository('api/build/pre-deploy')
-		}
-	    }
-	}
-	maven {
-	    nexus2 {
-		'maven-central' {
-		    stagingProfileId = '9b746c9f8abc1'
-		    active = 'ALWAYS'
-		    url = 'https://oss.sonatype.org/service/local'
-		    snapshotUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-		    closeRepository = true
-		    releaseRepository = true
-		    stagingRepository('adminapi/build/pre-deploy')
-		}
-	    }
-	}
-	// For newly created repositories
-        // maven {
-        //     mavenCentral {
-        //         sonatype {
-	// 	    applyMavenCentralRules = true
-        //             active = 'ALWAYS'
-        //             url = 'https://central.sonatype.com/api/v1/publisher'
-        //             username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
-        //             password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
-        //             stagingRepository('api/build/pre-deploy')
-        //         }
-        //     }
-        // }
-	// 
-        // maven {
-        //     mavenCentral {
-        //         sonatype {
-	// 	    applyMavenCentralRules = true
-        //             active = 'ALWAYS'
-        //             url = 'https://central.sonatype.com/api/v1/publisher'
-        //             username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
-        //             password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
-        //             stagingRepository('adminapi/build/pre-deploy')
-        //         }
-        //     }
-        // }
+        maven {
+             mavenCentral {
+                 sonatype {
+                     applyMavenCentralRules = true
+                     active = 'ALWAYS'
+                     url = 'https://central.sonatype.com/api/v1/publisher'
+                     username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
+                     password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
+                     stagingRepository('api/build/pre-deploy')
+                 }
+             }
+            /* Legacy OSSRH
+            nexus2 {
+                'maven-central' {
+                    stagingProfileId = '9b746c9f8abc1'
+                    active = 'ALWAYS'
+                    // Use url
+                    // 'https://s01.oss.sonatype.org/service/local'
+                    // for error 'Could not find a staging profile matching …​'.
+                    // Refer https://jreleaser.org/guide/latest/examples/maven/maven-central.html#_ossrh
+                    url = project.findProperty("sonatypeUrl") ?: 'https://oss.sonatype.org/service/local'
+                    snapshotUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+                    closeRepository = true
+                    releaseRepository = project.findProperty("releaseRepository")?.toBoolean() ?: false
+                    stagingRepository('api/build/pre-deploy')
+                }
+            }
+            */
+        }
+        maven {
+             mavenCentral {
+                 sonatype {
+                     applyMavenCentralRules = true
+                     active = 'ALWAYS'
+                     url = 'https://central.sonatype.com/api/v1/publisher'
+                     username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
+                     password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
+                     stagingRepository('adminapi/build/pre-deploy')
+                 }
+             }
+            /* Legacy OSSRH
+            nexus2 {
+                'maven-central' {
+                    stagingProfileId = '9b746c9f8abc1'
+                    active = 'ALWAYS'
+                    // Use url
+                    // 'https://s01.oss.sonatype.org/service/local'
+                    // for error 'Could not find a staging profile matching …​'.
+                    // Refer https://jreleaser.org/guide/latest/examples/maven/maven-central.html#_ossrh
+                    url = project.findProperty("sonatypeUrl") ?: 'https://oss.sonatype.org/service/local'
+                    snapshotUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+                    closeRepository = true
+                    releaseRepository = project.findProperty("releaseRepository")?.toBoolean() ?: false
+                    stagingRepository('adminapi/build/pre-deploy')
+                }
+            }
+            */
+        }
     }
 
     release {
         github {
-            enabled = false
+            skipRelease = true
+            skipTag = true
+            token = 'placeholder-token'
         }
     }
 }
