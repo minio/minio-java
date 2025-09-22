@@ -24,17 +24,26 @@ import java.io.StringWriter;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.convert.AnnotationStrategy;
 import org.simpleframework.xml.core.Persister;
+import org.simpleframework.xml.filter.Filter;
 import org.simpleframework.xml.stream.Format;
 
 /** XML marshaller and unmarshaller. */
 public class Xml {
+  private static final Filter noopFilter =
+      new Filter() {
+        @Override
+        public String replace(String name) {
+          return null;
+        }
+      };
+
   /**
    * This marshal method will traverse the provided object checking for field annotations in order
    * to compose the XML data.
    */
   public static String marshal(Object source) throws XmlParserException {
     try {
-      Serializer serializer = new Persister(new AnnotationStrategy(), new Format(0));
+      Serializer serializer = new Persister(new AnnotationStrategy(), noopFilter, new Format(0));
       StringWriter writer = new StringWriter();
       serializer.write(source, writer);
       return writer.toString();
@@ -49,7 +58,7 @@ public class Xml {
    */
   public static <T> T unmarshal(Class<? extends T> type, Reader source) throws XmlParserException {
     try {
-      Serializer serializer = new Persister(new AnnotationStrategy());
+      Serializer serializer = new Persister(new AnnotationStrategy(), noopFilter);
       return serializer.read(type, source);
     } catch (Exception e) {
       throw new XmlParserException(e);
@@ -62,7 +71,7 @@ public class Xml {
    */
   public static <T> T unmarshal(Class<? extends T> type, String source) throws XmlParserException {
     try {
-      Serializer serializer = new Persister(new AnnotationStrategy());
+      Serializer serializer = new Persister(new AnnotationStrategy(), noopFilter);
       return serializer.read(type, new StringReader(source));
     } catch (Exception e) {
       throw new XmlParserException(e);
@@ -75,7 +84,7 @@ public class Xml {
    */
   public static boolean validate(Class type, String source) throws XmlParserException {
     try {
-      Serializer serializer = new Persister(new AnnotationStrategy());
+      Serializer serializer = new Persister(new AnnotationStrategy(), noopFilter);
       return serializer.validate(type, source);
     } catch (Exception e) {
       throw new XmlParserException(e);
