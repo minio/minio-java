@@ -88,6 +88,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -183,8 +184,7 @@ public abstract class S3Base implements AutoCloseable {
             Provider provider,
             OkHttpClient httpClient,
             boolean closeHttpClient) {
-        this(baseUrl, awsS3Prefix, awsDomainSuffix, awsDualstack, useVirtualStyle, region, provider, httpClient, closeHttpClient);
-        this.executorService = ForkJoinPool.commonPool();
+        this(baseUrl, awsS3Prefix, awsDomainSuffix, awsDualstack, useVirtualStyle, region, provider, httpClient, closeHttpClient, ForkJoinPool.commonPool());
     }
 
   protected S3Base(
@@ -237,6 +237,7 @@ public abstract class S3Base implements AutoCloseable {
     this.provider = provider;
     this.httpClient = httpClient;
     this.closeHttpClient = false;
+    this.executorService = ForkJoinPool.commonPool();
   }
 
   protected S3Base(S3Base client) {

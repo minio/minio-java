@@ -3637,7 +3637,7 @@ public class MinioAsyncClient extends S3Base {
                   | XmlParserException e) {
                 throw new CompletionException(e);
               }
-            })
+            }, executorService)
         .thenCompose(
             body -> {
               try {
@@ -3872,7 +3872,7 @@ public class MinioAsyncClient extends S3Base {
           provider,
           httpClient,
           closeHttpClient,
-          executorService());
+          executorService);
     }
   }
 }
