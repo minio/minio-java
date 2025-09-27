@@ -20,7 +20,7 @@ import io.minio.messages.ObjectLockConfiguration;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setObjectLockConfiguration} and {@link
+ * Arguments of {@link MinioAsyncClient#setObjectLockConfiguration} and {@link
  * MinioClient#setObjectLockConfiguration}.
  */
 public class SetObjectLockConfigurationArgs extends BucketArgs {
@@ -34,11 +34,11 @@ public class SetObjectLockConfigurationArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetObjectLockConfigurationArgs}. */
+  /** Builder of {@link SetObjectLockConfigurationArgs}. */
   public static final class Builder
       extends BucketArgs.Builder<Builder, SetObjectLockConfigurationArgs> {
     private void validateConfig(ObjectLockConfiguration config) {
-      validateNotNull(config, "object-lock configuration");
+      Utils.validateNotNull(config, "object-lock configuration");
     }
 
     @Override

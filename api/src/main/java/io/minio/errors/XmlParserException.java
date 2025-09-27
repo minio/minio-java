@@ -21,6 +21,6 @@ public class XmlParserException extends MinioException {
   private static final long serialVersionUID = -3877568719271880309L;
 
   public XmlParserException(Exception e) {
-    super(e.toString());
+    super(e);
   }
 }

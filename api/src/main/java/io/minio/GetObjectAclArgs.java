@@ -16,12 +16,12 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioAsyncClient#getObjectAcl} and {@link MinioClient#getObjectAcl}. */
+/** Arguments of {@link MinioAsyncClient#getObjectAcl} and {@link MinioClient#getObjectAcl}. */
 public class GetObjectAclArgs extends ObjectVersionArgs {
   public static Builder builder() {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetObjectAclArgs}. */
+  /** Builder of {@link GetObjectAclArgs}. */
   public static final class Builder extends ObjectVersionArgs.Builder<Builder, GetObjectAclArgs> {}
 }

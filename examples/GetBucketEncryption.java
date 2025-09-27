@@ -19,42 +19,34 @@ import io.minio.MinioClient;
 import io.minio.errors.MinioException;
 import io.minio.messages.SseAlgorithm;
 import io.minio.messages.SseConfiguration;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class GetBucketEncryption {
   /** MinioClient.getBucketEncryption() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      SseConfiguration config =
-          minioClient.getBucketEncryption(
-              GetBucketEncryptionArgs.builder().bucket("my-bucketname").build());
-      if (config.rule() != null) {
-        System.out.println("Rule SSE algorithm: " + config.rule().sseAlgorithm());
-        if (config.rule().sseAlgorithm() == SseAlgorithm.AWS_KMS) {
-          System.out.println("Rule KMS master key ID: " + config.rule().kmsMasterKeyId());
-        }
-      } else {
-        System.out.println("No rule is set in SSE configuration.");
+    SseConfiguration config =
+        minioClient.getBucketEncryption(
+            GetBucketEncryptionArgs.builder().bucket("my-bucket").build());
+    if (config.rule() != null) {
+      System.out.println("Rule SSE algorithm: " + config.rule().sseAlgorithm());
+      if (config.rule().sseAlgorithm() == SseAlgorithm.AWS_KMS) {
+        System.out.println("Rule KMS master key ID: " + config.rule().kmsMasterKeyId());
       }
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
+    } else {
+      System.out.println("No rule is set in SSE configuration.");
     }
   }
 }

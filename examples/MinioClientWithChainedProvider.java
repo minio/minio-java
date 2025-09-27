@@ -21,9 +21,10 @@ import io.minio.credentials.AwsEnvironmentProvider;
 import io.minio.credentials.ChainedProvider;
 import io.minio.credentials.MinioEnvironmentProvider;
 import io.minio.credentials.Provider;
+import io.minio.errors.MinioException;
 
 public class MinioClientWithChainedProvider {
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws MinioException {
     Provider provider =
         new ChainedProvider(new AwsEnvironmentProvider(), new MinioEnvironmentProvider());
 
@@ -36,7 +37,7 @@ public class MinioClientWithChainedProvider {
     // Get information of an object.
     StatObjectResponse stat =
         minioClient.statObject(
-            StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+            StatObjectArgs.builder().bucket("my-bucket").object("my-object").build());
     System.out.println(stat);
   }
 }

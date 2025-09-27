@@ -22,7 +22,7 @@ import io.minio.messages.OutputSerialization;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#selectObjectContent} and {@link
+ * Arguments of {@link MinioAsyncClient#selectObjectContent} and {@link
  * MinioClient#selectObjectContent}.
  */
 public class SelectObjectContentArgs extends ObjectReadArgs {
@@ -61,11 +61,11 @@ public class SelectObjectContentArgs extends ObjectReadArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SelectObjectContentArgs}. */
+  /** Builder of {@link SelectObjectContentArgs}. */
   public static final class Builder
       extends ObjectReadArgs.Builder<Builder, SelectObjectContentArgs> {
     private void validateSqlExpression(String se) {
-      validateNotEmptyString(se, "sqlExpression");
+      Utils.validateNotEmptyString(se, "sqlExpression");
     }
 
     public Builder sqlExpression(String sqlExpression) {
@@ -75,7 +75,7 @@ public class SelectObjectContentArgs extends ObjectReadArgs {
     }
 
     private void validateInputSerialization(InputSerialization is) {
-      validateNotNull(is, "inputSerialization");
+      Utils.validateNotNull(is, "inputSerialization");
     }
 
     public Builder inputSerialization(InputSerialization inputSerialization) {
@@ -85,7 +85,7 @@ public class SelectObjectContentArgs extends ObjectReadArgs {
     }
 
     private void validateOutputSerialization(OutputSerialization os) {
-      validateNotNull(os, "outputSerialization");
+      Utils.validateNotNull(os, "outputSerialization");
     }
 
     public Builder outputSerialization(OutputSerialization outputSerialization) {

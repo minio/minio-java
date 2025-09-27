@@ -16,9 +16,6 @@
 
 package io.minio;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -26,29 +23,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-import okhttp3.HttpUrl;
 
-/** Base argument class. */
+/**
+ * Common arguments of {@link BucketArgs}, {@link ListBucketsArgs} and {@link PutObjectFanOutEntry}.
+ */
 public abstract class BaseArgs {
-  protected Multimap<String, String> extraHeaders =
-      Multimaps.unmodifiableMultimap(HashMultimap.create());
-  protected Multimap<String, String> extraQueryParams =
-      Multimaps.unmodifiableMultimap(HashMultimap.create());
+  protected String location;
+  protected Http.Headers extraHeaders;
+  protected Http.QueryParameters extraQueryParams;
 
-  public Multimap<String, String> extraHeaders() {
+  protected BaseArgs() {}
+
+  protected BaseArgs(BaseArgs args) {
+    this.location = args.location;
+    this.extraHeaders = args.extraHeaders;
+    this.extraQueryParams = args.extraQueryParams;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
+
+  public String location() {
+    return location;
+  }
+
+  public Http.Headers extraHeaders() {
     return extraHeaders;
   }
 
-  public Multimap<String, String> extraQueryParams() {
+  public Http.QueryParameters extraQueryParams() {
     return extraQueryParams;
   }
 
-  protected void checkSse(ServerSideEncryption sse, HttpUrl url) {
-    if (sse == null) {
-      return;
-    }
-
-    if (sse.tlsRequired() && !url.isHttps()) {
+  protected void checkSse(ServerSideEncryption sse, boolean isHttps) {
+    if (sse == null) return;
+    if (sse.tlsRequired() && !isHttps) {
       throw new IllegalArgumentException(
           sse + " operations must be performed over a secure connection.");
     }
@@ -60,77 +70,32 @@ public abstract class BaseArgs {
 
     protected abstract void validate(A args);
 
-    protected void validateNotNull(Object arg, String argName) {
-      if (arg == null) {
-        throw new IllegalArgumentException(argName + " must not be null.");
-      }
-    }
-
-    protected void validateNotEmptyString(String arg, String argName) {
-      validateNotNull(arg, argName);
-      if (arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    protected void validateNullOrNotEmptyString(String arg, String argName) {
-      if (arg != null && arg.isEmpty()) {
-        throw new IllegalArgumentException(argName + " must be a non-empty string.");
-      }
-    }
-
-    protected void validateNullOrPositive(Number arg, String argName) {
-      if (arg != null && arg.longValue() < 0) {
-        throw new IllegalArgumentException(argName + " cannot be non-negative.");
-      }
-    }
-
     public Builder() {
       this.operations = new ArrayList<>();
     }
 
-    protected Multimap<String, String> copyMultimap(Multimap<String, String> multimap) {
-      Multimap<String, String> multimapCopy = HashMultimap.create();
-      if (multimap != null) {
-        multimapCopy.putAll(multimap);
-      }
-      return Multimaps.unmodifiableMultimap(multimapCopy);
-    }
-
-    protected Multimap<String, String> toMultimap(Map<String, String> map) {
-      Multimap<String, String> multimap = HashMultimap.create();
-      if (map != null) {
-        multimap.putAll(Multimaps.forMap(map));
-      }
-      return Multimaps.unmodifiableMultimap(multimap);
-    }
-
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
-    public B extraHeaders(Multimap<String, String> headers) {
-      final Multimap<String, String> extraHeaders = copyMultimap(headers);
+    public B extraHeaders(Http.Headers headers) {
+      final Http.Headers extraHeaders = new Http.Headers(headers);
       operations.add(args -> args.extraHeaders = extraHeaders);
       return (B) this;
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
-    public B extraQueryParams(Multimap<String, String> queryParams) {
-      final Multimap<String, String> extraQueryParams = copyMultimap(queryParams);
+    public B extraQueryParams(Http.QueryParameters queryParams) {
+      final Http.QueryParameters extraQueryParams = new Http.QueryParameters(queryParams);
       operations.add(args -> args.extraQueryParams = extraQueryParams);
       return (B) this;
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B extraHeaders(Map<String, String> headers) {
-      final Multimap<String, String> extraHeaders = toMultimap(headers);
-      operations.add(args -> args.extraHeaders = extraHeaders);
-      return (B) this;
+      return extraHeaders(new Http.Headers(headers));
     }
 
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B extends this class.
     public B extraQueryParams(Map<String, String> queryParams) {
-      final Multimap<String, String> extraQueryParams = toMultimap(queryParams);
-      operations.add(args -> args.extraQueryParams = extraQueryParams);
-      return (B) this;
+      return extraQueryParams(new Http.QueryParameters(queryParams));
     }
 
     @SuppressWarnings("unchecked") // safe as B will always be the builder of the current args class
@@ -155,7 +120,7 @@ public abstract class BaseArgs {
     }
 
     /** Creates derived Args class with each attribute populated. */
-    public A build() throws IllegalArgumentException {
+    public A build() {
       A args = newInstance();
       operations.forEach(operation -> operation.accept(args));
       validate(args);

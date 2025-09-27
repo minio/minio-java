@@ -19,9 +19,10 @@ import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
 import io.minio.credentials.LdapIdentityProvider;
 import io.minio.credentials.Provider;
+import io.minio.errors.MinioException;
 
 public class MinioClientWithLdapIdentityProvider {
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws MinioException {
     // STS endpoint usually point to MinIO server.
     String stsEndpoint = "http://STS-HOST:STS-PORT/";
 
@@ -42,7 +43,7 @@ public class MinioClientWithLdapIdentityProvider {
     // Get information of an object.
     StatObjectResponse stat =
         minioClient.statObject(
-            StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+            StatObjectArgs.builder().bucket("my-bucket").object("my-object").build());
     System.out.println(stat);
   }
 }

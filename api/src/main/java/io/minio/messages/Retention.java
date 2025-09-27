@@ -16,13 +16,15 @@
 
 package io.minio.messages;
 
+import io.minio.Time;
+import io.minio.Utils;
 import java.time.ZonedDateTime;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
 
 /**
- * Object representation of request XML of <a
+ * Request XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObjectRetention.html">PutObjectRetention
  * API</a> and response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObjectRetention.html">GetObjectRetention
@@ -35,22 +37,19 @@ public class Retention {
   private RetentionMode mode;
 
   @Element(name = "RetainUntilDate", required = false)
-  private ResponseDate retainUntilDate;
+  private Time.S3Time retainUntilDate;
 
   public Retention() {}
 
   /** Constructs a new Retention object with given retention until date and mode. */
   public Retention(RetentionMode mode, ZonedDateTime retainUntilDate) {
-    if (mode == null) {
-      throw new IllegalArgumentException("null mode is not allowed");
-    }
-
+    if (mode == null) throw new IllegalArgumentException("null mode is not allowed");
     if (retainUntilDate == null) {
       throw new IllegalArgumentException("null retainUntilDate is not allowed");
     }
 
     this.mode = mode;
-    this.retainUntilDate = new ResponseDate(retainUntilDate);
+    this.retainUntilDate = new Time.S3Time(retainUntilDate);
   }
 
   /** Returns mode. */
@@ -60,10 +59,13 @@ public class Retention {
 
   /** Returns retain until date. */
   public ZonedDateTime retainUntilDate() {
-    if (retainUntilDate != null) {
-      return retainUntilDate.zonedDateTime();
-    }
+    return retainUntilDate == null ? null : retainUntilDate.toZonedDateTime();
+  }
 
-    return null;
+  @Override
+  public String toString() {
+    return String.format(
+        "Retention{mode=%s, retainUntilDate=%s}",
+        Utils.stringify(mode), Utils.stringify(retainUntilDate));
   }
 }

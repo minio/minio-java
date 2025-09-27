@@ -19,51 +19,43 @@ import io.minio.SnowballObject;
 import io.minio.UploadSnowballObjectsArgs;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UploadSnowballObjects {
   /** MinioClient.uploadSnowballObjects() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Upload snowball objects.
-      List<SnowballObject> objects = new ArrayList<SnowballObject>();
-      objects.add(
-          new SnowballObject(
-              "my-object-one",
-              new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8)),
-              5,
-              null));
-      objects.add(
-          new SnowballObject(
-              "my-object-two",
-              new ByteArrayInputStream("java".getBytes(StandardCharsets.UTF_8)),
-              4,
-              null));
-      minioClient.uploadSnowballObjects(
-          UploadSnowballObjectsArgs.builder().bucket("my-bucketname").objects(objects).build());
-      System.out.println("my-object-one and my-object-two are successfully uploaded");
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    // Upload snowball objects.
+    List<SnowballObject> objects = new ArrayList<SnowballObject>();
+    objects.add(
+        new SnowballObject(
+            "my-object-one",
+            new ByteArrayInputStream("hello".getBytes(StandardCharsets.UTF_8)),
+            5,
+            null));
+    objects.add(
+        new SnowballObject(
+            "my-object-two",
+            new ByteArrayInputStream("java".getBytes(StandardCharsets.UTF_8)),
+            4,
+            null));
+    minioClient.uploadSnowballObjects(
+        UploadSnowballObjectsArgs.builder().bucket("my-bucket").objects(objects).build());
+    System.out.println("my-object-one and my-object-two are successfully uploaded");
   }
 }

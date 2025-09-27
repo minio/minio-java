@@ -17,25 +17,38 @@
 package io.minio;
 
 import java.util.Objects;
-import okhttp3.HttpUrl;
 
-/** Base argument class for reading object. */
+/**
+ * Common arguments of {@link DownloadObjectArgs}, {@link GetObjectAttributesArgs}, {@link
+ * ObjectConditionalReadArgs} and {@link SelectObjectContentArgs}.
+ */
 public abstract class ObjectReadArgs extends ObjectVersionArgs {
-  protected ServerSideEncryptionCustomerKey ssec;
+  protected ServerSideEncryption.CustomerKey ssec;
 
-  public ServerSideEncryptionCustomerKey ssec() {
+  protected ObjectReadArgs() {}
+
+  protected ObjectReadArgs(ObjectReadArgs args) {
+    super(args);
+    this.ssec = args.ssec;
+  }
+
+  protected ObjectReadArgs(AppendObjectArgs args) {
+    super(args);
+  }
+
+  public ServerSideEncryption.CustomerKey ssec() {
     return ssec;
   }
 
-  protected void validateSsec(HttpUrl url) {
-    checkSse(ssec, url);
+  protected void validateSsec(boolean isHttps) {
+    checkSse(ssec, isHttps);
   }
 
-  /** Base argument builder class for {@link ObjectReadArgs}. */
+  /** Builder of {@link ObjectReadArgs}. */
   public abstract static class Builder<B extends Builder<B, A>, A extends ObjectReadArgs>
       extends ObjectVersionArgs.Builder<B, A> {
     @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
-    public B ssec(ServerSideEncryptionCustomerKey ssec) {
+    public B ssec(ServerSideEncryption.CustomerKey ssec) {
       operations.add(args -> args.ssec = ssec);
       return (B) this;
     }

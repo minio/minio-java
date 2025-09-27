@@ -18,57 +18,48 @@ import io.minio.BucketExistsArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class MakeBucket {
   /** MinioClient.makeBucket() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Create bucket 'my-bucketname' if it doesn`t exist.
-      if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucketname").build())) {
-        minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucketname").build());
-        System.out.println("my-bucketname is created successfully");
-      }
+    // Create bucket 'my-bucket' if it does not exist.
+    if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucket").build())) {
+      minioClient.makeBucket(MakeBucketArgs.builder().bucket("my-bucket").build());
+      System.out.println("my-bucket is created successfully");
+    }
 
-      // Create bucket 'my-bucketname-in-eu' in 'eu-west-1' region if it doesn't exist.
-      if (!minioClient.bucketExists(
-          BucketExistsArgs.builder().bucket("my-bucketname-in-eu").build())) {
-        minioClient.makeBucket(
-            MakeBucketArgs.builder().bucket("my-bucketname-in-eu").region("eu-west-1").build());
-        System.out.println("my-bucketname-in-eu is created successfully");
-      }
+    // Create bucket 'my-bucket-in-eu' in 'eu-west-1' region if it does not exist.
+    if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket("my-bucket-in-eu").build())) {
+      minioClient.makeBucket(
+          MakeBucketArgs.builder().bucket("my-bucket-in-eu").region("eu-west-1").build());
+      System.out.println("my-bucket-in-eu is created successfully");
+    }
 
-      // Create bucket 'my-bucketname-in-eu-with-object-lock' in 'eu-west-1' with object lock
-      // functionality enabled.
-      if (!minioClient.bucketExists(
-          BucketExistsArgs.builder().bucket("my-bucketname-in-eu-with-object-lock").build())) {
-        minioClient.makeBucket(
-            MakeBucketArgs.builder()
-                .bucket("my-bucketname-in-eu-with-object-lock")
-                .region("eu-west-1")
-                .objectLock(true)
-                .build());
-        System.out.println("my-bucketname-in-eu-with-object-lock is created successfully");
-      }
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
+    // Create bucket 'my-bucket-in-eu-with-object-lock' in 'eu-west-1' with object lock
+    // functionality enabled.
+    if (!minioClient.bucketExists(
+        BucketExistsArgs.builder().bucket("my-bucket-in-eu-with-object-lock").build())) {
+      minioClient.makeBucket(
+          MakeBucketArgs.builder()
+              .bucket("my-bucket-in-eu-with-object-lock")
+              .region("eu-west-1")
+              .objectLock(true)
+              .build());
+      System.out.println("my-bucket-in-eu-with-object-lock is created successfully");
     }
   }
 }

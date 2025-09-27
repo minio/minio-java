@@ -24,6 +24,7 @@ import io.minio.StatObjectResponse;
 import io.minio.credentials.Jwt;
 import io.minio.credentials.Provider;
 import io.minio.credentials.WebIdentityProvider;
+import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.security.ProviderException;
 import java.util.Objects;
@@ -66,7 +67,7 @@ public class MinioClientWithWebIdentityProvider {
     }
   }
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws MinioException {
     // IDP endpoint.
     String idpEndpoint =
         "https://IDP-HOST:IDP-PORT/auth/realms/master/protocol/openid-connect/token";
@@ -108,7 +109,7 @@ public class MinioClientWithWebIdentityProvider {
     // Get information of an object.
     StatObjectResponse stat =
         minioClient.statObject(
-            StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+            StatObjectArgs.builder().bucket("my-bucket").object("my-object").build());
     System.out.println(stat);
   }
 }

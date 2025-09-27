@@ -20,7 +20,7 @@ import io.minio.messages.NotificationConfiguration;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setBucketNotification} and {@link
+ * Arguments of {@link MinioAsyncClient#setBucketNotification} and {@link
  * MinioClient#setBucketNotification}.
  */
 public class SetBucketNotificationArgs extends BucketArgs {
@@ -34,10 +34,10 @@ public class SetBucketNotificationArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketNotificationArgs}. */
+  /** Builder of {@link SetBucketNotificationArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketNotificationArgs> {
     private void validateConfig(NotificationConfiguration config) {
-      validateNotNull(config, "notification configuration");
+      Utils.validateNotNull(config, "notification configuration");
     }
 
     protected void validate(SetBucketNotificationArgs args) {

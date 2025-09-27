@@ -20,11 +20,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.ProviderException;
 import java.util.Locale;
@@ -62,30 +62,26 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
    */
   @Override
   public Credentials fetch() {
-    String filename = this.filename;
+    String filename =
+        this.filename != null ? this.filename : getProperty("MINIO_SHARED_CREDENTIALS_FILE");
     if (filename == null) {
-      filename = getProperty("MINIO_SHARED_CREDENTIALS_FILE");
-    }
-    if (filename == null) {
-      String mcDir = ".mc";
-      if (System.getProperty("os.name").toLowerCase(Locale.US).contains("windows")) {
-        mcDir = "mc";
-      }
-
-      filename = Paths.get(System.getProperty("user.home"), mcDir, "config.json").toString();
+      filename =
+          Paths.get(
+                  System.getProperty("user.home"),
+                  System.getProperty("os.name").toLowerCase(Locale.US).contains("windows")
+                      ? "mc"
+                      : ".mc",
+                  "config.json")
+              .toString();
     }
 
     String alias = this.alias;
-    if (alias == null) {
-      alias = getProperty("MINIO_ALIAS");
-    }
-    if (alias == null) {
-      alias = "s3";
-    }
+    if (alias == null) alias = getProperty("MINIO_ALIAS");
+    if (alias == null) alias = "s3";
 
-    try (InputStream is = new FileInputStream(filename)) {
-      McConfig config =
-          mapper.readValue(new InputStreamReader(is, StandardCharsets.UTF_8), McConfig.class);
+    try (InputStream is = Files.newInputStream(Paths.get(filename))) {
+      Config config =
+          mapper.readValue(new InputStreamReader(is, StandardCharsets.UTF_8), Config.class);
       Map<String, String> values = config.get(alias);
       if (values == null) {
         throw new ProviderException(
@@ -111,10 +107,11 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
     }
   }
 
+  /** Configuration of {@link MinioClientConfigProvider}. */
   @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
       value = {"UwF", "UuF"},
       justification = "All the fields are written at the time of JSON unmarshalling.")
-  public static class McConfig {
+  public static class Config {
     private Map<String, Map<String, String>> hosts;
 
     public Map<String, String> get(String alias) {

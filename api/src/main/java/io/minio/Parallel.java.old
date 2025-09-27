@@ -1,0 +1,115 @@
+import io.minio.MinioAsyncClient;
+import io.minio.messages.Part;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class FullyAsyncS3Upload {
+
+  private static final String BUCKET_NAME = "your-bucket-name";
+  private static final String OBJECT_NAME = "your-object-name";
+  private static final String ACCESS_KEY = "your-access-key";
+  private static final String SECRET_KEY = "your-secret-key";
+  private static final String ENDPOINT = "https://s3.amazonaws.com";
+
+  private static final int PART_SIZE = 5 * 1024 * 1024; // 5 MB per part
+  private static final int THREAD_POOL_SIZE = 10; // Number of threads for parallel upload
+
+  public static void main(String[] args) {
+    MinioAsyncClient minioClient =
+        MinioAsyncClient.builder().endpoint(ENDPOINT).credentials(ACCESS_KEY, SECRET_KEY).build();
+
+    ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+
+    try (InputStream inputStream = getSampleInputStream()) {
+      // Fully asynchronous flow
+      CompletableFuture<Void> uploadProcess =
+          minioClient
+              .createMultipartUploadAsync(BUCKET_NAME, OBJECT_NAME)
+              .thenCompose(
+                  uploadId ->
+                      uploadPartsInParallel(minioClient, inputStream, uploadId, executorService)
+                          .thenCompose(
+                              parts ->
+                                  minioClient.completeMultipartUploadAsync(
+                                      BUCKET_NAME, OBJECT_NAME, uploadId, parts)))
+              .thenRun(() -> System.out.println("Multipart upload completed successfully."))
+              .exceptionally(
+                  ex -> {
+                    System.err.println("Upload failed: " + ex.getMessage());
+                    return null;
+                  });
+
+      // Wait for the upload process to complete
+      uploadProcess.join();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      executorService.shutdown();
+    }
+  }
+
+  private static CompletableFuture<List<Part>> uploadPartsInParallel(
+      MinioAsyncClient minioClient,
+      InputStream inputStream,
+      String uploadId,
+      ExecutorService executorService) {
+    List<CompletableFuture<Part>> partFutures = new ArrayList<>();
+    int partNumber = 1;
+    byte[] buffer = new byte[PART_SIZE];
+    int bytesRead;
+
+    try {
+      while ((bytesRead = inputStream.read(buffer)) > 0) {
+        byte[] partData = new byte[bytesRead];
+        System.arraycopy(buffer, 0, partData, 0, bytesRead);
+        int finalPartNumber = partNumber++;
+        CompletableFuture<Part> partFuture =
+            CompletableFuture.supplyAsync(
+                () -> uploadPart(minioClient, uploadId, finalPartNumber, partData),
+                executorService);
+        partFutures.add(partFuture);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read input stream", e);
+    }
+
+    // Combine all part futures into a single future
+    return CompletableFuture.allOf(partFutures.toArray(new CompletableFuture[0]))
+        .thenApply(
+            v -> {
+              List<Part> parts = new ArrayList<>();
+              for (CompletableFuture<Part> future : partFutures) {
+                parts.add(future.join()); // Safe to use join() here since all futures are complete
+              }
+              return parts;
+            });
+  }
+
+  private static Part uploadPart(
+      MinioAsyncClient minioClient, String uploadId, int partNumber, byte[] partData) {
+    try {
+      return minioClient
+          .uploadPartAsync(
+              BUCKET_NAME,
+              OBJECT_NAME,
+              uploadId,
+              partNumber,
+              new ByteArrayInputStream(partData),
+              partData.length)
+          .join();
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to upload part " + partNumber, e);
+    }
+  }
+
+  private static InputStream getSampleInputStream() {
+    // Replace this with your actual input stream (e.g., FileInputStream for a file)
+    return new ByteArrayInputStream(new byte[100 * 1024 * 1024]); // 100 MB sample data
+  }
+}

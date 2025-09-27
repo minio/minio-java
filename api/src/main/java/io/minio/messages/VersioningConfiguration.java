@@ -16,15 +16,22 @@
 
 package io.minio.messages;
 
+import io.minio.Utils;
+import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.simpleframework.xml.Element;
+import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Namespace;
 import org.simpleframework.xml.Root;
+import org.simpleframework.xml.convert.Convert;
+import org.simpleframework.xml.convert.Converter;
+import org.simpleframework.xml.stream.InputNode;
+import org.simpleframework.xml.stream.OutputNode;
 
 /**
- * Object representation of request XML of <a
+ * Request XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketVersioning.html">PutBucketVersioning
  * API</a> and response XML of <a
  * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketVersioning.html">GetBucketVersioning
@@ -34,35 +41,71 @@ import org.simpleframework.xml.Root;
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
 public class VersioningConfiguration {
   @Element(name = "Status", required = false)
-  private String status;
+  private Status status;
 
   @Element(name = "MfaDelete", required = false)
-  private String mfaDelete;
+  private Status mfaDelete;
+
+  @ElementList(name = "ExcludedPrefixes", inline = true, required = false)
+  private List<Prefix> excludedPrefixes;
+
+  @Element(name = "ExcludeFolders", required = false)
+  private Boolean excludeFolders;
 
   public VersioningConfiguration() {}
 
-  /** Constructs a new VersioningConfiguration object with given status. */
-  public VersioningConfiguration(@Nonnull Status status, @Nullable Boolean mfaDelete) {
+  /** Constructs a new VersioningConfiguration object with given parameters. */
+  public VersioningConfiguration(
+      @Nonnull Status status,
+      @Nullable Status mfaDelete,
+      @Nullable List<Prefix> excludedPrefixes,
+      @Nullable Boolean excludeFolders) {
     Objects.requireNonNull(status, "Status must not be null");
     if (status == Status.OFF) {
       throw new IllegalArgumentException("Status must be ENABLED or SUSPENDED");
     }
-    this.status = status.toString();
-
-    if (mfaDelete != null) {
-      this.mfaDelete = mfaDelete ? "Enabled" : "Disabled";
+    if (mfaDelete == Status.OFF) {
+      throw new IllegalArgumentException("Status must be ENABLED or SUSPENDED");
     }
+
+    this.status = status;
+    this.mfaDelete = mfaDelete;
+    this.excludedPrefixes = excludedPrefixes;
+    this.excludeFolders = excludeFolders;
   }
 
   public Status status() {
-    return Status.fromString(status);
+    return status == null ? Status.OFF : status;
+  }
+
+  public Status mfaDelete() {
+    return mfaDelete;
   }
 
   public Boolean isMfaDeleteEnabled() {
-    Boolean flag = (mfaDelete != null) ? Boolean.valueOf("Enabled".equals(mfaDelete)) : null;
-    return flag;
+    return mfaDelete == Status.ENABLED;
   }
 
+  public List<Prefix> excludedPrefixes() {
+    return excludedPrefixes;
+  }
+
+  public Boolean excludeFolders() {
+    return excludeFolders;
+  }
+
+  @Override
+  public String toString() {
+    return String.format(
+        "VersioningConfiguration{status=%s, mfaDelete=%s, excludedPrefixes=%s, excludeFolders=%s}",
+        Utils.stringify(status),
+        Utils.stringify(mfaDelete),
+        Utils.stringify(excludedPrefixes),
+        Utils.stringify(excludeFolders));
+  }
+
+  @Root(name = "Status")
+  @Convert(Status.StatusConverter.class)
   public static enum Status {
     OFF(""),
     ENABLED("Enabled"),
@@ -88,6 +131,38 @@ public class VersioningConfiguration {
       }
 
       return OFF;
+    }
+
+    /** XML converter of {@link Status}. */
+    public static class StatusConverter implements Converter<Status> {
+      @Override
+      public Status read(InputNode node) throws Exception {
+        return Status.fromString(node.getValue());
+      }
+
+      @Override
+      public void write(OutputNode node, Status status) throws Exception {
+        node.setValue(status.toString());
+      }
+    }
+  }
+
+  @Root(name = "ExcludedPrefixes")
+  public static class Prefix {
+    @Element(name = "Prefix")
+    private String prefix;
+
+    public Prefix(@Nonnull @Element(name = "Prefix") String prefix) {
+      this.prefix = Objects.requireNonNull(prefix, "prefix must not be null");
+    }
+
+    public String get() {
+      return prefix;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("Prefix{%s}", Utils.stringify(prefix));
     }
   }
 }

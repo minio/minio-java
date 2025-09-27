@@ -20,7 +20,12 @@ import io.minio.messages.CompleteMultipartUploadResult;
 import io.minio.messages.CopyObjectResult;
 import okhttp3.Headers;
 
-/** Response class of any APIs doing object creation. */
+/**
+ * Response of {@link MinioAsyncClient#completeMultipartUpload}, {@link
+ * MinioAsyncClient#composeObject(io.minio.ComposeObjectArgs)}, {@link MinioAsyncClient#copyObject},
+ * {@link MinioAsyncClient#putObject(io.minio.PutObjectArgs)}, {@link MinioAsyncClient#uploadObject}
+ * and {@link MinioAsyncClient#uploadSnowballObjects}.
+ */
 public class ObjectWriteResponse extends GenericUploadResponse {
   private String versionId;
 

@@ -18,10 +18,7 @@ package io.minio.messages;
 
 import org.simpleframework.xml.Root;
 
-/**
- * Helper class to denote Object information in {@link ListBucketResultV1} and {@link
- * ListBucketResultV2}
- */
+/** Object information in {@link ListBucketResultV1} and {@link ListBucketResultV2} */
 @Root(name = "Contents", strict = false)
 public class Contents extends Item {
   public Contents() {
@@ -30,5 +27,10 @@ public class Contents extends Item {
 
   public Contents(String prefix) {
     super(prefix);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("Contents{%s}", super.toString());
   }
 }

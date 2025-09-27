@@ -16,22 +16,20 @@
 
 package io.minio;
 
-import io.minio.messages.DeleteObject;
-import java.util.LinkedList;
+import io.minio.messages.DeleteRequest;
+import java.util.ArrayList;
 import java.util.Objects;
 
-/**
- * Argument class of {@link MinioAsyncClient#removeObjects} and {@link MinioClient#removeObjects}.
- */
+/** Arguments of {@link MinioAsyncClient#removeObjects} and {@link MinioClient#removeObjects}. */
 public class RemoveObjectsArgs extends BucketArgs {
   private boolean bypassGovernanceMode;
-  private Iterable<DeleteObject> objects = new LinkedList<>();
+  private Iterable<DeleteRequest.Object> objects = new ArrayList<>();
 
   public boolean bypassGovernanceMode() {
     return bypassGovernanceMode;
   }
 
-  public Iterable<DeleteObject> objects() {
+  public Iterable<DeleteRequest.Object> objects() {
     return objects;
   }
 
@@ -39,15 +37,15 @@ public class RemoveObjectsArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link RemoveObjectsArgs}. */
+  /** Builder of {@link RemoveObjectsArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, RemoveObjectsArgs> {
     public Builder bypassGovernanceMode(boolean flag) {
       operations.add(args -> args.bypassGovernanceMode = flag);
       return this;
     }
 
-    public Builder objects(Iterable<DeleteObject> objects) {
-      validateNotNull(objects, "objects");
+    public Builder objects(Iterable<DeleteRequest.Object> objects) {
+      Utils.validateNotNull(objects, "objects");
       operations.add(args -> args.objects = objects);
       return this;
     }

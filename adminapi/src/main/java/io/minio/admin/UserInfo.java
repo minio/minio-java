@@ -17,12 +17,10 @@
 
 package io.minio.admin;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -61,43 +59,10 @@ public class UserInfo {
   }
 
   public List<String> memberOf() {
-    return Collections.unmodifiableList(memberOf == null ? new LinkedList<>() : memberOf);
+    return Collections.unmodifiableList(memberOf == null ? new ArrayList<>() : memberOf);
   }
 
   public Status status() {
     return status;
-  }
-
-  public static enum Status {
-    ENABLED("enabled"),
-    DISABLED("disabled");
-
-    private final String value;
-
-    private Status(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String toString() {
-      return this.value;
-    }
-
-    @JsonCreator
-    public static Status fromString(String statusString) {
-      if ("enabled".equals(statusString)) {
-        return ENABLED;
-      }
-
-      if ("disabled".equals(statusString)) {
-        return DISABLED;
-      }
-
-      if (statusString.isEmpty()) {
-        return null;
-      }
-
-      throw new IllegalArgumentException("Unknown status " + statusString);
-    }
   }
 }

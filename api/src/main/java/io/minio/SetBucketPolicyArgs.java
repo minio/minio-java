@@ -19,8 +19,7 @@ package io.minio;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setBucketPolicy} and {@link
- * MinioClient#setBucketPolicy}.
+ * Arguments of {@link MinioAsyncClient#setBucketPolicy} and {@link MinioClient#setBucketPolicy}.
  */
 public class SetBucketPolicyArgs extends BucketArgs {
   private String config;
@@ -33,10 +32,10 @@ public class SetBucketPolicyArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketPolicyArgs}. */
+  /** Builder of {@link SetBucketPolicyArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketPolicyArgs> {
     private void validateConfig(String config) {
-      validateNotNull(config, "policy configuration");
+      Utils.validateNotNull(config, "policy configuration");
     }
 
     @Override

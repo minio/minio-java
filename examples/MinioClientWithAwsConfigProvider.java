@@ -19,9 +19,10 @@ import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
 import io.minio.credentials.AwsConfigProvider;
 import io.minio.credentials.Provider;
+import io.minio.errors.MinioException;
 
 public class MinioClientWithAwsConfigProvider {
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) throws MinioException {
     Provider provider = new AwsConfigProvider(null, null);
 
     MinioClient minioClient =
@@ -33,7 +34,7 @@ public class MinioClientWithAwsConfigProvider {
     // Get information of an object.
     StatObjectResponse stat =
         minioClient.statObject(
-            StatObjectArgs.builder().bucket("my-bucketname").object("my-objectname").build());
+            StatObjectArgs.builder().bucket("my-bucket").object("my-object").build());
     System.out.println(stat);
   }
 }

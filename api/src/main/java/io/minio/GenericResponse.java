@@ -18,7 +18,7 @@ package io.minio;
 
 import okhttp3.Headers;
 
-/** Generic response class of any APIs. */
+/** Generic response of any APIs. */
 public class GenericResponse {
   private Headers headers;
   private String bucket;

@@ -23,7 +23,7 @@ import org.simpleframework.xml.convert.Converter;
 import org.simpleframework.xml.stream.InputNode;
 import org.simpleframework.xml.stream.OutputNode;
 
-/** Amazon AWS S3 event types for notifications. */
+/** S3 event type. */
 @Root(name = "Event")
 @Convert(EventType.EventTypeConverter.class)
 public enum EventType {
@@ -64,15 +64,12 @@ public enum EventType {
   public static EventType fromString(String eventTypeString) {
     String s3EventTypeString = "s3:" + eventTypeString;
     for (EventType et : EventType.values()) {
-      if (eventTypeString.equals(et.value) || s3EventTypeString.equals(et.value)) {
-        return et;
-      }
+      if (eventTypeString.equals(et.value) || s3EventTypeString.equals(et.value)) return et;
     }
-
-    throw new IllegalArgumentException("unknown event '" + eventTypeString + "'");
+    throw new IllegalArgumentException("Unknown event '" + eventTypeString + "'");
   }
 
-  /** XML converter class. */
+  /** XML converter of {@link EventType}. */
   public static class EventTypeConverter implements Converter<EventType> {
     @Override
     public EventType read(InputNode node) throws Exception {

@@ -25,7 +25,7 @@ package io.minio.credentials;
 public interface Provider {
   /**
    * Returns a valid {@link Credentials} instance by retrieving from credential provider service if
-   * neccessary.
+   * necessary.
    */
   Credentials fetch();
 }

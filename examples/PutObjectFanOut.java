@@ -20,50 +20,42 @@ import io.minio.PutObjectFanOutEntry;
 import io.minio.PutObjectFanOutResponse;
 import io.minio.errors.MinioException;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class PutObjectFanOut {
   /** MinioClient.putObject() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      Map<String, String> map = new HashMap<>();
-      map.put("Project", "Project One");
-      map.put("User", "jsmith");
-      PutObjectFanOutResponse response =
-          minioClient.putObjectFanOut(
-              PutObjectFanOutArgs.builder().bucket("my-bucketname").stream(
-                      new ByteArrayInputStream("somedata".getBytes(StandardCharsets.UTF_8)), 8)
-                  .entries(
-                      Arrays.asList(
-                          new PutObjectFanOutEntry[] {
-                            PutObjectFanOutEntry.builder().key("fan-out.0").build(),
-                            PutObjectFanOutEntry.builder().key("fan-out.1").tags(map).build()
-                          }))
-                  .build());
-      System.out.println("response: " + response);
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    Map<String, String> map = new HashMap<>();
+    map.put("Project", "Project One");
+    map.put("User", "jsmith");
+    PutObjectFanOutResponse response =
+        minioClient.putObjectFanOut(
+            PutObjectFanOutArgs.builder().bucket("my-bucket").stream(
+                    new ByteArrayInputStream("somedata".getBytes(StandardCharsets.UTF_8)), 8)
+                .entries(
+                    Arrays.asList(
+                        new PutObjectFanOutEntry[] {
+                          PutObjectFanOutEntry.builder().key("fan-out.0").build(),
+                          PutObjectFanOutEntry.builder().key("fan-out.1").tags(map).build()
+                        }))
+                .build());
+    System.out.println("response: " + response);
   }
 }

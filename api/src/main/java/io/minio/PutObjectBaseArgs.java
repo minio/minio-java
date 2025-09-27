@@ -20,15 +20,16 @@ import java.io.IOException;
 import java.util.Objects;
 import okhttp3.MediaType;
 
-/** Base argument class for {@link PutObjectArgs} and {@link UploadObjectArgs}. */
+/** Common arguments of {@link PutObjectArgs} and {@link UploadObjectArgs}. */
 public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
-  protected long objectSize;
+  protected Long objectSize;
   protected long partSize;
   protected int partCount;
-  protected String contentType;
-  protected boolean preloadData;
+  protected MediaType contentType;
+  protected Checksum.Algorithm checksum;
+  protected int parallelUploads;
 
-  public long objectSize() {
+  public Long objectSize() {
     return objectSize;
   }
 
@@ -40,37 +41,35 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
     return partCount;
   }
 
-  /** Gets content type. It returns if content type is set (or) value of "Content-Type" header. */
-  public String contentType() throws IOException {
-    if (contentType != null) {
-      return contentType;
-    }
-
-    if (this.headers().containsKey("Content-Type")) {
-      return this.headers().get("Content-Type").iterator().next();
-    }
-
-    return null;
+  public MediaType contentType() throws IOException {
+    return contentType != null ? contentType : super.contentType();
   }
 
-  public boolean preloadData() {
-    return preloadData;
+  public Checksum.Algorithm checksum() {
+    return checksum;
   }
 
-  /** Base argument builder class for {@link PutObjectBaseArgs}. */
+  public int parallelUploads() {
+    return parallelUploads;
+  }
+
+  /** Builder of {@link PutObjectBaseArgs}. */
   @SuppressWarnings("unchecked") // Its safe to type cast to B as B is inherited by this class
   public abstract static class Builder<B extends Builder<B, A>, A extends PutObjectBaseArgs>
       extends ObjectWriteArgs.Builder<B, A> {
-    protected void validateContentType(String contentType) {
-      validateNotEmptyString(contentType, "content type");
-      if (MediaType.parse(contentType) == null) {
+    protected void validate(A args) {
+      super.validate(args);
+      if (args.checksum != null
+          && args.partCount > 0
+          && (!(args.partCount == 1 && args.checksum.fullObjectSupport()
+              || args.partCount > 1 && args.checksum.compositeSupport()))) {
         throw new IllegalArgumentException(
-            "invalid content type '" + contentType + "' as per RFC 2045");
+            "unsupported checksum " + args.checksum + " for part count " + args.partCount);
       }
     }
 
-    private void validateSizes(long objectSize, long partSize) {
-      if (partSize > 0) {
+    protected long[] getPartInfo(Long objectSize, Long partSize) {
+      if (partSize != null && partSize > 0) {
         if (partSize < MIN_MULTIPART_SIZE) {
           throw new IllegalArgumentException(
               "part size " + partSize + " is not supported; minimum allowed 5MiB");
@@ -82,31 +81,24 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
         }
       }
 
-      if (objectSize >= 0) {
-        if (objectSize > MAX_OBJECT_SIZE) {
+      if (objectSize == null || objectSize < 0) {
+        if (partSize == null || partSize <= 0) {
           throw new IllegalArgumentException(
-              "object size " + objectSize + " is not supported; maximum allowed 5TiB");
+              "valid part size must be provided for unknown object size");
         }
-      } else if (partSize <= 0) {
-        throw new IllegalArgumentException(
-            "valid part size must be provided when object size is unknown");
+        return new long[] {partSize, -1};
       }
-    }
 
-    protected long[] getPartInfo(long objectSize, long partSize) {
-      validateSizes(objectSize, partSize);
-
-      if (objectSize < 0) return new long[] {partSize, -1};
-
-      if (partSize <= 0) {
+      if (partSize == null || partSize <= 0) {
         // Calculate part size by multiple of MIN_MULTIPART_SIZE.
         double dPartSize = Math.ceil((double) objectSize / MAX_MULTIPART_COUNT);
         dPartSize = Math.ceil(dPartSize / MIN_MULTIPART_SIZE) * MIN_MULTIPART_SIZE;
         partSize = (long) dPartSize;
       }
 
-      if (partSize > objectSize) partSize = objectSize;
-      long partCount = partSize > 0 ? (long) Math.ceil((double) objectSize / partSize) : 1;
+      if (partSize > objectSize) return new long[] {partSize, 1};
+
+      long partCount = (long) Math.ceil((double) objectSize / partSize);
       if (partCount > MAX_MULTIPART_COUNT) {
         throw new IllegalArgumentException(
             "object size "
@@ -121,16 +113,29 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
       return new long[] {partSize, partCount};
     }
 
-    /**
-     * Sets flag to control data preload of stream/file. When this flag is enabled, entire
-     * part/object data is loaded into memory to enable connection retry on network failure in the
-     * middle of upload.
-     *
-     * @deprecated As this behavior is enabled by default and cannot be turned off.
-     */
-    @Deprecated
-    public B preloadData(boolean preloadData) {
-      operations.add(args -> args.preloadData = preloadData);
+    public B contentType(String value) {
+      MediaType contentType = MediaType.parse(value);
+      if (value != null && contentType == null) {
+        throw new IllegalArgumentException("invalid content type '" + value + "' as per RFC 2045");
+      }
+      return contentType(contentType);
+    }
+
+    public B contentType(MediaType contentType) {
+      operations.add(args -> args.contentType = contentType);
+      return (B) this;
+    }
+
+    public B checksum(Checksum.Algorithm algorithm) {
+      if (algorithm == Checksum.Algorithm.MD5) {
+        throw new IllegalArgumentException(Checksum.Algorithm.MD5 + " algorithm is not allowed");
+      }
+      operations.add(args -> args.checksum = algorithm);
+      return (B) this;
+    }
+
+    public B parallelUploads(int parallelUploads) {
+      operations.add(args -> args.parallelUploads = parallelUploads);
       return (B) this;
     }
   }
@@ -141,16 +146,17 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
     if (!(o instanceof PutObjectBaseArgs)) return false;
     if (!super.equals(o)) return false;
     PutObjectBaseArgs that = (PutObjectBaseArgs) o;
-    return objectSize == that.objectSize
+    return Objects.equals(objectSize, that.objectSize)
         && partSize == that.partSize
         && partCount == that.partCount
         && Objects.equals(contentType, that.contentType)
-        && preloadData == that.preloadData;
+        && Objects.equals(checksum, that.checksum)
+        && parallelUploads == that.parallelUploads;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        super.hashCode(), objectSize, partSize, partCount, contentType, preloadData);
+        super.hashCode(), objectSize, partSize, partCount, contentType, checksum, parallelUploads);
   }
 }

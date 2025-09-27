@@ -17,32 +17,31 @@
 package io.minio;
 
 import java.util.Objects;
-import okhttp3.HttpUrl;
 
-/** Argument class of {@link MinioAsyncClient#copyObject} and {@link MinioClient#copyObject}. */
+/**
+ * Arguments of {@link BaseS3Client#copyObject}, {@link MinioAsyncClient#copyObject} and {@link
+ * MinioClient#copyObject}.
+ */
 public class CopyObjectArgs extends ObjectWriteArgs {
-  private CopySource source = null;
+  private SourceObject source;
   private Directive metadataDirective;
   private Directive taggingDirective;
 
   protected CopyObjectArgs() {}
 
-  public CopyObjectArgs(ComposeObjectArgs args) {
-    this.extraHeaders = args.extraHeaders;
-    this.extraQueryParams = args.extraQueryParams;
-    this.bucketName = args.bucketName;
-    this.region = args.region;
-    this.objectName = args.objectName;
-    this.headers = args.headers;
-    this.userMetadata = args.userMetadata;
-    this.sse = args.sse;
-    this.tags = args.tags;
-    this.retention = args.retention;
-    this.legalHold = args.legalHold;
-    this.source = new CopySource(args.sources().get(0));
+  public CopyObjectArgs(CopyObjectArgs args, SourceObject source) {
+    super(args);
+    this.metadataDirective = args.metadataDirective;
+    this.taggingDirective = args.taggingDirective;
+    this.source = source;
   }
 
-  public CopySource source() {
+  public CopyObjectArgs(ComposeObjectArgs args) {
+    super(args);
+    this.source = args.sources().get(0);
+  }
+
+  public SourceObject source() {
     return source;
   }
 
@@ -59,31 +58,31 @@ public class CopyObjectArgs extends ObjectWriteArgs {
   }
 
   @Override
-  public void validateSse(HttpUrl url) {
-    super.validateSse(url);
-    source.validateSsec(url);
+  public void validateSse(boolean isHttps) {
+    super.validateSse(isHttps);
+    source.validateSsec(isHttps);
   }
 
-  /** Argument builder of {@link CopyObjectArgs}. */
+  /** Builder of {@link CopyObjectArgs}. */
   public static final class Builder extends ObjectWriteArgs.Builder<Builder, CopyObjectArgs> {
     @Override
     protected void validate(CopyObjectArgs args) {
       super.validate(args);
-      validateNotNull(args.source, "copy source");
+      Utils.validateNotNull(args.source, "source object");
       if (args.source.offset() != null || args.source.length() != null) {
-        if (args.metadataDirective != null && args.metadataDirective == Directive.COPY) {
+        if (args.metadataDirective == Directive.COPY) {
           throw new IllegalArgumentException(
               "COPY metadata directive is not applicable to source object with range");
         }
-        if (args.taggingDirective != null && args.taggingDirective == Directive.COPY) {
+        if (args.taggingDirective == Directive.COPY) {
           throw new IllegalArgumentException(
               "COPY tagging directive is not applicable to source object with range");
         }
       }
     }
 
-    public Builder source(CopySource source) {
-      validateNotNull(source, "copy source");
+    public Builder source(SourceObject source) {
+      Utils.validateNotNull(source, "source object");
       operations.add(args -> args.source = source);
       return this;
     }

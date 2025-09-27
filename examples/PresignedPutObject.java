@@ -15,52 +15,44 @@
  */
 
 import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.Http;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import io.minio.http.Method;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class PresignedPutObject {
   /** MinioClient.presignedPutObject() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Get presigned URL string to upload 'my-objectname' in 'my-bucketname'
-      // with response-content-type as application/json and its life time is
-      // one day.
-      Map<String, String> reqParams = new HashMap<String, String>();
-      reqParams.put("response-content-type", "application/json");
+    // Get presigned URL string to upload 'my-object' in 'my-bucket'
+    // with response-content-type as application/json and its life time is
+    // one day.
+    Map<String, String> reqParams = new HashMap<String, String>();
+    reqParams.put("response-content-type", "application/json");
 
-      String url =
-          minioClient.getPresignedObjectUrl(
-              GetPresignedObjectUrlArgs.builder()
-                  .method(Method.PUT)
-                  .bucket("my-bucketname")
-                  .object("my-objectname")
-                  .expiry(60 * 60 * 24)
-                  .extraQueryParams(reqParams)
-                  .build());
-      System.out.println(url);
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    String url =
+        minioClient.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Http.Method.PUT)
+                .bucket("my-bucket")
+                .object("my-object")
+                .expiry(60 * 60 * 24)
+                .extraQueryParams(reqParams)
+                .build());
+    System.out.println(url);
   }
 }

@@ -17,7 +17,7 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#deleteBucketNotification} and {@link
+ * Arguments of {@link MinioAsyncClient#deleteBucketNotification} and {@link
  * MinioClient#deleteBucketNotification}.
  */
 public class DeleteBucketNotificationArgs extends BucketArgs {
@@ -25,7 +25,7 @@ public class DeleteBucketNotificationArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link DeleteBucketNotificationArgs}. */
+  /** Builder of {@link DeleteBucketNotificationArgs}. */
   public static final class Builder
       extends BucketArgs.Builder<Builder, DeleteBucketNotificationArgs> {}
 }

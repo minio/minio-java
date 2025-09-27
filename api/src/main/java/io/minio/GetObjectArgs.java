@@ -16,7 +16,7 @@
 
 package io.minio;
 
-/** Argument class of {@link MinioAsyncClient#getObject} and {@link MinioClient#getObject}. */
+/** Arguments of {@link MinioAsyncClient#getObject} and {@link MinioClient#getObject}. */
 public class GetObjectArgs extends ObjectConditionalReadArgs {
   protected GetObjectArgs() {}
 
@@ -34,7 +34,7 @@ public class GetObjectArgs extends ObjectConditionalReadArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link GetObjectArgs}. */
+  /** Builder of {@link GetObjectArgs}. */
   public static final class Builder
       extends ObjectConditionalReadArgs.Builder<Builder, GetObjectArgs> {}
 }

@@ -16,40 +16,32 @@
 import io.minio.EnableObjectLegalHoldArgs;
 import io.minio.MinioClient;
 import io.minio.errors.MinioException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class EnableObjectLegalHold {
   /** MinioClient.enableObjectLegalHold() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException, IllegalArgumentException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      // Enable object legal hold.
-      minioClient.enableObjectLegalHold(
-          EnableObjectLegalHoldArgs.builder()
-              .bucket("my-bucketname")
-              .object("my-objectname")
-              .versionId("object-versionId")
-              .build());
+    // Enable object legal hold.
+    minioClient.enableObjectLegalHold(
+        EnableObjectLegalHoldArgs.builder()
+            .bucket("my-bucket")
+            .object("my-object")
+            .versionId("object-versionId")
+            .build());
 
-      System.out.println("Legal hold enabled on object successfully ");
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    System.out.println("Legal hold enabled on object successfully ");
   }
 }

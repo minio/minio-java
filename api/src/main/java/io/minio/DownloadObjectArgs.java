@@ -19,7 +19,8 @@ package io.minio;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#downloadObject} and {@link MinioClient#downloadObject}.
+ * Arguments of {@link MinioAsyncClient#downloadObject(io.minio.DownloadObjectArgs)} and {@link
+ * MinioClient#downloadObject}.
  */
 public class DownloadObjectArgs extends ObjectReadArgs {
   private String filename;
@@ -37,10 +38,10 @@ public class DownloadObjectArgs extends ObjectReadArgs {
     return new Builder();
   }
 
-  /** Argument class of {@link DownloadObjectArgs}. */
+  /** Arguments of {@link DownloadObjectArgs}. */
   public static final class Builder extends ObjectReadArgs.Builder<Builder, DownloadObjectArgs> {
     private void validateFilename(String filename) {
-      validateNotEmptyString(filename, "filename");
+      Utils.validateNotEmptyString(filename, "filename");
     }
 
     public Builder filename(String filename) {

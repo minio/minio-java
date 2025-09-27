@@ -20,7 +20,7 @@ import io.minio.messages.SseConfiguration;
 import java.util.Objects;
 
 /**
- * Argument class of {@link MinioAsyncClient#setBucketEncryption} and {@link
+ * Arguments of {@link MinioAsyncClient#setBucketEncryption} and {@link
  * MinioClient#setBucketEncryption}.
  */
 public class SetBucketEncryptionArgs extends BucketArgs {
@@ -34,10 +34,10 @@ public class SetBucketEncryptionArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link SetBucketEncryptionArgs}. */
+  /** Builder of {@link SetBucketEncryptionArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, SetBucketEncryptionArgs> {
     private void validateConfig(SseConfiguration config) {
-      validateNotNull(config, "encryption configuration");
+      Utils.validateNotNull(config, "encryption configuration");
     }
 
     protected void validate(SetBucketEncryptionArgs args) {

@@ -19,77 +19,70 @@ import io.minio.PutObjectArgs;
 import io.minio.SelectObjectContentArgs;
 import io.minio.SelectResponseStream;
 import io.minio.errors.MinioException;
-import io.minio.messages.FileHeaderInfo;
 import io.minio.messages.InputSerialization;
 import io.minio.messages.OutputSerialization;
-import io.minio.messages.QuoteFields;
 import io.minio.messages.Stats;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 
 public class SelectObjectContent {
   /** MinioClient.getObject() example. */
-  public static void main(String[] args)
-      throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-    try {
-      /* play.min.io for test and development. */
-      MinioClient minioClient =
-          MinioClient.builder()
-              .endpoint("https://play.min.io")
-              .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
-              .build();
+  public static void main(String[] args) throws IOException, MinioException {
+    /* play.min.io for test and development. */
+    MinioClient minioClient =
+        MinioClient.builder()
+            .endpoint("https://play.min.io")
+            .credentials("Q3AM3UQ867SPQQA43P2F", "zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG")
+            .build();
 
-      /* Amazon S3: */
-      // MinioClient minioClient =
-      //     MinioClient.builder()
-      //         .endpoint("https://s3.amazonaws.com")
-      //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
-      //         .build();
+    /* Amazon S3: */
+    // MinioClient minioClient =
+    //     MinioClient.builder()
+    //         .endpoint("https://s3.amazonaws.com")
+    //         .credentials("YOUR-ACCESSKEY", "YOUR-SECRETACCESSKEY")
+    //         .build();
 
-      byte[] data =
-          ("Year,Make,Model,Description,Price\n"
-                  + "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
-                  + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",\"\",4900.00\n"
-                  + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
-                  + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
-                  + "air, moon roof, loaded\",4799.00\n")
-              .getBytes(StandardCharsets.UTF_8);
-      ByteArrayInputStream bais = new ByteArrayInputStream(data);
-      minioClient.putObject(
-          PutObjectArgs.builder().bucket("my-bucketname").object("my-objectname").stream(
-                  bais, data.length, -1)
-              .build());
+    byte[] data =
+        ("Year,Make,Model,Description,Price\n"
+                + "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
+                + "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",\"\",4900.00\n"
+                + "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
+                + "1996,Jeep,Grand Cherokee,\"MUST SELL!\n"
+                + "air, moon roof, loaded\",4799.00\n")
+            .getBytes(StandardCharsets.UTF_8);
+    minioClient.putObject(
+        PutObjectArgs.builder()
+            .bucket("my-bucket")
+            .object("my-object")
+            .data(data, data.length)
+            .build());
 
-      String sqlExpression = "select * from S3Object";
-      InputSerialization is =
-          new InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null);
-      OutputSerialization os =
-          new OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null);
+    String sqlExpression = "select * from S3Object";
+    InputSerialization is =
+        InputSerialization.newCSV(
+            null, false, null, null, InputSerialization.FileHeaderInfo.USE, null, null, null);
+    OutputSerialization os =
+        OutputSerialization.newCSV(
+            null, null, null, OutputSerialization.QuoteFields.ASNEEDED, null);
 
-      SelectResponseStream stream =
-          minioClient.selectObjectContent(
-              SelectObjectContentArgs.builder()
-                  .bucket("my-bucketname")
-                  .object("my-objectName")
-                  .sqlExpression(sqlExpression)
-                  .inputSerialization(is)
-                  .outputSerialization(os)
-                  .requestProgress(true)
-                  .build());
+    SelectResponseStream stream =
+        minioClient.selectObjectContent(
+            SelectObjectContentArgs.builder()
+                .bucket("my-bucket")
+                .object("my-objectName")
+                .sqlExpression(sqlExpression)
+                .inputSerialization(is)
+                .outputSerialization(os)
+                .requestProgress(true)
+                .build());
 
-      byte[] buf = new byte[512];
-      int bytesRead = stream.read(buf, 0, buf.length);
-      System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
-      Stats stats = stream.stats();
-      System.out.println("bytes scanned: " + stats.bytesScanned());
-      System.out.println("bytes processed: " + stats.bytesProcessed());
-      System.out.println("bytes returned: " + stats.bytesReturned());
-      stream.close();
-    } catch (MinioException e) {
-      System.out.println("Error occurred: " + e);
-    }
+    byte[] buf = new byte[512];
+    int bytesRead = stream.read(buf, 0, buf.length);
+    System.out.println(new String(buf, 0, bytesRead, StandardCharsets.UTF_8));
+    Stats stats = stream.stats();
+    System.out.println("bytes scanned: " + stats.bytesScanned());
+    System.out.println("bytes processed: " + stats.bytesProcessed());
+    System.out.println("bytes returned: " + stats.bytesReturned());
+    stream.close();
   }
 }

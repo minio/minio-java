@@ -17,7 +17,7 @@
 package io.minio;
 
 /**
- * Argument class of {@link MinioAsyncClient#deleteBucketPolicy} and {@link
+ * Arguments of {@link MinioAsyncClient#deleteBucketPolicy} and {@link
  * MinioClient#deleteBucketPolicy}.
  */
 public class DeleteBucketPolicyArgs extends BucketArgs {
@@ -25,6 +25,6 @@ public class DeleteBucketPolicyArgs extends BucketArgs {
     return new Builder();
   }
 
-  /** Argument builder of {@link DeleteBucketPolicyArgs}. */
+  /** Builder of {@link DeleteBucketPolicyArgs}. */
   public static final class Builder extends BucketArgs.Builder<Builder, DeleteBucketPolicyArgs> {}
 }
