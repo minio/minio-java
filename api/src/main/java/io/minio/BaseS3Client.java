@@ -413,6 +413,10 @@ public abstract class BaseS3Client implements AutoCloseable {
                       code = result[0];
                       message = result[1];
                       break;
+                    case 403:
+                      code = "AccessDenied";
+                      message = "Access denied";
+                      break;
                     case 404:
                       if (s3request.object() != null) {
                         code = "NoSuchKey";
@@ -425,8 +429,8 @@ public abstract class BaseS3Client implements AutoCloseable {
                         message = "Request resource not found";
                       }
                       break;
-                    case 501:
                     case 405:
+                    case 501:
                       code = "MethodNotAllowed";
                       message = "The specified method is not allowed against this resource";
                       break;
@@ -438,10 +442,6 @@ public abstract class BaseS3Client implements AutoCloseable {
                         code = "ResourceConflict";
                         message = "Request resource conflicts";
                       }
-                      break;
-                    case 403:
-                      code = "AccessDenied";
-                      message = "Access denied";
                       break;
                     case 412:
                       code = "PreconditionFailed";
@@ -664,13 +664,18 @@ public abstract class BaseS3Client implements AutoCloseable {
   public CompletableFuture<ObjectWriteResponse> completeMultipartUpload(
       CompleteMultipartUploadArgs args) {
     checkArgs(args);
+    args.validateSsec(baseUrl.isHttps());
     Http.Body body = null;
     try {
       body = new Http.Body(new CompleteMultipartUpload(args.parts()), null, null, null);
     } catch (MinioException e) {
       return Utils.failedFuture(e);
     }
-    return executePostAsync(args, null, new Http.QueryParameters(UPLOAD_ID, args.uploadId()), body)
+    return executePostAsync(
+            args,
+            args.ssec() == null ? null : args.ssec().headers(),
+            new Http.QueryParameters(UPLOAD_ID, args.uploadId()),
+            body)
         .thenApply(
             response -> {
               try {
@@ -802,7 +807,7 @@ public abstract class BaseS3Client implements AutoCloseable {
     if (locationConstraint.equals(Http.US_EAST_1)) {
       config =
           new CreateBucketConfiguration(
-              locationConstraint, args.locationConfig(), args.bucketConfig());
+              locationConstraint, args.locationConfig(), args.bucketConfig(), args.tags());
     }
 
     Http.Body body = null;
@@ -949,6 +954,20 @@ public abstract class BaseS3Client implements AutoCloseable {
               regionCache.put(args.bucket(), location);
               return location;
             });
+  }
+
+  /**
+   * Do <a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_HeadBucket.html">HeadBucket S3
+   * API</a> asynchronously.
+   *
+   * @param args {@link HeadBucketArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link HeadBucketResponse}&gt; object.
+   */
+  public CompletableFuture<HeadBucketResponse> headBucket(HeadBucketArgs args) {
+    checkArgs(args);
+    return executeHeadAsync(args, null, null)
+        .thenApply(
+            response -> new HeadBucketResponse(response.headers(), args.bucket(), args.region()));
   }
 
   /**

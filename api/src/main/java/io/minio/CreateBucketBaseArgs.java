@@ -17,6 +17,7 @@
 package io.minio;
 
 import io.minio.messages.CreateBucketConfiguration;
+import io.minio.messages.Tags;
 import java.util.Objects;
 
 /** Common arguments of {@link CreateBucketArgs} and {@link MakeBucketArgs}. */
@@ -24,6 +25,7 @@ public abstract class CreateBucketBaseArgs extends BucketArgs {
   protected boolean objectLock;
   protected CreateBucketConfiguration.Location locationConfig;
   protected CreateBucketConfiguration.Bucket bucket;
+  protected Tags tags;
 
   protected CreateBucketBaseArgs() {}
 
@@ -32,6 +34,7 @@ public abstract class CreateBucketBaseArgs extends BucketArgs {
     this.objectLock = args.objectLock;
     this.locationConfig = args.locationConfig;
     this.bucket = args.bucket;
+    this.tags = args.tags;
   }
 
   public boolean objectLock() {
@@ -44,6 +47,10 @@ public abstract class CreateBucketBaseArgs extends BucketArgs {
 
   public CreateBucketConfiguration.Bucket bucketConfig() {
     return bucket;
+  }
+
+  public Tags tags() {
+    return tags;
   }
 
   /** Base argument builder of {@link CreateBucketBaseArgs}. */
@@ -69,6 +76,11 @@ public abstract class CreateBucketBaseArgs extends BucketArgs {
       operations.add(args -> args.bucket = bucket);
       return (B) this;
     }
+
+    public B tags(Tags tags) {
+      operations.add(args -> args.tags = tags);
+      return (B) this;
+    }
   }
 
   @Override
@@ -79,11 +91,12 @@ public abstract class CreateBucketBaseArgs extends BucketArgs {
     CreateBucketBaseArgs that = (CreateBucketBaseArgs) o;
     return objectLock == that.objectLock
         && Objects.equals(locationConfig, that.locationConfig)
-        && Objects.equals(bucket, that.bucket);
+        && Objects.equals(bucket, that.bucket)
+        && Objects.equals(tags, that.tags);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), objectLock, locationConfig, bucket);
+    return Objects.hash(super.hashCode(), objectLock, locationConfig, bucket, tags);
   }
 }

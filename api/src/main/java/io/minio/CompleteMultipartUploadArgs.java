@@ -24,6 +24,7 @@ import java.util.Objects;
 public class CompleteMultipartUploadArgs extends ObjectArgs {
   private String uploadId;
   private Part[] parts;
+  private ServerSideEncryption.CustomerKey ssec;
 
   protected CompleteMultipartUploadArgs() {}
 
@@ -37,6 +38,9 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
     super(args);
     this.uploadId = uploadId;
     this.parts = parts;
+    if (args.sse() != null && args.sse() instanceof ServerSideEncryption.CustomerKey) {
+      this.ssec = (ServerSideEncryption.CustomerKey) args.sse();
+    }
   }
 
   public String uploadId() {
@@ -45,6 +49,14 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
 
   public Part[] parts() {
     return parts;
+  }
+
+  public ServerSideEncryption.CustomerKey ssec() {
+    return ssec;
+  }
+
+  public void validateSsec(boolean isHttps) {
+    checkSse(ssec, isHttps);
   }
 
   public static Builder builder() {
@@ -72,6 +84,11 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
       operations.add(args -> args.parts = parts);
       return this;
     }
+
+    public Builder ssec(ServerSideEncryption.CustomerKey ssec) {
+      operations.add(args -> args.ssec = ssec);
+      return this;
+    }
   }
 
   @Override
@@ -80,11 +97,13 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
     if (!(o instanceof CompleteMultipartUploadArgs)) return false;
     if (!super.equals(o)) return false;
     CompleteMultipartUploadArgs that = (CompleteMultipartUploadArgs) o;
-    return Objects.equals(uploadId, that.uploadId) && Arrays.equals(parts, that.parts);
+    return Objects.equals(uploadId, that.uploadId)
+        && Arrays.equals(parts, that.parts)
+        && Objects.equals(ssec, that.ssec);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), uploadId, parts);
+    return Objects.hash(super.hashCode(), uploadId, parts, ssec);
   }
 }

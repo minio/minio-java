@@ -19,7 +19,7 @@ package io.minio;
 import io.minio.messages.LegalHold;
 import io.minio.messages.RetentionMode;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -34,6 +34,7 @@ public class HeadObjectResponse extends GenericResponse {
   private LegalHold lockLegalHold;
   private boolean deleteMarker;
   private Http.Headers userMetadata;
+  private Map<Checksum.Algorithm, String> checksums;
   private Checksum.Type checksumType;
 
   public HeadObjectResponse(okhttp3.Headers headers, String bucket, String region, String object) {
@@ -72,6 +73,19 @@ public class HeadObjectResponse extends GenericResponse {
 
     value = headers.get("x-amz-checksum-type");
     this.checksumType = value == null ? null : Checksum.Type.valueOf(value);
+
+    Map<Checksum.Algorithm, String> checksums = new HashMap<>();
+    value = headers.get("x-amz-checksum-crc32");
+    if (value != null && !value.isEmpty()) checksums.put(Checksum.Algorithm.CRC32, value);
+    value = headers.get("x-amz-checksum-crc32c");
+    if (value != null && !value.isEmpty()) checksums.put(Checksum.Algorithm.CRC32C, value);
+    value = headers.get("x-amz-checksum-crc64nvme");
+    if (value != null && !value.isEmpty()) checksums.put(Checksum.Algorithm.CRC64NVME, value);
+    value = headers.get("x-amz-checksum-sha1");
+    if (value != null && !value.isEmpty()) checksums.put(Checksum.Algorithm.SHA1, value);
+    value = headers.get("x-amz-checksum-sha256");
+    if (value != null && !value.isEmpty()) checksums.put(Checksum.Algorithm.SHA256, value);
+    if (!checksums.isEmpty()) this.checksums = checksums;
   }
 
   public String etag() {
@@ -118,32 +132,13 @@ public class HeadObjectResponse extends GenericResponse {
     return checksumType;
   }
 
-  public List<Checksum.Algorithm> algorithms() {
-    okhttp3.Headers headers = headers();
-    List<Checksum.Algorithm> algorithms = new ArrayList<>();
-    String value;
-
-    value = headers.get("x-amz-checksum-crc32");
-    if (value != null && !value.isEmpty()) algorithms.add(Checksum.Algorithm.CRC32);
-
-    value = headers.get("x-amz-checksum-crc32c");
-    if (value != null && !value.isEmpty()) algorithms.add(Checksum.Algorithm.CRC32C);
-
-    value = headers.get("x-amz-checksum-crc64nvme");
-    if (value != null && !value.isEmpty()) algorithms.add(Checksum.Algorithm.CRC64NVME);
-
-    value = headers.get("x-amz-checksum-sha1");
-    if (value != null && !value.isEmpty()) algorithms.add(Checksum.Algorithm.SHA1);
-
-    value = headers.get("x-amz-checksum-sha256");
-    if (value != null && !value.isEmpty()) algorithms.add(Checksum.Algorithm.SHA256);
-
-    return algorithms.size() == 0 ? null : algorithms;
+  public Map<Checksum.Algorithm, String> checksums() {
+    return checksums;
   }
 
   @Override
   public String toString() {
-    return "ObjectHead{"
+    return "HeadObjectResponse{"
         + "bucket="
         + bucket()
         + ", object="

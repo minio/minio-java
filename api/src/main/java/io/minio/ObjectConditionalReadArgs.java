@@ -35,6 +35,10 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
 
   protected ObjectConditionalReadArgs(SourceObject args) {
     super(args);
+    this.matchETag = args.matchETag();
+    this.notMatchETag = args.notMatchETag();
+    this.modifiedSince = args.modifiedSince();
+    this.unmodifiedSince = args.unmodifiedSince();
   }
 
   protected ObjectConditionalReadArgs(AppendObjectArgs args) {
@@ -44,6 +48,10 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
 
   protected ObjectConditionalReadArgs(DownloadObjectArgs args) {
     super(args);
+    this.matchETag = args.matchETag();
+    this.notMatchETag = args.notMatchETag();
+    this.modifiedSince = args.modifiedSince();
+    this.unmodifiedSince = args.unmodifiedSince();
   }
 
   protected ObjectConditionalReadArgs(ObjectConditionalReadArgs args) {

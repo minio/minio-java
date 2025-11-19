@@ -74,6 +74,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -583,14 +584,37 @@ public class MinioAsyncClient extends BaseS3Client {
                   sources.set(index, source);
                 }
 
-                long size = source.length() != null ? source.length() : source.objectSize();
-                size -= source.offset() != null ? source.offset() : 0;
-                if (size < ObjectWriteArgs.MIN_MULTIPART_SIZE && interimPart) {
+                List<String> keys =
+                    new ArrayList<>(
+                        Arrays.asList("source", source.bucket() + "/" + source.object()));
+                if (source.versionId() != null && !source.versionId().isEmpty()) {
+                  keys.add("version_id=" + source.versionId());
+                }
+                if (source.offset() != null) keys.add("offset=" + source.offset());
+                if (source.length() != null) keys.add("length=" + source.length());
+                String sourceMessage = String.join(" ", keys);
+                if ((source.offset() != null ? source.offset() : 0) >= source.objectSize()) {
                   throw new IllegalArgumentException(
-                      "compose source "
-                          + source.bucket()
-                          + "/"
-                          + source.object()
+                      "source "
+                          + sourceMessage
+                          + ": offset is beyond object size "
+                          + source.objectSize());
+                }
+
+                long size = source.objectSize() - (source.offset() != null ? source.offset() : 0);
+
+                if (size < (source.length() != null ? source.length() : 0)) {
+                  throw new IllegalArgumentException(
+                      "source "
+                          + sourceMessage
+                          + ": insufficient object size "
+                          + source.objectSize());
+                }
+                size = source.length() != null ? source.length() : size;
+                if (interimPart && size < ObjectWriteArgs.MIN_MULTIPART_SIZE) {
+                  throw new IllegalArgumentException(
+                      "source "
+                          + sourceMessage
                           + ": size "
                           + size
                           + " must be greater than "
@@ -600,7 +624,7 @@ public class MinioAsyncClient extends BaseS3Client {
                 objectSize[0] += size;
                 if (objectSize[0] > ObjectWriteArgs.MAX_OBJECT_SIZE) {
                   throw new IllegalArgumentException(
-                      "destination object size must be less than "
+                      "source objects yield destination object size greater than "
                           + ObjectWriteArgs.MAX_OBJECT_SIZE);
                 }
 
@@ -615,14 +639,11 @@ public class MinioAsyncClient extends BaseS3Client {
 
                   if (lastPartSize < ObjectWriteArgs.MIN_MULTIPART_SIZE && interimPart) {
                     throw new IllegalArgumentException(
-                        "compose source "
-                            + source.bucket()
-                            + "/"
-                            + source.object()
-                            + ": "
-                            + "for multipart split upload of "
+                        "source "
+                            + sourceMessage
+                            + ": multipart split upload for "
                             + size
-                            + ", last part size is less than "
+                            + " yields last part size less than "
                             + ObjectWriteArgs.MIN_MULTIPART_SIZE);
                   }
                   partCount += (int) count;
@@ -632,7 +653,9 @@ public class MinioAsyncClient extends BaseS3Client {
 
                 if (partCount > ObjectWriteArgs.MAX_MULTIPART_COUNT) {
                   throw new IllegalArgumentException(
-                      "Compose sources create more than allowed multipart count "
+                      "source objects yield multipart count "
+                          + partCount
+                          + " more than allowed multipart count "
                           + ObjectWriteArgs.MAX_MULTIPART_COUNT);
                 }
                 return partCount;
@@ -3332,7 +3355,7 @@ public class MinioAsyncClient extends BaseS3Client {
 
               // Build POST object data
               String objectName =
-                  "pan-out-"
+                  "fan-out-"
                       + new BigInteger(32, RANDOM).toString(32)
                       + "-"
                       + System.currentTimeMillis();
@@ -3549,8 +3572,10 @@ public class MinioAsyncClient extends BaseS3Client {
                           "append object does not support checksum type "
                               + response.checksumType()));
                 }
-                List<Checksum.Algorithm> algorithms = response.algorithms();
-                if (algorithms != null) algorithm = algorithms.get(0);
+                Map<Checksum.Algorithm, String> checksums = response.checksums();
+                if (checksums != null && !checksums.isEmpty()) {
+                  algorithm = checksums.keySet().iterator().next();
+                }
               }
 
               long writeOffset = response.size();

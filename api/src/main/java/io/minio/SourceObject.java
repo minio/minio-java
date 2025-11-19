@@ -29,6 +29,12 @@ public class SourceObject extends ObjectConditionalReadArgs {
     super(args, etag);
     validateSize(objectSize);
     this.objectSize = objectSize;
+    if (args.matchETag() == null) {
+      if (etag == null) throw new IllegalArgumentException("etag must be provided");
+    } else if (etag != null && !args.matchETag().equals(etag)) {
+      throw new IllegalArgumentException(
+          "matchETag " + args.matchETag() + " and passed etag " + etag + " does not match");
+    }
   }
 
   private void throwException(long objectsize, long arg, String argName) {

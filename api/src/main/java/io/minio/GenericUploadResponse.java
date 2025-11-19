@@ -18,11 +18,13 @@ package io.minio;
 
 import io.minio.messages.CompleteMultipartUploadResult;
 import io.minio.messages.CopyObjectResult;
+import java.time.ZonedDateTime;
 import okhttp3.Headers;
 
 /** Common response of {@link ObjectWriteResponse} and {@link PutObjectFanOutResponse}. */
 public class GenericUploadResponse extends GenericResponse {
   private String etag;
+  private ZonedDateTime lastModified;
   private String checksumCRC32;
   private String checksumCRC32C;
   private String checksumCRC64NVME;
@@ -54,6 +56,7 @@ public class GenericUploadResponse extends GenericResponse {
     super(headers, bucket, region, object);
     this.etag = etag;
     if (result != null) {
+      this.lastModified = result.lastModified();
       this.checksumType = result.checksumType();
       this.checksumCRC32 = result.checksumCRC32();
       this.checksumCRC32C = result.checksumCRC32C();
@@ -84,6 +87,10 @@ public class GenericUploadResponse extends GenericResponse {
 
   public String etag() {
     return etag;
+  }
+
+  public ZonedDateTime lastModified() {
+    return lastModified;
   }
 
   public String checksumCRC32() {

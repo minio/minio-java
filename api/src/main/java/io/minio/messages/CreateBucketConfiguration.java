@@ -38,15 +38,20 @@ public class CreateBucketConfiguration {
   @Element(name = "Bucket", required = false)
   private Bucket bucket;
 
+  @Element(name = "Tags", required = false)
+  private Tags tags;
+
   /** Constructs a new CreateBucketConfiguration object with given location constraint. */
   public CreateBucketConfiguration(String locationConstraint) {
     this.locationConstraint = locationConstraint;
   }
 
-  public CreateBucketConfiguration(String locationConstraint, Location location, Bucket bucket) {
+  public CreateBucketConfiguration(
+      String locationConstraint, Location location, Bucket bucket, Tags tags) {
     this.locationConstraint = locationConstraint;
     this.location = location;
     this.bucket = bucket;
+    this.tags = tags;
   }
 
   /** Bucket location information of {@link CreateBucketConfiguration}. */
