@@ -799,16 +799,14 @@ public abstract class BaseS3Client implements AutoCloseable {
       region = Http.US_EAST_1;
     }
 
-    Http.Headers headers =
-        args.objectLock() ? new Http.Headers("x-amz-bucket-object-lock-enabled", "true") : null;
-    final String locationConstraint = region;
+    Http.Headers headers = new Http.Headers();
+    if (args.objectLock()) headers.put("x-amz-bucket-object-lock-enabled", "true");
+    if (args.forceCreate()) headers.put("x-minio-force-create", "true");
 
-    CreateBucketConfiguration config = null;
-    if (locationConstraint.equals(Http.US_EAST_1)) {
-      config =
-          new CreateBucketConfiguration(
-              locationConstraint, args.locationConfig(), args.bucketConfig(), args.tags());
-    }
+    final String locationConstraint = region;
+    CreateBucketConfiguration config =
+        new CreateBucketConfiguration(
+            locationConstraint, args.locationConfig(), args.bucketConfig(), args.tags());
 
     Http.Body body = null;
     try {

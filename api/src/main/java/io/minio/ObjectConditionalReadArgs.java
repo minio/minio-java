@@ -67,7 +67,7 @@ public abstract class ObjectConditionalReadArgs extends ObjectReadArgs {
 
   protected ObjectConditionalReadArgs(ObjectConditionalReadArgs args, String matchETag) {
     this(args);
-    this.matchETag = args.matchETag;
+    this.matchETag = matchETag;
   }
 
   public Long offset() {
