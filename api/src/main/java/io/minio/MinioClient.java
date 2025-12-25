@@ -100,7 +100,7 @@ import okhttp3.OkHttpClient;
 public class MinioClient implements AutoCloseable {
   private MinioAsyncClient asyncClient = null;
 
-  private MinioClient(MinioAsyncClient asyncClient) {
+  protected MinioClient(MinioAsyncClient asyncClient) {
     this.asyncClient = asyncClient;
   }
 
