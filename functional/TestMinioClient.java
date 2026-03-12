@@ -3191,7 +3191,7 @@ public class TestMinioClient extends TestArgs {
       try {
         client.putObject(
             PutObjectArgs.builder().bucket(bucketName).object(objectName).stream(
-                    new ContentInputStream(1 * KB), 1L * KB, null)
+                    new ContentInputStream(6 * MB), 6L * MB, null)
                 .build());
         GetObjectAttributesResponse response =
             client.getObjectAttributes(
