@@ -3223,8 +3223,8 @@ public class TestMinioClient extends TestArgs {
         long partSize = response.result().objectParts().parts().get(0).partSize();
         long[][] parts =
             (partNumber == 1)
-                ? new long[][] {{1, 6 * MB}, {2, 1 * MB}}
-                : new long[][] {{2, 1 * MB}, {1, 6 * MB}};
+                ? new long[][] {{1, 5 * MB}, {2, 1 * MB}}
+                : new long[][] {{2, 1 * MB}, {1, 5 * MB}};
         Assertions.assertTrue(
             partNumber == parts[0][0],
             "partEntry 0: partNumber: expected: " + parts[0][0] + ", got: " + partNumber);
