@@ -3204,18 +3204,41 @@ public class TestMinioClient extends TestArgs {
                         })
                     .build());
         Assertions.assertTrue(
-            response.result().objectSize() == (1 * KB),
-            "objectSize: expected: " + (1 * KB) + ", got: " + response.result().objectSize());
+            response.result().objectSize() == (6 * MB),
+            "objectSize: expected: " + (6 * MB) + ", got: " + response.result().objectSize());
         Assertions.assertTrue(
-            response.result().objectParts().parts().get(0).partNumber() == 1,
-            "partNumber: expected: 1, got: "
-                + response.result().objectParts().parts().get(0).partNumber());
-        Assertions.assertTrue(
-            response.result().objectParts().parts().get(0).partSize() == (1 * KB),
-            "partSize: expected: "
-                + (1 * KB)
+            response.result().objectParts().partsCount() == 2,
+            "partsCount: expected: "
+                + 2
                 + ", got: "
-                + response.result().objectParts().parts().get(0).partSize());
+                + response.result().objectParts().partsCount());
+        Assertions.assertTrue(
+            response.result().objectParts().parts().size() == 2,
+            "partsSize: expected: "
+                + 2
+                + ", got: "
+                + response.result().objectParts().parts().size());
+
+        long partNumber = (long) response.result().objectParts().parts().get(0).partNumber();
+        long partSize = response.result().objectParts().parts().get(0).partSize();
+        long[][] parts =
+            (partNumber == 1)
+                ? new long[][] {{1, 6 * MB}, {2, 1 * MB}}
+                : new long[][] {{2, 1 * MB}, {1, 6 * MB}};
+        Assertions.assertTrue(
+            partNumber == parts[0][0],
+            "partEntry 0: partNumber: expected: " + parts[0][0] + ", got: " + partNumber);
+        Assertions.assertTrue(
+            partSize == parts[0][1],
+            "partEntry 0: partSize: expected: " + parts[0][1] + ", got: " + partSize);
+        partNumber = (long) response.result().objectParts().parts().get(1).partNumber();
+        partSize = response.result().objectParts().parts().get(1).partSize();
+        Assertions.assertTrue(
+            partNumber == parts[1][0],
+            "partEntry 1: partNumber: expected: " + parts[1][0] + ", got: " + partNumber);
+        Assertions.assertTrue(
+            partSize == parts[1][1],
+            "partEntry 1: partSize: expected: " + parts[1][1] + ", got: " + partSize);
         mintSuccessLog(methodName, null, startTime);
       } finally {
         client.removeObject(
