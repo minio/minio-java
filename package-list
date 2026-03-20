@@ -1,6 +1,4 @@
 io.minio
 io.minio.credentials
 io.minio.errors
-io.minio.http
 io.minio.messages
-io.minio.org.apache.commons.validator.routines
