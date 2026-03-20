@@ -29,7 +29,7 @@ plugins {
 
 allprojects {
     group = 'io.minio'
-    version = '9.0.0'
+    version = '9.0.1'
     if (!project.hasProperty('release')) {
         version += '-DEV'
     }
