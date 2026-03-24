@@ -890,7 +890,7 @@ public class MinioAsyncClient extends BaseS3Client {
     }
 
     Http.QueryParameters queryParams = new Http.QueryParameters();
-    if (args.versionId() == null) queryParams.put("versionId", args.versionId());
+    if (args.versionId() != null) queryParams.put("versionId", args.versionId());
 
     Credentials credentials = provider == null ? null : provider.fetch();
     if (credentials != null && credentials.sessionToken() != null) {
