@@ -1270,6 +1270,20 @@ public class TestMinioClient extends TestArgs {
                 .build(),
             expectedChecksum);
 
+        testTags = "[GET, versionId]";
+        String versionId = "dummy-version";
+        String urlString =
+            client.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                    .method(Http.Method.GET)
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .versionId(versionId)
+                    .build());
+        Assertions.assertTrue(
+            urlString.contains("versionId=" + versionId),
+            "versionId not found in the generated presigned URL");
+
         testTags = "[GET, expiry, query params]";
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("response-content-type", "application/json");
