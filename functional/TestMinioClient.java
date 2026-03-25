@@ -126,6 +126,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import okhttp3.Headers;
+import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -1280,9 +1281,12 @@ public class TestMinioClient extends TestArgs {
                     .object(objectName)
                     .versionId(versionId)
                     .build());
-        Assertions.assertTrue(
-            urlString.contains("versionId=" + versionId),
-            "versionId not found in the generated presigned URL");
+        HttpUrl url = HttpUrl.parse(urlString);
+        Assertions.assertNotNull(url, "generated url is not valid");
+        Assertions.assertEquals(
+            versionId,
+            url.queryParameter("versionId"),
+            "versionId query param does not match the expected value");
 
         testTags = "[GET, expiry, query params]";
         Map<String, String> queryParams = new HashMap<>();
