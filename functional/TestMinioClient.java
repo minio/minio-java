@@ -126,6 +126,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import okhttp3.Headers;
+import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -1269,6 +1270,23 @@ public class TestMinioClient extends TestArgs {
                 .expiry(1, TimeUnit.DAYS)
                 .build(),
             expectedChecksum);
+
+        testTags = "[GET, versionId]";
+        String versionId = "dummy-version";
+        String urlString =
+            client.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                    .method(Http.Method.GET)
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .versionId(versionId)
+                    .build());
+        HttpUrl url = HttpUrl.parse(urlString);
+        Assertions.assertNotNull(url, "generated url is not valid");
+        Assertions.assertEquals(
+            versionId,
+            url.queryParameter("versionId"),
+            "versionId query param does not match the expected value");
 
         testTags = "[GET, expiry, query params]";
         Map<String, String> queryParams = new HashMap<>();
