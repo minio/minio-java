@@ -30,13 +30,13 @@ import okhttp3.MediaType;
  * PutObjectBaseArgs}, {@link ComposeObjectArgs} and {@link CopyObjectArgs}.
  */
 public abstract class ObjectWriteArgs extends ObjectArgs {
-  // allowed maximum object size is 5TiB.
-  public static final long MAX_OBJECT_SIZE = 5L * 1024 * 1024 * 1024 * 1024;
   // allowed minimum part size is 5MiB in multipart upload.
   public static final int MIN_MULTIPART_SIZE = 5 * 1024 * 1024;
   // allowed maximum part size is 5GiB in multipart upload.
   public static final long MAX_PART_SIZE = 5L * 1024 * 1024 * 1024;
   public static final int MAX_MULTIPART_COUNT = 10000;
+  // allowed maximum object size is 48.828125 TiB.
+  public static final long MAX_OBJECT_SIZE = MAX_PART_SIZE * MAX_MULTIPART_COUNT;
 
   protected Http.Headers headers;
   protected Http.Headers userMetadata;
