@@ -430,7 +430,8 @@ public class FunctionalTest {
   public static void handleException(String methodName, String args, long startTime, Exception e)
       throws Exception {
     if (e instanceof ErrorResponseException) {
-      if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
+      int code = ((ErrorResponseException) e).response().code();
+      if (code == 405 || code == 501) {
         mintIgnoredLog(methodName, args, startTime);
         return;
       }
@@ -709,7 +710,8 @@ public class FunctionalTest {
           MakeBucketArgs.builder().bucket(bucketNameWithLock).objectLock(true).build());
     } catch (Exception e) {
       if (e instanceof ErrorResponseException) {
-        if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
+        int code = ((ErrorResponseException) e).response().code();
+        if (code == 405 || code == 501) {
           bucketNameWithLock = null;
           return;
         }
