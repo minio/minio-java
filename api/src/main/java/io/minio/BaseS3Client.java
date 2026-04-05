@@ -129,7 +129,7 @@ public abstract class BaseS3Client implements AutoCloseable {
 
   /** Closes underneath HTTP client. */
   @Override
-  public void close() throws Exception {
+  public void close() {
     if (closeHttpClient) {
       httpClient.dispatcher().executorService().shutdown();
       httpClient.connectionPool().evictAll();
