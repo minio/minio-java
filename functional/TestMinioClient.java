@@ -394,7 +394,8 @@ public class TestMinioClient extends TestArgs {
           MakeBucketArgs.builder().bucket(bucketNameWithLock).objectLock(true).build());
     } catch (Exception e) {
       if (e instanceof ErrorResponseException) {
-        if (((ErrorResponseException) e).errorResponse().code().equals("NotImplemented")) {
+        int code = ((ErrorResponseException) e).response().code();
+        if (code == 405 || code == 501) {
           bucketNameWithLock = null;
           return;
         }
