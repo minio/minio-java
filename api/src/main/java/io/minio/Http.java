@@ -424,15 +424,15 @@ public class Http {
   }
 
   private static int setCertificateEntry(
-      CertificateFactory cf, KeyStore ks, Path certPath, String namePrefix)
+      CertificateFactory cf, KeyStore ks, Path file, String namePrefix)
       throws CertificateException, IOException, KeyStoreException {
-    try (InputStream in = Files.newInputStream(certPath)) {
-      int certsInFile = 0;
+    try (InputStream in = Files.newInputStream(file)) {
+      int index = 0;
       while (in.available() > 0) {
         X509Certificate cert = (X509Certificate) cf.generateCertificate(in);
-        ks.setCertificateEntry(namePrefix + (certsInFile++), cert);
+        ks.setCertificateEntry(namePrefix + (index++), cert);
       }
-      return certsInFile;
+      return index;
     }
   }
 
@@ -445,35 +445,34 @@ public class Http {
     return buildTrustManagerFromKeyStore(ks);
   }
 
-  private static X509TrustManager getTrustManagerFromDirs(String dirPaths)
+  private static X509TrustManager getTrustManagerFromDir(String dirPath)
       throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
-    final CertificateFactory cf = CertificateFactory.getInstance("X.509");
-    final KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+    KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
     ks.load(null);
 
-    int totalCertificates = 0;
-    int fileNumber = 1;
-    for (Path directory : getDirectories(dirPaths)) {
+    int index = 0;
+    int number = 1;
+    for (Path directory : getDirectories(dirPath)) {
       try (Stream<Path> paths = Files.walk(directory)) {
-        for (Path certPath : (Iterable<Path>) paths.filter(Files::isRegularFile)::iterator) {
+        for (Path file : (Iterable<Path>) paths.filter(Files::isRegularFile)::iterator) {
           try {
-            totalCertificates +=
-                setCertificateEntry(cf, ks, certPath, "cert-dir-file-" + fileNumber + "-");
+            index += setCertificateEntry(cf, ks, file, "cert-dir-file-" + number + "-");
+            number++;
           } catch (CertificateException | IOException | KeyStoreException e) {
             // Ignore these errors.
           }
-          fileNumber++;
         }
       }
     }
 
-    if (totalCertificates == 0) return null;
+    if (index == 0) return null;
 
     return buildTrustManagerFromKeyStore(ks);
   }
 
-  private static List<Path> getDirectories(String dirPaths) {
-    return Stream.of(dirPaths.split(File.pathSeparator))
+  private static List<Path> getDirectories(String dirPath) {
+    return Stream.of(dirPath.split(File.pathSeparator))
         .map(String::trim)
         .filter(s -> !s.isEmpty())
         .map(Paths::get)
@@ -492,15 +491,15 @@ public class Http {
     return null;
   }
 
-  private static X509TrustManager getCompositeTrustManager(String filePath, String dirPaths)
+  private static X509TrustManager getCompositeTrustManager(String filePath, String dirPath)
       throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
     List<X509TrustManager> trustManagers = new ArrayList<>();
 
     X509TrustManager defaultTm = getDefaultTrustManager();
     if (defaultTm != null) trustManagers.add(defaultTm);
 
-    if (dirPaths != null && !dirPaths.isEmpty()) {
-      X509TrustManager dirTm = getTrustManagerFromDirs(dirPaths);
+    if (dirPath != null && !dirPath.isEmpty()) {
+      X509TrustManager dirTm = getTrustManagerFromDir(dirPath);
       if (dirTm != null) trustManagers.add(dirTm);
     }
 
@@ -592,11 +591,11 @@ public class Http {
         httpClient, trustStorePath, trustStorePassword, keyStorePath, keyStorePassword, "PKCS12");
   }
 
-  /** Enable external TLS certificates from given file path and all valid files from dir paths. */
+  /** Enable external TLS certificates from given file path and all valid files from dir path. */
   public static OkHttpClient enableExternalCertificates(
-      OkHttpClient client, String filePath, String dirPaths) throws MinioException {
+      OkHttpClient client, String filePath, String dirPath) throws MinioException {
     try {
-      X509TrustManager tm = getCompositeTrustManager(filePath, dirPaths);
+      X509TrustManager tm = getCompositeTrustManager(filePath, dirPath);
       if (tm == null) return client;
 
       SSLContext sslContext = SSLContext.getInstance("TLS");
