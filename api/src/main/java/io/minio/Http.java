@@ -451,9 +451,17 @@ public class Http {
     KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
     ks.load(null);
 
+    List<Path> directories =
+        Stream.of(dirPath.split(File.pathSeparator))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(Paths::get)
+            .filter(Files::isDirectory)
+            .collect(Collectors.toList());
+
     int index = 0;
     int number = 1;
-    for (Path directory : getDirectories(dirPath)) {
+    for (Path directory : directories) {
       try (Stream<Path> paths = Files.walk(directory)) {
         for (Path file : (Iterable<Path>) paths.filter(Files::isRegularFile)::iterator) {
           try {
@@ -469,15 +477,6 @@ public class Http {
     if (index == 0) return null;
 
     return buildTrustManagerFromKeyStore(ks);
-  }
-
-  private static List<Path> getDirectories(String dirPath) {
-    return Stream.of(dirPath.split(File.pathSeparator))
-        .map(String::trim)
-        .filter(s -> !s.isEmpty())
-        .map(Paths::get)
-        .filter(Files::isDirectory)
-        .collect(Collectors.toList());
   }
 
   private static X509TrustManager getDefaultTrustManager()
