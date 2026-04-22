@@ -29,9 +29,6 @@ import java.util.Map;
  * href="http://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html">Notification
  * Content Structure</a>.
  */
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-    value = "UwF",
-    justification = "Everything in this class is initialized by JSON unmarshalling.")
 public class NotificationRecords {
   @JsonProperty("Records")
   private List<Event> events;
@@ -46,9 +43,6 @@ public class NotificationRecords {
   }
 
   /** Event information of {@link NotificationRecords}. */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-      value = "UuF",
-      justification = "eventVersion and eventSource are available for completeness")
   public static class Event {
     @JsonProperty private String eventVersion;
     @JsonProperty private String eventSource;
@@ -123,9 +117,6 @@ public class NotificationRecords {
     }
 
     /** Identity information of {@link Event}. */
-    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "UwF",
-        justification = "Everything in this class is initialized by JSON unmarshalling.")
     public static class Identity {
       @JsonProperty private String principalId;
 
@@ -140,9 +131,6 @@ public class NotificationRecords {
     }
 
     /** Bucket information of {@link Event}. */
-    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "UwF",
-        justification = "Everything in this class is initialized by JSON unmarshalling.")
     public static class Bucket {
       @JsonProperty private String name;
       @JsonProperty private Identity ownerIdentity;
@@ -215,11 +203,6 @@ public class NotificationRecords {
     }
 
     /** S3 information of {@link Event}. */
-    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = {"UwF", "UuF"},
-        justification =
-            "Everything in this class is initialized by JSON unmarshalling "
-                + "and s3SchemaVersion/configurationId are available for completeness.")
     public static class S3 {
       @JsonProperty private String s3SchemaVersion;
       @JsonProperty private String configurationId;
@@ -247,9 +230,6 @@ public class NotificationRecords {
 
     /** Source information of {@link Event}. */
     /** This is MinIO extension. */
-    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-        value = "UwF",
-        justification = "Everything in this class is initialized by JSON unmarshalling.")
     public static class Source {
       @JsonProperty private String host;
       @JsonProperty private String port;

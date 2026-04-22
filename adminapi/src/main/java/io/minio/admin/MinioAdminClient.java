@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.type.MapType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.minio.Checksum;
 import io.minio.Http;
 import io.minio.Signer;
@@ -127,9 +126,9 @@ public class MinioAdminClient {
     this.httpClient = httpClient;
   }
 
-  private Credentials getCredentials() {
+  private Credentials getCredentials() throws MinioException {
     Credentials creds = provider.fetch();
-    if (creds == null) throw new RuntimeException("Credential provider returns null credential");
+    if (creds == null) throw new MinioException("Credential provider returns null credential");
     return creds;
   }
 
@@ -216,7 +215,7 @@ public class MinioAdminClient {
 
     if (response.isSuccessful()) return response;
 
-    throw new RuntimeException("Request failed with response: " + response.body().string());
+    throw new MinioException("Request failed with response: " + response.body().string());
   }
 
   private Response execute(
@@ -890,7 +889,6 @@ public class MinioAdminClient {
    *
    * @throws MinioException thrown to indicate SDK exception.
    */
-  @SuppressFBWarnings(value = "SIC", justification = "Should not be used in production anyways.")
   public void ignoreCertCheck() throws MinioException {
     this.httpClient = Http.disableCertCheck(this.httpClient);
   }

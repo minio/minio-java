@@ -134,8 +134,7 @@ import okhttp3.Response;
 import org.junit.jupiter.api.Assertions;
 
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-    value = "REC",
-    justification = "Allow catching super class Exception since it's tests")
+    value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", "REC_CATCH_EXCEPTION"})
 public class TestMinioClient extends TestArgs {
   private String bucketName = getRandomName();
   private String bucketNameWithLock = getRandomName();

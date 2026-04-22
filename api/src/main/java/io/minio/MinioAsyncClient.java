@@ -1271,7 +1271,7 @@ public class MinioAsyncClient extends BaseS3Client {
           private ListAllMyBucketsResult result = null;
           private Result<ListAllMyBucketsResult.Bucket> error = null;
           private Iterator<ListAllMyBucketsResult.Bucket> iterator = null;
-          private boolean completed = false;
+          private volatile boolean completed = false;
 
           private synchronized void populate() {
             if (completed) return;
@@ -1851,7 +1851,7 @@ public class MinioAsyncClient extends BaseS3Client {
                         }
                       });
               if (result == null) {
-                throw new RuntimeException(
+                throw new IllegalStateException(
                     "uploadExecutor.submit() returns null; this should not happen");
               }
             }
@@ -3675,7 +3675,7 @@ public class MinioAsyncClient extends BaseS3Client {
     Throwable ex = e.getCause();
     if (ex instanceof MinioException) throw (MinioException) ex;
     Throwable exc = ex.getCause();
-    throw new RuntimeException(exc != null ? exc : ex);
+    throw new IllegalStateException(exc != null ? exc : ex);
   }
 
   private abstract class ObjectIterator implements Iterator<Result<Item>> {
@@ -3683,7 +3683,7 @@ public class MinioAsyncClient extends BaseS3Client {
     protected Iterator<? extends Item> itemIterator;
     protected Iterator<ListVersionsResult.DeleteMarker> deleteMarkerIterator;
     protected Iterator<ListObjectsResult.Prefix> prefixIterator;
-    protected boolean completed = false;
+    protected volatile boolean completed = false;
     protected ListObjectsResult listObjectsResult;
     protected String lastObjectName;
 

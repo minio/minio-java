@@ -154,7 +154,7 @@ public class Utils {
       return value == null ? null : URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
     } catch (UnsupportedEncodingException e) {
       // This never happens as 'enc' name comes from JDK's own StandardCharsets.
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 
@@ -293,7 +293,6 @@ public class Utils {
   }
 
   /** Identifies and stores version information of minio-java package at run time. */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "MS_EXPOSE_REP")
   public static enum MinioProperties {
     INSTANCE;
 

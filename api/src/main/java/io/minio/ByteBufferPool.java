@@ -33,7 +33,7 @@ public class ByteBufferPool {
     // Optionally pre-fill
     for (int i = 0; i < capacity - 1; i++) {
       if (!pool.offer(new ByteBuffer(bufferSize))) {
-        throw new RuntimeException("unable to allocate byte buffer; this should not happen");
+        throw new IllegalStateException("unable to allocate byte buffer; this should not happen");
       }
     }
   }
@@ -52,7 +52,7 @@ public class ByteBufferPool {
       buffer.reset();
       if (!pool.offer(buffer)) return; // ignore if pool is full
     } catch (MinioException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 }

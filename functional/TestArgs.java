@@ -50,8 +50,7 @@ import okio.Okio;
 import org.junit.jupiter.api.Assertions;
 
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-    value = "REC",
-    justification = "Allow catching super class Exception since it's tests")
+    value = "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION")
 public class TestArgs {
   public static final String OS = System.getProperty("os.name").toLowerCase(Locale.US);
   public static final String MINIO_BINARY = OS.contains("windows") ? "minio.exe" : "minio";
@@ -79,7 +78,7 @@ public class TestArgs {
       keyGen.init(256);
       SSE_C = new ServerSideEncryption.CustomerKey(keyGen.generateKey());
     } catch (NoSuchAlgorithmException | MinioException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     String mintMode = System.getenv("MINT_MODE");
@@ -157,7 +156,7 @@ public class TestArgs {
     try {
       return Http.disableCertCheck(Http.newDefaultClient());
     } catch (MinioException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 

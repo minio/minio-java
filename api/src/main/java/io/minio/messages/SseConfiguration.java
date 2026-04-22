@@ -34,7 +34,6 @@ import org.simpleframework.xml.Root;
  */
 @Root(name = "ServerSideEncryptionConfiguration", strict = false)
 @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class SseConfiguration {
   @Element(name = "Rule", required = false)
   private Rule rule;
@@ -63,7 +62,6 @@ public class SseConfiguration {
   /** Rule information of {@link SseConfiguration}. */
   @Root(name = "Rule", strict = false)
   @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class Rule {
     @Path(value = "ApplyServerSideEncryptionByDefault")
     @Element(name = "KMSMasterKeyID", required = false)
