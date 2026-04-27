@@ -143,7 +143,8 @@ public class TestMinioClient extends TestArgs {
   private static final Set<String> IGNORABLE_DELETE_CODES =
       new HashSet<>(Arrays.asList("NoSuchKey", "NoSuchVersion"));
   private static final Set<String> TRANSIENT_DELETE_CODES =
-      new HashSet<>(Arrays.asList("InternalError", "RequestTimeout", "ServiceUnavailable", "SlowDown"));
+      new HashSet<>(
+          Arrays.asList("InternalError", "RequestTimeout", "ServiceUnavailable", "SlowDown"));
 
   private String bucketName = getRandomName();
   private String bucketNameWithLock = getRandomName();
