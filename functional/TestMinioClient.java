@@ -1250,6 +1250,10 @@ public class TestMinioClient extends TestArgs {
         RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
   }
 
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = "DE_MIGHT_IGNORE",
+      justification =
+          "Cleanup exception suppressed intentionally so original test failure propagates")
   public void testRemoveObjects(String testTags, List<ObjectWriteResponse> results)
       throws Exception {
     String methodName = "removeObjects()";
