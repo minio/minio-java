@@ -92,6 +92,7 @@ import io.minio.messages.AccessControlList;
 import io.minio.messages.AccessControlPolicy;
 import io.minio.messages.CORSConfiguration;
 import io.minio.messages.DeleteRequest;
+import io.minio.messages.DeleteResult;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.EventType;
 import io.minio.messages.Filter;
@@ -121,8 +122,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import okhttp3.Headers;
@@ -136,6 +139,12 @@ import org.junit.jupiter.api.Assertions;
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
     value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", "REC_CATCH_EXCEPTION"})
 public class TestMinioClient extends TestArgs {
+  private static final int MAX_DELETE_RETRIES = 5;
+  private static final Set<String> IGNORABLE_DELETE_CODES =
+      new HashSet<>(Arrays.asList("NoSuchKey", "NoSuchVersion"));
+  private static final Set<String> TRANSIENT_DELETE_CODES =
+      new HashSet<>(Arrays.asList("InternalError", "RequestTimeout", "ServiceUnavailable", "SlowDown"));
+
   private String bucketName = getRandomName();
   private String bucketNameWithLock = getRandomName();
   public boolean isQuickTest;
@@ -1026,18 +1035,44 @@ public class TestMinioClient extends TestArgs {
     return results;
   }
 
+  private void retryRemoveObject(String bucket, String object, String versionId) throws Exception {
+    for (int attempt = 0; attempt < MAX_DELETE_RETRIES; attempt++) {
+      if (attempt > 0) Thread.sleep(500L << attempt);
+      try {
+        RemoveObjectArgs.Builder b = RemoveObjectArgs.builder().bucket(bucket).object(object);
+        if (versionId != null) b.versionId(versionId);
+        client.removeObject(b.build());
+        return;
+      } catch (ErrorResponseException e) {
+        String code = e.errorResponse().code();
+        if (IGNORABLE_DELETE_CODES.contains(code)) return;
+        if (attempt == MAX_DELETE_RETRIES - 1 || !TRANSIENT_DELETE_CODES.contains(code)) throw e;
+      }
+    }
+  }
+
   public void removeObjects(String bucketName, List<ObjectWriteResponse> results) throws Exception {
+    // DeleteResult.Error only exposes objectName(); index all responses for retry lookup.
+    Map<String, List<ObjectWriteResponse>> byName = new HashMap<>();
+    for (ObjectWriteResponse res : results) {
+      byName.computeIfAbsent(res.object(), k -> new ArrayList<>()).add(res);
+    }
     List<DeleteRequest.Object> objects =
         results.stream()
-            .map(
-                result -> {
-                  return new DeleteRequest.Object(result.object(), result.versionId());
-                })
+            .map(result -> new DeleteRequest.Object(result.object(), result.versionId()))
             .collect(Collectors.toList());
+    // Fully consume the iterator before retrying so all batches are sent first.
+    List<DeleteResult.Error> deleteErrors = new ArrayList<>();
     for (Result<?> r :
         client.removeObjects(
             RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
-      ignore(r.get());
+      DeleteResult.Error err = (DeleteResult.Error) r.get();
+      if (err != null) deleteErrors.add(err);
+    }
+    for (DeleteResult.Error err : deleteErrors) {
+      for (ObjectWriteResponse res : byName.getOrDefault(err.objectName(), new ArrayList<>())) {
+        retryRemoveObject(bucketName, res.object(), res.versionId());
+      }
     }
   }
 
