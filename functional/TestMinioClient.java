@@ -141,6 +141,9 @@ import org.junit.jupiter.api.Assertions;
     value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", "REC_CATCH_EXCEPTION"})
 public class TestMinioClient extends TestArgs {
   private static final int MAX_DELETE_RETRIES = 5;
+  // Matches the SDK's internal chunk size: MinioAsyncClient sets completed=true on the
+  // first chunk that returns errors, dropping remaining chunks in the same call.
+  private static final int DELETE_BATCH_SIZE = 1000;
   private static final Set<String> TRANSIENT_DELETE_CODES =
       Collections.unmodifiableSet(
           new HashSet<>(
@@ -1057,25 +1060,29 @@ public class TestMinioClient extends TestArgs {
       }
       Set<String> retryNames = new HashSet<>();
       IOException nonTransientErr = null;
-      for (Result<DeleteResult.Error> r :
-          client.removeObjects(
-              RemoveObjectsArgs.builder().bucket(bucketName).objects(toDelete).build())) {
-        DeleteResult.Error err = r.get();
-        String code = err.code();
-        if (!TRANSIENT_DELETE_CODES.contains(code)) {
-          if (nonTransientErr == null) {
-            nonTransientErr =
-                new IOException(
-                    "non-transient delete error '"
-                        + code
-                        + "' on "
-                        + err.objectName()
-                        + " in bucket "
-                        + bucketName);
+      for (int i = 0; i < toDelete.size(); i += DELETE_BATCH_SIZE) {
+        List<DeleteRequest.Object> chunk =
+            toDelete.subList(i, Math.min(i + DELETE_BATCH_SIZE, toDelete.size()));
+        for (Result<DeleteResult.Error> r :
+            client.removeObjects(
+                RemoveObjectsArgs.builder().bucket(bucketName).objects(chunk).build())) {
+          DeleteResult.Error err = r.get();
+          String code = err.code();
+          if (!TRANSIENT_DELETE_CODES.contains(code)) {
+            if (nonTransientErr == null) {
+              nonTransientErr =
+                  new IOException(
+                      "non-transient delete error '"
+                          + code
+                          + "' on "
+                          + err.objectName()
+                          + " in bucket "
+                          + bucketName);
+            }
+            continue; // drain remaining response before throwing
           }
-          continue; // drain remaining response before throwing
+          retryNames.add(err.objectName());
         }
-        retryNames.add(err.objectName());
       }
       if (nonTransientErr != null) throw nonTransientErr;
       // All versions re-queued because DeleteResult.Error lacks versionId;
