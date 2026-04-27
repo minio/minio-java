@@ -140,7 +140,7 @@ import org.junit.jupiter.api.Assertions;
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
     value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", "REC_CATCH_EXCEPTION"})
 public class TestMinioClient extends TestArgs {
-  private static final int MAX_DELETE_RETRIES = 5;
+  private static final int MAX_DELETE_ATTEMPTS = 5;
   // Matches the SDK's internal chunk size: MinioAsyncClient sets completed=true on the
   // first chunk that returns errors, dropping remaining chunks in the same call.
   private static final int DELETE_BATCH_SIZE = 1000;
@@ -1049,7 +1049,8 @@ public class TestMinioClient extends TestArgs {
         results.stream()
             .map(r -> new DeleteRequest.Object(r.object(), r.versionId()))
             .collect(Collectors.toList());
-    for (int attempt = 0; attempt < MAX_DELETE_RETRIES && !toDelete.isEmpty(); attempt++) {
+    Set<String> failedNames = Collections.emptySet();
+    for (int attempt = 0; attempt < MAX_DELETE_ATTEMPTS && !toDelete.isEmpty(); attempt++) {
       if (attempt > 0) {
         try {
           Thread.sleep(500L << attempt); // 1s / 2s / 4s / 8s
@@ -1074,7 +1075,9 @@ public class TestMinioClient extends TestArgs {
                   new IOException(
                       "non-transient delete error '"
                           + code
-                          + "' on "
+                          + "': "
+                          + err.message()
+                          + " on "
                           + err.objectName()
                           + " in bucket "
                           + bucketName);
@@ -1087,6 +1090,7 @@ public class TestMinioClient extends TestArgs {
       }
       // All versions re-queued because DeleteResult.Error lacks versionId;
       // already-deleted versions return NoSuchVersion, filtered upstream by MinioAsyncClient.
+      failedNames = retryNames;
       toDelete = new ArrayList<>();
       for (String name : retryNames) {
         for (ObjectWriteResponse res : byName.getOrDefault(name, Collections.emptyList())) {
@@ -1098,9 +1102,11 @@ public class TestMinioClient extends TestArgs {
       throw new IOException(
           toDelete.size()
               + " object(s) not deleted after "
-              + MAX_DELETE_RETRIES
+              + MAX_DELETE_ATTEMPTS
               + " attempts in bucket "
-              + bucketName);
+              + bucketName
+              + "; sample: "
+              + failedNames.stream().limit(5).collect(Collectors.toList()));
     }
   }
 
