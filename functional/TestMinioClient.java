@@ -1079,12 +1079,12 @@ public class TestMinioClient extends TestArgs {
                           + " in bucket "
                           + bucketName);
             }
-            continue; // drain remaining response before throwing
+            continue; // drain current chunk's response before throwing
           }
           retryNames.add(err.objectName());
         }
+        if (nonTransientErr != null) throw nonTransientErr;
       }
-      if (nonTransientErr != null) throw nonTransientErr;
       // All versions re-queued because DeleteResult.Error lacks versionId;
       // already-deleted versions return NoSuchVersion, filtered upstream by MinioAsyncClient.
       toDelete = new ArrayList<>();
