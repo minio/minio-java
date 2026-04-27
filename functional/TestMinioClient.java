@@ -1262,7 +1262,13 @@ public class TestMinioClient extends TestArgs {
     } catch (Exception e) {
       handleException(methodName, testTags, startTime, e);
     } finally {
-      if (!succeeded) removeObjects(bucketName, results);
+      if (!succeeded) {
+        try {
+          removeObjects(bucketName, results);
+        } catch (Exception ignored) {
+          // suppress so the original test exception propagates unmasked
+        }
+      }
     }
   }
 
