@@ -1040,17 +1040,12 @@ public class TestMinioClient extends TestArgs {
   }
 
   public void removeObjects(String bucketName, List<ObjectWriteResponse> results) throws Exception {
-    // DeleteResult.Error has no versionId; keyed by name to rebuild versioned retry batches.
-    Map<String, List<ObjectWriteResponse>> byName = new HashMap<>();
-    for (ObjectWriteResponse res : results) {
-      byName.computeIfAbsent(res.object(), k -> new ArrayList<>()).add(res);
-    }
-    List<DeleteRequest.Object> toDelete =
+    List<DeleteRequest.Object> objects =
         results.stream()
             .map(r -> new DeleteRequest.Object(r.object(), r.versionId()))
             .collect(Collectors.toList());
-    Set<String> failedNames = Collections.emptySet();
-    for (int attempt = 0; attempt < MAX_DELETE_ATTEMPTS && !toDelete.isEmpty(); attempt++) {
+    boolean anyTransient = false;
+    for (int attempt = 0; attempt < MAX_DELETE_ATTEMPTS; attempt++) {
       if (attempt > 0) {
         try {
           Thread.sleep(500L << attempt); // 1s / 2s / 4s / 8s
@@ -1059,11 +1054,11 @@ public class TestMinioClient extends TestArgs {
           throw ie;
         }
       }
-      Set<String> retryNames = new HashSet<>();
+      anyTransient = false;
       IOException nonTransientErr = null;
-      for (int i = 0; i < toDelete.size(); i += DELETE_BATCH_SIZE) {
+      for (int i = 0; i < objects.size(); i += DELETE_BATCH_SIZE) {
         List<DeleteRequest.Object> chunk =
-            toDelete.subList(i, Math.min(i + DELETE_BATCH_SIZE, toDelete.size()));
+            objects.subList(i, Math.min(i + DELETE_BATCH_SIZE, objects.size()));
         for (Result<DeleteResult.Error> r :
             client.removeObjects(
                 RemoveObjectsArgs.builder().bucket(bucketName).objects(chunk).build())) {
@@ -1084,29 +1079,19 @@ public class TestMinioClient extends TestArgs {
             }
             continue; // drain current chunk's response before throwing
           }
-          retryNames.add(err.objectName());
+          anyTransient = true;
         }
         if (nonTransientErr != null) throw nonTransientErr;
       }
-      // All versions re-queued because DeleteResult.Error lacks versionId;
-      // already-deleted versions return NoSuchVersion, filtered upstream by MinioAsyncClient.
-      failedNames = retryNames;
-      toDelete = new ArrayList<>();
-      for (String name : retryNames) {
-        for (ObjectWriteResponse res : byName.getOrDefault(name, Collections.emptyList())) {
-          toDelete.add(new DeleteRequest.Object(res.object(), res.versionId()));
-        }
-      }
+      if (!anyTransient) break;
     }
-    if (!toDelete.isEmpty()) {
+    if (anyTransient) {
       throw new IOException(
-          toDelete.size()
+          results.size()
               + " object(s) not deleted after "
               + MAX_DELETE_ATTEMPTS
               + " attempts in bucket "
-              + bucketName
-              + "; sample: "
-              + failedNames.stream().limit(5).collect(Collectors.toList()));
+              + bucketName);
     }
   }
 
