@@ -141,9 +141,6 @@ import org.junit.jupiter.api.Assertions;
     value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", "REC_CATCH_EXCEPTION"})
 public class TestMinioClient extends TestArgs {
   private static final int MAX_DELETE_ATTEMPTS = 5;
-  // Matches the SDK's internal chunk size: MinioAsyncClient sets completed=true on the
-  // first chunk that returns errors, dropping remaining chunks in the same call.
-  private static final int DELETE_BATCH_SIZE = 1000;
   private static final Set<String> TRANSIENT_DELETE_CODES =
       Collections.unmodifiableSet(
           new HashSet<>(
@@ -1055,33 +1052,23 @@ public class TestMinioClient extends TestArgs {
         }
       }
       anyTransient = false;
-      IOException nonTransientErr = null;
-      for (int i = 0; i < objects.size(); i += DELETE_BATCH_SIZE) {
-        List<DeleteRequest.Object> chunk =
-            objects.subList(i, Math.min(i + DELETE_BATCH_SIZE, objects.size()));
-        for (Result<DeleteResult.Error> r :
-            client.removeObjects(
-                RemoveObjectsArgs.builder().bucket(bucketName).objects(chunk).build())) {
-          DeleteResult.Error err = r.get();
-          String code = err.code();
-          if (!TRANSIENT_DELETE_CODES.contains(code)) {
-            if (nonTransientErr == null) {
-              nonTransientErr =
-                  new IOException(
-                      "non-transient delete error '"
-                          + code
-                          + "': "
-                          + err.message()
-                          + " on "
-                          + err.objectName()
-                          + " in bucket "
-                          + bucketName);
-            }
-            continue; // drain current chunk's response before throwing
-          }
-          anyTransient = true;
+      for (Result<DeleteResult.Error> r :
+          client.removeObjects(
+              RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
+        DeleteResult.Error err = r.get();
+        String code = err.code();
+        if (!TRANSIENT_DELETE_CODES.contains(code)) {
+          throw new IOException(
+              "non-transient delete error '"
+                  + code
+                  + "': "
+                  + err.message()
+                  + " on "
+                  + err.objectName()
+                  + " in bucket "
+                  + bucketName);
         }
-        if (nonTransientErr != null) throw nonTransientErr;
+        anyTransient = true;
       }
       if (!anyTransient) break;
     }
