@@ -62,6 +62,9 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import javax.annotation.Nonnull;
@@ -103,6 +106,15 @@ public abstract class BaseS3Client implements AutoCloseable {
   private static final String UPLOAD_ID = "uploadId";
   private static final Set<String> TRACE_QUERY_PARAMS =
       ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID, "acl", "attributes");
+
+  private static final ScheduledExecutorService RETRY_SCHEDULER =
+      Executors.newSingleThreadScheduledExecutor(
+          r -> {
+            Thread t = new Thread(r, "minio-retry-scheduler");
+            t.setDaemon(true);
+            return t;
+          });
+
   private PrintWriter traceStream;
   protected final Map<String, String> regionCache = new ConcurrentHashMap<>();
   protected String userAgent = Utils.getDefaultUserAgent();
@@ -111,6 +123,7 @@ public abstract class BaseS3Client implements AutoCloseable {
   protected Provider provider;
   protected OkHttpClient httpClient;
   protected boolean closeHttpClient;
+  protected volatile int maxRetries = Retry.MAX_RETRY;
 
   protected BaseS3Client(
       Http.BaseUrl baseUrl, Provider provider, OkHttpClient httpClient, boolean closeHttpClient) {
@@ -125,6 +138,7 @@ public abstract class BaseS3Client implements AutoCloseable {
     this.provider = client.provider;
     this.httpClient = client.httpClient;
     this.closeHttpClient = client.closeHttpClient;
+    this.maxRetries = client.maxRetries;
   }
 
   /** Closes underneath HTTP client. */
@@ -134,6 +148,18 @@ public abstract class BaseS3Client implements AutoCloseable {
       httpClient.dispatcher().executorService().shutdown();
       httpClient.connectionPool().evictAll();
     }
+  }
+
+  /**
+   * Sets the maximum number of retry attempts for failed S3 requests. Requests with non-seekable
+   * bodies are never retried regardless of this value. The default is {@code Retry.MAX_RETRY} (10).
+   * Pass 1 to disable automatic retries.
+   *
+   * @param maxRetries maximum attempts (must be >= 1).
+   */
+  public void setMaxRetries(int maxRetries) {
+    if (maxRetries < 1) throw new IllegalArgumentException("maxRetries must be >= 1");
+    this.maxRetries = maxRetries;
   }
 
   /**
@@ -270,8 +296,47 @@ public abstract class BaseS3Client implements AutoCloseable {
     return new String[] {code, message};
   }
 
-  /** Execute HTTP request asynchronously for given parameters. */
+  /** Execute HTTP request asynchronously for given parameters, with automatic retry. */
   protected CompletableFuture<Response> executeAsync(Http.S3Request s3request, String region) {
+    // Non-seekable bodies (raw okhttp3 RequestBody) cannot be replayed — single attempt only.
+    Http.Body body = s3request.body();
+    int maxAttempts = (body != null && body.isHttpRequestBody()) ? 1 : this.maxRetries;
+    return executeWithRetry(s3request, region, maxAttempts, 0);
+  }
+
+  private CompletableFuture<Response> executeWithRetry(
+      Http.S3Request s3request, String region, int maxAttempts, int attempt) {
+    return doExecuteAsync(s3request, region)
+        .handle(
+            (response, throwable) -> {
+              if (throwable == null) {
+                return CompletableFuture.completedFuture(response);
+              }
+              Throwable cause =
+                  (throwable instanceof CompletionException) ? throwable.getCause() : throwable;
+              if (cause == null) cause = throwable;
+              if (attempt + 1 >= maxAttempts || !Retry.isRetryable(cause)) {
+                return Utils.<Response>failedFuture(cause);
+              }
+              long delayMs = Retry.computeBackoffMs(attempt + 1, RANDOM);
+              CompletableFuture<Response> retryFuture = new CompletableFuture<>();
+              RETRY_SCHEDULER.schedule(
+                  () ->
+                      executeWithRetry(s3request, region, maxAttempts, attempt + 1)
+                          .whenComplete(
+                              (r, t) -> {
+                                if (t != null) retryFuture.completeExceptionally(t);
+                                else retryFuture.complete(r);
+                              }),
+                  delayMs,
+                  TimeUnit.MILLISECONDS);
+              return retryFuture;
+            })
+        .thenCompose(cf -> cf);
+  }
+
+  /** Execute single HTTP request attempt asynchronously for given parameters. */
+  private CompletableFuture<Response> doExecuteAsync(Http.S3Request s3request, String region) {
     Credentials credentials = (provider == null) ? null : provider.fetch();
     Http.Request request = null;
     try {
@@ -285,11 +350,6 @@ public abstract class BaseS3Client implements AutoCloseable {
     if (traceStream != null) traceStream.print(request.httpTraces());
 
     OkHttpClient httpClient = this.httpClient;
-    // FIXME: enable retry for all request.
-    // if (!s3request.retryFailure()) {
-    //   httpClient = httpClient.newBuilder().retryOnConnectionFailure(false).build();
-    // }
-
     okhttp3.Request httpRequest = request.httpRequest();
     CompletableFuture<Response> completableFuture = newCompleteableFuture();
     httpClient

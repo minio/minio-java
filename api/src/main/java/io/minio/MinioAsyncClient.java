@@ -156,6 +156,7 @@ public class MinioAsyncClient extends BaseS3Client {
     private Provider provider;
     private OkHttpClient httpClient;
     private boolean closeHttpClient;
+    private int maxRetries = Retry.MAX_RETRY;
 
     public Builder baseUrl(Http.BaseUrl baseUrl) {
       if (baseUrl.region() == null) {
@@ -217,6 +218,16 @@ public class MinioAsyncClient extends BaseS3Client {
       return this;
     }
 
+    /**
+     * Sets the maximum number of retry attempts per request. Pass 1 to disable automatic retries.
+     * Defaults to {@link Retry#MAX_RETRY} (10).
+     */
+    public Builder maxRetries(int maxRetries) {
+      if (maxRetries < 1) throw new IllegalArgumentException("maxRetries must be >= 1");
+      this.maxRetries = maxRetries;
+      return this;
+    }
+
     public MinioAsyncClient build() {
       Utils.validateNotNull(baseUrl, "endpoint");
 
@@ -232,7 +243,10 @@ public class MinioAsyncClient extends BaseS3Client {
         httpClient = Http.newDefaultClient();
       }
 
-      return new MinioAsyncClient(baseUrl, provider, httpClient, closeHttpClient);
+      MinioAsyncClient client =
+          new MinioAsyncClient(baseUrl, provider, httpClient, closeHttpClient);
+      client.maxRetries = maxRetries;
+      return client;
     }
   }
 

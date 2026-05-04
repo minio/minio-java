@@ -20,6 +20,8 @@ package io.minio.errors;
 public class InvalidResponseException extends MinioException {
   private static final long serialVersionUID = -4793742105569629274L;
 
+  private final int responseCode;
+
   public InvalidResponseException(
       int responseCode, String contentType, String body, String httpTrace) {
     super(
@@ -30,5 +32,11 @@ public class InvalidResponseException extends MinioException {
             + ", body: "
             + body,
         httpTrace);
+    this.responseCode = responseCode;
+  }
+
+  /** Returns the HTTP response code that triggered this exception. */
+  public int responseCode() {
+    return responseCode;
   }
 }

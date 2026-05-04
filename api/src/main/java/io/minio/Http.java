@@ -1503,6 +1503,11 @@ public class Http {
       return object;
     }
 
+    /** Returns the request body, or {@code null} if none was set. */
+    public Body body() {
+      return body;
+    }
+
     private Request toRequest(
         BaseUrl baseUrl, String region, Credentials credentials, Integer expiry)
         throws MinioException {
