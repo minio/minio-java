@@ -51,17 +51,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -94,7 +93,6 @@ public abstract class BaseS3Client implements AutoCloseable {
       "ServerSideEncryptionConfigurationNotFoundError";
   // maximum allowed bucket policy size is 20KiB
   protected static final int MAX_BUCKET_POLICY_SIZE = 20 * 1024;
-  protected static final Random RANDOM = new Random(new SecureRandom().nextLong());
   protected static final ObjectMapper OBJECT_MAPPER =
       JsonMapper.builder()
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -318,7 +316,7 @@ public abstract class BaseS3Client implements AutoCloseable {
               if (attempt + 1 >= maxAttempts || !Retry.isRetryable(cause)) {
                 return Utils.<Response>failedFuture(cause);
               }
-              long delayMs = Retry.computeBackoffMs(attempt + 1, RANDOM);
+              long delayMs = Retry.computeBackoffMs(attempt + 1, ThreadLocalRandom.current());
               CompletableFuture<Response> retryFuture = new CompletableFuture<>();
               RETRY_SCHEDULER.schedule(
                   () ->
@@ -351,7 +349,8 @@ public abstract class BaseS3Client implements AutoCloseable {
     PrintWriter traceStream = this.traceStream;
     if (traceStream != null) traceStream.print(request.httpTraces());
 
-    OkHttpClient httpClient = this.httpClient;
+    OkHttpClient httpClient =
+        this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
     okhttp3.Request httpRequest = request.httpRequest();
     CompletableFuture<Response> completableFuture = newCompleteableFuture();
     httpClient

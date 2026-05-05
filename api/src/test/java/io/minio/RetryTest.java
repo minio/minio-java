@@ -459,8 +459,8 @@ public class RetryTest {
       try {
         client.listBuckets();
         Assert.fail("expected exception");
-      } catch (Exception e) {
-        Assert.assertNotNull("expected non-null exception", e);
+      } catch (InvalidResponseException e) {
+        Assert.assertEquals(500, e.responseCode());
       }
       // maxRetries=1 means a single attempt; must not retry
       Assert.assertEquals(1, server.getRequestCount());
@@ -481,8 +481,8 @@ public class RetryTest {
       try {
         client.listBuckets();
         Assert.fail("expected exception");
-      } catch (Exception e) {
-        Assert.assertNotNull("expected non-null exception", e);
+      } catch (InvalidResponseException e) {
+        Assert.assertEquals(500, e.responseCode());
       }
       Assert.assertEquals(1, server.getRequestCount());
     }
