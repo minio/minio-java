@@ -60,9 +60,9 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -349,8 +349,7 @@ public abstract class BaseS3Client implements AutoCloseable {
     PrintWriter traceStream = this.traceStream;
     if (traceStream != null) traceStream.print(request.httpTraces());
 
-    OkHttpClient httpClient =
-        this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
+    OkHttpClient httpClient = this.httpClient.newBuilder().retryOnConnectionFailure(false).build();
     okhttp3.Request httpRequest = request.httpRequest();
     CompletableFuture<Response> completableFuture = newCompleteableFuture();
     httpClient
