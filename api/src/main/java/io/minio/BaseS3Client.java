@@ -533,9 +533,10 @@ public abstract class BaseS3Client implements AutoCloseable {
                           response.header("x-amz-id-2"));
                 }
 
-                // invalidate region cache if needed
-                if (errorResponse.code().equals(NO_SUCH_BUCKET)
-                    || errorResponse.code().equals(RETRY_HEAD)) {
+                // invalidate region cache if needed (bucket may be null for e.g. listBuckets)
+                if (s3request.bucket() != null
+                    && (errorResponse.code().equals(NO_SUCH_BUCKET)
+                        || errorResponse.code().equals(RETRY_HEAD))) {
                   regionCache.remove(s3request.bucket());
                 }
 

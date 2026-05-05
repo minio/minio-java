@@ -389,7 +389,10 @@ public class RetryTest {
         client.listBuckets();
         Assert.fail("expected exception");
       } catch (Exception e) {
-        Assert.assertNotNull("expected non-null exception", e);
+        Assert.assertTrue("expected ErrorResponseException", e instanceof ErrorResponseException);
+        ErrorResponseException ere = (ErrorResponseException) e;
+        Assert.assertEquals("NoSuchBucket", ere.errorResponse().code());
+        Assert.assertEquals(404, ere.response().code());
       }
       // Must not retry — only 1 request should have been made
       Assert.assertEquals(1, server.getRequestCount());
@@ -417,7 +420,10 @@ public class RetryTest {
         client.listBuckets();
         Assert.fail("expected exception");
       } catch (Exception e) {
-        Assert.assertNotNull("expected non-null exception", e);
+        Assert.assertTrue("expected ErrorResponseException", e instanceof ErrorResponseException);
+        ErrorResponseException ere = (ErrorResponseException) e;
+        Assert.assertEquals("AccessDenied", ere.errorResponse().code());
+        Assert.assertEquals(403, ere.response().code());
       }
       Assert.assertEquals(1, server.getRequestCount());
     }
@@ -438,7 +444,9 @@ public class RetryTest {
         client.listBuckets();
         Assert.fail("expected exception after exhausted retries");
       } catch (Exception e) {
-        Assert.assertNotNull("expected non-null exception after exhausted retries", e);
+        Assert.assertTrue(
+            "expected InvalidResponseException", e instanceof InvalidResponseException);
+        Assert.assertEquals(500, ((InvalidResponseException) e).responseCode());
       }
       Assert.assertEquals(3, server.getRequestCount());
     }
