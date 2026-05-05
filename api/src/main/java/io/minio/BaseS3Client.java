@@ -321,13 +321,18 @@ public abstract class BaseS3Client implements AutoCloseable {
               RETRY_SCHEDULER.schedule(
                   () ->
                       CompletableFuture.runAsync(
-                          () ->
-                              executeWithRetry(s3request, region, maxAttempts, attempt + 1)
-                                  .whenComplete(
-                                      (r, t) -> {
-                                        if (t != null) retryFuture.completeExceptionally(t);
-                                        else retryFuture.complete(r);
-                                      })),
+                              () ->
+                                  executeWithRetry(s3request, region, maxAttempts, attempt + 1)
+                                      .whenComplete(
+                                          (r, t) -> {
+                                            if (t != null) retryFuture.completeExceptionally(t);
+                                            else retryFuture.complete(r);
+                                          }))
+                          .exceptionally(
+                              ex -> {
+                                retryFuture.completeExceptionally(ex);
+                                return null;
+                              }),
                   delayMs,
                   TimeUnit.MILLISECONDS);
               return retryFuture;
