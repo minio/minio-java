@@ -2054,7 +2054,7 @@ public class MinioClient implements AutoCloseable {
 
     /**
      * Sets the maximum number of retry attempts per request. Pass 1 to disable automatic retries.
-     * Defaults to {@link Retry#MAX_RETRY} (10).
+     * Defaults to {@code 10}.
      */
     public Builder maxRetries(int maxRetries) {
       asyncClientBuilder.maxRetries(maxRetries);

@@ -69,8 +69,7 @@ class Retry {
           502, // Bad Gateway
           503, // Service Unavailable
           504, // Gateway Timeout
-          520 // Cloudflare unknown error
-          );
+          520); // Cloudflare unknown error
 
   static boolean isRetryableS3Code(String code) {
     return code != null && RETRYABLE_S3_CODES.contains(code);

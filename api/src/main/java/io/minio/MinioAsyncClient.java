@@ -220,7 +220,7 @@ public class MinioAsyncClient extends BaseS3Client {
 
     /**
      * Sets the maximum number of retry attempts per request. Pass 1 to disable automatic retries.
-     * Defaults to {@link Retry#MAX_RETRY} (10).
+     * Defaults to {@code 10}.
      */
     public Builder maxRetries(int maxRetries) {
       if (maxRetries < 1) throw new IllegalArgumentException("maxRetries must be >= 1");

@@ -21,7 +21,10 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.messages.ErrorResponse;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.SocketException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Random;
 import java.util.concurrent.CompletionException;
 import javax.net.ssl.SSLHandshakeException;
@@ -616,6 +619,48 @@ public class RetryTest {
               .build());
 
       Assert.assertEquals(2, server.getRequestCount());
+    }
+  }
+
+  @Test
+  public void testRandomAccessFileBodyRetried() throws Exception {
+    Path tmpFile = Files.createTempFile("retry-raf-test", ".bin");
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(serverError500Html());
+      server.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setHeader("ETag", "\"abc123\"")
+              .setHeader("Content-Length", "0"));
+      server.start();
+
+      byte[] content = "hello-retry".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+      Files.write(tmpFile, content);
+
+      try (RandomAccessFile raf = new RandomAccessFile(tmpFile.toFile(), "r")) {
+        MinioAsyncClient client =
+            MinioAsyncClient.builder()
+                .endpoint(server.url("").toString())
+                .credentials("access", "secret")
+                .region("us-east-1")
+                .maxRetries(2)
+                .build();
+        client
+            .putObject(
+                PutObjectAPIArgs.builder()
+                    .bucket("test-bucket")
+                    .object("test-object")
+                    .file(raf, content.length)
+                    .build())
+            .join();
+      }
+
+      Assert.assertEquals(2, server.getRequestCount());
+      byte[] first = server.takeRequest().getBody().readByteArray();
+      byte[] second = server.takeRequest().getBody().readByteArray();
+      Assert.assertArrayEquals(first, second);
+    } finally {
+      Files.deleteIfExists(tmpFile);
     }
   }
 

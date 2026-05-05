@@ -322,12 +322,14 @@ public abstract class BaseS3Client implements AutoCloseable {
               CompletableFuture<Response> retryFuture = new CompletableFuture<>();
               RETRY_SCHEDULER.schedule(
                   () ->
-                      executeWithRetry(s3request, region, maxAttempts, attempt + 1)
-                          .whenComplete(
-                              (r, t) -> {
-                                if (t != null) retryFuture.completeExceptionally(t);
-                                else retryFuture.complete(r);
-                              }),
+                      CompletableFuture.runAsync(
+                          () ->
+                              executeWithRetry(s3request, region, maxAttempts, attempt + 1)
+                                  .whenComplete(
+                                      (r, t) -> {
+                                        if (t != null) retryFuture.completeExceptionally(t);
+                                        else retryFuture.complete(r);
+                                      })),
                   delayMs,
                   TimeUnit.MILLISECONDS);
               return retryFuture;
@@ -1285,6 +1287,15 @@ public abstract class BaseS3Client implements AutoCloseable {
     boolean checksumHeader = headers.namePrefixAny("x-amz-checksum-");
     String md5Hash = headers.getFirst(Http.Headers.CONTENT_MD5);
 
+    long fileStartPos = 0;
+    if (args.file() != null) {
+      try {
+        fileStartPos = args.file().getFilePointer();
+      } catch (IOException e) {
+        throw new MinioException(e);
+      }
+    }
+
     if (sha256HexString == null && sha256Base64String == null) {
       if (!baseUrl.isHttps()) {
         Checksum.Hasher hasher = Checksum.Algorithm.SHA256.hasher();
@@ -1337,6 +1348,14 @@ public abstract class BaseS3Client implements AutoCloseable {
         headers.put(Http.Headers.X_AMZ_CHECKSUM_SHA256, sha256Base64String);
         headers.put(
             Http.Headers.X_AMZ_SDK_CHECKSUM_ALGORITHM, Checksum.Algorithm.SHA256.toString());
+      }
+    }
+
+    if (args.file() != null) {
+      try {
+        args.file().seek(fileStartPos);
+      } catch (IOException e) {
+        throw new MinioException(e);
       }
     }
 
