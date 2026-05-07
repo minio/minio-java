@@ -108,14 +108,14 @@ public abstract class BaseArgs {
           }
         }
 
-        throw new RuntimeException(
+        throw new IllegalStateException(
             this.getClass().getEnclosingClass() + " must have no argument constructor");
       } catch (InstantiationException
           | IllegalAccessException
           | InvocationTargetException
           | SecurityException e) {
         // Args class must have no argument constructor with at least protected access.
-        throw new RuntimeException(e);
+        throw new IllegalStateException(e);
       }
     }
 

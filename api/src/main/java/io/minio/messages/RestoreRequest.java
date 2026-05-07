@@ -136,7 +136,6 @@ public class RestoreRequest {
 
   /** Select parameters information of {@link RestoreRequest}. */
   @Root(name = "SelectParameters")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class SelectParameters extends BaseSelectParameters {
     public SelectParameters(
         @Nonnull String expression,
@@ -148,7 +147,6 @@ public class RestoreRequest {
 
   /** Output location information of {@link RestoreRequest}. */
   @Root(name = "OutputLocation")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class OutputLocation {
     @Element(name = "S3")
     private S3 s3;
@@ -160,7 +158,6 @@ public class RestoreRequest {
 
   /** S3 information of {@link RestoreRequest.OutputLocation}. */
   @Root(name = "S3")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class S3 {
     @Element(name = "AccessControlList", required = false)
     private AccessControlList accessControlList;
@@ -281,7 +278,6 @@ public class RestoreRequest {
   /** User metadata information of {@link RestoreRequest.S3}. */
   @Root(name = "UserMetadata", strict = false)
   @Namespace(reference = "http://s3.amazonaws.com/doc/2006-03-01/")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class UserMetadata {
     @ElementMap(
         attribute = false,

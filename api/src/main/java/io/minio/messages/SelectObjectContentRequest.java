@@ -65,7 +65,6 @@ public class SelectObjectContentRequest extends BaseSelectParameters {
 
   /** Scan range information of {@link SelectObjectContentRequest}. */
   @Root(name = "ScanRange")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class ScanRange {
     @Element(name = "Start", required = false)
     private Long start;

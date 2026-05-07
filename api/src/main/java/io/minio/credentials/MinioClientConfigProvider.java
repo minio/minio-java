@@ -108,9 +108,7 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
   }
 
   /** Configuration of {@link MinioClientConfigProvider}. */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-      value = {"UwF", "UuF"},
-      justification = "All the fields are written at the time of JSON unmarshalling.")
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD")
   public static class Config {
     private Map<String, Map<String, String>> hosts;
 

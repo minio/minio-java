@@ -33,7 +33,6 @@ import org.simpleframework.xml.stream.OutputNode;
 
 /** Access control list of {@link RestoreRequest.S3} and {@link AccessControlPolicy}. */
 @Root(name = "AccessControlList")
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class AccessControlList {
   @ElementList(name = "Grant", inline = true)
   private List<Grant> grants;
@@ -58,7 +57,6 @@ public class AccessControlList {
 
   /** Grant information of {@link AccessControlList}. */
   @Root(name = "Grant")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class Grant {
     @Element(name = "Grantee", required = false)
     private Grantee grantee;
@@ -103,7 +101,6 @@ public class AccessControlList {
   /** Grantee information of {@link AccessControlList}. */
   @Root(name = "Grantee")
   @Namespace(prefix = "xsi", reference = "http://www.w3.org/2001/XMLSchema-instance")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class Grantee {
     @Attribute(name = "type")
     private String xsiType;

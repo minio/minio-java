@@ -624,7 +624,7 @@ public class Http {
     try {
       return enableExternalCertificatesFromEnv(client);
     } catch (MinioException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 
@@ -632,9 +632,6 @@ public class Http {
    * Disables TLS certificate check as a special case for self-signed certificate and testing to the
    * specified HTTP client.
    */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-      value = "SIC",
-      justification = "Should not be used in production anyways.")
   public static OkHttpClient disableCertCheck(OkHttpClient client) throws MinioException {
     try {
       final TrustManager[] trustAllCerts =
