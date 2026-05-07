@@ -32,6 +32,10 @@ import javax.net.ssl.SSLPeerUnverifiedException;
  *
  * <p>Defines the retryable HTTP status set, retryable S3 error code set, IOException filter, and
  * the full-jitter exponential backoff formula used for transient failure recovery.
+ *
+ * <p>Constants and predicates here mirror the contract in minio-go's {@code retry.go}
+ * (https://github.com/minio/minio-go/blob/master/retry.go) so a Java caller experiences the same
+ * retry semantics as a Go caller. Future drift in minio-go should be reflected here.
  */
 class Retry {
   /** Default maximum number of attempts per request. */

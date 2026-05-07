@@ -71,6 +71,7 @@ MinIO Client Builder is used to create MinIO client. Builder has below methods t
 | `credentials()` | Accepts access key (aka user ID) and secret key (aka password) of an account in S3 service.                                                |
 | `region()`      | Accepts region name of S3 service. If specified, all operations use this region otherwise region is probed per bucket.                     |
 | `httpClient()`  | Custom HTTP client to override default.                                                                                                    |
+| `maxRetries()`  | Maximum number of attempts per request for transient HTTP failures (retryable status codes 408/429/499/500/502/503/504/520, retryable S3 codes such as `SlowDown`/`InternalError`/`ExpiredToken`, and retryable IOExceptions). Pass `1` to disable automatic retries. Defaults to `10`. |
 
 __Examples__
 

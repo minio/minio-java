@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2022 MinIO, Inc.
+ * (C) 2022-2026 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,12 +206,22 @@ public class MinioAsyncClient extends BaseS3Client {
       return this;
     }
 
+    /**
+     * Supplies a custom {@link OkHttpClient}. The SDK wraps this client to install {@link
+     * Http.RetryInterceptor} and forces {@code retryOnConnectionFailure(false)} so that {@link
+     * Http.RetryInterceptor} owns the entire retry policy. Any prior {@code RetryInterceptor} on
+     * the supplied client is replaced.
+     */
     public Builder httpClient(OkHttpClient httpClient) {
       Utils.validateNotNull(httpClient, "http client");
       this.httpClient = httpClient;
       return this;
     }
 
+    /**
+     * Same as {@link #httpClient(OkHttpClient)} but additionally controls whether the SDK shuts
+     * down the underlying dispatcher on {@link MinioAsyncClient#close()}.
+     */
     public Builder httpClient(OkHttpClient httpClient, boolean close) {
       Utils.validateNotNull(httpClient, "http client");
       this.httpClient = httpClient;
@@ -246,7 +256,7 @@ public class MinioAsyncClient extends BaseS3Client {
 
       MinioAsyncClient client =
           new MinioAsyncClient(baseUrl, provider, httpClient, closeHttpClient);
-      client.maxRetries = maxRetries;
+      client.setMaxRetries(maxRetries);
       return client;
     }
   }

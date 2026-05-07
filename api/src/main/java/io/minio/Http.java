@@ -1,5 +1,5 @@
 /*
- * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2025 MinIO, Inc.
+ * MinIO Java SDK for Amazon S3 Compatible Cloud Storage, (C) 2025-2026 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -717,6 +718,28 @@ public class Http {
    * higher concurrency under widespread retry should size the dispatcher worker pool accordingly
    * (see {@link okhttp3.Dispatcher#setMaxRequests} / {@code setMaxRequestsPerHost}).
    *
+   * <p><b>Cancellation.</b> The interceptor checks {@code chain.call().isCanceled()} before each
+   * attempt and after any thrown {@link IOException}, so a {@code Call.cancel()} from the caller
+   * (or an upstream interceptor) terminates the retry loop instead of treating the cancellation as
+   * a retryable transport error.
+   *
+   * <p><b>Replayability.</b> Retries call {@code chain.proceed(request)} again, which re-invokes
+   * {@code request.body().writeTo(sink)}. Callers using the SDK's own body types ({@link Body} for
+   * {@code byte[]}, {@link ByteBuffer}, or {@link RandomAccessFile}) are safe — those bodies are
+   * replayable. A caller-supplied {@link okhttp3.RequestBody} that overrides {@code isOneShot()} to
+   * return {@code true} (or otherwise consumes its source on the first {@code writeTo}) MUST NOT be
+   * retried; either disable retries via {@link BaseS3Client#setMaxRetries(int)} {@code (1)} for
+   * those calls, or wrap the body in a replayable form before submission.
+   *
+   * <p><b>Request reuse.</b> The interceptor passes the same signed {@link okhttp3.Request} on
+   * every attempt, so the {@code X-Amz-Date} / {@code Authorization} headers are not refreshed
+   * between attempts. This is harmless for the default attempt budget (worst-case wall-clock
+   * &lt;&nbsp;10&nbsp;s, well inside the 15-minute S3 signing window) but extreme {@code
+   * maxRetries} values combined with high backoff caps could outlast either the signing window or a
+   * short-lived STS credential. minio-go's request-level retry rebuilds and re-signs each attempt;
+   * that semantic is intentionally not replicated here in exchange for the simpler interceptor
+   * model.
+   *
    * <p>To opt out of retries on a stand-alone {@link OkHttpClient}, simply do not register this
    * interceptor.
    */
@@ -724,8 +747,7 @@ public class Http {
     /** Maximum body bytes inspected when probing for an S3 {@code <Code>} value. */
     private static final long MAX_PEEK_BYTES = 5L * 1024L * 1024L;
 
-    private static final java.util.regex.Pattern S3_ERROR_CODE_PATTERN =
-        java.util.regex.Pattern.compile("<Code>([^<]+)</Code>");
+    private static final Pattern S3_ERROR_CODE_PATTERN = Pattern.compile("<Code>([^<]+)</Code>");
 
     private final IntSupplier maxAttemptsSupplier;
 
@@ -751,6 +773,14 @@ public class Http {
       IOException lastException = null;
 
       for (int attempt = 0; attempt < maxAttempts; attempt++) {
+        // Honour caller cancellation: mirrors minio-go's
+        // `errors.Is(err, context.Canceled)` short-circuit so the loop does not
+        // burn attempts re-issuing a call the caller has already abandoned.
+        if (chain.call().isCanceled()) {
+          if (response != null) response.close();
+          throw new IOException("Canceled");
+        }
+
         if (attempt > 0) {
           long delayMs = Retry.exponentialBackoffMs(attempt - 1);
           if (delayMs > 0L) {
@@ -771,6 +801,9 @@ public class Http {
         try {
           response = chain.proceed(request);
         } catch (IOException e) {
+          // A cancelled call surfaces as IOException with a message that would
+          // otherwise pass `isRequestErrorRetryable`. Bail out instead.
+          if (chain.call().isCanceled()) throw e;
           if (!Retry.isRequestErrorRetryable(e)) throw e;
           lastException = e;
           continue;
@@ -801,7 +834,7 @@ public class Http {
       try {
         String body = response.peekBody(MAX_PEEK_BYTES).string();
         if (body.isEmpty() || !body.contains("<Error")) return null;
-        java.util.regex.Matcher m = S3_ERROR_CODE_PATTERN.matcher(body);
+        Matcher m = S3_ERROR_CODE_PATTERN.matcher(body);
         return m.find() ? m.group(1) : null;
       } catch (IOException e) {
         return null;
@@ -822,9 +855,16 @@ public class Http {
     private String md5Hash;
     private boolean bodyString;
 
-    /** Creates Body for okhttp3 RequestBody. */
+    /**
+     * Creates Body for okhttp3 RequestBody.
+     *
+     * <p><b>Retry caveat.</b> {@link Http.RetryInterceptor} re-invokes {@code writeTo} on each
+     * retry. Pass only replayable bodies; do not pass a body that overrides {@code isOneShot()} to
+     * return {@code true} (or otherwise consumes its source on first write) unless retries are
+     * disabled for that call.
+     */
     public Body(okhttp3.RequestBody requestBody) {
-      this.requestBody = requestBody;
+      this.requestBody = Utils.validateNotNull(requestBody, "request body");
       this.contentType = requestBody.contentType();
     }
 

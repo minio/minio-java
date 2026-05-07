@@ -21,15 +21,32 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.net.SocketException;
+import java.security.cert.CertPathBuilderException;
+import java.security.cert.CertPathValidatorException;
+import java.security.cert.CertificateException;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
 import org.junit.Assert;
 import org.junit.Test;
 
 /** Unit + integration tests for {@link Retry} and {@link Http.RetryInterceptor}. */
 public class RetryTest {
+
+  private static void closeQuietly(MinioClient client) {
+    if (client == null) return;
+    try {
+      client.close();
+    } catch (Exception ignored) {
+      // Tests do not rely on close(); swallowing keeps the throws clauses narrow.
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Retry.isHttpStatusRetryable
@@ -215,9 +232,12 @@ public class RetryTest {
 
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(2).build();
-      client.listBuckets();
-
-      Assert.assertEquals(2, server.getRequestCount());
+      try {
+        client.listBuckets();
+        Assert.assertEquals(2, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
+      }
     }
   }
 
@@ -231,9 +251,12 @@ public class RetryTest {
 
         MinioClient client =
             MinioClient.builder().endpoint(server.url("").toString()).maxRetries(2).build();
-        client.listBuckets();
-
-        Assert.assertEquals("status " + code + " expected to retry", 2, server.getRequestCount());
+        try {
+          client.listBuckets();
+          Assert.assertEquals("status " + code + " expected to retry", 2, server.getRequestCount());
+        } finally {
+          closeQuietly(client);
+        }
       }
     }
   }
@@ -248,9 +271,12 @@ public class RetryTest {
 
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(2).build();
-      client.listBuckets();
-
-      Assert.assertEquals(2, server.getRequestCount());
+      try {
+        client.listBuckets();
+        Assert.assertEquals(2, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
+      }
     }
   }
 
@@ -263,13 +289,17 @@ public class RetryTest {
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
       try {
-        client.listBuckets();
-        Assert.fail("expected ErrorResponseException");
-      } catch (ErrorResponseException e) {
-        Assert.assertEquals("NoSuchBucket", e.errorResponse().code());
-        Assert.assertEquals(404, e.response().code());
+        try {
+          client.listBuckets();
+          Assert.fail("expected ErrorResponseException");
+        } catch (ErrorResponseException e) {
+          Assert.assertEquals("NoSuchBucket", e.errorResponse().code());
+          Assert.assertEquals(404, e.response().code());
+        }
+        Assert.assertEquals(1, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
       }
-      Assert.assertEquals(1, server.getRequestCount());
     }
   }
 
@@ -282,12 +312,16 @@ public class RetryTest {
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
       try {
-        client.listBuckets();
-        Assert.fail("expected ErrorResponseException");
-      } catch (ErrorResponseException e) {
-        Assert.assertEquals("AccessDenied", e.errorResponse().code());
+        try {
+          client.listBuckets();
+          Assert.fail("expected ErrorResponseException");
+        } catch (ErrorResponseException e) {
+          Assert.assertEquals("AccessDenied", e.errorResponse().code());
+        }
+        Assert.assertEquals(1, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
       }
-      Assert.assertEquals(1, server.getRequestCount());
     }
   }
 
@@ -303,16 +337,20 @@ public class RetryTest {
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
       try {
-        client.listBuckets();
-        Assert.fail("expected exception after exhausted retries");
-      } catch (InvalidResponseException e) {
-        // Terminal exception must surface the underlying 500 status so callers can distinguish
-        // exhausted retries from unrelated failures (e.g. NPE, parser bugs).
-        Assert.assertTrue(
-            "exhausted-retries exception must reflect HTTP 500, got: " + e.getMessage(),
-            e.getMessage().contains("Response code: 500"));
+        try {
+          client.listBuckets();
+          Assert.fail("expected exception after exhausted retries");
+        } catch (InvalidResponseException e) {
+          // Terminal exception must surface the underlying 500 status so callers can distinguish
+          // exhausted retries from unrelated failures (e.g. NPE, parser bugs).
+          Assert.assertTrue(
+              "exhausted-retries exception must reflect HTTP 500, got: " + e.getMessage(),
+              e.getMessage().contains("Response code: 500"));
+        }
+        Assert.assertEquals(3, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
       }
-      Assert.assertEquals(3, server.getRequestCount());
     }
   }
 
@@ -330,13 +368,17 @@ public class RetryTest {
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
       try {
-        client.listBuckets();
-        Assert.fail("expected ErrorResponseException after exhausted retries");
-      } catch (ErrorResponseException e) {
-        Assert.assertEquals(503, e.response().code());
-        Assert.assertEquals("InternalError", e.errorResponse().code());
+        try {
+          client.listBuckets();
+          Assert.fail("expected ErrorResponseException after exhausted retries");
+        } catch (ErrorResponseException e) {
+          Assert.assertEquals(503, e.response().code());
+          Assert.assertEquals("InternalError", e.errorResponse().code());
+        }
+        Assert.assertEquals(3, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
       }
-      Assert.assertEquals(3, server.getRequestCount());
     }
   }
 
@@ -351,12 +393,16 @@ public class RetryTest {
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(1).build();
       try {
-        client.listBuckets();
-        Assert.fail("expected exception");
-      } catch (InvalidResponseException e) {
-        // expected
+        try {
+          client.listBuckets();
+          Assert.fail("expected exception");
+        } catch (InvalidResponseException e) {
+          // expected
+        }
+        Assert.assertEquals(1, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
       }
-      Assert.assertEquals(1, server.getRequestCount());
     }
   }
 
@@ -371,12 +417,16 @@ public class RetryTest {
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(2).build();
       client.setMaxRetries(1); // disable
       try {
-        client.listBuckets();
-        Assert.fail("expected exception");
-      } catch (InvalidResponseException e) {
-        // expected
+        try {
+          client.listBuckets();
+          Assert.fail("expected exception");
+        } catch (InvalidResponseException e) {
+          // expected
+        }
+        Assert.assertEquals(1, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
       }
-      Assert.assertEquals(1, server.getRequestCount());
     }
   }
 
@@ -401,9 +451,149 @@ public class RetryTest {
 
       MinioClient client =
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
-      client.listBuckets();
+      try {
+        client.listBuckets();
+        Assert.assertEquals(3, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
+      }
+    }
+  }
 
-      Assert.assertEquals(3, server.getRequestCount());
+  // ---------------------------------------------------------------------------
+  // Additional coverage: SSL cert-path classifier, negative-validation, IOException
+  // path, user-supplied OkHttpClient, and cancellation short-circuit.
+  // ---------------------------------------------------------------------------
+
+  @Test
+  public void testIsRequestErrorRetryable_certPathErrorsNotRetryable() {
+    // SSLException whose cause is one of the cert-path error types must NOT retry.
+    SSLException certPathBuilder = new SSLException("x", new CertPathBuilderException("bad"));
+    SSLException certPathValidator = new SSLException("x", new CertPathValidatorException("bad"));
+    SSLException certError = new SSLException("x", new CertificateException("bad"));
+    Assert.assertFalse(Retry.isRequestErrorRetryable(certPathBuilder));
+    Assert.assertFalse(Retry.isRequestErrorRetryable(certPathValidator));
+    Assert.assertFalse(Retry.isRequestErrorRetryable(certError));
+
+    // SSLPeerUnverifiedException must NOT retry.
+    Assert.assertFalse(Retry.isRequestErrorRetryable(new SSLPeerUnverifiedException("untrusted")));
+
+    // SSLException with an unrelated cause is still retryable (transient TLS hiccup).
+    Assert.assertTrue(
+        Retry.isRequestErrorRetryable(new SSLException("read", new IOException("boom"))));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testMaxRetriesBuilderValidation_negative() {
+    MinioClient.builder().endpoint("http://localhost:9000").maxRetries(-1).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testSetMaxRetriesValidation_negative() {
+    MinioClient client = MinioClient.builder().endpoint("http://localhost:9000").build();
+    try {
+      client.setMaxRetries(-1);
+    } finally {
+      closeQuietly(client);
+    }
+  }
+
+  @Test
+  public void testRetryOnConnectionDropThenSuccess() throws IOException, MinioException {
+    // Simulate a transient transport failure: server drops the socket on first attempt, returns
+    // the success body on the second. Verifies the IOException retry path end-to-end (only the
+    // predicate was previously tested in isolation).
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+      server.enqueue(successResponse());
+      server.start();
+
+      MinioClient client =
+          MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
+      try {
+        client.listBuckets();
+        Assert.assertEquals(2, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
+      }
+    }
+  }
+
+  @Test
+  public void testUserSuppliedClientStillRetries() throws IOException, MinioException {
+    // Caller supplies a custom OkHttpClient with no RetryInterceptor and
+    // retryOnConnectionFailure(true). wrapWithRetry must still install the SDK interceptor and
+    // honour maxRetries — proves the integration path for caller-supplied clients.
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(htmlServerError(503));
+      server.enqueue(htmlServerError(503));
+      server.enqueue(successResponse());
+      server.start();
+
+      OkHttpClient custom = new OkHttpClient.Builder().retryOnConnectionFailure(true).build();
+      MinioClient client =
+          MinioClient.builder()
+              .endpoint(server.url("").toString())
+              .httpClient(custom, false)
+              .maxRetries(3)
+              .build();
+      try {
+        client.listBuckets();
+        Assert.assertEquals(3, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
+      }
+    }
+  }
+
+  @Test(timeout = 10_000)
+  public void testCancelDuringRetryStopsLoop() throws IOException, InterruptedException {
+    // Without cancellation handling the interceptor would loop maxRetries=10 times with backoff
+    // (~6s of sleep). With the chain.call().isCanceled() check, cancel mid-loop must short-circuit
+    // and surface IOException quickly — the timeout guards against regression.
+    try (MockWebServer server = new MockWebServer()) {
+      for (int i = 0; i < 20; i++) {
+        server.enqueue(htmlServerError(503));
+      }
+      server.start();
+
+      OkHttpClient client =
+          new OkHttpClient.Builder()
+              .retryOnConnectionFailure(false)
+              .addInterceptor(new Http.RetryInterceptor())
+              .build();
+      try {
+        okhttp3.Request request = new okhttp3.Request.Builder().url(server.url("/x")).get().build();
+        Call call = client.newCall(request);
+
+        Thread canceler =
+            new Thread(
+                () -> {
+                  try {
+                    Thread.sleep(150);
+                  } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                  }
+                  call.cancel();
+                });
+        canceler.start();
+
+        long start = System.currentTimeMillis();
+        try {
+          call.execute().close();
+          Assert.fail("expected IOException after cancel");
+        } catch (IOException e) {
+          // expected: cancel surfaces as IOException
+        }
+        long elapsed = System.currentTimeMillis() - start;
+        canceler.join();
+
+        Assert.assertTrue(
+            "cancel must short-circuit the retry loop, took " + elapsed + "ms", elapsed < 5_000);
+      } finally {
+        client.dispatcher().executorService().shutdown();
+        client.connectionPool().evictAll();
+      }
     }
   }
 }

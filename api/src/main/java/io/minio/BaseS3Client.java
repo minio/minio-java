@@ -1,6 +1,6 @@
 /*
  * MinIO Java SDK for Amazon S3 Compatible Cloud Storage,
- * (C) 2025 MinIO, Inc.
+ * (C) 2025-2026 MinIO, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,9 +114,10 @@ public abstract class BaseS3Client implements AutoCloseable {
   /**
    * Maximum attempts per S3 request. Default {@link Retry#MAX_RETRY}. Read on every request via the
    * retry interceptor's supplier so runtime tuning via {@link #setMaxRetries(int)} takes immediate
-   * effect.
+   * effect. Package-private so the {@code Builder} classes in this package can seed it via the
+   * setter; subclasses must go through {@link #setMaxRetries(int)}.
    */
-  protected volatile int maxRetries = Retry.MAX_RETRY;
+  volatile int maxRetries = Retry.MAX_RETRY;
 
   protected BaseS3Client(
       Http.BaseUrl baseUrl, Provider provider, OkHttpClient httpClient, boolean closeHttpClient) {
@@ -138,6 +139,12 @@ public abstract class BaseS3Client implements AutoCloseable {
    * Re-wires the retry interceptor on {@code client} so it reads {@link #maxRetries} from this
    * instance. Strips any prior {@link Http.RetryInterceptor} (e.g. one bound to a different
    * instance via the copy constructor) before installing this one.
+   *
+   * <p>Also forces {@code retryOnConnectionFailure(false)} on the underlying client. The SDK's own
+   * {@link Http.RetryInterceptor} is the single source of retry policy; layering OkHttp's
+   * connection-level retry on top would double-count attempts and obscure the {@link #maxRetries}
+   * budget. This silently overrides any {@code retryOnConnectionFailure(true)} that a
+   * caller-supplied client was configured with — by design.
    */
   private OkHttpClient wrapWithRetry(OkHttpClient client) {
     OkHttpClient.Builder builder = client.newBuilder().retryOnConnectionFailure(false);
@@ -209,6 +216,11 @@ public abstract class BaseS3Client implements AutoCloseable {
 
   /**
    * Enables HTTP call tracing and written to traceStream.
+   *
+   * <p><b>Retry caveat.</b> Tracing happens at the SDK callback level, so only the final response
+   * of a retry sequence is recorded. Per-attempt traces (which the {@link Http.RetryInterceptor}
+   * sees and discards) are not surfaced here. To inspect individual retry attempts, register an
+   * OkHttp {@code HttpLoggingInterceptor} on a custom client.
    *
    * @param traceStream {@link OutputStream} for writing HTTP call tracing.
    * @see #traceOff
