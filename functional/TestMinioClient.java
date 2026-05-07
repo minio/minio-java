@@ -113,7 +113,6 @@ import io.minio.messages.Status;
 import io.minio.messages.Tags;
 import io.minio.messages.VersioningConfiguration;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -1058,7 +1057,7 @@ public class TestMinioClient extends TestArgs {
         DeleteResult.Error err = r.get();
         String code = err.code();
         if (!TRANSIENT_DELETE_CODES.contains(code)) {
-          throw new IOException(
+          throw new Exception(
               "non-transient delete error '"
                   + code
                   + "': "
@@ -1073,7 +1072,7 @@ public class TestMinioClient extends TestArgs {
       if (!anyTransient) break;
     }
     if (anyTransient) {
-      throw new IOException(
+      throw new Exception(
           results.size()
               + " object(s) not deleted after "
               + MAX_DELETE_ATTEMPTS
@@ -1222,29 +1221,15 @@ public class TestMinioClient extends TestArgs {
         RemoveObjectArgs.builder().bucket(bucketName).object(getRandomName()).build());
   }
 
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-      value = "DE_MIGHT_IGNORE",
-      justification =
-          "Cleanup exception suppressed intentionally so original test failure propagates")
   public void testRemoveObjects(String testTags, List<ObjectWriteResponse> results)
       throws Exception {
     String methodName = "removeObjects()";
     long startTime = System.currentTimeMillis();
-    boolean succeeded = false;
     try {
       removeObjects(bucketName, results);
       mintSuccessLog(methodName, testTags, startTime);
-      succeeded = true;
     } catch (Exception e) {
       handleException(methodName, testTags, startTime, e);
-    } finally {
-      if (!succeeded) {
-        try {
-          removeObjects(bucketName, results);
-        } catch (Exception ignored) {
-          // suppress so the original test exception propagates unmasked
-        }
-      }
     }
   }
 
