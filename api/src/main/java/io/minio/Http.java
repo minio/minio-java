@@ -692,24 +692,32 @@ public class Http {
   /**
    * OkHttp interceptor that retries transient HTTP failures with full-jitter exponential backoff.
    *
+   * <p>This is part of the SDK's supported public API: it is installed automatically by {@link
+   * BaseS3Client} on every supplied {@link OkHttpClient} (default or caller-provided), and may also
+   * be registered explicitly on a stand-alone {@link OkHttpClient} via {@code .addInterceptor(new
+   * Http.RetryInterceptor())}.
+   *
    * <p>Retries on:
    *
    * <ul>
-   *   <li>retryable IOException ({@link Retry#isRequestErrorRetryable}) — connection reset, EOF,
-   *       socket timeout, idle-connection close. Excludes TLS handshake / unknown-CA / HTTPS
-   *       protocol mismatch.
-   *   <li>retryable HTTP status code ({@link Retry#RETRYABLE_HTTP_STATUS_CODES}) — 408, 429, 499,
-   *       500, 502, 503, 504, 520.
-   *   <li>retryable S3 error code in a non-2xx response body ({@link Retry#RETRYABLE_S3_CODES}) —
-   *       {@code SlowDown}, {@code InternalError}, {@code ExpiredToken}, etc.
+   *   <li>retryable IOException — connection reset, EOF, socket timeout, idle-connection close.
+   *       Excludes TLS handshake / unknown-CA / HTTPS protocol mismatch.
+   *   <li>retryable HTTP status code — 408, 429, 499, 500, 502, 503, 504, 520.
+   *   <li>retryable S3 error code in a non-2xx response body — {@code SlowDown}, {@code
+   *       InternalError}, {@code ExpiredToken}, etc.
    * </ul>
    *
-   * <p>Backoff is computed by {@link Retry#exponentialBackoffMs}. The maximum number of attempts is
-   * supplied per intercept call via {@link IntSupplier} so that an SDK client can expose runtime
-   * tuning while keeping the interceptor itself stateless. The no-arg constructor uses the default
-   * {@link Retry#MAX_RETRY}.
+   * <p>Backoff is full-jitter exponential, with a 200&nbsp;ms unit and a 1&nbsp;s per-attempt cap.
+   * The maximum number of attempts is supplied per intercept call via {@link IntSupplier} so that
+   * an SDK client can expose runtime tuning while keeping the interceptor itself stateless. The
+   * no-arg constructor uses the package default of 10 attempts.
    *
-   * <p>To opt out of retries on a custom {@link OkHttpClient}, simply do not register this
+   * <p><b>Threading.</b> Backoff sleeps on the OkHttp dispatcher thread that owns the call. Under
+   * sustained 5xx/429 storms this can hold dispatcher slots idle while waiting. Callers that need
+   * higher concurrency under widespread retry should size the dispatcher worker pool accordingly
+   * (see {@link okhttp3.Dispatcher#setMaxRequests} / {@code setMaxRequestsPerHost}).
+   *
+   * <p>To opt out of retries on a stand-alone {@link OkHttpClient}, simply do not register this
    * interceptor.
    */
   public static class RetryInterceptor implements Interceptor {

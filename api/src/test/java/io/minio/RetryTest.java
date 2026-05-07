@@ -306,7 +306,35 @@ public class RetryTest {
         client.listBuckets();
         Assert.fail("expected exception after exhausted retries");
       } catch (InvalidResponseException e) {
-        // expected — non-XML 500
+        // Terminal exception must surface the underlying 500 status so callers can distinguish
+        // exhausted retries from unrelated failures (e.g. NPE, parser bugs).
+        Assert.assertTrue(
+            "exhausted-retries exception must reflect HTTP 500, got: " + e.getMessage(),
+            e.getMessage().contains("Response code: 500"));
+      }
+      Assert.assertEquals(3, server.getRequestCount());
+    }
+  }
+
+  @Test
+  public void testRetryExhaustedSurfacesXmlErrorResponse() throws IOException, MinioException {
+    // 3 attempts, all 503 with XML <Error><Code>InternalError</Code> — confirms the terminal
+    // ErrorResponseException carries both the 503 status and the parsed S3 code after the retry
+    // loop gives up.
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(xmlError(503, "InternalError"));
+      server.enqueue(xmlError(503, "InternalError"));
+      server.enqueue(xmlError(503, "InternalError"));
+      server.start();
+
+      MinioClient client =
+          MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
+      try {
+        client.listBuckets();
+        Assert.fail("expected ErrorResponseException after exhausted retries");
+      } catch (ErrorResponseException e) {
+        Assert.assertEquals(503, e.response().code());
+        Assert.assertEquals("InternalError", e.errorResponse().code());
       }
       Assert.assertEquals(3, server.getRequestCount());
     }

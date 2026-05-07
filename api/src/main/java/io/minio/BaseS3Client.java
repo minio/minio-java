@@ -297,8 +297,11 @@ public abstract class BaseS3Client implements AutoCloseable {
   }
 
   /**
-   * Execute HTTP request asynchronously for given parameters. Retries on retryable HTTP status
-   * codes are handled by {@link Http.RetryInterceptor} installed on the default HTTP client.
+   * Execute HTTP request asynchronously for given parameters. Retries on retryable IOException,
+   * HTTP status, and S3 error code are handled by {@link Http.RetryInterceptor}, which {@link
+   * #wrapWithRetry} installs on the underlying {@link OkHttpClient} regardless of whether the
+   * client is the default or caller-supplied. The attempt budget is read from {@link #maxRetries}
+   * on every request.
    */
   protected CompletableFuture<Response> executeAsync(Http.S3Request s3request, String region) {
     Credentials credentials = (provider == null) ? null : provider.fetch();
