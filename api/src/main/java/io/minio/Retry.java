@@ -114,11 +114,15 @@ class Retry {
    *
    * <pre>
    *   sleep = min(DEFAULT_RETRY_CAP_MS, DEFAULT_RETRY_UNIT_MS * 2^attempt)
-   *   sleep -= random.nextDouble() * sleep * MAX_JITTER     // full jitter when MAX_JITTER == 1.0
+   *   sleep -= (long)(random.nextDouble() * sleep * MAX_JITTER)   // full jitter when MAX_JITTER == 1.0
    * </pre>
    *
-   * <p>With {@code MAX_JITTER == 1.0}, returns a uniform random value in {@code [0, min(cap, base *
-   * 2^attempt)]}.
+   * <p>With {@code MAX_JITTER == 1.0}, returns a value in {@code [1, min(cap, base * 2^attempt)]}.
+   * The lower bound is {@code 1} rather than {@code 0} because {@link
+   * java.util.concurrent.ThreadLocalRandom#nextDouble()} is in {@code [0.0, 1.0)} and the {@code
+   * (long)} cast truncates {@code rand * sleep} to at most {@code sleep - 1}. This matches the
+   * behaviour of minio-go's {@code exponentialBackoffWait}, which uses the same formula and
+   * therefore the same bounds.
    */
   static long exponentialBackoffMs(int attempt) {
     int exp = Math.min(Math.max(attempt, 0), 30);

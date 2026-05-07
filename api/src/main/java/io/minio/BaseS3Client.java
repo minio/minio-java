@@ -137,8 +137,10 @@ public abstract class BaseS3Client implements AutoCloseable {
 
   /**
    * Re-wires the retry interceptor on {@code client} so it reads {@link #maxRetries} from this
-   * instance. Strips any prior {@link Http.RetryInterceptor} (e.g. one bound to a different
-   * instance via the copy constructor) before installing this one.
+   * instance. Strips any prior {@link Http.RetryInterceptor} from BOTH the application-interceptor
+   * and network-interceptor chains (e.g. one bound to a different instance via the copy
+   * constructor, or accidentally registered on the network chain) before installing this one as an
+   * application interceptor.
    *
    * <p>Also forces {@code retryOnConnectionFailure(false)} on the underlying client. The SDK's own
    * {@link Http.RetryInterceptor} is the single source of retry policy; layering OkHttp's
@@ -149,12 +151,13 @@ public abstract class BaseS3Client implements AutoCloseable {
   private OkHttpClient wrapWithRetry(OkHttpClient client) {
     OkHttpClient.Builder builder = client.newBuilder().retryOnConnectionFailure(false);
     builder.interceptors().removeIf(i -> i instanceof Http.RetryInterceptor);
+    builder.networkInterceptors().removeIf(i -> i instanceof Http.RetryInterceptor);
     return builder.addInterceptor(new Http.RetryInterceptor(() -> this.maxRetries)).build();
   }
 
   /**
    * Sets the maximum number of attempts for transient HTTP failures. Pass {@code 1} to disable
-   * automatic retries. Defaults to {@link Retry#MAX_RETRY}.
+   * automatic retries. Defaults to {@code 10}.
    *
    * @param maxRetries maximum attempts (must be {@code >= 1}).
    */

@@ -210,7 +210,8 @@ public class MinioAsyncClient extends BaseS3Client {
      * Supplies a custom {@link OkHttpClient}. The SDK wraps this client to install {@link
      * Http.RetryInterceptor} and forces {@code retryOnConnectionFailure(false)} so that {@link
      * Http.RetryInterceptor} owns the entire retry policy. Any prior {@code RetryInterceptor} on
-     * the supplied client is replaced.
+     * either the application-interceptor or network-interceptor chain of the supplied client is
+     * stripped before the new one is installed (as an application interceptor).
      */
     public Builder httpClient(OkHttpClient httpClient) {
       Utils.validateNotNull(httpClient, "http client");
@@ -231,7 +232,7 @@ public class MinioAsyncClient extends BaseS3Client {
 
     /**
      * Sets the maximum number of attempts per request. Pass {@code 1} to disable automatic retries.
-     * Defaults to {@link Retry#MAX_RETRY}.
+     * Defaults to {@code 10}.
      */
     public Builder maxRetries(int maxRetries) {
       if (maxRetries < 1) throw new IllegalArgumentException("maxRetries must be >= 1");
