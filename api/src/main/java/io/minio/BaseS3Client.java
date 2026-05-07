@@ -111,19 +111,49 @@ public abstract class BaseS3Client implements AutoCloseable {
   protected OkHttpClient httpClient;
   protected boolean closeHttpClient;
 
+  /**
+   * Maximum attempts per S3 request. Default {@link Retry#MAX_RETRY}. Read on every request via the
+   * retry interceptor's supplier so runtime tuning via {@link #setMaxRetries(int)} takes immediate
+   * effect.
+   */
+  protected volatile int maxRetries = Retry.MAX_RETRY;
+
   protected BaseS3Client(
       Http.BaseUrl baseUrl, Provider provider, OkHttpClient httpClient, boolean closeHttpClient) {
     this.baseUrl = baseUrl;
     this.provider = provider;
-    this.httpClient = httpClient;
     this.closeHttpClient = closeHttpClient;
+    this.httpClient = wrapWithRetry(httpClient);
   }
 
   protected BaseS3Client(BaseS3Client client) {
     this.baseUrl = client.baseUrl;
     this.provider = client.provider;
-    this.httpClient = client.httpClient;
     this.closeHttpClient = client.closeHttpClient;
+    this.maxRetries = client.maxRetries;
+    this.httpClient = wrapWithRetry(client.httpClient);
+  }
+
+  /**
+   * Re-wires the retry interceptor on {@code client} so it reads {@link #maxRetries} from this
+   * instance. Strips any prior {@link Http.RetryInterceptor} (e.g. one bound to a different
+   * instance via the copy constructor) before installing this one.
+   */
+  private OkHttpClient wrapWithRetry(OkHttpClient client) {
+    OkHttpClient.Builder builder = client.newBuilder().retryOnConnectionFailure(false);
+    builder.interceptors().removeIf(i -> i instanceof Http.RetryInterceptor);
+    return builder.addInterceptor(new Http.RetryInterceptor(() -> this.maxRetries)).build();
+  }
+
+  /**
+   * Sets the maximum number of attempts for transient HTTP failures. Pass {@code 1} to disable
+   * automatic retries. Defaults to {@link Retry#MAX_RETRY}.
+   *
+   * @param maxRetries maximum attempts (must be {@code >= 1}).
+   */
+  public void setMaxRetries(int maxRetries) {
+    if (maxRetries < 1) throw new IllegalArgumentException("maxRetries must be >= 1");
+    this.maxRetries = maxRetries;
   }
 
   /** Closes underneath HTTP client. */

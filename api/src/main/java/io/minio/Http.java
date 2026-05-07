@@ -52,8 +52,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.IntSupplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -622,6 +622,9 @@ public class Http {
             .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
             .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
             .protocols(Arrays.asList(Protocol.HTTP_1_1))
+            // Our RetryInterceptor handles transient failures with full-jitter backoff; defer
+            // entirely to it instead of layering OkHttp's connection-level retry on top.
+            .retryOnConnectionFailure(false)
             .addInterceptor(new RetryInterceptor())
             .build();
     try {
@@ -687,48 +690,114 @@ public class Http {
   }
 
   /**
-   * OkHttp interceptor that retries requests on retryable HTTP status codes with exponential
-   * backoff and full jitter.
+   * OkHttp interceptor that retries transient HTTP failures with full-jitter exponential backoff.
+   *
+   * <p>Retries on:
+   *
+   * <ul>
+   *   <li>retryable IOException ({@link Retry#isRequestErrorRetryable}) — connection reset, EOF,
+   *       socket timeout, idle-connection close. Excludes TLS handshake / unknown-CA / HTTPS
+   *       protocol mismatch.
+   *   <li>retryable HTTP status code ({@link Retry#RETRYABLE_HTTP_STATUS_CODES}) — 408, 429, 499,
+   *       500, 502, 503, 504, 520.
+   *   <li>retryable S3 error code in a non-2xx response body ({@link Retry#RETRYABLE_S3_CODES}) —
+   *       {@code SlowDown}, {@code InternalError}, {@code ExpiredToken}, etc.
+   * </ul>
+   *
+   * <p>Backoff is computed by {@link Retry#exponentialBackoffMs}. The maximum number of attempts is
+   * supplied per intercept call via {@link IntSupplier} so that an SDK client can expose runtime
+   * tuning while keeping the interceptor itself stateless. The no-arg constructor uses the default
+   * {@link Retry#MAX_RETRY}.
+   *
+   * <p>To opt out of retries on a custom {@link OkHttpClient}, simply do not register this
+   * interceptor.
    */
   public static class RetryInterceptor implements Interceptor {
-    private static final int MAX_RETRIES = 5;
-    private static final long BASE_DELAY_MS = 200L;
-    private static final long MAX_DELAY_MS = 30_000L;
-    private static final Set<Integer> RETRYABLE_STATUS_CODES =
-        ImmutableSet.of(
-            408, // Request Timeout
-            429, // Too Many Requests
-            499, // Client Closed Request (nginx)
-            500, // Internal Server Error
-            502, // Bad Gateway
-            503, // Service Unavailable
-            504, // Gateway Timeout
-            520); // Cloudflare unknown error
+    /** Maximum body bytes inspected when probing for an S3 {@code <Code>} value. */
+    private static final long MAX_PEEK_BYTES = 5L * 1024L * 1024L;
+
+    private static final java.util.regex.Pattern S3_ERROR_CODE_PATTERN =
+        java.util.regex.Pattern.compile("<Code>([^<]+)</Code>");
+
+    private final IntSupplier maxAttemptsSupplier;
+
+    /** Creates a retry interceptor that uses {@link Retry#MAX_RETRY} attempts. */
+    public RetryInterceptor() {
+      this(() -> Retry.MAX_RETRY);
+    }
+
+    /**
+     * Creates a retry interceptor that reads its attempt budget from the supplier on every
+     * intercept call. Supplier values less than 1 are clamped to 1 (single attempt = retry off).
+     */
+    public RetryInterceptor(IntSupplier maxAttemptsSupplier) {
+      this.maxAttemptsSupplier = Objects.requireNonNull(maxAttemptsSupplier, "maxAttemptsSupplier");
+    }
 
     @Override
     public okhttp3.Response intercept(Chain chain) throws IOException {
       okhttp3.Request request = chain.request();
-      okhttp3.Response response = chain.proceed(request);
+      int maxAttempts = Math.max(1, maxAttemptsSupplier.getAsInt());
 
-      int tryCount = 0;
-      while (RETRYABLE_STATUS_CODES.contains(response.code()) && tryCount < MAX_RETRIES) {
-        tryCount++;
-        response.close();
+      okhttp3.Response response = null;
+      IOException lastException = null;
 
-        // Cap exponent to avoid bit-shift overflow at high attempt counts.
-        int exp = Math.min(tryCount, 30);
-        long backoffCap = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * (1L << exp));
-        long jittered = ThreadLocalRandom.current().nextLong(0, Math.max(1, backoffCap));
-        try {
-          Thread.sleep(jittered);
-        } catch (InterruptedException ie) {
-          Thread.currentThread().interrupt();
-          throw new IOException("retry interrupted", ie);
+      for (int attempt = 0; attempt < maxAttempts; attempt++) {
+        if (attempt > 0) {
+          long delayMs = Retry.exponentialBackoffMs(attempt - 1);
+          if (delayMs > 0L) {
+            try {
+              Thread.sleep(delayMs);
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+              throw new IOException("Retry interrupted", ie);
+            }
+          }
         }
 
-        response = chain.proceed(request);
+        if (response != null) {
+          response.close();
+          response = null;
+        }
+
+        try {
+          response = chain.proceed(request);
+        } catch (IOException e) {
+          if (!Retry.isRequestErrorRetryable(e)) throw e;
+          lastException = e;
+          continue;
+        }
+
+        if (Retry.isHttpStatusRetryable(response.code())) {
+          lastException = null;
+          continue;
+        }
+
+        if (!response.isSuccessful()) {
+          String s3Code = peekS3ErrorCode(response);
+          if (Retry.isS3CodeRetryable(s3Code)) {
+            lastException = null;
+            continue;
+          }
+        }
+
+        return response;
       }
+
+      if (lastException != null) throw lastException;
       return response;
+    }
+
+    /** Returns the S3 {@code <Code>} value if the body is XML containing one, else null. */
+    private static String peekS3ErrorCode(okhttp3.Response response) {
+      try {
+        String body = response.peekBody(MAX_PEEK_BYTES).string();
+        if (body.isEmpty() || !body.contains("<Error")) return null;
+        java.util.regex.Matcher m = S3_ERROR_CODE_PATTERN.matcher(body);
+        return m.find() ? m.group(1) : null;
+      } catch (IOException e) {
+        return null;
+      }
     }
   }
 
@@ -1560,11 +1629,6 @@ public class Http {
 
     public String object() {
       return object;
-    }
-
-    /** Returns the request body, or {@code null} if none was set. */
-    public Body body() {
-      return body;
     }
 
     private Request toRequest(

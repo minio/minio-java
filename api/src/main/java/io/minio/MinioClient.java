@@ -1922,6 +1922,16 @@ public class MinioClient implements AutoCloseable {
   }
 
   /**
+   * Sets the maximum number of attempts for transient HTTP failures. Pass {@code 1} to disable
+   * automatic retries. Defaults to 10.
+   *
+   * @param maxRetries maximum attempts (must be {@code >= 1}).
+   */
+  public void setMaxRetries(int maxRetries) {
+    asyncClient.setMaxRetries(maxRetries);
+  }
+
+  /**
    * Sets application's name/version to user agent. For more information about user agent refer <a
    * href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">#rfc2616</a>.
    *
@@ -2037,6 +2047,15 @@ public class MinioClient implements AutoCloseable {
 
     public Builder httpClient(OkHttpClient httpClient, boolean close) {
       asyncClientBuilder.httpClient(httpClient, close);
+      return this;
+    }
+
+    /**
+     * Sets the maximum number of attempts per request. Pass {@code 1} to disable automatic retries.
+     * Defaults to 10.
+     */
+    public Builder maxRetries(int maxRetries) {
+      asyncClientBuilder.maxRetries(maxRetries);
       return this;
     }
 
