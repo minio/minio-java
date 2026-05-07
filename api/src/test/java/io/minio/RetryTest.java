@@ -18,15 +18,12 @@ package io.minio;
 
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InvalidResponseException;
-import io.minio.errors.ServerException;
-import io.minio.messages.ErrorResponse;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
-import java.util.concurrent.CompletionException;
 import javax.net.ssl.SSLHandshakeException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -37,43 +34,6 @@ import org.junit.Test;
 
 /** Unit and integration tests for the automatic retry mechanism. */
 public class RetryTest {
-
-  // ---------------------------------------------------------------------------
-  // Retry.isRetryableS3Code tests
-  // ---------------------------------------------------------------------------
-
-  @Test
-  public void testIsRetryableS3Code_retryable() {
-    Assert.assertTrue(Retry.isRetryableS3Code("RequestError"));
-    Assert.assertTrue(Retry.isRetryableS3Code("RequestTimeout"));
-    Assert.assertTrue(Retry.isRetryableS3Code("Throttling"));
-    Assert.assertTrue(Retry.isRetryableS3Code("ThrottlingException"));
-    Assert.assertTrue(Retry.isRetryableS3Code("RequestLimitExceeded"));
-    Assert.assertTrue(Retry.isRetryableS3Code("RequestThrottled"));
-    Assert.assertTrue(Retry.isRetryableS3Code("InternalError"));
-    Assert.assertTrue(Retry.isRetryableS3Code("ExpiredToken"));
-    Assert.assertTrue(Retry.isRetryableS3Code("ExpiredTokenException"));
-    Assert.assertTrue(Retry.isRetryableS3Code("SlowDown"));
-    Assert.assertTrue(Retry.isRetryableS3Code("SlowDownWrite"));
-    Assert.assertTrue(Retry.isRetryableS3Code("SlowDownRead"));
-  }
-
-  @Test
-  public void testIsRetryableS3Code_notRetryable() {
-    Assert.assertFalse(Retry.isRetryableS3Code("NoSuchKey"));
-    Assert.assertFalse(Retry.isRetryableS3Code("NoSuchBucket"));
-    Assert.assertFalse(Retry.isRetryableS3Code("AccessDenied"));
-    Assert.assertFalse(Retry.isRetryableS3Code("InvalidBucketName"));
-    Assert.assertFalse(Retry.isRetryableS3Code("RetryHead"));
-    Assert.assertFalse(Retry.isRetryableS3Code("MethodNotAllowed"));
-    Assert.assertFalse(Retry.isRetryableS3Code("PreconditionFailed"));
-    Assert.assertFalse(Retry.isRetryableS3Code(""));
-  }
-
-  @Test
-  public void testIsRetryableS3Code_null() {
-    Assert.assertFalse(Retry.isRetryableS3Code(null));
-  }
 
   // ---------------------------------------------------------------------------
   // Retry.isRetryableHttpCode tests
@@ -125,64 +85,6 @@ public class RetryTest {
   public void testIsRetryableIOException_protocolMismatchNotRetryable() {
     Assert.assertFalse(
         Retry.isRetryableIOException(new IOException("server gave HTTP response to HTTPS client")));
-  }
-
-  // ---------------------------------------------------------------------------
-  // Retry.isRetryable(Throwable) tests
-  // ---------------------------------------------------------------------------
-
-  @Test
-  public void testIsRetryable_ioException() {
-    Assert.assertTrue(Retry.isRetryable(new IOException("connection reset")));
-  }
-
-  @Test
-  public void testIsRetryable_ioExceptionWrappedInCompletion() {
-    Assert.assertTrue(
-        Retry.isRetryable(new CompletionException(new IOException("connection reset"))));
-  }
-
-  @Test
-  public void testIsRetryable_sslHandshakeNotRetryable() {
-    Assert.assertFalse(Retry.isRetryable(new SSLHandshakeException("bad cert")));
-  }
-
-  @Test
-  public void testIsRetryable_serverException_retryable() throws Exception {
-    Assert.assertTrue(Retry.isRetryable(new ServerException("Server Error", 500, "")));
-    Assert.assertTrue(Retry.isRetryable(new ServerException("Bad Gateway", 502, "")));
-    Assert.assertTrue(Retry.isRetryable(new ServerException("Service Unavailable", 503, "")));
-  }
-
-  @Test
-  public void testIsRetryable_serverException_notRetryable() throws Exception {
-    Assert.assertFalse(Retry.isRetryable(new ServerException("Not Modified", 304, "")));
-  }
-
-  @Test
-  public void testIsRetryable_invalidResponseException_retryable() throws Exception {
-    Assert.assertTrue(Retry.isRetryable(new InvalidResponseException(500, "text/html", "", "")));
-    Assert.assertTrue(Retry.isRetryable(new InvalidResponseException(503, "text/html", "", "")));
-  }
-
-  @Test
-  public void testIsRetryable_invalidResponseException_notRetryable() throws Exception {
-    Assert.assertFalse(Retry.isRetryable(new InvalidResponseException(403, "text/html", "", "")));
-    Assert.assertFalse(Retry.isRetryable(new InvalidResponseException(404, "text/html", "", "")));
-  }
-
-  @Test
-  public void testIsRetryable_null() {
-    Assert.assertFalse(Retry.isRetryable(null));
-  }
-
-  @Test
-  public void testIsRetryable_retryHeadNotRetryable() throws Exception {
-    // The explicit guard in isRetryable() must fire even if "RetryHead" were in the codes set.
-    ErrorResponse errorResponse =
-        new ErrorResponse("RetryHead", null, null, null, null, null, null);
-    ErrorResponseException e = new ErrorResponseException(errorResponse, null, "");
-    Assert.assertFalse(Retry.isRetryable(e));
   }
 
   // ---------------------------------------------------------------------------
@@ -253,18 +155,6 @@ public class RetryTest {
           + "<Owner><ID>test</ID><DisplayName>test</DisplayName></Owner>"
           + "<Buckets/></ListAllMyBucketsResult>";
 
-  private static final String INTERNAL_ERROR_XML =
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-          + "<Error><Code>InternalError</Code>"
-          + "<Message>We encountered an internal error. Please try again.</Message>"
-          + "<Resource>/</Resource><RequestId>abc</RequestId></Error>";
-
-  private static final String THROTTLE_XML =
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-          + "<Error><Code>SlowDown</Code>"
-          + "<Message>Please reduce your request rate.</Message>"
-          + "<Resource>/</Resource><RequestId>abc</RequestId></Error>";
-
   /** Returns a 200 OK response with valid ListAllMyBucketsResult body. */
   private MockResponse successResponse() {
     return new MockResponse()
@@ -289,26 +179,10 @@ public class RetryTest {
         .setBody(new Buffer().writeUtf8("<html>Service Unavailable</html>"));
   }
 
-  /** Returns a 500 S3 InternalError XML response. */
-  private MockResponse s3InternalErrorResponse() {
-    return new MockResponse()
-        .setResponseCode(500)
-        .setHeader("Content-Type", "application/xml")
-        .setBody(new Buffer().writeUtf8(INTERNAL_ERROR_XML));
-  }
-
-  /** Returns a 429 TooManyRequests with S3 SlowDown XML. */
-  private MockResponse s3ThrottleResponse() {
-    return new MockResponse()
-        .setResponseCode(429)
-        .setHeader("Content-Type", "application/xml")
-        .setBody(new Buffer().writeUtf8(THROTTLE_XML));
-  }
-
   @Test
   public void testRetryOn500HtmlThenSuccess() throws Exception {
     try (MockWebServer server = new MockWebServer()) {
-      // First request → 500 HTML (non-XML) → InvalidResponseException(500) → retryable
+      // First request → 500 HTML (non-XML) → retryable
       server.enqueue(serverError500Html());
       // Second request (retry) → 200 OK
       server.enqueue(successResponse());
@@ -327,36 +201,6 @@ public class RetryTest {
   public void testRetryOn503ThenSuccess() throws Exception {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(serviceUnavailable503());
-      server.enqueue(successResponse());
-      server.start();
-
-      MinioClient client =
-          MinioClient.builder().endpoint(server.url("").toString()).maxRetries(2).build();
-      client.listBuckets();
-
-      Assert.assertEquals(2, server.getRequestCount());
-    }
-  }
-
-  @Test
-  public void testRetryOnS3InternalErrorThenSuccess() throws Exception {
-    try (MockWebServer server = new MockWebServer()) {
-      server.enqueue(s3InternalErrorResponse());
-      server.enqueue(successResponse());
-      server.start();
-
-      MinioClient client =
-          MinioClient.builder().endpoint(server.url("").toString()).maxRetries(2).build();
-      client.listBuckets();
-
-      Assert.assertEquals(2, server.getRequestCount());
-    }
-  }
-
-  @Test
-  public void testRetryOnS3ThrottleThenSuccess() throws Exception {
-    try (MockWebServer server = new MockWebServer()) {
-      server.enqueue(s3ThrottleResponse());
       server.enqueue(successResponse());
       server.start();
 

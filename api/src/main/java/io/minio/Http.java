@@ -52,7 +52,9 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.IntSupplier;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -65,6 +67,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
@@ -686,6 +689,63 @@ public class Http {
         .build();
   }
 
+  /**
+   * OkHttp interceptor that retries requests on retryable HTTP status codes and IOExceptions with
+   * exponential backoff and full jitter. Requests with non-replayable bodies are sent once.
+   */
+  public static class RetryInterceptor implements Interceptor {
+    private final IntSupplier maxRetriesSupplier;
+    private final Set<Integer> retryStatusCodes;
+
+    public RetryInterceptor(IntSupplier maxRetriesSupplier, Set<Integer> retryStatusCodes) {
+      this.maxRetriesSupplier = Objects.requireNonNull(maxRetriesSupplier, "maxRetriesSupplier");
+      this.retryStatusCodes = Objects.requireNonNull(retryStatusCodes, "retryStatusCodes");
+    }
+
+    private static boolean isReplayable(okhttp3.RequestBody body) {
+      if (body == null) return true;
+      if (body instanceof RequestBody) return ((RequestBody) body).isReplayable();
+      return false;
+    }
+
+    @Override
+    public okhttp3.Response intercept(Chain chain) throws IOException {
+      okhttp3.Request request = chain.request();
+      int maxAttempts =
+          isReplayable(request.body()) ? Math.max(1, maxRetriesSupplier.getAsInt()) : 1;
+
+      okhttp3.Response response = null;
+      IOException lastException = null;
+      for (int attempt = 0; attempt < maxAttempts; attempt++) {
+        if (attempt > 0) {
+          long delayMs = Retry.computeBackoffMs(attempt, ThreadLocalRandom.current());
+          if (delayMs > 0) {
+            try {
+              Thread.sleep(delayMs);
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+              throw new IOException("retry interrupted", ie);
+            }
+          }
+          if (response != null) response.close();
+        }
+
+        try {
+          response = chain.proceed(request);
+          if (!retryStatusCodes.contains(response.code())) return response;
+          lastException = null;
+        } catch (IOException e) {
+          if (!Retry.isRetryableIOException(e)) throw e;
+          lastException = e;
+          response = null;
+        }
+      }
+
+      if (lastException != null) throw lastException;
+      return response;
+    }
+  }
+
   /** HTTP body of {@link RandomAccessFile}, {@link ByteBuffer} or {@link byte} array. */
   public static class Body {
     private okhttp3.RequestBody requestBody;
@@ -892,6 +952,14 @@ public class Http {
       } else {
         sink.write(bytes, 0, (int) length);
       }
+    }
+
+    /**
+     * Returns true if {@link #writeTo} can be invoked multiple times. False for raw okhttp3
+     * RequestBody since it may consume a one-shot source.
+     */
+    public boolean isReplayable() {
+      return body == null;
     }
   }
 
