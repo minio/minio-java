@@ -18,6 +18,7 @@ package io.minio;
 
 import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InvalidResponseException;
+import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.SocketException;
@@ -180,7 +181,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testRetryOn500HtmlThenSuccess() throws Exception {
+  public void testRetryOn500HtmlThenSuccess() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       // First request → 500 HTML (non-XML) → retryable
       server.enqueue(serverError500Html());
@@ -198,7 +199,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testRetryOn503ThenSuccess() throws Exception {
+  public void testRetryOn503ThenSuccess() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(serviceUnavailable503());
       server.enqueue(successResponse());
@@ -213,7 +214,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testNoRetryOn404() throws Exception {
+  public void testNoRetryOn404() throws IOException, MinioException {
     String notFoundXml =
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
             + "<Error><Code>NoSuchBucket</Code><Message>not found</Message>"
@@ -242,7 +243,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testNoRetryOn403() throws Exception {
+  public void testNoRetryOn403() throws IOException, MinioException {
     String accessDeniedXml =
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
             + "<Error><Code>AccessDenied</Code><Message>Access Denied</Message>"
@@ -270,7 +271,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testRetryExhaustedThrowsLastError() throws Exception {
+  public void testRetryExhaustedThrowsLastError() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       // All 3 attempts fail with 500
       server.enqueue(serverError500Html());
@@ -291,7 +292,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testMaxRetriesOneDisablesRetry() throws Exception {
+  public void testMaxRetriesOneDisablesRetry() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(serverError500Html());
       // Second response should never be reached
@@ -312,7 +313,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testSetMaxRetriesPostConstruction() throws Exception {
+  public void testSetMaxRetriesPostConstruction() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       // Two failures enqueued, but maxRetries will be set to 1 after construction
       server.enqueue(serverError500Html());
@@ -333,7 +334,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testMultipleRetrySucceedsOnThirdAttempt() throws Exception {
+  public void testMultipleRetrySucceedsOnThirdAttempt() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(serverError500Html());
       server.enqueue(serviceUnavailable503());
@@ -349,7 +350,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testRetry429ThenSuccess() throws Exception {
+  public void testRetry429ThenSuccess() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(
           new MockResponse()
@@ -368,7 +369,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testRetry502ThenSuccess() throws Exception {
+  public void testRetry502ThenSuccess() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(
           new MockResponse()
@@ -387,7 +388,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testRetry504ThenSuccess() throws Exception {
+  public void testRetry504ThenSuccess() throws IOException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(
           new MockResponse()
@@ -411,13 +412,13 @@ public class RetryTest {
   }
 
   @Test(expected = IllegalArgumentException.class)
-  public void testSetMaxRetriesValidation() throws Exception {
+  public void testSetMaxRetriesValidation() {
     MinioClient client = MinioClient.builder().endpoint("http://localhost:9000").build();
     client.setMaxRetries(0);
   }
 
   @Test
-  public void testDefaultMaxRetriesIsConfigurable() throws Exception {
+  public void testDefaultMaxRetriesIsConfigurable() throws IOException, MinioException {
     // Use maxRetries=4 to keep test fast (delays ≤ 200+400+800ms ≈ 1.4s max)
     int retries = 4;
     try (MockWebServer server = new MockWebServer()) {
@@ -436,7 +437,7 @@ public class RetryTest {
   }
 
   @Test
-  public void testRequestBodyRetried() throws Exception {
+  public void testRequestBodyRetried() throws IOException, MinioException {
     // Byte array body (seekable) should be retried
     try (MockWebServer server = new MockWebServer()) {
       // First putObject fails, second succeeds with ETag
@@ -469,7 +470,8 @@ public class RetryTest {
   }
 
   @Test
-  public void testRandomAccessFileBodyRetried() throws Exception {
+  public void testRandomAccessFileBodyRetried()
+      throws IOException, InterruptedException, MinioException {
     Path tmpFile = Files.createTempFile("retry-raf-test", ".bin");
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(serverError500Html());
@@ -511,7 +513,8 @@ public class RetryTest {
   }
 
   @Test
-  public void testRecordedRequestHeaders() throws Exception {
+  public void testRecordedRequestHeaders()
+      throws IOException, InterruptedException, MinioException {
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(serverError500Html());
       server.enqueue(successResponse());
