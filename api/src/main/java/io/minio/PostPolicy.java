@@ -213,7 +213,7 @@ public class PostPolicy {
     try {
       policyBytes = objectMapper.writeValueAsString(policyMap).getBytes(StandardCharsets.UTF_8);
     } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
 
     String policy = Base64.getEncoder().encodeToString(policyBytes);

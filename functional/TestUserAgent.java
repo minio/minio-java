@@ -21,6 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
+@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+    value = "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION")
 public class TestUserAgent {
   public static void main(String[] args) throws Exception {
     MinioClient client = MinioClient.builder().endpoint("http://httpbin.org").build();

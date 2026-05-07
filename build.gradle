@@ -15,13 +15,13 @@
  */
 
 /********************************/
-/*   gradleVersion = '8.14.3'   */
+/*   gradleVersion = '9.4.1'    */
 /********************************/
 
 plugins {
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'com.github.spotbugs' version '6.1.13'
-    id 'org.jreleaser' version '1.20.0'
+    id 'com.gradleup.shadow' version '9.0.0'
+    id 'com.github.spotbugs' version '6.5.1'
+    id 'org.jreleaser' version '1.23.0'
     id 'com.diffplug.spotless' version '6.13.0'
 }
 
@@ -47,19 +47,19 @@ subprojects {
 
     dependencies {
         api 'com.carrotsearch.thirdparty:simple-xml-safe:2.7.1'
-        api 'com.google.guava:guava:33.5.0-jre'
-        api 'com.squareup.okhttp3:okhttp:5.2.1'
-        api 'com.fasterxml.jackson.core:jackson-annotations:2.20'
-        api 'com.fasterxml.jackson.core:jackson-core:2.20.0'
-        api 'com.fasterxml.jackson.core:jackson-databind:2.20.0'
-        api 'org.bouncycastle:bcprov-jdk18on:1.82'
+        api 'com.google.guava:guava:33.6.0-jre'
+        api 'com.squareup.okhttp3:okhttp:5.3.2'
+        api 'com.fasterxml.jackson.core:jackson-annotations:2.21'
+        api 'com.fasterxml.jackson.core:jackson-core:2.21.2'
+        api 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
+        api 'org.bouncycastle:bcprov-jdk18on:1.84'
         api 'org.apache.commons:commons-compress:1.28.0'
-        api 'commons-codec:commons-codec:1.19.0'
+        api 'commons-codec:commons-codec:1.21.0'
         api 'org.xerial.snappy:snappy-java:1.1.10.8'
         compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.8'
 
-        testImplementation 'com.squareup.okhttp3:mockwebserver:5.2.1'
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.0'
+        testImplementation 'com.squareup.okhttp3:mockwebserver:5.3.2'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.3'
     }
 
     [compileJava, compileTestJava].each() {
@@ -78,7 +78,7 @@ subprojects {
         reports {
             html {
                 required = true
-                outputLocation = file("$buildDir/reports/spotbugs/main/spotbugs.html")
+                outputLocation = layout.buildDirectory.file('reports/spotbugs/main/spotbugs.html')
                 stylesheet = 'fancy-hist.xsl'
             }
         }
@@ -124,7 +124,7 @@ project(':api') {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
-    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'com.gradleup.shadow'
 
     base {
         archivesName = 'minio'
@@ -136,8 +136,8 @@ project(':api') {
                        'Implementation-Version': archiveVersion.get(),
                        'Built-By': 'MinIO, inc',
                        'Built-JDK': System.getProperty('java.version'),
-                       'Source-Compatibility': sourceCompatibility,
-                       'Target-Compatibility': targetCompatibility)
+                       'Source-Compatibility': java.sourceCompatibility,
+                       'Target-Compatibility': java.targetCompatibility)
         }
     }
 
@@ -158,7 +158,7 @@ project(':api') {
     // Disable JavaDoc doclint on Java 8. It's annoying.
     if (JavaVersion.current().isJava8Compatible()) {
         allprojects {
-            tasks.withType(Javadoc) {
+            tasks.withType(Javadoc).configureEach {
                 options.addStringOption('Xdoclint:none', '-quiet')
             }
         }
@@ -237,7 +237,7 @@ project(':adminapi') {
     apply plugin: 'java-library'
     apply plugin: 'maven-publish'
     apply plugin: 'signing'
-    apply plugin: 'com.github.johnrengelman.shadow'
+    apply plugin: 'com.gradleup.shadow'
     apply plugin: 'base'
 
     base {
@@ -246,7 +246,7 @@ project(':adminapi') {
 
     dependencies {
         api project(':api')
-        api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.0'
+        api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.2'
         testImplementation project(':api')
     }
 
@@ -256,8 +256,8 @@ project(':adminapi') {
                        'Implementation-Version': archiveVersion.get(),
                        'Built-By': 'MinIO, inc',
                        'Built-JDK': System.getProperty('java.version'),
-                       'Source-Compatibility': sourceCompatibility,
-                       'Target-Compatibility': targetCompatibility)
+                       'Source-Compatibility': java.sourceCompatibility,
+                       'Target-Compatibility': java.targetCompatibility)
         }
     }
 
@@ -278,7 +278,7 @@ project(':adminapi') {
     // Disable JavaDoc doclint on Java 8. It's annoying.
     if (JavaVersion.current().isJava8Compatible()) {
         allprojects {
-            tasks.withType(Javadoc) {
+            tasks.withType(Javadoc).configureEach {
                 options.addStringOption('Xdoclint:none', '-quiet')
             }
         }
@@ -360,7 +360,8 @@ project(':examples') {
     }
 
     compileJava.dependsOn spotlessGroovyGradle, spotlessJava
-    spotbugsMain.dependsOn compileTestJava, jar, localeTest, spotlessGroovyGradle, spotlessJava
+    spotbugsMain.dependsOn compileTestJava, processTestResources, spotbugsTest, test, localeTest, jar, spotlessGroovyGradle, spotlessJava
+    spotbugsMain.mustRunAfter test, localeTest, spotbugsTest
 
     sourceSets {
         main {
@@ -373,13 +374,14 @@ project(':examples') {
 
 project(':functional') {
     dependencies {
-        implementation 'org.junit.jupiter:junit-jupiter-api:5.14.0'
+        implementation 'org.junit.jupiter:junit-jupiter-api:5.14.3'
         implementation project(':api')
         implementation project(':adminapi')
     }
 
     compileJava.dependsOn spotlessGroovyGradle, spotlessJava
-    spotbugsMain.dependsOn compileTestJava, jar, localeTest, spotlessGroovyGradle, spotlessJava
+    spotbugsMain.dependsOn compileTestJava, processTestResources, spotbugsTest, test, localeTest, jar, spotlessGroovyGradle, spotlessJava
+    spotbugsMain.mustRunAfter test, localeTest, spotbugsTest
 
     sourceSets {
         main {
@@ -389,34 +391,19 @@ project(':functional') {
         }
     }
 
-    task runFunctionalTest(type:JavaExec) {
+    tasks.register('runFunctionalTest', JavaExec) {
         mainClass = 'FunctionalTest'
         classpath = sourceSets.main.runtimeClasspath
 
-        ext.endpoint = 'https://play.min.io:9000'
-        if (rootProject.hasProperty('endpoint')) {
-            ext.endpoint = rootProject.properties['endpoint']
-        }
-
-        ext.accessKey = 'Q3AM3UQ867SPQQA43P2F'
-        if (project.properties.containsKey('accessKey')) {
-            ext.accessKey = rootProject.properties['accessKey']
-        }
-
-        ext.secretKey = 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
-        if (project.properties.containsKey('secretKey')) {
-            ext.secretKey = rootProject.properties['secretKey']
-        }
-
-        ext.region = 'us-east-1'
-        if (project.properties.containsKey('region')) {
-            ext.region = rootProject.properties['region']
-        }
+        def endpoint = rootProject.findProperty('endpoint') ?: 'https://play.min.io:9000'
+        def accessKey = rootProject.findProperty('accessKey') ?: 'Q3AM3UQ867SPQQA43P2F'
+        def secretKey = rootProject.findProperty('secretKey') ?: 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
+        def region = rootProject.findProperty('region') ?: 'us-east-1'
 
         maxHeapSize = '4096m'
         jvmArgs '-Xms256m'
         if (rootProject.hasProperty('endpoint')) {
-            args = [ext.endpoint, ext.accessKey, ext.secretKey, ext.region]
+            args = [endpoint, accessKey, secretKey, region]
         }
     }
 }
@@ -435,16 +422,16 @@ jreleaser {
 
     deploy {
         maven {
-             mavenCentral {
-                 sonatype {
-                     applyMavenCentralRules = true
-                     active = 'ALWAYS'
-                     url = 'https://central.sonatype.com/api/v1/publisher'
-                     username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
-                     password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
-                     stagingRepository('api/build/pre-deploy')
-                 }
-             }
+            mavenCentral {
+                sonatype {
+                    applyMavenCentralRules = true
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
+                    password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
+                    stagingRepository('api/build/pre-deploy')
+                }
+            }
             /* Legacy OSSRH
             nexus2 {
                 'maven-central' {
@@ -464,16 +451,16 @@ jreleaser {
             */
         }
         maven {
-             mavenCentral {
-                 sonatype {
-                     applyMavenCentralRules = true
-                     active = 'ALWAYS'
-                     url = 'https://central.sonatype.com/api/v1/publisher'
-                     username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
-                     password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
-                     stagingRepository('adminapi/build/pre-deploy')
-                 }
-             }
+            mavenCentral {
+                sonatype {
+                    applyMavenCentralRules = true
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    username = findProperty('nexusUsername') ?: System.getenv('NEXUS_USERNAME')
+                    password = findProperty('nexusPassword') ?: System.getenv('NEXUS_PASSWORD')
+                    stagingRepository('adminapi/build/pre-deploy')
+                }
+            }
             /* Legacy OSSRH
             nexus2 {
                 'maven-central' {

@@ -77,7 +77,8 @@ public abstract class BaseS3Client implements AutoCloseable {
     try {
       RequestBody.create(new byte[] {}, null);
     } catch (NoSuchMethodError ex) {
-      throw new RuntimeException("Unsupported OkHttp library found. Must use okhttp >= 4.11.0", ex);
+      throw new IllegalStateException(
+          "Unsupported OkHttp library found. Must use okhttp >= 4.11.0", ex);
     }
   }
 
@@ -188,9 +189,6 @@ public abstract class BaseS3Client implements AutoCloseable {
    *
    * @throws MinioException thrown to indicate SDK exception.
    */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-      value = "SIC",
-      justification = "Should not be used in production anyways.")
   public void ignoreCertCheck() throws MinioException {
     this.httpClient = Http.disableCertCheck(this.httpClient);
   }

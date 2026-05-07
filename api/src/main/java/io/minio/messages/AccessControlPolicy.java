@@ -29,7 +29,6 @@ import org.simpleframework.xml.Root;
  * API</a>.
  */
 @Root(name = "AccessControlPolicy", strict = false)
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
 public class AccessControlPolicy {
   @Element(name = "Owner", required = false)
   private Owner owner;

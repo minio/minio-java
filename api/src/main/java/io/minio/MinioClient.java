@@ -1917,9 +1917,6 @@ public class MinioClient implements AutoCloseable {
    *
    * @throws MinioException thrown to indicate SDK exception.
    */
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-      value = "SIC",
-      justification = "Should not be used in production anyways.")
   public void ignoreCertCheck() throws MinioException {
     asyncClient.ignoreCertCheck();
   }

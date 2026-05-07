@@ -86,7 +86,6 @@ public class OutputSerialization {
 
   /** JSON output serialization information of {@link OutputSerialization}. */
   @Root(name = "JSON")
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class JSON {
     @Element(name = "RecordDelimiter", required = false)
     private Character recordDelimiter;

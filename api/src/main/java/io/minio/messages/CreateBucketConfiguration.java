@@ -56,7 +56,6 @@ public class CreateBucketConfiguration {
 
   /** Bucket location information of {@link CreateBucketConfiguration}. */
   @Root(name = "Location", strict = false)
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class Location {
     @Element(name = "Name", required = false)
     private String name;
@@ -72,7 +71,6 @@ public class CreateBucketConfiguration {
 
   /** Bucket properties of {@link CreateBucketConfiguration}. */
   @Root(name = "Bucket", strict = false)
-  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "URF_UNREAD_FIELD")
   public static class Bucket {
     @Element(name = "DataRedundancy", required = false)
     private String dataRedundancy;
