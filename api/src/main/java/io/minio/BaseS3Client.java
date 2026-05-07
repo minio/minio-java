@@ -110,36 +110,20 @@ public abstract class BaseS3Client implements AutoCloseable {
   protected Provider provider;
   protected OkHttpClient httpClient;
   protected boolean closeHttpClient;
-  protected volatile int maxRetries = Retry.MAX_RETRY;
 
   protected BaseS3Client(
       Http.BaseUrl baseUrl, Provider provider, OkHttpClient httpClient, boolean closeHttpClient) {
     this.baseUrl = baseUrl;
     this.provider = provider;
+    this.httpClient = httpClient;
     this.closeHttpClient = closeHttpClient;
-    this.httpClient = wrapWithRetry(httpClient);
   }
 
   protected BaseS3Client(BaseS3Client client) {
     this.baseUrl = client.baseUrl;
     this.provider = client.provider;
+    this.httpClient = client.httpClient;
     this.closeHttpClient = client.closeHttpClient;
-    this.maxRetries = client.maxRetries;
-    this.httpClient = wrapWithRetry(client.httpClient);
-  }
-
-  /**
-   * Adds the retry interceptor to {@code client}. If {@code client} already has one (e.g. from a
-   * prior wrap via copy constructor), it is replaced so the interceptor reads from this instance's
-   * mutable {@code maxRetries} field.
-   */
-  private OkHttpClient wrapWithRetry(OkHttpClient client) {
-    OkHttpClient.Builder builder = client.newBuilder().retryOnConnectionFailure(false);
-    builder.interceptors().removeIf(i -> i instanceof Http.RetryInterceptor);
-    return builder
-        .addInterceptor(
-            new Http.RetryInterceptor(() -> this.maxRetries, Retry.RETRYABLE_HTTP_CODES))
-        .build();
   }
 
   /** Closes underneath HTTP client. */
@@ -149,18 +133,6 @@ public abstract class BaseS3Client implements AutoCloseable {
       httpClient.dispatcher().executorService().shutdown();
       httpClient.connectionPool().evictAll();
     }
-  }
-
-  /**
-   * Sets the maximum number of retry attempts for failed S3 requests. Requests with non-seekable
-   * bodies are never retried regardless of this value. The default is {@code Retry.MAX_RETRY} (10).
-   * Pass 1 to disable automatic retries.
-   *
-   * @param maxRetries maximum attempts (must be >= 1).
-   */
-  public void setMaxRetries(int maxRetries) {
-    if (maxRetries < 1) throw new IllegalArgumentException("maxRetries must be >= 1");
-    this.maxRetries = maxRetries;
   }
 
   /**
@@ -295,8 +267,8 @@ public abstract class BaseS3Client implements AutoCloseable {
   }
 
   /**
-   * Execute HTTP request asynchronously for given parameters. Network-level retry (transient HTTP
-   * status codes and IOExceptions) is handled by {@link Http.RetryInterceptor} on the client.
+   * Execute HTTP request asynchronously for given parameters. Retries on retryable HTTP status
+   * codes are handled by {@link Http.RetryInterceptor} installed on the default HTTP client.
    */
   protected CompletableFuture<Response> executeAsync(Http.S3Request s3request, String region) {
     Credentials credentials = (provider == null) ? null : provider.fetch();

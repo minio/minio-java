@@ -1976,15 +1976,6 @@ public class MinioClient implements AutoCloseable {
     asyncClient.setAwsS3Prefix(awsS3Prefix);
   }
 
-  /**
-   * Sets the maximum number of retry attempts. Pass 1 to disable automatic retries.
-   *
-   * @param maxRetries maximum attempts (must be >= 1).
-   */
-  public void setMaxRetries(int maxRetries) {
-    asyncClient.setMaxRetries(maxRetries);
-  }
-
   /** Closes underneath async client. */
   @Override
   public void close() throws Exception {
@@ -2046,15 +2037,6 @@ public class MinioClient implements AutoCloseable {
 
     public Builder httpClient(OkHttpClient httpClient, boolean close) {
       asyncClientBuilder.httpClient(httpClient, close);
-      return this;
-    }
-
-    /**
-     * Sets the maximum number of retry attempts per request. Pass 1 to disable automatic retries.
-     * Defaults to {@code 10}.
-     */
-    public Builder maxRetries(int maxRetries) {
-      asyncClientBuilder.maxRetries(maxRetries);
       return this;
     }
 
