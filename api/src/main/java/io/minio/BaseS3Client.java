@@ -111,14 +111,12 @@ public abstract class BaseS3Client implements AutoCloseable {
 
   protected Http.BaseUrl baseUrl;
   protected Provider provider;
-  protected OkHttpClient httpClient;
+  protected volatile OkHttpClient httpClient;
   protected boolean closeHttpClient;
 
   /**
-   * Maximum attempts per S3 request. Default {@link Retry#MAX_RETRY}. Read on every request via the
-   * retry interceptor's supplier so runtime tuning via {@link #setMaxRetries(int)} takes immediate
-   * effect. Package-private so the {@code Builder} classes in this package can seed it via the
-   * setter; subclasses must go through {@link #setMaxRetries(int)}.
+   * Maximum attempts per S3 request. Effective only on the SDK-default {@link OkHttpClient};
+   * caller-supplied clients are used verbatim and the SDK does not modify their retry policy.
    */
   volatile int maxRetries = Retry.MAX_RETRY;
 
@@ -127,40 +125,27 @@ public abstract class BaseS3Client implements AutoCloseable {
     this.baseUrl = baseUrl;
     this.provider = provider;
     this.closeHttpClient = closeHttpClient;
-    this.httpClient = wrapWithRetry(httpClient);
+    this.httpClient = httpClient;
   }
 
+  /**
+   * Copies share the source's {@link OkHttpClient} (and its retry interceptor binding), so {@link
+   * #setMaxRetries(int)} on a copy does not affect the shared retry budget.
+   */
   protected BaseS3Client(BaseS3Client client) {
     this.baseUrl = client.baseUrl;
     this.provider = client.provider;
     this.closeHttpClient = client.closeHttpClient;
     this.maxRetries = client.maxRetries;
-    this.httpClient = wrapWithRetry(client.httpClient);
-  }
-
-  /**
-   * Re-wires the retry interceptor on {@code client} so it reads {@link #maxRetries} from this
-   * instance. Strips any prior {@link Http.RetryInterceptor} from BOTH the application-interceptor
-   * and network-interceptor chains (e.g. one bound to a different instance via the copy
-   * constructor, or accidentally registered on the network chain) before installing this one as an
-   * application interceptor.
-   *
-   * <p>Also forces {@code retryOnConnectionFailure(false)} on the underlying client. The SDK's own
-   * {@link Http.RetryInterceptor} is the single source of retry policy; layering OkHttp's
-   * connection-level retry on top would double-count attempts and obscure the {@link #maxRetries}
-   * budget. This silently overrides any {@code retryOnConnectionFailure(true)} that a
-   * caller-supplied client was configured with — by design.
-   */
-  private OkHttpClient wrapWithRetry(OkHttpClient client) {
-    OkHttpClient.Builder builder = client.newBuilder().retryOnConnectionFailure(false);
-    builder.interceptors().removeIf(i -> i instanceof Http.RetryInterceptor);
-    builder.networkInterceptors().removeIf(i -> i instanceof Http.RetryInterceptor);
-    return builder.addInterceptor(new Http.RetryInterceptor(() -> this.maxRetries)).build();
+    this.httpClient = client.httpClient;
   }
 
   /**
    * Sets the maximum number of attempts for transient HTTP failures. Pass {@code 1} to disable
-   * automatic retries. Defaults to {@code 10}.
+   * automatic retries. Default {@code 10}.
+   *
+   * <p>Effective only on the SDK-default {@link OkHttpClient}; caller-supplied clients are used
+   * verbatim.
    *
    * @param maxRetries maximum attempts (must be {@code >= 1}).
    */
@@ -315,11 +300,8 @@ public abstract class BaseS3Client implements AutoCloseable {
   }
 
   /**
-   * Execute HTTP request asynchronously for given parameters. Retries on retryable IOException,
-   * HTTP status, and S3 error code are handled by {@link Http.RetryInterceptor}, which {@link
-   * #wrapWithRetry} installs on the underlying {@link OkHttpClient} regardless of whether the
-   * client is the default or caller-supplied. The attempt budget is read from {@link #maxRetries}
-   * on every request.
+   * Execute HTTP request asynchronously. Retry handling is delegated to {@link
+   * Http.RetryInterceptor} on the {@link OkHttpClient}, so this method itself never loops.
    */
   protected CompletableFuture<Response> executeAsync(Http.S3Request s3request, String region) {
     Credentials credentials = (provider == null) ? null : provider.fetch();
@@ -1269,15 +1251,6 @@ public abstract class BaseS3Client implements AutoCloseable {
     boolean checksumHeader = headers.namePrefixAny("x-amz-checksum-");
     String md5Hash = headers.getFirst(Http.Headers.CONTENT_MD5);
 
-    long fileStartPos = 0;
-    if (args.file() != null) {
-      try {
-        fileStartPos = args.file().getFilePointer();
-      } catch (IOException e) {
-        throw new MinioException(e);
-      }
-    }
-
     if (sha256HexString == null && sha256Base64String == null) {
       if (!baseUrl.isHttps()) {
         Checksum.Hasher hasher = Checksum.Algorithm.SHA256.hasher();
@@ -1330,14 +1303,6 @@ public abstract class BaseS3Client implements AutoCloseable {
         headers.put(Http.Headers.X_AMZ_CHECKSUM_SHA256, sha256Base64String);
         headers.put(
             Http.Headers.X_AMZ_SDK_CHECKSUM_ALGORITHM, Checksum.Algorithm.SHA256.toString());
-      }
-    }
-
-    if (args.file() != null) {
-      try {
-        args.file().seek(fileStartPos);
-      } catch (IOException e) {
-        throw new MinioException(e);
       }
     }
 

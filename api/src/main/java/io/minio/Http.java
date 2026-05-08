@@ -55,7 +55,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -612,10 +611,18 @@ public class Http {
   }
 
   /**
-   * Creates new HTTP client with default timeout with additional TLS certificates from
-   * SSL_CERT_FILE and SSL_CERT_DIR environment variables if present.
+   * Creates the SDK's default HTTP client with a fixed retry budget of {@link Retry#MAX_RETRY}. For
+   * a runtime-tunable budget, use {@link #newDefaultClient(IntSupplier)}.
    */
   public static OkHttpClient newDefaultClient() {
+    return newDefaultClient(() -> Retry.MAX_RETRY);
+  }
+
+  /**
+   * Creates the SDK's default HTTP client; the {@link RetryInterceptor}'s attempt budget is read
+   * from {@code maxAttemptsSupplier} on each call so it can track a runtime-tunable value.
+   */
+  public static OkHttpClient newDefaultClient(IntSupplier maxAttemptsSupplier) {
     OkHttpClient client =
         new OkHttpClient()
             .newBuilder()
@@ -624,7 +631,7 @@ public class Http {
             .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
             .protocols(Arrays.asList(Protocol.HTTP_1_1))
             .retryOnConnectionFailure(false)
-            .addInterceptor(new RetryInterceptor())
+            .addInterceptor(new RetryInterceptor(maxAttemptsSupplier))
             .build();
     try {
       return enableExternalCertificatesFromEnv(client);
@@ -691,10 +698,11 @@ public class Http {
   /**
    * OkHttp interceptor that retries transient HTTP failures with full-jitter exponential backoff.
    *
-   * <p>This is part of the SDK's supported public API: it is installed automatically by {@link
-   * BaseS3Client} on every supplied {@link OkHttpClient} (default or caller-provided), and may also
-   * be registered explicitly on a stand-alone {@link OkHttpClient} via {@code .addInterceptor(new
-   * Http.RetryInterceptor())}.
+   * <p>Installed automatically by {@link Http#newDefaultClient(IntSupplier)} on the SDK-default
+   * client. <em>Not</em> installed on caller-supplied clients passed via {@code
+   * MinioClient.Builder.httpClient(...)} — those are used verbatim. To opt into the SDK retry
+   * policy on a custom client, register this interceptor and pair it with {@code
+   * retryOnConnectionFailure(false)}.
    *
    * <p>Retries on:
    *
@@ -702,61 +710,42 @@ public class Http {
    *   <li>retryable IOException — connection reset, EOF, socket timeout, idle-connection close.
    *       Excludes TLS handshake / unknown-CA / HTTPS protocol mismatch.
    *   <li>retryable HTTP status code — 408, 429, 499, 500, 502, 503, 504, 520.
-   *   <li>retryable S3 error code in a non-2xx response body — {@code SlowDown}, {@code
-   *       InternalError}, {@code ExpiredToken}, etc.
    * </ul>
    *
    * <p>Backoff is full-jitter exponential, with a 200&nbsp;ms unit and a 1&nbsp;s per-attempt cap.
-   * The maximum number of attempts is supplied per intercept call via {@link IntSupplier} so that
-   * an SDK client can expose runtime tuning while keeping the interceptor itself stateless. The
-   * no-arg constructor uses the package default of 10 attempts.
+   * Attempt budget is read from an {@link IntSupplier} on every call so SDK clients can expose
+   * runtime tuning while the interceptor itself stays stateless.
    *
-   * <p><b>Threading.</b> Backoff sleeps on the OkHttp dispatcher thread that owns the call. Under
-   * sustained 5xx/429 storms this can hold dispatcher slots idle while waiting. Callers that need
-   * higher concurrency under widespread retry should size the dispatcher worker pool accordingly
-   * (see {@link okhttp3.Dispatcher#setMaxRequests} / {@code setMaxRequestsPerHost}).
+   * <p><b>Threading.</b> Backoff sleeps on the OkHttp dispatcher thread that owns the call; under
+   * sustained 5xx/429 storms this can hold dispatcher slots idle. Size {@link
+   * okhttp3.Dispatcher#setMaxRequests} / {@code setMaxRequestsPerHost} accordingly.
    *
-   * <p><b>Cancellation.</b> The interceptor checks {@code chain.call().isCanceled()} before each
-   * attempt and after any thrown {@link IOException}, so a {@code Call.cancel()} from the caller
-   * (or an upstream interceptor) terminates the retry loop instead of treating the cancellation as
-   * a retryable transport error.
+   * <p><b>Cancellation.</b> {@code Call.cancel()} short-circuits the retry loop instead of being
+   * mistaken for a retryable transport error.
    *
-   * <p><b>Replayability.</b> Retries call {@code chain.proceed(request)} again, which re-invokes
-   * {@code request.body().writeTo(sink)}. Callers using the SDK's own body types ({@link Body} for
-   * {@code byte[]}, {@link ByteBuffer}, or {@link RandomAccessFile}) are safe — those bodies are
-   * replayable. A caller-supplied {@link okhttp3.RequestBody} that overrides {@code isOneShot()} to
-   * return {@code true} (or otherwise consumes its source on the first {@code writeTo}) MUST NOT be
-   * retried; either disable retries via {@link BaseS3Client#setMaxRetries(int)} {@code (1)} for
-   * those calls, or wrap the body in a replayable form before submission.
+   * <p><b>Replayability.</b> SDK-owned body types ({@link Body} over {@code byte[]}, {@link
+   * ByteBuffer}, {@link RandomAccessFile}) are retry-safe. A caller-supplied {@link
+   * okhttp3.RequestBody} that overrides {@code isOneShot()} to {@code true} MUST NOT be retried;
+   * either disable retries for those calls via {@link BaseS3Client#setMaxRetries(int)} {@code (1)}
+   * or wrap the body in a replayable form.
    *
-   * <p><b>Request reuse.</b> The interceptor passes the same signed {@link okhttp3.Request} on
-   * every attempt, so the {@code X-Amz-Date} / {@code Authorization} headers are not refreshed
-   * between attempts. This is harmless for the default attempt budget (worst-case wall-clock
-   * &lt;&nbsp;10&nbsp;s, well inside the 15-minute S3 signing window) but extreme {@code
-   * maxRetries} values combined with high backoff caps could outlast either the signing window or a
-   * short-lived STS credential. minio-go's request-level retry rebuilds and re-signs each attempt;
-   * that semantic is intentionally not replicated here in exchange for the simpler interceptor
-   * model.
-   *
-   * <p>To opt out of retries on a stand-alone {@link OkHttpClient}, simply do not register this
-   * interceptor.
+   * <p><b>Request reuse.</b> Each attempt sends the same signed {@link okhttp3.Request}, so {@code
+   * X-Amz-Date}/{@code Authorization} are not refreshed. Harmless at the default budget; an extreme
+   * {@code maxRetries} combined with high backoff could outlast the 15-minute signing window or a
+   * short-lived STS credential. (minio-go re-signs per attempt; this Java implementation
+   * deliberately does not, in exchange for a simpler interceptor model.)
    */
   public static class RetryInterceptor implements Interceptor {
-    /** Maximum body bytes inspected when probing for an S3 {@code <Code>} value. */
-    private static final long MAX_PEEK_BYTES = 5L * 1024L * 1024L;
-
-    private static final Pattern S3_ERROR_CODE_PATTERN = Pattern.compile("<Code>([^<]+)</Code>");
-
     private final IntSupplier maxAttemptsSupplier;
 
-    /** Creates a retry interceptor that uses {@link Retry#MAX_RETRY} attempts. */
+    /** Uses a fixed budget of {@link Retry#MAX_RETRY} attempts. */
     public RetryInterceptor() {
       this(() -> Retry.MAX_RETRY);
     }
 
     /**
-     * Creates a retry interceptor that reads its attempt budget from the supplier on every
-     * intercept call. Supplier values less than 1 are clamped to 1 (single attempt = retry off).
+     * Reads the attempt budget from {@code maxAttemptsSupplier} on every call so it can track a
+     * runtime-tunable value. Values below 1 are clamped to 1 (= retry off).
      */
     public RetryInterceptor(IntSupplier maxAttemptsSupplier) {
       this.maxAttemptsSupplier = Objects.requireNonNull(maxAttemptsSupplier, "maxAttemptsSupplier");
@@ -812,31 +801,11 @@ public class Http {
           continue;
         }
 
-        if (!response.isSuccessful()) {
-          String s3Code = peekS3ErrorCode(response);
-          if (Retry.isS3CodeRetryable(s3Code)) {
-            lastException = null;
-            continue;
-          }
-        }
-
         return response;
       }
 
       if (lastException != null) throw lastException;
       return response;
-    }
-
-    /** Returns the S3 {@code <Code>} value if the body is XML containing one, else null. */
-    private static String peekS3ErrorCode(okhttp3.Response response) {
-      try {
-        String body = response.peekBody(MAX_PEEK_BYTES).string();
-        if (body.isEmpty() || !body.contains("<Error")) return null;
-        Matcher m = S3_ERROR_CODE_PATTERN.matcher(body);
-        return m.find() ? m.group(1) : null;
-      } catch (IOException e) {
-        return null;
-      }
     }
   }
 

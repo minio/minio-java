@@ -28,14 +28,8 @@ import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 /**
- * Retry configuration and classification helpers used by {@link Http.RetryInterceptor}.
- *
- * <p>Defines the retryable HTTP status set, retryable S3 error code set, IOException filter, and
- * the full-jitter exponential backoff formula used for transient failure recovery.
- *
- * <p>Constants and predicates here mirror the contract in minio-go's {@code retry.go}
- * (https://github.com/minio/minio-go/blob/master/retry.go) so a Java caller experiences the same
- * retry semantics as a Go caller. Future drift in minio-go should be reflected here.
+ * Retry configuration and classification helpers used by {@link Http.RetryInterceptor}: HTTP status
+ * set, IOException filter, and full-jitter exponential backoff formula.
  */
 class Retry {
   /** Default maximum number of attempts per request. */
@@ -50,22 +44,6 @@ class Retry {
   /** Maximum jitter fraction in {@code [0.0, 1.0]}. {@code 1.0} = full jitter. */
   static final double MAX_JITTER = 1.0;
 
-  /** Retryable AWS S3 error codes. */
-  static final Set<String> RETRYABLE_S3_CODES =
-      ImmutableSet.of(
-          "RequestError",
-          "RequestTimeout",
-          "Throttling",
-          "ThrottlingException",
-          "RequestLimitExceeded",
-          "RequestThrottled",
-          "InternalError",
-          "ExpiredToken",
-          "ExpiredTokenException",
-          "SlowDown",
-          "SlowDownWrite",
-          "SlowDownRead");
-
   /** Retryable HTTP status codes. */
   static final Set<Integer> RETRYABLE_HTTP_STATUS_CODES =
       ImmutableSet.of(
@@ -77,10 +55,6 @@ class Retry {
           503, // Service Unavailable
           504, // Gateway Timeout
           520); // Cloudflare unknown error
-
-  static boolean isS3CodeRetryable(String code) {
-    return code != null && RETRYABLE_S3_CODES.contains(code);
-  }
 
   static boolean isHttpStatusRetryable(int code) {
     return RETRYABLE_HTTP_STATUS_CODES.contains(code);

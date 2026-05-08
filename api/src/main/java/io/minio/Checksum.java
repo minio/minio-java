@@ -104,12 +104,31 @@ public class Checksum {
       size = buffer.length();
     }
 
+    // Positional reads keep this method side-effect-free on the file pointer; callers don't need
+    // to bracket with seek/restore.
+    long filePos = 0L;
+    java.nio.channels.FileChannel channel = null;
+    if (file != null) {
+      try {
+        filePos = file.getFilePointer();
+        channel = file.getChannel();
+      } catch (IOException e) {
+        throw new MinioException(e);
+      }
+    }
+
     byte[] buf16k = new byte[16384];
     long bytesRead = 0;
     while (bytesRead != size) {
       try {
         int length = (int) Math.min(size - bytesRead, buf16k.length);
-        int n = file != null ? file.read(buf16k, 0, length) : stream.read(buf16k, 0, length);
+        int n;
+        if (file != null) {
+          java.nio.ByteBuffer dst = java.nio.ByteBuffer.wrap(buf16k, 0, length);
+          n = channel.read(dst, filePos + bytesRead);
+        } else {
+          n = stream.read(buf16k, 0, length);
+        }
         if (n < 0) throw new MinioException("unexpected EOF");
         if (n != 0) {
           bytesRead += n;

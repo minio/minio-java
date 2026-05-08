@@ -73,41 +73,6 @@ public class RetryTest {
   }
 
   // ---------------------------------------------------------------------------
-  // Retry.isS3CodeRetryable
-  // ---------------------------------------------------------------------------
-
-  @Test
-  public void testIsS3CodeRetryable_retryable() {
-    String[] codes = {
-      "RequestError",
-      "RequestTimeout",
-      "Throttling",
-      "ThrottlingException",
-      "RequestLimitExceeded",
-      "RequestThrottled",
-      "InternalError",
-      "ExpiredToken",
-      "ExpiredTokenException",
-      "SlowDown",
-      "SlowDownWrite",
-      "SlowDownRead"
-    };
-    for (String c : codes) {
-      Assert.assertTrue("S3 code " + c + " must be retryable", Retry.isS3CodeRetryable(c));
-    }
-  }
-
-  @Test
-  public void testIsS3CodeRetryable_notRetryable() {
-    Assert.assertFalse(Retry.isS3CodeRetryable("NoSuchKey"));
-    Assert.assertFalse(Retry.isS3CodeRetryable("NoSuchBucket"));
-    Assert.assertFalse(Retry.isS3CodeRetryable("AccessDenied"));
-    Assert.assertFalse(Retry.isS3CodeRetryable("RetryHead"));
-    Assert.assertFalse(Retry.isS3CodeRetryable(""));
-    Assert.assertFalse(Retry.isS3CodeRetryable(null));
-  }
-
-  // ---------------------------------------------------------------------------
   // Retry.isRequestErrorRetryable
   // ---------------------------------------------------------------------------
 
@@ -257,25 +222,6 @@ public class RetryTest {
         } finally {
           closeQuietly(client);
         }
-      }
-    }
-  }
-
-  @Test
-  public void testRetryOnRetryableS3CodeIn400Body() throws IOException, MinioException {
-    // 400 is NOT a retryable HTTP status, but body has retryable S3 code → retry.
-    try (MockWebServer server = new MockWebServer()) {
-      server.enqueue(xmlError(400, "ExpiredToken"));
-      server.enqueue(successResponse());
-      server.start();
-
-      MinioClient client =
-          MinioClient.builder().endpoint(server.url("").toString()).maxRetries(2).build();
-      try {
-        client.listBuckets();
-        Assert.assertEquals(2, server.getRequestCount());
-      } finally {
-        closeQuietly(client);
       }
     }
   }
@@ -524,22 +470,54 @@ public class RetryTest {
   }
 
   @Test
-  public void testUserSuppliedClientStillRetries() throws IOException, MinioException {
-    // Caller supplies a custom OkHttpClient with no RetryInterceptor and
-    // retryOnConnectionFailure(true). wrapWithRetry must still install the SDK interceptor and
-    // honour maxRetries — proves the integration path for caller-supplied clients.
+  public void testUserSuppliedClientWithoutInterceptorDoesNotRetry()
+      throws IOException, MinioException {
+    // Locks in the contract that caller-supplied clients are not modified by the SDK.
+    try (MockWebServer server = new MockWebServer()) {
+      server.enqueue(htmlServerError(503));
+      server.enqueue(successResponse());
+      server.start();
+
+      OkHttpClient custom = new OkHttpClient.Builder().retryOnConnectionFailure(false).build();
+      MinioClient client =
+          MinioClient.builder()
+              .endpoint(server.url("").toString())
+              .httpClient(custom, false)
+              .maxRetries(3)
+              .build();
+      try {
+        try {
+          client.listBuckets();
+          Assert.fail(
+              "expected exception — user-supplied client without interceptor must not retry");
+        } catch (InvalidResponseException e) {
+          // expected
+        }
+        Assert.assertEquals(1, server.getRequestCount());
+      } finally {
+        closeQuietly(client);
+      }
+    }
+  }
+
+  @Test
+  public void testUserSuppliedClientWithInterceptorRetries() throws IOException, MinioException {
+    // Proves user-installed retry is the caller's own configuration, not an SDK side-effect.
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(htmlServerError(503));
       server.enqueue(htmlServerError(503));
       server.enqueue(successResponse());
       server.start();
 
-      OkHttpClient custom = new OkHttpClient.Builder().retryOnConnectionFailure(true).build();
+      OkHttpClient custom =
+          new OkHttpClient.Builder()
+              .retryOnConnectionFailure(false)
+              .addInterceptor(new Http.RetryInterceptor())
+              .build();
       MinioClient client =
           MinioClient.builder()
               .endpoint(server.url("").toString())
               .httpClient(custom, false)
-              .maxRetries(3)
               .build();
       try {
         client.listBuckets();

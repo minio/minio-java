@@ -93,7 +93,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -207,11 +206,10 @@ public class MinioAsyncClient extends BaseS3Client {
     }
 
     /**
-     * Supplies a custom {@link OkHttpClient}. The SDK wraps this client to install {@link
-     * Http.RetryInterceptor} and forces {@code retryOnConnectionFailure(false)} so that {@link
-     * Http.RetryInterceptor} owns the entire retry policy. Any prior {@code RetryInterceptor} on
-     * either the application-interceptor or network-interceptor chain of the supplied client is
-     * stripped before the new one is installed (as an application interceptor).
+     * Supplies a custom {@link OkHttpClient}; the SDK uses it verbatim. Retry policy on this client
+     * is the caller's responsibility — neither {@link #maxRetries(int)} nor {@link
+     * MinioAsyncClient#setMaxRetries(int)} apply unless the caller has wired {@link
+     * Http.RetryInterceptor} to read from them.
      */
     public Builder httpClient(OkHttpClient httpClient) {
       Utils.validateNotNull(httpClient, "http client");
@@ -232,7 +230,8 @@ public class MinioAsyncClient extends BaseS3Client {
 
     /**
      * Sets the maximum number of attempts per request. Pass {@code 1} to disable automatic retries.
-     * Defaults to {@code 10}.
+     * Default {@code 10}. Effective only on the SDK-default client; see {@link
+     * #httpClient(OkHttpClient)}.
      */
     public Builder maxRetries(int maxRetries) {
       if (maxRetries < 1) throw new IllegalArgumentException("maxRetries must be >= 1");
@@ -250,14 +249,15 @@ public class MinioAsyncClient extends BaseS3Client {
         throw new IllegalArgumentException("Region missing in Amazon S3 China endpoint " + baseUrl);
       }
 
-      if (httpClient == null) {
-        closeHttpClient = true;
-        httpClient = Http.newDefaultClient();
-      }
-
+      // Construct the client before the default httpClient so the RetryInterceptor supplier can
+      // capture client.maxRetries.
       MinioAsyncClient client =
           new MinioAsyncClient(baseUrl, provider, httpClient, closeHttpClient);
       client.setMaxRetries(maxRetries);
+      if (httpClient == null) {
+        client.httpClient = Http.newDefaultClient(() -> client.maxRetries);
+        client.closeHttpClient = true;
+      }
       return client;
     }
   }
@@ -1993,9 +1993,7 @@ public class MinioAsyncClient extends BaseS3Client {
         Map<Checksum.Algorithm, Checksum.Hasher> hashers = Checksum.newHasherMap(algorithms);
 
         if (file != null) {
-          long position = file.getFilePointer();
           Checksum.update(hashers, file, length);
-          file.seek(position);
           return putObject(
               new PutObjectAPIArgs(
                   args,
@@ -2015,8 +2013,6 @@ public class MinioAsyncClient extends BaseS3Client {
                 Checksum.makeHeaders(hashers, addContentSha256, addSha256Checksum)));
       } catch (MinioException e) {
         return Utils.failedFuture(e);
-      } catch (IOException e) {
-        return Utils.failedFuture(new MinioException(e));
       }
     }
 
@@ -3382,7 +3378,7 @@ public class MinioAsyncClient extends BaseS3Client {
               // Build POST object data
               String objectName =
                   "fan-out-"
-                      + new BigInteger(32, ThreadLocalRandom.current()).toString(32)
+                      + new BigInteger(32, RANDOM).toString(32)
                       + "-"
                       + System.currentTimeMillis();
               PostPolicy policy =
@@ -3544,13 +3540,9 @@ public class MinioAsyncClient extends BaseS3Client {
       }
 
       try {
-        long position = file.getFilePointer();
         Checksum.update(hashers, file, size);
-        file.seek(position);
       } catch (MinioException e) {
         return Utils.failedFuture(e);
-      } catch (IOException e) {
-        return Utils.failedFuture(new MinioException(e));
       }
 
       headers.putAll(Checksum.makeHeaders(hashers, addContentSha256, addSha256Checksum));
