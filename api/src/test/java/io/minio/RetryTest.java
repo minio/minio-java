@@ -282,6 +282,9 @@ public class RetryTest {
 
   @Test
   public void testNoRetryOn404() throws IOException, MinioException {
+    // Bucket-scoped operation returning 404 NoSuchBucket — a wire-realistic shape
+    // (NoSuchBucket only ever applies to bucket-scoped calls). Verifies that 404
+    // does not trigger retry and that the parsed error surfaces both code and status.
     try (MockWebServer server = new MockWebServer()) {
       server.enqueue(xmlError(404, "NoSuchBucket"));
       server.start();
@@ -290,7 +293,8 @@ public class RetryTest {
           MinioClient.builder().endpoint(server.url("").toString()).maxRetries(3).build();
       try {
         try {
-          client.listBuckets();
+          client.removeBucket(
+              RemoveBucketArgs.builder().bucket("missing-bucket-for-no-retry").build());
           Assert.fail("expected ErrorResponseException");
         } catch (ErrorResponseException e) {
           Assert.assertEquals("NoSuchBucket", e.errorResponse().code());

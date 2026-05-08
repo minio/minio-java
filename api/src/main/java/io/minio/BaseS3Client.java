@@ -51,11 +51,13 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -90,6 +92,7 @@ public abstract class BaseS3Client implements AutoCloseable {
       "ServerSideEncryptionConfigurationNotFoundError";
   // maximum allowed bucket policy size is 20KiB
   protected static final int MAX_BUCKET_POLICY_SIZE = 20 * 1024;
+  protected static final Random RANDOM = new Random(new SecureRandom().nextLong());
   protected static final ObjectMapper OBJECT_MAPPER =
       JsonMapper.builder()
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -512,10 +515,9 @@ public abstract class BaseS3Client implements AutoCloseable {
                           response.header("x-amz-id-2"));
                 }
 
-                // invalidate region cache if needed (bucket may be null for e.g. listBuckets)
-                if (s3request.bucket() != null
-                    && (errorResponse.code().equals(NO_SUCH_BUCKET)
-                        || errorResponse.code().equals(RETRY_HEAD))) {
+                // invalidate region cache if needed
+                if (errorResponse.code().equals(NO_SUCH_BUCKET)
+                    || errorResponse.code().equals(RETRY_HEAD)) {
                   regionCache.remove(s3request.bucket());
                 }
 

@@ -623,8 +623,6 @@ public class Http {
             .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
             .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
             .protocols(Arrays.asList(Protocol.HTTP_1_1))
-            // Our RetryInterceptor handles transient failures with full-jitter backoff; defer
-            // entirely to it instead of layering OkHttp's connection-level retry on top.
             .retryOnConnectionFailure(false)
             .addInterceptor(new RetryInterceptor())
             .build();
@@ -846,7 +844,6 @@ public class Http {
   public static class Body {
     private okhttp3.RequestBody requestBody;
     private RandomAccessFile file;
-    private long fileOffset;
     private ByteBuffer buffer;
     private byte[] data;
     private Long length;
@@ -864,7 +861,7 @@ public class Http {
      * disabled for that call.
      */
     public Body(okhttp3.RequestBody requestBody) {
-      this.requestBody = Utils.validateNotNull(requestBody, "request body");
+      this.requestBody = requestBody;
       this.contentType = requestBody.contentType();
     }
 
@@ -877,11 +874,6 @@ public class Http {
         String md5Hash) {
       if (length < 0) throw new IllegalArgumentException("valid length must be provided");
       this.file = file;
-      try {
-        this.fileOffset = file.getFilePointer();
-      } catch (IOException e) {
-        throw new IllegalStateException("failed to read file position", e);
-      }
       set(length, contentType, sha256Hash, md5Hash);
     }
 
@@ -955,14 +947,7 @@ public class Http {
     /** Creates HTTP RequestBody for this body. */
     public RequestBody toRequestBody() throws MinioException {
       if (requestBody != null) return new RequestBody(requestBody);
-      if (file != null) {
-        try {
-          file.seek(fileOffset);
-        } catch (IOException e) {
-          throw new MinioException(e);
-        }
-        return new RequestBody(file, length, contentType);
-      }
+      if (file != null) return new RequestBody(file, length, contentType);
       if (buffer != null) return new RequestBody(buffer, contentType);
       return new RequestBody(data, length.intValue(), contentType);
     }
