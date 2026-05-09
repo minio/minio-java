@@ -118,7 +118,7 @@ public abstract class BaseS3Client implements AutoCloseable {
    * Maximum attempts per S3 request. Effective only on the SDK-default {@link OkHttpClient};
    * caller-supplied clients are used verbatim and the SDK does not modify their retry policy.
    */
-  volatile int maxRetries = Retry.MAX_RETRY;
+  volatile int maxRetries = Http.RetryInterceptor.MAX_RETRY;
 
   protected BaseS3Client(
       Http.BaseUrl baseUrl, Provider provider, OkHttpClient httpClient, boolean closeHttpClient) {

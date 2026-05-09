@@ -35,6 +35,8 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.CertPathBuilderException;
+import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -52,6 +54,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntSupplier;
 import java.util.regex.Matcher;
@@ -61,6 +64,9 @@ import javax.annotation.Nonnull;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -611,11 +617,12 @@ public class Http {
   }
 
   /**
-   * Creates the SDK's default HTTP client with a fixed retry budget of {@link Retry#MAX_RETRY}. For
-   * a runtime-tunable budget, use {@link #newDefaultClient(IntSupplier)}.
+   * Creates the SDK's default HTTP client with a fixed retry budget of {@link
+   * RetryInterceptor#MAX_RETRY}. For a runtime-tunable budget, use {@link
+   * #newDefaultClient(IntSupplier)}.
    */
   public static OkHttpClient newDefaultClient() {
-    return newDefaultClient(() -> Retry.MAX_RETRY);
+    return newDefaultClient(() -> RetryInterceptor.MAX_RETRY);
   }
 
   /**
@@ -736,11 +743,85 @@ public class Http {
    * deliberately does not, in exchange for a simpler interceptor model.)
    */
   public static class RetryInterceptor implements Interceptor {
+    /** Default maximum number of attempts per request. */
+    static final int MAX_RETRY = 10;
+
+    /** Base unit per retry attempt, in milliseconds. */
+    static final long DEFAULT_RETRY_UNIT_MS = 200L;
+
+    /** Per-attempt sleep cap, in milliseconds. */
+    static final long DEFAULT_RETRY_CAP_MS = 1_000L;
+
+    /** Maximum jitter fraction in {@code [0.0, 1.0]}. {@code 1.0} = full jitter. */
+    static final double MAX_JITTER = 1.0;
+
+    /** Retryable HTTP status codes. */
+    static final Set<Integer> RETRYABLE_HTTP_STATUS_CODES =
+        ImmutableSet.of(
+            408, // Request Timeout
+            429, // Too Many Requests
+            499, // Client Closed Request (nginx)
+            500, // Internal Server Error
+            502, // Bad Gateway
+            503, // Service Unavailable
+            504, // Gateway Timeout
+            520); // Cloudflare unknown error
+
+    static boolean isHttpStatusRetryable(int code) {
+      return RETRYABLE_HTTP_STATUS_CODES.contains(code);
+    }
+
+    /**
+     * Returns true if {@code e} represents a transient transport failure that should be retried.
+     * TLS handshake failure, unknown-CA / cert-path errors, and the "server gave HTTP response to
+     * HTTPS client" protocol mismatch are NOT retryable; everything else (connection reset, EOF,
+     * server closed idle connection, socket timeout, …) is.
+     */
+    static boolean isRequestErrorRetryable(IOException e) {
+      if (e instanceof SSLHandshakeException) return false;
+      if (e instanceof SSLPeerUnverifiedException) return false;
+      if (e instanceof SSLException) {
+        Throwable cause = e.getCause();
+        if (cause instanceof CertPathBuilderException
+            || cause instanceof CertPathValidatorException
+            || cause instanceof CertificateException) {
+          return false;
+        }
+      }
+      String msg = e.getMessage();
+      if (msg != null && msg.contains("server gave HTTP response to HTTPS client")) return false;
+      return true;
+    }
+
+    /**
+     * Computes the exponential-backoff-with-full-jitter delay for retry {@code attempt} (0-indexed:
+     * {@code 0} = before the second attempt, {@code 1} = before the third, …):
+     *
+     * <pre>
+     *   sleep = min(DEFAULT_RETRY_CAP_MS, DEFAULT_RETRY_UNIT_MS * 2^attempt)
+     *   sleep -= (long)(random.nextDouble() * sleep * MAX_JITTER)   // full jitter when MAX_JITTER == 1.0
+     * </pre>
+     *
+     * <p>With {@code MAX_JITTER == 1.0}, returns a value in {@code [1, min(cap, base *
+     * 2^attempt)]}. The lower bound is {@code 1} rather than {@code 0} because {@link
+     * java.util.concurrent.ThreadLocalRandom#nextDouble()} is in {@code [0.0, 1.0)} and the {@code
+     * (long)} cast truncates {@code rand * sleep} to at most {@code sleep - 1}. This matches the
+     * behaviour of minio-go's {@code exponentialBackoffWait}, which uses the same formula and
+     * therefore the same bounds.
+     */
+    static long exponentialBackoffMs(int attempt) {
+      int exp = Math.min(Math.max(attempt, 0), 30);
+      long sleep = DEFAULT_RETRY_UNIT_MS * (1L << exp);
+      if (sleep > DEFAULT_RETRY_CAP_MS) sleep = DEFAULT_RETRY_CAP_MS;
+      sleep -= (long) (ThreadLocalRandom.current().nextDouble() * (double) sleep * MAX_JITTER);
+      return Math.max(0L, sleep);
+    }
+
     private final IntSupplier maxAttemptsSupplier;
 
-    /** Uses a fixed budget of {@link Retry#MAX_RETRY} attempts. */
+    /** Uses a fixed budget of {@link #MAX_RETRY} attempts. */
     public RetryInterceptor() {
-      this(() -> Retry.MAX_RETRY);
+      this(() -> MAX_RETRY);
     }
 
     /**
@@ -769,7 +850,7 @@ public class Http {
         }
 
         if (attempt > 0) {
-          long delayMs = Retry.exponentialBackoffMs(attempt - 1);
+          long delayMs = exponentialBackoffMs(attempt - 1);
           if (delayMs > 0L) {
             try {
               Thread.sleep(delayMs);
@@ -791,12 +872,12 @@ public class Http {
           // A cancelled call surfaces as IOException with a message that would
           // otherwise pass `isRequestErrorRetryable`. Bail out instead.
           if (chain.call().isCanceled()) throw e;
-          if (!Retry.isRequestErrorRetryable(e)) throw e;
+          if (!isRequestErrorRetryable(e)) throw e;
           lastException = e;
           continue;
         }
 
-        if (Retry.isHttpStatusRetryable(response.code())) {
+        if (isHttpStatusRetryable(response.code())) {
           lastException = null;
           continue;
         }

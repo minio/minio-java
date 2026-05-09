@@ -156,7 +156,7 @@ public class MinioAsyncClient extends BaseS3Client {
     private Provider provider;
     private OkHttpClient httpClient;
     private boolean closeHttpClient;
-    private int maxRetries = Retry.MAX_RETRY;
+    private int maxRetries = Http.RetryInterceptor.MAX_RETRY;
 
     public Builder baseUrl(Http.BaseUrl baseUrl) {
       if (baseUrl.region() == null) {
@@ -1993,7 +1993,9 @@ public class MinioAsyncClient extends BaseS3Client {
         Map<Checksum.Algorithm, Checksum.Hasher> hashers = Checksum.newHasherMap(algorithms);
 
         if (file != null) {
+          long position = file.getFilePointer();
           Checksum.update(hashers, file, length);
+          file.seek(position);
           return putObject(
               new PutObjectAPIArgs(
                   args,
@@ -2013,6 +2015,8 @@ public class MinioAsyncClient extends BaseS3Client {
                 Checksum.makeHeaders(hashers, addContentSha256, addSha256Checksum)));
       } catch (MinioException e) {
         return Utils.failedFuture(e);
+      } catch (IOException e) {
+        return Utils.failedFuture(new MinioException(e));
       }
     }
 
@@ -3540,9 +3544,13 @@ public class MinioAsyncClient extends BaseS3Client {
       }
 
       try {
+        long position = file.getFilePointer();
         Checksum.update(hashers, file, size);
+        file.seek(position);
       } catch (MinioException e) {
         return Utils.failedFuture(e);
+      } catch (IOException e) {
+        return Utils.failedFuture(new MinioException(e));
       }
 
       headers.putAll(Checksum.makeHeaders(hashers, addContentSha256, addSha256Checksum));

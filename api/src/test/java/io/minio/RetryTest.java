@@ -21,9 +21,12 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.net.SocketException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.cert.CertPathBuilderException;
 import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertificateException;
+import java.util.concurrent.ThreadLocalRandom;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLPeerUnverifiedException;
@@ -31,12 +34,13 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 import okhttp3.mockwebserver.SocketPolicy;
 import okio.Buffer;
 import org.junit.Assert;
 import org.junit.Test;
 
-/** Unit + integration tests for {@link Retry} and {@link Http.RetryInterceptor}. */
+/** Unit + integration tests for {@link Http.RetryInterceptor}. */
 public class RetryTest {
 
   private static void closeQuietly(MinioClient client) {
@@ -49,65 +53,71 @@ public class RetryTest {
   }
 
   // ---------------------------------------------------------------------------
-  // Retry.isHttpStatusRetryable
+  // Http.RetryInterceptor.isHttpStatusRetryable
   // ---------------------------------------------------------------------------
 
   @Test
   public void testIsHttpStatusRetryable_retryable() {
-    Assert.assertTrue(Retry.isHttpStatusRetryable(408));
-    Assert.assertTrue(Retry.isHttpStatusRetryable(429));
-    Assert.assertTrue(Retry.isHttpStatusRetryable(499));
-    Assert.assertTrue(Retry.isHttpStatusRetryable(500));
-    Assert.assertTrue(Retry.isHttpStatusRetryable(502));
-    Assert.assertTrue(Retry.isHttpStatusRetryable(503));
-    Assert.assertTrue(Retry.isHttpStatusRetryable(504));
-    Assert.assertTrue(Retry.isHttpStatusRetryable(520));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(408));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(429));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(499));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(500));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(502));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(503));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(504));
+    Assert.assertTrue(Http.RetryInterceptor.isHttpStatusRetryable(520));
   }
 
   @Test
   public void testIsHttpStatusRetryable_notRetryable() {
     for (int code : new int[] {200, 201, 204, 301, 304, 400, 401, 403, 404, 409, 412, 416, 501}) {
       Assert.assertFalse(
-          "status " + code + " must not be retryable", Retry.isHttpStatusRetryable(code));
+          "status " + code + " must not be retryable",
+          Http.RetryInterceptor.isHttpStatusRetryable(code));
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Retry.isRequestErrorRetryable
+  // Http.RetryInterceptor.isRequestErrorRetryable
   // ---------------------------------------------------------------------------
 
   @Test
   public void testIsRequestErrorRetryable_retryable() {
-    Assert.assertTrue(Retry.isRequestErrorRetryable(new IOException("connection reset")));
-    Assert.assertTrue(Retry.isRequestErrorRetryable(new IOException("EOF")));
     Assert.assertTrue(
-        Retry.isRequestErrorRetryable(new IOException("http: server closed idle connection")));
-    Assert.assertTrue(Retry.isRequestErrorRetryable(new SocketException("Connection timed out")));
-    Assert.assertTrue(Retry.isRequestErrorRetryable(new java.net.SocketTimeoutException("read")));
+        Http.RetryInterceptor.isRequestErrorRetryable(new IOException("connection reset")));
+    Assert.assertTrue(Http.RetryInterceptor.isRequestErrorRetryable(new IOException("EOF")));
+    Assert.assertTrue(
+        Http.RetryInterceptor.isRequestErrorRetryable(
+            new IOException("http: server closed idle connection")));
+    Assert.assertTrue(
+        Http.RetryInterceptor.isRequestErrorRetryable(new SocketException("Connection timed out")));
+    Assert.assertTrue(
+        Http.RetryInterceptor.isRequestErrorRetryable(new java.net.SocketTimeoutException("read")));
   }
 
   @Test
   public void testIsRequestErrorRetryable_sslHandshakeNotRetryable() {
     Assert.assertFalse(
-        Retry.isRequestErrorRetryable(new SSLHandshakeException("cert not trusted")));
+        Http.RetryInterceptor.isRequestErrorRetryable(
+            new SSLHandshakeException("cert not trusted")));
   }
 
   @Test
   public void testIsRequestErrorRetryable_protocolMismatchNotRetryable() {
     Assert.assertFalse(
-        Retry.isRequestErrorRetryable(
+        Http.RetryInterceptor.isRequestErrorRetryable(
             new IOException("server gave HTTP response to HTTPS client")));
   }
 
   // ---------------------------------------------------------------------------
-  // Retry.exponentialBackoffMs
+  // Http.RetryInterceptor.exponentialBackoffMs
   // ---------------------------------------------------------------------------
 
   @Test
   public void testExponentialBackoffMs_attempt0WithinFirstUnit() {
     // attempt=0: cap = min(1000, 200*2^0) = 200ms; with full jitter, result in [0, 200].
     for (int i = 0; i < 100; i++) {
-      long delay = Retry.exponentialBackoffMs(0);
+      long delay = Http.RetryInterceptor.exponentialBackoffMs(0);
       Assert.assertTrue(
           "attempt 0 delay must be in [0, 200ms], got " + delay, delay >= 0 && delay <= 200);
     }
@@ -117,7 +127,7 @@ public class RetryTest {
   public void testExponentialBackoffMs_attempt2WithinSecondCap() {
     // attempt=2: cap = min(1000, 200*2^2) = 800ms.
     for (int i = 0; i < 100; i++) {
-      long delay = Retry.exponentialBackoffMs(2);
+      long delay = Http.RetryInterceptor.exponentialBackoffMs(2);
       Assert.assertTrue(
           "attempt 2 delay must be in [0, 800ms], got " + delay, delay >= 0 && delay <= 800);
     }
@@ -127,8 +137,10 @@ public class RetryTest {
   public void testExponentialBackoffMs_cappedAtRetryCap() {
     // attempt=10: uncapped 200*2^10 = 204800ms; capped at 1000ms.
     for (int i = 0; i < 100; i++) {
-      long delay = Retry.exponentialBackoffMs(10);
-      Assert.assertTrue("delay must be <= cap, got " + delay, delay <= Retry.DEFAULT_RETRY_CAP_MS);
+      long delay = Http.RetryInterceptor.exponentialBackoffMs(10);
+      Assert.assertTrue(
+          "delay must be <= cap, got " + delay,
+          delay <= Http.RetryInterceptor.DEFAULT_RETRY_CAP_MS);
       Assert.assertTrue(delay >= 0);
     }
   }
@@ -136,7 +148,7 @@ public class RetryTest {
   @Test
   public void testExponentialBackoffMs_negativeAttemptIsClamped() {
     // Negative attempt clamps to 0; cap = 200ms.
-    long delay = Retry.exponentialBackoffMs(-5);
+    long delay = Http.RetryInterceptor.exponentialBackoffMs(-5);
     Assert.assertTrue(delay >= 0 && delay <= 200);
   }
 
@@ -144,10 +156,10 @@ public class RetryTest {
   public void testExponentialBackoffMs_highAttemptDoesNotOverflow() {
     // High attempts must not bit-shift overflow; cap saturates.
     for (int attempt : new int[] {30, 31, 60, 100, 1000}) {
-      long delay = Retry.exponentialBackoffMs(attempt);
+      long delay = Http.RetryInterceptor.exponentialBackoffMs(attempt);
       Assert.assertTrue(
           "attempt=" + attempt + " delay must be <= cap, got " + delay,
-          delay <= Retry.DEFAULT_RETRY_CAP_MS);
+          delay <= Http.RetryInterceptor.DEFAULT_RETRY_CAP_MS);
       Assert.assertTrue("attempt=" + attempt + " delay must be >= 0", delay >= 0);
     }
   }
@@ -421,16 +433,18 @@ public class RetryTest {
     SSLException certPathBuilder = new SSLException("x", new CertPathBuilderException("bad"));
     SSLException certPathValidator = new SSLException("x", new CertPathValidatorException("bad"));
     SSLException certError = new SSLException("x", new CertificateException("bad"));
-    Assert.assertFalse(Retry.isRequestErrorRetryable(certPathBuilder));
-    Assert.assertFalse(Retry.isRequestErrorRetryable(certPathValidator));
-    Assert.assertFalse(Retry.isRequestErrorRetryable(certError));
+    Assert.assertFalse(Http.RetryInterceptor.isRequestErrorRetryable(certPathBuilder));
+    Assert.assertFalse(Http.RetryInterceptor.isRequestErrorRetryable(certPathValidator));
+    Assert.assertFalse(Http.RetryInterceptor.isRequestErrorRetryable(certError));
 
     // SSLPeerUnverifiedException must NOT retry.
-    Assert.assertFalse(Retry.isRequestErrorRetryable(new SSLPeerUnverifiedException("untrusted")));
+    Assert.assertFalse(
+        Http.RetryInterceptor.isRequestErrorRetryable(new SSLPeerUnverifiedException("untrusted")));
 
     // SSLException with an unrelated cause is still retryable (transient TLS hiccup).
     Assert.assertTrue(
-        Retry.isRequestErrorRetryable(new SSLException("read", new IOException("boom"))));
+        Http.RetryInterceptor.isRequestErrorRetryable(
+            new SSLException("read", new IOException("boom"))));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -576,6 +590,133 @@ public class RetryTest {
         client.dispatcher().executorService().shutdown();
         client.connectionPool().evictAll();
       }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // File-body retry validation
+  //
+  // Validates the file-PUT retry path end-to-end after BaseS3Client.createBody
+  // was reverted to master form (no in-method getFilePointer/seek bracket).
+  // Retry-safety relies on:
+  //   - MinioAsyncClient pre-computing checksums and bracketing the file
+  //     pointer so it lands at start-of-payload before putObject is called;
+  //   - those pre-computed headers short-circuiting createBody's own
+  //     Checksum.update guards, so the pointer is never touched here;
+  //   - Http.RequestBody.writeTo seeking to the captured start position on
+  //     every attempt, so the retry interceptor's repeated writeTo calls all
+  //     replay the same payload bytes.
+  // ---------------------------------------------------------------------------
+
+  private MockResponse putSuccessResponse() {
+    return new MockResponse()
+        .setResponseCode(200)
+        .setHeader("ETag", "\"deadbeef\"")
+        .setHeader("x-amz-version-id", "v0");
+  }
+
+  @Test
+  public void testRetryWithFileBody_replaysSameBytesOnEveryAttempt()
+      throws IOException, InterruptedException, MinioException {
+    byte[] payload = new byte[8 * 1024];
+    ThreadLocalRandom.current().nextBytes(payload);
+    Path tempFile = Files.createTempFile("minio-retry-file-put-", ".dat");
+    try {
+      Files.write(tempFile, payload);
+
+      try (MockWebServer server = new MockWebServer()) {
+        server.enqueue(htmlServerError(503));
+        server.enqueue(htmlServerError(503));
+        server.enqueue(htmlServerError(503));
+        server.enqueue(putSuccessResponse());
+        server.start();
+
+        MinioClient client =
+            MinioClient.builder()
+                .endpoint(server.url("").toString())
+                .region("us-east-1")
+                .credentials("ACCESS", "SECRET")
+                .maxRetries(4)
+                .build();
+        try {
+          client.uploadObject(
+              UploadObjectArgs.builder()
+                  .bucket("retry-file-bucket")
+                  .object("retry-file-object")
+                  .filename(tempFile.toString())
+                  .build());
+
+          Assert.assertEquals(
+              "expected 3 retryable failures + 1 success", 4, server.getRequestCount());
+
+          for (int i = 0; i < 4; i++) {
+            RecordedRequest req = server.takeRequest();
+            Assert.assertEquals("attempt " + (i + 1) + " must be PUT", "PUT", req.getMethod());
+            byte[] received = req.getBody().readByteArray();
+            Assert.assertArrayEquals(
+                "attempt " + (i + 1) + " body must match the original file payload",
+                payload,
+                received);
+          }
+        } finally {
+          closeQuietly(client);
+        }
+      }
+    } finally {
+      Files.deleteIfExists(tempFile);
+    }
+  }
+
+  @Test
+  public void testRetryWithFileBody_transportFailureReplaysFromStart()
+      throws IOException, InterruptedException, MinioException {
+    // Locks in that the body source is replayable across a transport-level failure: the first
+    // attempt is dropped before the server sends a response, the second attempt must seek back
+    // to start-of-payload and resend the full file.
+    byte[] payload = new byte[4 * 1024];
+    ThreadLocalRandom.current().nextBytes(payload);
+    Path tempFile = Files.createTempFile("minio-retry-file-put-drop-", ".dat");
+    try {
+      Files.write(tempFile, payload);
+
+      try (MockWebServer server = new MockWebServer()) {
+        server.enqueue(new MockResponse().setSocketPolicy(SocketPolicy.DISCONNECT_AT_START));
+        server.enqueue(putSuccessResponse());
+        server.start();
+
+        MinioClient client =
+            MinioClient.builder()
+                .endpoint(server.url("").toString())
+                .region("us-east-1")
+                .credentials("ACCESS", "SECRET")
+                .maxRetries(3)
+                .build();
+        try {
+          client.uploadObject(
+              UploadObjectArgs.builder()
+                  .bucket("retry-file-bucket-drop")
+                  .object("retry-file-object-drop")
+                  .filename(tempFile.toString())
+                  .build());
+
+          Assert.assertEquals(
+              "expected 1 disconnected attempt + 1 successful retry", 2, server.getRequestCount());
+
+          // First request was disconnected at start; MockWebServer may or may not have a body for
+          // it. The second attempt — the actual retry — MUST carry the full original payload.
+          server.takeRequest();
+          RecordedRequest retry = server.takeRequest();
+          Assert.assertEquals("retry must be PUT", "PUT", retry.getMethod());
+          Assert.assertArrayEquals(
+              "retry body must match the original file payload after seek-back",
+              payload,
+              retry.getBody().readByteArray());
+        } finally {
+          closeQuietly(client);
+        }
+      }
+    } finally {
+      Files.deleteIfExists(tempFile);
     }
   }
 }
