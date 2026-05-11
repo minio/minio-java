@@ -17,12 +17,16 @@
 
 package io.minio;
 
+import io.minio.errors.ErrorResponseException;
 import io.minio.errors.InvalidResponseException;
 import io.minio.errors.MinioException;
+import io.minio.messages.ListAllMyBucketsResult;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.crypto.KeyGenerator;
 import okhttp3.OkHttpClient;
@@ -582,6 +586,50 @@ public class MinioClientTest {
             .region("us-east-1")
             .build();
     client.makeBucket(MakeBucketArgs.builder().bucket("mybucket").region("us-west-2").build());
+    Assert.fail("exception should be thrown");
+  }
+
+  @Test
+  public void testStatusRetryInterceptor()
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(new MockResponse().setResponseCode(408)); // OkHttp itself retries.
+    server.enqueue(new MockResponse().setResponseCode(429));
+    server.enqueue(new MockResponse().setResponseCode(504));
+    server.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setHeader(CONTENT_LENGTH, "211")
+            .setBody(
+                new Buffer()
+                    .writeUtf8(
+                        "<ListAllMyBucketsResult><Buckets><Bucket><CreationDate>2019-12-11T23:32:47Z</CreationDate><Name>amzn-s3-demo-bucket</Name></Bucket></Buckets><Owner><ID>AIDACKCEVSQ6C2EXAMPLE</ID></Owner></ListAllMyBucketsResult>")));
+    server.start();
+
+    MinioClient client = MinioClient.builder().endpoint(server.url("")).build();
+    List<ListAllMyBucketsResult.Bucket> buckets = client.listBuckets();
+    for (ListAllMyBucketsResult.Bucket bucket : buckets) {
+      Assert.assertEquals("amzn-s3-demo-bucket", bucket.name());
+    }
+  }
+
+  @Test(expected = ErrorResponseException.class)
+  public void testSetRetryDisable()
+      throws NoSuchAlgorithmException, IOException, InvalidKeyException, MinioException {
+    MockWebServer server = new MockWebServer();
+    server.enqueue(
+        new MockResponse()
+            .setResponseCode(500)
+            .setHeader(CONTENT_TYPE, "application/xml;utf-8")
+            .setHeader(CONTENT_LENGTH, "211")
+            .setBody(
+                new Buffer()
+                    .writeUtf8(
+                        "<Error><Code>InternalError</Code><Message>An internal error occurred. Try again.</Message></Error>")));
+    server.start();
+    MinioClient client = MinioClient.builder().endpoint(server.url("")).build();
+    client.setRetry(Collections.singleton(500), 100L, 1);
+    client.listBuckets();
     Assert.fail("exception should be thrown");
   }
 }

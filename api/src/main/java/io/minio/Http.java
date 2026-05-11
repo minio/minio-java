@@ -22,6 +22,7 @@ import io.minio.credentials.Credentials;
 import io.minio.errors.MinioException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -52,8 +53,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
@@ -65,9 +68,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
 import okio.BufferedSink;
 import okio.Okio;
 
@@ -85,6 +91,23 @@ public class Http {
           DEFAULT_MEDIA_TYPE,
           Checksum.ZERO_SHA256_HASH,
           Checksum.ZERO_MD5_HASH);
+  public static final Set<Integer> RETRIABLE_STATUS_CODES =
+      ImmutableSet.of(
+          408, // Request Timeout
+          429, // Too Many Requests
+          499, // Client Closed Request (nginx)
+          500, // Internal Server Error
+          502, // Bad Gateway
+          503, // Service Unavailable
+          504, // Gateway Timeout
+          520); // Cloudflare unknown error
+
+  public static final String END_HTTP = "----------END-HTTP----------";
+  public static final String UPLOAD_ID = "uploadId";
+  public static final Set<String> TRACE_QUERY_PARAMS =
+      ImmutableSet.of("retention", "legal-hold", "tagging", UPLOAD_ID, "acl", "attributes");
+  private static final Pattern SIGNATURE_PATTERN = Pattern.compile("Signature=([0-9a-f]+)");
+  private static final Pattern CREDENTIAL_PATTERN = Pattern.compile("Credential=([^/]+)");
 
   /** Base URL of S3 endpoint. */
   public static class BaseUrl {
@@ -608,6 +631,174 @@ public class Http {
         client, System.getenv("SSL_CERT_FILE"), System.getenv("SSL_CERT_DIR"));
   }
 
+  public static String getRequestTraces(okhttp3.Request request, String bodyString) {
+    Method method = Method.fromString(request.method());
+
+    StringBuilder traceBuilder = new StringBuilder();
+    traceBuilder.append("---------START-HTTP---------\n");
+    String encodedPath = request.url().encodedPath();
+    String encodedQuery = request.url().encodedQuery();
+    if (encodedQuery != null) encodedPath += "?" + encodedQuery;
+    traceBuilder.append(method.toString()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
+    traceBuilder.append(
+        SIGNATURE_PATTERN
+            .matcher(
+                CREDENTIAL_PATTERN
+                    .matcher(request.headers().toString())
+                    .replaceAll("Credential=*REDACTED*"))
+            .replaceAll("Signature=*REDACTED*"));
+
+    String lastTwoChars = traceBuilder.substring(traceBuilder.length() - 2);
+    if (lastTwoChars.charAt(1) != '\n') {
+      traceBuilder.append("\n\n");
+    } else if (lastTwoChars.charAt(0) != '\n') {
+      traceBuilder.append("\n");
+    }
+    if (method == Method.PUT || method == Method.POST) {
+      if (bodyString != null) {
+        traceBuilder.append(bodyString);
+        if (!bodyString.endsWith("\n")) traceBuilder.append("\n");
+      }
+    }
+    return traceBuilder.toString();
+  }
+
+  public static String getResponseTraces(
+      okhttp3.Response response,
+      Method method,
+      QueryParameters queryParams,
+      boolean isBucketRequest)
+      throws IOException {
+    StringBuilder traceBuilder = new StringBuilder();
+    String trace =
+        String.format(
+            "%s %d %s%n%s",
+            response.protocol().toString().toUpperCase(Locale.US),
+            response.code(),
+            response.message(),
+            response.headers().toString());
+    if (!trace.endsWith("\n\n")) {
+      trace += trace.endsWith("\n") ? "\n" : "\n\n";
+    }
+    traceBuilder.append(trace);
+
+    if (response.isSuccessful()) {
+      // Trace response body only if the request is not
+      // GetObject/ListenBucketNotification
+      // S3 API.
+      Set<String> keys = queryParams.keySet();
+      if ((method != Method.GET
+              || isBucketRequest
+              || !Collections.disjoint(keys, TRACE_QUERY_PARAMS))
+          && !(keys.contains("events") && (keys.contains("prefix") || keys.contains("suffix")))) {
+        String responseBody = response.peekBody(1024 * 1024).string();
+        traceBuilder.append(responseBody);
+        if (!responseBody.endsWith("\n")) traceBuilder.append("\n");
+      } else {
+        traceBuilder.append("<<<BYTES>>>\n");
+      }
+      traceBuilder.append(END_HTTP).append("\n");
+    } else {
+      String responseBody = response.peekBody(1024 * 1024).string();
+      traceBuilder.append(responseBody);
+      if (!responseBody.endsWith("\n") && !(responseBody.isEmpty() && method == Method.HEAD)) {
+        traceBuilder.append("\n");
+      }
+      traceBuilder.append(END_HTTP).append("\n");
+    }
+
+    return traceBuilder.toString();
+  }
+
+  public static class StatusRetryInterceptor implements Interceptor {
+    private final Set<Integer> retryStatusCodes;
+    private final long delayMs;
+    private final int maxRetries;
+    private final PrintWriter traceWriter;
+    private final boolean isBucketRequest;
+
+    private StatusRetryInterceptor(
+        Set<Integer> retryStatusCodes,
+        long delayMs,
+        int maxRetries,
+        PrintWriter traceWriter,
+        boolean isBucketRequest) {
+      this.retryStatusCodes = retryStatusCodes;
+      this.delayMs = delayMs;
+      this.maxRetries = Math.max(1, maxRetries);
+      this.traceWriter = traceWriter;
+      this.isBucketRequest = isBucketRequest;
+    }
+
+    public StatusRetryInterceptor() {
+      this(RETRIABLE_STATUS_CODES, 100, 5, null, false);
+    }
+
+    public StatusRetryInterceptor(Set<Integer> retryStatusCodes, long delayMs, int maxRetries) {
+      this(retryStatusCodes, delayMs, maxRetries, null, false);
+    }
+
+    public StatusRetryInterceptor(
+        StatusRetryInterceptor interceptor, PrintWriter traceWriter, boolean isBucketRequest) {
+      this(
+          interceptor != null ? interceptor.retryStatusCodes : RETRIABLE_STATUS_CODES,
+          interceptor != null ? interceptor.delayMs : 100,
+          interceptor != null ? interceptor.maxRetries : 5,
+          traceWriter,
+          isBucketRequest);
+    }
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+      okhttp3.Request request = chain.request();
+      Method method = Method.fromString(request.method());
+      QueryParameters queryParams = new QueryParameters();
+      for (String key : request.url().queryParameterNames()) {
+        for (String value : request.url().queryParameterValues(key)) {
+          queryParams.add(key, value);
+        }
+      }
+
+      String bodyString = null;
+      if (request.body() instanceof RequestBody) {
+        RequestBody body = (RequestBody) request.body();
+        bodyString = body.bodyString();
+      }
+
+      for (int i = 0; i < maxRetries; i++) {
+        if (traceWriter != null) {
+          traceWriter.print(getRequestTraces(request, bodyString));
+          traceWriter.flush();
+        }
+
+        okhttp3.Response response = chain.proceed(request);
+        if (traceWriter != null) {
+          traceWriter.print(getResponseTraces(response, method, queryParams, isBucketRequest));
+          traceWriter.flush();
+        }
+
+        if (response.isSuccessful()
+            || i == maxRetries - 1
+            || retryStatusCodes == null
+            || !retryStatusCodes.contains(response.code())) return response;
+
+        response.close();
+
+        if (delayMs <= 0) continue;
+        long maxBackoffLimit = delayMs * (1L << (i + 1));
+        long jitteredDelay = ThreadLocalRandom.current().nextLong(0, maxBackoffLimit);
+        try {
+          Thread.sleep(jitteredDelay);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IOException("Retry interrupted", e);
+        }
+      }
+
+      return null; // This never happens.
+    }
+  }
+
   /**
    * Creates new HTTP client with default timeout with additional TLS certificates from
    * SSL_CERT_FILE and SSL_CERT_DIR environment variables if present.
@@ -620,6 +811,7 @@ public class Http {
             .writeTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
             .readTimeout(DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS)
             .protocols(Arrays.asList(Protocol.HTTP_1_1))
+            .addInterceptor(new StatusRetryInterceptor())
             .build();
     try {
       return enableExternalCertificatesFromEnv(client);
@@ -693,7 +885,7 @@ public class Http {
     private MediaType contentType;
     private String sha256Hash;
     private String md5Hash;
-    private boolean bodyString;
+    private String bodyString = "<<<BYTE>>>";
 
     /** Creates Body for okhttp3 RequestBody. */
     public Body(okhttp3.RequestBody requestBody) {
@@ -740,9 +932,9 @@ public class Http {
       sha256Hash = Checksum.hexString(Checksum.SHA256.sum(data));
       md5Hash = Checksum.base64String(Checksum.MD5.sum(data));
 
-      this.bodyString = true;
       this.data = data;
       set((long) data.length, contentType, sha256Hash, md5Hash);
+      this.bodyString = new String(data, StandardCharsets.UTF_8);
     }
 
     private void set(Long length, MediaType contentType, String sha256Hash, String md5Hash) {
@@ -783,14 +975,18 @@ public class Http {
     /** Creates HTTP RequestBody for this body. */
     public RequestBody toRequestBody() throws MinioException {
       if (requestBody != null) return new RequestBody(requestBody);
-      if (file != null) return new RequestBody(file, length, contentType);
-      if (buffer != null) return new RequestBody(buffer, contentType);
-      return new RequestBody(data, length.intValue(), contentType);
+      if (file != null) {
+        return new RequestBody(file, length, contentType, bodyString);
+      }
+      if (buffer != null) {
+        return new RequestBody(buffer, contentType, bodyString);
+      }
+      return new RequestBody(data, length.intValue(), contentType, bodyString);
     }
 
     @Override
     public String toString() {
-      return bodyString ? new String(data, StandardCharsets.UTF_8) : "<<<BYTE>>>";
+      return bodyString;
     }
   }
 
@@ -803,21 +999,27 @@ public class Http {
     private byte[] bytes;
     private long length;
     private MediaType contentType;
+    private String bodyString;
 
     /** Creates RequestBody for byte array. */
     public RequestBody(
-        @Nonnull final byte[] bytes, final int length, @Nonnull final MediaType contentType) {
+        @Nonnull final byte[] bytes,
+        final int length,
+        @Nonnull final MediaType contentType,
+        final String bodyString) {
       this.bytes = Utils.validateNotNull(bytes, "data bytes");
       if (length < 0) throw new IllegalArgumentException("length must not be negative value");
       this.length = length;
       this.contentType = Utils.validateNotNull(contentType, "content type");
+      this.bodyString = bodyString;
     }
 
     /** Creates RequestBody for RandomAccessFile. */
     public RequestBody(
         @Nonnull final RandomAccessFile file,
         final long length,
-        @Nonnull final MediaType contentType)
+        @Nonnull final MediaType contentType,
+        final String bodyString)
         throws MinioException {
       this.file = Utils.validateNotNull(file, "randome access file");
       if (length < 0) throw new IllegalArgumentException("length must not be negative value");
@@ -828,13 +1030,41 @@ public class Http {
       } catch (IOException e) {
         throw new MinioException(e);
       }
+      this.bodyString = bodyString;
     }
 
     /** Creates RequestBody for ByteBuffer. */
-    public RequestBody(@Nonnull final ByteBuffer buffer, @Nonnull final MediaType contentType) {
+    public RequestBody(
+        @Nonnull final ByteBuffer buffer,
+        @Nonnull final MediaType contentType,
+        final String bodyString) {
       this.buffer = Utils.validateNotNull(buffer, "buffer");
       this.length = buffer.length();
       this.contentType = Utils.validateNotNull(contentType, "content type");
+      this.bodyString = bodyString;
+    }
+
+    /** Creates RequestBody for byte array. */
+    @Deprecated
+    public RequestBody(
+        @Nonnull final byte[] bytes, final int length, @Nonnull final MediaType contentType) {
+      this(bytes, length, contentType, null);
+    }
+
+    /** Creates RequestBody for RandomAccessFile. */
+    @Deprecated
+    public RequestBody(
+        @Nonnull final RandomAccessFile file,
+        final long length,
+        @Nonnull final MediaType contentType)
+        throws MinioException {
+      this(file, length, contentType, null);
+    }
+
+    /** Creates RequestBody for ByteBuffer. */
+    @Deprecated
+    public RequestBody(@Nonnull final ByteBuffer buffer, @Nonnull final MediaType contentType) {
+      this(buffer, contentType, null);
     }
 
     /** Creates RequestBody for okhttp3 RequestBody. */
@@ -877,6 +1107,11 @@ public class Http {
         sink.write(bytes, 0, (int) length);
       }
     }
+
+    /** Get body trace string. */
+    public String bodyString() {
+      return this.bodyString;
+    }
   }
 
   /** HTTP methods. */
@@ -886,6 +1121,15 @@ public class Http {
     POST,
     PUT,
     DELETE;
+
+    public static Method fromString(String value) {
+      if (value == null) return null;
+      try {
+        return Method.valueOf(value.toUpperCase(Locale.US).trim());
+      } catch (IllegalArgumentException e) {
+        return null;
+      }
+    }
   }
 
   /** HTTP headers. */
@@ -1592,31 +1836,7 @@ public class Http {
         }
       }
 
-      StringBuilder traceBuilder = new StringBuilder();
-      traceBuilder.append("---------START-HTTP---------\n");
-      String encodedPath = request.url().encodedPath();
-      String encodedQuery = request.url().encodedQuery();
-      if (encodedQuery != null) encodedPath += "?" + encodedQuery;
-      traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
-      traceBuilder.append(
-          request
-              .headers()
-              .toString()
-              .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
-      String lastTwoChars = traceBuilder.substring(traceBuilder.length() - 2);
-      if (lastTwoChars.charAt(1) != '\n') {
-        traceBuilder.append("\n\n");
-      } else if (lastTwoChars.charAt(0) != '\n') {
-        traceBuilder.append("\n");
-      }
-      String value = body.toString();
-      if (method == Method.PUT || method == Method.POST) {
-        traceBuilder.append(value);
-        if (!value.endsWith("\n")) traceBuilder.append("\n");
-      }
-
-      return new Request(request, traceBuilder.toString());
+      return new Request(request, getRequestTraces(request, body.toString()));
     }
 
     public Request toRequest(BaseUrl baseUrl, String region, Credentials credentials)

@@ -3388,7 +3388,7 @@ public class MinioAsyncClient extends BaseS3Client {
                 multipartBuilder.addFormDataPart(
                     "file",
                     "fanout-content",
-                    new Http.RequestBody(buffer, Http.DEFAULT_MEDIA_TYPE));
+                    new Http.RequestBody(buffer, Http.DEFAULT_MEDIA_TYPE, null));
 
                 return multipartBuilder.build();
               } catch (JsonProcessingException e) {
