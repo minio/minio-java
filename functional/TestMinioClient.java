@@ -92,6 +92,7 @@ import io.minio.messages.AccessControlList;
 import io.minio.messages.AccessControlPolicy;
 import io.minio.messages.CORSConfiguration;
 import io.minio.messages.DeleteRequest;
+import io.minio.messages.DeleteResult;
 import io.minio.messages.ErrorResponse;
 import io.minio.messages.EventType;
 import io.minio.messages.Filter;
@@ -121,8 +122,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import okhttp3.Headers;
@@ -136,6 +139,12 @@ import org.junit.jupiter.api.Assertions;
 @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
     value = {"THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION", "REC_CATCH_EXCEPTION"})
 public class TestMinioClient extends TestArgs {
+  private static final int MAX_DELETE_ATTEMPTS = 5;
+  private static final Set<String> TRANSIENT_DELETE_CODES =
+      Collections.unmodifiableSet(
+          new HashSet<>(
+              Arrays.asList("InternalError", "RequestTimeout", "ServiceUnavailable", "SlowDown")));
+
   private String bucketName = getRandomName();
   private String bucketNameWithLock = getRandomName();
   public boolean isQuickTest;
@@ -1029,15 +1038,46 @@ public class TestMinioClient extends TestArgs {
   public void removeObjects(String bucketName, List<ObjectWriteResponse> results) throws Exception {
     List<DeleteRequest.Object> objects =
         results.stream()
-            .map(
-                result -> {
-                  return new DeleteRequest.Object(result.object(), result.versionId());
-                })
+            .map(r -> new DeleteRequest.Object(r.object(), r.versionId()))
             .collect(Collectors.toList());
-    for (Result<?> r :
-        client.removeObjects(
-            RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
-      ignore(r.get());
+    boolean anyTransient = false;
+    for (int attempt = 0; attempt < MAX_DELETE_ATTEMPTS; attempt++) {
+      if (attempt > 0) {
+        try {
+          Thread.sleep(500L << attempt); // 1s / 2s / 4s / 8s
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          throw ie;
+        }
+      }
+      anyTransient = false;
+      for (Result<DeleteResult.Error> r :
+          client.removeObjects(
+              RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
+        DeleteResult.Error err = r.get();
+        String code = err.code();
+        if (!TRANSIENT_DELETE_CODES.contains(code)) {
+          throw new Exception(
+              "non-transient delete error '"
+                  + code
+                  + "': "
+                  + err.message()
+                  + " on "
+                  + err.objectName()
+                  + " in bucket "
+                  + bucketName);
+        }
+        anyTransient = true;
+      }
+      if (!anyTransient) break;
+    }
+    if (anyTransient) {
+      throw new Exception(
+          results.size()
+              + " object(s) not deleted after "
+              + MAX_DELETE_ATTEMPTS
+              + " attempts in bucket "
+              + bucketName);
     }
   }
 
@@ -1190,8 +1230,6 @@ public class TestMinioClient extends TestArgs {
       mintSuccessLog(methodName, testTags, startTime);
     } catch (Exception e) {
       handleException(methodName, testTags, startTime, e);
-    } finally {
-      removeObjects(bucketName, results);
     }
   }
 
