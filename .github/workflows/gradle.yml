@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Test on java-version ${{ matrix.java-version }} and ${{ matrix.os }}
+    name: Test on Java ${{ matrix.java-version }} in ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
