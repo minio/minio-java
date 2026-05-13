@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import io.minio.credentials.Credentials;
 import io.minio.errors.MinioException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -450,15 +451,25 @@ public class Http {
     KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
     ks.load(null);
 
+    List<Path> directories =
+        Stream.of(dirPath.split(File.pathSeparator))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(Paths::get)
+            .filter(Files::isDirectory)
+            .collect(Collectors.toList());
+
     int index = 0;
-    try (Stream<Path> paths = Files.walk(Paths.get(dirPath))) {
-      int number = 1;
-      for (Path file : (Iterable<Path>) paths.filter(Files::isRegularFile)::iterator) {
-        try {
-          index += setCertificateEntry(cf, ks, file, "cert-dir-file-" + number + "-");
-          number++;
-        } catch (CertificateException | IOException | KeyStoreException e) {
-          // Ignore these errors.
+    int number = 1;
+    for (Path directory : directories) {
+      try (Stream<Path> paths = Files.walk(directory)) {
+        for (Path file : (Iterable<Path>) paths.filter(Files::isRegularFile)::iterator) {
+          try {
+            index += setCertificateEntry(cf, ks, file, "cert-dir-file-" + number + "-");
+            number++;
+          } catch (CertificateException | IOException | KeyStoreException e) {
+            // Ignore these errors.
+          }
         }
       }
     }
