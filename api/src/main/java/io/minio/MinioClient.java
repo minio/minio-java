@@ -37,6 +37,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionException;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -1906,6 +1907,22 @@ public class MinioClient implements AutoCloseable {
    */
   public void setTimeout(long connectTimeout, long writeTimeout, long readTimeout) {
     asyncClient.setTimeout(connectTimeout, writeTimeout, readTimeout);
+  }
+
+  /**
+   * Sets request retry parameters. Any null/invalid values disable retry.
+   *
+   * <pre>Example:{@code
+   * minioClient.setRetry(ImmutableSet.of(408, 504), 250, 3);
+   * }</pre>
+   *
+   * @param retryStatusCodes HTTP status codes to be retried.
+   * @param delayMs Delay between retries.
+   * @param maxRetries Maximum number of retry attempts.
+   */
+  public synchronized void setRetry(
+      Set<Integer> retryStatusCodes, Long delayMs, Integer maxRetries) {
+    asyncClient.setRetry(retryStatusCodes, delayMs, maxRetries);
   }
 
   /**
