@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"io.minio"},{"l":"io.minio.credentials"},{"l":"io.minio.errors"},{"l":"io.minio.messages"}];updateSearchResults();
