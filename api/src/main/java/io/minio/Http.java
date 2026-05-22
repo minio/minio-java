@@ -103,6 +103,17 @@ public class Http {
           504, // Gateway Timeout
           520); // Cloudflare unknown error
 
+  // S3 error codes that may appear inside a 200-OK response body for APIs like
+  // CompleteMultipartUpload and DeleteObjects. These are considered transient and safe to retry.
+  public static final Set<String> RETRIABLE_ERROR_CODES =
+      ImmutableSet.of(
+          "InternalError",
+          "SlowDown",
+          "ServiceUnavailable",
+          "RequestTimeout",
+          "Throttling",
+          "ThrottlingException");
+
   public static final String END_HTTP = "----------END-HTTP----------";
   public static final String UPLOAD_ID = "uploadId";
   public static final Set<String> TRACE_QUERY_PARAMS =
@@ -757,6 +768,14 @@ public class Http {
           interceptor != null ? interceptor.maxRetries : 5,
           traceWriter,
           isBucketRequest);
+    }
+
+    public long delayMs() {
+      return delayMs;
+    }
+
+    public int maxRetries() {
+      return maxRetries;
     }
 
     @Override
