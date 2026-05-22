@@ -28,6 +28,8 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
   protected MediaType contentType;
   protected Checksum.Algorithm checksum;
   protected int parallelUploads;
+  protected long delayMs = 100L;
+  protected int maxRetries = 5;
 
   public Long objectSize() {
     return objectSize;
@@ -51,6 +53,14 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
 
   public int parallelUploads() {
     return parallelUploads;
+  }
+
+  public long delayMs() {
+    return delayMs;
+  }
+
+  public int maxRetries() {
+    return maxRetries;
   }
 
   /** Builder of {@link PutObjectBaseArgs}. */
@@ -138,6 +148,18 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
       operations.add(args -> args.parallelUploads = parallelUploads);
       return (B) this;
     }
+
+    /** Set delay between retries. Value &lt;= 0 disables retry (default 100ms). */
+    public B delayMs(long delayMs) {
+      operations.add(args -> args.delayMs = delayMs);
+      return (B) this;
+    }
+
+    /** Set maximum retry between failure. Value &lt;= 0 disables retry (default 5). */
+    public B maxRetries(int maxRetries) {
+      operations.add(args -> args.maxRetries = maxRetries);
+      return (B) this;
+    }
   }
 
   @Override
@@ -151,12 +173,22 @@ public abstract class PutObjectBaseArgs extends ObjectWriteArgs {
         && partCount == that.partCount
         && Objects.equals(contentType, that.contentType)
         && Objects.equals(checksum, that.checksum)
-        && parallelUploads == that.parallelUploads;
+        && parallelUploads == that.parallelUploads
+        && delayMs == that.delayMs
+        && maxRetries == that.maxRetries;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(
-        super.hashCode(), objectSize, partSize, partCount, contentType, checksum, parallelUploads);
+        super.hashCode(),
+        objectSize,
+        partSize,
+        partCount,
+        contentType,
+        checksum,
+        parallelUploads,
+        delayMs,
+        maxRetries);
   }
 }

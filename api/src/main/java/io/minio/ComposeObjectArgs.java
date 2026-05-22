@@ -26,11 +26,15 @@ import java.util.Objects;
  */
 public class ComposeObjectArgs extends ObjectWriteArgs {
   List<SourceObject> sources;
+  private long delayMs = 100L;
+  private int maxRetries = 5;
 
   protected ComposeObjectArgs() {}
 
   public ComposeObjectArgs(ComposeObjectArgs args, List<SourceObject> sources) {
     super(args);
+    this.delayMs = args.delayMs;
+    this.maxRetries = args.maxRetries;
     this.sources = sources;
   }
 
@@ -41,6 +45,14 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
 
   public List<SourceObject> sources() {
     return sources;
+  }
+
+  public long delayMs() {
+    return delayMs;
+  }
+
+  public int maxRetries() {
+    return maxRetries;
   }
 
   public static Builder builder() {
@@ -74,6 +86,18 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
       operations.add(args -> args.sources = sources);
       return this;
     }
+
+    /** Set delay between retries. Value &lt;= 0 makes no delay (default 100ms). */
+    public Builder delayMs(long delayMs) {
+      operations.add(args -> args.delayMs = delayMs);
+      return this;
+    }
+
+    /** Set maximum retry between failure. Value &lt;= 0 disables retry (default 5). */
+    public Builder maxRetries(int maxRetries) {
+      operations.add(args -> args.maxRetries = maxRetries);
+      return this;
+    }
   }
 
   @Override
@@ -82,11 +106,13 @@ public class ComposeObjectArgs extends ObjectWriteArgs {
     if (!(o instanceof ComposeObjectArgs)) return false;
     if (!super.equals(o)) return false;
     ComposeObjectArgs that = (ComposeObjectArgs) o;
-    return Objects.equals(sources, that.sources);
+    return Objects.equals(sources, that.sources)
+        && delayMs == that.delayMs
+        && maxRetries == that.maxRetries;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), sources);
+    return Objects.hash(super.hashCode(), sources, delayMs, maxRetries);
   }
 }

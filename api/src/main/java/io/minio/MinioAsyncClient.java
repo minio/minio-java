@@ -93,6 +93,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -1050,6 +1051,8 @@ public class MinioAsyncClient extends BaseS3Client {
           private Iterator<DeleteResult.Error> errorIterator = null;
           private boolean completed = false;
           private Iterator<DeleteRequest.Object> objectIter = args.objects().iterator();
+          private long delayMs = args.delayMs();
+          private int maxRetries = Math.max(1, args.maxRetries());
 
           private void setError() {
             error = null;
@@ -1060,6 +1063,41 @@ public class MinioAsyncClient extends BaseS3Client {
                 break;
               }
             }
+          }
+
+          private DeleteObjectsResponse doDeleteObjects(List<DeleteRequest.Object> objectList)
+              throws MinioException {
+            for (int i = 0; i < maxRetries; i++) {
+              try {
+                DeleteObjectsResponse response =
+                    deleteObjects(
+                            DeleteObjectsArgs.builder()
+                                .extraHeaders(args.extraHeaders())
+                                .extraQueryParams(args.extraQueryParams())
+                                .bucket(args.bucket())
+                                .region(args.region())
+                                .objects(objectList)
+                                .quiet(true)
+                                .bypassGovernanceMode(args.bypassGovernanceMode())
+                                .build())
+                        .join();
+                boolean retryableError =
+                    response.result().errors().stream()
+                        .anyMatch(err -> RETRYABLE_ERRORS.contains(err.code()));
+                if (!retryableError || i == maxRetries - 1) return response;
+                if (delayMs <= 0) continue;
+                long maxBackoffLimit = delayMs * (1L << (i + 1));
+                long jitteredDelay = ThreadLocalRandom.current().nextLong(0, maxBackoffLimit);
+                Thread.sleep(jitteredDelay);
+              } catch (CompletionException e) {
+                throwMinioException(e);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Retry backoff interrupted", e);
+              }
+            }
+
+            return null; // This never happens.
           }
 
           private synchronized void populate() {
@@ -1075,23 +1113,7 @@ public class MinioAsyncClient extends BaseS3Client {
 
               completed = objectList.isEmpty();
               if (completed) return;
-              DeleteObjectsResponse response = null;
-              try {
-                response =
-                    deleteObjects(
-                            DeleteObjectsArgs.builder()
-                                .extraHeaders(args.extraHeaders())
-                                .extraQueryParams(args.extraQueryParams())
-                                .bucket(args.bucket())
-                                .region(args.region())
-                                .objects(objectList)
-                                .quiet(true)
-                                .bypassGovernanceMode(args.bypassGovernanceMode())
-                                .build())
-                        .join();
-              } catch (CompletionException e) {
-                throwMinioException(e);
-              }
+              DeleteObjectsResponse response = doDeleteObjects(objectList);
               if (!response.result().errors().isEmpty()) {
                 errorIterator = response.result().errors().iterator();
                 setError();
