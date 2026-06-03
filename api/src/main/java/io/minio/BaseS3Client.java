@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.google.common.collect.ImmutableSet;
 import io.minio.credentials.Credentials;
 import io.minio.credentials.Provider;
 import io.minio.errors.ErrorResponseException;
@@ -60,6 +61,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
@@ -84,6 +86,8 @@ public abstract class BaseS3Client implements AutoCloseable {
     }
   }
 
+  protected static final Set<String> RETRYABLE_ERRORS =
+      ImmutableSet.of("InternalError", "RequestTimeout", "ServiceUnavailable", "SlowDown");
   protected static final String NO_SUCH_BUCKET_MESSAGE = "Bucket does not exist";
   protected static final String NO_SUCH_BUCKET = "NoSuchBucket";
   protected static final String NO_SUCH_BUCKET_POLICY = "NoSuchBucketPolicy";
@@ -675,24 +679,8 @@ public abstract class BaseS3Client implements AutoCloseable {
             });
   }
 
-  /**
-   * Do <a
-   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
-   * S3 API</a> asynchronously.
-   *
-   * @param args {@link CompleteMultipartUploadArgs} object.
-   * @return {@link CompletableFuture}&lt;{@link ObjectWriteResponse}&gt; object.
-   */
-  public CompletableFuture<ObjectWriteResponse> completeMultipartUpload(
-      CompleteMultipartUploadArgs args) {
-    checkArgs(args);
-    args.validateSsec(baseUrl.isHttps());
-    Http.Body body = null;
-    try {
-      body = new Http.Body(new CompleteMultipartUpload(args.parts()), null, null, null);
-    } catch (MinioException e) {
-      return Utils.failedFuture(e);
-    }
+  private CompletableFuture<ObjectWriteResponse> completeMultipartUpload(
+      CompleteMultipartUploadArgs args, Http.Body body) {
     return executePostAsync(
             args,
             args.ssec() == null ? null : args.ssec().headers(),
@@ -748,6 +736,59 @@ public abstract class BaseS3Client implements AutoCloseable {
                 response.close();
               }
             });
+  }
+
+  private CompletableFuture<ObjectWriteResponse> completeMultipartUpload(
+      CompleteMultipartUploadArgs args, Http.Body body, int attempt) {
+    return completeMultipartUpload(args, body)
+        .handle(
+            (response, ex) -> {
+              if (ex == null) return CompletableFuture.completedFuture(response);
+
+              ex = ex.getCause();
+              if (attempt == Math.max(1, args.maxRetries()) - 1
+                  || !(ex instanceof ErrorResponseException)
+                  || !RETRYABLE_ERRORS.contains(
+                      ((ErrorResponseException) ex).errorResponse().code())) {
+                return Utils.<ObjectWriteResponse>failedFuture(ex);
+              }
+
+              if (args.delayMs() > 0) {
+                long maxBackoffLimit = args.delayMs() * (1L << (attempt + 1));
+                long jitteredDelay = ThreadLocalRandom.current().nextLong(0, maxBackoffLimit);
+                try {
+                  Thread.sleep(jitteredDelay);
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  return Utils.<ObjectWriteResponse>failedFuture(
+                      new IllegalStateException("Retry timeout interrupted", e));
+                }
+              }
+
+              return completeMultipartUpload(args, body, attempt + 1);
+            })
+        .thenCompose(future -> future);
+  }
+
+  /**
+   * Do <a
+   * href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_CompleteMultipartUpload.html">CompleteMultipartUpload
+   * S3 API</a> asynchronously.
+   *
+   * @param args {@link CompleteMultipartUploadArgs} object.
+   * @return {@link CompletableFuture}&lt;{@link ObjectWriteResponse}&gt; object.
+   */
+  public CompletableFuture<ObjectWriteResponse> completeMultipartUpload(
+      CompleteMultipartUploadArgs args) {
+    checkArgs(args);
+    args.validateSsec(baseUrl.isHttps());
+    Http.Body body = null;
+    try {
+      body = new Http.Body(new CompleteMultipartUpload(args.parts()), null, null, null);
+    } catch (MinioException e) {
+      return Utils.failedFuture(e);
+    }
+    return completeMultipartUpload(args, body, 0);
   }
 
   /**

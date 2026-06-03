@@ -88,6 +88,7 @@ import io.minio.UploadObjectArgs;
 import io.minio.UploadSnowballObjectsArgs;
 import io.minio.Xml;
 import io.minio.errors.ErrorResponseException;
+import io.minio.errors.MinioException;
 import io.minio.messages.AccessControlList;
 import io.minio.messages.AccessControlPolicy;
 import io.minio.messages.CORSConfiguration;
@@ -1034,11 +1035,21 @@ public class TestMinioClient extends TestArgs {
                   return new DeleteRequest.Object(result.object(), result.versionId());
                 })
             .collect(Collectors.toList());
+    Exception ex = null;
     for (Result<?> r :
         client.removeObjects(
             RemoveObjectsArgs.builder().bucket(bucketName).objects(objects).build())) {
-      ignore(r.get());
+      try {
+        r.get();
+      } catch (MinioException e) {
+        if (ex == null) {
+          ex = e;
+        } else {
+          ex.addSuppressed(e);
+        }
+      }
     }
+    if (ex != null) throw ex;
   }
 
   public void testListObjects(String testTags, ListObjectsArgs args, int objCount, int versions)

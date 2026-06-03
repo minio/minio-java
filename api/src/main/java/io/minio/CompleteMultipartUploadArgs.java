@@ -25,6 +25,8 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
   private String uploadId;
   private Part[] parts;
   private ServerSideEncryption.CustomerKey ssec;
+  private long delayMs = 100L;
+  private int maxRetries = 5;
 
   protected CompleteMultipartUploadArgs() {}
 
@@ -32,6 +34,8 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
     super(args);
     this.uploadId = uploadId;
     this.parts = parts;
+    this.delayMs = args.delayMs();
+    this.maxRetries = args.maxRetries();
   }
 
   public CompleteMultipartUploadArgs(PutObjectBaseArgs args, String uploadId, Part[] parts) {
@@ -41,6 +45,8 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
     if (args.sse() != null && args.sse() instanceof ServerSideEncryption.CustomerKey) {
       this.ssec = (ServerSideEncryption.CustomerKey) args.sse();
     }
+    this.delayMs = args.delayMs();
+    this.maxRetries = args.maxRetries();
   }
 
   public String uploadId() {
@@ -53,6 +59,14 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
 
   public ServerSideEncryption.CustomerKey ssec() {
     return ssec;
+  }
+
+  public long delayMs() {
+    return delayMs;
+  }
+
+  public int maxRetries() {
+    return maxRetries;
   }
 
   public void validateSsec(boolean isHttps) {
@@ -89,6 +103,18 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
       operations.add(args -> args.ssec = ssec);
       return this;
     }
+
+    /** Set delay between retries. Value &lt;= 0 makes no delay (default 100ms). */
+    public Builder delayMs(long delayMs) {
+      operations.add(args -> args.delayMs = delayMs);
+      return this;
+    }
+
+    /** Set maximum retry between failure. Value &lt;= 0 disables retry (default 5). */
+    public Builder maxRetries(int maxRetries) {
+      operations.add(args -> args.maxRetries = maxRetries);
+      return this;
+    }
   }
 
   @Override
@@ -99,11 +125,13 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
     CompleteMultipartUploadArgs that = (CompleteMultipartUploadArgs) o;
     return Objects.equals(uploadId, that.uploadId)
         && Arrays.equals(parts, that.parts)
-        && Objects.equals(ssec, that.ssec);
+        && Objects.equals(ssec, that.ssec)
+        && delayMs == that.delayMs
+        && maxRetries == that.maxRetries;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), uploadId, parts, ssec);
+    return Objects.hash(super.hashCode(), uploadId, parts, ssec, delayMs, maxRetries);
   }
 }

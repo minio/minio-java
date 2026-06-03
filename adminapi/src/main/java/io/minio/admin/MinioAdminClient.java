@@ -46,19 +46,20 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 /** Client to perform MinIO administration operations. */
 public class MinioAdminClient {
@@ -111,12 +112,12 @@ public class MinioAdminClient {
   }
 
   private String userAgent = Utils.getDefaultUserAgent();
-  private PrintWriter traceStream;
+  private volatile PrintWriter traceStream;
 
   private HttpUrl baseUrl;
   private String region;
   private Provider provider;
-  private OkHttpClient httpClient;
+  private volatile OkHttpClient httpClient;
 
   private MinioAdminClient(
       HttpUrl baseUrl, String region, Provider provider, OkHttpClient httpClient) {
@@ -130,6 +131,39 @@ public class MinioAdminClient {
     Credentials creds = provider.fetch();
     if (creds == null) throw new MinioException("Credential provider returns null credential");
     return creds;
+  }
+
+  private static int getStatusRetryInterceptorIndex(List<Interceptor> interceptors) {
+    return IntStream.range(0, interceptors.size())
+        .filter(i -> interceptors.get(i) instanceof Http.StatusRetryInterceptor)
+        .findFirst()
+        .orElse(-1);
+  }
+
+  private OkHttpClient getHttpClient(PrintWriter traceStream) {
+    if (traceStream == null) return this.httpClient;
+
+    OkHttpClient httpClient = this.httpClient;
+    List<Interceptor> interceptors = httpClient.interceptors();
+    int i = getStatusRetryInterceptorIndex(interceptors);
+    Http.StatusRetryInterceptor interceptor =
+        i < 0 ? null : (Http.StatusRetryInterceptor) interceptors.get(i);
+
+    OkHttpClient.Builder builder = httpClient.newBuilder();
+    if (interceptor == null) {
+      builder.addInterceptor(new Http.StatusRetryInterceptor(interceptor, traceStream, false));
+    } else {
+      builder.interceptors().clear();
+      for (int j = 0; j < interceptors.size(); j++) {
+        if (i == j) {
+          builder.addInterceptor(new Http.StatusRetryInterceptor(interceptor, traceStream, false));
+        } else {
+          builder.addInterceptor(interceptors.get(j));
+        }
+      }
+    }
+
+    return builder.build();
   }
 
   private Response httpExecute(
@@ -179,40 +213,8 @@ public class MinioAdminClient {
             creds.secretKey(),
             request.header("x-amz-content-sha256"));
 
-    PrintWriter traceStream = this.traceStream;
-    if (traceStream != null) {
-      StringBuilder traceBuilder = new StringBuilder();
-      traceBuilder.append("---------START-HTTP---------\n");
-      String encodedPath = request.url().encodedPath();
-      String encodedQuery = request.url().encodedQuery();
-      if (encodedQuery != null) encodedPath += "?" + encodedQuery;
-      traceBuilder.append(request.method()).append(" ").append(encodedPath).append(" HTTP/1.1\n");
-      traceBuilder.append(
-          request
-              .headers()
-              .toString()
-              .replaceAll("Signature=([0-9a-f]+)", "Signature=*REDACTED*")
-              .replaceAll("Credential=([^/]+)", "Credential=*REDACTED*"));
-      if (body != null) traceBuilder.append("\n").append(new String(body, StandardCharsets.UTF_8));
-      traceStream.println(traceBuilder.toString());
-    }
-
-    OkHttpClient httpClient = this.httpClient;
+    OkHttpClient httpClient = getHttpClient(this.traceStream);
     Response response = httpClient.newCall(request).execute();
-
-    if (traceStream != null) {
-      String trace =
-          response.protocol().toString().toUpperCase(Locale.US)
-              + " "
-              + response.code()
-              + "\n"
-              + response.headers();
-      traceStream.println(trace);
-      ResponseBody responseBody = response.peekBody(1024 * 1024);
-      traceStream.println(responseBody.string());
-      traceStream.println("----------END-HTTP----------");
-    }
-
     if (response.isSuccessful()) return response;
 
     throw new MinioException("Request failed with response: " + response.body().string());
@@ -924,6 +926,38 @@ public class MinioAdminClient {
    */
   public void traceOff() {
     this.traceStream = null;
+  }
+
+  /**
+   * Sets request retry parameters. Any null/invalid values disable retry.
+   *
+   * <pre>Example:{@code
+   * minioClient.setRetry(ImmutableSet.of(408, 504), 250, 3);
+   * }</pre>
+   *
+   * @param retryStatusCodes HTTP status codes to be retried.
+   * @param delayMs Delay between retries.
+   * @param maxRetries Maximum number of retry attempts.
+   */
+  public synchronized void setRetry(
+      Set<Integer> retryStatusCodes, Long delayMs, Integer maxRetries) {
+    Interceptor interceptor =
+        new Http.StatusRetryInterceptor(
+            retryStatusCodes, delayMs == null ? 0 : delayMs, maxRetries == null ? 0 : maxRetries);
+
+    List<Interceptor> interceptors = this.httpClient.interceptors();
+    int i = getStatusRetryInterceptorIndex(interceptors);
+    OkHttpClient.Builder builder = this.httpClient.newBuilder();
+    if (i >= 0) {
+      builder.interceptors().clear();
+      for (int j = 0; j < interceptors.size(); j++) {
+        builder.addInterceptor(i == j ? interceptor : interceptors.get(j));
+      }
+    } else {
+      builder.addInterceptor(interceptor);
+    }
+
+    this.httpClient = builder.build();
   }
 
   public static Builder builder() {

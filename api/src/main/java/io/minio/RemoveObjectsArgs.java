@@ -24,6 +24,8 @@ import java.util.Objects;
 public class RemoveObjectsArgs extends BucketArgs {
   private boolean bypassGovernanceMode;
   private Iterable<DeleteRequest.Object> objects = new ArrayList<>();
+  private long delayMs = 100L;
+  private int maxRetries = 5;
 
   public boolean bypassGovernanceMode() {
     return bypassGovernanceMode;
@@ -31,6 +33,14 @@ public class RemoveObjectsArgs extends BucketArgs {
 
   public Iterable<DeleteRequest.Object> objects() {
     return objects;
+  }
+
+  public long delayMs() {
+    return delayMs;
+  }
+
+  public int maxRetries() {
+    return maxRetries;
   }
 
   public static Builder builder() {
@@ -49,6 +59,18 @@ public class RemoveObjectsArgs extends BucketArgs {
       operations.add(args -> args.objects = objects);
       return this;
     }
+
+    /** Set delay between retries. Value &lt;= 0 makes no delay (default 100ms). */
+    public Builder delayMs(long delayMs) {
+      operations.add(args -> args.delayMs = delayMs);
+      return this;
+    }
+
+    /** Set maximum retry between failure. Value &lt;= 0 disables retry (default 5). */
+    public Builder maxRetries(int maxRetries) {
+      operations.add(args -> args.maxRetries = maxRetries);
+      return this;
+    }
   }
 
   @Override
@@ -58,11 +80,13 @@ public class RemoveObjectsArgs extends BucketArgs {
     if (!super.equals(o)) return false;
     RemoveObjectsArgs that = (RemoveObjectsArgs) o;
     return bypassGovernanceMode == that.bypassGovernanceMode
-        && Objects.equals(objects, that.objects);
+        && Objects.equals(objects, that.objects)
+        && delayMs == that.delayMs
+        && maxRetries == that.maxRetries;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), bypassGovernanceMode, objects);
+    return Objects.hash(super.hashCode(), bypassGovernanceMode, objects, delayMs, maxRetries);
   }
 }

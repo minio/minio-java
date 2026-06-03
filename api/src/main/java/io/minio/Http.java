@@ -774,6 +774,10 @@ public class Http {
       if (request.body() instanceof RequestBody) {
         RequestBody body = (RequestBody) request.body();
         bodyString = body.bodyString();
+      } else if ((method == Method.PUT || method == Method.POST)
+          && request.body() != null
+          && request.body().contentLength() != 0) {
+        bodyString = "<<<BYTES>>>";
       }
 
       for (int i = 0; i < maxRetries; i++) {
