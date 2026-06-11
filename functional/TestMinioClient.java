@@ -2969,7 +2969,9 @@ public class TestMinioClient extends TestArgs {
           CORSConfiguration config =
               client.getBucketCors(GetBucketCorsArgs.builder().bucket(bucketName).build());
           Assertions.assertEquals(
-              expectedConfig, config, "cors: expected: " + expectedConfig + ", got: " + config);
+              expectedConfig.toString(),
+              config.toString(),
+              "cors: expected: " + expectedConfig.toString() + ", got: " + config.toString());
         }
         if (deleteTest) {
           client.deleteBucketCors(DeleteBucketCorsArgs.builder().bucket(bucketName).build());
