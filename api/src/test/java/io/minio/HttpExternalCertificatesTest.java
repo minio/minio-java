@@ -17,7 +17,9 @@
 
 package io.minio;
 
+import io.minio.errors.MinioException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
@@ -69,13 +71,13 @@ public class HttpExternalCertificatesTest {
   public String bundle;
 
   @Test
-  public void loadsExternalCertificateBundle() throws Exception {
+  public void loadsExternalCertificateBundle() throws IOException, MinioException {
     String path = writeBundle(bundle);
     OkHttpClient client = Http.enableExternalCertificates(new OkHttpClient(), path, null);
     Assert.assertNotNull(client);
   }
 
-  private static String writeBundle(String content) throws Exception {
+  private static String writeBundle(String content) throws IOException {
     File file = File.createTempFile("minio-ca-bundle", ".pem");
     file.deleteOnExit();
     Files.write(file.toPath(), content.getBytes(StandardCharsets.UTF_8));
