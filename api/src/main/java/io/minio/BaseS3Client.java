@@ -86,8 +86,21 @@ public abstract class BaseS3Client implements AutoCloseable {
     }
   }
 
+  // Update the list from https://github.com/minio/minio-go/blob/master/retry.go#L98
   protected static final Set<String> RETRYABLE_ERRORS =
-      ImmutableSet.of("InternalError", "RequestTimeout", "ServiceUnavailable", "SlowDown");
+      ImmutableSet.of(
+          "RequestError",
+          "RequestTimeout",
+          "Throttling",
+          "ThrottlingException",
+          "RequestLimitExceeded",
+          "RequestThrottled",
+          "InternalError",
+          "ExpiredToken",
+          "ExpiredTokenException",
+          "SlowDown",
+          "SlowDownWrite",
+          "SlowDownRead");
   protected static final String NO_SUCH_BUCKET_MESSAGE = "Bucket does not exist";
   protected static final String NO_SUCH_BUCKET = "NoSuchBucket";
   protected static final String NO_SUCH_BUCKET_POLICY = "NoSuchBucketPolicy";
