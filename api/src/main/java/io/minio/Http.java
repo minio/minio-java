@@ -37,6 +37,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -451,8 +452,7 @@ public class Http {
       throws CertificateException, IOException, KeyStoreException {
     try (InputStream in = Files.newInputStream(file)) {
       int index = 0;
-      while (in.available() > 0) {
-        X509Certificate cert = (X509Certificate) cf.generateCertificate(in);
+      for (Certificate cert : cf.generateCertificates(in)) {
         ks.setCertificateEntry(namePrefix + (index++), cert);
       }
       return index;
