@@ -25,7 +25,7 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
   private String uploadId;
   private Part[] parts;
   private ServerSideEncryption.CustomerKey ssec;
-  private long delayMs = 100L;
+  private long delayMs = 200L;
   private int maxRetries = 5;
 
   protected CompleteMultipartUploadArgs() {}
@@ -104,7 +104,7 @@ public class CompleteMultipartUploadArgs extends ObjectArgs {
       return this;
     }
 
-    /** Set delay between retries. Value &lt;= 0 makes no delay (default 100ms). */
+    /** Set delay between retries. Value &lt;= 0 makes no delay (default 200ms). */
     public Builder delayMs(long delayMs) {
       operations.add(args -> args.delayMs = delayMs);
       return this;

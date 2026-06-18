@@ -753,7 +753,7 @@ public class Http {
         StatusRetryInterceptor interceptor, PrintWriter traceWriter, boolean isBucketRequest) {
       this(
           interceptor != null ? interceptor.retryStatusCodes : RETRIABLE_STATUS_CODES,
-          interceptor != null ? interceptor.delayMs : 100,
+          interceptor != null ? interceptor.delayMs : 200,
           interceptor != null ? interceptor.maxRetries : 5,
           traceWriter,
           isBucketRequest);
