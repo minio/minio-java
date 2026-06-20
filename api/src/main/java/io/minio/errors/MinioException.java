@@ -62,12 +62,26 @@ public class MinioException extends Exception {
 
   /** Throws encapsulated exception. */
   public void throwEncapsulatedException()
-      throws BucketPolicyTooLargeException, CertificateException, EOFException,
-          ErrorResponseException, FileNotFoundException, GeneralSecurityException,
-          InsufficientDataException, InternalException, InvalidKeyException,
-          InvalidResponseException, IOException, JsonMappingException, JsonParseException,
-          JsonProcessingException, KeyManagementException, KeyStoreException, MinioException,
-          NoSuchAlgorithmException, ServerException, XmlParserException {
+      throws BucketPolicyTooLargeException,
+          CertificateException,
+          EOFException,
+          ErrorResponseException,
+          FileNotFoundException,
+          GeneralSecurityException,
+          InsufficientDataException,
+          InternalException,
+          InvalidKeyException,
+          InvalidResponseException,
+          IOException,
+          JsonMappingException,
+          JsonParseException,
+          JsonProcessingException,
+          KeyManagementException,
+          KeyStoreException,
+          MinioException,
+          NoSuchAlgorithmException,
+          ServerException,
+          XmlParserException {
     Throwable e = getCause();
 
     // Inherited by MinioException

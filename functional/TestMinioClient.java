@@ -548,7 +548,9 @@ public class TestMinioClient extends TestArgs {
 
     testPutObject(
         "[object name ends with '/']",
-        PutObjectArgs.builder().bucket(bucketName).object("path/to/" + getRandomName() + "/")
+        PutObjectArgs.builder()
+            .bucket(bucketName)
+            .object("path/to/" + getRandomName() + "/")
             .stream(new ContentInputStream(0), 0L, null)
             .contentType(CUSTOM_CONTENT_TYPE)
             .build(),
@@ -1445,7 +1447,9 @@ public class TestMinioClient extends TestArgs {
       client.makeBucket(MakeBucketArgs.builder().bucket(args.source().bucket()).build());
       try {
         PutObjectArgs.Builder builder =
-            PutObjectArgs.builder().bucket(args.source().bucket()).object(args.source().object())
+            PutObjectArgs.builder()
+                .bucket(args.source().bucket())
+                .object(args.source().object())
                 .stream(new ContentInputStream(1 * KB), 1L * KB, null);
         if (sse != null) builder.sse(sse);
         client.putObject(builder.build());

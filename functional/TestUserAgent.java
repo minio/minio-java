@@ -17,27 +17,38 @@
 
 import io.minio.BucketExistsArgs;
 import io.minio.MinioClient;
+import io.minio.errors.MinioException;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
-    value = "THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION")
 public class TestUserAgent {
   public static void main(String[] args) throws Exception {
-    MinioClient client = MinioClient.builder().endpoint("http://httpbin.org").build();
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    client.traceOn(baos);
-    client.bucketExists(BucketExistsArgs.builder().bucket("any-bucket-name-works").build());
-    client.traceOff();
+    // try-with-resources closes the client so its OkHttp dispatcher/connection-pool threads shut
+    // down and the JVM exits promptly instead of waiting out the idle keep-alive.
+    try (MinioClient client = MinioClient.builder().endpoint("http://httpbin.org").build()) {
+      client.setRetry(null, null, null);
+      client.traceOn(baos);
+      try {
+        client.bucketExists(BucketExistsArgs.builder().bucket("any-bucket-name-works").build());
+      } catch (MinioException e) {
+        // ignore
+      }
+      client.traceOff();
+    }
 
     String expectedVersion = System.getProperty("version");
+    if (expectedVersion == null || expectedVersion.isEmpty()) {
+      throw new Exception("system property 'version' must be set");
+    }
     String version = null;
     try (Scanner scanner = new Scanner(new String(baos.toByteArray(), StandardCharsets.UTF_8))) {
       while (scanner.hasNextLine()) {
         String line = scanner.nextLine();
         if (line.startsWith("User-Agent:")) {
-          version = line.split("/")[1];
+          String[] tokens = line.split("/");
+          if (tokens.length > 1) version = tokens[1];
           break;
         }
       }

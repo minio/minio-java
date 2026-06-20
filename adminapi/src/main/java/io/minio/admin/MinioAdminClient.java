@@ -453,8 +453,10 @@ public class MinioAdminClient {
           OBJECT_MAPPER
               .getTypeFactory()
               .constructMapType(HashMap.class, String.class, JsonNode.class);
-      return OBJECT_MAPPER.<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
-          .entrySet().stream()
+      return OBJECT_MAPPER
+          .<Map<String, JsonNode>>readValue(response.body().bytes(), mapType)
+          .entrySet()
+          .stream()
           .filter(entry -> "quota".equals(entry.getKey()))
           .findFirst()
           .map(entry -> Long.valueOf(entry.getValue().toString()))
