@@ -33,6 +33,7 @@ import java.util.Map;
 public class Checksum {
   /** MD5 hash of zero length byte array. */
   public static final String ZERO_MD5_HASH = "1B2M2Y8AsgTpgAmY7PhCfg==";
+
   /** SHA-256 hash of zero length byte array. */
   public static final String ZERO_SHA256_HASH =
       "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";

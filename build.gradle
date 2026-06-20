@@ -15,14 +15,14 @@
  */
 
 /********************************/
-/*   gradleVersion = '9.4.1'    */
+/*   gradleVersion = '9.6.0'    */
 /********************************/
 
 plugins {
-    id 'com.gradleup.shadow' version '9.0.0'
-    id 'com.github.spotbugs' version '6.5.1'
-    id 'org.jreleaser' version '1.23.0'
-    id 'com.diffplug.spotless' version '6.13.0'
+    id 'com.gradleup.shadow' version '9.4.2'
+    id 'com.github.spotbugs' version '6.5.8'
+    id 'org.jreleaser' version '1.24.0'
+    id 'com.diffplug.spotless' version '8.7.0'
 }
 
 /* Root project definitions */
@@ -48,22 +48,26 @@ subprojects {
     dependencies {
         api 'com.carrotsearch.thirdparty:simple-xml-safe:2.7.1'
         api 'com.google.guava:guava:33.6.0-jre'
-        api 'com.squareup.okhttp3:okhttp:5.3.2'
-        api 'com.fasterxml.jackson.core:jackson-annotations:2.21'
-        api 'com.fasterxml.jackson.core:jackson-core:2.21.2'
-        api 'com.fasterxml.jackson.core:jackson-databind:2.21.2'
+        api 'com.squareup.okhttp3:okhttp:5.4.0'
+        api 'com.fasterxml.jackson.core:jackson-annotations:2.22'
+        api 'com.fasterxml.jackson.core:jackson-core:2.22.0'
+        api 'com.fasterxml.jackson.core:jackson-databind:2.22.0'
         api 'org.bouncycastle:bcprov-jdk18on:1.84'
         api 'org.apache.commons:commons-compress:1.28.0'
-        api 'commons-codec:commons-codec:1.21.0'
+        api 'commons-codec:commons-codec:1.22.0'
         api 'org.xerial.snappy:snappy-java:1.1.10.8'
-        compileOnly 'com.github.spotbugs:spotbugs-annotations:4.9.8'
+        compileOnly 'com.github.spotbugs:spotbugs-annotations:4.10.2'
 
-        testImplementation 'com.squareup.okhttp3:mockwebserver:5.3.2'
-        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.3'
+        testImplementation 'com.squareup.okhttp3:mockwebserver:5.4.0'
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.4'
     }
 
     [compileJava, compileTestJava].each() {
         it.options.fork = true
+        // Build runs on JDK 25 (see java.toolchain) but enforces the Java 8 API surface and
+        // emits Java 8 bytecode via --release 8. --release also avoids the "source/target 8 is
+        // obsolete" warning; -Xlint:-options is kept as a belt-and-braces guard for -Werror.
+        it.options.release = 8
         it.options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation', '-Xlint:-options', '-Werror', '-Xdiags:verbose']
         it.options.encoding = 'UTF-8'
     }
@@ -103,6 +107,10 @@ subprojects {
     check.dependsOn localeTest
 
     java {
+        // Compile/test/javadoc run on JDK 25; bytecode/API level pinned to Java 8 via release below.
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -112,7 +120,7 @@ subprojects {
             target '**/*.java'
             importOrder 'edu', 'com', 'io', 'java', 'javax', 'org', ''
             removeUnusedImports()
-            googleJavaFormat('1.7')
+            googleJavaFormat('1.35.0')
         }
         groovyGradle {
             target '*.gradle'
@@ -226,7 +234,7 @@ project(':api') {
     }
 
     signing {
-        required {
+        required = {
             gradle.taskGraph.allTasks.any { it.name.contains('LocalMavenWithChecksums') }
         }
         sign publishing.publications.minioJava
@@ -346,7 +354,7 @@ project(':adminapi') {
     }
 
     signing {
-        required {
+        required = {
             gradle.taskGraph.allTasks.any { it.name.contains('LocalMavenWithChecksums') }
         }
         sign publishing.publications.minioJava
@@ -355,7 +363,7 @@ project(':adminapi') {
 
 project(':examples') {
     dependencies {
-        compileOnly 'me.tongfei:progressbar:0.9.5'
+        compileOnly 'me.tongfei:progressbar:0.10.2'
         compileOnly project(':api')
     }
 
@@ -367,6 +375,9 @@ project(':examples') {
         main {
             java {
                 srcDirs = ["$rootDir/examples"]
+                // srcDir is the module root, which also contains build/; keep generated
+                // files (e.g. Spotless lint output) out of compilation.
+                exclude 'build/**'
             }
         }
     }
@@ -374,7 +385,7 @@ project(':examples') {
 
 project(':functional') {
     dependencies {
-        implementation 'org.junit.jupiter:junit-jupiter-api:5.14.3'
+        implementation 'org.junit.jupiter:junit-jupiter-api:5.14.4'
         implementation project(':api')
         implementation project(':adminapi')
     }
@@ -387,6 +398,9 @@ project(':functional') {
         main {
             java {
                 srcDirs = ["$rootDir/functional"]
+                // srcDir is the module root, which also contains build/; keep generated
+                // files (e.g. Spotless lint output) out of compilation.
+                exclude 'build/**'
             }
         }
     }
