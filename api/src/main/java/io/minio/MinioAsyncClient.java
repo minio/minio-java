@@ -1117,7 +1117,7 @@ public class MinioAsyncClient extends BaseS3Client {
               if (!response.result().errors().isEmpty()) {
                 errorIterator = response.result().errors().iterator();
                 setError();
-                completed = true;
+                completed = error != null;
               }
             } catch (MinioException e) {
               error = new Result<>(e);
