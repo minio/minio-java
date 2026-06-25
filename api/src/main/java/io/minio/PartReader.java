@@ -96,7 +96,8 @@ public class PartReader {
     int n = 0;
 
     try {
-      while ((n = file != null ? file.read(oneByte) : stream.read(oneByte)) == 0) ;
+      while ((n = file != null ? file.read(oneByte) : stream.read(oneByte)) == 0)
+        ;
     } catch (IOException e) {
       throw new MinioException(e);
     }
