@@ -69,7 +69,7 @@ public class Filter {
       @Nullable @Element(name = "ObjectSizeLessThan", required = false) Long objectSizeLessThan,
       @Nullable @Element(name = "ObjectSizeGreaterThan", required = false)
           Long objectSizeGreaterThan) {
-    if (andOperator != null ^ prefix != null ^ tag != null) {
+    if (Utils.xor(andOperator, prefix, tag)) {
       this.andOperator = andOperator;
       this.prefix = prefix;
       this.tag = tag;
@@ -156,9 +156,9 @@ public class Filter {
         @Nullable Long objectSizeGreaterThan) {
       List<Tag> tagList = null;
       if (tags != null) {
-        this.tags = new ArrayList<>();
+        tagList = new ArrayList<>();
         for (Map.Entry<String, String> entry : tags.entrySet()) {
-          this.tags.add(new Tag(entry.getKey(), entry.getValue()));
+          tagList.add(new Tag(entry.getKey(), entry.getValue()));
         }
       }
       set(prefix, tagList, objectSizeLessThan, objectSizeGreaterThan);

@@ -51,7 +51,7 @@ public class ListObjectVersionsArgs extends BucketArgs {
   }
 
   public int maxKeys() {
-    return maxKeys;
+    return maxKeys != null ? maxKeys : 1000;
   }
 
   public String prefix() {

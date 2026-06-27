@@ -244,7 +244,7 @@ public class LifecycleConfiguration {
           throw new IllegalArgumentException(
               "ExpiredObjectDeleteMarker must not be provided along with Date and Days");
         }
-      } else if (date != null ^ days != null) {
+      } else if (Utils.xor(date, days)) {
         this.date = date;
         this.days = days;
       } else {
@@ -358,7 +358,7 @@ public class LifecycleConfiguration {
         @Nullable @Element(name = "Date", required = false) Time.S3Time date,
         @Nullable @Element(name = "Days", required = false) Integer days,
         @Nullable @Element(name = "StorageClass", required = false) String storageClass) {
-      if (date != null ^ days != null) {
+      if (Utils.xor(date, days)) {
         this.date = date;
         this.days = days;
       } else {

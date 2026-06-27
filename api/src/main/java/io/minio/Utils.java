@@ -96,6 +96,15 @@ public class Utils {
     }
   }
 
+  /** Returns true if and only if exactly one of the given objects is non-null. */
+  public static boolean xor(Object... objects) {
+    int count = 0;
+    for (Object object : objects) {
+      if (object != null && ++count > 1) return false;
+    }
+    return count == 1;
+  }
+
   public static boolean isValidIPv4OrIPv6(String value) {
     return InetAddressValidator.getInstance().isValid(value);
   }

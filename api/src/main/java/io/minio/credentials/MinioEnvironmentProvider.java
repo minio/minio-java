@@ -16,11 +16,24 @@
 
 package io.minio.credentials;
 
+import java.security.ProviderException;
+
 /** Credential provider using MinIO server specific environment variables. */
 public class MinioEnvironmentProvider extends EnvironmentProvider {
   @Override
   public Credentials fetch() {
-    return new Credentials(
-        getProperty("MINIO_ACCESS_KEY"), getProperty("MINIO_SECRET_KEY"), null, null);
+    String accessKey = getProperty("MINIO_ACCESS_KEY");
+    if (accessKey == null) {
+      throw new ProviderException(
+          "Access key does not exist in MINIO_ACCESS_KEY environment variable");
+    }
+
+    String secretKey = getProperty("MINIO_SECRET_KEY");
+    if (secretKey == null) {
+      throw new ProviderException(
+          "Secret key does not exist in MINIO_SECRET_KEY environment variable");
+    }
+
+    return new Credentials(accessKey, secretKey, null, null);
   }
 }

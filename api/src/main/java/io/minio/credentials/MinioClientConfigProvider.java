@@ -113,7 +113,7 @@ public class MinioClientConfigProvider extends EnvironmentProvider {
     private Map<String, Map<String, String>> hosts;
 
     public Map<String, String> get(String alias) {
-      return hosts.get(alias);
+      return hosts == null ? null : hosts.get(alias);
     }
   }
 }

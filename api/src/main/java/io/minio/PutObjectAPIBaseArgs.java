@@ -120,8 +120,7 @@ public abstract class PutObjectAPIBaseArgs extends ObjectArgs {
       extends ObjectArgs.Builder<B, A> {
     protected void validate(A args) {
       super.validate(args);
-      if (!((args.file != null) != (args.buffer != null) != (args.data != null)
-          && !(args.file != null && args.buffer != null && args.data != null))) {
+      if (!Utils.xor(args.file, args.buffer, args.data)) {
         throw new IllegalArgumentException("only one of file, buffer or data must be provided");
       }
     }
@@ -172,6 +171,6 @@ public abstract class PutObjectAPIBaseArgs extends ObjectArgs {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), file, buffer, data, length, headers);
+    return Objects.hash(super.hashCode(), file, buffer, Arrays.hashCode(data), length, headers);
   }
 }

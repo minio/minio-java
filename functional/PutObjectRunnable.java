@@ -25,11 +25,17 @@ class PutObjectRunnable implements Runnable {
   MinioClient client;
   String bucketName;
   String filename;
+  private volatile Exception exception;
 
   public PutObjectRunnable(MinioClient client, String bucketName, String filename) {
     this.client = client;
     this.bucketName = bucketName;
     this.filename = filename;
+  }
+
+  /** Returns the exception that failed this run, or null if it succeeded. */
+  public Exception exception() {
+    return exception;
   }
 
   public void run() {
@@ -48,6 +54,8 @@ class PutObjectRunnable implements Runnable {
       traceBuffer.append("[" + filename + "]: delete object\n");
       client.removeObject(RemoveObjectArgs.builder().bucket(bucketName).object(filename).build());
     } catch (Exception e) {
+      // Record the failure so the test thread can detect it after join(); also print for tracing.
+      this.exception = e;
       System.err.print(traceBuffer.toString());
       e.printStackTrace();
     }

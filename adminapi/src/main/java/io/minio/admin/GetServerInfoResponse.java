@@ -289,7 +289,9 @@ public class GetServerInfoResponse {
     }
 
     public Map<String, String> network() {
-      return Collections.unmodifiableMap(this.network);
+      return this.network == null
+          ? Collections.emptyMap()
+          : Collections.unmodifiableMap(this.network);
     }
 
     public List<Disk> disks() {
@@ -321,7 +323,9 @@ public class GetServerInfoResponse {
     }
 
     public Map<String, String> minioEnvVars() {
-      return Collections.unmodifiableMap(this.minioEnvVars);
+      return this.minioEnvVars == null
+          ? Collections.emptyMap()
+          : Collections.unmodifiableMap(this.minioEnvVars);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -613,11 +617,13 @@ public class GetServerInfoResponse {
       }
 
       public Map<String, TimedAction> lastMinute() {
-        return Collections.unmodifiableMap(lastMinute);
+        return lastMinute == null
+            ? Collections.emptyMap()
+            : Collections.unmodifiableMap(lastMinute);
       }
 
       public Map<String, String> apiCalls() {
-        return Collections.unmodifiableMap(apiCalls);
+        return apiCalls == null ? Collections.emptyMap() : Collections.unmodifiableMap(apiCalls);
       }
 
       public Long totalTokens() {

@@ -31,6 +31,12 @@ public class UploadSnowballObjectsArgs extends ObjectWriteArgs {
   private String stagingFilename;
   private boolean compression;
 
+  public UploadSnowballObjectsArgs() {
+    // The snowball tarball is uploaded under a transient, auto-generated object key; generate it
+    // here (once per instance) rather than mutating state inside validate().
+    this.objectName = "snowball." + random.nextLong() + ".tar";
+  }
+
   public Iterable<SnowballObject> objects() {
     return this.objects;
   }
@@ -56,7 +62,6 @@ public class UploadSnowballObjectsArgs extends ObjectWriteArgs {
 
     @Override
     protected void validate(UploadSnowballObjectsArgs args) {
-      args.objectName = "snowball." + random.nextLong() + ".tar";
       validateObjects(args.objects);
       super.validate(args);
     }

@@ -95,7 +95,7 @@ public class Checksum {
 
   private void addHeader(Http.Headers headers, String algorithm, String value) {
     if (value == null || value.isEmpty()) return;
-    headers.put("x-amz-checksum-algorithm-" + algorithm, value);
+    headers.put("x-amz-checksum-" + algorithm, value);
     headers.put("x-amz-checksum-algorithm", algorithm);
   }
 
